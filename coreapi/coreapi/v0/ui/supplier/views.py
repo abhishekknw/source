@@ -3,7 +3,7 @@ from pathlib import Path
 from rest_framework.views import APIView
 from v0.ui.utils import get_supplier_id, handle_response, get_content_type, save_flyer_locations
 from models import SupplierTypeSociety
-from v0.ui.location.models import City
+from v0.ui.location.models import City, CityArea, CitySubArea
 from v0.ui.account.models import ContactDetails
 from v0.models import DurationType
 from v0.ui.inventory.models import AdInventoryType
@@ -16,6 +16,30 @@ def get_state_map():
     for city in all_city:
         state_map[city.city_code] = {'state_name': city.state_code.state_name, 'state_code': city.state_code.state_code}
     return state_map
+
+
+def get_city_map():
+    all_city = City.objects.all()
+    city_map = {}
+    for city in all_city:
+        city_map[city.city_code] = city.city_name
+    return city_map
+
+
+def get_city_area_map():
+    all_city_area = CityArea.objects.all()
+    city_area_map = {}
+    for city_area in all_city_area:
+        city_area_map[city_area.area_code] = city_area.label
+    return city_area_map
+
+
+def get_city_subarea_map():
+    all_city_subarea = CitySubArea.objects.all()
+    city_subarea_map = {}
+    for city_subarea in all_city_subarea:
+        city_subarea_map[city_subarea.subarea_code] = city_subarea.subarea_name
+    return city_subarea_map
 
 
 def create_price_mapping_default(days_count, adinventory_name, adinventory_type, new_society,
@@ -36,7 +60,6 @@ class SocietyDataImport(APIView):
 
     def post(self, request):
         source_file = request.data['file']
-        path = Path.cwd()
         wb = load_workbook(source_file)
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
         society_data_list = []
@@ -74,6 +97,9 @@ class SocietyDataImport(APIView):
                     # 'comment': row[27].value,
                 })
         all_states_map = get_state_map()
+        all_city_map = get_city_map()
+        all_city_area_map = get_city_area_map()
+        all_city_subarea_map = get_city_subarea_map()
         for society in society_data_list:
             if society['supplier_code'] is not None:
                 data = {
@@ -89,8 +115,10 @@ class SocietyDataImport(APIView):
                 new_society = SupplierTypeSociety(**{
                     'supplier_id': supplier_id,
                     'society_name': society['society_name'],
-                    'society_locality': society['society_locality'],
-                    'society_subarea': society['society_subarea'],
+                    'society_locality': all_city_area_map[society['society_locality']],
+                    'society_city': all_city_map[society['society_city']],
+                    'society_state': all_states_map[society['society_city']]['state_name'],
+                    'society_subarea': all_city_subarea_map[society['society_subarea']],
                     'supplier_code': society['supplier_code'],
                     'society_zip': society['society_zip'],
                     'society_latitude': society['society_latitude'],
