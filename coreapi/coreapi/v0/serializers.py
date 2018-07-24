@@ -3,25 +3,20 @@ from django.contrib.auth.models import User, Permission, Group
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
-from v0.models import BusinessTypes, BusinessSubTypes, ImageMapping, DurationType, \
-    UserInquiry, Events, \
-    OperationsInfo, Signup
+from v0.models import BusinessTypes, BusinessSubTypes, DurationType, \
+    Events, OperationsInfo
 from v0.ui.organisation.serializers import OrganisationSerializer
-from v0.models import SocietyMajorEvents, \
-    CorporateParkCompanyList, CorporateBuildingWing, CorporateCompanyDetails, \
-    CompanyFloor
+from v0.models import SocietyMajorEvents, CorporateCompanyDetails
 import models
 from v0.ui.finances.models import RatioDetails, PrintingCost, LogisticOperationsCost, IdeationDesignCost, \
     SpaceBookingCost, EventStaffingCost, DataSciencesCost, DoorToDoorInfo
-from v0.ui.supplier.models import CorporateBuilding
+from v0.ui.supplier.models import CorporateBuilding, CorporateParkCompanyList
 from v0.ui.components.models import CommunityHallInfo, LiftDetails, NoticeBoardDetails, SwimmingPoolInfo, \
-    SocietyFlat, FlatType, SocietyTower, SportsInfra, MailboxInfo, CommonAreaDetails
-
-
-class ImageMappingSerializer(ModelSerializer):
-    class Meta:
-        model = ImageMapping
-        fields = '__all__'
+    SocietyFlat, FlatType, SocietyTower, SportsInfra, MailboxInfo, CommonAreaDetails, CorporateBuildingWing, \
+    CompanyFloor
+from v0.ui.account.models import Profile
+from v0.ui.account.models import Signup
+from v0.permissions import GeneralUserPermission, ObjectLevelPermission, UserInquiry
 
 
 class DurationTypeSerializer(ModelSerializer):
@@ -29,16 +24,10 @@ class DurationTypeSerializer(ModelSerializer):
         model = DurationType
         exclude = ('created_at', 'updated_at')
 
-
 '''class CarDisplayInventorySerializer(ModelSerializer):
 
 	class Meta:
 		model = CarDisplayInventory'''
-
-class UserInquirySerializer(ModelSerializer):
-    class Meta:
-        model = UserInquiry
-        fields = '__all__'
 
 class EventsSerializer(ModelSerializer):
     class Meta:
@@ -48,11 +37,6 @@ class EventsSerializer(ModelSerializer):
 class OperationsInfoSerializer(ModelSerializer):
     class Meta:
         model = OperationsInfo
-        fields = '__all__'
-
-class SignupSerializer(ModelSerializer):
-    class Meta:
-        model = Signup
         fields = '__all__'
 
 class CorporateParkCompanyListSerializer(ModelSerializer):
@@ -195,7 +179,7 @@ class GeneralUserPermissionSerializer(ModelSerializer):
     serializer for GeneralUserPermissions
     """
     class Meta:
-        model = models.GeneralUserPermission
+        model = GeneralUserPermission
         fields = '__all__'
 
 
@@ -204,7 +188,7 @@ class ObjectLevelPermissionSerializer(ModelSerializer):
     serializer for Object Level Permissions
     """
     class Meta:
-        model = models.ObjectLevelPermission
+        model = ObjectLevelPermission
         fields = '__all__'
 
 
@@ -217,7 +201,7 @@ class ProfileNestedSerializer(ModelSerializer):
     general_user_permission = GeneralUserPermissionSerializer(many=True, source='generaluserpermission_set')
 
     class Meta:
-        model = models.Profile
+        model = Profile
         fields = '__all__'
 
 

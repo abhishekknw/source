@@ -6,6 +6,32 @@ from v0.constants import supplier_id_max_length
 from django.contrib.contenttypes import fields
 from v0 import managers
 
+class Amenity(BaseModel):
+    """
+    Stores individual amenities. There basic details.
+    """
+    name = models.CharField(max_length=1000)
+    code = models.CharField(max_length=1000, null=True, blank=True)
+
+    class Meta:
+        db_table = 'amenities'
+
+class CorporateBuildingWing(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    wing_name = models.CharField(db_column='WING_NAME', max_length=50, null=True, blank=True)
+    number_of_floors = models.IntegerField(db_column='NUMBER_OF_FLOORS', null=True, blank=True)
+    building_id = models.ForeignKey('CorporateBuilding',db_index=True, db_column='BUILDING_ID',related_name='buildingwing', blank=True, null=True, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table='corporate_building_wing'
+
+class CompanyFloor(models.Model):
+    company_details_id = models.ForeignKey('CorporateCompanyDetails',db_column='COMPANY_DETAILS_ID',related_name='wingfloor', blank=True, null=True, on_delete=models.CASCADE)
+    floor_number = models.IntegerField(db_column='FLOOR_NUMBER', blank=True, null=True)
+
+    class Meta:
+        db_table='corporate_building_floors'
+
 class CommunityHallInfo(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='community_halls', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)

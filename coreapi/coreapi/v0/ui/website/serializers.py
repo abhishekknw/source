@@ -11,7 +11,7 @@ from v0.ui.base.serializers import BaseModelPermissionSerializer
 from v0.serializers import DurationTypeSerializer
 from v0.ui.serializers import UISocietySerializer
 from v0.ui.user.serializers import BaseUserSerializer
-from v0.ui.account.models import AccountInfo
+from v0.ui.account.models import AccountInfo, Profile
 from v0.ui.account.serializers import BusinessAccountContactSerializer
 from v0.ui.campaign.models import Campaign, CampaignSocietyMapping, CampaignAssignment
 from v0.ui.campaign.serializers import CampaignTypeMappingSerializer
@@ -22,6 +22,7 @@ from v0.ui.inventory.serializers import AdInventoryTypeSerializer
 from v0.ui.proposal.models import ProposalCenterMapping, ProposalCenterMappingVersion
 from v0.ui.proposal.serializers import ProposalInfoSerializer
 from v0.ui.supplier.models import SupplierTypeCorporate, SupplierAmenitiesMap
+from v0.ui.components.models import Amenity
 
 class InventoryActivitySerializer(ModelSerializer):
     """
@@ -355,7 +356,7 @@ class ShortlistedInventoryPricingSerializerWithShortlistedSpacesReadOnly(ModelSe
 class AmenitySerializer(ModelSerializer):
 
     class Meta:
-        model = models.Amenity
+        model = Amenity
         fields = '__all__'
 
 
@@ -441,7 +442,7 @@ class ProfileNestedSerializer(ModelSerializer):
     general_user_permission = GeneralUserPermissionSerializer(many=True, source='generaluserpermission_set')
 
     class Meta:
-        model = models.Profile
+        model = Profile
         fields = '__all__'
 
 
@@ -450,7 +451,7 @@ class ProfileSimpleSerializer(ModelSerializer):
     simple serializer for Profile
     """
     class Meta:
-        model = models.Profile
+        model = Profile
         fields = '__all__'
 
 

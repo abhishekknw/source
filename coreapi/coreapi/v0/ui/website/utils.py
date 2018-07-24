@@ -43,12 +43,11 @@ import gpxpy.geo
 
 import v0.models as models
 from v0.models import  (ShortlistedSpaces,
-                        Filters, DurationType,
-                        GenericExportFileName,
-                        Amenity, Events, Role, Lead,
+                        DurationType,
+                        GenericExportFileName, Events, Role, Lead,
                         CampaignLeads)
 from v0.ui.account.models import ContactDetails, AccountInfo
-from v0.ui.components.models import FlatType, SocietyTower
+from v0.ui.components.models import FlatType, SocietyTower, Amenity
 from v0.ui.inventory.models import SupplierTypeSociety, AdInventoryType, InventoryActivityAssignment, \
     InventoryActivityImage, InventorySummary, InventoryActivity
 from v0.ui.location.models import State, City, CityArea, CitySubArea
@@ -65,6 +64,7 @@ import v0.serializers as v0_serializers
 from v0.ui.finances.models import RatioDetails, PrintingCost, LogisticOperationsCost, IdeationDesignCost, \
     SpaceBookingCost, EventStaffingCost, DataSciencesCost, ShortlistedInventoryPricingDetails, PriceMappingDefault
 from v0.ui.supplier.models import SupplierAmenitiesMap
+from v0.ui.permissions.models import Filters
 
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):

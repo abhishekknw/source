@@ -24,12 +24,10 @@ from v0.serializers import ImageMappingSerializer, EventsSerializer, \
     CorporateBuildingSerializer, CorporateBuildingWingSerializer, CorporateBuildingGetSerializer, \
     CorporateParkCompanySerializer
 
-from v0.models import ImageMapping, Events, \
-    CorporateParkCompanyList
-from v0.models import SocietyMajorEvents, CorporateBuildingWing, \
-    CorporateCompanyDetails, CompanyFloor
+from v0.models import ImageMapping, Events
+from v0.models import SocietyMajorEvents, CorporateCompanyDetails
 from v0.ui.components.models import CommunityHallInfo, LiftDetails, NoticeBoardDetails, SocietyFlat, \
-    SwimmingPoolInfo,  SportsInfra, SocietyTower, FlatType, MailboxInfo
+    SwimmingPoolInfo,  SportsInfra, SocietyTower, FlatType, MailboxInfo, CorporateBuildingWing, CompanyFloor
 from v0.ui.components.serializers import CommunityHallInfoSerializer, LiftDetailsSerializer, NoticeBoardDetailsSerializer, \
     FlatTypeSerializer, SocietyTowerSerializer, SocietyFlatSerializer, SportsInfraSerializer, SwimmingPoolInfoSerializer
 from v0.ui.finances.models import DoorToDoorInfo, PriceMapping, PriceMappingDefault
@@ -47,7 +45,7 @@ from inventory.models import PosterInventory, InventorySummary, StreetFurniture,
 from inventory.serializers import PosterInventorySerializer
 from v0.ui.website.serializers import SupplierAmenitiesMapSerializer
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeCorporate, SupplierAmenitiesMap, SupplierTypeCode, \
-    SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, CorporateBuilding
+    SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, CorporateBuilding, CorporateParkCompanyList
 from v0.ui.supplier.serializers import (SupplierTypeCorporateSerializer, SupplierTypeSalonSerializer,
                                         SupplierTypeGymSerializer, SupplierTypeBusShelterSerializer,
                                         SupplierTypeCodeSerializer, SupplierTypeSocietySerializer)

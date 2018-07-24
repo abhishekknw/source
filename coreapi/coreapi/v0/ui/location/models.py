@@ -1,4 +1,8 @@
 from django.db import models
+from v0.ui.base.models import BaseModel
+from v0.constants import supplier_id_max_length
+from django.contrib.contenttypes import fields
+from v0 import managers
 
 class State(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -8,7 +12,6 @@ class State(models.Model):
     class Meta:
 
         db_table = 'state'
-
 
 class City(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -46,3 +49,19 @@ class CitySubArea(models.Model):
 
         db_table = 'city_area_subarea'
         unique_together = (('area_code','subarea_code'),)
+
+class ImageMapping(BaseModel):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    location_id = models.CharField(db_column='LOCATION_ID', max_length=20, blank=True, null=True)
+    location_type = models.CharField(db_column='LOCATION_TYPE', max_length=20, blank=True, null=True)
+    supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='images', blank=True, null=True, on_delete=models.CASCADE)
+    image_url = models.CharField(db_column='IMAGE_URL', max_length=100)
+    comments = models.CharField(db_column='COMMENTS', max_length=100, blank=True, null=True)
+    name = models.CharField(db_column='NAME', max_length=50, blank=True, null=True)
+    content_type = models.ForeignKey('ContentType', null=True)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'image_mapping'

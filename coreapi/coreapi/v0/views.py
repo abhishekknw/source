@@ -24,15 +24,13 @@ from v0.ui.user.serializers import BaseUserSerializer, BaseUserUpdateSerializer
 from v0.ui.location.models import CityArea
 from v0.ui.location.serializers import CityAreaSerializer
 from v0.ui.account.serializers import ContactDetailsSerializer, ContactDetailsGenericSerializer
-from v0.ui.account.models import ContactDetails, ContactDetailsGeneric
+from v0.ui.account.models import ContactDetails, ContactDetailsGeneric, Signup
 from v0.ui.inventory.models import SupplierTypeSociety, StallInventory
 # from v0.ui.inventory.serializers import SupplierTypeSocietySerializer
 from rest_framework.decorators import detail_route, list_route
 from v0.models import UserInquiry, \
-    Events, OperationsInfo, \
-    Signup, BaseUser, CustomPermissions, BusinessTypes, \
-    BusinessSubTypes, DurationType, \
-    Amenity
+    Events, OperationsInfo, BaseUser, CustomPermissions, BusinessTypes, \
+    BusinessSubTypes, DurationType
 from v0.ui.finances.models import RatioDetails, DoorToDoorInfo
 from v0.ui.finances.serializers import DoorToDoorInfoSerializer, RatioDetailsSerializer
 from v0.ui.supplier.serializers import SupplierInfoSerializer, SupplierTypeSocietySerializer
@@ -41,7 +39,7 @@ from v0.ui.inventory.serializers import (BannerInventorySerializer, PosterInvent
                                          PoleInventorySerializer, PosterInventoryMappingSerializer,
                                          StallInventorySerializer, StreetFurnitureSerializer)
 from v0.ui.components.models import CommunityHallInfo, LiftDetails, NoticeBoardDetails, SocietyFlat, SwimmingPoolInfo, \
-    FlatType, MailboxInfo, SocietyTower, CommonAreaDetails
+    FlatType, MailboxInfo, SocietyTower, CommonAreaDetails, Amenity
 from v0.ui.components.serializers import LiftDetailsSerializer, CommunityHallInfoSerializer, FlatTypeSerializer, \
     NoticeBoardDetailsSerializer, SocietyFlatSerializer, SwimmingPoolInfoSerializer, MailboxInfoSerializer, \
     CommonAreaDetailsSerializer, SocietyTowerSerializer

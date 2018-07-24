@@ -2,7 +2,7 @@ from rest_framework.serializers import ModelSerializer
 from models import BusinessAccountContact, AccountInfo, ContactDetails, ContactDetailsGeneric
 from v0.ui.organisation.models import Organisation
 from v0.ui.base.serializers import BaseModelPermissionSerializer
-
+from v0.ui.account.models import Signup
 
 class BusinessAccountContactSerializer(ModelSerializer):
     class Meta:
@@ -43,3 +43,8 @@ class ContactDetailsGenericSerializer(ModelSerializer):
         model = ContactDetailsGeneric
         fields = '__all__'
         depth = 2
+
+class SignupSerializer(ModelSerializer):
+    class Meta:
+        model = Signup
+        fields = '__all__'
