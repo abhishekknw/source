@@ -92,8 +92,8 @@ class SocietyDataImport(APIView):
                     'stall_price': float(row[24].value) if row[24].value else None,
                     'poster_price': float(row[25].value) if row[25].value else None,
                     'flier_price': float(row[26].value) if row[26].value else None,
-                    # 'status': row[27].value,
-                    # 'comment': row[27].value,
+                    'status': row[27].value,
+                    'comments': row[28].value,
                 })
         all_states_map = get_state_map()
         all_city_map = get_city_map()
@@ -128,7 +128,9 @@ class SocietyDataImport(APIView):
                     'ifsc_code': society['ifsc_code'],
                     'bank_name': society['bank_name'],
                     'account_no': society['account_no'],
-                    'stall_allowed': society['stall_allowed']
+                    'stall_allowed': society['stall_allowed'],
+                    'supplier_status': society['status'],
+                    'comments': society['comments'],
                 })
                 new_society.save()
                 new_contact_data = {
