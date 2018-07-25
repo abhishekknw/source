@@ -1,5 +1,6 @@
 from rest_framework.serializers import ModelSerializer
-from models import BusinessAccountContact, AccountInfo, ContactDetails, ContactDetailsGeneric
+from models import BusinessAccountContact, AccountInfo, ContactDetails, ContactDetailsGeneric, BusinessTypes,\
+    BusinessSubTypes
 from v0.ui.organisation.models import Organisation
 from v0.ui.base.serializers import BaseModelPermissionSerializer
 from v0.ui.account.models import Signup, Profile
@@ -11,6 +12,10 @@ class BusinessAccountContactSerializer(ModelSerializer):
         model = BusinessAccountContact
         fields = '__all__'
 
+class BusinessTypesSerializer(ModelSerializer):
+    class Meta:
+        model = BusinessTypes
+        fields = '__all__'
 
 class BusinessInfoSerializer(ModelSerializer):
     # sub_type = BusinessSubTypesSerializer()
@@ -49,6 +54,30 @@ class ContactDetailsGenericSerializer(ModelSerializer):
 class SignupSerializer(ModelSerializer):
     class Meta:
         model = Signup
+        fields = '__all__'
+
+class ProfileNestedSerializer(ModelSerializer):
+    """
+    Nested serializer for Profile
+    """
+    organisation = OrganisationSerializer()
+    object_level_permission = ObjectLevelPermissionSerializer(many=True, source='objectlevelpermission_set')
+    general_user_permission = GeneralUserPermissionSerializer(many=True, source='generaluserpermission_set')
+
+    class Meta:
+        model = Profile
+        fields = '__all__'
+
+class BusinessSubTypesSerializer(ModelSerializer):
+    class Meta:
+        model = BusinessSubTypes
+        fields = '__all__'
+
+class BusinessTypeSubTypeReadOnlySerializer(ModelSerializer):
+    subtypes = BusinessSubTypesSerializer(source='business_subtypes', many=True)
+
+    class Meta:
+        model = BusinessTypes
         fields = '__all__'
 
 class ProfileNestedSerializer(ModelSerializer):

@@ -1,8 +1,15 @@
 from rest_framework.serializers import ModelSerializer
 from models import (SupplierTypeSociety, SupplierTypeCode, SupplierTypeRetailShop, SupplierTypeBusShelter,
                     SupplierTypeGym, SupplierTypeSalon, SupplierTypeCorporate, SupplierInfo, CorporateBuilding,
-                    CorporateParkCompanyList, CorporateCompanyDetails)
+                    CorporateParkCompanyList, CorporateCompanyDetails, SupplierTypeBusDepot, SupplierAmenitiesMap)
 from v0.ui.components.serializers import CompanyFloorSerializer, CorporateBuildingWingSerializer
+
+class SupplierAmenitiesMapSerializer(ModelSerializer):
+
+    class Meta:
+        model = SupplierAmenitiesMap
+        fields = '__all__'
+        depth = 1
 
 class CorporateCompanySerializer(ModelSerializer):
     # for saving details of comapny with their building wing and floors /corporate/{{corporate_id}}/companyInfo
@@ -87,3 +94,11 @@ class SupplierInfoSerializer(ModelSerializer):
     class Meta:
         model = SupplierInfo
         fields = '__all__'
+
+class RetailShopSerializer(ModelSerializer):
+    class Meta:
+        model = SupplierTypeRetailShop
+
+class BusDepotSerializer(ModelSerializer):
+    class Meta:
+        model = SupplierTypeBusDepot

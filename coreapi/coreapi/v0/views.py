@@ -16,13 +16,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, viewsets
 
-from v0.serializers import OperationsInfoSerializer, BusinessTypeSubTypeReadOnlySerializer, GroupSerializer
+from v0.serializers import OperationsInfoSerializer, GroupSerializer
 from v0.ui.permissions.serializers import UserInquirySerializer, PermissionSerializer
 from v0.ui.user.serializers import BaseUserSerializer, BaseUserUpdateSerializer, BaseUserCreateSerializer
 from v0.ui.user.models import UserInquiry
 from v0.ui.location.models import CityArea
 from v0.ui.location.serializers import CityAreaSerializer
-from v0.ui.account.serializers import ContactDetailsSerializer, ContactDetailsGenericSerializer, SignupSerializer
+from v0.ui.account.serializers import ContactDetailsSerializer, ContactDetailsGenericSerializer, SignupSerializer, \
+    BusinessTypeSubTypeReadOnlySerializer
 from v0.ui.account.models import ContactDetails, ContactDetailsGeneric, Signup
 from v0.ui.inventory.models import SupplierTypeSociety, StallInventory
 # from v0.ui.inventory.serializers import SupplierTypeSocietySerializer
@@ -31,7 +32,8 @@ from v0.ui.account.models import OperationsInfo, BusinessTypes, \
     BusinessSubTypes
 from v0.ui.user.models import BaseUser
 from v0.ui.permissions.models import CustomPermissions
-from v0.ui.finances.models import RatioDetails, DoorToDoorInfo, DurationType
+from v0.ui.base.models import DurationType
+from v0.ui.finances.models import RatioDetails, DoorToDoorInfo
 from v0.ui.finances.serializers import DoorToDoorInfoSerializer, RatioDetailsSerializer
 from v0.ui.supplier.serializers import SupplierInfoSerializer, SupplierTypeSocietySerializer
 from v0.ui.inventory.serializers import (BannerInventorySerializer, PosterInventorySerializer,
@@ -93,7 +95,6 @@ class PopulateContentTypeFields(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-
 class SetUserToMasterUser(APIView):
     """
     The api sets user_id field to master user if any in the database.
@@ -121,7 +122,6 @@ class SetUserToMasterUser(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
 
 class BannerInventoryAPIView(APIView):
 

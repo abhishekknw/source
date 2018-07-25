@@ -1,8 +1,14 @@
 from rest_framework.serializers import ModelSerializer
 from models import CommunityHallInfo, LiftDetails, NoticeBoardDetails, SocietyFlat, FlatType, \
     SwimmingPoolInfo, MailboxInfo, SportsInfra, SocietyTower, CommonAreaDetails, CompanyFloor, \
-    CorporateBuildingWing
+    CorporateBuildingWing, Amenity
 from rest_framework import serializers
+
+class AmenitySerializer(ModelSerializer):
+
+    class Meta:
+        model = Amenity
+        fields = '__all__'
 
 class CorporateBuildingWingSerializer(ModelSerializer):
     class Meta:

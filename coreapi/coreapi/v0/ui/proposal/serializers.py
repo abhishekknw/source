@@ -1,7 +1,7 @@
 from rest_framework.serializers import ModelSerializer
 from v0.ui.base.serializers import BaseModelPermissionSerializer
 from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMappingVersion, ProposalMasterCost, ProposalInfoVersion,
-    ProposalMetrics, ProposalCenterMapping)
+    ProposalMetrics, ProposalCenterMapping, ImageMapping)
 
 class ProposalInfoSerializer(BaseModelPermissionSerializer):
 
@@ -37,3 +37,9 @@ class ProposalMetricsSerializer(ModelSerializer):
     class Meta:
         model = ProposalMetrics
         fields = '__all__'
+
+class ImageMappingSerializer(ModelSerializer):
+    class Meta:
+        model = ImageMapping
+        fields = '__all__'
+

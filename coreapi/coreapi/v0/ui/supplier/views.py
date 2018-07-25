@@ -6,8 +6,8 @@ from models import SupplierTypeSociety
 from v0.ui.location.models import City, CityArea, CitySubArea
 from v0.ui.account.models import ContactDetails
 from v0.ui.inventory.models import AdInventoryType
-from v0.ui.finances.models import PriceMappingDefault, DurationType
-
+from v0.ui.finances.models import PriceMappingDefault
+from v0.ui.base.models import DurationType
 
 def get_state_map():
     all_city = City.objects.all()

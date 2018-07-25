@@ -44,3 +44,11 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
+
+class DurationType(BaseModel):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    duration_name = models.CharField(db_column='DURATION_NAME', max_length=20)
+    days_count = models.CharField(db_column='DAYS_COUNT', max_length=10)
+
+    class Meta:
+        db_table = 'duration_type'
