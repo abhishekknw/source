@@ -36,7 +36,7 @@ class Lead(BaseModel):
     lead_status = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
-        db_table = 'shortlisted_spaces'
+        db_table = 'lead'
 
 class Leads(BaseModel):
     """

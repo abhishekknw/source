@@ -82,6 +82,13 @@ class BasicSupplierDetails(BaseModel):
 
 class SupplierTypeSociety(BaseModel):
 
+    SUPPLIER_STATUS = (
+        ('Tapped', 'Tapped'),
+        ('LetterGiven', 'LetterGiven'),
+        ('MeetingRequired', 'MeetingRequired'),
+        ('Other', 'Other')
+    )
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     objects = managers.GeneralManager()
     supplier_id = models.CharField(db_column='SUPPLIER_ID', primary_key=True, max_length=20)  # Field name made lowercase.
@@ -177,6 +184,8 @@ class SupplierTypeSociety(BaseModel):
     landmark = models.CharField(max_length=255, null=True, blank=True)
     feedback = models.CharField(max_length=255, null=True, blank=True)
     representative = models.ForeignKey('Organisation', null=True, blank=True)
+    supplier_status = models.CharField(max_length=80, null=True,  choices=SUPPLIER_STATUS)
+    comments = models.CharField(max_length=255, null=True, blank=True)
 
     def get_society_image(self):
         try:
