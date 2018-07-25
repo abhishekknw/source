@@ -13,6 +13,38 @@ RETAIL_SHOP_TYPE = (
     ('STATIONARY_STORE', 'STATIONARY_STORE')
 )
 
+class CorporateCompanyDetails(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    company_id = models.ForeignKey('CorporateParkCompanyList', db_column='COMPANY_ID', related_name='companydetails', blank=True, null=True, on_delete=models.CASCADE)
+    building_name = models.CharField(db_column='BUILDING_NAME', max_length=20, blank=True, null=True)
+    wing_name = models.CharField(db_column='WING_NAME', max_length=20, blank=True, null=True)
+
+    def get_floors(self):
+        return self.wingfloor.all()
+
+    class Meta:
+        db_table='corporate_company_details'
+
+class CorporateParkCompanyList(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    name = models.CharField(db_column='COMPANY_NAME',max_length=50, blank=True, null=True)
+    supplier_id = models.ForeignKey('SupplierTypeCorporate', db_column='CORPORATEPARK_ID', related_name='corporatecompany', blank=True, null=True, on_delete=models.CASCADE)
+
+    def get_company_details(self):
+        return self.companydetails.all()
+
+    class Meta:
+      db_table = 'corporateparkcompanylist'
+
+class FlatTypeCode(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    flat_type_name = models.CharField(db_column='FLAT_TYPE_NAME', max_length=20, null=True)
+    flat_type_code = models.CharField(db_column='FLAT_TYPE_CODE', max_length=5, null=True)
+
+    class Meta:
+
+        db_table = 'flat_type_code'
+
 class BasicSupplierDetails(BaseModel):
     """
     This is an abstract base class for all the suppliers. As we know more common fields, add

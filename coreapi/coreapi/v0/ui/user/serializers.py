@@ -1,6 +1,8 @@
 from rest_framework.serializers import ModelSerializer
 from models import UserProfile, BaseUser
-from v0.serializers import GroupSerializer, PermissionsSerializer, ProfileNestedSerializer
+from v0.serializers import GroupSerializer
+from v0.ui.account.serializers import ProfileNestedSerializer
+from v0.ui.permissions.serializers import PermissionsSerializer
 
 class UserProfileSerializer(ModelSerializer):
     # user1 = UserSerializer(source='get_user')
@@ -88,3 +90,38 @@ class BaseUserUpdateSerializer(ModelSerializer):
         model = BaseUser
         fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile', 'is_superuser', 'groups',
                   'user_permissions', 'profile', 'role')
+
+class BaseUserCreateSerializer(ModelSerializer):
+    """
+    specifically for creating  User objects. There was a need for creating this as standard serializer
+    was also containing a nested serializer. It's not possible to write to a serializer if it's nested
+    as of Django 1.8.
+    """
+
+    def create(self, validated_data):
+        """
+        Args:
+            validated_data: the data that is used to be create the user.
+
+        Returns: sets the password of the user when it's created.
+        """
+
+        # get the password
+        password = validated_data['password']
+        # delete it from the validated_data because we do not want to save it as raw password
+        del validated_data['password']
+        user = self.Meta.model.objects.create(**validated_data)
+        # save password this way
+        user.set_password(password)
+        # save profile
+        user.save()
+        # return
+        return user
+
+    class Meta:
+        model = BaseUser
+        fields = (
+        'id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile', 'password', 'is_superuser', 'profile')
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }

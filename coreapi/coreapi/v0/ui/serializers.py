@@ -1,11 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
-from v0.models import UserInquiry, \
-    Events, OperationsInfo, \
-    Signup
-from v0.serializers import UserInquirySerializer, EventsSerializer, \
-    OperationsInfoSerializer, SignupSerializer, ImageMappingSerializer
 from inventory.models import SupplierTypeSociety
 from inventory.serializers import  StandeeInventorySerializer
 from account.serializers import ContactDetailsSerializer
@@ -18,6 +13,7 @@ from v0.ui.components.models import LiftDetails, NoticeBoardDetails, SocietyFlat
 from v0.ui.components.serializers import CommunityHallInfoSerializer, LiftDetailsSerializer, \
     NoticeBoardDetailsSerializer, SocietyFlatSerializer, SocietyTowerSerializer, \
     SwimmingPoolInfoSerializer, MailboxInfoSerializer
+from v0.ui.location.serializers import ImageMappingSerializer
 
 class UISocietySerializer(ModelSerializer):
     basic_contact_available = serializers.BooleanField(source='is_contact_available')

@@ -1,5 +1,5 @@
 from rest_framework.serializers import ModelSerializer
-from models import City, CityArea, CitySubArea, State
+from models import City, CityArea, CitySubArea, State, ImageMapping
 
 class CitySubAreaSerializer(ModelSerializer):
     class Meta:
@@ -22,3 +22,8 @@ class StateSerializer(ModelSerializer):
 
     class Meta:
         model = State
+
+class ImageMappingSerializer(ModelSerializer):
+    class Meta:
+        model = ImageMapping
+        fields = '__all__'

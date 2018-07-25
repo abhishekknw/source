@@ -4,14 +4,13 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
 import v0.models as models
-from v0.models import SpaceMapping, ShortlistedSpaces,\
-                    SpaceMappingVersion, ShortlistedSpacesVersion, BaseUser
+from v0.ui.proposal.models import SpaceMapping, SpaceMappingVersion
+from v0.ui.user.models import BaseUser
 from v0.ui.finances.models import AuditDate, ShortlistedInventoryPricingDetails, PriceMappingDefault
-from v0.ui.base.serializers import BaseModelPermissionSerializer
-from v0.serializers import DurationTypeSerializer
+from v0.ui.finances.serializers import DurationTypeSerializer
 from v0.ui.serializers import UISocietySerializer
 from v0.ui.user.serializers import BaseUserSerializer
-from v0.ui.account.models import AccountInfo
+from v0.ui.account.models import AccountInfo, Profile, GenericExportFileName, BusinessTypes, BusinessSubTypes
 from v0.ui.account.serializers import BusinessAccountContactSerializer
 from v0.ui.campaign.models import Campaign, CampaignSocietyMapping, CampaignAssignment
 from v0.ui.campaign.serializers import CampaignTypeMappingSerializer
@@ -22,6 +21,12 @@ from v0.ui.inventory.serializers import AdInventoryTypeSerializer
 from v0.ui.proposal.models import ProposalCenterMapping, ProposalCenterMappingVersion
 from v0.ui.proposal.serializers import ProposalInfoSerializer
 from v0.ui.supplier.models import SupplierTypeCorporate, SupplierAmenitiesMap
+from v0.ui.components.models import Amenity
+from v0.ui.permissions.models import Filters, ObjectLevelPermission, GeneralUserPermission, Role, RoleHierarchy
+from v0.ui.location.models import ShortlistedSpaces, ShortlistedSpacesVersion
+
+from v0.ui.leads.models import Lead, LeadAlias, Leads
+from v0.ui.leads.serializers import LeadSerializer
 
 class InventoryActivitySerializer(ModelSerializer):
     """
@@ -33,15 +38,9 @@ class InventoryActivitySerializer(ModelSerializer):
         fields = '__all__'
 
 
-class LeadSerializer(ModelSerializer):
-    class Meta:
-        model = models.Lead
-        fields = '__all__'
-
-
 class FiltersSerializer(ModelSerializer):
     class Meta:
-        model = models.Filters
+        model = Filters
         fields = '__all__'
 
 class SpaceMappingVersionSerializer(ModelSerializer):
@@ -91,7 +90,7 @@ class GenericExportFileSerializerReadOnly(ModelSerializer):
     assignment_detail = serializers.ReadOnlyField(source='calculate_assignment_detail')
 
     class Meta:
-        model = models.GenericExportFileName
+        model = GenericExportFileName
         fields = '__all__'
 
 
@@ -201,14 +200,14 @@ class UISocietyInventorySerializer(ModelSerializer):
 class BusinessTypeSerializer(ModelSerializer):
 
     class Meta:
-        model = models.BusinessTypes
+        model = BusinessTypes
         fields = '__all__'
 
 
 class BusinessSubTypeSerializer(ModelSerializer):
 
     class Meta:
-        model = models.BusinessSubTypes
+        model = BusinessSubTypes
         fields = '__all__'
 
 
@@ -325,7 +324,7 @@ class ShortlistedSpacesSerializerReadOnly(ModelSerializer):
     shortlisted_inventories = ShortlistedInventoryPricingSerializerReadOnly(many=True, source='shortlistedinventorypricingdetails_set')
 
     class Meta:
-        model = models.ShortlistedSpaces
+        model = ShortlistedSpaces
         exclude = ('created_at', 'updated_at', 'space_mapping')
 
 
@@ -355,7 +354,7 @@ class ShortlistedInventoryPricingSerializerWithShortlistedSpacesReadOnly(ModelSe
 class AmenitySerializer(ModelSerializer):
 
     class Meta:
-        model = models.Amenity
+        model = Amenity
         fields = '__all__'
 
 
@@ -412,7 +411,7 @@ class ObjectLevelPermissionSerializer(ModelSerializer):
     serializer for Object Level Permissions
     """
     class Meta:
-        model = models.ObjectLevelPermission
+        model = ObjectLevelPermission
         fields = '__all__'
 
 
@@ -421,7 +420,7 @@ class GeneralUserPermissionSerializer(ModelSerializer):
     serializer for GeneralUserPermissions
     """
     class Meta:
-        model = models.GeneralUserPermission
+        model = GeneralUserPermission
         fields = '__all__'
 
 
@@ -441,7 +440,7 @@ class ProfileNestedSerializer(ModelSerializer):
     general_user_permission = GeneralUserPermissionSerializer(many=True, source='generaluserpermission_set')
 
     class Meta:
-        model = models.Profile
+        model = Profile
         fields = '__all__'
 
 
@@ -450,7 +449,7 @@ class ProfileSimpleSerializer(ModelSerializer):
     simple serializer for Profile
     """
     class Meta:
-        model = models.Profile
+        model = Profile
         fields = '__all__'
 
 
@@ -467,7 +466,7 @@ class ObjectLevelPermissionViewSet(ModelSerializer):
 
     """
     class Meta:
-        model = models.ObjectLevelPermission
+        model = ObjectLevelPermission
         fields = '__all__'
 
 
@@ -476,7 +475,7 @@ class RoleSerializer(ModelSerializer):
     simple serializer for Role
     """
     class Meta:
-        model = models.Role
+        model = Role
         fields = '__all__'
 
 class RoleHierarchySerializer(ModelSerializer):
@@ -484,7 +483,7 @@ class RoleHierarchySerializer(ModelSerializer):
     simple serializer for RoleHierarchy
     """
     class Meta:
-        model = models.RoleHierarchy
+        model = RoleHierarchy
         fields = '__all__'
 
 class GenericExportFileSerializer(ModelSerializer):
@@ -493,23 +492,5 @@ class GenericExportFileSerializer(ModelSerializer):
     """
 
     class Meta:
-        model = models.GenericExportFileName
-        fields = '__all__'
-
-class LeadAliasSerializer(ModelSerializer):
-    """
-    simple serializer for LeadAlias
-    """
-
-    class Meta:
-        model = models.LeadAlias
-        fields = '__all__'
-
-class LeadsSerializer(ModelSerializer):
-    """
-
-    """
-
-    class Meta:
-        model = models.Leads
+        model = GenericExportFileName
         fields = '__all__'
