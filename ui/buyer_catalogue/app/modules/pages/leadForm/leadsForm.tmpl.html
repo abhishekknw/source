@@ -3,7 +3,12 @@
 <html>
 <link rel="stylesheet" href="/modules/pages/leadForm/leadsForm.tmpl.css">
 <link rel="stylesheet" type="text/css" media="screen and (min-device-width:320px) and (max-device-width:500px)" href="css/mobile.css" />
+<style>
+.error{
+color:red;
+}
 
+</style>
 <body class="container">
   <div><nav-bar></nav-bar></div></br></br> <br />
 
@@ -33,22 +38,27 @@
     <div class="panel-body">
 
     </div>
-    <form class="form-horizontal" role="form" ng-if="!showLeads">
+    <form class="form-horizontal" name="myForm" role="form" novalidate ng-if="!showLeads">
         <div class="form-group" ng-repeat="model in alias_data">
             &nbsp;
+
             <label  class="col-sm-3 control-label">{{model.alias}}</label>
             <div class="col-sm-6">
                 <input type="{{getFieldType(model.original_name)}}" id="firstName" class="form-control"
-                    ng-if="checkValidFields(model.original_name)" ng-model="modelData[model.original_name]" style="margin-left:10px;"/>
+                    ng-if="checkValidFields(model.original_name)" name="modelData[model.original_name]" ng-model="modelData[model.original_name]" style="margin-left:10px;"
+                    ng-pattern="model.original_name == 'mobile1' || model.original_name == 'mobile2'?ph_numbr:null"
+                    ng-pattern="model.original_name == 'date1' || model.original_name == 'date2'?datePtrn:null"  ng-required="model.original_name == 'mobile1'"/>
 
 
-                    <div style="margin-left:20px;" class="" ng-hide="checkValidFields(model.original_name)">Yes
+                    <div style="margin-left:20px;" class="" ng-hide="checkValidFields(model.original_name)" required>Yes
                       <input type="{{getFieldType(model.original_name)}}"  ng-value="true"
                         ng-model="modelData[model.original_name]" style="margin-left:20px;"/>
+
                     </div>
-                    <div style="margin-left:20px;" class="" ng-hide="checkValidFields(model.original_name)">No
+                    <div style="margin-left:20px;" class="" ng-hide="checkValidFields(model.original_name)" required>No
                       <input type="{{getFieldType(model.original_name)}}"  ng-value="false"
-                        ng-model="modelData[model.original_name]" style="margin-left:20px;"/>
+                        ng-model="modelData[model.original_name]"
+                        style="margin-left:20px;"/>
                     </div>
 
             </div>
@@ -56,13 +66,19 @@
 
             </div>
         </div>
+        <!-- <div class="">
+      <span class="error" ng-if="myForm.modelData[model.original_name].$error.required && myForm.modelData[model.original_name].$dirty">Contact number is a required field</span>
+      <span class="error" ng-show="myForm.modelData[model.original_name].$error.pattern">Please enter a 10 digit number</span>
+
+        </div> -->
         <div class="col-sm-3">
 
         </div>
-        <button ng-if="!editLead" ng-click="saveLeads()" class="btn btn-primary" style="margin:10px;">Save</button>
+        <button ng-if="!editLead" ng-disabled="myForm.$invalid" ng-click="saveLeads()" class="btn btn-primary" style="margin:10px;">Save</button>
         <button ng-if="editLead" ng-click="updateLeads()" class="btn btn-primary" style="margin:10px;">Update</button>
 
           <button ng-click="getLeads()" class="btn btn-danger pull-center" style="margin:10px;">View Leads</button>
+
 
     </form>
     <div class="" ng-if="showLeads && !editLeads">

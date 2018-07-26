@@ -22,11 +22,16 @@
       <table st-table="campaigns" st-safe-src="Data" class="table table-striped">
         <thead>
           <tr>
+            <th colspan='999' style="background-color:#ffffff;margin-left:-30px">
+              <input st-search="" placeholder="Search ..." class="form-control"  type="search"/>
+            </th>
+          </tr>
+          <tr>
             <th ng-repeat="header in campaignHeaders">{{header.header}}</th>
           </tr>
         </thead>
         <tbody>
-          <tr style="text-align:center" ng-repeat="campaign in campaigns">
+            <tr style="text-align:center" ng-repeat="campaign in campaigns">
             <td>{{campaign.campaign.name}}</td>
             <td>{{campaign.campaign.tentative_start_date|limitTo:10}}</td>
             <td>{{campaign.campaign.tentative_end_date|limitTo:10}}</td>

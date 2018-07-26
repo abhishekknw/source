@@ -2,6 +2,9 @@
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
 <!-- <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"> -->
 <div><nav-bar></nav-bar></div>
+<div ng-loading="loading"></div> <!--For displaying loading icon-->
+<main ng-show="!isEmpty" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }" ng-if="loading">
+
 <!-- <div ng-loading="loading"></div> --> <!--For displaying loading icon-->
 </br></br></br>
 <div ng-if="!backButton" permission="[campaign_manager]">
@@ -14,7 +17,6 @@
     <!-- </div> -->
   </div>
 </div>
-<div ng-loading="loading"></div> <!--For displaying loading icon-->
 <div class="panel header-panel">
     <div ng-hide="!hideData" style="text-align:center"><label>No Results Found</label></div>
     <div class="pageTitle">
@@ -42,6 +44,11 @@
     <div class="">
       <table st-table="campaignDataList" st-safe-src="Data" class="table table-striped">
         <thead>
+          <tr>
+            <th colspan='999' style="background-color:#ffffff;">
+              <input st-search="" placeholder="Search ..." class="form-control"  type="search"/>
+            </th>
+          </tr>
           <tr>
             <th ng-repeat="header in headings" class="col-md-1" style="text-align: center;">{{header.header}}</th>
           </tr>
@@ -207,3 +214,4 @@
 <!-- <div id="progressBarModal" class="modal fade" data-backdrop="static" data-keyboard="false">
 </div> -->
 <!--End: Code for loading progress bar -->
+</main>

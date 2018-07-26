@@ -1,8 +1,9 @@
 <link rel="stylesheet" href="modules/pages/releaseCampaignPlan/releaseCampaign.tmpl.css"/>
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
+<div ng-loading="loading"></div>
+
 <main ng-show="!isEmpty" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }" ng-if="loading" >
 <div><nav-bar></nav-bar></div>
-<div ng-loading="loading"></div>
 </br></br></br>
 <div ng-if="!backButton" permission="[campaign_manager]">
   <back-Button></back-Button>
