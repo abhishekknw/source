@@ -32,27 +32,6 @@ class UISocietySerializer(ModelSerializer):
             'society_image',
         )
 
-
-class UICorporateSerializer(ModelSerializer):
-    class Meta:
-        model = SupplierTypeCorporate
-
-
-class UISalonSerializer(ModelSerializer):
-    class Meta:
-        model = SupplierTypeSalon
-
-
-class UIGymSerializer(ModelSerializer):
-    class Meta:
-        model = SupplierTypeGym
-
-
-class BusShelterSerializer(ModelSerializer):
-    class Meta:
-        model = SupplierTypeBusShelter
-
-
 class SocietyListSerializer(ModelSerializer):
     # Start : code changes to display image of society
     society_image = ImageMappingSerializer(source='get_society_image')

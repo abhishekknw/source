@@ -5,7 +5,7 @@ from models import DoorToDoorInfo, DataSciencesCost, EventStaffingCost, Ideation
 from v0.ui.inventory.serializers import InventoryActivitySerializerWithInventoryAssignmentsAndImages, \
     AdInventoryTypeSerializer, ShortlistedInventoryPricingSerializerReadOnly
 from v0.ui.proposal.models import ShortlistedSpaces
-from v0.ui.base.models import DurationType
+from v0.ui.base.serializers import DurationTypeSerializer
 
 class AuditDateSerializer(ModelSerializer):
 
@@ -81,3 +81,12 @@ class ShortlistedSpacesSerializerReadOnly(ModelSerializer):
     class Meta:
         model = ShortlistedSpaces
         exclude = ('created_at', 'updated_at', 'space_mapping')
+
+class PriceMappingDefaultSerializerReadOnly(ModelSerializer):
+
+    inventory_type = AdInventoryTypeSerializer(source='adinventory_type')
+    inventory_duration = DurationTypeSerializer(source='duration_type')
+
+    class Meta:
+        model = PriceMappingDefault
+        fields = '__all__'

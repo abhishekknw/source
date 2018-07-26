@@ -4,6 +4,31 @@ from models import (SupplierTypeSociety, SupplierTypeCode, SupplierTypeRetailSho
                     CorporateParkCompanyList, CorporateCompanyDetails, SupplierTypeBusDepot, SupplierAmenitiesMap)
 from v0.ui.components.serializers import CompanyFloorSerializer, CorporateBuildingWingSerializer
 
+class UICorporateSerializer(ModelSerializer):
+    class Meta:
+        model = SupplierTypeCorporate
+
+
+class UISalonSerializer(ModelSerializer):
+    class Meta:
+        model = SupplierTypeSalon
+
+
+class UIGymSerializer(ModelSerializer):
+    class Meta:
+        model = SupplierTypeGym
+
+
+class BusShelterSerializer(ModelSerializer):
+    class Meta:
+        model = SupplierTypeBusShelter
+
+class CorporateCompanyDetailsSerializer(ModelSerializer):
+    class Meta:
+        model = CorporateCompanyDetails
+        fields = '__all__'
+
+
 class SupplierAmenitiesMapSerializer(ModelSerializer):
 
     class Meta:

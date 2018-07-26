@@ -1,6 +1,8 @@
 from rest_framework.serializers import ModelSerializer
-from models import Campaign, CampaignSupplierTypes, CampaignTypeMapping, CampaignSocietyMapping
+from models import Campaign, CampaignSupplierTypes, CampaignTypeMapping, CampaignSocietyMapping, CampaignAssignment
 from rest_framework import serializers
+from v0.ui.user.serializers import BaseUserSerializer
+from v0.ui.proposal.serializers import ProposalInfoSerializer
 
 class CampaignSerializer(ModelSerializer):
     class Meta:
@@ -40,3 +42,13 @@ class CampaignListSerializer(ModelSerializer):
         'society_count',
         'info'
         )
+
+class CampaignAssignmentSerializerReadOnly(ModelSerializer):
+
+    assigned_by = BaseUserSerializer()
+    assigned_to = BaseUserSerializer()
+    campaign = ProposalInfoSerializer()
+
+    class Meta:
+        model = CampaignAssignment
+        fields = '__all__'

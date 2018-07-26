@@ -18,8 +18,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import viewsets
-from serializers import UISocietySerializer, UITowerSerializer, UICorporateSerializer, UISalonSerializer, \
-    BusShelterSerializer
+from serializers import UISocietySerializer, UITowerSerializer
 from v0.ui.events.serializers import EventsSerializer
 from v0.ui.supplier.serializers import CorporateBuildingSerializer, CorporateParkCompanySerializer, \
     CorporateBuildingGetSerializer
@@ -46,9 +45,9 @@ from inventory.serializers import PosterInventorySerializer
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeCorporate, SupplierAmenitiesMap, SupplierTypeCode, \
     SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, CorporateBuilding, CorporateParkCompanyList
 from v0.ui.supplier.serializers import (SupplierTypeCorporateSerializer, SupplierTypeSalonSerializer,
-                                        SupplierTypeGymSerializer, SupplierTypeBusShelterSerializer,
-                                        SupplierTypeCodeSerializer, SupplierTypeSocietySerializer, CorporateCompanyDetails,
-                                        CorporateParkCompanyListSerializer, RetailShopSerializer, BusDepotSerializer)
+                        SupplierTypeGymSerializer, SupplierTypeBusShelterSerializer, UICorporateSerializer, UISalonSerializer,
+                        SupplierTypeCodeSerializer, SupplierTypeSocietySerializer, CorporateCompanyDetails,
+                        CorporateParkCompanyListSerializer, RetailShopSerializer, BusDepotSerializer, BusShelterSerializer)
 from inventory.serializers import (StandeeInventorySerializer, WallInventorySerializer, PoleInventorySerializer,
                                    StallInventorySerializer, StreetFurnitureSerializer, FlyerInventorySerializer,
                                    InventorySummarySerializer)

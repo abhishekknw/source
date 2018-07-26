@@ -16,14 +16,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status, viewsets
 
-from v0.serializers import OperationsInfoSerializer, GroupSerializer
+from v0.ui.base.serializers import GroupSerializer
 from v0.ui.permissions.serializers import UserInquirySerializer, PermissionSerializer
 from v0.ui.user.serializers import BaseUserSerializer, BaseUserUpdateSerializer, BaseUserCreateSerializer
 from v0.ui.user.models import UserInquiry
 from v0.ui.location.models import CityArea
 from v0.ui.location.serializers import CityAreaSerializer
 from v0.ui.account.serializers import ContactDetailsSerializer, ContactDetailsGenericSerializer, SignupSerializer, \
-    BusinessTypeSubTypeReadOnlySerializer
+    BusinessTypeSubTypeReadOnlySerializer, OperationsInfoSerializer
 from v0.ui.account.models import ContactDetails, ContactDetailsGeneric, Signup
 from v0.ui.inventory.models import SupplierTypeSociety, StallInventory
 # from v0.ui.inventory.serializers import SupplierTypeSocietySerializer

@@ -1,4 +1,3 @@
-from django.contrib.auth.models import User, Permission, Group
 
 from rest_framework.serializers import ModelSerializer
 
@@ -6,15 +5,6 @@ from v0.ui.account.models import BusinessTypes, BusinessSubTypes, OperationsInfo
 from v0.ui.supplier.serializers import CorporateCompanyDetails
 from v0.ui.account.models import Profile
 
-'''class CarDisplayInventorySerializer(ModelSerializer):
-
-	class Meta:
-		model = CarDisplayInventory'''
-
-class OperationsInfoSerializer(ModelSerializer):
-    class Meta:
-        model = OperationsInfo
-        fields = '__all__'
 #
 # class BusinessInfoSerializer(ModelSerializer):
 #     # sub_type = BusinessSubTypesSerializer()
@@ -46,13 +36,3 @@ class OperationsInfoSerializer(ModelSerializer):
 
 
 # CorporateBuilding, CorporateBuildingWing, CorporateCompany, CorporateCompanyDetails, CompanyFloor
-
-class CorporateCompanyDetailsSerializer(ModelSerializer):
-    class Meta:
-        model = CorporateCompanyDetails
-        fields = '__all__'
-
-class GroupSerializer(ModelSerializer):
-    class Meta:
-        model = Group
-        fields = '__all__'
