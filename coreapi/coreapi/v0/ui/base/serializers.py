@@ -2,7 +2,9 @@ from rest_framework.serializers import ModelSerializer
 from v0.managers import check_object_permission
 from django.core.exceptions import PermissionDenied
 import v0.constants as v0_constants
-
+from models import DurationType
+from django.contrib.auth.models import Group
+from django.contrib.contenttypes.models import ContentType
 
 class BaseModelPermissionSerializer(ModelSerializer):
     """
@@ -24,3 +26,20 @@ class BaseModelPermissionSerializer(ModelSerializer):
         if not is_permission:
             raise PermissionDenied(class_name, error)
         return self.Meta.model.objects.create(**validated_data)
+
+class DurationTypeSerializer(ModelSerializer):
+    class Meta:
+        model = DurationType
+        exclude = ('created_at', 'updated_at')
+
+class GroupSerializer(ModelSerializer):
+    class Meta:
+        model = Group
+        fields = '__all__'
+
+class ContentTypeSerializer(ModelSerializer):
+
+    class Meta:
+        model =  ContentType
+        fields = '__all__'
+

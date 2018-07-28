@@ -37,14 +37,6 @@ def getPriceDict():
 
     return price_dict
 
-class DurationType(BaseModel):
-    id = models.AutoField(db_column='ID', primary_key=True)
-    duration_name = models.CharField(db_column='DURATION_NAME', max_length=20)
-    days_count = models.CharField(db_column='DAYS_COUNT', max_length=10)
-
-    class Meta:
-        db_table = 'duration_type'
-
 class DoorToDoorInfo(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='door_to_doors', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)

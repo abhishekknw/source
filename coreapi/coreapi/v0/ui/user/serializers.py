@@ -1,8 +1,12 @@
 from rest_framework.serializers import ModelSerializer
 from models import UserProfile, BaseUser
-from v0.serializers import GroupSerializer
+from v0.ui.base.serializers import GroupSerializer
 from v0.ui.account.serializers import ProfileNestedSerializer
 from v0.ui.permissions.serializers import PermissionsSerializer
+from v0.ui.proposal.serializers import ProposalInfoSerializer
+from rest_framework import serializers
+from v0.ui.account.models import GenericExportFileName
+
 
 class UserProfileSerializer(ModelSerializer):
     # user1 = UserSerializer(source='get_user')
@@ -125,3 +129,22 @@ class BaseUserCreateSerializer(ModelSerializer):
         extra_kwargs = {
             'password': {'write_only': True}
         }
+
+class GuestUserSerializer(ModelSerializer):
+
+    class Meta:
+        model = BaseUser
+        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile')
+
+class GenericExportFileSerializerReadOnly(ModelSerializer):
+    """
+    This is nested serializer. it does not support Write operations as of now. Careful before using it.
+    Currently it is being used to show File data plus proposal data
+    """
+    proposal = ProposalInfoSerializer()
+    user = BaseUserSerializer()
+    assignment_detail = serializers.ReadOnlyField(source='calculate_assignment_detail')
+
+    class Meta:
+        model = GenericExportFileName
+        fields = '__all__'
