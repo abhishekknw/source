@@ -3,7 +3,9 @@ from django.db import models
 from v0 import managers
 from django.contrib.contenttypes.models import ContentType
 from v0.ui.base.models import BaseModel
-#from v0.models import SpaceMapping, SpaceMappingVersion
+from v0.ui.finances.models import ProposalMasterCost
+from v0.constants import supplier_id_max_length
+from django.contrib.contenttypes import fields
 
 class ProposalCenterMapping(BaseModel):
     """
@@ -174,27 +176,6 @@ class ProposalInfoVersion(models.Model):
         #db_table = 'PROPOSAL_INFO_VERSION'
         db_table = 'proposal_info_version'
 
-class ProposalMasterCost(BaseModel):
-    """
-    A table to store revenue related costs. currently it's content will be populated by a sheet. only fixed fields
-    and relations are covered up.
-    Only one instance of MasterCost exists for one proposal version, proposal
-    proposal_version alone does not make any sense. it's always tied to a proposal instance.
-    """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
-    proposal = models.OneToOneField('ProposalInfo', null=True, blank=True)
-    agency_cost = models.FloatField(null=True, blank=True)
-    basic_cost = models.FloatField(null=True, blank=True)
-    discount = models.FloatField(null=True, blank=True)
-    total_cost = models.FloatField(null=True, blank=True)
-    tax = models.FloatField(null=True, blank=True)
-    total_impressions = models.FloatField(null=True, blank=True)
-    average_cost_per_impression = models.FloatField(null=True, blank=True)
-    objects = managers.GeneralManager()
-
-    class Meta:
-        db_table = 'proposal_master_cost_details'
-
 class ProposalMetrics(BaseModel):
     """
     Different types of  spaces/suppliers will have different metrics. a metrics is list of predefined headers.
@@ -226,3 +207,56 @@ class ProposalCenterSuppliers(BaseModel):
 
     class Meta:
         db_table = 'proposal_center_suppliers'
+
+class ImageMapping(BaseModel):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    location_id = models.CharField(db_column='LOCATION_ID', max_length=20, blank=True, null=True)
+    location_type = models.CharField(db_column='LOCATION_TYPE', max_length=20, blank=True, null=True)
+    supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='images', blank=True, null=True, on_delete=models.CASCADE)
+    image_url = models.CharField(db_column='IMAGE_URL', max_length=100)
+    comments = models.CharField(db_column='COMMENTS', max_length=100, blank=True, null=True)
+    name = models.CharField(db_column='NAME', max_length=50, blank=True, null=True)
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'image_mapping'
+
+class ShortlistedSpacesVersion(models.Model):
+    space_mapping_version   = models.ForeignKey('SpaceMappingVersion',db_index=True, related_name='spaces_version',on_delete=models.CASCADE)
+    supplier_code   = models.CharField(max_length=4)
+    content_type    = models.ForeignKey(ContentType, related_name='spaces_version')
+    object_id       = models.CharField(max_length=12)
+    content_object  = fields.GenericForeignKey('content_type', 'object_id')
+    buffer_status   = models.BooleanField(default=False)
+
+    class Meta:
+        #db_table = 'SHORTLISTED_SPACES_VERSION'
+        db_table = 'shortlisted_spaces_version'
+
+class ShortlistedSpaces(BaseModel):
+    """
+    This model stores all the shortlisted spaces. One Supplier or space can be under different campaigns.
+    in one campaign it's status can be removed while in the other it's buffered. Hence this model is made
+    for mapping such relations.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
+    space_mapping = models.ForeignKey('SpaceMapping', db_index=True, related_name='spaces', on_delete=models.CASCADE, null=True, blank=True)
+    center = models.ForeignKey('ProposalCenterMapping', null=True, blank=True)
+    proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
+    supplier_code = models.CharField(max_length=4, null=True, blank=True)
+    content_type = models.ForeignKey(ContentType, related_name='spaces')
+    object_id = models.CharField(max_length=supplier_id_max_length)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    buffer_status = models.BooleanField(default=False)
+    status = models.CharField(max_length=10, null=True, blank=True)
+    objects = managers.GeneralManager()
+    campaign_status = models.CharField(max_length=10, default='', null=True, blank=True)
+    phase = models.CharField(max_length=10, default='',  null=True, blank=True)
+    payment_status = models.CharField(max_length=255, null=True, blank=True)
+    payment_method = models.CharField(max_length=255, null=True, blank=True)
+    total_negotiated_price = models.CharField(max_length=255, null=True, blank=True)
+    booking_status = models.CharField(max_length=10, null=True, blank=True)
+    is_completed = models.BooleanField(default=False)

@@ -1,23 +1,14 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
-from v0.models import UserInquiry, \
-    Events, OperationsInfo, \
-    Signup
-from v0.serializers import UserInquirySerializer, EventsSerializer, \
-    OperationsInfoSerializer, SignupSerializer, ImageMappingSerializer
 from inventory.models import SupplierTypeSociety
-from inventory.serializers import  StandeeInventorySerializer
 from account.serializers import ContactDetailsSerializer
-from v0.ui.finances.models import DoorToDoorInfo
-from v0.ui.finances.serializers import DoorToDoorInfoSerializer, RatioDetailsSerializer
 from supplier.models import SupplierTypeCorporate, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, \
-    SupplierTypeRetailShop, SupplierTypeBusDepot, SupplierInfo
-from v0.ui.components.models import LiftDetails, NoticeBoardDetails, SocietyFlat, SwimmingPoolInfo, MailboxInfo, \
-    SocietyTower, CommunityHallInfo
-from v0.ui.components.serializers import CommunityHallInfoSerializer, LiftDetailsSerializer, \
-    NoticeBoardDetailsSerializer, SocietyFlatSerializer, SocietyTowerSerializer, \
-    SwimmingPoolInfoSerializer, MailboxInfoSerializer
+    SupplierTypeBusDepot, SupplierInfo
+from v0.ui.components.models import SocietyTower
+from v0.ui.components.serializers import LiftDetailsSerializer, \
+    SocietyFlatSerializer
+from v0.ui.proposal.serializers import ImageMappingSerializer
 
 class UISocietySerializer(ModelSerializer):
     basic_contact_available = serializers.BooleanField(source='is_contact_available')
@@ -40,27 +31,6 @@ class UISocietySerializer(ModelSerializer):
             'business_preferences',
             'society_image',
         )
-
-
-class UICorporateSerializer(ModelSerializer):
-    class Meta:
-        model = SupplierTypeCorporate
-
-
-class UISalonSerializer(ModelSerializer):
-    class Meta:
-        model = SupplierTypeSalon
-
-
-class UIGymSerializer(ModelSerializer):
-    class Meta:
-        model = SupplierTypeGym
-
-
-class BusShelterSerializer(ModelSerializer):
-    class Meta:
-        model = SupplierTypeBusShelter
-
 
 class SocietyListSerializer(ModelSerializer):
     # Start : code changes to display image of society
@@ -113,11 +83,3 @@ class UIPosterSerializer(ModelSerializer):
         )
 
 
-class RetailShopSerializer(ModelSerializer):
-    class Meta:
-        model = SupplierTypeRetailShop
-
-
-class BusDepotSerializer(ModelSerializer):
-    class Meta:
-        model = SupplierTypeBusDepot

@@ -20,3 +20,9 @@ class OrganisationMapNestedSerializer(ModelSerializer):
     class Meta:
         model = OrganisationMap
         fields = '__all__'
+
+class OrganisationSerializer(ModelSerializer):
+
+    class Meta:
+        model = Organisation
+        fields = '__all__'

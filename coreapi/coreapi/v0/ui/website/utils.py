@@ -42,18 +42,13 @@ from collections import namedtuple
 import gpxpy.geo
 
 import v0.models as models
-from v0.models import  (ShortlistedSpaces,
-                        Filters, DurationType,
-                        GenericExportFileName,
-                        Amenity, Events, Role, Lead,
-                        CampaignLeads)
-from v0.ui.account.models import ContactDetails, AccountInfo
-from v0.ui.components.models import FlatType, SocietyTower
+from v0.ui.account.models import ContactDetails, AccountInfo, GenericExportFileName
+from v0.ui.components.models import FlatType, SocietyTower, Amenity
 from v0.ui.inventory.models import SupplierTypeSociety, AdInventoryType, InventoryActivityAssignment, \
     InventoryActivityImage, InventorySummary, InventoryActivity
 from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping, ProposalCenterSuppliers, ProposalMetrics,
-    ProposalInfoVersion, ProposalMasterCost)
+    ProposalInfoVersion, ProposalMasterCost, ShortlistedSpaces)
 from v0.ui.proposal.serializers import ProposalInfoSerializer, ProposalCenterMappingSerializer
 from v0.ui.campaign.models import CampaignAssignment
 import v0.ui.utils as ui_utils
@@ -65,7 +60,17 @@ import v0.serializers as v0_serializers
 from v0.ui.finances.models import RatioDetails, PrintingCost, LogisticOperationsCost, IdeationDesignCost, \
     SpaceBookingCost, EventStaffingCost, DataSciencesCost, ShortlistedInventoryPricingDetails, PriceMappingDefault
 from v0.ui.supplier.models import SupplierAmenitiesMap
+
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
+
+from v0.ui.permissions.models import Filters, Role
+
+from v0.ui.leads.models import Lead, CampaignLeads
+
+from v0.ui.events.models import Events
+
+from v0.ui.base.models import DurationType
+
 
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):

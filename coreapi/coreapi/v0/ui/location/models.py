@@ -1,4 +1,8 @@
 from django.db import models
+from v0.ui.base.models import BaseModel
+from v0 import managers
+from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
 
 class State(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -8,7 +12,6 @@ class State(models.Model):
     class Meta:
 
         db_table = 'state'
-
 
 class City(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
