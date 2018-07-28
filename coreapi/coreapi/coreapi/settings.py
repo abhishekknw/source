@@ -91,6 +91,7 @@ DATABASES = {
             'HOST': Config.DATABASE['HOST'],
             'USER': Config.DATABASE['USER'],
             'PASSWORD': Config.DATABASE['PASSWORD'],
+            'CONN_MAX_AGE': 100
         }
 }
 
