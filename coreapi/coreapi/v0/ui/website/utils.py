@@ -44,34 +44,31 @@ import gpxpy.geo
 import v0.models as models
 from v0.ui.account.models import ContactDetails, AccountInfo, GenericExportFileName
 from v0.ui.components.models import FlatType, SocietyTower, Amenity
-from v0.ui.inventory.models import SupplierTypeSociety, AdInventoryType, InventoryActivityAssignment, \
-    InventoryActivityImage, InventorySummary, InventoryActivity
+from v0.ui.inventory.models import (SupplierTypeSociety, AdInventoryType, InventoryActivityAssignment,
+                                    InventoryActivityImage, InventorySummary, InventoryActivity, INVENTORY_ACTIVITY_TYPES)
+from v0.ui.inventory.serializers import (InventoryActivityAssignmentSerializer)
 from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping, ProposalCenterSuppliers, ProposalMetrics,
     ProposalInfoVersion, ProposalMasterCost, ShortlistedSpaces)
 from v0.ui.proposal.serializers import ProposalInfoSerializer, ProposalCenterMappingSerializer
 from v0.ui.campaign.models import CampaignAssignment
 import v0.ui.utils as ui_utils
-import serializers
 from v0 import errors
 import tasks
 import v0.constants as v0_constants
-import v0.serializers as v0_serializers
-from v0.ui.finances.models import RatioDetails, PrintingCost, LogisticOperationsCost, IdeationDesignCost, \
-    SpaceBookingCost, EventStaffingCost, DataSciencesCost, ShortlistedInventoryPricingDetails, PriceMappingDefault
+from v0.ui.finances.models import (RatioDetails, PrintingCost, LogisticOperationsCost, IdeationDesignCost,
+                                   SpaceBookingCost, EventStaffingCost, DataSciencesCost, 
+                                   ShortlistedInventoryPricingDetails, PriceMappingDefault)
+from v0.ui.finances.serializers import ShortlistedSpacesSerializerReadOnly
 from v0.ui.supplier.models import SupplierAmenitiesMap
-
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
-
 from v0.ui.permissions.models import Filters, Role
-
-from v0.ui.leads.models import Lead, CampaignLeads
-
+from v0.ui.permissions.serializers import FiltersSerializer, RoleHierarchySerializer
+from v0.ui.leads.serializers import LeadSerializer, LeadsSerializer
+from v0.ui.leads.models import Lead, CampaignLeads, Leads
 from v0.ui.events.models import Events
-
 from v0.ui.base.models import DurationType
-
-
+from v0.ui.account.serializers import GenericExportFileSerializer, ContactDetailsSerializer
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
     """
@@ -1672,7 +1669,7 @@ def get_filters(data):
         # get the filter's data
         filter_objects = Filters.objects.filter(proposal_id=proposal_id, center_id=center_id,
                                                 supplier_type=supplier_content_type)
-        filter_serializer = serializers.FiltersSerializer(filter_objects, many=True)
+        filter_serializer = FiltersSerializer(filter_objects, many=True)
         return ui_utils.handle_response(function_name, data=filter_serializer.data, success=True)
     except Exception as e:
         return ui_utils.handle_response(function_name, exception_object=e)
@@ -2570,7 +2567,7 @@ def save_leads(row):
         if not email:
             return ui_utils.handle_response(function, data='please provide email')
         lead_object, is_created = Lead.objects.get_or_create(email=email)
-        serializer = serializers.LeadSerializer(lead_object, data=lead_data)
+        serializer = LeadSerializer(lead_object, data=lead_data)
         if serializer.is_valid():
             serializer.save()
             return ui_utils.handle_response(function, data=lead_object, success=True)
@@ -4081,7 +4078,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
         if not response.data['status']:
             return response
         supplier_price_per_content_type_per_supplier = response.data['data']
-        shortlisted_suppliers_serializer = serializers.ShortlistedSpacesSerializerReadOnly(shortlisted_spaces,
+        shortlisted_suppliers_serializer = ShortlistedSpacesSerializerReadOnly(shortlisted_spaces,
                                                                                            many=True)
         shortlisted_suppliers_list = shortlisted_suppliers_serializer.data
         result['shortlisted_suppliers'] = shortlisted_suppliers_list
@@ -4114,7 +4111,6 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
 
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
-        print e
         return ui_utils.handle_response(function, exception_object=e)
 
 
@@ -6275,7 +6271,7 @@ def create_entry_in_role_hierarchy(role):
             'parent': instance.id,
             'child': instance.id
         }
-        serializer = serializers.RoleHierarchySerializer(data=data)
+        serializer = RoleHierarchySerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return 1
@@ -6693,7 +6689,7 @@ def create_generic_export_file_data(proposal):
         data['proposal'] = proposal.proposal_id
         data['file_name'] = v0_constants.exported_file_name_default
         data['is_exported'] = False
-        serializer = serializers.GenericExportFileSerializer(data=data)
+        serializer = GenericExportFileSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return ui_utils.handle_response(function_name, data={}, success=True)
@@ -6738,7 +6734,7 @@ def get_total_activity_data(activity, campaign_id, content_type_id):
             filter(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id,
                    inventory_activity__activity_type=activity,
                    inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id)
-        serializer = serializers.InventoryActivityAssignmentSerializer(result, many=True)
+        serializer = InventoryActivityAssignmentSerializer(result, many=True)
         return serializer.data;
 
     except Exception as e:
@@ -6764,7 +6760,7 @@ def get_actual_activity_data(activity, campaign_id, content_type_id):
             annotate(activity_date=F('inventory_activity_assignment__inventory_activity__activity_date'),
                      assignment_id=F('inventory_activity_assignemnt__id')). \
             values('activity_date', 'created_at', 'image_path', 'assignment_id')
-        # serializer = serializers.InventoryActivityImageSerializer(result, many=True)
+        # serializer = InventoryActivityImageSerializer(result, many=True)
         return result;
 
     except Exception as e:
@@ -6791,7 +6787,7 @@ def get_activity_data_by_values(campaign_id, content_type_id):
                                activity=F('inventory_activity_assignment__inventory_activity__activity_type')). \
                       values('object_id', 'latitude', 'longitude', 'inventory_activity_assignment_id', 'activity'))
 
-        return result;
+        return result
 
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
@@ -6806,7 +6802,7 @@ def get_filters_by_campaign(campaign_id):
     function_name = get_filters_by_campaign.__name__
     try:
         filters = models.Filters.objects.filter(proposal__proposal_id=campaign_id).values('filter_code').distinct()
-        # serializer = serializers.FiltersSerializer(filters, many=True)
+        # serializer = FiltersSerializer(filters, many=True)
         return filters
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
@@ -6821,7 +6817,7 @@ def get_campaign_leads(campaign_id):
     function_name = get_campaign_leads.__name__
     try:
         leads_instance = Leads.objects.filter(campaign__proposal_id=campaign_id)
-        serializer = serializers.LeadsSerializer(leads_instance, many=True)
+        serializer = LeadsSerializer(leads_instance, many=True)
         leads = serializer.data
         leads_data = {}
         if leads:
@@ -6902,7 +6898,7 @@ def create_contact_details(account_id, contacts):
     try:
         for contact in contacts:
             contact['object_id'] = account_id
-            serializer = v0_serializers.ContactDetailsSerializer(data=contact)
+            serializer = ContactDetailsSerializer(data=contact)
             if serializer.is_valid():
                 serializer.save()
             else:
@@ -6929,7 +6925,7 @@ def update_contact_details(account_id, contacts):
             if is_created:
                 instance.object_id = account_id
                 instance.content_type = ContentType.objects.get_for_model(AccountInfo)
-            serializer = v0_serializers.ContactDetailsSerializer(data=contact, instance=instance)
+            serializer = ContactDetailsSerializer(data=contact, instance=instance)
             if serializer.is_valid():
                 serializer.save()
             else:

@@ -1,15 +1,44 @@
+import json
 from openpyxl import load_workbook
 from pathlib import Path
 from rest_framework.views import APIView
 from rest_framework import viewsets
 from rest_framework.decorators import list_route
-from v0.ui.utils import get_supplier_id, handle_response, get_content_type, save_flyer_locations
-from models import SupplierTypeSociety
+from v0.ui.utils import (get_supplier_id, handle_response, get_content_type, save_flyer_locations, make_supplier_data,
+                         get_model, get_serializer, save_supplier_data, get_region_based_query, get_supplier_image,
+                         save_basic_supplier_details)
+from v0.ui.website.utils import manipulate_object_key_values
+from models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeGym,
+                    SupplierTypeRetailShop, CorporateParkCompanyList, CorporateBuilding, SupplierTypeBusDepot,
+                    SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE)
+from serializers import (UICorporateSerializer, SupplierTypeSocietySerializer, SupplierAmenitiesMapSerializer,
+                         UISalonSerializer, SupplierTypeSalon, SupplierTypeGymSerializer, RetailShopSerializer,
+                         SupplierInfoSerializer, SupplierInfo, SupplierTypeCorporateSerializer,
+                         CorporateBuildingGetSerializer, CorporateParkCompanyListSerializer, CorporateBuildingSerializer,
+                         SupplierTypeSalonSerializer, BusDepotSerializer, CorporateParkCompanySerializer,
+                         BusShelterSerializer, SupplierTypeBusShelterSerializer)
 from v0.ui.location.models import City, CityArea, CitySubArea
+from v0.ui.location.serializers import CityAreaSerializer
 from v0.ui.account.models import ContactDetails
 from v0.ui.inventory.models import AdInventoryType
 from v0.ui.finances.models import PriceMappingDefault
 from v0.ui.base.models import DurationType
+from v0.ui.serializers import (UISocietySerializer, SocietyListSerializer)
+from v0.ui.proposal.serializers import ImageMappingSerializer
+from v0.ui.proposal.models import ImageMapping
+from v0.ui.account.serializers import (ContactDetailsSerializer, ContactDetailsGenericSerializer)
+from v0.ui.account.models import ContactDetailsGeneric
+from v0.ui.components.models import (SocietyTower, CorporateBuildingWing, CompanyFloor)
+from v0.ui.components.serializers import CorporateBuildingWingSerializer
+import v0.constants as v0_constants
+from rest_framework.response import Response
+from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.contenttypes.models import ContentType
+from rest_framework.pagination import PageNumberPagination
+from django.db.models import Q
+from rest_framework import status
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+
 
 def get_state_map():
     all_city = City.objects.all()
@@ -156,8 +185,8 @@ class SocietyDataImport(APIView):
                                              society['flier_price'], rs_content_type, supplier_id)
         return handle_response({}, data='success', success=True)
 
-class TransactionDataImport(APIView):
 
+class TransactionDataImport(APIView):
     def post(self, request):
         source_file = request.data['file']
         wb = load_workbook(source_file)
@@ -184,6 +213,7 @@ class TransactionDataImport(APIView):
                 })
         return handle_response({}, data='transaction-success', success=True)
 
+
 class checkSupplierCodeAPIView(APIView):
     def get(self, request, code, format=None):
         try:
@@ -192,6 +222,7 @@ class checkSupplierCodeAPIView(APIView):
                 return Response(status=200)
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
+
 
 class GenerateSupplierIdAPIView(APIView):
     """
@@ -214,22 +245,22 @@ class GenerateSupplierIdAPIView(APIView):
                 'supplier_name': request.data['supplier_name'],
             }
 
-            city_object = models.City.objects.get(id=data['city_id'])
+            city_object = City.objects.get(id=data['city_id'])
             city_code = city_object.city_code
 
-            data['supplier_id'] = ui_utils.get_supplier_id(data)
+            data['supplier_id'] = get_supplier_id(data)
             data['supplier_type_code'] = request.data['supplier_type']
             data['current_user'] = request.user
-            response = ui_utils.make_supplier_data(data)
+            response = make_supplier_data(data)
             if not response.data['status']:
                 return response
             all_supplier_data = response.data['data']
-            return ui_utils.handle_response(class_name, data=ui_utils.save_supplier_data(user, all_supplier_data),
+            return handle_response(class_name, data=save_supplier_data(user, all_supplier_data),
                                             success=True)
         except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return handle_response(class_name, exception_object=e)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e)
+            return handle_response(class_name, exception_object=e)
 
 class SupplierImageDetails(APIView):
     """
@@ -246,16 +277,16 @@ class SupplierImageDetails(APIView):
 
             supplier_type_code = request.query_params.get('supplierTypeCode')
             if not supplier_type_code:
-                return ui_utils.handle_response(class_name, data='No Supplier type code provided')
+                return handle_response(class_name, data='No Supplier type code provided')
 
-            content_type_response = ui_utils.get_content_type(supplier_type_code)
+            content_type_response = get_content_type(supplier_type_code)
             if not content_type_response.data['status']:
-                return ui_utils.handle_response(class_name, data='No content type found')
+                return handle_response(class_name, data='No content type found')
 
             content_type = content_type_response.data['data']
-            supplier_object = ui_utils.get_model(supplier_type_code).objects.get(pk=id)
+            supplier_object = get_model(supplier_type_code).objects.get(pk=id)
 
-            serializer_class = ui_utils.get_serializer(supplier_type_code)
+            serializer_class = get_serializer(supplier_type_code)
             serializer = serializer_class(supplier_object)
             result['supplier_data'] = serializer.data
 
@@ -267,10 +298,10 @@ class SupplierImageDetails(APIView):
             amenity_serializer = SupplierAmenitiesMapSerializer(amenities, many=True)
             result['amenities'] = amenity_serializer.data
 
-            return ui_utils.handle_response(class_name, data=result, success=True)
+            return handle_response(class_name, data=result, success=True)
 
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
 
 class SocietyAPIView(APIView):
     # permission_classes = (permissions.IsAuthenticated, IsOwnerOrManager,)
@@ -348,7 +379,7 @@ class SocietyAPIView(APIView):
 
         society = SupplierTypeSociety.objects.filter(pk=serializer.data['supplier_id']).first()
         object_id = serializer.data['supplier_id']
-        content_type = models.ContentType.objects.get_for_model(SupplierTypeSociety)
+        content_type = ContentType.objects.get_for_model(SupplierTypeSociety)
 
         # here we will start storing contacts
         if request.data and 'basic_contact_available' in request.data and request.data['basic_contact_available']:
@@ -404,20 +435,22 @@ class SocietyList(APIView):
             if user.is_superuser:
                 society_objects = SupplierTypeSociety.objects.all().order_by('society_name')
             else:
-                city_query = ui_utils.get_region_based_query(user, v0_constants.valid_regions['CITY'],
+                city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
                                                              v0_constants.society)
                 society_objects = SupplierTypeSociety.objects.filter(city_query)
 
             serializer = SupplierTypeSocietySerializer(society_objects, many=True)
-            suppliers = website_utils.manipulate_object_key_values(serializer.data)
-            societies_with_images = ui_utils.get_supplier_image(suppliers, v0_constants.society_name)
+            suppliers = manipulate_object_key_values(serializer.data)
+            societies_with_images = get_supplier_image(suppliers, v0_constants.society_name)
+
             data = {
                 'count': len(societies_with_images),
                 'societies': societies_with_images
             }
-            return ui_utils.handle_response(class_name, data=data, success=True)
+
+            return handle_response(class_name, data=data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
 
 class CorporateViewSet(viewsets.ViewSet):
     """
@@ -432,12 +465,12 @@ class CorporateViewSet(viewsets.ViewSet):
             if user.is_superuser:
                 corporates = SupplierTypeCorporate.objects.all().order_by('name')
             else:
-                city_query = ui_utils.get_region_based_query(user, v0_constants.valid_regions['CITY'],
+                city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
                                                              v0_constants.corporate_code)
                 corporates = SupplierTypeCorporate.objects.filter(city_query)
 
             serializer = UICorporateSerializer(corporates, many=True)
-            corporates_with_images = ui_utils.get_supplier_image(serializer.data, 'Corporate')
+            corporates_with_images = get_supplier_image(serializer.data, 'Corporate')
             # disabling pagination as search cannot be performed on whole data set
             # paginator = PageNumberPagination()
             # result_page = paginator.paginate_queryset(corporates_with_images, request)
@@ -446,12 +479,12 @@ class CorporateViewSet(viewsets.ViewSet):
                 'count': len(corporates_with_images),
                 'corporates': corporates_with_images
             }
-            return ui_utils.handle_response(class_name, data=data, success=True)
+            return handle_response(class_name, data=data, success=True)
         except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
 
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
 
     def retrieve(self, request, pk=None):
         """
@@ -461,11 +494,11 @@ class CorporateViewSet(viewsets.ViewSet):
         try:
             corporate_instance = SupplierTypeCorporate.objects.get(pk=pk)
             serializer = UICorporateSerializer(corporate_instance)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return handle_response(class_name, data=serializer.data, success=True)
         except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
+            return handle_response(class_name, data=pk, exception_object=e)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
 
     def update(self, request, pk=None):
         """
@@ -483,12 +516,12 @@ class CorporateViewSet(viewsets.ViewSet):
             serializer = UICorporateSerializer(corporate_instance, data=request.data)
             if serializer.is_valid():
                 serializer.save()
-                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-            return ui_utils.handle_response(class_name, data=serializer.errors)
+                return handle_response(class_name, data=serializer.data, success=True)
+            return handle_response(class_name, data=serializer.errors)
         except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, data=pk, exception_object=e)
+            return handle_response(class_name, data=pk, exception_object=e)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
 
     def create(self, request):
         """
@@ -503,10 +536,10 @@ class CorporateViewSet(viewsets.ViewSet):
             serializer = UICorporateSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
-                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-            return ui_utils.handle_response(class_name, data=serializer.errors)
+                return handle_response(class_name, data=serializer.data, success=True)
+            return handle_response(class_name, data=serializer.errors)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
 
     @list_route(methods=['GET'])
     def search(self, request):
@@ -524,7 +557,7 @@ class CorporateViewSet(viewsets.ViewSet):
                     city__icontains=query) | Q(state__icontains=query)).order_by('name')
             serializer = UICorporateSerializer(corporates, many=True)
 
-            corporates_with_images = ui_utils.get_supplier_image(serializer.data, 'Corporate')
+            corporates_with_images = get_supplier_image(serializer.data, 'Corporate')
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(corporates_with_images, request)
 
@@ -533,9 +566,9 @@ class CorporateViewSet(viewsets.ViewSet):
                 'count': len(corporates_with_images),
                 'corporates': paginator_response.data
             }
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
 
 class SalonViewSet(viewsets.ViewSet):
 
@@ -547,12 +580,12 @@ class SalonViewSet(viewsets.ViewSet):
             if user.is_superuser:
                 salon_objects = SupplierTypeSalon.objects.all().order_by('name')
             else:
-                city_query = ui_utils.get_region_based_query(user, v0_constants.valid_regions['CITY'],
+                city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
                                                              v0_constants.salon)
                 salon_objects = SupplierTypeSalon.objects.filter(city_query)
 
             salon_serializer = UISalonSerializer(salon_objects, many=True)
-            items = ui_utils.get_supplier_image(salon_serializer.data, 'Salon')
+            items = get_supplier_image(salon_serializer.data, 'Salon')
             # disabling pagination because search cannot be performed on whole data set
             # paginator = PageNumberPagination()
             # result_page = paginator.paginate_queryset(items, request)
@@ -561,11 +594,11 @@ class SalonViewSet(viewsets.ViewSet):
                 'count': len(salon_serializer.data),
                 'salons': items
             }
-            return ui_utils.handle_response(class_name, data=data, success=True)
+            return handle_response(class_name, data=data, success=True)
         except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, data='Salon does not exist', exception_object=e)
+            return handle_response(class_name, data='Salon does not exist', exception_object=e)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
 
 class GymViewSet(viewsets.ViewSet):
 
@@ -577,11 +610,11 @@ class GymViewSet(viewsets.ViewSet):
             if user.is_superuser:
                 gym_objects = SupplierTypeGym.objects.all().order_by('name')
             else:
-                city_query = ui_utils.get_region_based_query(user, v0_constants.valid_regions['CITY'], v0_constants.gym)
+                city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'], v0_constants.gym)
                 gym_objects = SupplierTypeGym.objects.filter(city_query)
 
             gym_shelter_serializer = SupplierTypeGymSerializer(gym_objects, many=True)
-            items = ui_utils.get_supplier_image(gym_shelter_serializer.data, 'Gym')
+            items = get_supplier_image(gym_shelter_serializer.data, 'Gym')
             # disabling pagination because search cannot be performed on whole data set
             # paginator = PageNumberPagination()
             # result_page = paginator.paginate_queryset(items, request)
@@ -590,11 +623,11 @@ class GymViewSet(viewsets.ViewSet):
                 'count': len(gym_shelter_serializer.data),
                 'gyms': items
             }
-            return ui_utils.handle_response(class_name, data=data, success=True)
+            return handle_response(class_name, data=data, success=True)
         except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, data='Gym does not exist', exception_object=e)
+            return handle_response(class_name, data='Gym does not exist', exception_object=e)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
 
 class SocietyAPIFiltersListView(APIView):
 
@@ -896,10 +929,10 @@ class RetailShopViewSet(viewsets.ViewSet):
             serializer = RetailShopSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
-                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-            return ui_utils.handle_response(class_name, data=serializer.errors)
+                return handle_response(class_name, data=serializer.data, success=True)
+            return handle_response(class_name, data=serializer.errors)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
 
     def list(self, request):
         class_name = self.__class__.__name__
@@ -907,13 +940,13 @@ class RetailShopViewSet(viewsets.ViewSet):
             # all retail_shop_objects sorted by name
             user = request.user
             if user.is_superuser:
-                retail_shop_objects = models.SupplierTypeRetailShop.objects.all().order_by('name')
+                retail_shop_objects = SupplierTypeRetailShop.objects.all().order_by('name')
             else:
-                city_query = ui_utils.get_region_based_query(user, v0_constants.valid_regions['CITY'],
+                city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
                                                              v0_constants.retail_shop_code)
-                retail_shop_objects = models.SupplierTypeRetailShop.objects.filter(city_query)
+                retail_shop_objects = SupplierTypeRetailShop.objects.filter(city_query)
             serializer = RetailShopSerializer(retail_shop_objects, many=True)
-            retail_shop_with_images = ui_utils.get_supplier_image(serializer.data, 'Retail Shop')
+            retail_shop_with_images = get_supplier_image(serializer.data, 'Retail Shop')
 
             # disabling paginators because search cannot be performed in front end in whole data set
             # paginator = PageNumberPagination()
@@ -923,30 +956,30 @@ class RetailShopViewSet(viewsets.ViewSet):
                 'count': len(serializer.data),
                 'retail_shop_objects': retail_shop_with_images
             }
-            return ui_utils.handle_response(class_name, data=data, success=True)
+            return handle_response(class_name, data=data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
 
     def update(self, request, pk):
         class_name = self.__class__.__name__
         try:
-            retail_shop_instance = models.SupplierTypeRetailShop.objects.get(pk=pk)
+            retail_shop_instance = SupplierTypeRetailShop.objects.get(pk=pk)
             serializer = RetailShopSerializer(instance=retail_shop_instance, data=request.data)
             if serializer.is_valid():
                 serializer.save()
-                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+                return handle_response(class_name, data=serializer.data, success=True)
+            return handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
 
     def retrieve(self, request, pk):
         class_name = self.__class__.__name__
         try:
-            retail_shop_instance = models.SupplierTypeRetailShop.objects.get(pk=pk)
+            retail_shop_instance = SupplierTypeRetailShop.objects.get(pk=pk)
             serializer = RetailShopSerializer(instance=retail_shop_instance)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
 
 class SaveBasicCorporateDetailsAPIView(APIView):
 
@@ -1044,7 +1077,7 @@ class SaveBasicCorporateDetailsAPIView(APIView):
                 if serializer.is_valid():
                     serializer.save()
                 else:
-                    return ui_utils.handle_response(class_name, data=serializer.errors)
+                    return handle_response(class_name, data=serializer.errors)
 
             # in the end we need to delete the crossed out contacts. all contacts now in the list of ids are
             # being deleted by the user hence we delete it from here too.
@@ -1435,7 +1468,7 @@ class saveBasicGymDetailsAPIView(APIView):
         if gym_serializer.is_valid():
             gym_serializer.save()
         else:
-            return ui_utils.handle_response(class_name, data='Invalid Gym Info data')
+            return handle_response(class_name, data='Invalid Gym Info data')
 
         # Now saving contacts
         try:
@@ -1497,13 +1530,13 @@ class BusShelter(APIView):
         # check for supplier_type_code
         supplier_type_code = request.data.get('supplier_type_code')
         if not supplier_type_code:
-            return ui_utils.handle_response(class_name, data='provide supplier type code', success=False)
+            return handle_response(class_name, data='provide supplier type code', success=False)
         data = request.data.copy()
         data['supplier_id'] = id
-        basic_details_response = ui_utils.save_basic_supplier_details(supplier_type_code, data)
+        basic_details_response = save_basic_supplier_details(supplier_type_code, data)
         if not basic_details_response.data['status']:
             return basic_details_response
-        return ui_utils.handle_response(class_name, data=basic_details_response.data['data'], success=True)
+        return handle_response(class_name, data=basic_details_response.data['data'], success=True)
 
     def get(self, request):
         # fetch all and list Bus Shelters
@@ -1516,12 +1549,12 @@ class BusShelter(APIView):
             if user.is_superuser:
                 bus_objects = SupplierTypeBusShelter.objects.all().order_by('name')
             else:
-                city_query = ui_utils.get_region_based_query(user, v0_constants.valid_regions['CITY'],
+                city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
                                                              v0_constants.bus_shelter)
                 bus_objects = SupplierTypeBusShelter.objects.filter(city_query)
 
             bus_shelter_serializer = BusShelterSerializer(bus_objects, many=True)
-            items = ui_utils.get_supplier_image(bus_shelter_serializer.data, 'Bus Shelter')
+            items = get_supplier_image(bus_shelter_serializer.data, 'Bus Shelter')
             # disabling pagination because search cannot be performed in whole data set.
             # paginator = PageNumberPagination()
             # result_page = paginator.paginate_queryset(items, request)
@@ -1530,11 +1563,11 @@ class BusShelter(APIView):
                 'count': len(bus_shelter_serializer.data),
                 'busshelters': items
             }
-            return ui_utils.handle_response(class_name, data=data, success=True)
+            return handle_response(class_name, data=data, success=True)
         except SupplierTypeBusShelter.DoesNotExist as e:
-            return ui_utils.handle_response(class_name, data='Bus Shelter object does not exist', exception_object=e)
+            return handle_response(class_name, data='Bus Shelter object does not exist', exception_object=e)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
 
 
 class BusShelterSearchView(APIView):
@@ -1552,7 +1585,7 @@ class BusShelterSearchView(APIView):
             user = request.user
             search_txt = request.query_params.get('search', None)
             if not search_txt:
-                return ui_utils.handle_response(class_name, data='Search Text is not provided')
+                return handle_response(class_name, data='Search Text is not provided')
             items = SupplierTypeBusShelter.objects.filter(
                 Q(supplier_id__icontains=search_txt) | Q(name__icontains=search_txt) | Q(
                     address1__icontains=search_txt) | Q(city__icontains=search_txt) | Q(
@@ -1562,9 +1595,10 @@ class BusShelterSearchView(APIView):
             serializer = SupplierTypeBusShelterSerializer(result_page, many=True)
             return paginator.get_paginated_response(serializer.data)
         except SupplierTypeBusShelter.DoesNotExist as e:
-            return ui_utils.handle_response(class_name, data='Bus Shelter object does not exist', exception_object=e)
+            return handle_response(class_name, data='Bus Shelter object does not exist', exception_object=e)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
+
 
 class SocietyAPIListView(APIView):
 
@@ -1583,12 +1617,12 @@ class SocietyAPIListView(APIView):
                 if user.is_superuser:
                     society_objects = SupplierTypeSociety.objects.all().order_by('society_name')
                 else:
-                    city_query = ui_utils.get_region_based_query(user, v0_constants.valid_regions['CITY'],
-                                                                 v0_constants.society)
+                    city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
+                                                        v0_constants.society)
                     society_objects = SupplierTypeSociety.objects.filter(city_query)
 
             # modify items to have society images data
-            society_objects = ui_utils.get_supplier_image(society_objects, 'Society')
+            society_objects = get_supplier_image(society_objects, 'Society')
             paginator = PageNumberPagination()
             result_page = paginator.paginate_queryset(society_objects, request)
             paginator_response = paginator.get_paginated_response(result_page)
@@ -1596,9 +1630,10 @@ class SocietyAPIListView(APIView):
                 'count': len(society_objects),
                 'societies': paginator_response.data
             }
-            return ui_utils.handle_response(class_name, data=data, success=True)
+            return handle_response(class_name, data=data, success=True)
         except SupplierTypeSociety.DoesNotExist:
             return Response(status=404)
+
 
 class SuppliersMeta(APIView):
     """
@@ -1614,14 +1649,14 @@ class SuppliersMeta(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            valid_supplier_type_code_instances = models.SupplierTypeCode.objects.all()
+            valid_supplier_type_code_instances = SupplierTypeCode.objects.all()
             data = {}
 
             for instance in valid_supplier_type_code_instances:
                 supplier_type_code = instance.supplier_type_code
                 error = False
                 try:
-                    model_name = ui_utils.get_model(supplier_type_code)
+                    model_name = get_model(supplier_type_code)
                     count = model_name.objects.all().count()
                 except Exception:
                     count = 0
@@ -1633,11 +1668,12 @@ class SuppliersMeta(APIView):
                     'error': error
                 }
                 if supplier_type_code == v0_constants.retail_shop_code:
-                    data[supplier_type_code]['retail_shop_types'] = [tup[0] for tup in models.RETAIL_SHOP_TYPE]
+                    data[supplier_type_code]['retail_shop_types'] = [tup[0] for tup in RETAIL_SHOP_TYPE]
 
-            return ui_utils.handle_response(class_name, data=data, success=True)
+            return handle_response(class_name, data=data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
+
 
 class BusDepotViewSet(viewsets.ViewSet):
     """
@@ -1651,37 +1687,37 @@ class BusDepotViewSet(viewsets.ViewSet):
             serializer = BusDepotSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
-                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-            return ui_utils.handle_response(class_name, data=serializer.errors)
+                return handle_response(class_name, data=serializer.data, success=True)
+            return handle_response(class_name, data=serializer.errors)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
 
     def list(self, request):
         class_name = self.__class__.__name__
         try:
-            bus_depots = models.SupplierTypeBusDepot.objects.all()
+            bus_depots = SupplierTypeBusDepot.objects.all()
             serializer = BusDepotSerializer(bus_depots, many=True)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
 
     def update(self, request, pk=None):
         class_name = self.__class__.__name__
         try:
-            instance = models.SupplierTypeBusDepot.objects.get(pk=pk)
+            instance = SupplierTypeBusDepot.objects.get(pk=pk)
             serializer = BusDepotSerializer(instance=instance, data=request.data)
             if serializer.is_valid():
                 serializer.save()
-                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-            return ui_utils.handle_response(class_name, data=serializer.errors)
+                return handle_response(class_name, data=serializer.data, success=True)
+            return handle_response(class_name, data=serializer.errors)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)
 
     def retrieve(self, request, pk=None):
         class_name = self.__class__.__name__
         try:
-            instance = models.SupplierTypeBusDepot.objects.get(pk=pk)
+            instance = SupplierTypeBusDepot.objects.get(pk=pk)
             serializer = BusDepotSerializer(instance=instance)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, exception_object=e, request=request)

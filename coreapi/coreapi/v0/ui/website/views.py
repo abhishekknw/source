@@ -5485,7 +5485,6 @@ class OrganisationMapViewSet(viewsets.ViewSet):
             serializer = OrganisationMapNestedSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
-            print e
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def create(self, request):
@@ -6195,7 +6194,6 @@ class CampaignsAssignedInventoryCountApiView(APIView):
 
             return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
-            print e
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 class GetAssignedIdImagesListApiView(APIView):
