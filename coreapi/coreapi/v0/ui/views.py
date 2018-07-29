@@ -32,9 +32,9 @@ from v0.ui.components.serializers import CommunityHallInfoSerializer, LiftDetail
 from v0.ui.finances.models import DoorToDoorInfo, PriceMapping, PriceMappingDefault
 from v0.ui.finances.serializers import PriceMappingDefaultSerializer, PriceMappingSerializer
 from v0.ui.user.models import UserProfile
+
 from v0.ui.location.models import City, CityArea, CitySubArea
 from v0.ui.events.serializers import SocietyMajorEventsSerializer
-from v0.ui.serializers import SocietyListSerializer
 from v0.ui.user.serializers import UserSerializer, UserProfileSerializer
 from v0.ui.location.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, StateSerializer
 from v0.ui.account.models import ContactDetails, ContactDetailsGeneric
@@ -43,7 +43,8 @@ from inventory.models import PosterInventory, InventorySummary, StreetFurniture,
     StallInventory, FlyerInventory, StandeeInventory, PoleInventory
 from inventory.serializers import PosterInventorySerializer
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeCorporate, SupplierAmenitiesMap, SupplierTypeCode, \
-    SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, CorporateBuilding, CorporateParkCompanyList
+    SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, CorporateBuilding, CorporateParkCompanyList, \
+    RETAIL_SHOP_TYPE
 from v0.ui.supplier.serializers import (SupplierTypeCorporateSerializer, SupplierTypeSalonSerializer,
                         SupplierTypeGymSerializer, SupplierTypeBusShelterSerializer, UICorporateSerializer, UISalonSerializer,
                         SupplierTypeCodeSerializer, SupplierTypeSocietySerializer, CorporateCompanyDetails,
@@ -1898,7 +1899,7 @@ class StateViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            states = models.State.objects.all()
+            states = State.objects.all()
             serializer = StateSerializer(states, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:

@@ -60,6 +60,9 @@ import v0.serializers as v0_serializers
 from v0.ui.finances.models import RatioDetails, PrintingCost, LogisticOperationsCost, IdeationDesignCost, \
     SpaceBookingCost, EventStaffingCost, DataSciencesCost, ShortlistedInventoryPricingDetails, PriceMappingDefault
 from v0.ui.supplier.models import SupplierAmenitiesMap
+
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
+
 from v0.ui.permissions.models import Filters, Role
 
 from v0.ui.leads.models import Lead, CampaignLeads
@@ -67,6 +70,7 @@ from v0.ui.leads.models import Lead, CampaignLeads
 from v0.ui.events.models import Events
 
 from v0.ui.base.models import DurationType
+
 
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
@@ -6801,9 +6805,9 @@ def get_filters_by_campaign(campaign_id):
     """
     function_name = get_filters_by_campaign.__name__
     try:
-        filters = Filters.objects.filter(proposal__proposal_id=campaign_id)
-        serializer = serializers.FiltersSerializer(filters, many=True)
-        return serializer.data
+        filters = models.Filters.objects.filter(proposal__proposal_id=campaign_id).values('filter_code').distinct()
+        # serializer = serializers.FiltersSerializer(filters, many=True)
+        return filters
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
 
@@ -7067,7 +7071,7 @@ def get_assigned_inv_location_data(campaign_id, content_type_id, act_type):
 
         supplier_id_list = [object['object_id'] for object in inv_act_image_objects]
         supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
-        serializer = v0_serializers.SupplierTypeSocietySerializer(supplier_objects, many=True)
+        serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
         suppliers = serializer.data
         inv_act_image_objects_with_distance = calculate_location_difference_between_inventory_and_supplier(
             inv_act_image_objects, suppliers)
@@ -7126,16 +7130,55 @@ def get_campaign_inv_data(campaign_id):
     """
     function_name = get_campaign_inv_data.__name__
     try:
-        data = ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces__proposal=campaign_id). \
-            annotate(inv_name=F('ad_inventory_type__adinventory_name'), object_id=F('shortlisted_spaces__object_id')). \
-            values('object_id', 'inv_name').annotate(total=Count('id'))
+
         result = {}
-        for inv in data:
-            if inv['object_id'] not in result:
-                result[inv['object_id']] = {}
-            if inv['inv_name'] not in result[inv['object_id']]:
-                result[inv['object_id']][inv['inv_name']] = {}
-            result[inv['object_id']][inv['inv_name']] = inv
+        inv_act_image_data = models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
+                                                                                  'inventory_activity_assignment__inventory_activity',
+                                                                                  'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
+                                                                                  'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
+                                                                                  'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal'). \
+            filter(
+            inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id). \
+            annotate(activity_type=F('inventory_activity_assignment__inventory_activity__activity_type'), inventory=F(
+            'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name'),
+            object_id=F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id')). \
+            values('activity_type', 'inventory','object_id'). \
+            annotate(total=Count('inventory_activity_assignment', distinct=True))
+        inv_act_image_data_map = organise_data_by_activity_and_inventory_type(inv_act_image_data)
+        # inv_act_image_data_map = {supplier['object_id']:supplier for supplier in inv_act_image_data}
+        total_inv_act_data = models.ShortlistedInventoryPricingDetails.objects. \
+            filter(shortlisted_spaces__proposal=campaign_id). \
+            annotate(object_id=F('shortlisted_spaces__object_id'), inventory=F('ad_inventory_type__adinventory_name')). \
+            values('object_id', 'inventory'). \
+            annotate(total=Count('id'))
+        total_inv_act_data_map = {}
+
+        for supplier in total_inv_act_data:
+            if supplier['object_id'] not in total_inv_act_data_map:
+                total_inv_act_data_map[supplier['object_id']] = {}
+            if supplier['inventory'] not in total_inv_act_data_map[supplier['object_id']]:
+                total_inv_act_data_map[supplier['object_id']][supplier['inventory']] = {}
+            total_inv_act_data_map[supplier['object_id']][supplier['inventory']] = supplier
+        inv_act_assigned_data = models.InventoryActivityAssignment.objects. \
+            filter(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id). \
+            annotate(activity_type=F('inventory_activity__activity_type'), inventory=F(
+            'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name'),
+                object_id=F('inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id')). \
+            values('activity_type', 'inventory','object_id'). \
+            annotate(total=Count('id', distinct=True))
+        inv_act_assigned_data_map = organise_data_by_activity_and_inventory_type(inv_act_assigned_data)
+
+        for key,supplier in total_inv_act_data_map.items():
+            if key not in result:
+                result[key] = {}
+            for inv_key,inv_data in supplier.items():
+                if inv_key not in result[key]:
+                    result[key][inv_key] = {}
+                    result[key][inv_key]['total'] = inv_data
+                if key in inv_act_assigned_data_map and inv_key in inv_act_assigned_data_map[key]:
+                    result[key][inv_key]['assigned'] = inv_act_assigned_data_map[key][inv_key]
+                if key in inv_act_image_data_map and inv_key in inv_act_image_data_map[key]:
+                    result[key][inv_key]['completed'] = inv_act_image_data_map[key][inv_key]
         return result
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
@@ -7166,6 +7209,26 @@ def get_past_campaigns_data(supplier_id, campaign_id):
             'past_campaigns': past_campaigns_count,
             'campaigns': campaign_list
         }
+        return result
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def organise_data_by_activity_and_inventory_type(data):
+    """
+    THis function takes data which should contain activity_type, inventory_type and object_id which will return data by orgaised way
+    :param data:
+    :return:
+    """
+    function_name = organise_data_by_activity_and_inventory_type.__name__
+    try:
+        result = {}
+        for supplier in data:
+            if supplier['object_id'] not in result:
+                result[supplier['object_id']] = {}
+            if supplier['inventory'] not in result[supplier['object_id']]:
+                result[supplier['object_id']][supplier['inventory']] = {}
+            if supplier['activity_type'] not in result[supplier['object_id']][supplier['inventory']]:
+                result[supplier['object_id']][supplier['inventory']][supplier['activity_type']] = supplier
         return result
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))

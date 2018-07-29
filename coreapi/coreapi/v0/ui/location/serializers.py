@@ -22,4 +22,4 @@ class StateSerializer(ModelSerializer):
 
     class Meta:
         model = State
-
+        fields = '__all__'

@@ -2654,7 +2654,7 @@ class CreateInitialProposal(APIView):
                     proposal_data['parent'] = ProposalInfo.objects.get_permission(user=user, proposal_id=parent).proposal_id
 
                 # call the function that saves basic proposal information
-                proposal_data['created_by'] = user
+                proposal_data['created_by'] = user.username
                 response = website_utils.create_basic_proposal(proposal_data)
                 if not response.data['status']:
                     return response
@@ -6066,6 +6066,58 @@ class DashBoardViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+    @list_route()
+    def get_activity_images_by_suppliers(self,request):
+        """
+        It will retrieve the images of suppliers
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            supplier_id = request.query_params.get('supplier_id',None)
+            inv_code = request.query_params.get('inv_code',None)
+            act_type = request.query_params.get('act_type',None)
+
+            content_type = ui_utils.fetch_content_type(inv_code)
+            content_type_id = content_type.id
+
+            result = models.InventoryActivityImage.objects. \
+                filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id=supplier_id,
+                       inventory_activity_assignment__inventory_activity__activity_type=act_type,
+                       inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id). \
+                values()
+
+            for imageInstance in result:
+                imageInstance['object_id'] = supplier_id
+                
+            supplier = models.SupplierTypeSociety.objects.filter(supplier_id=supplier_id).values()
+
+            inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(
+                result, supplier)
+            return ui_utils.handle_response(class_name, data=inv_act_image_objects_with_distance, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+    # @list_route()
+    # def get_all_inventory_details_of_supplier(self, request):
+    #     """
+    #     This function returns the total, assigned, completed inv and image details for Release, Audit & Closure of supplier
+    #     :param request:
+    #     :return:
+    #     """
+    #     class_name = self.__class__.__name__
+    #     try:
+    #         pass
+    #         supplier_id = request.query_params.get('supplier_id',None)
+    #         inv_code = request.query_params.get('inv_code', None)
+    #         if not supplier_id or not inv_code:
+    #             return Response(data={'status': False, 'error': 'No Supplier Id or Inv Code provided'},
+    #                             status=status.HTTP_400_BAD_REQUEST)
+    #     except Exception as e:
+    #         return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 class CampaignsAssignedInventoryCountApiView(APIView):
     def get(self, request, organisation_id):
         """
@@ -6187,7 +6239,7 @@ class GetAssignedIdImagesListApiView(APIView):
                                                                      'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
                 filter(proposal_query, query, activity_type_query, activity_date_query, inv_query). \
                 annotate(name=F(proposal_alias_name),inv_id=F(shortlisted_inv_alias),object_id=F(supplier_id),proposal_id=F(proposal_alias_id)). \
-                values('name','inv_id','object_id','latitude','longitude','updated_at','created_at','actual_activity_date','proposal_id','image_path')
+                values('name','inv_id','object_id','latitude','longitude','updated_at','created_at','actual_activity_date','proposal_id','image_path','comment')
 
 
             supplier_id_list = [object['object_id'] for object in inv_act_image_objects]

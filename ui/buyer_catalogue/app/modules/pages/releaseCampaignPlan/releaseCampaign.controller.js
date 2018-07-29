@@ -225,16 +225,16 @@ angular.module('catalogueApp')
       { name: 'Saloon',  code:'SA'},
       { name: 'Retail Store',  code:'RE'},
       ];
-    $scope.search;
+    $scope.search = {};
     $scope.search_status = false;
-    $scope.supplier_type_code;
+    $scope.supplier_type_code = {};
     $scope.center_index = null;
     $scope.searchSuppliers = function(){
      try{
       $scope.search_status = false;
-      console.log($scope.supplier_type_code,$scope.search);
-      if($scope.supplier_type_code && $scope.search){
-        mapViewService.searchSuppliers($scope.supplier_type_code,$scope.search)
+      console.log($scope.supplier_type_code.code,$scope.search.query);
+      if($scope.supplier_type_code.code && $scope.search.query){
+        mapViewService.searchSuppliers($scope.supplier_type_code.code,$scope.search.query)
           .then(function onSuccess(response, status){
             console.log(response);
               $scope.center_index = null;
@@ -282,8 +282,8 @@ angular.module('catalogueApp')
       try{
         $scope.supplierData = [];
         $scope.search_status = false;
-        $scope.supplier_type_code = null;
-        $scope.search = null;
+        $scope.supplier_type_code = {};
+        $scope.search = {};
         $scope.errorMsg = undefined;
         $scope.center_index = null;
 
@@ -428,11 +428,12 @@ $scope.multiSelect =
          };
 
         $scope.selected_customTexts = {buttonDefaultText: 'Stall Location'};
-        $scope.getRelationShipData = function(supplierId){
+        $scope.getRelationShipData = function(supplier){
           $scope.relationshipData = {};
           var supplierCode = 'RS';
           var campaignId = $scope.releaseDetails.campaign.proposal_id;
-          releaseCampaignService.getRelationShipData(supplierId,supplierCode,campaignId)
+          $scope.supplierFlatCount = supplier.flat_count;
+          releaseCampaignService.getRelationShipData(supplier.supplier_id,supplierCode,campaignId)
           .then(function onSuccess(response){
             $scope.relationshipData = response.data.data;
             console.log(response);

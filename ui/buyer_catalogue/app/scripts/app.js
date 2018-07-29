@@ -253,7 +253,7 @@ angular
            controller : 'OpsDashCtrl',
            templateUrl : 'modules/pages/DashBoard/OperationsDashBoard/opsdashboard.tmpl.html',
            ncyBreadcrumb: {
-             label:'DashBoard',
+             label:'OpsDashBoard',
              parent : 'manageCampaign.create'
            }
        })
@@ -351,8 +351,8 @@ angular
       //$qProvider.errorOnUnhandledRejections(false);
       $locationProvider.hashPrefix('');
 })
-.run(['$rootScope', '$window', '$location', 'AuthService','$state',
-     function ($rootScope, $window, $location, AuthService, $state) {
+.run(['$rootScope', '$window', '$location', 'AuthService','$state','$cookieStore',
+     function ($rootScope, $window, $location, AuthService, $state, $cookieStore) {
        $rootScope.globals = $rootScope.globals || {};
        $rootScope.globals.currentUser = AuthService.UserInfo();
        $rootScope.getCurState = function() {
@@ -372,17 +372,21 @@ angular
         //    $location.path('/forbiddenPage');
         //  }
         console.log(event);
-         console.log("location change start - Whence: " + whence);
-
+         console.log("location change start - Whence: " + whence);         
          // redirect to login page if not logged in
          $rootScope.globals.currentUser = AuthService.UserInfo();
          if (!$rootScope.globals.currentUser) {
+           if($location.path() != '/login')
+              $cookieStore.put('returnUrl', $location.url());
            $location.path('/login');
          }else if ($rootScope.globals.currentUser && $location.path() == '/guestHomePage') {
            $location.path("/guestHomePage");
          }else if ($rootScope.globals.currentUser && $location.path() == '/logout'){
            AuthService.Logout();
            $location.path("/login");
+         }else if ($rootScope.globals.currentUser && typeof $cookieStore.get('returnUrl') != 'undefined' && $cookieStore.get('returnUrl')){
+           $location.path($cookieStore.get('returnUrl'));
+           $cookieStore.remove('returnUrl');
          }else if ($rootScope.globals.currentUser && ($location.path() == '/login' || $location.path() == '/') && ($window.localStorage.user_code != 'guestUser')){
            $location.path("/manageCampaign/create");
          }else {
