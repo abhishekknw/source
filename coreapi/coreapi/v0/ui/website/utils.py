@@ -45,7 +45,8 @@ import v0.models as models
 from v0.ui.account.models import ContactDetails, AccountInfo, GenericExportFileName
 from v0.ui.components.models import FlatType, SocietyTower, Amenity
 from v0.ui.inventory.models import (SupplierTypeSociety, AdInventoryType, InventoryActivityAssignment,
-                                    InventoryActivityImage, InventorySummary, InventoryActivity, INVENTORY_ACTIVITY_TYPES)
+                                    InventoryActivityImage, InventorySummary, InventoryActivity, INVENTORY_ACTIVITY_TYPES,
+                                    PosterInventory)
 from v0.ui.inventory.serializers import (InventoryActivityAssignmentSerializer)
 from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping, ProposalCenterSuppliers, ProposalMetrics,
@@ -6547,6 +6548,7 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
     :param create_inv_act_data:
     :return:
     """
+
     function_name = save_shortlisted_inventory_pricing_details_data.__name__
     try:
         supplier_ids = [id['id'] for id in proposal_data['center_data'][supplier_code]['supplier_data']]
@@ -6564,16 +6566,19 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
             if supplier_id not in inventory_summary_objects_mapping:
                 create_inventory_summary_data_for_supplier()
             for filter_code in proposal_data['center_data'][supplier_code]['filter_codes']:
-                inventory_objects = getattr(models, v0_constants.model_to_codes[filter_code['id']]).objects.filter(
+                inventory_objects = getattr(v0.ui.inventory.models, v0_constants.model_to_codes[filter_code['id']]).objects.filter(
                     Q(object_id=supplier_id))
+                print inventory_objects
                 if not inventory_objects or str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL' or str(
                         filter_code['id']) == 'GA':
                     inventory_objects = create_inventory_ids(supplier_objects_mapping[supplier_id], filter_code)
                 response = make_final_list(filter_code, inventory_objects, shortlisted_suppliers_mapping[supplier_id])
                 if not response.data['status']:
                     return response
+                print "here1"
                 shortlisted_inv_objects.extend(response.data['data'])
         ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_inv_objects)
+        print 'here'
         if create_inv_act_data:
             shortlisted_supplier_ids = {space_obj.id for space_obj in shortlisted_suppliers}
             shortlisted_inventory_objects = ShortlistedInventoryPricingDetails.objects.filter(
@@ -6582,6 +6587,7 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
 
             response = create_inventory_activity_data(shortlisted_inventory_objects)
             if not response:
+                print response
                 return response
 
         return ui_utils.handle_response(function_name, data={}, success=True)
@@ -6801,7 +6807,7 @@ def get_filters_by_campaign(campaign_id):
     """
     function_name = get_filters_by_campaign.__name__
     try:
-        filters = models.Filters.objects.filter(proposal__proposal_id=campaign_id).values('filter_code').distinct()
+        filters = Filters.objects.filter(proposal__proposal_id=campaign_id).values('filter_code').distinct()
         # serializer = FiltersSerializer(filters, many=True)
         return filters
     except Exception as e:
@@ -7128,7 +7134,7 @@ def get_campaign_inv_data(campaign_id):
     try:
 
         result = {}
-        inv_act_image_data = models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
+        inv_act_image_data = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
                                                                                   'inventory_activity_assignment__inventory_activity',
                                                                                   'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
                                                                                   'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
@@ -7142,7 +7148,7 @@ def get_campaign_inv_data(campaign_id):
             annotate(total=Count('inventory_activity_assignment', distinct=True))
         inv_act_image_data_map = organise_data_by_activity_and_inventory_type(inv_act_image_data)
         # inv_act_image_data_map = {supplier['object_id']:supplier for supplier in inv_act_image_data}
-        total_inv_act_data = models.ShortlistedInventoryPricingDetails.objects. \
+        total_inv_act_data = ShortlistedInventoryPricingDetails.objects. \
             filter(shortlisted_spaces__proposal=campaign_id). \
             annotate(object_id=F('shortlisted_spaces__object_id'), inventory=F('ad_inventory_type__adinventory_name')). \
             values('object_id', 'inventory'). \
@@ -7155,7 +7161,7 @@ def get_campaign_inv_data(campaign_id):
             if supplier['inventory'] not in total_inv_act_data_map[supplier['object_id']]:
                 total_inv_act_data_map[supplier['object_id']][supplier['inventory']] = {}
             total_inv_act_data_map[supplier['object_id']][supplier['inventory']] = supplier
-        inv_act_assigned_data = models.InventoryActivityAssignment.objects. \
+        inv_act_assigned_data = InventoryActivityAssignment.objects. \
             filter(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id). \
             annotate(activity_type=F('inventory_activity__activity_type'), inventory=F(
             'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name'),

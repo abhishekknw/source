@@ -6,6 +6,7 @@ import string
 import time
 
 import openpyxl
+from openpyxl import load_workbook
 import os
 import requests
 import gpxpy.geo
@@ -65,7 +66,7 @@ from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMa
     ProposalCenterMappingSpaceSerializer, ProposalMasterCostSerializer, ProposalMetricsSerializer,
     ProposalCenterMappingVersionSpaceSerializer, SpaceMappingVersionSerializer, ProposalSocietySerializer,
                                         ProposalCorporateSerializer)
-from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeCorporate
+from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeSociety
 from v0.ui.supplier.serializers import SupplierAmenitiesMapSerializer, SupplierTypeCorporateSerializer
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails, PriceMappingDefault, getPriceDict
 from v0.ui.permissions.models import ObjectLevelPermission, GeneralUserPermission, Role, RoleHierarchy
@@ -2668,8 +2669,33 @@ class CreateInitialProposal(APIView):
                 proposal_id = proposal_data['proposal_id']
                 return ui_utils.handle_response(class_name, data=proposal_id, success=True)
         except Exception as e:
-             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+class CreateInitialProposalBulk (APIView) :
+    def post(self, request):
+        source_file = request.data['file']
+        wb = load_workbook(source_file)
+        ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+        proposal_list = []
+        for index, row in enumerate(ws.iter_rows()):
+            if index > 0:
+                proposal_list.append({
+                    'organisation_id': str(row[0].value) if row[0].value else None,
+                    'account_id': str(row[1].value) if row[1].value else None,
+                    'name' : str(row[2].value) if row[2].value else None,
+                    'tentative_cost': float(row[3].value) if row[3].value else None,
+                    'center_name': str(row[4].value) if row[4].value else None,
+                    'address': str(row[5].value) if row[5].value else None,
+                    'city': str(row[6].value) if row[6].value else None,
+                    'area': str(row[7].value) if row[7].value else None,
+                    'subarea': str(row[8].value) if row[8].value else None,
+                    'pincode': int(row[9].value) if row[9].value else None,
+                    'radius': str(row[10].value) if row[10].value else None,
+                    'codes': row[11] if row[11].value else None,
+                    # 'comment': row[27].value,
+                })
+        print proposal_list
+        return ui_utils.handle_response({}, data='success', success=True)
 
 class CreateFinalProposal(APIView):
     """
@@ -6081,7 +6107,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             content_type = ui_utils.fetch_content_type(inv_code)
             content_type_id = content_type.id
 
-            result = models.InventoryActivityImage.objects. \
+            result = InventoryActivityImage.objects. \
                 filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id=supplier_id,
                        inventory_activity_assignment__inventory_activity__activity_type=act_type,
                        inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id). \
@@ -6090,7 +6116,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             for imageInstance in result:
                 imageInstance['object_id'] = supplier_id
                 
-            supplier = models.SupplierTypeSociety.objects.filter(supplier_id=supplier_id).values()
+            supplier = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).values()
 
             inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(
                 result, supplier)
@@ -6276,6 +6302,7 @@ class convertDirectProposalToCampaign(APIView):
             center = ProposalCenterMapping.objects.get(pk=center_id)
 
             for supplier_code in proposal_data['center_data']:
+
                 response = website_utils.save_filters(center, supplier_code, proposal_data, proposal)
                 if not response.data['status']:
                     return response
