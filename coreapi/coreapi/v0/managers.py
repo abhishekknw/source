@@ -3,9 +3,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, PermissionDenied
 from django.db import models
 from django.db.models import Q
-
-import v0.models
 from v0 import constants
+from v0.ui.permissions.models import CustomPermissions, ObjectLevelPermission, RoleHierarchy
+from v0.ui.user.models import BaseUser
 
 
 class GeneralManager(models.Manager):
@@ -222,7 +222,7 @@ class HelperManagerMethods(object):
             user_permission_code = user.user_code
 
             # get the extra permission codes which may be defined for this user
-            extra_permission_codes = list(v0.models.CustomPermissions.objects.filter(user=user).values('extra_permission_code'))
+            extra_permission_codes = list(CustomPermissions.objects.filter(user=user).values('extra_permission_code'))
             # even the user current permission code is going by name 'extra_permission_code'. don't be confused.
             extra_permission_codes.append({'extra_permission_code': user_permission_code})
 
@@ -287,7 +287,7 @@ def check_object_permission(user, model, permission):
         if not user.profile:
             raise Exception('Every User must have associated profile')
         content_type = ContentType.objects.get_for_model(model)
-        instance = v0.models.ObjectLevelPermission.objects.get(profile=user.profile, content_type=content_type)
+        instance = ObjectLevelPermission.objects.get(profile=user.profile, content_type=content_type)
         if instance.__dict__[permission]:
             return True, error
         error = 'This user does not have permission of ' + permission + ' on this model ' + model.__class__.__name__
@@ -303,14 +303,14 @@ def fetch_users_in_hierarchy(user):
     """
     function = fetch_users_in_hierarchy.__name__
     try:
-        child_roles = v0.models.RoleHierarchy.objects.filter(parent=user.role.id)
+        child_roles = RoleHierarchy.objects.filter(parent=user.role.id)
         query = None
         for role_instance in child_roles:
             if query is None:
                 query = Q(role=role_instance.child.id)
             else:
                 query |= Q(role=role_instance.child.id)
-        user_objects = v0.models.BaseUser.objects.filter(query)
+        user_objects = BaseUser.objects.filter(query)
         query = None
         for user_instance in user_objects:
             if query is None:
