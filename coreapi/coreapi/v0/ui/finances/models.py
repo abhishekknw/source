@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
-from v0.models import BaseModel, managers, fields
+from v0.ui.base.models import BaseModel
+from v0 import managers
+from django.contrib.contenttypes import fields
 from django.contrib.contenttypes.models import ContentType
 from v0.constants import supplier_id_max_length
 

@@ -1,8 +1,9 @@
 from rest_framework import permissions
 import v0.utils as v0_utils
-import v0.models as models
 from django.core.exceptions import ObjectDoesNotExist
 from types import *
+from v0.ui.proposal.models import ProposalInfo
+
 
 class IsOwnerOrManager(permissions.BasePermission):
     """
@@ -102,7 +103,7 @@ class IsProposalAuthenticated(permissions.BasePermission):
             try:
                 # if it's not super user, we check weather the proposal was created by this user only. We only grant
                 # CRUD operations on the proposal only if it's been created by the user who is requesting the operations.
-                models.ProposalInfo.objects.get(user=user, proposal_id=proposal_id)
+                ProposalInfo.objects.get(user=user, proposal_id=proposal_id)
                 return True
             except ObjectDoesNotExist:
                 return False

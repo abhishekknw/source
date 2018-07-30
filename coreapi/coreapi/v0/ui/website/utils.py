@@ -44,9 +44,8 @@ import gpxpy.geo
 import v0.models as models
 from v0.ui.account.models import ContactDetails, AccountInfo, GenericExportFileName
 from v0.ui.components.models import FlatType, SocietyTower, Amenity
-from v0.ui.inventory.models import (SupplierTypeSociety, AdInventoryType, InventoryActivityAssignment,
-                                    InventoryActivityImage, InventorySummary, InventoryActivity, INVENTORY_ACTIVITY_TYPES,
-                                    PosterInventory)
+from v0.ui.inventory.models import (AdInventoryType, InventoryActivityAssignment,
+                                    InventoryActivityImage, InventorySummary, InventoryActivity, INVENTORY_ACTIVITY_TYPES, PosterInventory)
 from v0.ui.inventory.serializers import (InventoryActivityAssignmentSerializer)
 from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping, ProposalCenterSuppliers, ProposalMetrics,
@@ -61,15 +60,18 @@ from v0.ui.finances.models import (RatioDetails, PrintingCost, LogisticOperation
                                    SpaceBookingCost, EventStaffingCost, DataSciencesCost, 
                                    ShortlistedInventoryPricingDetails, PriceMappingDefault)
 from v0.ui.finances.serializers import ShortlistedSpacesSerializerReadOnly
-from v0.ui.supplier.models import SupplierAmenitiesMap
+from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeSociety
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
-from v0.ui.permissions.models import Filters, Role
-from v0.ui.permissions.serializers import FiltersSerializer, RoleHierarchySerializer
+from v0.ui.permissions.models import Role
+from v0.ui.permissions.serializers import RoleHierarchySerializer
 from v0.ui.leads.serializers import LeadSerializer, LeadsSerializer
 from v0.ui.leads.models import Lead, CampaignLeads, Leads
 from v0.ui.events.models import Events
 from v0.ui.base.models import DurationType
 from v0.ui.account.serializers import GenericExportFileSerializer, ContactDetailsSerializer
+from v0.ui.inventory.models import Filters
+from v0.ui.inventory.serializers import FiltersSerializer
+
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
     """

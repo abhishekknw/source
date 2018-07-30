@@ -1,12 +1,7 @@
 from rest_framework.serializers import ModelSerializer
-from v0.ui.permissions.models import ObjectLevelPermission, GeneralUserPermission, Role, RoleHierarchy, Filters
+from v0.ui.permissions.models import ObjectLevelPermission, GeneralUserPermission, Role, RoleHierarchy
 from django.contrib.auth.models import User, Permission, Group
 from v0.ui.user.models import UserInquiry
-
-class FiltersSerializer(ModelSerializer):
-    class Meta:
-        model = Filters
-        fields = '__all__'
 
 
 class UserInquirySerializer(ModelSerializer):

@@ -31,16 +31,16 @@ from v0.ui.components.serializers import CommunityHallInfoSerializer, LiftDetail
     SwimmingPoolInfoSerializer, CorporateBuildingWingSerializer
 from v0.ui.finances.models import DoorToDoorInfo, PriceMapping, PriceMappingDefault
 from v0.ui.finances.serializers import PriceMappingDefaultSerializer, PriceMappingSerializer
-from v0.ui.user.models import UserProfile
 
-from v0.ui.location.models import City, CityArea, CitySubArea
+from v0.ui.location.models import City, CityArea, CitySubArea, State
 from v0.ui.events.serializers import SocietyMajorEventsSerializer
 from v0.ui.user.serializers import UserSerializer, UserProfileSerializer
 from v0.ui.location.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, StateSerializer
 from v0.ui.account.models import ContactDetails, ContactDetailsGeneric
 from v0.ui.account.serializers import (ContactDetailsSerializer, ContactDetailsGenericSerializer)
-from inventory.models import PosterInventory, InventorySummary, StreetFurniture, \
-    StallInventory, FlyerInventory, StandeeInventory, PoleInventory
+from inventory.models import (PosterInventory, InventorySummary, StreetFurniture,
+                              StallInventory, FlyerInventory, StandeeInventory, PoleInventory, SupplierTypeSociety,
+                              InventorySummary, WallInventory)
 from inventory.serializers import PosterInventorySerializer
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeCorporate, SupplierAmenitiesMap, SupplierTypeCode, \
     SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, CorporateBuilding, CorporateParkCompanyList, \
@@ -59,10 +59,10 @@ from v0.ui.proposal.serializers import ImageMappingSerializer
 import utils as ui_utils
 import website.utils as website_utils
 from coreapi.settings import BASE_DIR
-from v0.ui.user.models import UserAreas, UserCities
+from v0.ui.user.models import UserAreas, UserCities, UserProfile
+from v0.ui.common.models import BaseUser
 from v0.constants import keys, decision
 from website.utils import save_price_mapping_default
-import v0.models as models
 import v0.constants as v0_constants
 
 
@@ -87,7 +87,7 @@ class UsersProfilesAPIView(APIView):
             for u in UserProfile.objects.filter(created_by=user).select_related('user'):
                 users.append(u.user)
         else:
-            users = models.BaseUser.objects.all()
+            users = BaseUser.objects.all()
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data, status=200)
 
@@ -101,7 +101,7 @@ class UsersProfilesAPIView(APIView):
             serializer.save()
         else:
             return Response(serializer.errors, status=400)
-        user = models.BaseUser.objects.get(pk=serializer.data['id'])
+        user = BaseUser.objects.get(pk=serializer.data['id'])
         up = UserProfile(user=user, created_by=request.user)
         up.save()
         return Response(serializer.data, status=200)
@@ -110,7 +110,7 @@ class UsersProfilesAPIView(APIView):
 class getUserData(APIView):
 
     def get(self, request, id, format=None):
-        user = models.BaseUser.objects.get(pk=id)
+        user = BaseUser.objects.get(pk=id)
         user_profile = user.user_profile.all().first()
         user_serializer = UserSerializer(user)
         serializer = UserProfileSerializer(user_profile)
@@ -122,7 +122,7 @@ class getUserData(APIView):
 
     def post(self, request, id, format=None):
         data = request.data
-        user = models.BaseUser.objects.get(pk=id)
+        user = BaseUser.objects.get(pk=id)
         serializer = UserSerializer(user, data=data['user'])
         if serializer.is_valid():
             serializer.save()
@@ -163,14 +163,14 @@ class getUserData(APIView):
 
     # to update password
     def put(self, request, id, format=None):
-        user = models.BaseUser.objects.get(pk=id)
+        user = BaseUser.objects.get(pk=id)
         user.set_password(request.data['password'])
         user.save()
         return Response(status=200)
 
     def delete(self, request, id, format=None):
         try:
-            item = models.BaseUser.objects.get(pk=id)
+            item = BaseUser.objects.get(pk=id)
         except User.DoesNotExist:
             return Response(status=404)
         item.delete()
@@ -180,7 +180,7 @@ class getUserData(APIView):
 class deleteUsersAPIView(APIView):
 
     def post(self, request, format=None):
-        models.BaseUser.objects.filter(id__in=request.data).delete()
+        BaseUser.objects.filter(id__in=request.data).delete()
         return Response(status=204)
 
 
@@ -388,14 +388,14 @@ class ImportSummaryData(APIView):
                         return None
                     data['content_type'] = content_type_response.data['data']
                     try:
-                        supplier_instance = models.SupplierTypeSociety.objects.get(supplier_id=data['supplier_id'])
+                        supplier_instance = SupplierTypeSociety.objects.get(supplier_id=data['supplier_id'])
                     except ObjectDoesNotExist:
                         supplier_instance = None
                     if not supplier_instance:
                         continue
 
                     data['object_id'] = data['supplier_id']
-                    obj, created = models.InventorySummary.objects.update_or_create(supplier_id=supplier_instance,
+                    obj, created = InventorySummary.objects.update_or_create(supplier_id=supplier_instance,
                                                                                     defaults=data)
                     obj.save()
                     # view = InventorySummaryAPIView.as_view()
@@ -1165,7 +1165,7 @@ class PosterAPIView(APIView):
 
     def post(self, request, id, format=None):
         society = SupplierTypeSociety.objects.get(pk=id)
-        society_content_type = models.ContentType.objects.get_for_model(SupplierTypeSociety)
+        society_content_type = ContentType.objects.get_for_model(SupplierTypeSociety)
         if request.data['nb_a4_available']:
             for notice_board in request.data['nb_details']:
                 data = request.data['nb_common_details']
@@ -1314,7 +1314,7 @@ class FlierAPIView(APIView):
                 flyer_serializer = FlyerInventorySerializer(flyer_item, data=flyer)
 
             else:
-                flyer_serializer = FlyerInventorySerializer(data=flier)
+                flyer_serializer = FlyerInventorySerializer(data=flyer)
 
             if flyer_serializer.is_valid():
                 flyer_serializer.save()
@@ -1722,7 +1722,7 @@ class EventViewSet(viewsets.ViewSet):
             supplier_id = request.query_params['supplier_id']
             supplier_type_code = request.query_params['supplier_type_code']
             content_type = ui_utils.fetch_content_type(supplier_type_code)
-            events = models.Events.objects.filter(object_id=supplier_id, content_type=content_type)
+            events = Events.objects.filter(object_id=supplier_id, content_type=content_type)
             serializer = EventsSerializer(events, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -1740,7 +1740,7 @@ class EventViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            serializer = EventsSerializer(models.Events.objects.get(pk=pk))
+            serializer = EventsSerializer(Events.objects.get(pk=pk))
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -1756,7 +1756,7 @@ class EventViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            event = models.Events.objects.get(pk=pk)
+            event = Events.objects.get(pk=pk)
             serializer = EventsSerializer(event, data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -1784,7 +1784,7 @@ class EventViewSet(viewsets.ViewSet):
             # see if the supplier actually exist
             supplier_class.objects.get(pk=supplier_id)
 
-            event, is_created = models.Events.objects.get_or_create(event_name=event_name, object_id=supplier_id,
+            event, is_created = Events.objects.get_or_create(event_name=event_name, object_id=supplier_id,
                                                                     content_type=ui_utils.fetch_content_type(
                                                                         supplier_type_code))
             data = request.data.copy()
@@ -1812,7 +1812,7 @@ class EventViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            models.Events.objects.get(pk=pk).delete()
+            Events.objects.get(pk=pk).delete()
             return ui_utils.handle_response(class_name, data=pk, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -1833,7 +1833,7 @@ class ImageMappingViewSet(viewsets.ViewSet):
             supplier_id = request.query_params.get('supplier_id', None)
             supplier_type_code = request.query_params.get('supplier_type_code', None)
             content_type = ui_utils.fetch_content_type(supplier_type_code)
-            instances = models.ImageMapping.objects.filter(location_id=supplier_id, content_type=content_type)
+            instances = ImageMapping.objects.filter(location_id=supplier_id, content_type=content_type)
             serializer = ImageMappingSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -1842,7 +1842,7 @@ class ImageMappingViewSet(viewsets.ViewSet):
     def update(self, request, pk):
         class_name = self.__class__.__name__
         try:
-            instance = models.ImageMapping.objects.get(pk=pk)
+            instance = ImageMapping.objects.get(pk=pk)
             serializer = ImageMappingSerializer(instance=instance, data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -1876,7 +1876,7 @@ class ImageMappingViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             data = request.data
-            image_instance = models.ImageMapping.objects.get(pk=data['id'])
+            image_instance = ImageMapping.objects.get(pk=data['id'])
             serializer = ImageMappingSerializer(image_instance, data=data)
             if serializer.is_valid():
                 serializer.save()

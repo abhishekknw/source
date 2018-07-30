@@ -3,7 +3,7 @@ from models import (SocietyInventoryBooking, InventoryLocation, AdInventoryLocat
                     BannerInventory, PosterInventory, InventorySummary, StreetFurniture, StallInventory, FlyerInventory,
                     StandeeInventory, WallInventory, InventoryInfo, PoleInventory, PosterInventoryMapping,
                     GatewayArchInventory, InventoryActivity, InventoryTypeVersion, InventoryActivityImage, InventoryType,
-                    InventoryActivityAssignment, )
+                    InventoryActivityAssignment, Filters)
 from v0.ui.campaign.models import CampaignSocietyMapping
 from v0.ui.campaign.serializers import CampaignTypeMappingSerializer, CampaignListSerializer
 from rest_framework import serializers
@@ -241,4 +241,10 @@ class InventoryActivityImageSerializerReadOnly(ModelSerializer):
 
     class Meta:
         model = InventoryActivityImage
+        fields = '__all__'
+
+
+class FiltersSerializer(ModelSerializer):
+    class Meta:
+        model = Filters
         fields = '__all__'

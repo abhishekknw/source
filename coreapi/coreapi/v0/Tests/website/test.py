@@ -7,8 +7,11 @@ from django.contrib.contenttypes.models import ContentType
 
 from rest_framework.test import APITestCase
 from rest_framework import status
+from v0.ui.account.models import BusinessTypes, BusinessSubTypes
+from v0.ui.organisation.models import Organisation
+from v0.ui.account.models import AccountInfo
+from v0.ui.proposal.models import ProposalInfo
 
-import v0.models as models
 import v0.Tests.utils as test_utils
 
 '''
@@ -354,19 +357,19 @@ class CreateInitialProposalTestCases(APITestCase):
         # setup proposal data
 
         # make business_type
-        business_type = models.BusinessTypes.objects.create(business_type='EDUCATION', business_type_code='EDU')
+        business_type = BusinessTypes.objects.create(business_type='EDUCATION', business_type_code='EDU')
 
         # make business sub types
-        business_sub_type = models.BusinessSubTypes.objects.create(business_type=business_type,
+        business_sub_type = BusinessSubTypes.objects.create(business_type=business_type,
                                                                         business_sub_type='SCHOOL',
                                                                         business_sub_type_code='SCH')
 
         # make businesses
-        business = models.Organisation.objects.create(business_id='B1', name='AXCDG', type_name=business_type,
+        business = Organisation.objects.create(business_id='B1', name='AXCDG', type_name=business_type,
                                                       sub_type=business_sub_type, )
 
         # make account
-        self.account = models.AccountInfo.objects.create(account_id='a1', business=business, name='A1', phone='960790857',
+        self.account = AccountInfo.objects.create(account_id='a1', business=business, name='A1', phone='960790857',
                                           email='whatever@gmail.com')
 
         self.proposal_data = {
@@ -418,7 +421,7 @@ class CreateInitialProposalTestCases(APITestCase):
         child_proposal_id = response.data['data']
 
         # fetch the parent for this proposal_id.
-        parent_id = models.ProposalInfo.objects.get(proposal_id=child_proposal_id).parent.proposal_id
+        parent_id = ProposalInfo.objects.get(proposal_id=child_proposal_id).parent.proposal_id
 
         # this should be the same parent which was supplied
         self.assertEqual(parent_id, proposal_id_created)

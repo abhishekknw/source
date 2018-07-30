@@ -37,17 +37,19 @@ from rest_framework.views import APIView
 # from import_export import resources
 import tasks
 from v0.ui.components.models import SocietyTower, FlatType, Amenity
+from v0.ui.components.serializers import AmenitySerializer
 from v0.ui.account.models import BusinessTypes, BusinessSubTypes, GenericExportFileName
-from v0.ui.account.serializers import BusinessTypesSerializer, BusinessSubTypesSerializer, ProfileSimpleSerializer, \
-    UIBusinessInfoSerializer, UIAccountInfoSerializer
+from v0.ui.account.serializers import (BusinessTypesSerializer, BusinessSubTypesSerializer, ProfileSimpleSerializer,
+                                       UIBusinessInfoSerializer, UIAccountInfoSerializer, ProfileNestedSerializer)
 from v0.ui.campaign.models import Campaign, CampaignSocietyMapping, CampaignAssignment
 from v0.ui.campaign.serializers import CampaignSerializer, CampaignSocietyMappingSerializer, CampaignListSerializer, \
     CampaignAssignmentSerializerReadOnly
-from v0.ui.account.serializers import BusinessInfoSerializer, BusinessAccountContactSerializer, AccountInfoSerializer
+from v0.ui.account.serializers import (BusinessInfoSerializer, BusinessAccountContactSerializer, AccountInfoSerializer,
+                                       ContactDetailsSerializer, AccountSerializer)
 from v0.ui.account.models import BusinessAccountContact, ContactDetails, AccountInfo, Profile
-from v0.ui.inventory.models import AdInventoryType, SocietyInventoryBooking, SupplierTypeSociety, \
-    InventoryActivityAssignment, InventoryActivityImage, InventorySummary, InventoryTypeVersion, InventoryType, \
-    InventoryActivity
+from v0.ui.inventory.models import (AdInventoryType, SocietyInventoryBooking,InventoryActivityAssignment,
+                                    InventoryActivityImage, InventorySummary,InventoryTypeVersion, InventoryType,
+                                    InventoryActivity, INVENTORY_ACTIVITY_TYPES)
 from v0.ui.inventory.serializers import SocietyInventoryBookingSerializer, InventoryTypeSerializer, \
     InventoryActivityAssignmentSerializerReadOnly, InventoryActivityAssignmentSerializer, \
     InventoryTypeVersionSerializer, CampaignInventorySerializer
@@ -56,7 +58,8 @@ from v0.ui.organisation.models import Organisation, OrganisationMap, ORGANIZATIO
 from v0.ui.organisation.serializers import OrganisationMapNestedSerializer, OrganisationSerializer
 from v0.ui.location.models import State, City, CityArea, CitySubArea
 
-from v0.ui.user.models import BaseUser, UserProfile, UserCities, UserAreas, BaseUser
+from v0.ui.user.models import UserProfile, UserCities, UserAreas
+from v0.ui.common.models import BaseUser
 from v0.ui.user.serializers import UserProfileSerializer, UserSerializer, BaseUserSerializer, BaseUserUpdateSerializer, \
     GenericExportFileSerializerReadOnly
 from v0.ui.proposal.models import ProposalInfo, ProposalCenterMapping,ProposalCenterMappingVersion, \
@@ -67,10 +70,12 @@ from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMa
     ProposalCenterMappingVersionSpaceSerializer, SpaceMappingVersionSerializer, ProposalSocietySerializer,
                                         ProposalCorporateSerializer)
 from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeSociety
-from v0.ui.supplier.serializers import SupplierAmenitiesMapSerializer, SupplierTypeCorporateSerializer
+from v0.ui.supplier.serializers import (SupplierAmenitiesMapSerializer, SupplierTypeCorporateSerializer,
+                                        SupplierTypeSocietySerializer)
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails, PriceMappingDefault, getPriceDict
 from v0.ui.permissions.models import ObjectLevelPermission, GeneralUserPermission, Role, RoleHierarchy
-from v0.ui.permissions.serializers import ObjectLevelPermissionSerializer, GeneralUserPermissionSerializer
+from v0.ui.permissions.serializers import (ObjectLevelPermissionSerializer, GeneralUserPermissionSerializer,
+                                           RoleSerializer)
 from v0.ui.base.models import DurationType
 from v0.ui.base.serializers import ContentTypeSerializer
 from v0.ui.leads.models import Leads, LeadAlias
@@ -78,7 +83,6 @@ from v0.ui.leads.serializers import LeadsSerializer, LeadAliasSerializer
 
 import utils as website_utils
 import v0.ui.utils as ui_utils
-import v0.serializers as v0_serializers
 import v0.permissions as v0_permissions
 import v0.utils as v0_utils
 from coreapi.settings import BASE_URL, BASE_DIR
@@ -3494,7 +3498,7 @@ class Business(APIView):
             master_user = BaseUser.objects.get(id=8)
             result = AccountInfo.objects.get_permission(user=master_user)
             # result = AccountInfo.objects.filter_permission(user=master_user)
-            serializer = v0_serializers.AccountSerializer(result)
+            serializer = AccountSerializer(result)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5050,7 +5054,7 @@ class ContactViewSet(viewsets.ViewSet):
                 instances = ContactDetails.objects.filter(object_id=object_id)
             else:
                 instances = ContactDetails.objects.all()
-            serializer = v0_serializers.ContactDetailsSerializer(instances, many=True)
+            serializer = ContactDetailsSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -5063,7 +5067,7 @@ class ContactViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            serializer = v0_serializers.ContactDetailsSerializer(data=request.data)
+            serializer = ContactDetailsSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
@@ -5081,7 +5085,7 @@ class ContactViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             instance = ContactDetails.objects.get(pk=pk)
-            serializer = v0_serializers.ContactDetailsSerializer(data=request.data, instance=instance)
+            serializer = ContactDetailsSerializer(data=request.data, instance=instance)
             if serializer.is_valid():
                 serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
@@ -5561,7 +5565,7 @@ class AccountViewSet(viewsets.ViewSet):
             account = AccountInfo.objects.get_permission(user=request.user, pk=pk)
             account_serializer = AccountInfoSerializer(account)
             contacts = ContactDetails.objects.filter(object_id=pk)
-            contact_serializer = v0_serializers.ContactDetailsSerializer(contacts, many=True)
+            contact_serializer = ContactDetailsSerializer(contacts, many=True)
             data = {
                 'account' : account_serializer.data,
                 'contacts' : contact_serializer.data
@@ -5817,7 +5821,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             shortlisted_suppliers_id_list = [supplier.object_id for supplier in shortlisted_suppliers]
 
             suppliers_instances = SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_suppliers_id_list)
-            supplier_serializer = v0_serializers.SupplierTypeSocietySerializer(suppliers_instances,many=True)
+            supplier_serializer = SupplierTypeSocietySerializer(suppliers_instances,many=True)
             suppliers = supplier_serializer.data
 
             supplier_objects_id_list = {supplier['supplier_id']:supplier for supplier in suppliers}
@@ -5949,7 +5953,7 @@ class DashBoardViewSet(viewsets.ViewSet):
 
             supplier_ids = {supplier['object_id'] for supplier in result}
             supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
-            serializer = v0_serializers.SupplierTypeSocietySerializer(supplier_objects,many=True)
+            serializer = SupplierTypeSocietySerializer(supplier_objects,many=True)
             suppliers = serializer.data
             supplier_objects_id_map = {supplier['supplier_id']:supplier for supplier in suppliers}
 
@@ -5986,7 +5990,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             campaign_id = request.query_params.get('campaign_id',None)
             supplier_id_list = ShortlistedSpaces.objects.filter(proposal=campaign_id).values_list('object_id')
             suppliers = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
-            serializer = v0_serializers.SupplierTypeSocietySerializer(suppliers, many=True)
+            serializer = SupplierTypeSocietySerializer(suppliers, many=True)
             filters = website_utils.get_filters_by_campaign(campaign_id)
             data = {
                 'supplier_data' : serializer.data,
@@ -6268,7 +6272,7 @@ class GetAssignedIdImagesListApiView(APIView):
 
             supplier_id_list = [object['object_id'] for object in inv_act_image_objects]
             supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
-            serializer = v0_serializers.SupplierTypeSocietySerializer(supplier_objects, many=True)
+            serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
             suppliers = serializer.data
 
             inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(inv_act_image_objects, suppliers)
