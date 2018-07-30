@@ -1,12 +1,12 @@
 from rest_framework.serializers import ModelSerializer
-from models import UserProfile, BaseUser
+from models import UserProfile
 from v0.ui.base.serializers import GroupSerializer
 from v0.ui.account.serializers import ProfileNestedSerializer
 from v0.ui.permissions.serializers import PermissionsSerializer
 from v0.ui.proposal.serializers import ProposalInfoSerializer
 from rest_framework import serializers
 from v0.ui.account.models import GenericExportFileName
-
+from v0.ui.common.models import BaseUser
 
 class UserProfileSerializer(ModelSerializer):
     # user1 = UserSerializer(source='get_user')

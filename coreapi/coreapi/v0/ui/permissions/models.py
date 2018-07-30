@@ -1,8 +1,6 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes import fields
-from v0 import managers
 from v0.ui.base.models import BaseModel
 
 class CustomPermissions(BaseModel):
@@ -48,25 +46,6 @@ class GeneralUserPermission(BaseModel):
     class Meta:
         db_table = 'general_user_permission'
 
-class Filters(BaseModel):
-    """
-    Stores all kinds of filters and there respective codes. Filters are used when you filter all the suppliers
-    on the basis of what inventories you would like to have in there, etc. because different suppliers can have
-    different types of filters, we have content_type field for capturing that. These filters are predefined in constants
-    and are populated from there.
-    """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
-    center = models.ForeignKey('ProposalCenterMapping', null=True, blank=True)
-    proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
-    supplier_type = models.ForeignKey(ContentType, null=True, blank=True)
-    filter_name = models.CharField(max_length=255, null=True, blank=True)
-    filter_code = models.CharField(max_length=255, null=True, blank=True)
-    is_checked = models.BooleanField(default=False)
-    supplier_type_code = models.CharField(max_length=255, null=True, blank=True)
-    objects = managers.GeneralManager()
-
-    class Meta:
-        db_table = 'filters'
 
 class Role(models.Model):
     """

@@ -5,7 +5,7 @@ from django.db import models
 from django.db.models import Q
 from v0 import constants
 from v0.ui.permissions.models import CustomPermissions, ObjectLevelPermission, RoleHierarchy
-from v0.ui.user.models import BaseUser
+from v0.ui.common.models import BaseUser
 
 
 class GeneralManager(models.Manager):

@@ -22,7 +22,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 
 from v0.constants import supplier_id_max_length
-from v0.ui.user.models import BaseUser
+# from v0.ui.user.models import BaseUser
 from v0.ui.base.models import BaseModel
 from v0.ui.campaign.models import CampaignAssignment
 from v0.ui.organisation.models import Organisation

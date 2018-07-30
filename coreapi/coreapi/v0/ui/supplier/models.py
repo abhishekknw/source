@@ -3,7 +3,8 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import fields
 from v0.ui.base.models import BaseModel
-from v0.ui.account.models import ContactDetailsGeneric
+from v0.ui.account.models import ContactDetailsGeneric, ContactDetails
+
 from v0 import managers
 
 RETAIL_SHOP_TYPE = (

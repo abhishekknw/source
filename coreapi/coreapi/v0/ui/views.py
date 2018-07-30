@@ -59,10 +59,10 @@ from v0.ui.proposal.serializers import ImageMappingSerializer
 import utils as ui_utils
 import website.utils as website_utils
 from coreapi.settings import BASE_DIR
-from v0.ui.user.models import UserAreas, UserCities, UserProfile, BaseUser
+from v0.ui.user.models import UserAreas, UserCities, UserProfile
+from v0.ui.common.models import BaseUser
 from v0.constants import keys, decision
 from website.utils import save_price_mapping_default
-# import v0.models as models
 import v0.constants as v0_constants
 
 

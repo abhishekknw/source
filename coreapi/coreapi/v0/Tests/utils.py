@@ -1,5 +1,11 @@
-import v0.models as models
 import v0.ui.website.serializers as website_serializers
+from v0.ui.location.models import State, City, CityArea, CitySubArea
+from v0.ui.account.models import BusinessTypes, BusinessSubTypes
+from v0.ui.organisation.models import Organisation
+from v0.ui.account.models import AccountInfo
+from v0.ui.proposal.models import ProposalInfo
+from v0.ui.supplier.models import SupplierTypeSociety
+from v0.ui.proposal.models import ProposalCenterMapping
 
 
 def create_city_area_subarea():
@@ -8,10 +14,10 @@ def create_city_area_subarea():
         Returns: a dict containing necessary objects for creating a subarea
 
         """
-        state =  models.State.objects.create(state_name='UP', state_code='UP')
-        city =  models.City.objects.create(city_name='LKO', city_code='LKO', state_code=state)
-        city_area = models.CityArea.objects.create(label='Aminabad', area_code='A', city_code=city)
-        city_subarea = models.CitySubArea.objects.create(subarea_name='Vihar', subarea_code='V',  area_code=city_area)
+        state = State.objects.create(state_name='UP', state_code='UP')
+        city = City.objects.create(city_name='LKO', city_code='LKO', state_code=state)
+        city_area = CityArea.objects.create(label='Aminabad', area_code='A', city_code=city)
+        city_subarea = CitySubArea.objects.create(subarea_name='Vihar', subarea_code='V',  area_code=city_area)
 
         context = {
             'state': state,
@@ -71,24 +77,24 @@ def create_basic_proposal(proposal_id):
 
         """
         # make business_type
-        business_type = models.BusinessTypes.objects.create(business_type='EDUCATION', business_type_code='EDU')
+        business_type = BusinessTypes.objects.create(business_type='EDUCATION', business_type_code='EDU')
 
         # make business sub types
-        business_sub_type = models.BusinessSubTypes.objects.create(business_type=business_type,
+        business_sub_type = BusinessSubTypes.objects.create(business_type=business_type,
                                                                         business_sub_type='SCHOOL',
                                                                         business_sub_type_code='SCH')
 
         # make businesses
-        business = models.Organisation.objects.create(business_id='B1', name='AXCDG', type_name=business_type,
+        business = Organisation.objects.create(business_id='B1', name='AXCDG', type_name=business_type,
                                                       sub_type=business_sub_type, )
 
         # make account
-        account = models.AccountInfo.objects.create(account_id='a1', business=business, name='A1', phone='960790857',
+        account = AccountInfo.objects.create(account_id='a1', business=business, name='A1', phone='960790857',
                                           email='whatever@gmail.com')
 
         # make some proposals for this account
 
-        proposal = models.ProposalInfo.objects.create(proposal_id=proposal_id, account=account, name='P1', tentative_cost=500)
+        proposal = ProposalInfo.objects.create(proposal_id=proposal_id, account=account, name='P1', tentative_cost=500)
 
         return proposal
 
@@ -108,8 +114,8 @@ def create_final_proposal_data():
     proposal = create_basic_proposal(proposal_id)
 
     # create some suppliers
-    models.SupplierTypeSociety.objects.create(supplier_id='s1', society_name='Gajar')
-    models.SupplierTypeSociety.objects.create(supplier_id='s2', society_name='Bhindi')
+    SupplierTypeSociety.objects.create(supplier_id='s1', society_name='Gajar')
+    SupplierTypeSociety.objects.create(supplier_id='s2', society_name='Bhindi')
 
     center_data = {
         'proposal': proposal,
@@ -156,7 +162,7 @@ def create_final_proposal_data():
 
 
 def create_db_center(data):
-    center = models.ProposalCenterMapping.objects.create(**data)
+    center = ProposalCenterMapping.objects.create(**data)
     serializer = website_serializers.ProposalCenterMappingSerializer(data=center)
     if serializer.is_valid():
         return serializer.data

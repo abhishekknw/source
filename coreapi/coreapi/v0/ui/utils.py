@@ -29,20 +29,19 @@ from rest_framework.response import Response
 from rest_framework import status
 from bulk_update.helper import bulk_update
 
-import v0.models
-import v0.serializers
-import v0.models as models
 import v0.errors as errors
 import v0.constants as v0_constants
 import v0.ui.serializers as ui_serializers
 from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.supplier.serializers import (SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SupplierTypeBusShelterSerializer,
-     SupplierTypeGymSerializer, SupplierTypeRetailShopSerializer, SupplierTypeSalonSerializer)
+                                        SupplierTypeGymSerializer, SupplierTypeRetailShopSerializer, SupplierTypeSalonSerializer)
+from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.serializers import (IdeationDesignCostSerializer, DataSciencesCostSerializer, EventStaffingCostSerializer,
                                         LogisticOperationsCostSerializer, SpaceBookingCostSerializer, PrintingCostSerializer)
 from v0.ui.proposal.serializers import ProposalMetricsSerializer, ProposalMasterCostSerializer
 from v0.ui.proposal.models import (ImageMapping)
-from v0.ui.inventory.models import (AdInventoryType, InventorySummary, FlyerInventory, StallInventory, GatewayArchInventory)
+from v0.ui.inventory.models import (AdInventoryType, InventorySummary, FlyerInventory, StallInventory,
+                                    GatewayArchInventory, PosterInventory)
 from v0.ui.base.models import DurationType
 from v0.ui.finances.models import PriceMappingDefault
 
@@ -763,7 +762,7 @@ def generate_poster_objects(count, nb, society, society_content_type):
         for i in range(1, pos):
             nb_id = society.supplier_id + nb_tag + "PO" + str(i).zfill(2)
             supplier_id = society.supplier_id
-            nb = models.PosterInventory(adinventory_id=nb_id, poster_location=nb_tag, tower_name=nb_tower, supplier=society, object_id=supplier_id, content_type=society_content_type)
+            nb = PosterInventory(adinventory_id=nb_id, poster_location=nb_tag, tower_name=nb_tower, supplier=society, object_id=supplier_id, content_type=society_content_type)
             nb.save()
         return handle_response(function, data='success', success=True)
     except Exception as e:
@@ -813,7 +812,7 @@ def get_region_based_query(user, region, supplier_type_code):
     function = get_region_based_query.__name__
     try:
         authorized_region_codes = [group.split('-')[2] for group in user.groups.all().values_list('name', flat=True) if group.startswith("Form-" + region)]
-        city_names = models.City.objects.filter(city_code__in=authorized_region_codes).values_list('city_name', flat=True)
+        city_names = City.objects.filter(city_code__in=authorized_region_codes).values_list('city_name', flat=True)
         if supplier_type_code == 'RS':
             city_query = Q(society_city__in=city_names)
         else:
@@ -948,7 +947,7 @@ def save_society_payment_details(data):
     try:
         society_ids = [cell[1].value for cell in data]
         data_by_society_ids = {cell[1].value:cell for cell in data}
-        society_objects = models.SupplierTypeSociety.objects.filter(supplier_id__in=society_ids)
+        society_objects = SupplierTypeSociety.objects.filter(supplier_id__in=society_ids)
         for society in society_objects:
             society.name_for_payment = data_by_society_ids[society.supplier_id][2].value
             society.ifsc_code = data_by_society_ids[society.supplier_id][3].value

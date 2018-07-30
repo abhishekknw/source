@@ -30,7 +30,7 @@ from v0.ui.inventory.models import SupplierTypeSociety, StallInventory
 from rest_framework.decorators import detail_route, list_route
 from v0.ui.account.models import OperationsInfo, BusinessTypes, \
     BusinessSubTypes
-from v0.ui.user.models import BaseUser
+from v0.ui.common.models import BaseUser
 from v0.ui.permissions.models import CustomPermissions
 from v0.ui.base.models import DurationType
 from v0.ui.finances.models import RatioDetails, DoorToDoorInfo
