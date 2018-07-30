@@ -11,10 +11,15 @@ from django.contrib.contenttypes.models import ContentType
 import geocoder
 from bulk_update.helper import bulk_update
 
-import models as v0_models
 import v0.constants as v0_constants
 import v0.ui.utils as ui_utils
 import v0.ui.website.utils as website_utils
+from v0.ui.finances.models import PriceMappingDefault
+from v0.ui.components.models import FlatType, SocietyTower, Amenity
+from v0.ui.supplier.models import SupplierAmenitiesMap
+from v0.ui.inventory.models import (SupplierTypeSociety, AdInventoryType, InventorySummary, FlyerInventory,
+                                    StallInventory, PosterInventory, StandeeInventory)
+from v0.ui.base.models import DurationType
 
 
 def do_each_model(myModel, supplier_model, content_type):
@@ -207,10 +212,10 @@ def handle_society_flat_detail(flat_detail, suppliers_dict, content_type):
                     'size_builtup_area': random.uniform(float(size_range[0]), float(size_range[1]))
                 }
                 total_flat_count += data['flat_count']
-                flat_instances.append(v0_models.FlatType(**data))
+                flat_instances.append(FlatType(**data))
             suppliers_dict[society_id]['flat_count'] = total_flat_count
-        v0_models.FlatType.objects.all().delete()
-        v0_models.FlatType.objects.bulk_create(flat_instances)
+        FlatType.objects.all().delete()
+        FlatType.objects.bulk_create(flat_instances)
         return True
     except Exception as e:
         raise Exception(e, ui_utils.get_system_error(e))
@@ -242,10 +247,10 @@ def handle_tower_details(tower_detail, suppliers_dict, content_type):
                     'content_type': content_type,
                     'tower_name': v0_constants.default_tower_base_name + str(tower_number),
                 }
-                tower_instances.append(v0_models.SocietyTower(**data))
+                tower_instances.append(SocietyTower(**data))
             suppliers_dict[supplier_id]['tower_count'] = total_tower_count
-        v0_models.SocietyTower.objects.all().delete()
-        v0_models.SocietyTower.objects.bulk_create(tower_instances)
+        SocietyTower.objects.all().delete()
+        SocietyTower.objects.bulk_create(tower_instances)
         return True
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
@@ -267,8 +272,8 @@ def handle_supplier_amenities(amenities, suppliers_dict, content_type):
         if not amenities or (not suppliers_dict) or (not content_type):
             return False
         supplier_ids = suppliers_dict.keys()
-        v0_models.SupplierAmenitiesMap.objects.all().delete()
-        amenities = v0_models.Amenity.objects.filter(code__in=amenities)
+        SupplierAmenitiesMap.objects.all().delete()
+        amenities = Amenity.objects.filter(code__in=amenities)
         if not amenities:
             return False
         amenities_map = {amenity.code: amenity for amenity in amenities}
@@ -282,9 +287,9 @@ def handle_supplier_amenities(amenities, suppliers_dict, content_type):
                     'object_id': supplier_id,
                     'amenity': amenities_map[amenities[random.randint(0, len(amenities)-1)]]
                 }
-                supplier_amenity_objects.append(v0_models.SupplierAmenitiesMap(**data))
-        v0_models.SupplierAmenitiesMap.objects.all().delete()
-        v0_models.SupplierAmenitiesMap.objects.bulk_create(supplier_amenity_objects)
+                supplier_amenity_objects.append(SupplierAmenitiesMap(**data))
+        SupplierAmenitiesMap.objects.all().delete()
+        SupplierAmenitiesMap.objects.bulk_create(supplier_amenity_objects)
         return True
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
@@ -323,8 +328,8 @@ def handle_supplier_inventory_detail(inventory_detail, supplier_ids, content_typ
         if not inventory_detail or (not supplier_ids) or (not content_type):
             return False
         inventories_allowed = inventory_detail['inventories_allowed']
-        society_instances_map = v0_models.SupplierTypeSociety.objects.in_bulk(supplier_ids)
-        tower_instances = v0_models.SocietyTower.objects.filter(object_id__in=supplier_ids, content_type=content_type)
+        society_instances_map = SupplierTypeSociety.objects.in_bulk(supplier_ids)
+        tower_instances = SocietyTower.objects.filter(object_id__in=supplier_ids, content_type=content_type)
         tower_instances_map = {}
         # each society will have list of towers
         for tower_instance in tower_instances:
@@ -356,7 +361,7 @@ def handle_supplier_inventory_detail(inventory_detail, supplier_ids, content_typ
                                 'content_type': content_type,
                                 'object_id': supplier_id
                             }
-                            poster_objects.append(v0_models.PosterInventory(**data))
+                            poster_objects.append(PosterInventory(**data))
                     elif inv_code == v0_constants.inventory_name_to_code['standee']:
                         for standee_index in range(v0_constants.default_standee_per_tower):
                             data = {
@@ -365,7 +370,7 @@ def handle_supplier_inventory_detail(inventory_detail, supplier_ids, content_typ
                                 'content_type': content_type,
                                 'object_id': supplier_id
                             }
-                            standee_objects.append(v0_models.StandeeInventory(**data))
+                            standee_objects.append(StandeeInventory(**data))
 
                 # handle inventories which do not depend on towers
                 if inv_code == v0_constants.inventory_name_to_code['stall']:
@@ -375,7 +380,7 @@ def handle_supplier_inventory_detail(inventory_detail, supplier_ids, content_typ
                             'content_type': content_type,
                             'object_id': supplier_id
                         }
-                        stall_objects.append(v0_models.StallInventory(**data))
+                        stall_objects.append(StallInventory(**data))
 
                 elif inv_code == v0_constants.inventory_name_to_code['flier']:
                     for flier_frequency in range(v0_constants.default_flier_frequency_per_society):
@@ -384,23 +389,23 @@ def handle_supplier_inventory_detail(inventory_detail, supplier_ids, content_typ
                             'content_type': content_type,
                             'object_id': supplier_id
                         }
-                        flier_objects.append(v0_models.FlyerInventory(**data))
+                        flier_objects.append(FlyerInventory(**data))
                     inv_summary_data['flier_frequency'] = v0_constants.default_flier_frequency_per_society
 
-            inv_summary_objects.append(v0_models.InventorySummary(**inv_summary_data))
+            inv_summary_objects.append(InventorySummary(**inv_summary_data))
 
-        v0_models.InventorySummary.objects.all().delete()
-        v0_models.InventorySummary.objects.bulk_create(inv_summary_objects)
+        InventorySummary.objects.all().delete()
+        InventorySummary.objects.bulk_create(inv_summary_objects)
 
-        v0_models.PosterInventory.objects.all().delete()
-        v0_models.FlyerInventory.objects.all().delete()
-        v0_models.StallInventory.objects.all().delete()
-        v0_models.StandeeInventory.objects.all().delete()
+        PosterInventory.objects.all().delete()
+        FlyerInventory.objects.all().delete()
+        StallInventory.objects.all().delete()
+        StandeeInventory.objects.all().delete()
 
-        v0_models.PosterInventory.objects.bulk_create(poster_objects)
-        v0_models.StandeeInventory.objects.bulk_create(standee_objects)
-        v0_models.StallInventory.objects.bulk_create(stall_objects)
-        v0_models.FlyerInventory.objects.bulk_create(flier_objects)
+        PosterInventory.objects.bulk_create(poster_objects)
+        StandeeInventory.objects.bulk_create(standee_objects)
+        StallInventory.objects.bulk_create(stall_objects)
+        FlyerInventory.objects.bulk_create(flier_objects)
 
         return True
     except Exception as e:
@@ -423,7 +428,7 @@ def handle_society_detail(suppliers_dict, society_detail):
             return False
 
         supplier_ids = suppliers_dict.keys()
-        societies = v0_models.SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
+        societies = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
         response = ui_utils.get_content_type(v0_constants.society)
         if not response.data['status']:
             return response
@@ -489,7 +494,7 @@ def handle_inventory_pricing(supplier_ids, content_type, price_dict):
     """
     function = handle_inventory_pricing.__name__
     try:
-        inventory_summary_instances = v0_models.InventorySummary.objects.filter(object_id__in=supplier_ids, content_type=content_type)
+        inventory_summary_instances = InventorySummary.objects.filter(object_id__in=supplier_ids, content_type=content_type)
         inventory_summary_instance_map = {instance.object_id: instance for instance in inventory_summary_instances}
 
         price_mapping_instances_list = []
@@ -506,8 +511,8 @@ def handle_inventory_pricing(supplier_ids, content_type, price_dict):
 
             if inventory_summary_instance.flier_allowed:
                 price_mapping_instances_list.extend(create_price_mapping_instances(supplier_id, content_type, v0_constants.flier,  price_dict))
-        v0_models.PriceMappingDefault.objects.all().delete()
-        v0_models.PriceMappingDefault.objects.bulk_create(price_mapping_instances_list)
+        PriceMappingDefault.objects.all().delete()
+        PriceMappingDefault.objects.bulk_create(price_mapping_instances_list)
         return True
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
@@ -527,8 +532,8 @@ def create_price_mapping_instances(supplier_id, content_type,  inventory_name, p
     """
     function = create_price_mapping_instances.__name__
     try:
-        ad_inventory_instances = v0_models.AdInventoryType.objects.filter(adinventory_name=inventory_name)
-        duration_type_instances = v0_models.DurationType.objects.all()
+        ad_inventory_instances = AdInventoryType.objects.filter(adinventory_name=inventory_name)
+        duration_type_instances = DurationType.objects.all()
         pmd_instances = []
         for ad_inventory_instance in ad_inventory_instances:
             for duration_type_instance in duration_type_instances:
@@ -540,7 +545,7 @@ def create_price_mapping_instances(supplier_id, content_type,  inventory_name, p
                     'object_id': supplier_id,
                     'content_type': content_type
                 }
-                pmd_instances.append(v0_models.PriceMappingDefault(**data))
+                pmd_instances.append(PriceMappingDefault(**data))
         return pmd_instances
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))

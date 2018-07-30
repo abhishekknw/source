@@ -3,7 +3,7 @@ from models import (SocietyInventoryBooking, InventoryLocation, AdInventoryLocat
                     BannerInventory, PosterInventory, InventorySummary, StreetFurniture, StallInventory, FlyerInventory,
                     StandeeInventory, WallInventory, InventoryInfo, PoleInventory, PosterInventoryMapping,
                     GatewayArchInventory, InventoryActivity, InventoryTypeVersion, InventoryActivityImage, InventoryType,
-                    InventoryActivityAssignment, )
+                    InventoryActivityAssignment)
 from v0.ui.campaign.models import CampaignSocietyMapping
 from v0.ui.campaign.serializers import CampaignTypeMappingSerializer, CampaignListSerializer
 from rest_framework import serializers
