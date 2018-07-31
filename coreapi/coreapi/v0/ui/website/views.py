@@ -2637,7 +2637,9 @@ class CreateInitialProposal(APIView):
         try:
             with transaction.atomic():
                 proposal_data = request.data
+                print proposal_data
                 user = request.user
+                print user
 
                 organisation_id = proposal_data['organisation_id']
                 account_id = account_id
@@ -2670,6 +2672,7 @@ class CreateInitialProposal(APIView):
                     return response
 
                 # return the proposal_id of the new proposal created
+                print proposal_data
                 proposal_id = proposal_data['proposal_id']
                 return ui_utils.handle_response(class_name, data=proposal_id, success=True)
         except Exception as e:
@@ -2681,11 +2684,17 @@ class CreateInitialProposalBulk (APIView) :
         wb = load_workbook(source_file)
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
         proposal_list = []
+        user = request.user
         for index, row in enumerate(ws.iter_rows()):
             if index > 0:
+                account_id = str(row[1].value) if row[1].value else None
+                organisation_id = str(row[0].value) if row[0].value else None
+                proposal_id = website_utils.get_generic_id([Organisation.objects.get(pk=organisation_id).name, AccountInfo.objects.get(pk=account_id).name])
+                account = AccountInfo.objects.get_permission(user=user, account_id=account_id)
+                parent = request.data.get('parent') if request.data.get('parent')!='0' else None
                 proposal_list.append({
-                    'organisation_id': str(row[0].value) if row[0].value else None,
-                    'account_id': str(row[1].value) if row[1].value else None,
+                    'organisation_id': organisation_id,
+                    'account_id': account_id,
                     'name' : str(row[2].value) if row[2].value else None,
                     'tentative_cost': float(row[3].value) if row[3].value else None,
                     'center_name': str(row[4].value) if row[4].value else None,
@@ -2695,10 +2704,16 @@ class CreateInitialProposalBulk (APIView) :
                     'subarea': str(row[8].value) if row[8].value else None,
                     'pincode': int(row[9].value) if row[9].value else None,
                     'radius': str(row[10].value) if row[10].value else None,
-                    'codes': row[11] if row[11].value else None,
+                    'codes': str(row[11].value) if row[11].value else None,
+                    'proposal_id': proposal_id,
+                    'account': account.account_id,
+                    'user': user.id,
+                    'created_by': user.username,
+                    'parent': parent
                     # 'comment': row[27].value,
                 })
-        print proposal_list
+                proposal_data = proposal_list[index-1]
+                response = website_utils.create_basic_proposal(proposal_data)
         return ui_utils.handle_response({}, data='success', success=True)
 
 class CreateFinalProposal(APIView):

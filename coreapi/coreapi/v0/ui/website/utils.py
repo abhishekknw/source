@@ -41,7 +41,8 @@ from celery.task.sets import TaskSet, subtask
 from collections import namedtuple
 import gpxpy.geo
 
-import v0.models as models
+#import v0.models as models
+import v0.ui.inventory.models as inventory_models
 from v0.ui.account.models import ContactDetails, AccountInfo, GenericExportFileName
 from v0.ui.components.models import FlatType, SocietyTower, Amenity
 from v0.ui.inventory.models import (AdInventoryType, InventoryActivityAssignment,
@@ -6568,19 +6569,16 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
             if supplier_id not in inventory_summary_objects_mapping:
                 create_inventory_summary_data_for_supplier()
             for filter_code in proposal_data['center_data'][supplier_code]['filter_codes']:
-                inventory_objects = getattr(v0.ui.inventory.models, v0_constants.model_to_codes[filter_code['id']]).objects.filter(
+                inventory_objects = getattr(inventory_models, v0_constants.model_to_codes[filter_code['id']]).objects.filter(
                     Q(object_id=supplier_id))
-                print inventory_objects
                 if not inventory_objects or str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL' or str(
                         filter_code['id']) == 'GA':
                     inventory_objects = create_inventory_ids(supplier_objects_mapping[supplier_id], filter_code)
                 response = make_final_list(filter_code, inventory_objects, shortlisted_suppliers_mapping[supplier_id])
                 if not response.data['status']:
                     return response
-                print "here1"
                 shortlisted_inv_objects.extend(response.data['data'])
         ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_inv_objects)
-        print 'here'
         if create_inv_act_data:
             shortlisted_supplier_ids = {space_obj.id for space_obj in shortlisted_suppliers}
             shortlisted_inventory_objects = ShortlistedInventoryPricingDetails.objects.filter(
