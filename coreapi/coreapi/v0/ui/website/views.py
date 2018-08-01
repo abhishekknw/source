@@ -4,6 +4,8 @@ import random
 import shutil
 import string
 import time
+import datetime
+import pytz
 
 import openpyxl
 from openpyxl import load_workbook
@@ -2637,9 +2639,7 @@ class CreateInitialProposal(APIView):
         try:
             with transaction.atomic():
                 proposal_data = request.data
-                print proposal_data
                 user = request.user
-                print user
 
                 organisation_id = proposal_data['organisation_id']
                 account_id = account_id
@@ -2667,7 +2667,6 @@ class CreateInitialProposal(APIView):
                     return response
 
                 # time to save all the centers data
-                print proposal_data['centers']
                 response = website_utils.save_center_data(proposal_data, user)
                 if not response.data['status']:
                     return response
@@ -2680,10 +2679,12 @@ class CreateInitialProposal(APIView):
 
 class CreateInitialProposalBulk(APIView) :
     def post(self, request):
+        class_name = self.__class__.__name__
         source_file = request.data['file']
         wb = load_workbook(source_file)
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
         proposal_list = []
+        campaign_list = []
         user = request.user
         for index, row in enumerate(ws.iter_rows()):
             if index > 0:
@@ -2731,6 +2732,13 @@ class CreateInitialProposalBulk(APIView) :
                     'user': user.id,
                     'created_by': user.username,
                     'parent': parent,
+                    'tentative_start_date': row[12].value if row[12].value else None,
+                    'center_id': int(row[13].value) if row[13].value else None,
+                    'inventories': str(row[14].value) if row[14].value else None,
+                    'supplier_id_str': str(row[15].value) if row[15].value else None,
+                    'supplier_status_str': str(row[16].value) if row[16].value else None,
+                    'tentative_end_date': row[17].value if row[17].value else None,
+                    'invoice_number': int(row[18].value) if row[18].value else None,
                     # 'comment': row[27].value,
                 })
                 proposal_data = proposal_list[index-1]
@@ -2741,6 +2749,65 @@ class CreateInitialProposalBulk(APIView) :
                 response = website_utils.save_center_data(proposal_data, user)
                 if not response.data['status']:
                     return response
+
+                for center in proposal_data['centers']:
+                    center_data = center['center']
+                    supplier_types = center_data['codes']
+                    inventory_filters = strToList(proposal_data['inventories'])
+                    filter_codes = []
+                    for inv_type in inventory_filters:
+                        f = {'id': inv_type}
+                        filter_codes.append(f)
+                    supplier_ids = strToList(proposal_data['supplier_id_str'])
+                    supplier_statuses = strToList(proposal_data['supplier_status_str'])
+                    supplier_data = []
+                    for i in range(len(supplier_ids)):
+                        supplier_id = supplier_ids[i]
+                        supplier_status = supplier_statuses[i]
+                        supplier_data.append({
+                            'status': supplier_status,
+                            'id': supplier_id
+                        })
+                    supplier_type_data = {'filter_codes': filter_codes, 'supplier_data': supplier_data}
+                    center_data = {'RS': supplier_type_data}
+                    campaign_data = {}
+                    tentative_start_date = proposal_data['tentative_start_date'].replace(tzinfo=pytz.UTC)
+                    tentative_end_date = proposal_data['tentative_end_date'].replace(tzinfo=pytz.UTC)
+                    campaign_data.update({
+                        'tentative_start_date': tentative_start_date,
+                        'center_id': proposal_data['center_id'],
+                        'center_data': center_data,
+                        'tentative_end_date': tentative_end_date,
+                        'invoice_number': proposal_data['invoice_number'],
+                        'proposal_id': proposal_data['proposal_id']
+                    })
+                    campaign_list.append(campaign_data)
+
+                center_id = campaign_data['center_id']
+                proposal = ProposalInfo.objects.get(pk=campaign_data['proposal_id'])
+                center = ProposalCenterMapping.objects.get(pk=center_id)
+
+                for supplier_code in campaign_data['center_data']:
+
+                    response = website_utils.save_filters(center, supplier_code, campaign_data, proposal)
+                    if not response.data['status']:
+                        return response
+                    response = website_utils.save_shortlisted_suppliers_data(center, supplier_code, campaign_data,
+                                                                             proposal)
+                    if not response.data['status']:
+                        return response
+                    response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
+                                                                                             campaign_data, proposal)
+                    if not response.data['status']:
+                        return response
+                response = website_utils.update_proposal_invoice_and_state(campaign_data, proposal)
+                if not response.data['status']:
+                    return response
+                response = website_utils.create_generic_export_file_data(proposal)
+                if not response.data['status']:
+                    return response
+
+                return ui_utils.handle_response(class_name, data={}, success=True)
 
         return ui_utils.handle_response({}, data='success', success=True)
 
@@ -6344,6 +6411,7 @@ class convertDirectProposalToCampaign(APIView):
         class_name = self.__class__.__name__
         try:
             proposal_data = request.data
+            print proposal_data
             center_id = proposal_data['center_id']
             proposal = ProposalInfo.objects.get(pk=proposal_data['proposal_id'])
             center = ProposalCenterMapping.objects.get(pk=center_id)
@@ -6370,6 +6438,22 @@ class convertDirectProposalToCampaign(APIView):
             return ui_utils.handle_response(class_name, data={}, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+def strToList (str):
+    elements = str.split(',')
+    converted_list = [x.strip(' ') for x in elements]
+    return converted_list
+
+def convertDirectProposalToCampaignExcel (proposal_list):
+    for proposal_data in proposal_list:
+        center_id = proposal_data['center_id']
+        proposal = ProposalInfo.objects.get(pk=proposal_data['proposal_id'])
+        center = ProposalCenterMapping.objects.get(pk=center_id)
+
+        # data conversion
+        center_data = {}
+
+
 
 class proposalCenterMappingViewSet(viewsets.ViewSet):
     """
