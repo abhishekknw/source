@@ -63,7 +63,7 @@ from v0.ui.common.models import BaseUser
 from v0.constants import keys, decision
 from website.utils import save_price_mapping_default
 import v0.constants as v0_constants
-from utils import get_or_none, get_from_dict
+from utils import get_from_dict
 from controller import inventory_summary_insert
 
 class UsersProfilesAPIView(APIView):
