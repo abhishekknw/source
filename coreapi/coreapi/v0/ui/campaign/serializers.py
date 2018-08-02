@@ -1,5 +1,6 @@
 from rest_framework.serializers import ModelSerializer
-from models import Campaign, CampaignSupplierTypes, CampaignTypeMapping, CampaignSocietyMapping, CampaignAssignment
+from models import (Campaign, CampaignSupplierTypes, CampaignTypeMapping, CampaignSocietyMapping, CampaignAssignment,
+                    GenericExportFileName)
 from rest_framework import serializers
 from v0.ui.user.serializers import BaseUserSerializer
 from v0.ui.proposal.serializers import ProposalInfoSerializer
@@ -51,4 +52,14 @@ class CampaignAssignmentSerializerReadOnly(ModelSerializer):
 
     class Meta:
         model = CampaignAssignment
+        fields = '__all__'
+
+
+class GenericExportFileSerializer(ModelSerializer):
+    """
+    simple serializer for generic export file name
+    """
+
+    class Meta:
+        model = GenericExportFileName
         fields = '__all__'

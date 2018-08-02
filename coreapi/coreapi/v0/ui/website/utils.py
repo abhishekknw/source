@@ -42,7 +42,7 @@ from collections import namedtuple
 import gpxpy.geo
 
 import v0.models as models
-from v0.ui.account.models import ContactDetails, AccountInfo, GenericExportFileName
+from v0.ui.account.models import ContactDetails, AccountInfo
 from v0.ui.components.models import FlatType, SocietyTower, Amenity
 from v0.ui.inventory.models import (AdInventoryType, InventoryActivityAssignment,
                                     InventoryActivityImage, InventorySummary, InventoryActivity, INVENTORY_ACTIVITY_TYPES)
@@ -51,7 +51,7 @@ from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping, ProposalCenterSuppliers, ProposalMetrics,
     ProposalInfoVersion, ProposalMasterCost, ShortlistedSpaces)
 from v0.ui.proposal.serializers import ProposalInfoSerializer, ProposalCenterMappingSerializer
-from v0.ui.campaign.models import CampaignAssignment
+from v0.ui.campaign.models import CampaignAssignment, GenericExportFileName
 import v0.ui.utils as ui_utils
 from v0 import errors
 import tasks
@@ -68,7 +68,8 @@ from v0.ui.leads.serializers import LeadSerializer, LeadsSerializer
 from v0.ui.leads.models import Lead, CampaignLeads, Leads
 from v0.ui.events.models import Events
 from v0.ui.base.models import DurationType
-from v0.ui.account.serializers import GenericExportFileSerializer, ContactDetailsSerializer
+from v0.ui.account.serializers import ContactDetailsSerializer
+from v0.ui.campaign.serializers import GenericExportFileSerializer
 from v0.ui.inventory.models import Filters
 from v0.ui.inventory.serializers import FiltersSerializer
 
