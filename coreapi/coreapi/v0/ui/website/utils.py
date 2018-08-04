@@ -1251,16 +1251,21 @@ def save_suppliers_allowed(center_info, proposal_id, center_id, user):
     """
     function_name = save_suppliers_allowed.__name__
 
+    print center_info
+    print proposal_id
+    print center_id
+    print user
     try:
         # fetch all the supplier codes. 'supplier_codes' 
         suppliers_codes = center_info['center']['codes']
+        print suppliers_codes
         # for all the codes
         for code in suppliers_codes:
             content_type_response = ui_utils.get_content_type(code)
             if not content_type_response.data['status']:
                 return content_type_response
             content_type = content_type_response.data['data']
-
+            print '1'
             # prepare the data
             data = {
                 'proposal_id': proposal_id,
@@ -1270,6 +1275,7 @@ def save_suppliers_allowed(center_info, proposal_id, center_id, user):
                 'user': user
             }
             ProposalCenterSuppliers.objects.get_or_create(**data)
+            print '2'
         # return success if done
         return ui_utils.handle_response(function_name, data='success', success=True)
     except KeyError as e:
@@ -1334,6 +1340,8 @@ def save_center_data(proposal_data, user):
                 if not center['pincode']:
                     center['pincode'] = 0
 
+                print '2'
+
                 if 'id' in center_info:
                     # means an existing center was updated
                     center_instance = ProposalCenterMapping.objects.get_permission(user=user, id=center_info['id'])
@@ -1343,6 +1351,7 @@ def save_center_data(proposal_data, user):
                     center_serializer = ProposalCenterMappingSerializer(data=center)
 
                 # save center info
+                print '3'
                 if center_serializer.is_valid():
                     center_serializer.save()
                     # now save all the suppliers associated with this center
@@ -1354,6 +1363,69 @@ def save_center_data(proposal_data, user):
             return ui_utils.handle_response(function_name, data='success', success=True)
     except Exception as e:
         return ui_utils.handle_response(function_name, exception_object=e)
+
+def save_center_data_basic(proposal_data, user):
+    """
+
+    Args:
+        proposal_data: a proposal_data with proposal_id as key must.
+        user: User instance
+
+    Returns: center data
+
+    """
+    function_name = save_center_data.__name__
+    try:
+        # get the proposal_id
+        proposal_id = proposal_data['proposal_id']
+        with transaction.atomic():
+            # for all centers
+            center = proposal_data['center']
+            print center
+
+            # prepare center info
+            center['proposal'] = proposal_id
+            # get address for this center. because address can contain a complicated logic in future, it's in separate
+            # function
+            address_response = calculate_address(center)
+            if not address_response.data['data']:
+                return address_response
+            address = address_response.data['data']
+
+            # add lat long to center's data based on address calculated
+            #geo_response = get_geo_object_lat_long(address)
+            #if not geo_response.data['status']:
+            center['latitude'], center['longitude'] = [0, 0]
+            #else:
+            #   center['latitude'], center['longitude'] = geo_response.data['data']
+            center['user'] = user.id
+            # set pincode to zero if there isn't any
+            if not center['pincode']:
+                center['pincode'] = 0
+
+            if 'id' in center:
+                # means an existing center was updated
+                center_instance = ProposalCenterMapping.objects.get_permission(user=user, id=center['id'])
+                center_serializer = ProposalCenterMappingSerializer(center_instance, data=center)
+            else:
+                # means we need to create new center
+                center_serializer = ProposalCenterMappingSerializer(data=center)
+
+            print center_serializer
+            # save center info
+            if center_serializer.is_valid():
+                center_serializer.save()
+                # now save all the suppliers associated with this center
+                response = save_suppliers_allowed(center, proposal_id, center_serializer.data['id'], user)
+                if not response.data['status']:
+                    return response
+            else:
+                return ui_utils.handle_response(function_name, data=center_serializer.errors)
+            return ui_utils.handle_response(function_name, data='success', success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e)
+
+
 
 
 def save_shortlisted_suppliers(suppliers, fixed_data):
