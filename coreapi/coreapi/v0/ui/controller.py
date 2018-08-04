@@ -9,10 +9,6 @@ from v0.ui.utils import get_from_dict
 
 
 def inventory_summary_insert(data, supplier_inventory_data):
-    print "supplier_inventory_data"
-    print supplier_inventory_data
-    print "data"
-    print data
     supplier_object = get_from_dict(data, 'supplier_object')
     inventory_object = get_from_dict(data, 'inventory_object')
     supplier_type_code = get_from_dict(data, 'supplier_type_code')
