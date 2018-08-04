@@ -503,6 +503,7 @@ class InventorySummaryAPIView(APIView):
           description : flier lobby allowed or not
 
         """
+        print request.data
         class_name = self.__class__.__name__
         response = ui_utils.get_supplier_inventory(request.data.copy(), id)
 
@@ -510,6 +511,7 @@ class InventorySummaryAPIView(APIView):
             return response
 
         supplier_inventory_data = response.data['data']['request_data']
+
         final_data = {
             'id': get_from_dict(request.data, 'id'),
             'supplier_object': get_from_dict(response.data['data'], 'supplier_object'),
@@ -550,12 +552,12 @@ class InventorySummaryAPIView(APIView):
             'flier_lobby_allowed': get_from_dict(request.data, 'flier_lobby_allowed'),
             'gateway_arch_allowed': get_from_dict(request.data, 'gateway_arch_allowed'),
         }
-        try:
-            return inventory_summary_insert(final_data,supplier_inventory_data)
-        except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
-        except Exception as e:
-            return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+        return inventory_summary_insert(final_data,supplier_inventory_data)
+        # try:
+        # except ObjectDoesNotExist as e:
+        #     return ui_utils.handle_response(class_name, exception_object=e, request=request)
+        # except Exception as e:
+        #     return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
 
 class PostInventorySummary(APIView):
     """

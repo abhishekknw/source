@@ -38,6 +38,12 @@ from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q
 from rest_framework import status
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from v0.ui.utils import get_from_dict
+from v0.ui.controller import inventory_summary_insert
+import v0.ui.utils as ui_utils
+from v0.ui.inventory.models import InventorySummary
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 
 def get_state_map():
@@ -83,6 +89,7 @@ def create_price_mapping_default(days_count, adinventory_name, adinventory_type,
                                               object_id=supplier_id)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class SocietyDataImport(APIView):
     """
 
@@ -93,6 +100,7 @@ class SocietyDataImport(APIView):
         wb = load_workbook(source_file)
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
         society_data_list = []
+        print "here1"
         for index, row in enumerate(ws.iter_rows()):
             if index > 0:
                 society_data_list.append({
@@ -116,15 +124,17 @@ class SocietyDataImport(APIView):
                     'bank_name': row[17].value if row[17].value else None,
                     'account_no': row[18].value if row[18].value else None,
                     'stall_allowed': True if row[19].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'poster_allowed_nb': True if row[20].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'nb_per_tower': int(row[21].value) if row[21].value else None,
-                    'poster_allowed_lift': True if row[22].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'door_to_door': True if row[23].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'stall_price': float(row[24].value) if row[24].value else None,
-                    'poster_price': float(row[25].value) if row[25].value else None,
-                    'flier_price': float(row[26].value) if row[26].value else None,
-                    'status': row[27].value,
-                    'comments': row[28].value,
+                    'total_stall_count': row[20].value if row[20].value else None,
+                    'poster_allowed_nb': True if row[21].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'nb_per_tower': int(row[22].value) if row[22].value else None,
+                    'poster_allowed_lift': True if row[23].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'lift_per_tower': int(row[24].value) if row[24].value else None,
+                    'door_to_door': True if row[25].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'stall_price': float(row[26].value) if row[26].value else None,
+                    'poster_price': float(row[27].value) if row[27].value else None,
+                    'flier_price': float(row[28].value) if row[28].value else None,
+                    'status': row[29].value,
+                    'comments': row[30].value,
                 })
         all_states_map = get_state_map()
         all_city_map = get_city_map()
@@ -183,6 +193,77 @@ class SocietyDataImport(APIView):
                 save_flyer_locations(0, 1, new_society, society['supplier_code'])
                 create_price_mapping_default('1', "FLIER", "Door-to-Door", new_society,
                                              society['flier_price'], rs_content_type, supplier_id)
+
+                supplier_inventory_data = response.data['data']['request_data']
+                inventory_obj = InventorySummary.objects.get(object_id=supplier_id)
+                print inventory_obj
+                request_data = {
+                    'd2d_allowed': True,
+                    'poster_allowed_nb': True,
+                    'supplier_type_code': 'RS',
+                    'lift_count': society['tower_count'] * society['lift_per_tower'],
+                    'stall_allowed': True,
+                    'object_id': supplier_id,
+                    'flier_allowed': True,
+                    'nb_count': society['tower_count'] * society['nb_per_tower'],
+                    'user': 1,
+                    'content_type': 46,
+                    'flier_frequency': 2,
+                    'total_stall_count': 1,
+                    'poster_allowed_lift': True,
+                }
+                class_name = self.__class__.__name__
+                response = ui_utils.get_supplier_inventory(request_data.copy(), supplier_id)
+
+                if not response.data['status']:
+                    return response
+                final_data = {
+                    'id': get_from_dict(request_data, supplier_id),
+                    'supplier_object': get_from_dict(response.data['data'], 'supplier_object'),
+                    'inventory_object': get_from_dict(response.data['data'], 'inventory_object'),
+                    'supplier_type_code': get_from_dict(request_data, 'supplier_type_code'),
+                    'poster_allowed_nb': get_from_dict(request_data, 'poster_allowed_nb'),
+                    'nb_count': get_from_dict(request_data, 'nb_count'),
+                    'poster_campaign': get_from_dict(request_data, 'poster_campaign'),
+                    'lift_count': get_from_dict(request_data, 'lift_count'),
+                    'poster_allowed_lift': get_from_dict(request_data, 'poster_allowed_lift'),
+                    'standee_allowed': get_from_dict(request_data, 'standee_allowed'),
+                    'total_standee_count': get_from_dict(request_data, 'total_standee_count'),
+                    'standee_campaign': get_from_dict(request_data, 'standee_campaign'),
+                    'stall_allowed': get_from_dict(request_data, 'stall_allowed'),
+                    'car_display_allowed': get_from_dict(request_data, 'car_display_allowed'),
+                    'total_stall_count': get_from_dict(request_data, 'total_stall_count'),
+                    'stall_or_cd_campaign': get_from_dict(request_data, 'stall_or_cd_campaign'),
+                    'flier_allowed': get_from_dict(request_data, 'flier_allowed'),
+                    'flier_frequency': get_from_dict(request_data, 'flier_frequency'),
+                    'flier_campaign': get_from_dict(request_data, 'flier_campaign'),
+                    'poster_price_week_nb': get_from_dict(request_data, 'poster_price_week_nb'),
+                    'nb_A3_allowed': get_from_dict(request_data, 'nb_A3_allowed'),
+                    'nb_A4_allowed': get_from_dict(request_data, 'nb_A4_allowed'),
+                    'poster_price_week_lift': get_from_dict(request_data, 'poster_price_week_lift'),
+                    'standee_price_week': get_from_dict(request_data, 'standee_price_week'),
+                    'standee_small': get_from_dict(request_data, 'standee_small'),
+                    'standee_medium': get_from_dict(request_data, 'standee_medium'),
+                    'stall_price_day_small': get_from_dict(request_data, 'stall_price_day_small'),
+                    'stall_large': get_from_dict(request_data, 'stall_large'),
+                    'stall_price_day_large': get_from_dict(request_data, 'stall_price_day_large'),
+                    'cd_standard': get_from_dict(request_data, 'cd_standard'),
+                    'cd_price_day_standard': get_from_dict(request_data, 'cd_price_day_standard'),
+                    'cd_premium': get_from_dict(request_data, 'cd_premium'),
+                    'cd_price_day_premium': get_from_dict(request_data, 'cd_price_day_premium'),
+                    'flier_price_day': get_from_dict(request_data, 'flier_price_day'),
+                    'mailbox_allowed': get_from_dict(request_data, 'mailbox_allowed'),
+                    'd2d_allowed': get_from_dict(request_data, 'd2d_allowed'),
+                    'flier_lobby_allowed': get_from_dict(request_data, 'flier_lobby_allowed'),
+                    'gateway_arch_allowed': get_from_dict(request_data, 'gateway_arch_allowed'),
+                }
+                try:
+                    pass
+                    # return inventory_summary_insert(final_data, supplier_inventory_data)
+                except ObjectDoesNotExist as e:
+                    return ui_utils.handle_response(class_name, exception_object=e, request=request)
+                except Exception as e:
+                    return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
         return handle_response({}, data='success', success=True)
 
 
