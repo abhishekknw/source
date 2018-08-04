@@ -40,10 +40,10 @@ from rest_framework.views import APIView
 import tasks
 from v0.ui.components.models import SocietyTower, FlatType, Amenity
 from v0.ui.components.serializers import AmenitySerializer
-from v0.ui.account.models import BusinessTypes, BusinessSubTypes, GenericExportFileName
+from v0.ui.account.models import BusinessTypes, BusinessSubTypes
 from v0.ui.account.serializers import (BusinessTypesSerializer, BusinessSubTypesSerializer, ProfileSimpleSerializer,
                                        UIBusinessInfoSerializer, UIAccountInfoSerializer, ProfileNestedSerializer)
-from v0.ui.campaign.models import Campaign, CampaignSocietyMapping, CampaignAssignment
+from v0.ui.campaign.models import Campaign, CampaignSocietyMapping, CampaignAssignment, GenericExportFileName
 from v0.ui.campaign.serializers import CampaignSerializer, CampaignSocietyMappingSerializer, CampaignListSerializer, \
     CampaignAssignmentSerializerReadOnly
 from v0.ui.account.serializers import (BusinessInfoSerializer, BusinessAccountContactSerializer, AccountInfoSerializer,
@@ -3038,7 +3038,6 @@ class ProposalViewSet(viewsets.ViewSet):
                 if proposal_id not in seen:
                     seen.add(proposal_id)
                     final_file_objects.append(file_object)
-
             file_serializer = GenericExportFileSerializerReadOnly(final_file_objects, many=True)
             return ui_utils.handle_response(class_name, data=file_serializer.data, success=True)
         except Exception as e:
@@ -3426,10 +3425,10 @@ class SupplierSearch(APIView):
             supplier_type_code = request.query_params.get('supplier_type_code')
             if not supplier_type_code:
                 return ui_utils.handle_response(class_name, data='provide supplier type code')
-
+    
             if not search_txt:
                 return ui_utils.handle_response(class_name, data=[], success=True)
-
+    
             model = ui_utils.get_model(supplier_type_code)
             search_query = Q()
             for search_field in v0_constants.search_fields[supplier_type_code]:
@@ -3437,12 +3436,12 @@ class SupplierSearch(APIView):
                     search_query |= Q(**{search_field: search_txt})
                 else:
                     search_query = Q(**{search_field: search_txt})
-
+    
             suppliers = model.objects.filter(search_query)
             serializer_class = ui_utils.get_serializer(supplier_type_code)
             serializer = serializer_class(suppliers, many=True)
             suppliers = website_utils.manipulate_object_key_values(serializer.data, supplier_type_code=supplier_type_code,  **{'status': v0_constants.status})
-
+    
             return ui_utils.handle_response(class_name, data=suppliers, success=True)
         except ObjectDoesNotExist as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -4826,6 +4825,7 @@ class UserList(APIView):
         try:
             users = BaseUser.objects.all()
             user_serializer = BaseUserSerializer(users, many=True)
+
             return ui_utils.handle_response(class_name, data=user_serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
