@@ -11,11 +11,13 @@ from v0.ui.supplier.views import SocietyAPIView,SocietyAPIFiltersView, SocietyAP
     CorporateCompanyDetailsAPIView, saveBasicSalonDetailsAPIView, saveBasicGymDetailsAPIView, BusShelter, \
     SuppliersMeta, BusDepotViewSet
 
+
 # from v0.ui.website import views as web_views
 urlpatterns = [
 
     url(r'^website/', include('v0.ui.website.urls')),
     url(r'^supplier/', include('v0.ui.supplier.urls')),
+    url(r'^proposal/', include('v0.ui.proposal.urls')),
 
     # url(r'^website/create_business/load_business_types/',web_views.getBusinessTypesAPIView.as_view()),
     # url(r'^website/subtypes/(?P<id>[A-Z_a-z0-9]+)/$', web_views.getBusinessSubTypesAPIView.as_view()),

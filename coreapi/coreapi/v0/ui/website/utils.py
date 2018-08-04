@@ -41,11 +41,12 @@ from celery.task.sets import TaskSet, subtask
 from collections import namedtuple
 import gpxpy.geo
 
-import v0.models as models
+#import v0.models as models
+import v0.ui.inventory.models as inventory_models
 from v0.ui.account.models import ContactDetails, AccountInfo
 from v0.ui.components.models import FlatType, SocietyTower, Amenity
 from v0.ui.inventory.models import (AdInventoryType, InventoryActivityAssignment,
-                                    InventoryActivityImage, InventorySummary, InventoryActivity, INVENTORY_ACTIVITY_TYPES)
+                                    InventoryActivityImage, InventorySummary, InventoryActivity, INVENTORY_ACTIVITY_TYPES, PosterInventory)
 from v0.ui.inventory.serializers import (InventoryActivityAssignmentSerializer)
 from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping, ProposalCenterSuppliers, ProposalMetrics,
@@ -1324,10 +1325,11 @@ def save_center_data(proposal_data, user):
                 address = address_response.data['data']
 
                 # add lat long to center's data based on address calculated
-                geo_response = get_geo_object_lat_long(address)
-                if not geo_response.data['status']:
-                    return geo_response
-                center['latitude'], center['longitude'] = geo_response.data['data']
+                #geo_response = get_geo_object_lat_long(address)
+                #if not geo_response.data['status']:
+                center['latitude'], center['longitude'] = [0, 0]
+                #else:
+                #   center['latitude'], center['longitude'] = geo_response.data['data']
                 center['user'] = user.id
                 # set pincode to zero if there isn't any
                 if not center['pincode']:
@@ -6551,6 +6553,7 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
     :param create_inv_act_data:
     :return:
     """
+
     function_name = save_shortlisted_inventory_pricing_details_data.__name__
     try:
         supplier_ids = [id['id'] for id in proposal_data['center_data'][supplier_code]['supplier_data']]
@@ -6568,7 +6571,7 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
             if supplier_id not in inventory_summary_objects_mapping:
                 create_inventory_summary_data_for_supplier()
             for filter_code in proposal_data['center_data'][supplier_code]['filter_codes']:
-                inventory_objects = getattr(models, v0_constants.model_to_codes[filter_code['id']]).objects.filter(
+                inventory_objects = getattr(inventory_models, v0_constants.model_to_codes[filter_code['id']]).objects.filter(
                     Q(object_id=supplier_id))
                 if not inventory_objects or str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL' or str(
                         filter_code['id']) == 'GA':
@@ -6586,6 +6589,7 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
 
             response = create_inventory_activity_data(shortlisted_inventory_objects)
             if not response:
+                print response
                 return response
 
         return ui_utils.handle_response(function_name, data={}, success=True)
@@ -6805,7 +6809,7 @@ def get_filters_by_campaign(campaign_id):
     """
     function_name = get_filters_by_campaign.__name__
     try:
-        filters = models.Filters.objects.filter(proposal__proposal_id=campaign_id).values('filter_code').distinct()
+        filters = Filters.objects.filter(proposal__proposal_id=campaign_id).values('filter_code').distinct()
         # serializer = FiltersSerializer(filters, many=True)
         return filters
     except Exception as e:
@@ -7132,7 +7136,7 @@ def get_campaign_inv_data(campaign_id):
     try:
 
         result = {}
-        inv_act_image_data = models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
+        inv_act_image_data = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
                                                                                   'inventory_activity_assignment__inventory_activity',
                                                                                   'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
                                                                                   'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
@@ -7146,7 +7150,7 @@ def get_campaign_inv_data(campaign_id):
             annotate(total=Count('inventory_activity_assignment', distinct=True))
         inv_act_image_data_map = organise_data_by_activity_and_inventory_type(inv_act_image_data)
         # inv_act_image_data_map = {supplier['object_id']:supplier for supplier in inv_act_image_data}
-        total_inv_act_data = models.ShortlistedInventoryPricingDetails.objects. \
+        total_inv_act_data = ShortlistedInventoryPricingDetails.objects. \
             filter(shortlisted_spaces__proposal=campaign_id). \
             annotate(object_id=F('shortlisted_spaces__object_id'), inventory=F('ad_inventory_type__adinventory_name')). \
             values('object_id', 'inventory'). \
@@ -7159,7 +7163,7 @@ def get_campaign_inv_data(campaign_id):
             if supplier['inventory'] not in total_inv_act_data_map[supplier['object_id']]:
                 total_inv_act_data_map[supplier['object_id']][supplier['inventory']] = {}
             total_inv_act_data_map[supplier['object_id']][supplier['inventory']] = supplier
-        inv_act_assigned_data = models.InventoryActivityAssignment.objects. \
+        inv_act_assigned_data = InventoryActivityAssignment.objects. \
             filter(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id). \
             annotate(activity_type=F('inventory_activity__activity_type'), inventory=F(
             'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name'),
