@@ -1313,6 +1313,7 @@ def save_center_data(proposal_data, user):
             # for all centers
             for center_info in proposal_data['centers']:
                 center = center_info['center']
+                print center
 
                 # prepare center info
                 center['proposal'] = proposal_id
@@ -6643,6 +6644,8 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
                 if not response.data['status']:
                     return response
                 shortlisted_inv_objects.extend(response.data['data'])
+        print shortlisted_inv_objects[0].__dict__
+        print len(shortlisted_inv_objects)
         ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_inv_objects)
         if create_inv_act_data:
             shortlisted_supplier_ids = {space_obj.id for space_obj in shortlisted_suppliers}
@@ -6704,6 +6707,9 @@ def make_final_list(filter_code, inventory_objects, space_id):
     """
     function_name = make_final_list.__name__
     try:
+        print filter_code
+        print inventory_objects
+        print space_id.__dict__
         ad_inventory = v0_constants.inventory_type_duration_dict_list[filter_code['id']]
         ad_inventory_type_id = AdInventoryType.objects.get(adinventory_name=ad_inventory[0],
                                                            adinventory_type=ad_inventory[1])
@@ -6721,8 +6727,8 @@ def make_final_list(filter_code, inventory_objects, space_id):
                 'updated_at': now_time,
                 'inventory_content_type_id': content_type.id
             }
-            shortlisted_suppliers.append(ShortlistedInventoryPricingDetails(**data))
 
+            shortlisted_suppliers.append(ShortlistedInventoryPricingDetails(**data))
         return ui_utils.handle_response(function_name, data=shortlisted_suppliers, success=True)
 
     except Exception as e:
