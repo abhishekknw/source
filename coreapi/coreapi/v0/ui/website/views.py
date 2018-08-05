@@ -2677,7 +2677,7 @@ class CreateInitialProposal(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-class CreateInitialProposalBulk(APIView) :
+class CreateInitialProposalBulk(APIView):
     def post(self, request):
         class_name = self.__class__.__name__
         source_file = request.data['file']
@@ -2686,11 +2686,13 @@ class CreateInitialProposalBulk(APIView) :
         proposal_list = []
         campaign_list = []
         user = request.user
+
         for index, row in enumerate(ws.iter_rows()):
             if index > 0:
                 account_id = str(row[1].value) if row[1].value else None
                 organisation_id = str(row[0].value) if row[0].value else None
-                proposal_id = website_utils.get_generic_id([Organisation.objects.get(pk=organisation_id).name, AccountInfo.objects.get(pk=account_id).name])
+                if index == 1:
+                    proposal_id = website_utils.get_generic_id([Organisation.objects.get(pk=organisation_id).name, AccountInfo.objects.get(pk=account_id).name])
                 account = AccountInfo.objects.get_permission(user=user, account_id=account_id)
                 parent = request.data.get('parent') if request.data.get('parent')!='0' else None
                 supplier_string = str(row[11].value) if row[11].value else None
@@ -2743,12 +2745,14 @@ class CreateInitialProposalBulk(APIView) :
                 })
                 proposal_data = proposal_list[index-1]
 
-                response = website_utils.create_basic_proposal(proposal_data)
-                if not response.data['status']:
-                    return response
-                response = website_utils.save_center_data(proposal_data, user)
-                if not response.data['status']:
-                    return response
+                if index == 1:
+                    response = website_utils.create_basic_proposal(proposal_data)
+                    if not response.data['status']:
+                        return response
+                    response = website_utils.save_center_data(proposal_data, user)
+                    if not response.data['status']:
+                        return response
+                    print 'proposal created'
 
                 for center in proposal_data['centers']:
                     center_data = center['center']
@@ -2807,9 +2811,160 @@ class CreateInitialProposalBulk(APIView) :
                 if not response.data['status']:
                     return response
 
-                return ui_utils.handle_response(class_name, data={}, success=True)
+                print 'campaign created'
+
+#                return ui_utils.handle_response(class_name, data={}, success=True)
 
         return ui_utils.handle_response({}, data='success', success=True)
+
+class CreateInitialProposalBulk2(APIView):
+    def post(self, request):
+        class_name = self.__class__.__name__
+        source_file = request.data['file']
+        wb = load_workbook(source_file)
+        ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+        proposal_list = []
+        campaign_list = []
+        user = request.user
+
+        for index, row in enumerate(ws.iter_rows()):
+            if index > 0:
+                account_id = str(row[1].value) if row[1].value else None
+                organisation_id = str(row[0].value) if row[0].value else None
+                proposal_id = website_utils.get_generic_id([Organisation.objects.get(pk=organisation_id).name, AccountInfo.objects.get(pk=account_id).name])
+                account = AccountInfo.objects.get_permission(user=user, account_id=account_id)
+                parent = request.data.get('parent') if request.data.get('parent')!='0' else None
+                supplier_string = str(row[11].value) if row[11].value else None
+                supplier_codes = supplier_string.split(',')
+                supplier_codes = [x.strip(' ') for x in supplier_codes]
+
+                center = {}
+                # center.append({
+                #     'city': str(row[6].value) if row[6].value else None,
+                #     'codes': supplier_codes,
+                #     'area': str(row[7].value) if row[7].value else None,
+                #     'center_name': str(row[4].value) if row[4].value else None,
+                #     'subarea': str(row[8].value) if row[8].value else None,
+                #     'pincode': int(row[9].value) if row[9].value else None,
+                #     'radius': str(row[10].value) if row[10].value else None,
+                #     'address': str(row[5].value) if row[5].value else None
+                # })
+
+
+                center['city'] = row[6].value if row[6].value else None
+                center['codes'] = supplier_codes
+                center['area'] = row[7].value if row[7].value else None
+                center['center_name'] = row[4].value if row[4].value else None
+                center['subarea'] = row[8].value if row[8].value else None
+                center['pincode'] = str(row[9].value) if row[9].value else None
+                center['radius'] = int(row[10].value) if row[10].value else None
+                center['address'] = row[5].value if row[5].value else None
+
+                centers = [{'center': center}]
+                proposal_list.append({
+                    'organisation_id': organisation_id,
+                    'account_id': account_id,
+                    'centers': centers,
+                    'name' : str(row[2].value) if row[2].value else None,
+                    'tentative_cost': float(row[3].value) if row[3].value else None,
+                    'center_name': str(row[4].value) if row[4].value else None,
+                    'proposal_id': proposal_id,
+                    'account': account.account_id,
+                    'user': user.id,
+                    'created_by': user.username,
+                    'parent': parent,
+                    'tentative_start_date': row[12].value if row[12].value else None,
+                    'center_id': int(row[13].value) if row[13].value else None,
+                    'inventories': str(row[14].value) if row[14].value else None,
+                    'supplier_id_str': str(row[15].value) if row[15].value else None,
+                    'supplier_status_str': str(row[16].value) if row[16].value else None,
+                    'tentative_end_date': row[17].value if row[17].value else None,
+                    'invoice_number': int(row[18].value) if row[18].value else None,
+                    # 'comment': row[27].value,
+                })
+
+                proposal_data = proposal_list[index-1]
+
+                if index == 1:
+                    response = website_utils.create_basic_proposal(proposal_data)
+                    if not response.data['status']:
+                        return response
+                    response = website_utils.save_center_data(proposal_data, user)
+                    if not response.data['status']:
+                        return response
+
+
+
+class CreateInitialProposalBulkBasic(APIView):
+    def post(self, request):
+        class_name = self.__class__.__name__
+        source_file = request.data['file']
+        wb = load_workbook(source_file)
+        ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+        proposal_list = []
+        campaign_list = []
+        user = request.user
+
+        for index, row in enumerate(ws.iter_rows()):
+            if index == 1:
+                account_id = str(row[1].value) if row[1].value else None
+                organisation_id = str(row[0].value) if row[0].value else None
+                proposal_id = website_utils.get_generic_id([Organisation.objects.get(pk=organisation_id).name, AccountInfo.objects.get(pk=account_id).name])
+                account = AccountInfo.objects.get_permission(user=user, account_id=account_id)
+                parent = request.data.get('parent') if request.data.get('parent')!='0' else None
+                supplier_string = str(row[11].value) if row[11].value else None
+                supplier_codes = supplier_string.split(',')
+                supplier_codes = [x.strip(' ') for x in supplier_codes]
+                center = {}
+
+                center['city'] = row[6].value if row[6].value else None
+                center['area'] = row[7].value if row[7].value else None
+                center['codes'] = supplier_codes
+                center['center_name'] = row[4].value if row[4].value else None
+                center['subarea'] = row[8].value if row[8].value else None
+                center['pincode'] = str(row[9].value) if row[9].value else None
+                center['radius'] = int(row[10].value) if row[10].value else None
+                center['address'] = row[5].value if row[5].value else None
+
+                inventory_types = ['PO','ST','FL','SL','GA']
+                inventory_list = {}
+                r = 16
+                for inv in inventory_types:
+                    print inv
+                    inventory_list[inv] = int(row[r].value) if row[16].value else 0
+                    r = r + 1
+                print inventory_list
+                proposal_list.append({
+                    'organisation_id': organisation_id,
+                    'account_id': account_id,
+                    'center': center,
+                    'name': str(row[2].value) if row[2].value else None,
+                    'tentative_cost': float(row[3].value) if row[3].value else None,
+                    'center_name': str(row[4].value) if row[4].value else None,
+                    'proposal_id': proposal_id,
+                    'account': account.account_id,
+                    'user': user.id,
+                    'created_by': user.username,
+                    'parent': parent,
+                    'tentative_start_date': row[12].value if row[12].value else None,
+                    'center_id': int(row[13].value) if row[13].value else None,
+                    'tentative_end_date': row[14].value if row[14].value else None,
+                    'invoice_number': int(row[15].value) if row[15].value else None,
+                    'inventories': inventory_list
+                })
+                proposal_data = proposal_list[index - 1]
+
+                response = website_utils.create_basic_proposal(proposal_data)
+                if not response.data['status']:
+                    return response
+                response = website_utils.save_center_data_basic(proposal_data, user)
+                if not response.data['status']:
+                    return response
+
+        print proposal_data
+
+        return ui_utils.handle_response({}, data='success', success=True)
+
 
 class CreateFinalProposal(APIView):
     """
@@ -5306,7 +5461,6 @@ class ProfileViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-
 class OrganisationViewSet(viewsets.ViewSet):
     """
     ViewSets around organisations.
@@ -5381,7 +5535,6 @@ class OrganisationViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-
 class ContentTypeViewSet(viewsets.ViewSet):
     """
     fetches all content types in the system
@@ -5415,7 +5568,6 @@ class ContentTypeViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
 
 class ObjectLevelPermissionViewSet(viewsets.ViewSet):
     """
@@ -5484,7 +5636,6 @@ class ObjectLevelPermissionViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
 
 class GeneralUserPermissionViewSet(viewsets.ViewSet):
     """
@@ -5555,7 +5706,6 @@ class GeneralUserPermissionViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-
 class CloneProfile(APIView):
     """
     Clone a profile.
@@ -5599,7 +5749,6 @@ class CloneProfile(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-
 class OrganisationMapViewSet(viewsets.ViewSet):
     """
     viewset that around OrganisationMap model
@@ -5642,7 +5791,6 @@ class OrganisationMapViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
 
 class AccountViewSet(viewsets.ViewSet):
     """
