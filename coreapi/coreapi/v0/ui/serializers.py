@@ -22,6 +22,7 @@ class UISocietySerializer(ModelSerializer):
 
     class Meta:
         model = SupplierTypeSociety
+        fields = '__all__'
         read_only_fields = (
             'basic_contact_available',
             'basic_contacts',
@@ -59,6 +60,7 @@ class UITowerSerializer(ModelSerializer):
 
     class Meta:
         model = SocietyTower
+        fields = '__all__'
         read_only_fields = (
             'flat_type_details_available',
             'flat_type_details',
@@ -73,6 +75,7 @@ class UIPosterSerializer(ModelSerializer):
     # basic_reference_contacts = serializers.ListField(source='get_reference')
     class Meta:
         model = SocietyTower
+        fields = '__all__'
         read_only_fields = (
             # 'notice_board_details_available',
             'flat_type_details_available',

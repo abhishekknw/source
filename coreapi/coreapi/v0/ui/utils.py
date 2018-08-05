@@ -34,7 +34,8 @@ import v0.constants as v0_constants
 import v0.ui.serializers as ui_serializers
 from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.supplier.serializers import (SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SupplierTypeBusShelterSerializer,
-                                        SupplierTypeGymSerializer, SupplierTypeRetailShopSerializer, SupplierTypeSalonSerializer)
+                                        SupplierTypeGymSerializer, SupplierTypeRetailShopSerializer,
+                                        SupplierTypeSalonSerializer, BusDepotSerializer)
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.serializers import (IdeationDesignCostSerializer, DataSciencesCostSerializer, EventStaffingCostSerializer,
                                         LogisticOperationsCostSerializer, SpaceBookingCostSerializer, PrintingCostSerializer)
@@ -44,6 +45,7 @@ from v0.ui.inventory.models import (AdInventoryType, InventorySummary, FlyerInve
                                     GatewayArchInventory, PosterInventory)
 from v0.ui.base.models import DurationType
 from v0.ui.finances.models import PriceMappingDefault
+
 
 def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False, request=None):
     """
@@ -62,12 +64,14 @@ def handle_response(object_name, data=None, headers=None, content_type=None, exc
 
     """
     if not success:
+
         # prepare the object to be sent in error response
         data = {
             'general_error': data,
             'system_error': get_system_error(exception_object),
             'culprit_module': object_name,
         }
+
         if request:
             # fill the data with more information about request
             data['request_data'] = request.data
@@ -94,8 +98,8 @@ def handle_response(object_name, data=None, headers=None, content_type=None, exc
             except Exception as e:
                 # email sending failed. let it go.
                 pass
-
         if isinstance(exception_object, PermissionDenied):
+
             return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_403_FORBIDDEN)
         else:
             return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_400_BAD_REQUEST)
@@ -523,9 +527,8 @@ def save_stall_locations(c1, c2, supplier, supplier_type_code):
 
 def save_flyer_locations(c1, c2, supplier, supplier_type_code):
     count = int(c2) + 1
-
     try:
-        for i in range(c1 + 1, count):
+        for i in range(c1 + 1, count+1):
             flyer_id = supplier.supplier_id + "0000FL" + str(i).zfill(2)
             data = {
                 'adinventory_id': flyer_id,
@@ -714,7 +717,7 @@ def get_serializer(query):
             v0_constants.salon: SupplierTypeSalonSerializer,
             v0_constants.bus_shelter: SupplierTypeBusShelterSerializer,
             v0_constants.retail_shop_code: SupplierTypeRetailShopSerializer,
-            v0_constants.bus_depot_code: ui_serializers.BusDepotSerializer,
+            v0_constants.bus_depot_code: BusDepotSerializer,
             'ideation_design_cost': IdeationDesignCostSerializer,
             'logistic_operations_cost': LogisticOperationsCostSerializer,
             'space_booking_cost': SpaceBookingCostSerializer,
@@ -958,3 +961,11 @@ def save_society_payment_details(data):
         return True
     except Exception as e:
         raise Exception(function, "Error " + get_system_error(e))
+
+
+def get_from_dict(dict, key):
+    if key in dict:
+        if dict[key]:
+            return dict[key]
+    else:
+        return None

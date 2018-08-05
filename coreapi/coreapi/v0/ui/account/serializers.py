@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 from models import BusinessAccountContact, AccountInfo, ContactDetails, ContactDetailsGeneric, BusinessTypes,\
-    BusinessSubTypes, OperationsInfo, GenericExportFileName
+    BusinessSubTypes, OperationsInfo
 from v0.ui.organisation.models import Organisation
 from v0.ui.base.serializers import BaseModelPermissionSerializer
 from v0.ui.account.models import Signup, Profile
@@ -125,15 +125,6 @@ class UIBusinessInfoSerializer(ModelSerializer):
 
     class Meta:
         model = Organisation
-        fields = '__all__'
-
-class GenericExportFileSerializer(ModelSerializer):
-    """
-    simple serializer for generic export file name
-    """
-
-    class Meta:
-        model = GenericExportFileName
         fields = '__all__'
 
 

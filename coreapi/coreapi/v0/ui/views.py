@@ -5,7 +5,6 @@ import openpyxl
 
 # django imports
 from django.contrib.contenttypes.models import ContentType
-from django.db import transaction
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
@@ -64,7 +63,8 @@ from v0.ui.common.models import BaseUser
 from v0.constants import keys, decision
 from website.utils import save_price_mapping_default
 import v0.constants as v0_constants
-
+from utils import get_from_dict
+from controller import inventory_summary_insert
 
 class UsersProfilesAPIView(APIView):
 
@@ -503,300 +503,61 @@ class InventorySummaryAPIView(APIView):
           description : flier lobby allowed or not
 
         """
+        print request.data
         class_name = self.__class__.__name__
-        try:
+        response = ui_utils.get_supplier_inventory(request.data.copy(), id)
 
-            response = ui_utils.get_supplier_inventory(request.data.copy(), id)
+        if not response.data['status']:
+            return response
 
-            if not response.data['status']:
-                return response
+        supplier_inventory_data = response.data['data']['request_data']
 
-            data = response.data['data']['request_data']
-
-            supplier_object = response.data['data']['supplier_object']
-            inventory_object = response.data['data']['inventory_object']
-            supplier_type_code = request.data['supplier_type_code']
-            # supplier_type_code = 'CP'
-            # society = SupplierTypeSociety.objects.get(pk=id)
-            # item = InventorySummary.objects.get(supplier=society)
-            tower_response = ui_utils.get_tower_count(supplier_object, supplier_type_code)
-            if not tower_response.data['status']:
-                return tower_response
-            towercount = tower_response.data['data']
-
-            poster_campaign = 0
-            standee_campaign = 0
-            stall_campaign = 0
-            flier_campaign = 0
-            total_campaign = 0
-
-            with transaction.atomic():
-                if request.data.get('poster_allowed_nb'):
-                    if request.data.get('nb_count'):
-                        supplier_object.poster_allowed_nb = True
-                        poster_campaign = int(request.data.get('nb_count'))
-                        request.data['poster_campaign'] = poster_campaign
-                    else:
-                        supplier_object.poster_allowed_nb = False
-                else:
-                    supplier_object.poster_allowed_nb = False
-
-                if request.data.get('lift_count') and request.data.get('poster_allowed_lift'):
-                    if request.data.get('lift_count') > 0:
-                        supplier_object.poster_allowed_lift = True
-                        poster_campaign = poster_campaign + int(request.data.get('lift_count'))
-                        request.data['poster_campaign'] = poster_campaign
-                    else:
-                        supplier_object.poster_allowed_lift = False
-                else:
-                    supplier_object.poster_allowed_lift = False
-
-                if request.data.get('standee_allowed'):
-                    if request.data.get('total_standee_count'):
-                        supplier_object.standee_allowed = True
-                        standee_campaign = int(request.data.get('total_standee_count'))
-                        request.data['standee_campaign'] = standee_campaign
-                    else:
-                        supplier_object.standee_allowed = False
-                else:
-                    supplier_object.standee_allowed = False
-
-                if request.data.get('stall_allowed') or request.data.get('car_display_allowed'):
-                    if request.data.get('total_stall_count'):
-                        stall_campaign = int(request.data.get('total_stall_count'))
-                        request.data['stall_or_cd_campaign'] = stall_campaign
-
-                if request.data.get('flier_allowed'):
-                    if request.data.get('flier_frequency'):
-                        supplier_object.flier_allowed = True
-                        flier_campaign = int(request.data.get('flier_frequency'))
-                        request.data['flier_campaign'] = flier_campaign
-                    else:
-                        supplier_object.flier_allowed = False
-                else:
-                    supplier_object.flier_allowed = False
-
-                # flier creation
-
-                flag1 = True
-                if 'id' in request.data:
-                    flag1 = False
-                    if request.data.get('flier_allowed'):
-                        if request.data.get('flier_frequency') and inventory_object.flier_frequency < request.data.get(
-                                'flier_frequency'):
-                            if not inventory_object.flier_frequency:
-                                ui_utils.save_flyer_locations(0, request.data.get('flier_frequency'), supplier_object,
-                                                              supplier_type_code)
-                            else:
-                                ui_utils.save_flyer_locations(inventory_object.flier_frequency,
-                                                              request.data.get('flier_frequency'), supplier_object,
-                                                              supplier_type_code)
-                        serializer = InventorySummarySerializer(inventory_object, data=data)
-                else:
-                    if flag1 and request.data.get('flier_frequency'):
-                        ui_utils.save_flyer_locations(0, request.data['flier_frequency'], supplier_object,
-                                                      supplier_type_code)
-                    serializer = InventorySummarySerializer(data=data)
-
-                supplier_object.stall_allowed = True if request.data.get('stall_allowed') else False
-                supplier_object.car_display_allowed = True if request.data.get('car_display_allowed') else False
-
-                # society = SupplierTypeSociety.objects.get(pk=id)
-                supplier_object.total_campaign = poster_campaign + standee_campaign + stall_campaign + flier_campaign
-                supplier_object.save()
-
-                # stall creation
-                flag = True
-                if 'id' in request.data:
-                    flag = False
-                    if request.data.get('stall_allowed'):
-                        if request.data.get(
-                                'total_stall_count') and inventory_object.total_stall_count < request.data.get(
-                            'total_stall_count'):
-                            if not inventory_object.total_stall_count:
-                                ui_utils.save_stall_locations(0, request.data.get('total_stall_count'), supplier_object,
-                                                              supplier_type_code)
-                            else:
-                                ui_utils.save_stall_locations(inventory_object.total_stall_count,
-                                                              request.data.get('total_stall_count'), supplier_object,
-                                                              supplier_type_code)
-                    serializer = InventorySummarySerializer(inventory_object, data=data)
-
-                else:
-                    if flag and request.data.get('total_stall_count'):
-                        ui_utils.save_stall_locations(0, request.data.get('total_stall_count'), supplier_object,
-                                                      supplier_type_code)
-                        #
-                        # serializer = InventorySummarySerializer(data=data)
-                        # if serializer.is_valid():
-                        #     serializer.save(supplier=supplier_object)
-                        # else :
-                        #     return Response({'error': serializer.errors},status=400)
-
-                adinventory_dict = ui_utils.adinventory_func()
-                duration_type_dict = ui_utils.duration_type_func()
-                price_list = []
-                if request.data.get('poster_price_week_nb'):
-
-                    posPrice = int(request.data.get('poster_price_week_nb'))
-                    if request.data.get('poster_allowed_nb'):
-                        if request.data.get('nb_A3_allowed'):
-                            price = PriceMappingDefault.objects.get_price_mapping_object(
-                                ui_utils.make_dict_manager(adinventory_dict['poster_a3'],
-                                                           duration_type_dict['campaign_weekly']), id,
-                                supplier_type_code)
-                            ui_utils.save_price_data(price, posPrice)
-
-                            price = PriceMappingDefault.objects.get_price_mapping_object(
-                                ui_utils.make_dict_manager(adinventory_dict['poster_a3'],
-                                                           duration_type_dict['unit_weekly']), id, supplier_type_code)
-                            ui_utils.save_price_data(price, posPrice / towercount)
-
-                        if request.data.get('nb_A4_allowed'):
-                            price = PriceMappingDefault.objects.get_price_mapping_object(
-                                ui_utils.make_dict_manager(adinventory_dict['poster_a4'],
-                                                           duration_type_dict['campaign_weekly']), id,
-                                supplier_type_code)
-                            ui_utils.save_price_data(price, posPrice)
-
-                            price = PriceMappingDefault.objects.get_price_mapping_object(
-                                ui_utils.make_dict_manager(adinventory_dict['poster_a4'],
-                                                           duration_type_dict['unit_weekly']), id, supplier_type_code)
-                            ui_utils.save_price_data(price, posPrice / towercount)
-
-                if request.data.get('poster_price_week_lift'):
-                    posPrice = int(request.data.get('poster_price_week_lift'))
-                    if request.data.get('poster_allowed_lift'):
-                        price = PriceMappingDefault.objects.get_price_mapping_object(
-                            ui_utils.make_dict_manager(adinventory_dict['poster_lift_a3'],
-                                                       duration_type_dict['campaign_weekly']), id, supplier_type_code)
-                        ui_utils.save_price_data(price, posPrice)
-
-                        price = PriceMappingDefault.objects.get_price_mapping_object(
-                            ui_utils.make_dict_manager(adinventory_dict['poster_lift_a3'],
-                                                       duration_type_dict['unit_weekly']), id, supplier_type_code)
-                        ui_utils.save_price_data(price, posPrice / towercount)
-
-                        price = PriceMappingDefault.objects.get_price_mapping_object(
-                            ui_utils.make_dict_manager(adinventory_dict['poster_lift_a4'],
-                                                       duration_type_dict['campaign_weekly']), id, supplier_type_code)
-                        ui_utils.save_price_data(price, posPrice)
-
-                        price = PriceMappingDefault.objects.get_price_mapping_object(
-                            ui_utils.make_dict_manager(adinventory_dict['poster_lift_a4'],
-                                                       duration_type_dict['unit_weekly']), id, supplier_type_code)
-                        ui_utils.save_price_data(price, posPrice / towercount)
-
-                if request.data.get('standee_price_week'):
-                    stanPrice = int(request.data.get('standee_price_week'))
-                    if request.data.get('standee_allowed'):
-                        if request.data.get('standee_small'):
-                            price = PriceMappingDefault.objects.get_price_mapping_object(
-                                ui_utils.make_dict_manager(adinventory_dict['standee_small'],
-                                                           duration_type_dict['campaign_weekly']), id,
-                                supplier_type_code)
-
-                            ui_utils.save_price_data(price, stanPrice)
-
-                            price = PriceMappingDefault.objects.get_price_mapping_object(
-                                ui_utils.make_dict_manager(adinventory_dict['standee_small'],
-                                                           duration_type_dict['unit_weekly']), id, supplier_type_code)
-                            ui_utils.save_price_data(price, stanPrice / towercount)
-
-                        if request.data.get('standee_medium'):
-                            price = PriceMappingDefault.objects.get_price_mapping_object(
-                                ui_utils.make_dict_manager(adinventory_dict['standee_medium'],
-                                                           duration_type_dict['campaign_weekly']), id,
-                                supplier_type_code)
-
-                            ui_utils.save_price_data(price, stanPrice)
-
-                            price = PriceMappingDefault.objects.get_price_mapping_object(
-                                ui_utils.make_dict_manager(adinventory_dict['standee_medium'],
-                                                           duration_type_dict['unit_weekly']), id, supplier_type_code)
-                            ui_utils.save_price_data(price, stanPrice / towercount)
-
-                if request.data.get('stall_allowed'):
-                    if request.data.get('stall_small'):
-                        if request.data.get('stall_price_day_small'):
-                            stallPrice = int(request.data.get('stall_price_day_small'))
-
-                            price = PriceMappingDefault.objects.get_price_mapping_object(
-                                ui_utils.make_dict_manager(adinventory_dict['stall_small'],
-                                                           duration_type_dict['unit_daily']), id, supplier_type_code)
-                            ui_utils.save_price_data(price, stallPrice)
-
-                            price = PriceMappingDefault.objects.get_price_mapping_object(
-                                ui_utils.make_dict_manager(adinventory_dict['stall_canopy'],
-                                                           duration_type_dict['unit_daily']), id, supplier_type_code)
-                            ui_utils.save_price_data(price, stallPrice)
-
-                    if request.data.get('stall_large'):
-                        if request.data.get('stall_price_day_large'):
-                            stallPrice = int(request.data.get('stall_price_day_large'))
-
-                            price = PriceMappingDefault.objects.get_price_mapping_object(
-                                ui_utils.make_dict_manager(adinventory_dict['stall_large'],
-                                                           duration_type_dict['unit_daily']), id, supplier_type_code)
-                            ui_utils.save_price_data(price, stallPrice)
-
-                if request.data.get('car_display_allowed'):
-                    if request.data.get('cd_standard'):
-                        if request.data.get('cd_price_day_standard'):
-                            cdPrice = int(request.data['cd_price_day_standard'])
-
-                            price = PriceMappingDefault.objects.get_price_mapping_object(
-                                ui_utils.make_dict_manager(adinventory_dict['car_display_standard'],
-                                                           duration_type_dict['unit_daily']), id, supplier_type_code)
-                            ui_utils.save_price_data(price, cdPrice)
-
-                    if request.data.get('cd_premium'):
-                        if request.data.get('cd_price_day_premium'):
-                            cdPrice = int(request.data.get('cd_price_day_premium'))
-
-                            price = PriceMappingDefault.objects.get_price_mapping_object(
-                                ui_utils.make_dict_manager(adinventory_dict['car_display_premium'],
-                                                           duration_type_dict['unit_daily']), id, supplier_type_code)
-                            ui_utils.save_price_data(price, cdPrice)
-
-                if request.data.get('flier_price_day'):
-                    flierPrice = int(request.data.get('flier_price_day'))
-                    if request.data.get('mailbox_allowed'):
-                        price = PriceMappingDefault.objects.get_price_mapping_object(
-                            ui_utils.make_dict_manager(adinventory_dict['flier_mailbox'],
-                                                       duration_type_dict['unit_daily']), id, supplier_type_code)
-                        ui_utils.save_price_data(price, flierPrice)
-
-                    if request.data.get('d2d_allowed'):
-                        price = PriceMappingDefault.objects.get_price_mapping_object(
-                            ui_utils.make_dict_manager(adinventory_dict['flier_door_to_door'],
-                                                       duration_type_dict['unit_daily']), id, supplier_type_code)
-                        ui_utils.save_price_data(price, flierPrice)
-
-                    if request.data.get('flier_lobby_allowed'):
-                        try:
-                            price = PriceMappingDefault.objects.get_price_mapping_object(
-                                ui_utils.make_dict_manager(adinventory_dict['flier_lobby'],
-                                                           duration_type_dict['unit_daily']), id, supplier_type_code)
-                            ui_utils.save_price_data(price, flierPrice)
-
-                        except KeyError as e:
-                            raise KeyError(e.message)
-                if request.data.get('gateway_arch_allowed'):
-                    ui_utils.save_gateway_arch_location(supplier_object, supplier_type_code)
-
-                serializer = InventorySummarySerializer(inventory_object, data=data)
-
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response(serializer.data, status=status.HTTP_200_OK)
-                else:
-                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
-        except Exception as e:
-            return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
-
+        final_data = {
+            'id': get_from_dict(request.data, 'id'),
+            'supplier_object': get_from_dict(response.data['data'], 'supplier_object'),
+            'inventory_object': get_from_dict(response.data['data'], 'inventory_object'),
+            'supplier_type_code': get_from_dict(request.data, 'supplier_type_code'),
+            'poster_allowed_nb': get_from_dict(request.data, 'poster_allowed_nb'),
+            'nb_count': get_from_dict(request.data, 'nb_count'),
+            'poster_campaign': get_from_dict(request.data, 'poster_campaign'),
+            'lift_count': get_from_dict(request.data, 'lift_count'),
+            'poster_allowed_lift': get_from_dict(request.data, 'poster_allowed_lift'),
+            'standee_allowed': get_from_dict(request.data, 'standee_allowed'),
+            'total_standee_count': get_from_dict(request.data, 'total_standee_count'),
+            'standee_campaign': get_from_dict(request.data, 'standee_campaign'),
+            'stall_allowed': get_from_dict(request.data, 'stall_allowed'),
+            'car_display_allowed': get_from_dict(request.data, 'car_display_allowed'),
+            'total_stall_count': get_from_dict(request.data, 'total_stall_count'),
+            'stall_or_cd_campaign': get_from_dict(request.data, 'stall_or_cd_campaign'),
+            'flier_allowed': get_from_dict(request.data, 'flier_allowed'),
+            'flier_frequency': get_from_dict(request.data, 'flier_frequency'),
+            'flier_campaign': get_from_dict(request.data, 'flier_campaign'),
+            'poster_price_week_nb': get_from_dict(request.data, 'poster_price_week_nb'),
+            'nb_A3_allowed': get_from_dict(request.data, 'nb_A3_allowed'),
+            'nb_A4_allowed': get_from_dict(request.data, 'nb_A4_allowed'),
+            'poster_price_week_lift': get_from_dict(request.data, 'poster_price_week_lift'),
+            'standee_price_week': get_from_dict(request.data, 'standee_price_week'),
+            'standee_small': get_from_dict(request.data, 'standee_small'),
+            'standee_medium': get_from_dict(request.data, 'standee_medium'),
+            'stall_price_day_small': get_from_dict(request.data, 'stall_price_day_small'),
+            'stall_large': get_from_dict(request.data, 'stall_large'),
+            'stall_price_day_large': get_from_dict(request.data, 'stall_price_day_large'),
+            'cd_standard': get_from_dict(request.data, 'cd_standard'),
+            'cd_price_day_standard': get_from_dict(request.data, 'cd_price_day_standard'),
+            'cd_premium': get_from_dict(request.data, 'cd_premium'),
+            'cd_price_day_premium': get_from_dict(request.data, 'cd_price_day_premium'),
+            'flier_price_day': get_from_dict(request.data, 'flier_price_day'),
+            'mailbox_allowed': get_from_dict(request.data, 'mailbox_allowed'),
+            'd2d_allowed': get_from_dict(request.data, 'd2d_allowed'),
+            'flier_lobby_allowed': get_from_dict(request.data, 'flier_lobby_allowed'),
+            'gateway_arch_allowed': get_from_dict(request.data, 'gateway_arch_allowed'),
+        }
+        return inventory_summary_insert(final_data,supplier_inventory_data)
+        # try:
+        # except ObjectDoesNotExist as e:
+        #     return ui_utils.handle_response(class_name, exception_object=e, request=request)
+        # except Exception as e:
+        #     return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
 
 class PostInventorySummary(APIView):
     """
