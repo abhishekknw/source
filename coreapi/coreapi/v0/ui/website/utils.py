@@ -1352,72 +1352,11 @@ def save_center_data(proposal_data, user):
                         return response
                 else:
                     return ui_utils.handle_response(function_name, data=center_serializer.errors)
-            return ui_utils.handle_response(function_name, data='success', success=True)
+            return ui_utils.handle_response(function_name,
+                                            data={'status': 'success', 'center_id': center_serializer.data['id']},
+                                            success=True)
     except Exception as e:
         return ui_utils.handle_response(function_name, exception_object=e)
-
-
-def save_center_data_basic(proposal_data, user):
-    """
-
-    Args:
-        proposal_data: a proposal_data with proposal_id as key must.
-        user: User instance
-
-    Returns: center data
-
-    """
-    function_name = save_center_data.__name__
-    try:
-        # get the proposal_id
-        proposal_id = proposal_data['proposal_id']
-        with transaction.atomic():
-            # for all centers
-            center = proposal_data['center']
-
-            # prepare center info
-            center['proposal'] = proposal_id
-            # get address for this center. because address can contain a complicated logic in future, it's in separate
-            # function
-            address_response = calculate_address(center)
-            if not address_response.data['data']:
-                return address_response
-            address = address_response.data['data']
-
-            # add lat long to center's data based on address calculated
-
-            geo_response = get_geo_object_lat_long(address)
-            if not geo_response.data['status']:
-                center['latitude'], center['longitude'] = [0, 0]
-            else:
-                center['latitude'], center['longitude'] = geo_response.data['data']
-            center['user'] = user.id
-            # set pincode to zero if there isn't any
-            if not center['pincode']:
-                center['pincode'] = 0
-
-            if 'id' in center:
-                # means an existing center was updated
-                center_instance = ProposalCenterMapping.objects.get_permission(user=user, id=center['id'])
-                center_serializer = ProposalCenterMappingSerializer(center_instance, data=center)
-            else:
-                # means we need to create new center
-                center_serializer = ProposalCenterMappingSerializer(data=center)
-
-            print center_serializer
-            # save center info
-            if center_serializer.is_valid():
-                center_serializer.save()
-                # now save all the suppliers associated with this center
-                response = save_suppliers_allowed(center, proposal_id, center_serializer.data['id'], user)
-                if not response.data['status']:
-                    return response
-            else:
-                return ui_utils.handle_response(function_name, data=center_serializer.errors)
-            return ui_utils.handle_response(function_name, data='success', success=True)
-    except Exception as e:
-        return ui_utils.handle_response(function_name, exception_object=e)
-
 
 
 
@@ -6646,6 +6585,7 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
                 shortlisted_inv_objects.extend(response.data['data'])
         print shortlisted_inv_objects[0].__dict__
         print len(shortlisted_inv_objects)
+
         ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_inv_objects)
         if create_inv_act_data:
             shortlisted_supplier_ids = {space_obj.id for space_obj in shortlisted_suppliers}
