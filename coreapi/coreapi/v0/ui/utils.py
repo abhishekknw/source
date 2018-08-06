@@ -527,9 +527,8 @@ def save_stall_locations(c1, c2, supplier, supplier_type_code):
 
 def save_flyer_locations(c1, c2, supplier, supplier_type_code):
     count = int(c2) + 1
-
     try:
-        for i in range(c1 + 1, count):
+        for i in range(c1 + 1, count+1):
             flyer_id = supplier.supplier_id + "0000FL" + str(i).zfill(2)
             data = {
                 'adinventory_id': flyer_id,
