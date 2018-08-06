@@ -4035,7 +4035,6 @@ class CampaignInventory(APIView):
         # todo: reduce the time taken for this API. currently it takes 15ms to fetch data which is too much.
         try:
             proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
-
             response = website_utils.is_campaign(proposal)
             if not response.data['status']:
                 return response

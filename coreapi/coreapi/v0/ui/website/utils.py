@@ -1314,7 +1314,6 @@ def save_center_data(proposal_data, user):
             # for all centers
             for center_info in proposal_data['centers']:
                 center = center_info['center']
-
                 # prepare center info
                 center['proposal'] = proposal_id
                 # get address for this center. because address can contain a complicated logic in future, it's in separate
@@ -1325,11 +1324,11 @@ def save_center_data(proposal_data, user):
                 address = address_response.data['data']
 
                 # add lat long to center's data based on address calculated
-                #geo_response = get_geo_object_lat_long(address)
-                #if not geo_response.data['status']:
-                center['latitude'], center['longitude'] = [0, 0]
-                #else:
-                #   center['latitude'], center['longitude'] = geo_response.data['data']
+                geo_response = get_geo_object_lat_long(address)
+                if not geo_response.data['status']:
+                    center['latitude'], center['longitude'] = [0, 0]
+                else:
+                    center['latitude'], center['longitude'] = geo_response.data['data']
                 center['user'] = user.id
                 # set pincode to zero if there isn't any
                 if not center['pincode']:
@@ -1357,6 +1356,7 @@ def save_center_data(proposal_data, user):
     except Exception as e:
         return ui_utils.handle_response(function_name, exception_object=e)
 
+
 def save_center_data_basic(proposal_data, user):
     """
 
@@ -1374,7 +1374,6 @@ def save_center_data_basic(proposal_data, user):
         with transaction.atomic():
             # for all centers
             center = proposal_data['center']
-            print center
 
             # prepare center info
             center['proposal'] = proposal_id
@@ -1386,11 +1385,12 @@ def save_center_data_basic(proposal_data, user):
             address = address_response.data['data']
 
             # add lat long to center's data based on address calculated
-            #geo_response = get_geo_object_lat_long(address)
-            #if not geo_response.data['status']:
-            center['latitude'], center['longitude'] = [0, 0]
-            #else:
-            #   center['latitude'], center['longitude'] = geo_response.data['data']
+
+            geo_response = get_geo_object_lat_long(address)
+            if not geo_response.data['status']:
+                center['latitude'], center['longitude'] = [0, 0]
+            else:
+                center['latitude'], center['longitude'] = geo_response.data['data']
             center['user'] = user.id
             # set pincode to zero if there isn't any
             if not center['pincode']:
