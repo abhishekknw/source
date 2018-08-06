@@ -1255,7 +1255,6 @@ def save_suppliers_allowed(center_info, proposal_id, center_id, user):
     try:
         # fetch all the supplier codes. 'supplier_codes' 
         suppliers_codes = center_info['center']['codes']
-        print suppliers_codes
         # for all the codes
         for code in suppliers_codes:
             content_type_response = ui_utils.get_content_type(code)
@@ -5904,7 +5903,6 @@ def handle_supplier_data_from_sheet(result, supplier_instance_map, content_type,
         for supplier_id, detail in result.iteritems():
             count = count + 1
             instance = supplier_instance_map[supplier_id]
-            print count
             if supplier_type_code == v0_constants.society_code:
                 # get additional tower instance to be added if any first before setting new attributes
                 tower_created_list = handle_society_towers(instance, detail, tower_count_map, content_type)
@@ -6531,6 +6529,8 @@ def save_shortlisted_suppliers_data(center, supplier_code, proposal_data, propos
                 'proposal': proposal,
                 'supplier_code': supplier_code,
                 'status': supplier['status'],
+                'total_negotiated_price': supplier[
+                    'total_negotiated_price'] if 'total_negotiated_price' in supplier else None
             }
             shortlisted_suppliers.append(ShortlistedSpaces(**data))
 
@@ -6583,8 +6583,6 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
                 if not response.data['status']:
                     return response
                 shortlisted_inv_objects.extend(response.data['data'])
-        print shortlisted_inv_objects[0].__dict__
-        print len(shortlisted_inv_objects)
 
         ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_inv_objects)
         if create_inv_act_data:
@@ -6595,7 +6593,6 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
 
             response = create_inventory_activity_data(shortlisted_inventory_objects)
             if not response:
-                print response
                 return response
 
         return ui_utils.handle_response(function_name, data={}, success=True)
@@ -6647,9 +6644,6 @@ def make_final_list(filter_code, inventory_objects, space_id):
     """
     function_name = make_final_list.__name__
     try:
-        print filter_code
-        print inventory_objects
-        print space_id.__dict__
         ad_inventory = v0_constants.inventory_type_duration_dict_list[filter_code['id']]
         ad_inventory_type_id = AdInventoryType.objects.get(adinventory_name=ad_inventory[0],
                                                            adinventory_type=ad_inventory[1])

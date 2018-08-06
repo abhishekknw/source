@@ -2687,8 +2687,8 @@ def create_proposal_object(organisation_id, account_id, user, tentative_cost, na
         'user': user.id,
         'created_by': user.id,
         'tentative_cost': tentative_cost,
-        'name': name,
-        'campaign_state': 'PTC'
+        'name': name
+        # 'campaign_state': 'PTC'
     }
 
 class CreateInitialProposalBulkBasic(APIView):
@@ -2763,15 +2763,14 @@ class CreateInitialProposalBulkBasic(APIView):
                 stall_filter = True if int(row[6].value) == 1 else False
                 gatewayarch_filter = True if int(row[7].value) == 1 else False
                 supplier_id = row[8].value if row[8].value else None
-                poster_count = row[9].value if row[8].value else None
-                poster_price = row[10].value if row[10].value else None
-                poster_days = row[11].value if row[11].value else None
+                total_negotiated_price = int(row[9].value) if row[9].value else None
                 start_date = start_date.replace(tzinfo=pytz.UTC) if start_date else None
                 end_date = end_date.replace(tzinfo=pytz.UTC) if end_date else None
                 proposal_data['tentative_start_date'] = start_date
                 proposal_data['tentative_end_date'] = end_date
                 proposal_data['center_id'] = center_id
                 proposal_data['invoice_number'] = invoice_no
+                proposal_data['total_negotiated_price'] = total_negotiated_price
                 center = ProposalCenterMapping.objects.get(pk=center_id)
                 filter_codes = []
                 if poster_filter:
@@ -2786,7 +2785,8 @@ class CreateInitialProposalBulkBasic(APIView):
                     filter_codes.append({'id': 'GA'})
                 supplier_data = [{
                     'status': 'F',
-                    'id': supplier_id
+                    'id': supplier_id,
+                    'total_negotiated_price': total_negotiated_price
                 }]
                 center_data = {
                     'RS': {
@@ -2810,139 +2810,9 @@ class CreateInitialProposalBulkBasic(APIView):
                 response = website_utils.update_proposal_invoice_and_state(proposal_data, proposal)
                 if not response.data['status']:
                     return response
-
-        #         organisation_id = str(row[0].value) if row[0].value else None
-        #         if index == 1:
-        #             proposal_id = website_utils.get_generic_id([Organisation.objects.get(pk=organisation_id).name, AccountInfo.objects.get(pk=account_id).name])
-        #         account = AccountInfo.objects.get_permission(user=user, account_id=account_id)
-        #         parent = request.data.get('parent') if request.data.get('parent')!='0' else None
-        #         supplier_string = str(row[11].value) if row[11].value else None
-        #         supplier_codes = supplier_string.split(',')
-        #         supplier_codes = [x.strip(' ') for x in supplier_codes]
-        #         center = {}
-        #
-        #         center['city'] = row[6].value if row[6].value else None
-        #         center['area'] = row[7].value if row[7].value else None
-        #         center['codes'] = supplier_codes
-        #         center['center_name'] = row[4].value if row[4].value else None
-        #         center['subarea'] = row[8].value if row[8].value else None
-        #         center['pincode'] = str(row[9].value) if row[9].value else None
-        #         center['radius'] = int(row[10].value) if row[10].value else None
-        #         center['address'] = row[5].value if row[5].value else None
-        #
-        #         centers = [{'center': center}]
-        #         inventory_types = ['PO', 'ST', 'FL', 'SL', 'GA']
-        #         inventory_list = []
-        #         inventory_details = []
-        #         r = 16
-        #         for inv in inventory_types:
-        #             inv_value = int(row[r].value) if row[r].value else 0
-        #             if inv_value == 1:
-        #                 x = 3*r - 26
-        #                 inventory_list.append(inv)
-        #                 curr_inventory = {
-        #                     'count': int(row[x].value) if row[x].value else 0,
-        #                     'price': int(row[x+1].value) if row[x+1].value else 0,
-        #                     'days' : int(row[x+2].value) if row[x+2].value else 0
-        #                 }
-        #                 inventory_details.append({inv: curr_inventory})
-        #             r = r + 1
-        #         print inventory_details
-        #         proposal_list.append({
-        #             'organisation_id': organisation_id,
-        #             'account_id': account_id,
-        #             'centers': centers,
-        #             'name': str(row[2].value) if row[2].value else None,
-        #             'tentative_cost': float(row[3].value) if row[3].value else None,
-        #             'center_name': str(row[4].value) if row[4].value else None,
-        #             'proposal_id': proposal_id,
-        #             'account': account.account_id,
-        #             'user': user.id,
-        #             'created_by': user.username,
-        #             'parent': parent,
-        #             'tentative_start_date': row[12].value if row[12].value else None,
-        #             'center_id': int(row[13].value) if row[13].value else None,
-        #             'tentative_end_date': row[14].value if row[14].value else None,
-        #             'invoice_number': int(row[15].value) if row[15].value else None,
-        #             'inventories': inventory_list,
-        #             'supplier_id_str': str(row[21].value) if row[15].value else None,
-        #             'supplier_status_str': 'F'
-        #
-        #         })
-        #         proposal_data = proposal_list[index - 1]
-        #         print "proposal_data"
-        #         print proposal_data
-        #
-        #         if index == 1:
-        #             response = website_utils.create_basic_proposal(proposal_data)
-        #             if not response.data['status']:
-        #                 return response
-        #             response = website_utils.save_center_data(proposal_data, user)
-        #             if not response.data['status']:
-        #                 return response
-        #             print 'proposal created'
-        #         for center in proposal_data['centers']:
-        #             center_data = center['center']
-        #             supplier_types = center_data['codes']
-        #             inventory_filters = proposal_data['inventories']
-        #             filter_codes = []
-        #             for inv_type in inventory_filters:
-        #                 f = {'id': inv_type}
-        #                 filter_codes.append(f)
-        #             supplier_ids = strToList(proposal_data['supplier_id_str'])
-        #             supplier_statuses = strToList(proposal_data['supplier_status_str'])
-        #             supplier_data = []
-        #             for i in range(len(supplier_ids)):
-        #                 supplier_id = supplier_ids[i]
-        #                 supplier_status = supplier_statuses[i]
-        #                 supplier_data.append({
-        #                     'status': supplier_status,
-        #                     'id': supplier_id
-        #                 })
-        #             supplier_type_data = {'filter_codes': filter_codes, 'supplier_data': supplier_data}
-        #             center_data = {'RS': supplier_type_data}
-        #             campaign_data = {}
-        #             tentative_start_date = proposal_data['tentative_start_date'].replace(tzinfo=pytz.UTC)
-        #             tentative_end_date = proposal_data['tentative_end_date'].replace(tzinfo=pytz.UTC)
-        #             campaign_data.update({
-        #                 'tentative_start_date': tentative_start_date,
-        #                 'center_id': proposal_data['center_id'],
-        #                 'center_data': center_data,
-        #                 'tentative_end_date': tentative_end_date,
-        #                 'invoice_number': proposal_data['invoice_number'],
-        #                 'proposal_id': proposal_data['proposal_id']
-        #             })
-        #             campaign_list.append(campaign_data)
-        #         print campaign_data
-        #         center_id = campaign_data['center_id']
-        #         print center_id
-        #         proposal = ProposalInfo.objects.get(pk=campaign_data['proposal_id'])
-        #         try:
-        #             center = ProposalCenterMapping.objects.get(pk=center_id)
-        #         except Exception as e:
-        #             print e
-        #         for supplier_code in campaign_data['center_data']:
-        #
-        #             response = website_utils.save_filters(center, supplier_code, campaign_data, proposal)
-        #             if not response.data['status']:
-        #                 return response
-        #             response = website_utils.save_shortlisted_suppliers_data(center, supplier_code, campaign_data,
-        #                                                                      proposal)
-        #             if not response.data['status']:
-        #                 return response
-        #             response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
-        #                                                                                      campaign_data, proposal)
-        #             if not response.data['status']:
-        #                 return response
-        #         response = website_utils.update_proposal_invoice_and_state(campaign_data, proposal)
-        #         if not response.data['status']:
-        #             return response
-        #         response = website_utils.create_generic_export_file_data(proposal)
-        #         if not response.data['status']:
-        #             return response
-        #
-        #         print 'campaign created'
-        # return ui_utils.handle_response({}, data='success', success=True)
+                response = website_utils.create_generic_export_file_data(proposal)
+                if not response.data['status']:
+                    return response
         return ui_utils.handle_response({}, data='success', success=True)
 
 
@@ -3969,7 +3839,7 @@ class AssignCampaign(APIView):
             if user.is_superuser:
                 assigned_objects = CampaignAssignment.objects.all()
             else:
-                assigned_objects = CampaignAssignment.objects.filter(Q(assigned_to=user) | Q(assigned_by=user) | Q(campaign__created_by=user.username))
+                    assigned_objects = CampaignAssignment.objects.filter(Q(assigned_to=user) | Q(assigned_by=user) | Q(campaign__created_by=user.username))
             campaigns = []
             # check each one of them weather they are campaign or not
             for assign_object in assigned_objects:
