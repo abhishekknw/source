@@ -239,6 +239,12 @@ angular
             controller : 'MapCtrl',
             templateUrl : 'modules/pages/mapview/mapview.tmpl.html',
         })
+        .state('societydetailspage',{
+              // url : '/SocietyDetailsPages',
+              url : '/:supplierId/SocietyDetailsPages',
+                controller : 'SocietyDetailsPagesCtrl',
+              templateUrl : 'modules/pages/SocietyDetailsPages/societydetailspage.tmpl.html',
+          })
       .state('releasePlan',{
            url : '/:proposal_id/releasePlan',
            controller : 'ReleaseCampaignCtrl',
@@ -372,7 +378,7 @@ angular
         //    $location.path('/forbiddenPage');
         //  }
         console.log(event);
-         console.log("location change start - Whence: " + whence);         
+         console.log("location change start - Whence: " + whence);
          // redirect to login page if not logged in
          $rootScope.globals.currentUser = AuthService.UserInfo();
          if (!$rootScope.globals.currentUser) {

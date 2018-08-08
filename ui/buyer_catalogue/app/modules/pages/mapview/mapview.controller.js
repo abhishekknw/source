@@ -2261,7 +2261,9 @@ $scope.gridViewSummary = {};
 
 
   //start : code added for societyDetails
-$scope.getSocietyDetails = function(supplier,center,index){
+$scope.getSocietyDetails = function(supplier,supplierId,center,index){
+  console.log(supplier);
+  $location.path('/' + supplierId + '/SocietyDetailsPages');
   $scope.temp_index = index;
   $scope.center = center;
   mapViewService.processParam();
@@ -2336,6 +2338,8 @@ $scope.getSocietyDetails = function(supplier,center,index){
     commonDataShare.showErrorMessage(response);
   });
 }//End of function getSocietyDetails
+
+
   function estimatedResidents (flatcount){
     var residents = flatcount * 4;
     $scope.residentCount = {
@@ -2583,4 +2587,5 @@ var setSocietyLocationOnMap = function(supplier){
 
 });
   }
+
 });
