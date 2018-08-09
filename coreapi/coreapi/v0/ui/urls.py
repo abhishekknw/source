@@ -18,6 +18,7 @@ urlpatterns = [
     url(r'^website/', include('v0.ui.website.urls')),
     url(r'^supplier/', include('v0.ui.supplier.urls')),
     url(r'^proposal/', include('v0.ui.proposal.urls')),
+    url(r'^leads/', include('v0.ui.leads.urls')),
 
     # url(r'^website/create_business/load_business_types/',web_views.getBusinessTypesAPIView.as_view()),
     # url(r'^website/subtypes/(?P<id>[A-Z_a-z0-9]+)/$', web_views.getBusinessSubTypesAPIView.as_view()),
