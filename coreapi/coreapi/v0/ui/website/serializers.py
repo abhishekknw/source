@@ -492,3 +492,11 @@ class LeadsSerializer(ModelSerializer):
 
     class Meta:
         model = models.Leads
+
+class HashtagImagesSerializer(ModelSerializer):
+    """
+simple serializer for HashtagImages
+    """
+
+    class Meta:
+        model = models.HashTagImages
