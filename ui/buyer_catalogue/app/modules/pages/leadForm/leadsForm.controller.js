@@ -7,7 +7,7 @@ angular.module('catalogueApp')
         lastname1 : 'text',
         firstname2 : 'text',
         lastname2 : 'text',
-        mobile1 : 'number',
+        mobile1  : 'number',
         mobile2 : 'number',
         email1 : 'email',
         email2 : 'email',
@@ -32,6 +32,8 @@ angular.module('catalogueApp')
         .then(function onSuccess(response){
           console.log(response);
           $scope.alias_data = response.data.data;
+          console.log(  $scope.alias_data);
+          console.log($scope.alias_data);
         }).catch(function onError(response){
           console.log(response);
         })
@@ -120,5 +122,7 @@ angular.module('catalogueApp')
           console.log(response);
         })
       }
+      $scope.ph_numbr = /^\+?\d{10}$/;
+      $scope.datePtrn = "dd/MM/YYYY";
 
     });

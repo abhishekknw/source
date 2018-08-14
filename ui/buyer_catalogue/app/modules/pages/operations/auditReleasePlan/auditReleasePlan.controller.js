@@ -266,8 +266,10 @@ angular.module('catalogueApp')
     $scope.removeAuditDate = function(inventory,index){
       inventory.splice(index,1);
     }
+    $scope.isDisabled =false;
     $scope.saveActivityDates = function(){
       $scope.savingDates = true;
+      $scope.isDisabled = true;
       //below function creates complex request structure for data
       editActivityDates();
       auditReleasePlanService.saveActivityDetails($scope.requestaActivityData)
@@ -339,6 +341,7 @@ angular.module('catalogueApp')
     //event on modal close i.e - clear invIdList
     $scope.resetData = function(){
       $scope.invIdList = [];
+      $scope.isDisabled =false;
       $scope.selectedRow = undefined;
       $scope.invActivityData = [];
       $('#manageDatesModal').on('hide.bs.modal', function () {
@@ -384,6 +387,8 @@ angular.module('catalogueApp')
         commonDataShare.showErrorMessage(response);
         console.log("error occured", response.status);
       });
+
+
 
     }
 }]);

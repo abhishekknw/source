@@ -6517,3 +6517,30 @@ class GetRelationshipAndPastCampaignsData(APIView):
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class HashtagImagesViewSet(viewsets.ViewSet):
+    """
+    This class is arround hashtagged images by audit app
+    """
+    def create(self,request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            data = request.data.copy()
+            supplier_type_code = request.data.get('supplierTypeCode')
+            response = ui_utils.get_content_type(supplier_type_code)
+            if not response:
+                return response
+            content_type = response.data.get('data')
+            data['content_type'] = content_type.id
+            serializer = website_serializers.HashtagImagesSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
