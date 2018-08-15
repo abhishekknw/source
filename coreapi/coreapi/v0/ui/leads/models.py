@@ -63,6 +63,7 @@ class LeadAlias(BaseModel):
 class LeadsForm(BaseModel):
     campaign_id = models.CharField(max_length=70, null=True, blank=True) # to be changed to foreign key
     leads_form_name = models.CharField(max_length=100, null=True, blank=True)
+    last_entry_id = models.IntegerField(blank=False, null=True)
 
     class Meta:
         db_table = 'leads_form'
@@ -105,6 +106,6 @@ class LeadsFormData(BaseModel):
     supplier_id = models.CharField(max_length=70, null=True, blank=True)
     item_order_id = models.IntegerField(blank=False, null=True)
     item_value = models.CharField(max_length=200, null=True, blank=True)
-
+    entry_id = models.IntegerField(blank=False, null=True)
     class Meta:
         db_table = 'leads_form_data'

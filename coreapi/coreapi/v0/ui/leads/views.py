@@ -64,14 +64,12 @@ class LeadsViewSetExcel(APIView):
 
 class CreateLeadsForm(APIView):
 
-    def post(self, request):
+    def post(self, request, campaign_id):
         """
         :param request:
         :return:
         """
         class_name = self.__class__.__name__
-        print request.data
-        campaign_id = request.data['campaign_id']
         leads_form_name = request.data['leads_form_name']
         leads_form_items = request.data['leads_form_items']
         new_dynamic_form = LeadsForm(**{
