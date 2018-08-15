@@ -1,6 +1,7 @@
 from django.conf.urls import url
-from v0.ui.website.views import LeadsViewSetExcel
+from views import LeadsViewSetExcel, CreateLeadsForm
 
 urlpatterns = [
-    url(r'^create-leads-excel/$', LeadsViewSetExcel.as_view())
+    url(r'^create-leads-excel/$', LeadsViewSetExcel.as_view()),
+    url(r'^form/create$', CreateLeadsForm.as_view())
 ]
