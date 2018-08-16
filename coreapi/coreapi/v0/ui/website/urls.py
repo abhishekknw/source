@@ -47,7 +47,7 @@ urlpatterns = [
     url(r'^(?P<proposal_id>[A-Z_a-z0-9-]+)/import-proposal-cost-data/$', views.ImportProposalCostData.as_view(), name='import-metric-data'),
     url(r'^(?P<proposal_id>[A-Z_a-z0-9-]+)/create-final-proposal/$', views.CreateFinalProposal.as_view(), name='create-final-proposal'),
     url(r'^(?P<account_id>[A-Z_a-z0-9-]+)/create-initial-proposal/$', views.CreateInitialProposal.as_view(), name='create-initial-proposal'),
-    url(r'^import-campaign-leads-data/$', views.ImportCampaignLeads.as_view()),
+    # url(r'^import-campaign-leads-data/$', views.ImportCampaignLeads.as_view()),
     url(r'^filtered-suppliers/$', views.FilteredSuppliers.as_view()),
     url(r'^supplier-search/$', views.SupplierSearch.as_view()),
     url(r'^import-area-subarea/$', views.ImportAreaSubArea.as_view()),
@@ -106,7 +106,6 @@ router.register(r'^role-hierarchy', views.RoleHierarchyViewSet, base_name='role-
 router.register(r'^dashboard', views.DashBoardViewSet, base_name='dashboard')
 router.register(r'^proposal-center-mapping', views.proposalCenterMappingViewSet, base_name='proposal-center-mapping')
 router.register(r'^lead-alias', views.LeadAliasViewSet, base_name='lead-alias')
-router.register(r'^leads', views.LeadsViewSet, base_name='leads')
 router.register(r'^leads', views.LeadsViewSet, base_name='leads')
 
 

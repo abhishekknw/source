@@ -5,44 +5,14 @@ from django.contrib.contenttypes.models import ContentType
 from v0.ui.base.models import BaseModel
 from v0.constants import supplier_id_max_length
 from django.contrib.contenttypes import fields
+from v0.ui.proposal.models import ProposalInfo
 
-class CampaignLeads(BaseModel):
-    """
-    a campaign can have multiple leads. a lead can go in multiple campaigns.
-    campaign stores the campaign id.
-    lead stores the lead id
-    """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
-    campaign_id = models.IntegerField(default=0)
-    lead_email = models.EmailField(default='')
-    comments = models.CharField(max_length=255, null=True)
-    objects = managers.GeneralManager()
-
-    class Meta:
-        db_table = 'campaign_leads'
-        unique_together = (('campaign_id', 'lead_email'),)
-
-class Lead(BaseModel):
-    """
-    A model to store the leads data. This user is different django from auth_user. it's a 'lead'.
-    """
-    email = models.EmailField(primary_key=True)
-    name = models.CharField(max_length=255, null=True, blank=True)
-    gender = models.CharField(max_length=255, null=True, blank=True)
-    age = models.FloatField(null=True, blank=True)
-    phone = models.IntegerField(null=True, blank=True)
-    address = models.CharField(max_length=255, null=True, blank=True)
-    lead_type = models.CharField(max_length=255, null=True, blank=True)
-    lead_status = models.CharField(max_length=255, null=True, blank=True)
-
-    class Meta:
-        db_table = 'lead'
 
 class Leads(BaseModel):
     """
     This model defines Leads
     """
-    campaign = models.ForeignKey('ProposalInfo', null=False, blank=False)
+    campaign = models.ForeignKey(ProposalInfo, null=False, blank=False)
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(max_length=supplier_id_max_length)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
@@ -77,23 +47,66 @@ class Leads(BaseModel):
     class Meta:
         db_table = 'leads'
 
+
 class LeadAlias(BaseModel):
     """
     This model defines aliases of leads model fields
     """
-    campaign = models.ForeignKey('ProposalInfo', null=False, blank=False)
+    campaign = models.ForeignKey(ProposalInfo, null=False, blank=False)
     original_name = models.CharField(max_length=255, null=False, blank=False)
     alias = models.CharField(max_length=255, null=False, blank=False)
 
     class Meta:
         db_table = 'lead_alias'
 
-class SocietyLeads(models.Model):
-    id = models.CharField(max_length=100,null=False,primary_key=True)
-    society = models.ForeignKey('SupplierTypeSociety', null=True, on_delete=models.SET_NULL)
-    name = models.CharField(max_length=50)
-    phone = models.CharField(max_length=15, null=True, blank=True,default='0')
-    email = models.EmailField()
+
+class LeadsForm(BaseModel):
+    campaign_id = models.CharField(max_length=70, null=True, blank=True) # to be changed to foreign key
+    leads_form_name = models.CharField(max_length=100, null=True, blank=True)
+    last_entry_id = models.IntegerField(blank=False, null=True)
 
     class Meta:
-        db_table = 'society_leads'
+        db_table = 'leads_form'
+
+
+LEAD_KEY_TYPES = (
+    ('STRING', 'STRING'),
+    ('BOOLEAN', 'BOOLEAN'),
+    ('INT', 'INT'),
+    ('EMAIL', 'EMAIL'),
+    ('PASSWORD', 'PASSWORD'),
+    ('PHONE', 'PHONE'),
+    ('RADIO', 'RADIO'),
+    ('DROPDOWN', 'DROPDOWN'),
+    ('CHECKBOX', 'CHECKBOX'),
+    ('TEXTAREA', 'TEXTAREA')
+)
+
+LEAD_ITEM_STATUS = (
+    ('ACTIVE', 'ACTIVE'),
+    ('INACTIVE', 'INACTIVE')
+)
+
+
+class LeadsFormItems(BaseModel):
+    leads_form = models.ForeignKey('LeadsForm', null=False, blank=False)
+    key_name = models.CharField(max_length=70, null=True, blank=True)
+    key_options = models.CharField(max_length=200, null=True, blank=True)  # delimiter separated
+    key_type = models.CharField(max_length=70, null=True, choices=LEAD_KEY_TYPES)
+    order_id = models.IntegerField(blank=False, null=True)
+    item_id = models.IntegerField(blank=False, null=True)
+    status = models.CharField(max_length=70, null=True, choices=LEAD_ITEM_STATUS)
+    is_required = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'leads_form_items'
+
+
+class LeadsFormData(BaseModel):
+    leads_form = models.ForeignKey('LeadsForm', null=False, blank=False)
+    supplier_id = models.CharField(max_length=70, null=True, blank=True)
+    item_value = models.CharField(max_length=200, null=True, blank=True)
+    entry_id = models.IntegerField(blank=False, null=True)
+    item_id = models.IntegerField(blank=False, null=True)
+    class Meta:
+        db_table = 'leads_form_data'

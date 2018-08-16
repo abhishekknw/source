@@ -93,6 +93,7 @@ from v0 import errors
 import v0.constants as v0_constants
 from v0.constants import flat_type_dict
 
+
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
 class GetBusinessTypesAPIView(APIView):
     """
@@ -6641,63 +6642,6 @@ class LeadsViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-
-class LeadsViewSetExcel(APIView):
-
-    def post(self, request):
-        """
-
-        :param request:
-        :return:
-        """
-        class_name = self.__class__.__name__
-        source_file = request.data['file']
-        wb = load_workbook(source_file)
-        ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
-        leads_list = []
-        serializer_list = []
-        for index, row in enumerate(ws.iter_rows()):
-            if index > 0:
-                base_data = {}
-                supplier_type_code = row[0].value if row[0].value else None
-                base_data = {
-                'supplierCode': supplier_type_code,
-                'object_id' : str(row[1].value) if row[1].value else None,
-                'campaign' : row[2].value if row[2].value else None
-                    }
-                leads_list.append(base_data)
-                response = ui_utils.get_content_type(supplier_type_code)
-                if not response:
-                    return response
-                content_type = response.data.get('data')
-                base_data['content_type'] = content_type.id
-                base_data['firstname1'] = str(row[3].value) if row[3].value else None
-                base_data['lastname1'] = str(row[5].value) if row[5].value else None
-                base_data['firstname2'] = str(row[6].value) if row[6].value else None
-                base_data['alphanumeric1'] = str(row[4].value) if row[4].value else None
-                base_data['lastname2'] = str(row[8].value) if row[8].value else None
-                base_data['number1'] = int(row[7].value) if row[7].value else None
-                base_data['alphanumeric2'] = str(row[9].value) if row[9].value else None
-                base_data['number2'] = int(row[10].value) if row[10].value else None
-                base_data['mobile1'] = int(row[11].value) if row[11].value else None
-                base_data['mobile2'] = int(row[12].value) if row[12].value else None
-                base_data['email1'] = str(row[13].value) if row[13].value else None
-                base_data['number2'] = int(row[15].value) if row[15].value else None
-                base_data['date1'] = row[14].value.date() if row[14].value else None
-                base_data['alphanumeric2'] = str(row[16].value) if row[16].value else None
-                base_data['alphanumeric3'] = str(row[17].value) if row[17].value else None
-                base_data['is_from_sheet'] = True
-                base_data['is_interested'] = row[18].value if row[18].value else False
-
-                serializer = LeadsSerializer(data=base_data)
-                if serializer.is_valid():
-                    serializer.save()
-                    serializer_list.append(serializer.data)
-                else:
-                    return ui_utils.handle_response(class_name, data=serializer.errors)
-
-
-        return ui_utils.handle_response(class_name, data=serializer_list, success=True)
 
 class GetRelationshipAndPastCampaignsData(APIView):
     def get(self, request):
