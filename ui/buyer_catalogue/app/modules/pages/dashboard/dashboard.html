@@ -375,14 +375,14 @@
                                 <tr>
                                   <td>Campaign Status</td>
                                   <td>Supplier Count</td>
-                                  <td ng-if="showLeadsDetails" class="blinking">Total Leads <br><small>(High Quality Leads)</small></td>
+                                  <td ng-if="showLeadsDetails" >Total Leads <br><small>(High Quality Leads)</small></td>
                                 </tr>
                               </thead>
                                   <tbody>
                                   <tr ng-repeat="item in campaignChartdata">
                                     <td style="text-align:left;">{{item.label}}</td>
                                     <td> {{item.value}}</td>
-                                    <td ng-if="showLeadsDetails && item.status != 'upcoming'">{{campaignStatusData[item.status].totalLeads||0}}({{campaignStatusData[item.status].hotLeads}})</td>
+                                    <td class="blinking" ng-if="showLeadsDetails && item.status != 'upcoming'">{{campaignStatusData[item.status].totalLeads||0}}({{campaignStatusData[item.status].hotLeads}})</td>
                                     <td ng-if="showLeadsDetails && item.status == 'upcoming'">NA</td>
                                   </tr>
 

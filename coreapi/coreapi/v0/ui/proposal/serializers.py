@@ -1,7 +1,8 @@
 from rest_framework.serializers import ModelSerializer
 from v0.ui.base.serializers import BaseModelPermissionSerializer
 from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMappingVersion, ProposalMasterCost, ProposalInfoVersion,
-    ProposalMetrics, ProposalCenterMapping, ImageMapping, SpaceMapping, SpaceMappingVersion, ShortlistedSpacesVersion)
+    ProposalMetrics, ProposalCenterMapping, ImageMapping, SpaceMapping, SpaceMappingVersion, ShortlistedSpacesVersion,
+                                   HashTagImages)
 from rest_framework import serializers
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeCorporate
 
@@ -135,3 +136,10 @@ class ProposalCorporateSerializer(ModelSerializer):
             'shortlisted',
             'buffer_status',
         )
+class HashtagImagesSerializer(ModelSerializer):
+    """
+simple serializer for HashtagImages
+    """
+
+    class Meta:
+        model = HashTagImages

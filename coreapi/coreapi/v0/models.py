@@ -48,3 +48,4 @@ from v0.ui.supplier.models import SupplierTypeCorporate
 #     shortlisted_spaces = models.ForeignKey(ShortlistedSpaces, null=True, blank=True)
 #     objects = managers.GeneralManager()
 #
+

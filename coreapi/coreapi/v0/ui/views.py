@@ -1594,7 +1594,7 @@ class ImageMappingViewSet(viewsets.ViewSet):
             supplier_id = request.query_params.get('supplier_id', None)
             supplier_type_code = request.query_params.get('supplier_type_code', None)
             content_type = ui_utils.fetch_content_type(supplier_type_code)
-            instances = ImageMapping.objects.filter(location_id=supplier_id, content_type=content_type)
+            instances = ImageMapping.objects.filter(Q(location_id=supplier_id) | Q(object_id=supplier_id),content_type=content_type)
             serializer = ImageMappingSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
