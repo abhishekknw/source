@@ -1,11 +1,10 @@
 
-<<<<<<< HEAD
 # from rest_framework.serializers import ModelSerializer
 #
 # from v0.ui.account.models import BusinessTypes, BusinessSubTypes, OperationsInfo
 # from v0.ui.supplier.serializers import CorporateCompanyDetails
 # from v0.ui.account.models import Profile
-=======
+
 
 #
 # class BusinessInfoSerializer(ModelSerializer):
