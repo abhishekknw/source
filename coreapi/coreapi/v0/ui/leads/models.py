@@ -89,7 +89,7 @@ LEAD_ITEM_STATUS = (
 
 
 class LeadsFormItems(BaseModel):
-    leads_form_id = models.ForeignKey('LeadsForm', null=False, blank=False)
+    leads_form = models.ForeignKey('LeadsForm', null=False, blank=False)
     key_name = models.CharField(max_length=70, null=True, blank=True)
     key_options = models.CharField(max_length=200, null=True, blank=True)  # delimiter separated
     key_type = models.CharField(max_length=70, null=True, choices=LEAD_KEY_TYPES)
@@ -102,7 +102,7 @@ class LeadsFormItems(BaseModel):
 
 
 class LeadsFormData(BaseModel):
-    leads_form_id = models.ForeignKey('LeadsForm', null=False, blank=False)
+    leads_form = models.ForeignKey('LeadsForm', null=False, blank=False)
     supplier_id = models.CharField(max_length=70, null=True, blank=True)
     item_order_id = models.IntegerField(blank=False, null=True)
     item_value = models.CharField(max_length=200, null=True, blank=True)

@@ -78,13 +78,40 @@ class CreateLeadsForm(APIView):
         })
         new_dynamic_form.save()
         form_items_list = []
+        item_id = 1
         for item in leads_form_items:
             form_items_list.append(LeadsFormItems(**{
-                "leads_form_id": new_dynamic_form,
+                "leads_form": new_dynamic_form,
                 "key_name": item["key_name"],
                 "key_type": item["key_type"],
                 "key_options": item["key_options"] if "key_options" in item else None,
-                "order_id": item["order_id"]
+                "order_id": item["order_id"],
+                "item_id": item_id
             }))
+            item_id = item_id + 1
         LeadsFormItems.objects.bulk_create(form_items_list)
         return ui_utils.handle_response({}, data='success', success=True)
+
+
+class GetLeadsForm(APIView):
+
+    def get(self, request, campaign_id):
+        """
+        :param request:
+        :return:
+        """
+        campaign_lead_form = LeadsForm.objects.filter(campaign_id=campaign_id)
+        lead_form_dict = {}
+        for lead_from in campaign_lead_form:
+            all_items = LeadsFormItems.objects.filter(leads_form_id=lead_from.id)
+            lead_form_dict[lead_from.id] = {
+                "leads_form_name": lead_from.leads_form_name,
+                "leads_form_items": []
+            }
+            for item in all_items:
+                lead_form_dict[lead_from.id]["leads_form_items"].append({
+                    "key_name": item.key_name,
+                    "key_type": item.key_type,
+                    "order_id": item.order_id
+                })
+        return ui_utils.handle_response({}, data=lead_form_dict, success=True)
