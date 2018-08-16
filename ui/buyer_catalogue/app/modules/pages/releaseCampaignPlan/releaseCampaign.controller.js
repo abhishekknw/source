@@ -36,6 +36,7 @@ angular.module('catalogueApp')
         {header : 'Payment Status'},
       ];
   $scope.booking_status = [
+    {name:'Decision Pending', code : 'DP'},
     {name:'Confirmed Booking', code : 'BK'},
     {name:'Tentative Booking', code : 'NB'},
     {name:'Phone Booked' , code : 'PB'},
@@ -44,7 +45,6 @@ angular.module('catalogueApp')
     {name:'Send Email', code : 'SE'},
     {name:'Visit Required', code : 'VR'},
     {name:'Call Required', code : 'CR'},
-    {name:'Decision Pending', code : 'DP'},
   ];
 
   $scope.payment_status = [
