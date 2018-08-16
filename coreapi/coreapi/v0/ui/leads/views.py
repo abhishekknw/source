@@ -106,6 +106,7 @@ class GetLeadsForm(APIView):
             all_items = LeadsFormItems.objects.filter(leads_form_id=lead_from.id)
             lead_form_dict[lead_from.id] = {
                 "leads_form_name": lead_from.leads_form_name,
+                "leads_form_id": lead_from.id,
                 "leads_form_items": []
             }
             for item in all_items:
@@ -115,3 +116,28 @@ class GetLeadsForm(APIView):
                     "order_id": item.order_id
                 })
         return ui_utils.handle_response({}, data=lead_form_dict, success=True)
+
+
+class LeadsFormEntry(APIView):
+
+    def post(self, request, lead_form_id):
+        """
+        :param request:
+        :return:
+        """
+        supplier_id = request.data['supplier_id']
+        form_entry_list = []
+        lead_form = LeadsForm.objects.get(id=lead_form_id)
+        entry_id = lead_form.last_entry_id + 1 if lead_form.last_entry_id else 1
+        for entry in request.data["leads_form_entries"]:
+            form_entry_list.append(LeadsFormData(**{
+                "supplier_id": supplier_id,
+                "item_id": entry["item_id"],
+                "item_value": entry["value"],
+                "leads_form": lead_form,
+                "entry_id": entry_id
+            }))
+        LeadsFormData.objects.bulk_create(form_entry_list)
+        lead_form.last_entry_id = entry_id
+        lead_form.save()
+        return ui_utils.handle_response({}, data='success', success=True)

@@ -104,8 +104,8 @@ class LeadsFormItems(BaseModel):
 class LeadsFormData(BaseModel):
     leads_form = models.ForeignKey('LeadsForm', null=False, blank=False)
     supplier_id = models.CharField(max_length=70, null=True, blank=True)
-    item_order_id = models.IntegerField(blank=False, null=True)
     item_value = models.CharField(max_length=200, null=True, blank=True)
     entry_id = models.IntegerField(blank=False, null=True)
+    item_id = models.IntegerField(blank=False, null=True)
     class Meta:
         db_table = 'leads_form_data'
