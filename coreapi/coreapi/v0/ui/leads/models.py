@@ -96,6 +96,7 @@ class LeadsFormItems(BaseModel):
     order_id = models.IntegerField(blank=False, null=True)
     item_id = models.IntegerField(blank=False, null=True)
     status = models.CharField(max_length=70, null=True, choices=LEAD_ITEM_STATUS)
+    is_required = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'leads_form_items'
