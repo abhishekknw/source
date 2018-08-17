@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from openpyxl import load_workbook
+from openpyxl import load_workbook, Workbook
 from serializers import LeadsSerializer, LeadsFormItemsSerializer
 from models import LeadsForm, LeadsFormItems, LeadsFormData
 import v0.ui.utils as ui_utils
@@ -159,21 +159,6 @@ class GetLeadsForm(APIView):
         return ui_utils.handle_response({}, data=lead_form_dict, success=True)
 
 
-class LeadsFormEntry(APIView):
-
-    def post(self, request, leads_form_id):
-        """
-        :param request:
-        :return:
-        """
-        supplier_id = request.data['supplier_id']
-        form_entry_list = []
-        lead_form = LeadsForm.objects.get(id=leads_form_id)
-        entry_id = lead_form.last_entry_id + 1 if lead_form.last_entry_id else 1
-        lead_data = request.data["leads_form_entries"]
-        enter_lead(LeadsFormData, lead_data, supplier_id, lead_form, entry_id)
-        return ui_utils.handle_response({}, data='success', success=True)
-
 class LeadsFormBulkEntry(APIView):
     def post(self, request, leads_form_id):
         source_file = request.data['file']
@@ -194,11 +179,38 @@ class LeadsFormBulkEntry(APIView):
                     "entry_id": entry_id
                 }))
             LeadsFormData.objects.bulk_create(form_entry_list)
-            entry_id = entry_id + 1 # will be saved in the end
+            entry_id = entry_id + 1  # will be saved in the end
         lead_form.last_entry_id = entry_id
         lead_form.save()
         return ui_utils.handle_response({}, data='success', success=True)
 
 
+class LeadsFormEntry(APIView):
+    def post(self, request, leads_form_id):
+        """
+        :param request:
+        :return:
+        """
+        supplier_id = request.data['supplier_id']
+        form_entry_list = []
+        lead_form = LeadsForm.objects.get(id=leads_form_id)
+        entry_id = lead_form.last_entry_id + 1 if lead_form.last_entry_id else 1
+        lead_data = request.data["leads_form_entries"]
+        enter_lead(LeadsFormData, lead_data, supplier_id, lead_form, entry_id)
+        return ui_utils.handle_response({}, data='success', success=True)
 
+class GenerateLeadForm(APIView):
 
+    def post(self, request, leads_form_id):
+        lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id)
+        lead_form_items_dict = {}
+        keys_list = []
+        for item in lead_form_items_list:
+            curr_row = LeadsFormItemsSerializer(item).data
+            lead_form_items_dict[item.item_id] = curr_row
+            keys_list.append(curr_row['key_name'])
+        book = Workbook()
+        sheet = book.active
+        sheet.append(keys_list)
+        book.save('v0/ui/leads/form_test.xlsx')
+        return ui_utils.handle_response({}, data='success', success=True)
