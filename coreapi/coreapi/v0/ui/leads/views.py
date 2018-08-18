@@ -25,7 +25,7 @@ class GetLeadsEntries(APIView):
         :param request:
         :return:
         """
-        lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id)
+        lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
         lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id)
         all_lead_entries = []
         lead_form_items_dict = {}
@@ -144,7 +144,7 @@ class GetLeadsForm(APIView):
         campaign_lead_form = LeadsForm.objects.filter(campaign_id=campaign_id)
         lead_form_dict = {}
         for lead_from in campaign_lead_form:
-            all_items = LeadsFormItems.objects.filter(leads_form_id=lead_from.id)
+            all_items = LeadsFormItems.objects.filter(leads_form_id=lead_from.id).exclude(status='inactive')
             lead_form_dict[lead_from.id] = {
                 "leads_form_name": lead_from.leads_form_name,
                 "leads_form_id": lead_from.id,
@@ -168,18 +168,19 @@ class LeadsFormBulkEntry(APIView):
         entry_id = lead_form.last_entry_id + 1 if lead_form.last_entry_id else 1
 
         for index, row in enumerate(ws.iter_rows()):
-            form_entry_list = []
-            supplier_id = row[0].value if row[0].value else None
-            for item_id in range(1, len(row)):
-                form_entry_list.append(LeadsFormData(**{
-                    "supplier_id": supplier_id,
-                    "item_id": item_id,
-                    "item_value": row[item_id].value if row[item_id].value else None,
-                    "leads_form": lead_form,
-                    "entry_id": entry_id
-                }))
-            LeadsFormData.objects.bulk_create(form_entry_list)
-            entry_id = entry_id + 1  # will be saved in the end
+            if index > 0:
+                form_entry_list = []
+                supplier_id = row[0].value if row[0].value else None
+                for item_id in range(1, len(row)):
+                    form_entry_list.append(LeadsFormData(**{
+                        "supplier_id": supplier_id,
+                        "item_id": item_id,
+                        "item_value": row[item_id].value if row[item_id].value else None,
+                        "leads_form": lead_form,
+                        "entry_id": entry_id
+                    }))
+                LeadsFormData.objects.bulk_create(form_entry_list)
+                entry_id = entry_id + 1  # will be saved in the end
         lead_form.last_entry_id = entry_id
         lead_form.save()
         return ui_utils.handle_response({}, data='success', success=True)
@@ -201,8 +202,8 @@ class LeadsFormEntry(APIView):
 
 class GenerateLeadForm(APIView):
 
-    def post(self, request, leads_form_id):
-        lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id)
+    def get(self, request, leads_form_id):
+        lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
         lead_form_items_dict = {}
         keys_list = []
         for item in lead_form_items_list:
@@ -214,3 +215,12 @@ class GenerateLeadForm(APIView):
         sheet.append(keys_list)
         book.save('v0/ui/leads/form_test.xlsx')
         return ui_utils.handle_response({}, data='success', success=True)
+
+class DeleteLeadItems(APIView):
+    # Items are marked inactive, while still present in DB
+    def put (self, request, form_id, item_id):
+        lead_form_item = LeadsFormItems.objects.get(leads_form_id = form_id, item_id = item_id)
+        lead_form_item.status = 'inactive'
+        lead_form_item.save()
+        return ui_utils.handle_response({}, data='success', success=True)
+
