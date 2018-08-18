@@ -7,6 +7,23 @@ from v0.constants import supplier_id_max_length
 from django.contrib.contenttypes import fields
 from v0.ui.proposal.models import ProposalInfo
 
+LEAD_KEY_TYPES = (
+    ('STRING', 'STRING'),
+    ('BOOLEAN', 'BOOLEAN'),
+    ('INT', 'INT'),
+    ('EMAIL', 'EMAIL'),
+    ('PASSWORD', 'PASSWORD'),
+    ('PHONE', 'PHONE'),
+    ('RADIO', 'RADIO'),
+    ('DROPDOWN', 'DROPDOWN'),
+    ('CHECKBOX', 'CHECKBOX'),
+    ('TEXTAREA', 'TEXTAREA')
+)
+
+LEAD_ITEM_STATUS = (
+    ('ACTIVE', 'ACTIVE'),
+    ('INACTIVE', 'INACTIVE')
+)
 
 class Leads(BaseModel):
     """
@@ -64,28 +81,10 @@ class LeadsForm(BaseModel):
     campaign_id = models.CharField(max_length=70, null=True, blank=True) # to be changed to foreign key
     leads_form_name = models.CharField(max_length=100, null=True, blank=True)
     last_entry_id = models.IntegerField(blank=False, null=True)
+    status = models.CharField(max_length=70, null=True, choices=LEAD_ITEM_STATUS)
 
     class Meta:
         db_table = 'leads_form'
-
-
-LEAD_KEY_TYPES = (
-    ('STRING', 'STRING'),
-    ('BOOLEAN', 'BOOLEAN'),
-    ('INT', 'INT'),
-    ('EMAIL', 'EMAIL'),
-    ('PASSWORD', 'PASSWORD'),
-    ('PHONE', 'PHONE'),
-    ('RADIO', 'RADIO'),
-    ('DROPDOWN', 'DROPDOWN'),
-    ('CHECKBOX', 'CHECKBOX'),
-    ('TEXTAREA', 'TEXTAREA')
-)
-
-LEAD_ITEM_STATUS = (
-    ('ACTIVE', 'ACTIVE'),
-    ('INACTIVE', 'INACTIVE')
-)
 
 
 class LeadsFormItems(BaseModel):
@@ -108,5 +107,6 @@ class LeadsFormData(BaseModel):
     item_value = models.CharField(max_length=200, null=True, blank=True)
     entry_id = models.IntegerField(blank=False, null=True)
     item_id = models.IntegerField(blank=False, null=True)
+    status = models.CharField(max_length=70, null=True, choices=LEAD_ITEM_STATUS)
     class Meta:
         db_table = 'leads_form_data'
