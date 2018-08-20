@@ -67,7 +67,7 @@ class CreateLeadsForm(APIView):
                 "leads_form": new_dynamic_form,
                 "key_name": item["key_name"],
                 "key_type": item["key_type"],
-                "key_options": item["key_options"] if "key_options" in item else None,
+                "key_options": ",".join(item["key_options"]) if "key_options" in item else None,
                 "order_id": item["order_id"],
                 "item_id": item_id
             })
@@ -95,7 +95,7 @@ class GetLeadsForm(APIView):
                 lead_form_dict[lead_from.id]["leads_form_items"].append({
                     "key_name": item.key_name,
                     "key_type": item.key_type,
-                    "key_options": item.key_options,
+                    "key_options": item.key_options.split(",") if item.key_options else None,
                     "item_id": item.item_id,
                     "order_id": item.order_id
                 })
