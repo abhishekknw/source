@@ -60,18 +60,22 @@ class CreateLeadsForm(APIView):
         })
         new_dynamic_form.save()
         form_items_list = []
-        item_id = 1
+        item_id = 0
         for item in leads_form_items:
-            form_items_list.append(LeadsFormItems(**{
+            item_id = item_id + 1
+            item_object = LeadsFormItems(**{
                 "leads_form": new_dynamic_form,
                 "key_name": item["key_name"],
                 "key_type": item["key_type"],
                 "key_options": item["key_options"] if "key_options" in item else None,
                 "order_id": item["order_id"],
                 "item_id": item_id
-            }))
-            item_id = item_id + 1
-        LeadsFormItems.objects.bulk_create(form_items_list)
+            })
+            form_items_list.append(item_object)
+            item_object.save()
+        #LeadsFormItems.objects.bulk_create(form_items_list)
+        new_dynamic_form.fields_count = item_id
+        new_dynamic_form.save()
         return ui_utils.handle_response({}, data='success', success=True)
 
 
@@ -201,4 +205,14 @@ class DeleteLeadEntry(APIView):
             items.save()
         return ui_utils.handle_response({}, data='success', success=True)
 
-
+class LeadFormUpdate(APIView):
+    # this function is used to add fields to an existing form using form id
+    @staticmethod
+    def put(request, form_id):
+        new_field = request.data
+        new_field_object = LeadsFormItems(**new_field)
+        new_field_object.leads_form_id = form_id
+        last_item_id = LeadsForm.objects.get(id=form_id).fields_count
+        new_field_object.item_id = last_item_id + 1
+        new_field_object.save()
+        return ui_utils.handle_response({}, data='success', success=True)
