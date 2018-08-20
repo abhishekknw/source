@@ -96,26 +96,37 @@
   </div>
   <div class="panel-body">
     <form name="fieldForm">
-      <div ng-repeat="model in modelData.alias_data">
+      <div class="">
+        Enter Name For Lead Form* :
+        <input type="text" class="form-control" ng-model="formName.name" required>
+      </div>
+      <div ng-repeat="model in leadFormFeilds">
         <div class="form-group col-md-5">
           <label for="email">FieldName:</label>
-          <select class="form-control" ng-model="model.original_name" required>
-            <option ng-repeat="field in formFields" value="{{field.name}}" ng-disabled="savedFormFields[field.name]">{{field.name}}</option>
-          </select>
+          <input type="text" class="form-control" ng-model="model.key_name" required>
         </div>
         <div class="form-group col-md-5">
-          <label for="pwd">Suggested Name:</label>
-          <input type="text" class="form-control" ng-model="model.alias" required>
+          <label for="pwd">Field Type:</label>
+          <select class="form-control" ng-model="model.key_type" required>
+            <option ng-repeat="type in leadKeyTypes" value="{{type.name}}">{{type.name}}</option>
+          </select>
+
         </div>
         <div class="form-group col-md-2">
           <label></label>
-          <button type="button" class="form-control btn btn-danger" ng-click="removeField($index)" ng-disabled="leadsData.leads.length">Remove</button>
+          <button type="button" class="form-control btn btn-danger" ng-click="removeField($index)">Remove</button>
         </div>
-
+        <div class="col-md-12" ng-if="model.key_type=='RADIO' || model.key_type=='CHECKBOX' || model.key_type=='DROPDOWN'">
+          Add Options:
+          <input type="text" class="form-control" ng-model="optionForm.option"><span class="glyphicon glyphicon-plus" ng-click="addKeyOption(optionForm.option,$index)"></span>
+          <div class="" ng-repeat="option in model.key_options">
+            <span>{{option}}</span><span class="glyphicon glyphicon-minus"></span>
+          </div>
+        </div>
       </div>
+      <button class="btn btn-danger" ng-click="addLeadFormFeilds()">Add</button>
       <div class="form-group col-md-12">
-        <button style="text-align:left" class="btn btn-danger" ng-click="addField($index)">Add</button>
-        <button ng-click="create()" style="text-align:right" class="btn btn-danger" ng-disabled="fieldForm.$invalid">Submit</button>
+        <button ng-click="createLeadForm()" style="text-align:right" class="btn btn-danger" ng-disabled="fieldForm.$invalid">Submit</button>
       </div>
     </form>
   </div>

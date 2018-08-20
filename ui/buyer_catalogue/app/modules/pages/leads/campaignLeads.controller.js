@@ -6,8 +6,27 @@ angular.module('catalogueApp')
       $scope.savedFormFields = [];
       $scope.importLeadsData = [];
       $scope.showImportTable = false;
+      $scope.formName = {
+        name : undefined
+      }
       var formatedLeadsList = [];
       console.log("hello");
+      $scope.leadKeyTypes = [
+        {name : 'STRING'},
+        {name : 'INT'},
+        {name : 'EMAIL'},
+        {name : 'PASSWORD'},
+        {name : 'PHONE'},
+        {name : 'RADIO'},
+        {name : 'DROPDOWN'},
+        {name : 'CHECKBOX'},
+        {name : 'TEXTAREA'},
+      ];
+      var leadFormFeild = {
+        key_name : '',
+        key_type : '',
+        order_id : 1
+      };
       $scope.campaignHeaders = [
         {header : 'Campaign Name'},
         {header : 'Start Date'},
@@ -53,10 +72,16 @@ angular.module('catalogueApp')
         enterLeads : false,
         selectSuppliers : false,
       }
-      $scope.create = function(){
-        $scope.modelData['campaign'] = $scope.campaignId;
-        console.log($scope.modelData);
-        campaignLeadsService.create($scope.modelData)
+      $scope.createLeadForm = function(){
+        var data = {
+          leads_form_name : $scope.formName.name,
+          leads_form_items : $scope.leadFormFeilds
+        }
+        console.log(data);
+        angular.forEach(data.leads_form_items, function(item,index){
+          item.order_id = index + 1;
+        })
+        campaignLeadsService.createLeadForm(data,$scope.campaignId)
         .then(function onSuccess(response){
           console.log(response);
           swal(constants.name,constants.create_success,constants.success);
@@ -89,8 +114,7 @@ angular.module('catalogueApp')
         checkSavedFields();
       }
       $scope.removeField = function(index){
-        delete $scope.savedFormFields[$scope.modelData.alias_data[index].original_name];
-        $scope.modelData.alias_data.splice(index,1);
+        $scope.leadFormFeilds.splice(index,1);
       }
       var assigned_by = '0';
       var fetch_all = '0';
@@ -271,4 +295,23 @@ angular.module('catalogueApp')
         })
       }
       // END:   call to create leads API through sheet
+      // START: add lead form fields
+      $scope.leadFormFeilds = [];
+      $scope.optionForm = {
+        option : undefined
+      };
+      $scope.leadFormFeilds.push(angular.copy(leadFormFeild));
+
+      $scope.addLeadFormFeilds = function(){
+        $scope.leadFormFeilds.push(angular.copy(leadFormFeild));
+      }
+      // END: add lead form fields
+      $scope.addKeyOption = function(option,index){
+
+        if(!$scope.leadFormFeilds[index].hasOwnProperty('key_options')){
+            $scope.leadFormFeilds[index]['key_options'] = [];
+        }
+        $scope.leadFormFeilds[index]['key_options'].push(option);
+        $scope.optionForm.option = undefined;
+      }
     });//Controller ends here

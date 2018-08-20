@@ -6,11 +6,12 @@
   function (machadaloHttp, $stateParams, $rootScope, $routeParams, $location) {
 
     var url_base = 'v0/ui/website/';
+    var url_base_leads = 'v0/ui/leads/';
 
     var campaignLeadsService = {};
 
-        campaignLeadsService.create = function(data){
-          var url = url_base + "lead-alias/";
+        campaignLeadsService.createLeadForm = function(data, campaignId){
+          var url = url_base_leads + campaignId + "/create";
           return machadaloHttp.post(url, data);
         }
 
