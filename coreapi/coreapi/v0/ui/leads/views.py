@@ -91,6 +91,7 @@ class GetLeadsForm(APIView):
                 lead_form_dict[lead_from.id]["leads_form_items"].append({
                     "key_name": item.key_name,
                     "key_type": item.key_type,
+                    "key_options": item.key_options,
                     "order_id": item.order_id
                 })
         return ui_utils.handle_response({}, data=lead_form_dict, success=True)
