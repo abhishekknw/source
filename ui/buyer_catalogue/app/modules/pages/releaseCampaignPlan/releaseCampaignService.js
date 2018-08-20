@@ -4,6 +4,7 @@
   function (machadaloHttp, $stateParams, $rootScope, $routeParams, $location, $http) {
 
     var url_base = 'v0/ui/website/';
+    var url_base_ui = 'v0/ui/';
     var releaseCampaignService = {};
 
 
@@ -27,5 +28,11 @@
                 + "&campaign_id=" + campaignId;
       return machadaloHttp.get(url);
     }
+
+    releaseCampaignService.savePaymentDetails = function(data,supplierId){
+      var url = url_base_ui + 'society/';
+      return machadaloHttp.post(url,data);
+    }
+
     return releaseCampaignService;
 }]);

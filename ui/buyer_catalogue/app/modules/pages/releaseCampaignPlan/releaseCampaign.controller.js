@@ -12,6 +12,7 @@ angular.module('catalogueApp')
   $scope.shortlistedSuppliersIdList = {}
   $scope.permissions = permissions.supplierBookingPage;
   $scope.showSummaryTab = false;
+  $scope.editPaymentDetails = true;
  	$scope.headings = [
         {header : 'Index'},
         {header : 'Supplier Name'},
@@ -435,6 +436,22 @@ $scope.multiSelect =
           releaseCampaignService.getRelationShipData(supplier.supplier_id,supplierCode,campaignId)
           .then(function onSuccess(response){
             $scope.relationshipData = response.data.data;
+            console.log(response);
+          }).catch(function onError(response){
+            console.log(response);
+          })
+        }
+
+        $scope.savePaymentDetails = function(){
+          console.log($scope.payment);
+          releaseCampaignService.savePaymentDetails($scope.payment,$scope.payment.supplier_id)
+          .then(function onSuccess(response){
+            $scope.editPaymentDetails = !$scope.editPaymentDetails;
+            console.log($scope.editPaymentDetails);
+            // $scope.payment.name_for_payment = response.data.name_for_payment;
+            // $scope.payment.bank_name = response.data.bank_name;
+            // $scope.payment.ifsc_code = response.data.ifsc_code;
+            // $scope.payment.ifsc_code = response.data.account_no;
             console.log(response);
           }).catch(function onError(response){
             console.log(response);
