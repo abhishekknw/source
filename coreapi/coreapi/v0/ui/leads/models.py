@@ -81,6 +81,7 @@ class LeadsForm(BaseModel):
     campaign_id = models.CharField(max_length=70, null=True, blank=True) # to be changed to foreign key
     leads_form_name = models.CharField(max_length=100, null=True, blank=True)
     last_entry_id = models.IntegerField(blank=False, null=True)
+    fields_count = models.IntegerField(blank=False, null=True, default = 0)
     status = models.CharField(max_length=70, null=True, choices=LEAD_ITEM_STATUS)
 
     class Meta:

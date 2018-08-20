@@ -12,17 +12,6 @@ class Test(APIView):
         """
         return ui_utils.handle_response({}, data="success", success=True)
 
-# class CreateChecklist(APIView):
-#     # import checklist template using excel
-#     def post(self, request):
-#         levels = 2   # will change later
-#         source_file = request.data['file']
-#         wb = load_workbook(source_file)
-#         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
-#         for index, row in enumerate(ws.iter_rows()):
-#             if index == 0:
-
-
 class CreateChecklistTemplate(APIView):
     def post(self, request, campaign_id):
         """
