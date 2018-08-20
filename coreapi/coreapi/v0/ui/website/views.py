@@ -93,6 +93,7 @@ from v0 import errors
 import v0.constants as v0_constants
 from v0.constants import flat_type_dict
 
+
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
 class GetBusinessTypesAPIView(APIView):
     """
@@ -6640,6 +6641,7 @@ class LeadsViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data={}, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 
 class GetRelationshipAndPastCampaignsData(APIView):
     def get(self, request):

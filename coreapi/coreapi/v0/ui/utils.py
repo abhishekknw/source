@@ -50,8 +50,8 @@ from v0.ui.finances.models import PriceMappingDefault
 def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False, request=None):
     """
     Args:
-        success: determines wether to send success or failure messages
-        object_name: The function or class where the error occurrs
+        success: determines whether to send success or failure messages
+        object_name: The function or class where the error occurs
         data: The user error which you want to display to user's on screens
         exception_object: The exception object caught. an instance of Exception, KeyError etc.
         headers: the dict of headers

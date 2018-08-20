@@ -65,8 +65,8 @@ from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeSociety
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
 from v0.ui.permissions.models import Role
 from v0.ui.permissions.serializers import RoleHierarchySerializer
-from v0.ui.leads.serializers import LeadSerializer, LeadsSerializer
-from v0.ui.leads.models import Lead, CampaignLeads, Leads
+from v0.ui.leads.serializers import LeadsSerializer
+from v0.ui.leads.models import Leads
 from v0.ui.events.models import Events
 from v0.ui.base.models import DurationType
 from v0.ui.account.serializers import ContactDetailsSerializer
@@ -2558,87 +2558,6 @@ def set_supplier_inventory_keys(supplier_dict, inv_summary_instance, unique_inve
         return False, supplier_dict
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
-
-
-def save_leads(row):
-    """
-    Args:
-        row: a dict representing one row of campaign_leads.
-
-    Returns: tries to save leads data  into lead model and returns either newly created object or old object.
-
-    """
-    function = save_leads.__name__
-    try:
-        lead_data = {lead_key: row[lead_key] for lead_key in v0_constants.lead_keys}
-        email = lead_data['email']
-        if not email:
-            return ui_utils.handle_response(function, data='please provide email')
-        lead_object, is_created = Lead.objects.get_or_create(email=email)
-        serializer = LeadSerializer(lead_object, data=lead_data)
-        if serializer.is_valid():
-            serializer.save()
-            return ui_utils.handle_response(function, data=lead_object, success=True)
-        return ui_utils.handle_response(function, data=serializer.errors)
-    except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
-
-
-def save_campaign_leads(row):
-    """
-
-    Args:
-        row: a dict representing one row of campaign_leads sheet.
-
-    Returns: tries to save on campaign_leads table. return the newly created campaign_leads object.
-
-    """
-    function = save_campaign_leads.__name__
-    try:
-        campaign_id = row['campaign_id']
-        lead_email = row['email']
-        campaign_lead_object, is_created = CampaignLeads.objects.get_or_create(campaign_id=campaign_id,
-                                                                               lead_email=lead_email)
-        campaign_lead_object.comments = row['comments']
-        campaign_lead_object.save()
-        return ui_utils.handle_response(function, data=campaign_lead_object, success=True)
-    except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
-
-
-def handle_campaign_leads(row):
-    """
-    Args:
-        row: row is a dict containing one row information of campaign-leads sheet.
-         currently i am inserting into db directly instead of a bulk_create. will change in future if performance
-         is compromised.
-
-    Returns: success in case db hit is success, failure otherwise
-
-    """
-    function = save_campaign_leads.__name__
-    try:
-        with transaction.atomic():
-            response = save_leads(row)
-            if not response.data['status']:
-                return response
-            lead_object = response.data['data']
-
-            response = save_campaign_leads(row)
-            if not response.data['status']:
-                return response
-
-            campaign_lead_object = response.data['data']
-
-            # send some useful information back
-            data = {
-                'lead_email': lead_object.email,
-                'campaign_lead_id': campaign_lead_object.id,
-                'campaign_id': row['campaign_id']
-            }
-            return ui_utils.handle_response(function, data=data, success=True)
-    except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
 
 
 def handle_common_filters(common_filters, supplier_type_code):
