@@ -53,7 +53,6 @@ angular.module('catalogueApp')
     {name:'Cheque Released' , code : 'PCR'},
     {name:'Paid', code : 'PD'},
     {name:'Rejected', code : 'PR'},
-
   ];
 
   $scope.contact_headings = [
