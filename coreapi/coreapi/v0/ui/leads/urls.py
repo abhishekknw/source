@@ -1,6 +1,6 @@
 from django.conf.urls import url
-from views import CreateLeadsForm, GetLeadsForm,LeadsFormEntry, GetLeadsEntries, \
-    LeadsFormBulkEntry, GenerateLeadForm, DeleteLeadItems, DeleteLeadForm, DeleteLeadEntry
+from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntries,
+                   LeadsFormBulkEntry, GenerateLeadForm, DeleteLeadItems, DeleteLeadForm, DeleteLeadEntry)
 
 urlpatterns = [
     url(r'^(?P<campaign_id>[A-Z_a-z0-9]+)/create$', CreateLeadsForm.as_view()),

@@ -1,30 +1,32 @@
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
-from serializers import LeadsSerializer, LeadsFormItemsSerializer
+from serializers import LeadsFormItemsSerializer
 from models import LeadsForm, LeadsFormItems, LeadsFormData
 import v0.ui.utils as ui_utils
+import boto3
+import os
+import datetime
+from django.conf import settings
 
-def enter_lead(TableName, lead_data, supplier_id, lead_form, entry_id):
+
+def enter_lead(lead_data, supplier_id, lead_form, entry_id):
     form_entry_list = []
     for entry in lead_data:
-        form_entry_list.append(TableName(**{
+        form_entry_list.append(LeadsFormData(**{
             "supplier_id": supplier_id,
             "item_id": entry["item_id"],
             "item_value": entry["value"],
             "leads_form": lead_form,
             "entry_id": entry_id
         }))
-    TableName.objects.bulk_create(form_entry_list)
+    LeadsFormData.objects.bulk_create(form_entry_list)
     lead_form.last_entry_id = entry_id
     lead_form.save()
 
-class GetLeadsEntries(APIView):
 
-    def get(self, request, leads_form_id, supplier_id):
-        """
-        :param request:
-        :return:
-        """
+class GetLeadsEntries(APIView):
+    @staticmethod
+    def get(request, leads_form_id, supplier_id):
         lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
         lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
         all_lead_entries = []
@@ -46,14 +48,10 @@ class GetLeadsEntries(APIView):
         }
         return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
 
-class CreateLeadsForm(APIView):
 
-    def post(self, request, campaign_id):
-        """
-        :param request:
-        :return:
-        """
-        class_name = self.__class__.__name__
+class CreateLeadsForm(APIView):
+    @staticmethod
+    def post(request, campaign_id):
         leads_form_name = request.data['leads_form_name']
         leads_form_items = request.data['leads_form_items']
         new_dynamic_form = LeadsForm(**{
@@ -78,12 +76,8 @@ class CreateLeadsForm(APIView):
 
 
 class GetLeadsForm(APIView):
-
-    def get(self, request, campaign_id):
-        """
-        :param request:
-        :return:
-        """
+    @staticmethod
+    def get(request, campaign_id):
         campaign_lead_form = LeadsForm.objects.filter(campaign_id=campaign_id).exclude(status='inactive')
         lead_form_dict = {}
         for lead_from in campaign_lead_form:
@@ -97,13 +91,15 @@ class GetLeadsForm(APIView):
                 lead_form_dict[lead_from.id]["leads_form_items"].append({
                     "key_name": item.key_name,
                     "key_type": item.key_type,
+                    "key_options": item.key_options,
                     "order_id": item.order_id
                 })
         return ui_utils.handle_response({}, data=lead_form_dict, success=True)
 
 
 class LeadsFormBulkEntry(APIView):
-    def post(self, request, leads_form_id):
+    @staticmethod
+    def post(request, leads_form_id):
         source_file = request.data['file']
         wb = load_workbook(source_file)
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
@@ -130,22 +126,20 @@ class LeadsFormBulkEntry(APIView):
 
 
 class LeadsFormEntry(APIView):
-    def post(self, request, leads_form_id):
-        """
-        :param request:
-        :return:
-        """
+    @staticmethod
+    def post(request, leads_form_id):
         supplier_id = request.data['supplier_id']
         form_entry_list = []
         lead_form = LeadsForm.objects.get(id=leads_form_id).exclude(status='inactive')
         entry_id = lead_form.last_entry_id + 1 if lead_form.last_entry_id else 1
         lead_data = request.data["leads_form_entries"]
-        enter_lead(LeadsFormData, lead_data, supplier_id, lead_form, entry_id)
+        enter_lead(lead_data, supplier_id, lead_form, entry_id)
         return ui_utils.handle_response({}, data='success', success=True)
 
-class GenerateLeadForm(APIView):
 
-    def get(self, request, leads_form_id):
+class GenerateLeadForm(APIView):
+    @staticmethod
+    def get(request, leads_form_id):
         lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
         lead_form_items_dict = {}
         keys_list = []
@@ -156,28 +150,51 @@ class GenerateLeadForm(APIView):
         book = Workbook()
         sheet = book.active
         sheet.append(keys_list)
-        book.save('v0/ui/leads/form_test.xlsx')
-        return ui_utils.handle_response({}, data='success', success=True)
+        now = datetime.datetime.now()
+        current_date = now.strftime("%d%m%Y_%H%M")
+        cwd = os.path.dirname(os.path.realpath(__file__))
+        filename = 'leads_form_' + current_date + '.xlsx'
+        filepath = cwd + '/' + filename
+        book.save(filepath)
+
+        s3 = boto3.client(
+            's3',
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
+        )
+        with open(filepath) as f:
+            try:
+                s3.put_object(Body=f, Bucket='leads-forms-templates', Key=filename)
+                os.unlink(filepath)
+            except Exception as ex:
+                print ex
+        return ui_utils.handle_response({}, data={'filepath': 'https://s3.ap-south-1.amazonaws.com/leads-forms-templates/' + filename}, success=True)
+
 
 class DeleteLeadItems(APIView):
     # Items are marked inactive, while still present in DB
-    def put (self, request, form_id, item_id):
-        lead_form_item = LeadsFormItems.objects.get(leads_form_id = form_id, item_id = item_id)
+    @staticmethod
+    def put (request, form_id, item_id):
+        lead_form_item = LeadsFormItems.objects.get(leads_form_id=form_id, item_id=item_id)
         lead_form_item.status = 'inactive'
         lead_form_item.save()
         return ui_utils.handle_response({}, data='success', success=True)
 
+
 class DeleteLeadForm(APIView):
     # Entire form is deactivated
-    def put (self, request, form_id):
-        form_details = LeadsForm.objects.get(id = form_id)
+    @staticmethod
+    def put(request, form_id):
+        form_details = LeadsForm.objects.get(id=form_id)
         form_details.status = 'inactive'
         form_details.save()
         return ui_utils.handle_response({}, data='success', success=True)
 
+
 class DeleteLeadEntry(APIView):
-    def put(self, request, form_id, entry_id):
-        entry_list = LeadsFormData.objects.filter(leads_form_id = form_id, entry_id = entry_id)
+    @staticmethod
+    def put(request, form_id, entry_id):
+        entry_list = LeadsFormData.objects.filter(leads_form_id=form_id, entry_id=entry_id)
         for items in entry_list:
             items.status = 'inactive'
             items.save()

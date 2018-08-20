@@ -213,11 +213,22 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
+              <tr ng-if="editPaymentDetails">
                 <td class="alignment">{{payment.name_for_payment}}</td>
                 <td class="alignment">{{payment.bank_name}}</td>
                 <td class="alignment">{{payment.ifsc_code}}</td>
                 <td class="alignment">{{payment.account_no}}</td>
+              </tr>
+              <tr ng-if="!editPaymentDetails">
+                <td class="alignment"><input ng-model="payment.name_for_payment"></td>
+                <td class="alignment"><input ng-model="payment.bank_name"></td>
+                <td class="alignment"><input ng-model="payment.ifsc_code"></td>
+                <td class="alignment"><input ng-model="payment.account_no"></td>
+              </tr>
+              <tr>
+                <button class="btn btn-danger" ng-if="editPaymentDetails"
+                    ng-click="editPaymentDetails=!editPaymentDetails">Edit</button>
+                <button class="btn btn-danger" ng-if="!editPaymentDetails" ng-click="savePaymentDetails()">Save</button>
               </tr>
             </tbody>
           </table>
