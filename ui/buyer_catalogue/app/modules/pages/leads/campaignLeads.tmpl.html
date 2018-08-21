@@ -100,7 +100,7 @@
         Enter Name For Lead Form* :
         <input type="text" class="form-control" ng-model="formName.name" required>
       </div>
-      <div ng-repeat="model in leadFormFeilds">
+      <div ng-repeat="model in leadFormFields">
         <div class="form-group col-md-5">
           <label for="email">FieldName:</label>
           <input type="text" class="form-control" ng-model="model.key_name" required>
@@ -124,7 +124,7 @@
           </div>
         </div>
       </div>
-      <button class="btn btn-danger" ng-click="addLeadFormFeilds()">Add</button>
+      <button class="btn btn-danger" ng-click="addLeadFormFields()">Add</button>
       <div class="form-group col-md-12">
         <button ng-click="saveLeadForm()" style="text-align:right" class="btn btn-danger" ng-disabled="fieldForm.$invalid">Submit</button>
       </div>
