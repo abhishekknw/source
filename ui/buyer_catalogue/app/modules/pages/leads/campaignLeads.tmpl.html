@@ -252,12 +252,12 @@
       <div class="" ng-if="item.key_type == 'DROPDOWN'">
         {{item.key_name}}
         <select class="" ng-model="item.value" >
-          <option ng-repeat="option in optionsDummy" value="option">{{option.name}}</option>
+          <option ng-repeat="option in item.key_options" value="option">{{option.name}}</option>
         </select>
       </div>
       <div class="" ng-if="item.key_type == 'RADIO' || item.key_type == 'CHECKBOX'">
         {{item.key_name}}
-        <div class="" ng-repeat="option in optionsDummy">
+        <div class="" ng-repeat="option in item.key_options">
             <input type="{{keyTypesMap[item.key_type]}}" ng-model="item.value" name="name1" value="{{option.name}}">{{option.name}}
         </div>
 
