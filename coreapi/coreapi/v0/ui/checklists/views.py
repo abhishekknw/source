@@ -3,15 +3,6 @@ from models import Checklist, ChecklistColumns, ChecklistRows, ChecklistData
 from serializers import ChecklistSerializer
 import v0.ui.utils as ui_utils
 
-class Test(APIView):
-
-    def get(self, request):
-        """
-        :param request:
-        :return:
-        """
-        return ui_utils.handle_response({}, data="success", success=True)
-
 class CreateChecklistTemplate(APIView):
     def post(self, request, campaign_id):
         """
@@ -86,7 +77,7 @@ class ChecklistEntry(APIView):
 class GetCampaignChecklists(APIView):
     # used for getting a list of all checklists of a campaign
     def get(self, request, campaign_id):
-        checklists = Checklist.objects.filter(campaign_id = campaign_id)
+        checklists = Checklist.objects.filter(campaign_id = campaign_id).exclude(status='inactive')
         checklist_dict = []
         for item in checklists:
             list_item = ChecklistSerializer(item).data
@@ -96,7 +87,7 @@ class GetCampaignChecklists(APIView):
 class GetSupplierChecklists(APIView):
     # used for getting a list of all checklists of a particular supplier within a campaign
     def get(self, request, campaign_id, supplier_id):
-        checklists = Checklist.objects.filter(campaign_id=campaign_id, supplier_id = supplier_id)
+        checklists = Checklist.objects.filter(campaign_id=campaign_id, supplier_id = supplier_id).exclude(status='inactive')
         checklist_dict = []
         for item in checklists:
             list_item = ChecklistSerializer(item).data
@@ -109,8 +100,8 @@ class GetChecklistData(APIView):
     def get(request,checklist_id):
         checklist_info = Checklist.objects.get(id=checklist_id)
         last_entry_id = checklist_info.last_entry_id
-        checklist_columns = ChecklistColumns.objects.filter(checklist_id=checklist_id)
-        checklist_data = ChecklistData.objects.filter(checklist_id=checklist_id)
+        checklist_columns = ChecklistColumns.objects.filter(checklist_id=checklist_id).exclude(status='inactive')
+        checklist_data = ChecklistData.objects.filter(checklist_id=checklist_id).exclude(status='inactive')
         checklist_rows = []
         for i in range(1, last_entry_id+1):
             entry_data = checklist_data.filter(entry_id = i)
@@ -127,3 +118,28 @@ class GetChecklistData(APIView):
             if current_row != {}:
                 checklist_rows.append(current_row)
         return ui_utils.handle_response({}, data=checklist_rows, success=True)
+
+class DeleteChecklist(APIView):
+    # deactivating a full checklist
+    @staticmethod
+    def put(request,checklist_id):
+        checklist_details = Checklist.objects.get(id=checklist_id)
+        checklist_details.status = 'inactive'
+        checklist_details.save()
+        return ui_utils.handle_response({}, data='success', success=True)
+
+class DeleteChecklistItems(APIView):
+    def put (self, request, checklist_id, item_id):
+        checklist_item = ChecklistColumns.objects.get(checklist_id=checklist_id, item_id=item_id)
+        checklist_item.status = 'inactive'
+        checklist_item.save()
+        return ui_utils.handle_response({}, data='success', success=True)
+
+class DeleteChecklistRow(APIView):
+    @staticmethod
+    def put(request, checklist_id, entry_id):
+        entry_list = ChecklistData.objects.filter(checklist_id=checklist_id, entry_id=entry_id)
+        for item in entry_list:
+            item.status = 'inactive'
+            item.save()
+        return ui_utils.handle_response({}, data='success', success=True)
