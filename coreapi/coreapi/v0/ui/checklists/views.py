@@ -73,7 +73,8 @@ class ChecklistEntry(APIView):
                 "item_id": item["item_id"],
                 "item_value": item["item_value"],
                 "status": "active",
-                "supplier_id": supplier_id
+                "supplier_id": supplier_id,
+                "entry_id": entry_id
             }))
             checklist_entry_list.append(row)
             row.save()
@@ -102,4 +103,27 @@ class GetSupplierChecklists(APIView):
             checklist_dict.append(list_item)
         return ui_utils.handle_response({}, data=checklist_dict, success=True)
 
-
+class GetChecklistData(APIView):
+    # viewing a particular checklist
+    @staticmethod
+    def get(request,checklist_id):
+        checklist_info = Checklist.objects.get(id=checklist_id)
+        last_entry_id = checklist_info.last_entry_id
+        checklist_columns = ChecklistColumns.objects.filter(checklist_id=checklist_id)
+        checklist_data = ChecklistData.objects.filter(checklist_id=checklist_id)
+        checklist_rows = []
+        for i in range(1, last_entry_id+1):
+            entry_data = checklist_data.filter(entry_id = i)
+           # if entry_data is not None:
+            current_row = {}
+            for keys in checklist_columns:
+                key_name = keys.key_name
+                item_id = keys.item_id
+                key_query = entry_data.filter(item_id=item_id).first()
+                if (not key_query):
+                    continue
+                key_value = key_query.item_value
+                current_row[key_name] = key_value
+            if current_row != {}:
+                checklist_rows.append(current_row)
+        return ui_utils.handle_response({}, data=checklist_rows, success=True)
