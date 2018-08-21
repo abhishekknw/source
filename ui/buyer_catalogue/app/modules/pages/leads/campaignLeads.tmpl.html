@@ -34,10 +34,10 @@
               <button class="btn btn-danger" ng-click="changeView('viewLeads',campaign)">View Leads</button>
             </td>
             <td>
-              <button class="btn btn-danger" ng-click="changeView('createForm',campaign)">Create/Edit Lead Form</button>
+              <button class="btn btn-danger" ng-click="changeView('viewLeadForms',campaign)">Create/Edit Lead Form</button>
             </td>
             <td>
-              <button class="btn btn-danger" ng-click="changeView('selectSuppliers',campaign)">Enter Leads</button>
+              <button class="btn btn-danger" ng-click="changeView('viewLeadForms',campaign)">Enter Leads</button>
             </td>
             <td>
               <button class="btn btn-danger" ng-click="changeView('importLeads',campaign)">Import Leads</button>
@@ -96,26 +96,37 @@
   </div>
   <div class="panel-body">
     <form name="fieldForm">
-      <div ng-repeat="model in modelData.alias_data">
+      <div class="">
+        Enter Name For Lead Form* :
+        <input type="text" class="form-control" ng-model="formName.name" required>
+      </div>
+      <div ng-repeat="model in leadFormFeilds">
         <div class="form-group col-md-5">
           <label for="email">FieldName:</label>
-          <select class="form-control" ng-model="model.original_name" required>
-            <option ng-repeat="field in formFields" value="{{field.name}}" ng-disabled="savedFormFields[field.name]">{{field.name}}</option>
-          </select>
+          <input type="text" class="form-control" ng-model="model.key_name" required>
         </div>
         <div class="form-group col-md-5">
-          <label for="pwd">Suggested Name:</label>
-          <input type="text" class="form-control" ng-model="model.alias" required>
+          <label for="pwd">Field Type:</label>
+          <select class="form-control" ng-model="model.key_type" required>
+            <option ng-repeat="type in leadKeyTypes" value="{{type.name}}">{{type.name}}</option>
+          </select>
+
         </div>
         <div class="form-group col-md-2">
           <label></label>
-          <button type="button" class="form-control btn btn-danger" ng-click="removeField($index)" ng-disabled="leadsData.leads.length">Remove</button>
+          <button type="button" class="form-control btn btn-danger" ng-click="removeField($index)">Remove</button>
         </div>
-
+        <div class="col-md-12" ng-if="model.key_type=='RADIO' || model.key_type=='CHECKBOX' || model.key_type=='DROPDOWN'">
+          Add Options:
+          <input type="text" class="form-control" ng-model="optionForm.option"><span class="glyphicon glyphicon-plus" ng-click="addKeyOption(optionForm.option,$index)"></span>
+          <div class="" ng-repeat="option in model.key_options">
+            <span>{{option}}</span><span class="glyphicon glyphicon-minus"></span>
+          </div>
+        </div>
       </div>
+      <button class="btn btn-danger" ng-click="addLeadFormFeilds()">Add</button>
       <div class="form-group col-md-12">
-        <button style="text-align:left" class="btn btn-danger" ng-click="addField($index)">Add</button>
-        <button ng-click="create()" style="text-align:right" class="btn btn-danger" ng-disabled="fieldForm.$invalid">Submit</button>
+        <button ng-click="saveLeadForm()" style="text-align:right" class="btn btn-danger" ng-disabled="fieldForm.$invalid">Submit</button>
       </div>
     </form>
   </div>
@@ -147,7 +158,7 @@
             <td>{{supplier.subarea}}</td>
             <td>{{supplier.address1}} {{supplier.address2}}</td>
             <td>
-              <button class="btn btn-danger" ng-click="getLeadForm(supplier)">Click Here To Enter Leads</button>
+              <button class="btn btn-danger" ng-click="enterLeads(supplier)">Click Here To Enter Leads</button>
             </td>
           </tr>
         </tbody>
@@ -159,8 +170,8 @@
 <!--start : import leads  -->
 <div class="panel" ng-show="views.importLeads">
   <div class="pageTitle">
-      <h3>  Import Leads for {{campaignName}} Campaign</h3>
-      </div>
+    <h3>Import Leads for {{campaignName}} Campaign</h3>
+  </div>
   <div class="panel-body">
     <label>Select Lead Sheet</label>
     <js-xls onread="read" onerror="error"></js-xls></br>
@@ -190,3 +201,72 @@
   </div>
 </div>
 <!--end : import leads  -->
+<!--start : view lead forms -->
+<div class="panel " ng-if="views.viewLeadForms">
+  <div class="pageTitle">
+    <h3>{{campaignName}} Lead Form List</h3>
+  </div>
+  <div class="panel-body">
+    <div>
+      <table class="table table-bordered table-responsive">
+        <thead>
+          <tr>
+            <th>Index</th>
+            <th>Form Name</th>
+            <th>Action</th>
+            <th>Leads</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="item in leadForms">
+            <td>{{$index+1}}</td>
+            <td>{{item.leads_form_name}}</td>
+            <td>
+              <button class="btn btn-danger" ng-click="getLeadForm(item)">Details</button>
+            </td>
+            <td>
+              <button class="btn btn-danger" ng-click="changeView('selectSuppliers',campaignInfo,item)">Enter Leads</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="btn btn-danger" ng-click="getLeadForm()">Create Lead Form</button>
+    </div>
+  </div>
+</div>
+<!--end : view lead forms -->
+<!--start: enter leads  -->
+<div class="panel" ng-if="views.enterLeads">
+  <div class="pageTitle">
+    <h3>Leads</h3>
+    Name of Society : {{supplierData.name}}
+    Area : {{supplierData.area}}
+    Subarea : {{supplierData.subarea}}
+  </div>
+  <form class="">
+    <div class="" ng-repeat="item in leadModelData">
+      <div class="" ng-if="item.key_type != 'RADIO' && item.key_type != 'CHECKBOX' && item.key_type != 'DROPDOWN'" >
+        {{item.key_name}}
+        <input type="{{keyTypesMap[item.key_type]}}" ng-model="item.value">
+      </div>
+      <div class="" ng-if="item.key_type == 'DROPDOWN'">
+        {{item.key_name}}
+        <select class="" ng-model="item.value" >
+          <option ng-repeat="option in optionsDummy" value="option">{{option.name}}</option>
+        </select>
+      </div>
+      <div class="" ng-if="item.key_type == 'RADIO' || item.key_type == 'CHECKBOX'">
+        {{item.key_name}}
+        <div class="" ng-repeat="option in optionsDummy">
+            <input type="{{keyTypesMap[item.key_type]}}" ng-model="item.value" name="name1" value="{{option.name}}">{{option.name}}
+        </div>
+
+      </div>
+
+    </div>
+    <div class="">
+      <button class="btn btn-danger" ng-click="saveLeads()">Submit</button>
+    </div>
+  </form>
+</div>
+<!--end: enter leads  -->
