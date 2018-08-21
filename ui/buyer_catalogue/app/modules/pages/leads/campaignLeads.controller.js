@@ -10,6 +10,10 @@ angular.module('catalogueApp')
         name : undefined
       }
       var formatedLeadsList = [];
+      $scope.leadFormFields = [];
+      $scope.optionForm = {
+        option : undefined
+      };
       console.log("hello");
       $scope.optionsDummy = [
         {name : 'STRING'},
@@ -43,7 +47,7 @@ angular.module('catalogueApp')
         'CHECKBOX' : 'checkbox',
         'TEXTAREA' : 'textarea'
       }
-      var leadFormFeild = {
+      var leadFormField = {
         key_name : '',
         key_type : '',
         order_id : 1
@@ -96,7 +100,7 @@ angular.module('catalogueApp')
       $scope.saveLeadForm = function(){
         var data = {
           leads_form_name : $scope.formName.name,
-          leads_form_items : $scope.leadFormFeilds
+          leads_form_items : $scope.leadFormFields
         }
         console.log(data);
         angular.forEach(data.leads_form_items, function(item,index){
@@ -135,7 +139,7 @@ angular.module('catalogueApp')
         checkSavedFields();
       }
       $scope.removeField = function(index){
-        $scope.leadFormFeilds.splice(index,1);
+        $scope.leadFormFields.splice(index,1);
       }
       var assigned_by = '0';
       var fetch_all = '0';
@@ -167,7 +171,11 @@ angular.module('catalogueApp')
         }
         $scope.views[view] = true;
         $scope.campaignInfo = campaign;
-        $scope.leadFormFeilds = formFields;
+        if(formFields)
+        {
+          $scope.leadFormFields = formFields;
+        }
+
         console.log(view,campaign);
         switch(true){
           case $scope.views.viewLeadForms:
@@ -205,7 +213,7 @@ angular.module('catalogueApp')
         .then(function onSuccess(response){
           console.log(response);
           $scope.leadForms = response.data.data;
-          console.log($scope.leadFormFeilds, $scope.formName.name);
+          console.log($scope.leadFormFields, $scope.formName.name);
           // getLeads(campaignId);
           // $scope.modelData.alias_data = response.data.data;
           // checkSavedFields();
@@ -235,15 +243,17 @@ angular.module('catalogueApp')
 
       $scope.getLeadForm = function(item){
         $scope.formName.name = undefined;
-        $scope.leadFormFeilds = [];
-        $scope.changeView('createForm');
+        $scope.leadFormFields = [];
+
         if(item){
           $scope.formName.name = item.leads_form_name;
-          $scope.leadFormFeilds = item.leads_form_items;
+          $scope.leadFormFields = item.leads_form_items;
         }
         else{
-          $scope.leadFormFeilds.push(angular.copy(leadFormFeild));
+          console.log($scope.leadFormFields,leadFormField);
+          $scope.leadFormFields.push(angular.copy(leadFormField));
         }
+        $scope.changeView('createForm');
       }
 
       // start : to read excel sheet while importing lead sheet
@@ -336,33 +346,31 @@ angular.module('catalogueApp')
       }
       // END:   call to create leads API through sheet
       // START: add lead form fields
-      $scope.leadFormFeilds = [];
-      $scope.optionForm = {
-        option : undefined
-      };
-      $scope.leadFormFeilds.push(angular.copy(leadFormFeild));
 
-      $scope.addLeadFormFeilds = function(){
-        $scope.leadFormFeilds.push(angular.copy(leadFormFeild));
+      $scope.leadFormFields.push(angular.copy(leadFormField));
+
+      $scope.addLeadFormFields = function(){
+        console.log($scope.leadFormFields);
+        $scope.leadFormFields.push(angular.copy(leadFormField));
       }
       // END: add lead form fields
       $scope.addKeyOption = function(option,index){
 
-        if(!$scope.leadFormFeilds[index].hasOwnProperty('key_options')){
-            $scope.leadFormFeilds[index]['key_options'] = [];
+        if(!$scope.leadFormFields[index].hasOwnProperty('key_options')){
+            $scope.leadFormFields[index]['key_options'] = [];
         }
-        $scope.leadFormFeilds[index]['key_options'].push(option);
+        $scope.leadFormFields[index]['key_options'].push(option);
         $scope.optionForm.option = undefined;
       }
       $scope.getMultipleLeadForms = function(supplier){
         $scope.changeView('viewLeadForms',$scope.campaignInfo);
       }
       $scope.enterLeads = function(supplier){
-        console.log($scope.leadFormFeilds);
+        console.log($scope.leadFormFields);
         $scope.leadModelData = [];
-        $scope.leadModelData = angular.copy($scope.leadFormFeilds.leads_form_items);
-        $scope.leadFormId = $scope.leadFormFeilds.leads_form_id;
-        $scope.changeView('enterLeads',$scope.campaignInfo,$scope.leadFormFeilds);
+        $scope.leadModelData = angular.copy($scope.leadFormFields.leads_form_items);
+        $scope.leadFormId = $scope.leadFormFields.leads_form_id;
+        $scope.changeView('enterLeads',$scope.campaignInfo,$scope.leadFormFields);
         $scope.supplierData = supplier;
 
         console.log(supplier);
