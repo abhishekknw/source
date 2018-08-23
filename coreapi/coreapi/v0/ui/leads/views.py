@@ -29,22 +29,30 @@ class GetLeadsEntries(APIView):
     def get(request, leads_form_id, supplier_id):
         lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
         lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
-        all_lead_entries = []
+
+        values = {}
         lead_form_items_dict = {}
+        lead_form_items_dict_part = []
         for item in lead_form_items_list:
-            lead_form_items_dict[item.item_id] = LeadsFormItemsSerializer(item).data
+            curr_item = LeadsFormItemsSerializer(item).data
+            lead_form_items_dict[item.item_id] = curr_item
+            curr_item_part = {key:curr_item[key] for key in ['order_id', 'key_name']}
+            lead_form_items_dict_part.append(curr_item_part)
+
         for entry in lead_form_entries_list:
-            all_lead_entries.append({
-                'key_name': lead_form_items_dict[entry.item_id]["key_name"],
-                'key_type': lead_form_items_dict[entry.item_id]["key_type"],
-                'key_options': lead_form_items_dict[entry.item_id]["key_options"],
-                'order_id': lead_form_items_dict[entry.item_id]["order_id"],
-                'value': entry.item_value,
+            entry_id = entry.entry_id - 1
+            new_entry = ({
+                "order_id": lead_form_items_dict[entry.item_id]["order_id"],
+                "value": entry.item_value
             })
+            if entry_id in values:
+                values[entry_id].append(new_entry)
+            else:
+                values[entry_id] = [new_entry]
         supplier_all_lead_entries = {
             'supplier_id': supplier_id,
-            'all_lead_entries': all_lead_entries,
-            'total_leads': len(lead_form_entries_list)
+            'headers': lead_form_items_dict_part,
+            'values': values,
         }
         return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
 
@@ -125,7 +133,7 @@ class LeadsFormBulkEntry(APIView):
                     }))
                 LeadsFormData.objects.bulk_create(form_entry_list)
                 entry_id = entry_id + 1  # will be saved in the end
-        lead_form.last_entry_id = entry_id
+        lead_form.last_entry_id = entry_id-1
         lead_form.save()
         return ui_utils.handle_response({}, data='success', success=True)
 
