@@ -321,33 +321,30 @@
     </div>
   </form>
 
-  <!-- <div class="" ng-if="showLeads && !editLeads">
+  <div class="" ng-if="showLeads && !editLeads">
          <div class="panel-body">
            <div>
              <div class="col-md-6">
                  <input type="text" class="form-control" ng-model="query" placeholder="Search"><br />
              </div>
-             <div class="col-md-6">
-                 <button type="button" class="btn btn-danger pull-right" ng-click="changeView()">  Create New Lead</button><br />
-             </div>
-
 
              <div class="col-md-12 scroll">
-               <table class="table table-bordered table-responsive" export-csv="csv" separator=";" ng-if="leadsData.leads.length">
-                 <br /><thead>
+               <table class="table table-bordered table-responsive">
+                 <br />
+                 <thead>
                    <tr>
                      <th>Index</th>
-                     <th ng-repeat="header in leadsData.alias_data">{{header.alias}}</th>
+                     <th ng-repeat="header in entryListLeadsData.headers">{{header.key_name}}</th>
                    </tr>
                  </thead>
-                 <tbody >
-                   <tr ng-repeat="lead in leadsData.leads | filter : query">
+                 <tbody ng-repeat="lead in entryListLeadsData.values | filter : query" >
+                   <tr  ng-repeat="alias in lead" >
                      <td>{{$index + 1}}</td>
-                     <td ng-repeat="alias in leadsData.alias_data">{{lead[alias.original_name]}}</td>
-                     <td><button type="button" class="btn btn-danger" ng-click="editView(lead)">EDIT</button></td>
+                     <td>{{alias.value}}</td>
                    </tr>
                  </tbody>
-               </table><br />
+               </table>
+               <br />
                <a class="btn btn-danger" title="{{campaignName}} Leads" ng-click='csv.generate()' ng-href="{{ csv.link() }}"
                     download="{{campaignName}}_leads.csv" ng-if="leadsData.leads.length">
                    <i class="glyphicon glyphicon-new-window"></i> Download As Excel
@@ -360,7 +357,7 @@
            </div>
 
          </div>
-     </div> -->
+     </div>
 
 </div>
 <!--end: enter leads  -->
