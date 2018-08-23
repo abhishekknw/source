@@ -597,3 +597,6 @@ color: #ffffff !important;
     99%{    color:transparent;  }
     100%{   color: #123456;    }
 }
+.nvd3 g.nv-groups path.nv-line {
+  stroke-width: 3px;
+}

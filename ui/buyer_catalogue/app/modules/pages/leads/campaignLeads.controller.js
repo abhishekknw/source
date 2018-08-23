@@ -134,7 +134,8 @@ angular.module('catalogueApp')
              .then(function onSuccess(response){
                console.log(response);
                $scope.showLeads = true;
-               $scope.leadsData = response.data.data;
+               $scope.entryListLeadsData = response.data.data;               
+               console.log($scope.entryListLeadsData.values);
              }).catch(function onError(response){
                console.log(response);
              })
@@ -348,7 +349,7 @@ angular.module('catalogueApp')
         };
         console.log(data);
         campaignLeadsService.importLeadsThroughSheet($scope.campaignId, data)
-        .then(function onSuccess(reset){
+        .then(function onSuccess(response){
           console.log(response);
         }).catch(function onError(response){
           console.log(response);
