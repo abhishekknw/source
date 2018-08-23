@@ -135,7 +135,7 @@ class LeadsFormEntry(APIView):
     def post(request, leads_form_id):
         supplier_id = request.data['supplier_id']
         form_entry_list = []
-        lead_form = LeadsForm.objects.get(id=leads_form_id).exclude(status='inactive')
+        lead_form = LeadsForm.objects.get(id=leads_form_id)
         entry_id = lead_form.last_entry_id + 1 if lead_form.last_entry_id else 1
         lead_data = request.data["leads_form_entries"]
         enter_lead(lead_data, supplier_id, lead_form, entry_id)

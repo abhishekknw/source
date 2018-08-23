@@ -129,6 +129,16 @@ angular.module('catalogueApp')
           console.log(response);
         })
       }
+      $scope.getEntryListLeads = function(){
+             campaignLeadsService.getEntryListLeads($scope.leadFormId,$scope.supplierData.supplier_id)
+             .then(function onSuccess(response){
+               console.log(response);
+               $scope.showLeads = true;
+               $scope.leadsData = response.data.data;
+             }).catch(function onError(response){
+               console.log(response);
+             })
+           }
 
       $scope.addField = function(){
         var data = {
@@ -353,6 +363,8 @@ angular.module('catalogueApp')
         console.log($scope.leadFormFields);
         $scope.leadFormFields.push(angular.copy(leadFormField));
       }
+
+
       // END: add lead form fields
       $scope.addKeyOption = function(option,index){
 
@@ -361,7 +373,9 @@ angular.module('catalogueApp')
         }
         $scope.leadFormFields[index]['key_options'].push(option);
         $scope.optionForm.option = undefined;
-      }
+        }
+
+
       $scope.getMultipleLeadForms = function(supplier){
         $scope.changeView('viewLeadForms',$scope.campaignInfo);
       }
@@ -386,13 +400,47 @@ angular.module('catalogueApp')
               value : item.value
             }
             data.leads_form_entries.push(temp_data);
-        })
+        });
+        console.log(data);
         campaignLeadsService.saveLeads($scope.leadFormId,data)
         .then(function onSuccess(response){
           console.log(response);
         }).catch(function onError(response){
           console.log(response);
         })
-        console.log(data);
+
       }
+
+
+      $scope.updateSelection = function(position, option) {
+        angular.forEach(option, function(item, index) {
+          if (position != index)
+            item.value = false;
+        });
+      }
+      $scope.setCheckBoxValue = function(isSelected,index,values){
+        console.log(values);
+        if(!values.hasOwnProperty('value')){
+          values['value'] = [];
+        }
+        console.log(isSelected);
+        if(isSelected){
+          values.value.push($scope.leadChBoxKeyOptions[index].name);
+        }else {
+          console.log("hello");
+          values.value.splice(values.value.indexOf($scope.leadChBoxKeyOptions[index].name),1);
+        }
+        console.log(values,$scope.leadModelData);
+      }
+      $scope.getCheckBoxValues = function(values){
+        console.log(values);
+        $scope.leadChBoxKeyOptions = [];
+        angular.forEach(values, function(value,index){
+          $scope.leadChBoxKeyOptions[index] = {
+            name : value, selected : false
+          };
+        });
+        console.log($scope.leadChBoxKeyOptions);
+      }
+
     });//Controller ends here
