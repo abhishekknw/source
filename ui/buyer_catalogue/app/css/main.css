@@ -597,3 +597,13 @@ color: #ffffff !important;
     99%{    color:transparent;  }
     100%{   color: #123456;    }
 }
+.nvd3 g.nv-groups path.nv-line {
+  stroke-width: 3px;
+}
+
+div.outer { overflow: scroll; }
+div.outer .inner { width:900px; }
+
+
+div.outerdate { overflow: scroll; }
+div.outerdate .innerdate { width: 500px; }

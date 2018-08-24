@@ -1,8 +1,9 @@
 <link rel="stylesheet" href="modules/pages/releaseCampaignPlan/releaseCampaign.tmpl.css"/>
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
+<div ng-loading="loading"></div>
+
 <main ng-show="!isEmpty" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }" ng-if="loading" >
 <div><nav-bar></nav-bar></div>
-<div ng-loading="loading"></div>
 </br></br></br>
 <div ng-if="!backButton" permission="[campaign_manager]">
   <back-Button></back-Button>
@@ -90,7 +91,7 @@
               selected-model="searchSelectAllModel"   translation-texts="selected_baselines_customTexts"></span>
   </td>
             <td class="col-md-4" rowspan="{{key.length}}" ng-show="$first">
-              <select  class="form-control spacing input-width" ng-model="supplier.booking_status" permission = "[permissions.changeBookingStatus,permissions.viewBookingStatus]">
+              <select  class="form-control spacing input-width" ng-selected="{{item.name == 'Undecided'}}" permission = "[permissions.changeBookingStatus,permissions.viewBookingStatus]">
                 <option style="width:100%;" ng-repeat="item in booking_status" value="{{item.code}}">{{item.name}}</option>
               </select>
             </td>
@@ -118,7 +119,7 @@
             </td>
             <!--for payment status  -->
             <td class="" style="text-align:left" rowspan="{{key.length}}" ng-show="$first">
-              <select class="form-control spacing input-width" ng-model="supplier.payment_status" permission = "[permissions.viewPaymentDetails]">
+              <select class="form-control spacing input-width" ng-selected="{{item.name == 'Not Initiated'}}" permission = "[permissions.viewPaymentDetails]">
                 <option style="width:100%;" ng-repeat="item in payment_status" value="{{item.code}}" ng-click="updateSupplierStatus()"  ng-disabled="supplier.booking_status != 'BK'">{{item.name}}</option>
               </select>
               <!-- <div class="radio" permission = "[permissions.viewPaymentDetails]">
@@ -394,7 +395,6 @@
         <div class = "modal-body">
           <div class="modal-body table-responsive">
               <table class="table table-bordered">
-
                 <tbody>
                   <tr>
                     <th>Supply Owner / Representative</th>
