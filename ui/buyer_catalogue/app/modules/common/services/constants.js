@@ -12,6 +12,7 @@ angular
     content_type : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     //amazon server
     aws_bucket_url : 'http://mdimages.s3.amazonaws.com/',
+    account_email_id : 'tejas.pawar@machaddalo.com',
     //general
     name : '',
     success : 'success',
@@ -39,6 +40,7 @@ angular
     add_data_success : 'Added Successfully',
     captcha_error : 'Please resolve the captcha and submit!',
     login_error : 'Username or Password is Incorrect',
+    email_success : 'Email sent Successfully',
     //createproposal
     geo_location_error : 'Address or Pincode Incorrect, Please Provide Correct Information',
     center_warning : 'Do you want to create only one center ?',

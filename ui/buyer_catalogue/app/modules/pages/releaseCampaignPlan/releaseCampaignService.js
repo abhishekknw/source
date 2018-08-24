@@ -34,5 +34,15 @@
       return machadaloHttp.post(url,data);
     }
 
+    releaseCampaignService.sendMail = function(data){
+      var url = url_base + "mail/";
+      return machadaloHttp.post(url,data);
+    }
+
+    releaseCampaignService.sendMailInProgress = function(taskId){
+      var url = url_base  + "task/is-individual-task-successfull/" + taskId + "/";
+      return machadaloHttp.get(url);
+    }
+
     return releaseCampaignService;
 }]);

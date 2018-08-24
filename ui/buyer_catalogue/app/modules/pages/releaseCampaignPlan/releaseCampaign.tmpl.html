@@ -1,9 +1,8 @@
 <link rel="stylesheet" href="modules/pages/releaseCampaignPlan/releaseCampaign.tmpl.css"/>
 <link rel="stylesheet" href="modules/common/loadingicon/loading-spinner.tmpl.css"/>
-<div ng-loading="loading"></div>
-
 <main ng-show="!isEmpty" ng-class="{ 'menu-collapsed': $baSidebarService.isMenuCollapsed() }" ng-if="loading" >
 <div><nav-bar></nav-bar></div>
+<div ng-loading="loading"></div>
 </br></br></br>
 <div ng-if="!backButton" permission="[campaign_manager]">
   <back-Button></back-Button>
@@ -91,7 +90,7 @@
               selected-model="searchSelectAllModel"   translation-texts="selected_baselines_customTexts"></span>
   </td>
             <td class="col-md-4" rowspan="{{key.length}}" ng-show="$first">
-              <select  class="form-control spacing input-width" ng-selected="{{item.name == 'Undecided'}}" permission = "[permissions.changeBookingStatus,permissions.viewBookingStatus]">
+              <select  class="form-control spacing input-width" ng-model="supplier.booking_status" permission = "[permissions.changeBookingStatus,permissions.viewBookingStatus]">
                 <option style="width:100%;" ng-repeat="item in booking_status" value="{{item.code}}">{{item.name}}</option>
               </select>
             </td>
@@ -102,7 +101,11 @@
             <!--mode of payment  -->
             <td class="" style="text-align:left" rowspan="{{key.length}}" ng-show="$first">
               <div class="radio">
-                     <label><input type="radio" ng-model="supplier.payment_method" value="NEFT" ng-click="updateSupplierStatus('Y')" permission = "[permissions.viewPaymentMode,permissions.addPaymentMode]" ng-disabled="supplier.booking_status != 'BK'">NEFT</label>
+                     <label>
+                       <input type="radio" ng-model="supplier.payment_method" value="NEFT" ng-click="getPaymentDetails(supplier,supplier.payment_method)"
+                       permission = "[permissions.viewPaymentMode,permissions.addPaymentMode]"
+                       data-target="#selectedPaymentModal" data-toggle="modal">NEFT
+                     </label>
               </div>
 
               <div ng-show="IsVisible" class="radio">
@@ -111,12 +114,16 @@
                 <br /><br />
                 <button type="button" class="btn btn-primary" name="button">Save</button>
                 <button class="btn btn-primary" ngf-select="uploadImage($file,supplier)" permission = "[permissions.uploadImages]">Upload Image</button>
-            </div>
-              <div class="radio">
-                     <label><input type="radio" ng-model="supplier.payment_method" value="CHEQUE" ng-click="updateSupplierStatus('N')" permission = "[permissions.viewPaymentMode,permissions.addPaymentMode]" ng-disabled="supplier.booking_status != 'BK'">Cheque</label>
+              </div>
+
+              <div class="radio" ng-if="supplier.status != 'X'">
+                <label>
+                   <input type="radio" ng-model="supplier.payment_method" value="CHEQUE"  permission = "[permissions.viewPaymentMode,permissions.addPaymentMode]"
+                   data-target="#selectedPaymentModal" data-toggle="modal" ng-click="getPaymentDetails(supplier,supplier.payment_method)">Cheque</label>
               </div>
               <div class="radio" ng-if="supplier.status != 'X'">
-                     <label><input type="radio" ng-model="supplier.payment_method" value="CASH" ng-click="updateSupplierStatus('N')" permission = "[permissions.viewPaymentMode,permissions.addPaymentMode]" ng-disabled="supplier.booking_status != 'BK'">Cash</label>
+                     <label><input type="radio" ng-model="supplier.payment_method" value="CASH" permission = "[permissions.viewPaymentMode,permissions.addPaymentMode]"
+                       ng-click="getPaymentDetails(supplier,supplier.payment_method)">Cash</label>
               </div>
 
               <div style="text-align:center">
@@ -128,8 +135,8 @@
             </td>
             <!--for payment status  -->
             <td class="" style="text-align:left" rowspan="{{key.length}}" ng-show="$first">
-              <select class="form-control spacing input-width" ng-selected="{{item.name == 'Not Initiated'}}" permission = "[permissions.viewPaymentDetails]">
-                <option style="width:100%;" ng-repeat="item in payment_status" value="{{item.code}}" ng-click="updateSupplierStatus()"  ng-disabled="supplier.booking_status != 'BK'">{{item.name}}</option>
+              <select class="form-control spacing input-width" ng-model="supplier.payment_status" permission = "[permissions.viewPaymentDetails]">
+                <option style="width:100%;" ng-repeat="item in payment_status" value="{{item.code}}" ng-click="updateSupplierStatus()" >{{item.name}}</option>
               </select>
               <!-- <div class="radio" permission = "[permissions.viewPaymentDetails]">
                      <label><input type="radio" ng-model="supplier.payment_status" value="PD" ng-click="updateSupplierStatus()" ng-disabled="supplier.booking_status != 'BK'">Paid</label>
@@ -404,6 +411,7 @@
         <div class = "modal-body">
           <div class="modal-body table-responsive">
               <table class="table table-bordered">
+
                 <tbody>
                   <tr>
                     <th>Supply Owner / Representative</th>
@@ -463,4 +471,28 @@
   </div>
 </div>
 <!--End: Code for RelationShip Data Modal Window -->
+<!--START : NEFT payment modal  -->
+<div id="selectedPaymentModal" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">{{paymentStatus}} Details for {{supplierPaymentData.name}}</h4>
+        <hr/>
+        <div class = "modal-body" style = "height: 300px;">
+        <label>Check Payment Details, Edit As per requirement and send to Account</label></br>
+        <!-- Beneficiary_Name : <input type="text" ng-model="body.Beneficiary_Name"></br>
+        Bank Account Number : <input type="text" ng-model="body.Bank_Account_Number"></br>
+        IFSC Code : <input type="text" ng-model="body.IFSC_Code"></br>
+        Negotiated Price : <input type="text" ng-model="body.Negotiated_Price"></br> -->
+          <textarea name="reason" id="onHoldReason" class="form-control" ng-model="body.message" cols="6">
+          </textarea>
+          <button class="btn btn-danger active notify" ng-click="sendNotification()" ng-disabled="!body" ng-loading="loadSpinner">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--END : NEFT payment modal  -->
 </main>
