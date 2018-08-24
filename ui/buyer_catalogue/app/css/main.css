@@ -603,3 +603,7 @@ color: #ffffff !important;
 
 div.outer { overflow: scroll; }
 div.outer .inner { width:900px; }
+
+
+div.outerdate { overflow: scroll; }
+div.outerdate .innerdate { width: 500px; }
