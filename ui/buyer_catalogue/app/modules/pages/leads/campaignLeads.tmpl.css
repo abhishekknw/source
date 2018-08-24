@@ -82,3 +82,8 @@ th {
 h3 {
   text-align: center;
 }
+
+.show-error{
+	font-size: 15px;
+	color: red;
+}

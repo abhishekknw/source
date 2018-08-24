@@ -118,9 +118,11 @@
         </div>
         <div class="col-md-12" ng-if="model.key_type=='RADIO' || model.key_type=='CHECKBOX' || model.key_type=='DROPDOWN'">
           Add Options:
-          <input type="text" class="form-control" ng-model="optionForm.option"><span class="glyphicon glyphicon-plus" ng-click="addKeyOption(optionForm.option,$index)"></span>
-          <div class="" ng-repeat="option in model.key_options">
-            <span>{{option}}</span><span class="glyphicon glyphicon-minus"></span>
+          <input type="text" class="form-control" ng-model="optionForm.option">
+          <button class="btn btn-danger" ng-click="addKeyOption(optionForm.option,$index)">+</button>
+          <div class="" ng-repeat="option in model.key_options" style="display:inline-block;">
+            <button class="btn btn-primary">{{option}}</button>
+              <span ng-click="model.key_options.splice($index,1)" class="glyphicon glyphicon-remove-circle"></span>
           </div>
         </div>
       </div>
@@ -243,30 +245,119 @@
     Area : {{supplierData.area}}
     Subarea : {{supplierData.subarea}}
   </div>
-  <form class="">
+    <form name="leadForm"  style="margin:5%;" >
     <div class="" ng-repeat="item in leadModelData">
-      <div class="" ng-if="item.key_type != 'RADIO' && item.key_type != 'CHECKBOX' && item.key_type != 'DROPDOWN'" >
-        {{item.key_name}}
-        <input type="{{keyTypesMap[item.key_type]}}" ng-model="item.value">
+      <div class="form-group" style="padding-bottom:0;padding-top:0;">
+        <div class="cols-sm-10" ng-if="item.key_type != 'RADIO' && item.key_type != 'CHECKBOX' && item.key_type != 'DROPDOWN' && item.key_type != 'EMAIL' && item.key_type != 'PHONE' && item.key_type != 'TEXTAREA'">
+          {{item.key_name}}
+          <div class="input-group">
+            <span class="input-group-addon"><i class="fa fa-user fa" aria-hidden="true"></i></span>
+            <input type="{{keyTypesMap[item.key_type]}}" class="form-control" ng-model="item.value" required/>
+          </div>
+        </div>
       </div>
-      <div class="" ng-if="item.key_type == 'DROPDOWN'">
-        {{item.key_name}}
-        <select class="" ng-model="item.value" >
-          <option ng-repeat="option in item.key_options" value="option">{{option.name}}</option>
-        </select>
+      <div class="form-group" style="padding-bottom:0;padding-top:0;">
+        <div class="cols-sm-10" ng-if="item.key_type == 'PHONE'">
+          {{item.key_name}}
+          <div class="input-group">
+            <span class="input-group-addon"><i class="fa fa-user fa" aria-hidden="true"></i></span>
+            <input type="text" name="contact_phone" id="contact_phone" class="form-control" ng-pattern="/^(\d{10})$/" ng-model="item.value"/>
+             <span class="show-error" ng-show="leadForm.contact_phone.$error.pattern">Please Enter Valid 10 Digit Mobile Number</span>
+          </div>
+        </div>
       </div>
-      <div class="" ng-if="item.key_type == 'RADIO' || item.key_type == 'CHECKBOX'">
-        {{item.key_name}}
-        <div class="" ng-repeat="option in item.key_options">
-            <input type="{{keyTypesMap[item.key_type]}}" ng-model="item.value" name="name1" value="{{option.name}}">{{option.name}}
+      <div class="form-group" style="padding-bottom:0;padding-top:0;" ng-class="{ 'has-error' : leadForm.email.$invalid && !leadForm.email.$pristine }">
+        <div class="cols-sm-10" ng-if="item.key_type == 'EMAIL'">
+          {{item.key_name}}
+          <div class="input-group">
+            <span class="input-group-addon"><i class="fa fa-user fa" aria-hidden="true"></i></span>
+            <input type="email" name="contact_email" id="contact_email" class="form-control" ng-pattern= "/^[\S+@\S+\.\S]+$/" ng-model="item.value"  />
+            <span class="show-error" ng-show="leadForm.contact_email.$error.email">Please Enter Valid Email</span></div>
+
+          </div>
+        </div>
+        <div class="form-group" style="padding-bottom:0;padding-top:0;">
+          <div class="cols-sm-10" ng-if="item.key_type == 'TEXTAREA'">
+            {{item.key_name}}
+            <div class="input-group">
+              <textarea style="width:100%;" class="form-control" rows="5" id="comment" ng-model="item.value" required></textarea>
+              <!-- <span class="input-group-addon"><i class="fa fa-user fa" aria-hidden="true"></i></span>
+              <input type="{{keyTypesMap[item.key_type]}}" class="form-control" ng-model="item.value"/> -->
+            </div>
+          </div>
         </div>
 
-      </div>
+        <div class="form-group" style="padding-bottom:0;padding-top:0;">
+          <div class="cols-sm-10" ng-if="item.key_type == 'RADIO'">
+            {{item.key_name}}
+            <div class="input-group" ng-repeat="option in item.key_options">
+              <!-- <span class="form-check-input"></span> -->
+              <input type="{{keyTypesMap[item.key_type]}}" class="form-check-input" value="{{option}}" name="radio" ng-model="item.value" required/>{{option}}
+            </div>
+          </div>
+        </div>
+        <div class="form-group" style="padding-bottom:0;padding-top:0;">
+          <div class="cols-sm-10" ng-if="item.key_type == 'CHECKBOX'" ng-init="getCheckBoxValues(item.key_options)">
+            {{item.key_name}}
+            <div class="input-group" ng-repeat="option in leadChBoxKeyOptions">
+              <!-- <span class="form-check-input"></span> -->
+              <input type="checkbox" class="form-check-input"  value="{{option}}"  name="chbox" ng-model="option.selected"  ng-click="setCheckBoxValue(option.selected,$index,item)"/>{{option.name}}
 
+            </div>
+          </div>
+        </div>
+        <div class="form-group" style="padding-bottom:0;padding-top:0;">
+            <span ng-if="item.key_type == 'DROPDOWN'">{{item.key_name}}</span>
+            <select ng-if="item.key_type == 'DROPDOWN'" class="form-control" ng-model="item.value">
+              <option ng-repeat="option in item.key_options" value="{{option}}" required>{{option}}</option>
+            </select>
+        </div>
     </div>
-    <div class="">
+    <div class="form-group">
       <button class="btn btn-danger" ng-click="saveLeads()">Submit</button>
     </div>
+    <div class="form-group">
+      <button class="btn btn-danger" ng-click="getEntryListLeads()">View Leads</button>
+    </div>
   </form>
+
+  <div class="" ng-if="showLeads && !editLeads">
+         <div class="panel-body">
+           <div>
+             <div class="col-md-6">
+                 <input type="text" class="form-control" ng-model="query" placeholder="Search"><br />
+             </div>
+
+             <div class="col-md-12 scroll">
+               <table class="table table-bordered table-responsive">
+                 <br />
+                 <thead>
+                   <tr>
+                     <th>Index</th>
+                     <th ng-repeat="header in entryListLeadsData.headers">{{header.key_name}}</th>
+                   </tr>
+                 </thead>
+                 <tbody ng-repeat="lead in entryListLeadsData.values | filter : query" >
+                   <tr  ng-repeat="alias in lead">
+                     <td>{{$index + 1}}</td>
+                     <td>{{alias.value}}</td>
+                   </tr>
+                 </tbody>
+               </table>
+               <br />
+               <a class="btn btn-danger" title="{{campaignName}} Leads" ng-click='csv.generate()' ng-href="{{ csv.link() }}"
+                    download="{{campaignName}}_leads.csv" ng-if="leadsData.leads.length">
+                   <i class="glyphicon glyphicon-new-window"></i> Download As Excel
+               </a>
+             </div>
+
+             <div ng-if="!leadsData.leads.length">
+               <label>No Leads Found</label>
+             </div>
+           </div>
+
+         </div>
+     </div>
+
 </div>
 <!--end: enter leads  -->
