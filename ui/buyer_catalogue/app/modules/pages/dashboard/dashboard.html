@@ -1410,9 +1410,17 @@
                                 <h4> Leads Per Society</h4>
                               </div>
                             </div>
-                            <div class="col-md-12">
-                              <nvd3 options="stackedBarChartOptions" data="stackedBarChartSupplierData"></nvd3>
+
+                            <div class="col-md-12" ng-scrollable>
+                              <div class="outer">
+                                <div class="inner">
+                                  <nvd3 options="stackedBarChartOptions" data="stackedBarChartSupplierData"></nvd3>
+                                </div>
+                              </div>
                             </div>
+                            <!-- <div class="col-md-6">
+                            <nvd3 options="variableoptions" data="stackedBarChartSupplierData"></nvd3>
+                            </div> -->
                           </div>
                           <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.leads" style="margin-top:50px;">
                             <div class="panel-heading content-title">
@@ -1420,9 +1428,13 @@
                                 <h4> Leads By Date</h4>
                               </div>
                             </div>
-                            <div class="col-md-6">
-                              <bar-chart data="d3StackedBarChartData"></bar-chart>
+                            <div class="col-md-12" ng-scrollable>
+                              <div class="outer">
+                                <div class="inner">
+                                  <nvd3 options="stackedBarChartOptions" data="stackedBarChartDateData"></nvd3>
+                                </div>
                               </div>
+                            </div>
                           </div>
 
                           <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.multipleLeads" style="margin-top:50px;">

@@ -600,3 +600,6 @@ color: #ffffff !important;
 .nvd3 g.nv-groups path.nv-line {
   stroke-width: 3px;
 }
+
+div.outer { overflow: scroll; }
+div.outer .inner { width:900px; }
