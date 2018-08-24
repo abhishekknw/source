@@ -199,13 +199,13 @@
 
 <!--Start: Code for payment mode Modal Window -->
 <div id="paymentModal" class="modal fade">
-  <div class="modal-dialog">
+  <div class="modal-dialog" style="width:800px">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
         <h4 class="modal-title">Mode of Payment Details</h4>
         <hr/>
-        <div class = "modal-body" style = "height: 200px;">
+        <div class = "modal-body" style = "height: 200px;" >
           <table class="table table-bordered">
             <thead>
               <tr>
@@ -226,12 +226,19 @@
                 <td class="alignment"><input ng-model="payment.account_no"></td>
               </tr>
               <tr>
-                <button class="btn btn-danger" ng-if="editPaymentDetails"
-                    ng-click="editPaymentDetails=!editPaymentDetails">Edit</button>
-                <button class="btn btn-danger" ng-if="!editPaymentDetails" ng-click="savePaymentDetails()">Save</button>
+
+
               </tr>
             </tbody>
           </table>
+          <div class="" ng-show="editPaymentDetails">
+            <button class="btn btn-danger"
+                ng-click="setEditPaymentDetails()">Edit
+            </button>
+          </div>
+          <div class="" ng-show="!editPaymentDetails">
+              <button class="btn btn-danger"  ng-click="savePaymentDetails()">Save</button>
+          </div>
         </div>
       </div>
     </div>

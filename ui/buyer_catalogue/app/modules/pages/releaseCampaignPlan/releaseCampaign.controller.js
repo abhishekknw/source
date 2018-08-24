@@ -5,6 +5,7 @@ angular.module('catalogueApp')
   $scope.campaign_id = $stateParams.proposal_id;
   $scope.positiveNoError = constants.positive_number_error;
   $scope.campaign_manager = constants.campaign_manager;
+  $scope.editPaymentDetails = true;
   if($rootScope.globals.userInfo.is_superuser == true){
     $scope.backButton = true;
   }
@@ -447,8 +448,9 @@ $scope.multiSelect =
           console.log($scope.payment);
           releaseCampaignService.savePaymentDetails($scope.payment,$scope.payment.supplier_id)
           .then(function onSuccess(response){
-            $scope.editPaymentDetails = !$scope.editPaymentDetails;
+            $scope.editPaymentDetails = true;
             console.log($scope.editPaymentDetails);
+
             // $scope.payment.name_for_payment = response.data.name_for_payment;
             // $scope.payment.bank_name = response.data.bank_name;
             // $scope.payment.ifsc_code = response.data.ifsc_code;
@@ -457,6 +459,11 @@ $scope.multiSelect =
           }).catch(function onError(response){
             console.log(response);
           })
+        }
+
+        $scope.setEditPaymentDetails = function(){
+          $scope.editPaymentDetails = false;
+          console.log($scope.editPaymentDetails);
         }
 
 
