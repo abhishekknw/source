@@ -30,7 +30,7 @@ class GetLeadsEntries(APIView):
         lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
         lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
 
-        values = {}
+        values = []
         lead_form_items_dict = {}
         lead_form_items_dict_part = []
         for item in lead_form_items_list:
@@ -39,16 +39,24 @@ class GetLeadsEntries(APIView):
             curr_item_part = {key:curr_item[key] for key in ['order_id', 'key_name']}
             lead_form_items_dict_part.append(curr_item_part)
 
+        previous_entry_id = -1
+        current_list = []
         for entry in lead_form_entries_list:
             entry_id = entry.entry_id - 1
             new_entry = ({
                 "order_id": lead_form_items_dict[entry.item_id]["order_id"],
                 "value": entry.item_value
             })
-            if entry_id in values:
-                values[entry_id].append(new_entry)
-            else:
-                values[entry_id] = [new_entry]
+            if entry_id != previous_entry_id and current_list != []:
+                values.append(current_list)
+                current_list = []
+
+            current_list.append(new_entry)
+            # values.append([new_entry])
+
+            previous_entry_id = entry_id
+        values.append(current_list)
+
         supplier_all_lead_entries = {
             'supplier_id': supplier_id,
             'headers': lead_form_items_dict_part,
