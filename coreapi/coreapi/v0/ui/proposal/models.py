@@ -260,6 +260,7 @@ class ShortlistedSpaces(BaseModel):
     total_negotiated_price = models.CharField(max_length=255, null=True, blank=True)
     booking_status = models.CharField(max_length=10, null=True, blank=True)
     is_completed = models.BooleanField(default=False)
+    transaction_or_check_number = models.CharField(max_length=50, null=True, blank=True)
 
 class HashTagImages(BaseModel):
     """

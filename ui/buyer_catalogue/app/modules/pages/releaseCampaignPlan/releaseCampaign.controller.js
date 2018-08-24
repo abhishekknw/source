@@ -1,7 +1,7 @@
 angular.module('catalogueApp')
 .controller('ReleaseCampaignCtrl',
-    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','Upload','cfpLoadingBar','constants','permissions','mapViewService','$timeout',
-    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams,constants, permissions,Upload,cfpLoadingBar, mapViewService, $timeout) {
+    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','permissions','Upload','cfpLoadingBar','constants','mapViewService','$timeout',
+    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams, permissions, Upload, cfpLoadingBar,constants, mapViewService, $timeout) {
   $scope.campaign_id = $stateParams.proposal_id;
   $scope.positiveNoError = constants.positive_number_error;
   $scope.campaign_manager = constants.campaign_manager;
@@ -470,9 +470,6 @@ $scope.multiSelect =
           console.log($scope.editPaymentDetails);
         }
 
-        $scope.isVisible = false;
-
-
    $scope.uploadImage = function(file,supplier){
      console.log(supplier);
 
@@ -542,7 +539,6 @@ $scope.multiSelect =
            else if(response.data.data.status == true){
              $scope.loadSpinner = true;
              $('#selectedPaymentModal').modal('hide');
-             $scope.isVisible = true;
              // $('#selectedPaymentModal').modal('hide');
 
              swal(constants.name,constants.email_success,constants.success);
@@ -556,7 +552,7 @@ $scope.multiSelect =
            $('#onHoldModal').modal('hide');
            $('#declineModal').modal('hide');
            commonDataShare.showErrorMessage(response);
-          //  swal(constants.name,constants.email_error,constants.error);
+           swal(constants.name,constants.email_error,constants.error);
          });
        }
 
@@ -571,11 +567,22 @@ $scope.multiSelect =
             supplier.payment_status = 'PCR';
           }
 
+          supplier.booking_status = 'NB';
+
           $scope.body.message = "Beneficiary Name : " +  $scope.supplierPaymentData.name_for_payment + ",     " +
             "Bank Account Number : " + $scope.supplierPaymentData.account_no + ",     " +
             "IFSC Code : " + $scope.supplierPaymentData.ifsc_code + ",     " +
             "Negotiated Price :" + $scope.supplierPaymentData.total_negotiated_price + ",     " +
             "Message : ";
+       }
+
+       $scope.updateSupplierStatus = function(supplier){
+         if(supplier.transaction_or_check_number){
+           console.log("hello");
+           supplier.payment_status = 'PD';
+           supplier.booking_status = 'BK';
+         }
+
        }
 
 

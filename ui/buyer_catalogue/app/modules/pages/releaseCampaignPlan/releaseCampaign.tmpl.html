@@ -52,6 +52,7 @@
             <th>Booking Status</th>
             <th>Phase</th>
             <th>Mode Of Payment</th>
+            <th>Transaction/Cheque Number</th>
             <th>Contacts</th>
             <th>Payment Status</th>
 
@@ -88,7 +89,7 @@
             <td style="text-align:left;" rowspan="{{key.length}}" ng-show="$first">
               <span ng-dropdown-multiselect="" options="multiSelect"  extra-settings="selected_baseline_settings"
               selected-model="searchSelectAllModel"   translation-texts="selected_baselines_customTexts"></span>
-  </td>
+            </td>
             <td class="col-md-4" rowspan="{{key.length}}" ng-show="$first">
               <select  class="form-control spacing input-width" ng-model="supplier.booking_status" permission = "[permissions.changeBookingStatus,permissions.viewBookingStatus]">
                 <option style="width:100%;" ng-repeat="item in booking_status" value="{{item.code}}">{{item.name}}</option>
@@ -108,14 +109,6 @@
                      </label>
               </div>
 
-              <div ng-show="IsVisible" class="radio">
-                NEFT Number:
-                <input type="text" id="txtNEFTNumber" ng-model="supplier.payment_method" permission = "[permissions.viewPaymentMode,permissions.addPaymentMode]" ng-disabled="supplier.booking_status != 'BK'"/>
-                <br /><br />
-                <button type="button" class="btn btn-primary" name="button">Save</button>
-                <button class="btn btn-primary" ngf-select="uploadImage($file,supplier)" permission = "[permissions.uploadImages]">Upload Image</button>
-              </div>
-
               <div class="radio" ng-if="supplier.status != 'X'">
                 <label>
                    <input type="radio" ng-model="supplier.payment_method" value="CHEQUE"  permission = "[permissions.viewPaymentMode,permissions.addPaymentMode]"
@@ -131,12 +124,19 @@
               </div>
             </td>
             <td class="" rowspan="{{key.length}}" ng-show="$first">
+              <div class="" ng-if="supplier.payment_method == 'NEFT' || supplier.payment_method == 'CHEQUE'">
+                <input type="text" class="form-control" ng-model="supplier.transaction_or_check_number" ng-change="updateSupplierStatus(supplier)">
+              </div>
+            </td>
+            <td class="" rowspan="{{key.length}}" ng-show="$first">
               <a class="" data-target="#contactModal" data-toggle="modal" ng-click="setContact(supplier)"><b>View Contact Details</b></a>
             </td>
             <!--for payment status  -->
             <td class="" style="text-align:left" rowspan="{{key.length}}" ng-show="$first">
               <select class="form-control spacing input-width" ng-model="supplier.payment_status" permission = "[permissions.viewPaymentDetails]">
-                <option style="width:100%;" ng-repeat="item in payment_status" value="{{item.code}}" ng-click="updateSupplierStatus()" >{{item.name}}</option>
+                <option style="width:100%;" ng-repeat="item in payment_status"
+                value="{{item.code}}" ng-click="updateSupplierStatus(supplier)"
+                >{{item.name}}</option>
               </select>
               <!-- <div class="radio" permission = "[permissions.viewPaymentDetails]">
                      <label><input type="radio" ng-model="supplier.payment_status" value="PD" ng-click="updateSupplierStatus()" ng-disabled="supplier.booking_status != 'BK'">Paid</label>
