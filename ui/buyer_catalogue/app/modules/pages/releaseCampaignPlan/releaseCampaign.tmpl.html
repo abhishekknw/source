@@ -102,14 +102,23 @@
             <!--mode of payment  -->
             <td class="" style="text-align:left" rowspan="{{key.length}}" ng-show="$first">
               <div class="radio">
-                     <label><input type="radio" ng-model="supplier.payment_method" value="NEFT" ng-click="updateSupplierStatus()" permission = "[permissions.viewPaymentMode,permissions.addPaymentMode]" ng-disabled="supplier.booking_status != 'BK'">NEFT</label>
+                     <label><input type="radio" ng-model="supplier.payment_method" value="NEFT" ng-click="updateSupplierStatus('Y')" permission = "[permissions.viewPaymentMode,permissions.addPaymentMode]" ng-disabled="supplier.booking_status != 'BK'">NEFT</label>
               </div>
+
+              <div ng-show="IsVisible" class="radio">
+                NEFT Number:
+                <input type="text" id="txtNEFTNumber" ng-model="supplier.payment_method" permission = "[permissions.viewPaymentMode,permissions.addPaymentMode]" ng-disabled="supplier.booking_status != 'BK'"/>
+                <br /><br />
+                <button type="button" class="btn btn-primary" name="button">Save</button>
+                <button class="btn btn-primary" ngf-select="uploadImage($file,supplier)" permission = "[permissions.uploadImages]">Upload Image</button>
+            </div>
               <div class="radio">
-                     <label><input type="radio" ng-model="supplier.payment_method" value="CHEQUE" ng-click="updateSupplierStatus()" permission = "[permissions.viewPaymentMode,permissions.addPaymentMode]" ng-disabled="supplier.booking_status != 'BK'">Cheque</label>
+                     <label><input type="radio" ng-model="supplier.payment_method" value="CHEQUE" ng-click="updateSupplierStatus('N')" permission = "[permissions.viewPaymentMode,permissions.addPaymentMode]" ng-disabled="supplier.booking_status != 'BK'">Cheque</label>
               </div>
               <div class="radio" ng-if="supplier.status != 'X'">
-                     <label><input type="radio" ng-model="supplier.payment_method" value="CASH" ng-click="updateSupplierStatus()" permission = "[permissions.viewPaymentMode,permissions.addPaymentMode]" ng-disabled="supplier.booking_status != 'BK'">Cash</label>
+                     <label><input type="radio" ng-model="supplier.payment_method" value="CASH" ng-click="updateSupplierStatus('N')" permission = "[permissions.viewPaymentMode,permissions.addPaymentMode]" ng-disabled="supplier.booking_status != 'BK'">Cash</label>
               </div>
+
               <div style="text-align:center">
                 <a data-target="#paymentModal" data-toggle="modal" ng-click="setPayment(supplier)" permission = "[permissions.viewPaymentDetails]"><b>Details</b></a>
               </div>
