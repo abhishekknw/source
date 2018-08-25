@@ -14,3 +14,23 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
             return handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
+
+    def create(self, request, campaign_id):
+        class_name = self.__class__.__name__
+        try:
+            data = request.data.copy()
+            phases = data['phases']
+
+            for phase in phases:
+                if 'id' in phase:
+                    item = SupplierPhase.objects.filter(pk=phase['id'])
+                    phase_serializer = SupplierPhaseSerializer(item, data=phase)
+                else:
+                    phase_serializer = SupplierPhaseSerializer(data=phase)
+                if phase_serializer.is_valid():
+                    phase_serializer.save()
+            data = SupplierPhase.objects.filter(campaign=campaign_id)
+            serializer = SupplierPhaseSerializer(data,many=True)
+            return handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return handle_response(class_name, exception_object=e, request=request)
