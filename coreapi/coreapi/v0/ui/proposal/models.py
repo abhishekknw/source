@@ -260,3 +260,20 @@ class ShortlistedSpaces(BaseModel):
     total_negotiated_price = models.CharField(max_length=255, null=True, blank=True)
     booking_status = models.CharField(max_length=10, null=True, blank=True)
     is_completed = models.BooleanField(default=False)
+    transaction_or_check_number = models.CharField(max_length=50, null=True, blank=True)
+
+class HashTagImages(BaseModel):
+    """
+    This model stores campaign images which is hashtagged by BANNER,RECEIPT...etc
+    """
+    campaign = models.ForeignKey('ProposalInfo', null=False, blank=False)
+    object_id = models.CharField(max_length=supplier_id_max_length)
+    content_type = models.ForeignKey(ContentType, null=True)
+    image_path = models.CharField(max_length=1000, null=True, blank=True)
+    hashtag = models.CharField(max_length=255)
+    comment = models.CharField(max_length=1000, null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'hashtag_images'

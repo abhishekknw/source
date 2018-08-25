@@ -9,7 +9,6 @@
     <link rel="icon" type="image/ico" href="images/logo.jpg">
     <!-- build:css(.) styles/vendor.css -->
     <!-- bower:css -->
-    <!-- <link href="assets/css/material-bootstrap-wizard.css" rel="stylesheet" />  -->
     <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css" />
     <link rel="stylesheet" href="bower_components/font-awesome/css/font-awesome.css" />
     <link rel="stylesheet" href="bower_components/fullcalendar/dist/fullcalendar.css" />
@@ -28,7 +27,6 @@
     <link rel="stylesheet" href="bower_components/jstree/dist/themes/default/style.css" />
     <link rel="stylesheet" href="bower_components/angular-progress-button-styles/dist/angular-progress-button-styles.min.css" />
     <link rel="stylesheet" href="bower_components/angular-toastr/dist/angular-toastr.css" />
-    <link rel="stylesheet" href="bower_components/AngularJS-Toaster/toaster.css" />
     <link rel="stylesheet" href="bower_components/morris.js/morris.css" />
     <link rel="stylesheet" href="bower_components/Ionicons/css/ionicons.css" />
     <link rel="stylesheet" href="bower_components/animate.css/animate.css" />
@@ -51,6 +49,7 @@
     <!-- build:css(.tmp) styles/main.css -->
     <link rel="stylesheet" href="styles/main.css">
     <!-- endbuild -->
+    <!-- <link href="assets/css/material-bootstrap-wizard.css" rel="stylesheet" /> -->
   </head>
   <body ng-app="catalogueApp">
     <!--[if lte IE 8]>
@@ -122,7 +121,6 @@
     <script src="bower_components/jquery-ui/jquery-ui.js"></script>
     <script src="bower_components/angular-ui-sortable/sortable.js"></script>
     <script src="bower_components/angular-toastr/dist/angular-toastr.tpls.js"></script>
-    <script src="bower_components/AngularJS-Toaster/toaster.js"></script>
     <script src="bower_components/amcharts3/amcharts/amcharts.js"></script>
     <script src="bower_components/amcharts-stock/dist/amcharts/amstock.js"></script>
     <script src="bower_components/eve-raphael/eve.js"></script>
@@ -146,11 +144,9 @@
     <script src="bower_components/textAngular/dist/textAngular-sanitize.js"></script>
     <script src="bower_components/textAngular/dist/textAngularSetup.js"></script>
     <script src="bower_components/angular-ui-select/dist/select.js"></script>
-    <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
     <script src="bower_components/aws-sdk/dist/aws-sdk.js"></script>
     <script src="bower_components/angular-circular-progress/dist/circularProgress.min.js"></script>
     <script src="bower_components/ngmap/build/scripts/ng-map.js"></script>
-    <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:js({.tmp,app}) scripts/scripts.js -->
@@ -187,6 +183,7 @@
         <script src="modules/common/charts/line-chart.directive.js"></script>
         <script src="modules/common/charts/donut-chart.directive.js"></script>
         <script src="modules/common/directives/importExcelSheet.directive.js"></script>
+        <script src="modules/common/d3chart/d3chart.directive-dupl-range.js"></script>
 
         <!--dashboard theme files  -->
 
@@ -310,6 +307,9 @@
         <script src="modules/pages/leadForm/leadsForm.controller.js"></script>
 
         <!-- endbuild -->
+      <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
+      <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+      <script src="/bower_components/ngmap/build/scripts/ng-map.min.js"></script>
 
 </body>
 </html>

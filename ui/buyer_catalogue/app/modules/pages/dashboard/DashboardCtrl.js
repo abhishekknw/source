@@ -477,6 +477,66 @@
            }
        };
 
+       $scope.variableoptions = {
+         chart: {
+               type: 'linePlusBarChart',
+               height: 500,
+               margin: {
+                   top: 30,
+                   right: 75,
+                   bottom: 50,
+                   left: 75
+               },
+               bars: {
+                   forceY: [0]
+               },
+               bars2: {
+                   forceY: [0]
+               },
+               color: ['#2ca02c', 'darkred'],
+               x: function(d,i) { return i; },
+                showLabels: true,
+               xAxis: {
+                   axisLabel: 'X Axis',
+                   tickFormat: function(d) {
+                   // var label = $scope.formatMultiBarChartDataForSuppliers[0].values[d].x;
+                   var label = $scope.values1;
+                   return label;
+                   console.log(label);
+                  }
+               },
+               x2Axis: {
+                   showMaxMin: false
+
+               },
+               y1Axis: {
+                   axisLabel: 'Y1 Axis',
+                   tickFormat: function(d){
+                       return d3.format(',f')(d);
+                   },
+                   axisLabelDistance: 12
+               },
+               y2Axis: {
+                   axisLabel: 'Y2 Axis',
+                   tickFormat: function(d) {
+                       return 'HQ ' + d3.format(',.2f')(d)
+                   }
+               },
+               y3Axis: {
+                   tickFormat: function(d){
+                       return d3.format(',f')(d);
+                   }
+               },
+               y4Axis: {
+                   tickFormat: function(d) {
+                       return '$' + d3.format(',.2f')(d)
+                   }
+               }
+           }
+               };
+
+
+
        var stackedBarChart = {
           "chart": {
             "type": "multiBarChart",
@@ -814,6 +874,7 @@
      .then(function onSuccess(response){
        console.log(response);
        $scope.LeadsByCampaign = response.data.data;
+       $scope.d3StackedBarChartData = formatD3StackedBarChartData($scope.LeadsByCampaign.supplier_data);
        $scope.stackedBarChartOptions = angular.copy(stackedBarChart);
        $scope.stackedBarChartSupplierData = formatMultiBarChartDataForSuppliers(response.data.data.supplier_data);
        $scope.stackedBarChartDateData = formatMultiBarChartDataByDate(response.data.data.date_data);
@@ -823,31 +884,58 @@
        console.log(response);
      })
    }
+
+  //  $scope.formatMultiBarChartDataForSuppliers = [
+  //      {
+  //          "key" : "Quantity" ,
+  //          "bar": true,
+  //          "values" : [ [ 1136005200000, 1271000.0] , [ 1138683600000, 1271000.0], [ 1138683600000, 1271000.0], [ 1138683600000, 1271000.0] ]
+  //      },
+  //      {
+  //          "key" : "Price",
+  //          "values" : [ [ 1136005200000 , 71.89] , [ 1138683600000 , 75.51], [ 1138683600000 , 75.51] , [ 1138683600000 , 75.51] ]
+  //      }
+  //  ].map((series) => {
+  //          series.values = series.values.map((d) => { return {x: d[0], y: d[1] } });
+  //          return series;
+  // });
+
    var formatMultiBarChartDataForSuppliers = function(data){
      var values1 = [];
      var values2 = [];
      angular.forEach(data, function(supplier){
         var value1 =
-           { x : supplier.data.society_name, y : supplier.total - supplier.interested};
+           [supplier.data.society_name, supplier.total - supplier.interested];
         var value2 =
-           { x : supplier.data.society_name, y : supplier.interested};
+           [supplier.data.society_name, supplier.interested];
         values1.push(value1);
         values2.push(value2);
+
+
      })
+     console.log(values1);
+     console.log(values2);
      var temp_data = [
        {
          key : "Normal Leads",
          color : constants.colorKey1,
-         values : values1
+         values : values1,
+         "bar": true,
        },
        {
          key : "High Potential Leads",
          color : constants.colorKey2,
-         values : values2
+         values : values2,
+
        }
-     ];
+     ].map((series) => {
+             series.values = series.values.map((d) => { return {x: d[0], y: d[1] } });
+             return series;
+    });
      return temp_data;
+    console.log(temp_data);
    }
+
    var formatMultiBarChartDataByDate = function(data){
      var values1 = [];
      var values2 = [];
@@ -1011,6 +1099,8 @@
       $scope.lineChartValues.push(values1);
       $scope.lineChartValues.push(values2);
     }
+    console.log($scope.lineChartValues);
+
     $scope.lineChartOptions = {
     scales: {
       yAxes: [
@@ -1252,5 +1342,51 @@ $scope.viewSupplierImages = function(supplierId, invType, activityType){
     console.log(response);
   })
 }
-  })//END
+//
+$scope.options = {width: 500, height: 300, 'bar': 'aaa'};
+           // $scope.data = [1, 2, 3, 4];
+//            $scope.hovered = function(d){
+//                $scope.barValue = d;
+//                $scope.$apply();
+//            };
+//            $scope.barValue = 'None';
+
+
+var formatD3StackedBarChartData = function(data){
+  var d3Data = [];
+  // var d3Data['counts'] = [];
+  angular.forEach(data, function(value){
+    var object_data = {
+      label : value.data.society_name,
+      total : value.total,
+      counts : []
+    };
+    // object_data['counts'] = [];
+
+    var temp_data = {
+       'name'  : 'count',
+       'y0'  : 0,
+       'y1' : value.total - value.interested,
+       'label' : value.data.society_name,
+       'total' : value.total,
+      };
+    object_data['counts'].push(temp_data);
+    var temp_data = {
+       'name'  : 'count2',
+       'y0'  : value.total - value.interested,
+       'y1' : value.total,
+       'label' : value.data.society_name,
+       'total' : value.total,
+      };
+    object_data['counts'].push(temp_data);
+
+   d3Data.push(object_data);
+  });
+  console.log(d3Data);
+  return d3Data;
+}
+//END
+})
+
+
 })();

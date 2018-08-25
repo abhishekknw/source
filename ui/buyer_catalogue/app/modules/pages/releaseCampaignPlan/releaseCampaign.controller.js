@@ -1,10 +1,14 @@
 angular.module('catalogueApp')
 .controller('ReleaseCampaignCtrl',
-    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','constants','permissions','mapViewService',
-    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams,constants, permissions, mapViewService) {
+    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','permissions','Upload','cfpLoadingBar','constants','mapViewService','$timeout',
+    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams, permissions, Upload, cfpLoadingBar,constants, mapViewService, $timeout) {
   $scope.campaign_id = $stateParams.proposal_id;
   $scope.positiveNoError = constants.positive_number_error;
   $scope.campaign_manager = constants.campaign_manager;
+  $scope.editPaymentDetails = true;
+  $scope.body = {
+    message : '',
+  };
   if($rootScope.globals.userInfo.is_superuser == true){
     $scope.backButton = true;
   }
@@ -12,6 +16,7 @@ angular.module('catalogueApp')
   $scope.shortlistedSuppliersIdList = {}
   $scope.permissions = permissions.supplierBookingPage;
   $scope.showSummaryTab = false;
+  $scope.editPaymentDetails = true;
  	$scope.headings = [
         {header : 'Index'},
         {header : 'Supplier Name'},
@@ -36,6 +41,8 @@ angular.module('catalogueApp')
         {header : 'Payment Status'},
       ];
   $scope.booking_status = [
+    {name:'Undecided', code : ''},
+    {name:'Decision Pending', code : 'DP'},
     {name:'Confirmed Booking', code : 'BK'},
     {name:'Tentative Booking', code : 'NB'},
     {name:'Phone Booked' , code : 'PB'},
@@ -44,8 +51,8 @@ angular.module('catalogueApp')
     {name:'Send Email', code : 'SE'},
     {name:'Visit Required', code : 'VR'},
     {name:'Call Required', code : 'CR'},
-    {name:'Decision Pending', code : 'DP'},
   ];
+
 
   $scope.payment_status = [
     {name:'Not Initiated', code : 'PNI'},
@@ -53,7 +60,6 @@ angular.module('catalogueApp')
     {name:'Cheque Released' , code : 'PCR'},
     {name:'Paid', code : 'PD'},
     {name:'Rejected', code : 'PR'},
-
   ];
 
   $scope.contact_headings = [
@@ -441,6 +447,143 @@ $scope.multiSelect =
             console.log(response);
           })
         }
+
+        $scope.savePaymentDetails = function(){
+          console.log($scope.payment);
+          releaseCampaignService.savePaymentDetails($scope.payment,$scope.payment.supplier_id)
+          .then(function onSuccess(response){
+            $scope.editPaymentDetails = true;
+            console.log($scope.editPaymentDetails);
+
+            // $scope.payment.name_for_payment = response.data.name_for_payment;
+            // $scope.payment.bank_name = response.data.bank_name;
+            // $scope.payment.ifsc_code = response.data.ifsc_code;
+            // $scope.payment.ifsc_code = response.data.account_no;
+            console.log(response);
+          }).catch(function onError(response){
+            console.log(response);
+          })
+        }
+
+        $scope.setEditPaymentDetails = function(){
+          $scope.editPaymentDetails = false;
+          console.log($scope.editPaymentDetails);
+        }
+
+   $scope.uploadImage = function(file,supplier){
+     console.log(supplier);
+
+     // cfpLoadingBar.set(0.3)
+
+         var token = $rootScope.globals.currentUser.token;
+         if (file) {
+            // $("#progressBarModal").modal();
+           cfpLoadingBar.start();
+           // cfpLoadingBar.inc();
+           Upload.upload({
+               url: constants.base_url + constants.url_base + constants.upload_image_activity_url,
+               data: {
+                 file: file,
+                 // 'inventory_activity_assignment_id' : inventory.id,
+                 // 'supplier_name' : inventory.supplier_name,
+                 // 'activity_name' : inventory.act_name,
+                 // 'inventory_name' : inventory.inv_type,
+                 // 'activity_date' : inventory.act_date,
+               },
+               headers: {'Authorization': 'JWT ' + token}
+           }).then(function onSuccess(response){
+                 uploaded_image = {'image_path': response.data.data };
+                 supplier.images.push(uploaded_image);
+                 cfpLoadingBar.complete();
+                 // $("#progressBarModal").modal('hide');
+           })
+           .catch(function onError(response) {
+             cfpLoadingBar.complete();
+             console.log(response);
+           });
+         }
+       }
+        //to send email
+        $scope.loadSpinner = true;
+        $scope.sendNotification = function(){
+          console.log($scope.body);
+          $scope.loadSpinner = false;
+          var email_Data = {
+            subject:$scope.paymentStatus + " Details For " + $scope.supplierPaymentData.name,
+            body:$scope.body.message,
+            to:'yogesh.mhetre@machadalo.com',
+          };
+          releaseCampaignService.sendMail(email_Data)
+          .then(function onSuccess(response){
+            console.log(response);
+            $scope.taskId = response.data.data.task_id;
+            sendMailInProgress();
+        	})
+        	.catch(function onError(response){
+            $scope.loadSpinner = true;
+            $('#selectedPaymentModal').modal('hide');
+            // $('#declineModal').modal('hide');
+            commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.onhold_error,constants.error);
+        		console.log("error occured", response);
+        	});
+          $scope.reason = "";
+       }
+
+       var sendMailInProgress = function(){
+         releaseCampaignService.sendMailInProgress($scope.taskId)
+         .then(function onSuccess(response){
+           if(response.data.data.ready != true){
+              $timeout(sendMailInProgress,constants.sleepTime); // This will perform async
+           }
+           else if(response.data.data.status == true){
+             $scope.loadSpinner = true;
+             $('#selectedPaymentModal').modal('hide');
+             // $('#selectedPaymentModal').modal('hide');
+
+             swal(constants.name,constants.email_success,constants.success);
+           }
+           else {
+             $scope.loadSpinner = true;
+             swal(constants.name,constants.email_error,constants.error);
+           }
+         }).catch(function onError(response){
+           $scope.loadSpinner = true;
+           $('#onHoldModal').modal('hide');
+           $('#declineModal').modal('hide');
+           commonDataShare.showErrorMessage(response);
+           swal(constants.name,constants.email_error,constants.error);
+         });
+       }
+
+       $scope.getPaymentDetails = function(supplier,status){
+         console.log(supplier);
+         $scope.body.message = '';
+         $scope.supplierPaymentData = supplier;
+          $scope.paymentStatus = status;
+          if(status == 'NEFT' || status == 'CASH'){
+            supplier.payment_status = 'PP';
+          }else if(status == 'CHEQUE'){
+            supplier.payment_status = 'PCR';
+          }
+
+          supplier.booking_status = 'NB';
+
+          $scope.body.message = "Beneficiary Name : " +  $scope.supplierPaymentData.name_for_payment + ",     " +
+            "Bank Account Number : " + $scope.supplierPaymentData.account_no + ",     " +
+            "IFSC Code : " + $scope.supplierPaymentData.ifsc_code + ",     " +
+            "Negotiated Price :" + $scope.supplierPaymentData.total_negotiated_price + ",     " +
+            "Message : ";
+       }
+
+       $scope.updateSupplierStatus = function(supplier){
+         if(supplier.transaction_or_check_number){
+           console.log("hello");
+           supplier.payment_status = 'PD';
+           supplier.booking_status = 'BK';
+         }
+
+       }
 
 
 }]);//Controller function ends here

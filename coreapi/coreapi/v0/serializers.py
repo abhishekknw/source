@@ -5,6 +5,7 @@
 # from v0.ui.supplier.serializers import CorporateCompanyDetails
 # from v0.ui.account.models import Profile
 
+
 #
 # class BusinessInfoSerializer(ModelSerializer):
 #     # sub_type = BusinessSubTypesSerializer()

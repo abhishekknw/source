@@ -41,11 +41,12 @@ from celery.task.sets import TaskSet, subtask
 from collections import namedtuple
 import gpxpy.geo
 
-import v0.models as models
+#import v0.models as models
+import v0.ui.inventory.models as inventory_models
 from v0.ui.account.models import ContactDetails, AccountInfo
 from v0.ui.components.models import FlatType, SocietyTower, Amenity
 from v0.ui.inventory.models import (AdInventoryType, InventoryActivityAssignment,
-                                    InventoryActivityImage, InventorySummary, InventoryActivity, INVENTORY_ACTIVITY_TYPES)
+                                    InventoryActivityImage, InventorySummary, InventoryActivity, INVENTORY_ACTIVITY_TYPES, PosterInventory)
 from v0.ui.inventory.serializers import (InventoryActivityAssignmentSerializer)
 from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping, ProposalCenterSuppliers, ProposalMetrics,
@@ -64,8 +65,8 @@ from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeSociety
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
 from v0.ui.permissions.models import Role
 from v0.ui.permissions.serializers import RoleHierarchySerializer
-from v0.ui.leads.serializers import LeadSerializer, LeadsSerializer
-from v0.ui.leads.models import Lead, CampaignLeads, Leads
+from v0.ui.leads.serializers import LeadsSerializer
+from v0.ui.leads.models import Leads
 from v0.ui.events.models import Events
 from v0.ui.base.models import DurationType
 from v0.ui.account.serializers import ContactDetailsSerializer
@@ -1260,7 +1261,6 @@ def save_suppliers_allowed(center_info, proposal_id, center_id, user):
             if not content_type_response.data['status']:
                 return content_type_response
             content_type = content_type_response.data['data']
-
             # prepare the data
             data = {
                 'proposal_id': proposal_id,
@@ -1313,7 +1313,6 @@ def save_center_data(proposal_data, user):
             # for all centers
             for center_info in proposal_data['centers']:
                 center = center_info['center']
-
                 # prepare center info
                 center['proposal'] = proposal_id
                 # get address for this center. because address can contain a complicated logic in future, it's in separate
@@ -1326,12 +1325,14 @@ def save_center_data(proposal_data, user):
                 # add lat long to center's data based on address calculated
                 geo_response = get_geo_object_lat_long(address)
                 if not geo_response.data['status']:
-                    return geo_response
-                center['latitude'], center['longitude'] = geo_response.data['data']
+                    center['latitude'], center['longitude'] = [0, 0]
+                else:
+                    center['latitude'], center['longitude'] = geo_response.data['data']
                 center['user'] = user.id
                 # set pincode to zero if there isn't any
                 if not center['pincode']:
                     center['pincode'] = 0
+
 
                 if 'id' in center_info:
                     # means an existing center was updated
@@ -1350,9 +1351,12 @@ def save_center_data(proposal_data, user):
                         return response
                 else:
                     return ui_utils.handle_response(function_name, data=center_serializer.errors)
-            return ui_utils.handle_response(function_name, data='success', success=True)
+            return ui_utils.handle_response(function_name,
+                                            data={'status': 'success', 'center_id': center_serializer.data['id']},
+                                            success=True)
     except Exception as e:
         return ui_utils.handle_response(function_name, exception_object=e)
+
 
 
 def save_shortlisted_suppliers(suppliers, fixed_data):
@@ -2554,87 +2558,6 @@ def set_supplier_inventory_keys(supplier_dict, inv_summary_instance, unique_inve
         return False, supplier_dict
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
-
-
-def save_leads(row):
-    """
-    Args:
-        row: a dict representing one row of campaign_leads.
-
-    Returns: tries to save leads data  into lead model and returns either newly created object or old object.
-
-    """
-    function = save_leads.__name__
-    try:
-        lead_data = {lead_key: row[lead_key] for lead_key in v0_constants.lead_keys}
-        email = lead_data['email']
-        if not email:
-            return ui_utils.handle_response(function, data='please provide email')
-        lead_object, is_created = Lead.objects.get_or_create(email=email)
-        serializer = LeadSerializer(lead_object, data=lead_data)
-        if serializer.is_valid():
-            serializer.save()
-            return ui_utils.handle_response(function, data=lead_object, success=True)
-        return ui_utils.handle_response(function, data=serializer.errors)
-    except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
-
-
-def save_campaign_leads(row):
-    """
-
-    Args:
-        row: a dict representing one row of campaign_leads sheet.
-
-    Returns: tries to save on campaign_leads table. return the newly created campaign_leads object.
-
-    """
-    function = save_campaign_leads.__name__
-    try:
-        campaign_id = row['campaign_id']
-        lead_email = row['email']
-        campaign_lead_object, is_created = CampaignLeads.objects.get_or_create(campaign_id=campaign_id,
-                                                                               lead_email=lead_email)
-        campaign_lead_object.comments = row['comments']
-        campaign_lead_object.save()
-        return ui_utils.handle_response(function, data=campaign_lead_object, success=True)
-    except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
-
-
-def handle_campaign_leads(row):
-    """
-    Args:
-        row: row is a dict containing one row information of campaign-leads sheet.
-         currently i am inserting into db directly instead of a bulk_create. will change in future if performance
-         is compromised.
-
-    Returns: success in case db hit is success, failure otherwise
-
-    """
-    function = save_campaign_leads.__name__
-    try:
-        with transaction.atomic():
-            response = save_leads(row)
-            if not response.data['status']:
-                return response
-            lead_object = response.data['data']
-
-            response = save_campaign_leads(row)
-            if not response.data['status']:
-                return response
-
-            campaign_lead_object = response.data['data']
-
-            # send some useful information back
-            data = {
-                'lead_email': lead_object.email,
-                'campaign_lead_id': campaign_lead_object.id,
-                'campaign_id': row['campaign_id']
-            }
-            return ui_utils.handle_response(function, data=data, success=True)
-    except Exception as e:
-        return ui_utils.handle_response(function, exception_object=e)
 
 
 def handle_common_filters(common_filters, supplier_type_code):
@@ -4154,7 +4077,8 @@ def handle_update_campaign_inventories(user, data):
                 'payment_status': supplier['payment_status'],
                 'payment_method': supplier['payment_method'],
                 'total_negotiated_price': supplier['total_negotiated_price'],
-                'booking_status': supplier['booking_status']
+                'booking_status': supplier['booking_status'],
+                'transaction_or_check_number' : supplier['transaction_or_check_number']
             }
 
             shortlisted_inventories = supplier['shortlisted_inventories']
@@ -4234,6 +4158,7 @@ def update_campaign_inventories(data):
             obj.payment_method = shortlisted_spaces[ss_global_id]['payment_method']
             obj.total_negotiated_price = shortlisted_spaces[ss_global_id]['total_negotiated_price']
             obj.booking_status = shortlisted_spaces[ss_global_id]['booking_status']
+            obj.transaction_or_check_number = shortlisted_spaces[ss_global_id]['transaction_or_check_number']
 
         sid_ids = shortlisted_inventory_details.keys()
         sid_objects = ShortlistedInventoryPricingDetails.objects.filter(id__in=sid_ids)
@@ -5899,7 +5824,6 @@ def handle_supplier_data_from_sheet(result, supplier_instance_map, content_type,
         for supplier_id, detail in result.iteritems():
             count = count + 1
             instance = supplier_instance_map[supplier_id]
-            print count
             if supplier_type_code == v0_constants.society_code:
                 # get additional tower instance to be added if any first before setting new attributes
                 tower_created_list = handle_society_towers(instance, detail, tower_count_map, content_type)
@@ -6526,6 +6450,8 @@ def save_shortlisted_suppliers_data(center, supplier_code, proposal_data, propos
                 'proposal': proposal,
                 'supplier_code': supplier_code,
                 'status': supplier['status'],
+                'total_negotiated_price': supplier[
+                    'total_negotiated_price'] if 'total_negotiated_price' in supplier else None
             }
             shortlisted_suppliers.append(ShortlistedSpaces(**data))
 
@@ -6551,6 +6477,7 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
     :param create_inv_act_data:
     :return:
     """
+
     function_name = save_shortlisted_inventory_pricing_details_data.__name__
     try:
         supplier_ids = [id['id'] for id in proposal_data['center_data'][supplier_code]['supplier_data']]
@@ -6568,7 +6495,7 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
             if supplier_id not in inventory_summary_objects_mapping:
                 create_inventory_summary_data_for_supplier()
             for filter_code in proposal_data['center_data'][supplier_code]['filter_codes']:
-                inventory_objects = getattr(models, v0_constants.model_to_codes[filter_code['id']]).objects.filter(
+                inventory_objects = getattr(inventory_models, v0_constants.model_to_codes[filter_code['id']]).objects.filter(
                     Q(object_id=supplier_id))
                 if not inventory_objects or str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL' or str(
                         filter_code['id']) == 'GA':
@@ -6577,6 +6504,7 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
                 if not response.data['status']:
                     return response
                 shortlisted_inv_objects.extend(response.data['data'])
+
         ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_inv_objects)
         if create_inv_act_data:
             shortlisted_supplier_ids = {space_obj.id for space_obj in shortlisted_suppliers}
@@ -6654,8 +6582,8 @@ def make_final_list(filter_code, inventory_objects, space_id):
                 'updated_at': now_time,
                 'inventory_content_type_id': content_type.id
             }
-            shortlisted_suppliers.append(ShortlistedInventoryPricingDetails(**data))
 
+            shortlisted_suppliers.append(ShortlistedInventoryPricingDetails(**data))
         return ui_utils.handle_response(function_name, data=shortlisted_suppliers, success=True)
 
     except Exception as e:
@@ -6805,7 +6733,7 @@ def get_filters_by_campaign(campaign_id):
     """
     function_name = get_filters_by_campaign.__name__
     try:
-        filters = models.Filters.objects.filter(proposal__proposal_id=campaign_id).values('filter_code').distinct()
+        filters = Filters.objects.filter(proposal__proposal_id=campaign_id).values('filter_code').distinct()
         # serializer = FiltersSerializer(filters, many=True)
         return filters
     except Exception as e:
@@ -7132,7 +7060,7 @@ def get_campaign_inv_data(campaign_id):
     try:
 
         result = {}
-        inv_act_image_data = models.InventoryActivityImage.objects.select_related('inventory_activity_assignment',
+        inv_act_image_data = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
                                                                                   'inventory_activity_assignment__inventory_activity',
                                                                                   'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
                                                                                   'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
@@ -7146,7 +7074,7 @@ def get_campaign_inv_data(campaign_id):
             annotate(total=Count('inventory_activity_assignment', distinct=True))
         inv_act_image_data_map = organise_data_by_activity_and_inventory_type(inv_act_image_data)
         # inv_act_image_data_map = {supplier['object_id']:supplier for supplier in inv_act_image_data}
-        total_inv_act_data = models.ShortlistedInventoryPricingDetails.objects. \
+        total_inv_act_data = ShortlistedInventoryPricingDetails.objects. \
             filter(shortlisted_spaces__proposal=campaign_id). \
             annotate(object_id=F('shortlisted_spaces__object_id'), inventory=F('ad_inventory_type__adinventory_name')). \
             values('object_id', 'inventory'). \
@@ -7159,7 +7087,7 @@ def get_campaign_inv_data(campaign_id):
             if supplier['inventory'] not in total_inv_act_data_map[supplier['object_id']]:
                 total_inv_act_data_map[supplier['object_id']][supplier['inventory']] = {}
             total_inv_act_data_map[supplier['object_id']][supplier['inventory']] = supplier
-        inv_act_assigned_data = models.InventoryActivityAssignment.objects. \
+        inv_act_assigned_data = InventoryActivityAssignment.objects. \
             filter(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id). \
             annotate(activity_type=F('inventory_activity__activity_type'), inventory=F(
             'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name'),

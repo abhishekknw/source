@@ -4,8 +4,11 @@ import random
 import shutil
 import string
 import time
+import datetime
+import pytz
 
 import openpyxl
+from openpyxl import load_workbook
 import os
 import requests
 import gpxpy.geo
@@ -67,7 +70,7 @@ from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMa
     ProposalCenterMappingVersionSerializer, ProposalInfoVersionSerializer, SpaceMappingSerializer,
     ProposalCenterMappingSpaceSerializer, ProposalMasterCostSerializer, ProposalMetricsSerializer,
     ProposalCenterMappingVersionSpaceSerializer, SpaceMappingVersionSerializer, ProposalSocietySerializer,
-                                        ProposalCorporateSerializer)
+                                        ProposalCorporateSerializer, HashtagImagesSerializer)
 from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeSociety
 from v0.ui.supplier.serializers import (SupplierAmenitiesMapSerializer, SupplierTypeCorporateSerializer,
                                         SupplierTypeSocietySerializer)
@@ -89,6 +92,7 @@ from v0.ui.utils import get_supplier_id
 from v0 import errors
 import v0.constants as v0_constants
 from v0.constants import flat_type_dict
+
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
 class GetBusinessTypesAPIView(APIView):
@@ -2637,7 +2641,6 @@ class CreateInitialProposal(APIView):
             with transaction.atomic():
                 proposal_data = request.data
                 user = request.user
-
                 organisation_id = proposal_data['organisation_id']
                 account_id = account_id
 
@@ -2672,7 +2675,146 @@ class CreateInitialProposal(APIView):
                 proposal_id = proposal_data['proposal_id']
                 return ui_utils.handle_response(class_name, data=proposal_id, success=True)
         except Exception as e:
-             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+def create_proposal_object(organisation_id, account_id, user, tentative_cost, name):
+    account = AccountInfo.objects.get_permission(user=user, account_id=account_id)
+    return {
+        'organisation_id': organisation_id,
+        'account_id': account_id,
+        'proposal_id': website_utils.get_generic_id(
+            [Organisation.objects.get(pk=organisation_id).name, AccountInfo.objects.get(pk=account_id).name]),
+        'account': account.account_id,
+        'user': user.id,
+        'created_by': user.id,
+        'tentative_cost': tentative_cost,
+        'name': name
+        # 'campaign_state': 'PTC'
+    }
+
+class CreateInitialProposalBulkBasic(APIView):
+    def post(self, request):
+        class_name = self.__class__.__name__
+        source_file = request.data['file']
+        wb = load_workbook(source_file)
+        ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+        proposal_list = []
+        campaign_list = []
+        proposal_data = {}
+        organisation_id = request.data['organisation_id']
+        account_id = request.data['account_id']
+        user = request.user
+        tentative_cost = request.data['tentative_cost']
+        name = request.data['name']
+        proposal_data = create_proposal_object(organisation_id, account_id, user, tentative_cost, name)
+        response = website_utils.create_basic_proposal(proposal_data)
+        if not response.data['status']:
+            return response
+        center_name = request.data['center_name']
+        city = request.data['city']
+        area = request.data['area']
+        subarea = request.data['subarea']
+        pincode = request.data['pincode']
+        radius = request.data['radius']
+        address = request.data['address']
+        supplier_codes = request.data['codes'].split(',')
+        supplier_codes = [x.strip(' ') for x in supplier_codes]
+        city_id = City.objects.get(city_name=city).id
+        area_id = CityArea.objects.get(label=area).id
+        all_suppliers = {'RS': 'Societies', 'CP': 'Corporate Parks', 'BS': 'Bus Shelter', 'GY': 'Gym', 'SA': 'Saloon',
+                         'RE': 'Retail Shop'}
+        suppliers = []
+        for supplier in all_suppliers:
+            selected_status = False
+            if supplier in supplier_codes:
+                selected_status = True
+            suppliers.append({
+                'selected': selected_status,
+                'code': supplier,
+                'name': all_suppliers[supplier]
+            })
+        centers = [{
+            'isEditProposal': False,
+            'city': city_id,
+            'area': area_id,
+            'suppliers': suppliers,
+            'center': {
+            'city': city,
+            'area': area,
+            'codes': supplier_codes,
+            'center_name': center_name,
+            'subarea': subarea,
+            'pincode': pincode,
+            'radius': radius,
+            'address': address
+        }}]
+        proposal_data['centers'] = centers
+        center_response = website_utils.save_center_data(proposal_data, user)
+        center_id = center_response.data['data']['center_id']
+        if not center_response.data['status']:
+            return response
+        for index, row in enumerate(ws.iter_rows()):
+            if index > 0:
+                start_date = row[0].value if row[0].value else None
+                end_date = row[1].value if row[1].value else None
+                invoice_no = int(row[2].value) if row[2].value else None
+                poster_filter = True if int(row[3].value) == 1 else False
+                standee_filter = True if int(row[4].value) == 1 else False
+                flier_filter = True if int(row[5].value) == 1 else False
+                stall_filter = True if int(row[6].value) == 1 else False
+                gatewayarch_filter = True if int(row[7].value) == 1 else False
+                supplier_id = row[8].value if row[8].value else None
+                total_negotiated_price = int(row[9].value) if row[9].value else None
+                start_date = start_date.replace(tzinfo=pytz.UTC) if start_date else None
+                end_date = end_date.replace(tzinfo=pytz.UTC) if end_date else None
+                proposal_data['tentative_start_date'] = start_date
+                proposal_data['tentative_end_date'] = end_date
+                proposal_data['center_id'] = center_id
+                proposal_data['invoice_number'] = invoice_no
+                proposal_data['total_negotiated_price'] = total_negotiated_price
+                center = ProposalCenterMapping.objects.get(pk=center_id)
+                filter_codes = []
+                if poster_filter:
+                    filter_codes.append({'id': 'PO'})
+                if stall_filter:
+                    filter_codes.append({'id': 'SL'})
+                if standee_filter:
+                    filter_codes.append({'id': 'ST'})
+                if flier_filter:
+                    filter_codes.append({'id': 'FL'})
+                if gatewayarch_filter:
+                    filter_codes.append({'id': 'GA'})
+                supplier_data = [{
+                    'status': 'F',
+                    'id': supplier_id,
+                    'total_negotiated_price': total_negotiated_price
+                }]
+                center_data = {
+                    'RS': {
+                        'filter_codes': filter_codes,
+                        'supplier_data': supplier_data
+                    }
+                }
+                proposal_data['center_data'] = center_data
+                proposal = ProposalInfo.objects.get(pk=proposal_data['proposal_id'])
+                for supplier_code in proposal_data['center_data']:
+                    response = website_utils.save_filters(center, supplier_code, proposal_data, proposal)
+                    if not response.data['status']:
+                        return response
+                    response = website_utils.save_shortlisted_suppliers_data(center, supplier_code, proposal_data, proposal)
+                    if not response.data['status']:
+                        return response
+                    response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
+                                                                                         proposal_data, proposal)
+                    if not response.data['status']:
+                        return response
+                response = website_utils.update_proposal_invoice_and_state(proposal_data, proposal)
+                if not response.data['status']:
+                    return response
+                response = website_utils.create_generic_export_file_data(proposal)
+                if not response.data['status']:
+                    return response
+        return ui_utils.handle_response({}, data='success', success=True)
 
 
 class CreateFinalProposal(APIView):
@@ -3698,7 +3840,7 @@ class AssignCampaign(APIView):
             if user.is_superuser:
                 assigned_objects = CampaignAssignment.objects.all()
             else:
-                assigned_objects = CampaignAssignment.objects.filter(Q(assigned_to=user) | Q(assigned_by=user) | Q(campaign__created_by=user.username))
+                    assigned_objects = CampaignAssignment.objects.filter(Q(assigned_to=user) | Q(assigned_by=user) | Q(campaign__created_by=user.username))
             campaigns = []
             # check each one of them weather they are campaign or not
             for assign_object in assigned_objects:
@@ -3744,7 +3886,6 @@ class CampaignInventory(APIView):
         # todo: reduce the time taken for this API. currently it takes 15ms to fetch data which is too much.
         try:
             proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
-
             response = website_utils.is_campaign(proposal)
             if not response.data['status']:
                 return response
@@ -5170,7 +5311,6 @@ class ProfileViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-
 class OrganisationViewSet(viewsets.ViewSet):
     """
     ViewSets around organisations.
@@ -5245,7 +5385,6 @@ class OrganisationViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-
 class ContentTypeViewSet(viewsets.ViewSet):
     """
     fetches all content types in the system
@@ -5279,7 +5418,6 @@ class ContentTypeViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
 
 class ObjectLevelPermissionViewSet(viewsets.ViewSet):
     """
@@ -5348,7 +5486,6 @@ class ObjectLevelPermissionViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
 
 class GeneralUserPermissionViewSet(viewsets.ViewSet):
     """
@@ -5419,7 +5556,6 @@ class GeneralUserPermissionViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-
 class CloneProfile(APIView):
     """
     Clone a profile.
@@ -5463,7 +5599,6 @@ class CloneProfile(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-
 class OrganisationMapViewSet(viewsets.ViewSet):
     """
     viewset that around OrganisationMap model
@@ -5506,7 +5641,6 @@ class OrganisationMapViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
 
 class AccountViewSet(viewsets.ViewSet):
     """
@@ -6280,6 +6414,7 @@ class convertDirectProposalToCampaign(APIView):
             center = ProposalCenterMapping.objects.get(pk=center_id)
 
             for supplier_code in proposal_data['center_data']:
+
                 response = website_utils.save_filters(center, supplier_code, proposal_data, proposal)
                 if not response.data['status']:
                     return response
@@ -6300,6 +6435,22 @@ class convertDirectProposalToCampaign(APIView):
             return ui_utils.handle_response(class_name, data={}, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+def strToList (str):
+    elements = str.split(',')
+    converted_list = [x.strip(' ') for x in elements]
+    return converted_list
+
+def convertDirectProposalToCampaignExcel (proposal_list):
+    for proposal_data in proposal_list:
+        center_id = proposal_data['center_id']
+        proposal = ProposalInfo.objects.get(pk=proposal_data['proposal_id'])
+        center = ProposalCenterMapping.objects.get(pk=center_id)
+
+        # data conversion
+        center_data = {}
+
+
 
 class proposalCenterMappingViewSet(viewsets.ViewSet):
     """
@@ -6491,6 +6642,7 @@ class LeadsViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+
 class GetRelationshipAndPastCampaignsData(APIView):
     def get(self, request):
         """
@@ -6512,5 +6664,32 @@ class GetRelationshipAndPastCampaignsData(APIView):
             }
             return ui_utils.handle_response(class_name, data=result, success=True)
 
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class HashtagImagesViewSet(viewsets.ViewSet):
+    """
+    This class is arround hashtagged images by audit app
+    """
+    def create(self,request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            data = request.data.copy()
+            supplier_type_code = request.data.get('supplierTypeCode')
+            response = ui_utils.get_content_type(supplier_type_code)
+            if not response:
+                return response
+            content_type = response.data.get('data')
+            data['content_type'] = content_type.id
+            serializer = HashtagImagesSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)

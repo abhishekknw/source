@@ -33,10 +33,45 @@
     <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="96x96" href="assets/img/favicon-96x96.png">
     <link rel="stylesheet" type="text/css" href="modules/pages/DashBoard/adminDashboard/percentage-circular-bar.css">
+    <script src="modules/pages/DashBoard/d3chart.js"></script>
+    <script src="modules/pages/DashBoard/d3RangeSlider.js"></script>
+    <link href="modules/pages/DashBoard/d3RangeSlider.css" rel="stylesheet">
 
 
   </head>
-  <body ng-cloak >
+  <style>
+  svg {
+    font: 10px sans-serif;
+    shape-rendering: crispEdges;
+  }
+  g.axis path, g.axis line {
+  		fill: none;
+  		stroke: black;
+  		shape-rendering: crispEdges;
+  	}
+  	g.brush rect.extent {
+  		fill-opacity: 0.2;
+  	}
+  	.resize path {
+  		fill-opacity: 0.2;
+  	}
+  .toolTip {
+         font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+         position: absolute;
+         display: none;
+         width: auto;
+         height: auto;
+         background: none repeat scroll 0 0 white;
+         border: 0 none;
+         border-radius: 8px 8px 8px 8px;
+         box-shadow: -3px 3px 15px #888888;
+         color: black;
+         font: 12px sans-serif;
+         padding: 5px;
+         text-align: center;
+     }
+</style>
+  <body ng-cloak>
 
     <div class="body-bg"></div>
 
@@ -375,14 +410,14 @@
                                 <tr>
                                   <td>Campaign Status</td>
                                   <td>Supplier Count</td>
-                                  <td ng-if="showLeadsDetails" class="blinking">Total Leads <br><small>(High Quality Leads)</small></td>
+                                  <td ng-if="showLeadsDetails" >Total Leads <br><small>(High Quality Leads)</small></td>
                                 </tr>
                               </thead>
                                   <tbody>
                                   <tr ng-repeat="item in campaignChartdata">
                                     <td style="text-align:left;">{{item.label}}</td>
                                     <td> {{item.value}}</td>
-                                    <td ng-if="showLeadsDetails && item.status != 'upcoming'">{{campaignStatusData[item.status].totalLeads||0}}({{campaignStatusData[item.status].hotLeads}})</td>
+                                    <td class="blinking" ng-if="showLeadsDetails && item.status != 'upcoming'">{{campaignStatusData[item.status].totalLeads||0}}({{campaignStatusData[item.status].hotLeads}})</td>
                                     <td ng-if="showLeadsDetails && item.status == 'upcoming'">NA</td>
                                   </tr>
 
@@ -1375,9 +1410,17 @@
                                 <h4> Leads Per Society</h4>
                               </div>
                             </div>
-                            <div class="col-md-12">
-                              <nvd3 options="stackedBarChartOptions" data="stackedBarChartSupplierData"></nvd3>
+
+                            <div class="col-md-12" ng-scrollable>
+                              <div class="outer">
+                                <div class="inner">
+                                  <nvd3 options="stackedBarChartOptions" data="stackedBarChartSupplierData"></nvd3>
+                                </div>
+                              </div>
                             </div>
+                            <!-- <div class="col-md-6">
+                            <nvd3 options="variableoptions" data="stackedBarChartSupplierData"></nvd3>
+                            </div> -->
                           </div>
                           <div class="col-md-6" ng-if="showPerfMetrics == perfMetrics.leads" style="margin-top:50px;">
                             <div class="panel-heading content-title">
@@ -1385,8 +1428,12 @@
                                 <h4> Leads By Date</h4>
                               </div>
                             </div>
-                            <div class="col-md-12">
-                              <nvd3 options="stackedBarChartOptions" data="stackedBarChartDateData" ></nvd3>
+                            <div class="col-md-12" ng-scrollable>
+                              <div class="outerdate">
+                                <div class="innerdate">
+                                  <nvd3 options="stackedBarChartOptions" data="stackedBarChartDateData"></nvd3>
+                                </div>
+                              </div>
                             </div>
                           </div>
 
