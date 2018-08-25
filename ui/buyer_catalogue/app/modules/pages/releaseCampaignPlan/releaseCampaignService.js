@@ -33,6 +33,10 @@
       var url = url_base_ui + 'society/';
       return machadaloHttp.post(url,data);
     }
+    releaseCampaignService.saveContactDetails = function(data){
+      var url = url_base_ui + 'society/';
+      return machadaloHttp.post(url,data);
+    }
 
     releaseCampaignService.sendMail = function(data){
       var url = url_base + "mail/";
