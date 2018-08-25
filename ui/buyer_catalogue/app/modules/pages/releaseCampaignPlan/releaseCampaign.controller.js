@@ -6,9 +6,13 @@ angular.module('catalogueApp')
   $scope.positiveNoError = constants.positive_number_error;
   $scope.campaign_manager = constants.campaign_manager;
   $scope.editPaymentDetails = true;
+
   $scope.body = {
     message : '',
   };
+  $scope.editContactDetails = true;
+  $scope.addContactDetails = true;
+
   if($rootScope.globals.userInfo.is_superuser == true){
     $scope.backButton = true;
   }
@@ -17,6 +21,9 @@ angular.module('catalogueApp')
   $scope.permissions = permissions.supplierBookingPage;
   $scope.showSummaryTab = false;
   $scope.editPaymentDetails = true;
+  $scope.editContactDetails = true;
+  $scope.addContactDetails = true;
+
  	$scope.headings = [
         {header : 'Index'},
         {header : 'Supplier Name'},
@@ -70,6 +77,7 @@ angular.module('catalogueApp')
     {header : 'STD Code'},
     {header : 'Landline No'},
     {header : 'Mobile No'},
+    {header : 'Remove'},
 
   ];
   $scope.payment_headings = [
@@ -173,10 +181,9 @@ angular.module('catalogueApp')
     }
     //Start:To set contacts to show in contactModal
     $scope.setContact = function(supplier){
-      if(supplier.contacts.length > 0)
-        $scope.contacts = supplier.contacts;
-      else
-        $scope.contacts = null;
+      $scope.payment = supplier;
+      console.log(supplier);
+
     }
     //End:To set contacts to show in contactModal
     //Start:To set payment details to show in paymentModal
@@ -465,10 +472,75 @@ $scope.multiSelect =
           })
         }
 
-        $scope.setEditPaymentDetails = function(){
+      $scope.setEditPaymentDetails = function(){
           $scope.editPaymentDetails = false;
           console.log($scope.editPaymentDetails);
         }
+
+        // $scope.saveContactDetails = function(){
+        //   console.log($scope.payment);
+        //   releaseCampaignService.saveContactDetails($scope.payment,$scope.payment.supplier_id)
+        //   .then(function onSuccess(response){
+        //     $scope.editContactDetails = true;
+        //     console.log($scope.editContactDetails);
+        //     console.log(response);
+        //   }).catch(function onError(response){
+        //     console.log(response);
+        //   })
+        // }
+        var temp_data = [];
+
+        $scope.saveContactDetails = function(){
+          var data = {
+            supplier_id : $scope.payment.supplier_id,
+            contacts : []
+          };
+          angular.forEach($scope.payment.contacts, function(item){
+            console.log(item);
+              var temp_data = {
+                salutation : item.salutation,
+                name : item.name,
+                designation: item.designation,
+                email:item.email,
+                std_code : item.std_code,
+                landline: item.landline,
+                mobile: item.mobile,
+                object_id : item.supplier_id,
+              }
+              data.contacts.push(temp_data);
+          });
+          console.log(temp_data);
+          console.log(data);
+          console.log($scope.payment);
+          releaseCampaignService.saveContactDetails($scope.payment,$scope.payment.supplier_id)
+          .then(function onSuccess(response){
+            console.log(response);
+          }).catch(function onError(response){
+            console.log(response);
+          })
+          // console.log($scope.addRow);
+        // $scope.addRow.push({});
+        }
+        $scope.setEditContactDetails = function(){
+            $scope.editContactDetails = false;
+            console.log($scope.editContactDetails);
+          }
+          $scope.addRow = ({});
+          $scope.addContactDetail = function(){
+            $scope.addRow = $scope.payment.contacts;
+            $scope.addContactDetails = false;
+            console.log($scope.addRow);
+          $scope.addRow.push({});
+          }
+
+          $scope.removeContact = function(index){
+            $scope.payment.contacts.splice(index , 1);
+          }
+        $scope.IsVisible = false;
+       $scope.updateSupplierStatus = function (value) {
+      //If DIV is visible it will be hidden and vice versa.
+      $scope.IsVisible = value == "Y";
+      }
 
    $scope.uploadImage = function(file,supplier){
      console.log(supplier);
@@ -584,6 +656,12 @@ $scope.multiSelect =
          }
 
        }
+
+
+
+
+
+
 
 
 }]);//Controller function ends here
