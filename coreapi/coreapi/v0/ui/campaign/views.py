@@ -1,6 +1,7 @@
 from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, SupplierPhase
 from v0.ui.proposal.serializers import ProposalInfoSerializer
 from rest_framework.views import APIView
+from rest_framework import viewsets
 from v0.ui.utils import handle_response
 
 class CreateSupplierPhaseData(APIView):
@@ -35,3 +36,5 @@ class CreateSupplierPhaseData(APIView):
             return handle_response(class_name, data={}, success=True)
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
+
+
