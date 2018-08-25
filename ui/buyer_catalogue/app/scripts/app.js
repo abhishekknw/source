@@ -58,7 +58,7 @@ angular
     'catalogueApp.theme',
     'angular-circular-progress',
     'ngMap',
-    
+
 
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider, $locationProvider,cfpLoadingBarProvider) {
@@ -245,7 +245,7 @@ angular
            controller : 'ReleaseCampaignCtrl',
            templateUrl : 'modules/pages/releaseCampaignPlan/releaseCampaign.tmpl.html',
            ncyBreadcrumb: {
-             label:'ReleasePlan',
+             label:'BookingPlan',
              parent : 'CampaignList'
            }
        })
@@ -278,7 +278,7 @@ angular
             controller : 'AuditReleasePlanCtrl',
             templateUrl : 'modules/pages/operations/auditReleasePlan/auditReleasePlan.tmpl.html',
             ncyBreadcrumb: {
-              label:'AuditReleasePlan',
+              label:'CampaignAndAuditPlan',
               parent : 'releasePlan'
             }
       })
@@ -373,7 +373,7 @@ angular
         //    $location.path('/forbiddenPage');
         //  }
         console.log(event);
-         console.log("location change start - Whence: " + whence);         
+         console.log("location change start - Whence: " + whence);
          // redirect to login page if not logged in
          $rootScope.globals.currentUser = AuthService.UserInfo();
          if (!$rootScope.globals.currentUser) {
