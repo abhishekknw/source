@@ -182,6 +182,7 @@ angular.module('catalogueApp')
     //Start:To set contacts to show in contactModal
     $scope.setContact = function(supplier){
       $scope.payment = supplier;
+      $scope.editContactDetails = true;
       console.log(supplier);
 
     }
@@ -477,49 +478,20 @@ $scope.multiSelect =
           console.log($scope.editPaymentDetails);
         }
 
-        // $scope.saveContactDetails = function(){
-        //   console.log($scope.payment);
-        //   releaseCampaignService.saveContactDetails($scope.payment,$scope.payment.supplier_id)
-        //   .then(function onSuccess(response){
-        //     $scope.editContactDetails = true;
-        //     console.log($scope.editContactDetails);
-        //     console.log(response);
-        //   }).catch(function onError(response){
-        //     console.log(response);
-        //   })
-        // }
         var temp_data = [];
 
         $scope.saveContactDetails = function(){
-          var data = {
-            supplier_id : $scope.payment.supplier_id,
-            contacts : []
-          };
-          angular.forEach($scope.payment.contacts, function(item){
-            console.log(item);
-              var temp_data = {
-                salutation : item.salutation,
-                name : item.name,
-                designation: item.designation,
-                email:item.email,
-                std_code : item.std_code,
-                landline: item.landline,
-                mobile: item.mobile,
-                object_id : item.supplier_id,
-              }
-              data.contacts.push(temp_data);
-          });
-          console.log(temp_data);
-          console.log(data);
-          console.log($scope.payment);
+          $scope.payment['basic_contact_available'] = true;
+          $scope.payment['basic_contacts'] = $scope.payment.contacts;
           releaseCampaignService.saveContactDetails($scope.payment,$scope.payment.supplier_id)
           .then(function onSuccess(response){
             console.log(response);
+            $scope.editContactDetails = true;
+            swal(constants.name, constants.add_data_success, constants.success);
           }).catch(function onError(response){
             console.log(response);
           })
-          // console.log($scope.addRow);
-        // $scope.addRow.push({});
+
         }
         $scope.setEditContactDetails = function(){
             $scope.editContactDetails = false;
