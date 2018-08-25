@@ -3,6 +3,7 @@ from django.conf.urls import include, url
 from rest_framework.routers import DefaultRouter
 
 from v0.ui.website import views
+from v0.ui.campaign.views import CreateSupplierPhaseData
 
 urlpatterns = [
 
@@ -86,7 +87,8 @@ urlpatterns = [
     url(r'^campaigns-assigned-inventory-ids-and-images/(?P<organisation_id>[A-Z_a-z0-9-]+)/$', views.GetAssignedIdImagesListApiView.as_view()),
     url(r'^convert-direct-proposal-to-campaign/$', views.convertDirectProposalToCampaign.as_view()),
     url(r'^add-suppliers-direct-to-campaign/$', views.addSupplierDirectToCampaign.as_view()),
-    url(r'^get-relationship-and-past-campaigns-data/$', views.GetRelationshipAndPastCampaignsData.as_view())
+    url(r'^get-relationship-and-past-campaigns-data/$', views.GetRelationshipAndPastCampaignsData.as_view()),
+    url(r'^create-supplier-phase-data/$', CreateSupplierPhaseData.as_view()),
 
 ]
 

@@ -261,6 +261,7 @@ class ShortlistedSpaces(BaseModel):
     booking_status = models.CharField(max_length=10, null=True, blank=True)
     is_completed = models.BooleanField(default=False)
     transaction_or_check_number = models.CharField(max_length=50, null=True, blank=True)
+    phase_no = models.ForeignKey('SupplierPhase', blank=True, null=True)
 
 class HashTagImages(BaseModel):
     """
@@ -277,3 +278,17 @@ class HashTagImages(BaseModel):
 
     class Meta:
         db_table = 'hashtag_images'
+
+class SupplierPhase(BaseModel):
+
+    """
+    This model stores phase no of supplier and start date and end date
+    """
+    phase_no = models.CharField(max_length=10, default='',  null=True, blank=True)
+    start_date = models.DateTimeField(null=True)
+    end_date = models.DateTimeField(null=True)
+    comments = models.CharField(max_length=255, null=True, blank=True)
+    campaign = models.ForeignKey('ProposalInfo', null=False, blank=False)
+
+    class Meta:
+        db_table = 'supplier_phase'
