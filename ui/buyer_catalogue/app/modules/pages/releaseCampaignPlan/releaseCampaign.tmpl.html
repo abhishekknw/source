@@ -92,7 +92,9 @@
             </td>
             <td class="col-md-4" rowspan="{{key.length}}" ng-show="$first">
               <select  class="form-control spacing input-width" ng-model="supplier.booking_status" permission = "[permissions.changeBookingStatus,permissions.viewBookingStatus]">
-                <option style="width:100%;" ng-repeat="item in booking_status" value="{{item.code}}">{{item.name}}</option>
+                <option style="width:100%;" ng-repeat="item in booking_status" value="{{item.code}}"
+                ng-if="supplier.booking_status == undefined ? supplier.booking_status = booking_status[0].code : 1"
+                >{{item.name}}</option>
               </select>
             </td>
             <td  class="col-md-2" rowspan="{{key.length}}" ng-show="$first" ng-form name="phaseform">
@@ -135,6 +137,7 @@
             <td class="" style="text-align:left" rowspan="{{key.length}}" ng-show="$first">
               <select class="form-control spacing input-width" ng-model="supplier.payment_status" permission = "[permissions.viewPaymentDetails]">
                 <option style="width:100%;" ng-repeat="item in payment_status"
+                 ng-if="supplier.payment_status == undefined ? supplier.payment_status = payment_status[0].code : 1"
                 value="{{item.code}}" ng-click="updateSupplierStatus(supplier)"
                 >{{item.name}}</option>
               </select>
