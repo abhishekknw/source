@@ -1,9 +1,10 @@
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
-from views import (CreateInitialProposalBulkBasic,HashtagImagesViewSet, InitialProposalAPIView, GetAccountProposalsAPIView,
-                CurrentProposalAPIView, ProposalHistoryAPIView, ChildProposals, CreateInitialProposal, ProposalViewSet,
-                CreateFinalProposal, ProposalVersion, ProposalToCampaign, FinalProposalAPIView, CreateProposalAPIView,
-                   ProposalImagesPath, convertDirectProposalToCampaign)
+from views import (CreateInitialProposalBulkBasic, HashtagImagesViewSet, InitialProposalAPIView,
+                   GetAccountProposalsAPIView, CurrentProposalAPIView, ProposalHistoryAPIView, ChildProposals,
+                   CreateInitialProposal, ProposalViewSet, CreateFinalProposal, ProposalVersion, ProposalToCampaign,
+                   FinalProposalAPIView, CreateProposalAPIView, ProposalImagesPath, convertDirectProposalToCampaign,
+                   CampaignToProposal)
 
 urlpatterns = [
     url(r'^create-initial-proposal-basic/$', CreateInitialProposalBulkBasic.as_view()),
@@ -24,6 +25,7 @@ urlpatterns = [
     url(r'^manageCampaign/(?P<id>[A-Z_a-z0-9]+)/proposal/$', CreateProposalAPIView.as_view()),
     url(r'^proposal-images-path/$', ProposalImagesPath.as_view()),
     url(r'^convert-direct-proposal-to-campaign/$', convertDirectProposalToCampaign.as_view()),
+    url(r'^(?P<campaign_id>[A-Z_a-z0-9-]+)/convert-to-proposal/$', CampaignToProposal.as_view()),
 
 ]
 
@@ -32,6 +34,5 @@ router.include_format_suffixes = False
 
 router.register(r'^hashtag-images', HashtagImagesViewSet, base_name='hashtag-images')
 router.register(r'^proposal', ProposalViewSet, base_name='Proposal')
-
 
 urlpatterns += router.urls

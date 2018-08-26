@@ -3,7 +3,8 @@ from rest_framework.routers import DefaultRouter
 from views import (CampaignInventory, CampaignSuppliersInventoryList, InventoryActivityImageAPIView,
                    BulkInsertInventoryActivityImage, GenerateInventoryActivitySummary,
                    InventoryActivityAssignmentAPIView, AssignInventoryActivityDateUsers,
-                   ReassignInventoryActivityDateUsers)
+                   ReassignInventoryActivityDateUsers, CampaignsAssignedInventoryCountApiView,
+                   CampaignInventoryAPIView, UploadInventoryActivityImageAmazon)
 
 urlpatterns = [
     url(r'^(?P<campaign_id>[A-Z_a-z0-9-]+)/campaign-inventories/$', CampaignInventory.as_view()),
@@ -14,8 +15,10 @@ urlpatterns = [
     url(r'^inventory-activity-assignment/$', InventoryActivityAssignmentAPIView.as_view()),
     url(r'^inventory-activity-date-user-assignment/$', AssignInventoryActivityDateUsers.as_view()),
     url(r'^inventory-activity-date-user-reassignment/$', ReassignInventoryActivityDateUsers.as_view()),
-    url(r'^upload-inventory-activity-image-amazon/$', views.UploadInventoryActivityImageAmazon.as_view()),
+    url(r'^upload-inventory-activity-image-amazon/$', UploadInventoryActivityImageAmazon.as_view()),
     url(r'^campaign/(?P<id>[A-Z_a-z0-9]+)/inventories/$', CampaignInventoryAPIView.as_view()),
+    url(r'^campaigns-assigned-inventory-counts/(?P<organisation_id>[A-Z_a-z0-9-]+)/$',CampaignsAssignedInventoryCountApiView.as_view()),
+
 ]
 
 router = DefaultRouter()

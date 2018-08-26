@@ -1,12 +1,20 @@
+import random, string
 from rest_framework.views import APIView
-from rest_framework import viewsets
-from openpyxl import load_workbook, Workbook
+from rest_framework import viewsets, status
+from django.db import transaction
 import v0.ui.utils as ui_utils
-import os
-import v0.permissions as v0_permissions
-from django.conf import settings
-from rest_framework.decorators import detail_route, list_route
-from models import AccountInfo, BusinessAccountContact, BusinessInfo, BusinessSubTypes, BusinessTypes
+from models import AccountInfo, BusinessAccountContact, BusinessSubTypes, BusinessTypes
+from rest_framework.response import Response
+from serializers import BusinessTypesSerializer, AccountInfoSerializer
+from v0.ui.supplier.models import SupplierTypeSociety
+from v0.ui.organisation.models import Organisation
+from v0.ui.account.models import ContactDetails
+from v0.ui.account.serializers import (BusinessInfoSerializer, BusinessSubTypesSerializer, UIBusinessInfoSerializer,
+                                       UIAccountInfoSerializer, BusinessAccountContactSerializer,
+                                       ContactDetailsSerializer)
+from django.contrib.contenttypes.models import ContentType
+import v0.ui.website.utils as website_utils
+
 
 class GetBusinessTypesAPIView(APIView):
     """
@@ -157,23 +165,25 @@ class BusinessContacts(APIView):
                 business_serializer_data = {}
 
                 if 'organisation_id' in business_data:
-                    business = Organisation.objects.get_permission(user=request.user, pk=business_data['organisation_id'])
+                    business = Organisation.objects.get_permission(user=request.user,
+                                                                   pk=business_data['organisation_id'])
                     serializer = BusinessInfoSerializer(business, data=business_data)
                 else:
-                    business_data['organisation_id'] = self.generate_organisation_id(business_name=business_data['name'], \
-                                                                             sub_type=sub_type, type_name=type_name)
+                    business_data['organisation_id'] = self.generate_organisation_id(
+                        business_name=business_data['name'], sub_type=sub_type, type_name=type_name)
                     if business_data['organisation_id'] is None:
                         # if organisation_id is None --> after 12 attempts couldn't get unique id so return first id in lowercase
-                        business_data['organisation_id'] = self.generate_organisation_id(business_data['name'], \
-                                                                                 sub_type=sub_type, type_name=type_name,
-                                                                                 lower=True)
+                        business_data['organisation_id'] = self.generate_organisation_id(business_data['name'],
+                                                                                         sub_type=sub_type,
+                                                                                         type_name=type_name,
+                                                                                         lower=True)
                     serializer = BusinessInfoSerializer(data=business_data)
 
                 if serializer.is_valid():
-                     serializer.save()
-                     business_serializer_data = serializer.data
-                     business_serializer_data['business_sub_type'] = sub_type.business_sub_type
-                     business_serializer_data['business_type'] = type_name.business_type
+                    serializer.save()
+                    business_serializer_data = serializer.data
+                    business_serializer_data['business_sub_type'] = sub_type.business_sub_type
+                    business_serializer_data['business_type'] = type_name.business_type
 
                 business = Organisation.objects.get_permission(user=current_user, pk=business_data['organisation_id'])
                 content_type_business = ContentType.objects.get_for_model(Organisation)
