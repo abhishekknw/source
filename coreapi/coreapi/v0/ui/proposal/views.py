@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-from models import SupplierPhase
+from models import SupplierPhase, ProposalInfo
 from serializers import SupplierPhaseSerializer
 from v0.ui.utils import handle_response
 
@@ -15,17 +15,17 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
 
-    def create(self, request, campaign_id):
+    def create(self, request):
         class_name = self.__class__.__name__
         try:
-            data = request.data.copy()
-            phases = data['phases']
-
+            phases = request.data
+            campaign_id = request.query_params.get('campaign_id')
             for phase in phases:
                 if 'id' in phase:
-                    item = SupplierPhase.objects.filter(pk=phase['id'])
+                    item = SupplierPhase.objects.get(pk=phase['id'],campaign=campaign_id)
                     phase_serializer = SupplierPhaseSerializer(item, data=phase)
                 else:
+                    phase['campaign'] = campaign_id
                     phase_serializer = SupplierPhaseSerializer(data=phase)
                 if phase_serializer.is_valid():
                     phase_serializer.save()
