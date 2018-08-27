@@ -236,7 +236,7 @@
       <button class="btn btn-danger active notify" style="text-align:left; margin-left:10px" ng-click="updateData()" permission = "[permissions.updateData]">Update</button>
     </span>
     <span class = "col-md-3 pull-right">
-    <button class="btn btn-danger active notify" style="text-align:right" ng-click="changeLocation()">Planning Release-Audit</button>
+      <button class="btn btn-danger active notify" style="text-align:right" ng-click="changeLocation()">Planning Release-Audit</button>
     </span>
 
 
@@ -611,21 +611,33 @@
                 </tr>
               </thead>
               <tbody>
-                <tr>
+                <tr ng-repeat="phase in phases" ng-show="!editPhase">
                   <td>{{$index+1}}</td>
-                  <td><input type="number" ng-model="phaseno"></td>
-                  <td><input type="date" ng-model="startdate"></td>
-                  <td><input type="date" ng-model="enddate"></td>
+                  <td>{{phase.phase_no||'NA'}}</td>
+                  <td>{{phase.start_date|limitTo:10||'NA'}}</td>
+                  <td>{{phase.end_date|limitTo:10||'NA'}}</td>
                   <td>
                     <div class="radio">
-                      <button type="button" name="button" ng-click="removeSupplierToList(supplier.supplier_id)">Remove</button>
+                      <button type="button" name="button" ng-click="removePhase($index)">Remove</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr ng-repeat="phase in phases" ng-show="editPhase">
+                  <td>{{$index+1}}</td>
+                  <td><input type="text" ng-model="phase.phase_no"></td>
+                  <td><input type="date" ng-model="phase.start_date"></td>
+                  <td><input type="date" ng-model="phase.end_date"></td>
+                  <td>
+                    <div class="radio">
+                      <button type="button" name="button" ng-click="removePhase($index)">Remove</button>
                     </div>
                   </td>
                 </tr>
               </tbody>
             </table>
+              <button class="btn btn-success" ng-click="editPhaseDetails()">Edit</button>
               <button class="btn btn-success" type="button" name="button" ng-click="addNewPhase()">Add</button>
-              <button class="btn btn-success" type="button" name="button">Save</button>
+              <button class="btn btn-success" type="button" name="button" ng-click="savePhases()">Save</button>
             </div>
         </div>
       </div>
