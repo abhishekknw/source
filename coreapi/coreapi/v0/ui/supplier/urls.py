@@ -19,5 +19,6 @@ urlpatterns = [
     url(r'^(?P<proposal_id>[A-Z_a-z0-9-]+)/import-supplier-data/$', ImportSupplierData.as_view()),
     url(r'^add-suppliers-direct-to-campaign/$', addSupplierDirectToCampaign.as_view()),
 
+
 ]
 

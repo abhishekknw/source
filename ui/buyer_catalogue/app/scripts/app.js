@@ -240,6 +240,12 @@ angular
             controller : 'MapCtrl',
             templateUrl : 'modules/pages/mapview/mapview.tmpl.html',
         })
+        .state('societydetailspage',{
+             // url : '/SocietyDetailsPages',
+             url : '/:supplierId/SocietyDetailsPages',
+               controller : 'SocietyDetailsPagesCtrl',
+             templateUrl : 'modules/pages/SocietyDetailsPages/societydetailspage.tmpl.html',
+         })
       .state('releasePlan',{
            url : '/:proposal_id/releasePlan',
            controller : 'ReleaseCampaignCtrl',

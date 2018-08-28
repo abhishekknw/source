@@ -47,7 +47,7 @@ from v0.ui.account.serializers import (BusinessInfoSerializer, BusinessAccountCo
 from v0.ui.account.models import BusinessAccountContact, ContactDetails, AccountInfo, Profile
 from v0.ui.inventory.models import (AdInventoryType, SocietyInventoryBooking,InventoryActivityAssignment,
                                     InventoryActivityImage, InventorySummary,InventoryTypeVersion, InventoryType,
-                                    InventoryActivity, INVENTORY_ACTIVITY_TYPES)
+                                    InventoryActivity, INVENTORY_ACTIVITY_TYPES, Filters)
 from v0.ui.inventory.serializers import SocietyInventoryBookingSerializer, InventoryTypeSerializer, \
     InventoryActivityAssignmentSerializerReadOnly, InventoryActivityAssignmentSerializer, \
     InventoryTypeVersionSerializer, CampaignInventorySerializer
@@ -55,6 +55,7 @@ from v0.ui.inventory.serializers import SocietyInventoryBookingSerializer, Inven
 from v0.ui.organisation.models import Organisation, OrganisationMap, ORGANIZATION_CATEGORY
 from v0.ui.organisation.serializers import OrganisationMapNestedSerializer, OrganisationSerializer
 from v0.ui.location.models import State, City, CityArea, CitySubArea
+from v0.ui.location.serializers import CitySerializer
 
 from v0.ui.common.models import BaseUser
 from v0.ui.user.serializers import UserProfileSerializer, UserSerializer, BaseUserSerializer, BaseUserUpdateSerializer, \
@@ -71,6 +72,7 @@ from v0.ui.supplier.serializers import (SupplierAmenitiesMapSerializer, Supplier
                                         SupplierTypeSocietySerializer)
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails, PriceMappingDefault, getPriceDict
 from v0.ui.permissions.models import ObjectLevelPermission, GeneralUserPermission, Role, RoleHierarchy
+from v0.ui.base.models import DurationType
 from v0.ui.base.serializers import ContentTypeSerializer
 
 import utils as website_utils
@@ -1717,3 +1719,158 @@ class GetRelationshipAndPastCampaignsData(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+
+class AdvancedTransactionDataSheet(APIView):
+    def post(self, request):
+        class_name = self.__class__.__name__
+        try:
+            import pdb
+            pdb.set_trace()
+            supplier_data = SupplierTypeSociety.objects.all()
+            society_data_list = []
+            contact_data_list = []
+            total_society_id_list = []
+            source_file = request.data['file']
+            wb = load_workbook(source_file)
+            ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+            for index, row in enumerate(ws.iter_rows()):
+                if index > 0:
+                    try:
+                        city = City.objects.get(city_name=row[1].value)
+                        city_code = city.city_code
+                    except ObjectDoesNotExist as e:
+                        error = 'No City Found at - '+ str(index) + ',' +  str(row[1].value)
+                        return ui_utils.handle_response(class_name, data=error)
+                    try:
+                        area = CityArea.objects.get(label=row[2].value)
+                        area_code = area.area_code
+                    except ObjectDoesNotExist as e:
+                        error = 'No Area Found at - '+ str(index) + ',' +  str(row[2].value)
+                        return ui_utils.handle_response(class_name, data=error)
+                    try:
+                        subarea = CitySubArea.objects.get(subarea_name=row[3].value)
+                        subarea_code = subarea.subarea_code
+                    except ObjectDoesNotExist as e:
+                        error = 'No SubArea Found at - '+ str(index) + ',' +  str(row[3].value)
+                        return ui_utils.handle_response(class_name, data=error)
+                    try:
+                        error = 'No Supplier Code - '+ str(index) + ',' +  str(row[3].value)
+                        if row[4].value:
+                            supplier_code = row[4].value
+                        else:
+                            return ui_utils.handle_response(class_name, data=error)
+
+                    except ObjectDoesNotExist as e:
+                        error = 'No SubArea Found at - '+ str(index) + ',' +  str(row[3].value)
+                        return ui_utils.handle_response(class_name, data=error)
+                    supplier_id = city_code + area_code + subarea_code + 'RS' +  subarea_code
+                    try:
+                        supplier = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
+                        content_type = ui_utils.get_content_type('RS').data['data']
+                    except ObjectDoesNotExist as e:
+
+                        society_data_list.append(SupplierTypeSociety(**{
+                            'supplier_id' : supplier_id,
+                            'society_name': row[0].value if row[0].value else None,
+                            'society_city': str(city_code),
+                            'society_locality': str(area_code),
+                            'society_subarea': str(subarea_code),
+                            'supplier_code': str(subarea_code),
+                            'society_zip': int(row[5].value),
+                            'society_latitude': float(row[6].value) if row[6].value else None,
+                            'society_longitude': float(row[7].value) if row[7].value else None,
+                            'tower_count': int(row[8].value) if row[8].value else None,
+                            'flat_count': int(row[9].value) if row[9].value else None,
+                        }))
+                    contact_data_list.append(ContactDetails**({
+                        'name': row[18].value if row[18].value else None,
+                        'designation': 'Manager',
+                        'salutation': 'Mr',
+                        'mobile': row[19].value if row[18].value else None,
+                        'content_type': content_type,
+                        'object_id': supplier_id
+                    }))
+                    data = {
+                        'supplier_id' : supplier_id,
+                        'poster_count' : row[10].value if row[10].value else row[8].value,
+                        'poster_date' : row[12].value if row[12].value else None,
+                        'stall_count' : row[13].value if row[13].value else None,
+                        'standee_count' : row[17].value if row[17].value else None,
+                        'flyer_count' : 1,
+                        'flyer_date' : row[16].value if row[16].value else None
+                    }
+                    total_society_id_list.append(supplier_id)
+            SupplierTypeSociety.objects.bulk_create(society_data_list)
+            ContactDetails.objects.bulk_create(contact_data_list)
+
+            proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
+            proposal.invoice_number = invoice_number
+            proposal.campaign_state = 'PTC'
+            campaign_assignment = CampaignAssignment(**{
+                'campaign' : proposal,
+                'assigned_by' : assigned_by,
+                'assigned_to' : assigned_to
+            })
+            campaign_assignment.save()
+            filters = ['PO','SL','ST','FL']
+            filter_data = []
+            center = ProposalCenterMapping.objects.get(pk=center_id)
+            for filter in filters:
+                data = {
+                    'center': center,
+                    'proposal': proposal,
+                    'supplier_type': content_type,
+                    'supplier_type_code': supplier_code,
+                    'filter_name': 'inventory_type_selected',
+                    'filter_code': filter,
+                    'is_checked': True,
+                }
+                filter_data.append(Filters(**data))
+            Filters.objects.bulk_create(filter_data)
+            response = website_utils.create_generic_export_file_data(proposal)
+            shortlisted_suppliers_data = []
+            for supplier in total_society_id_list:
+                data = {
+                    'object_id' : supplier,
+                    'center' : center,
+                    'content_type' : content_type,
+                    'proposal' : proposal,
+                    'supplier_code' : 'RS',
+                    'status' : 'F',
+                    'booking_status' : 'BK'
+                }
+                shortlisted_suppliers_data.append(ShortlistedSpaces(**data))
+            ShortlistedSpaces.objects.bulk_create(shortlisted_suppliers_data)
+
+            inventory_counts = [row[10].value if row[10].value else 0,
+                                row[13].value if row[13].value else 0,
+                                row[17].value if row[17].value else 0,
+                                1]
+
+            for supplier in total_society_id_list:
+                for filter in filters:
+                    ad_inventory = v0_constants.inventory_type_duration_dict_list[filter]
+                    ad_inventory_type_id = AdInventoryType.objects.get(adinventory_name=ad_inventory[0],
+                                                                       adinventory_type=ad_inventory[1])
+                    duration_type_id = DurationType.objects.get(duration_name=ad_inventory[2])
+                    content_type = ui_utils.fetch_content_type(filter)
+                    now_time = timezone.now()
+                    shortlisted_suppliers = []
+                    if filter == 'PO':
+                        objects_count = supplier['poster_count']
+                    for inventory in objects_count:
+                        data = {
+                            'ad_inventory_type': ad_inventory_type_id,
+                            'ad_inventory_duration': duration_type_id,
+                            'inventory_id': inventory.adinventory_id,
+                            'shortlisted_spaces': space_id,
+                            'created_at': now_time,
+                            'updated_at': now_time,
+                            'inventory_content_type_id': content_type.id
+                        }
+
+                        shortlisted_suppliers.append(ShortlistedInventoryPricingDetails(**data))
+
+            return ui_utils.handle_response(class_name,data={}, status=200)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)

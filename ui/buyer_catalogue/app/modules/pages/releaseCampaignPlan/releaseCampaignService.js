@@ -49,13 +49,32 @@
       return machadaloHttp.get(url);
     }
 
+    releaseCampaignService.getSociety = function (id,supplierTypeCode) {
+      console.log(id);
+       var url = url_base_societyDetails + "supplier/" + id + "/image_details/?supplierTypeCode=" + supplierTypeCode;;
+       return machadaloHttp.get(url);
+    };
+
+    releaseCampaignService.processParam = function(){
+     if($stateParams.campaignId){
+       $rootScope.campaignId = $stateParams.campaignId;
+     }else {
+       $rootScope.campaignId = null;
+      }
+
+      if($stateParams.societyId){
+       $rootScope.societyId = $stateParams.societyId;
+     }else {
+       $rootScope.societyId = null;
+     }
+    };
     releaseCampaignService.getPhases = function(campaignId){
-      var url = url_base_proposal  + "supplier-phase/?campaign_id=" + campaignId;
+      var url = url_base  + "supplier-phase/?campaign_id=" + campaignId;
       return machadaloHttp.get(url);
     }
 
     releaseCampaignService.savePhases = function(data,campaignId){
-      var url = url_base_proposal  + "supplier-phase/?campaign_id=" + campaignId;
+      var url = url_base  + "supplier-phase/?campaign_id=" + campaignId;
       return machadaloHttp.post(url,data);
     }
 
