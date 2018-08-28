@@ -21,7 +21,7 @@ import v0.ui.website.utils as website_utils
 import v0.ui.utils as ui_utils
 from v0.ui.organisation.models import Organisation
 from django.db import transaction
-from v0.ui.location.models import City, CityArea
+from v0.ui.location.models import City, CityArea, CitySubArea
 from v0.ui.campaign.models import GenericExportFileName
 from v0.ui.website.views import GenericExportFileSerializerReadOnly
 from rest_framework.response import Response
@@ -39,6 +39,7 @@ from v0.ui.inventory.models import (AdInventoryType,InventoryActivityAssignment,
 from v0.ui.inventory.serializers import (InventoryTypeSerializer, InventoryTypeVersionSerializer)
 from v0.ui.finances.models import (ShortlistedInventoryPricingDetails, PriceMappingDefault, getPriceDict)
 from v0.ui.campaign.models import Campaign
+from v0.ui.account.models import ContactDetails
 from v0.ui.website.utils import return_price
 import v0.constants as v0_constants
 import v0.ui.website.tasks as tasks
@@ -67,6 +68,90 @@ def create_proposal_object(organisation_id, account_id, user, tentative_cost, na
         # 'campaign_state': 'PTC'
     }
 
+def genrate_supplier_data(data):
+    function_name = genrate_supplier_data.__name__
+    try:
+
+        import pdb
+        pdb.set_trace()
+        supplier_data = SupplierTypeSociety.objects.all()
+        society_data_list = []
+        contact_data_list = []
+        total_society_id_list = []
+        source_file = data['file']
+        wb = load_workbook(source_file)
+        ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+        for index, row in enumerate(ws.iter_rows()):
+            if index > 0:
+                try:
+                    city = City.objects.get(city_name=row[1].value)
+                    city_code = city.city_code
+                except ObjectDoesNotExist as e:
+                    error = 'No City Found at - ' + str(index) + ',' + str(row[1].value)
+                    return ui_utils.handle_response(function_name, data=error)
+                try:
+                    area = CityArea.objects.get(label=row[2].value)
+                    area_code = area.area_code
+                except ObjectDoesNotExist as e:
+                    error = 'No Area Found at - ' + str(index) + ',' + str(row[2].value)
+                    return ui_utils.handle_response(function_name, data=error)
+                try:
+                    subarea = CitySubArea.objects.get(subarea_name=row[3].value)
+                    subarea_code = subarea.subarea_code
+                except ObjectDoesNotExist as e:
+                    error = 'No SubArea Found at - ' + str(index) + ',' + str(row[3].value)
+                    return ui_utils.handle_response(function_name, data=error)
+                try:
+                    error = 'No Supplier Code - ' + str(index) + ',' + str(row[3].value)
+                    if row[4].value:
+                        supplier_code = row[4].value
+                    else:
+                        return ui_utils.handle_response(function_name, data=error)
+
+                except ObjectDoesNotExist as e:
+                    error = 'No SubArea Found at - ' + str(index) + ',' + str(row[3].value)
+                    return ui_utils.handle_response(function_name, data=error)
+                supplier_id = city_code + area_code + subarea_code + 'RS' + subarea_code
+                try:
+                    supplier = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
+                except ObjectDoesNotExist as e:
+
+                    society_data_list.append(SupplierTypeSociety(**{
+                        'supplier_id': supplier_id,
+                        'society_name': row[0].value if row[0].value else None,
+                        'society_city': str(city_code),
+                        'society_locality': str(area_code),
+                        'society_subarea': str(subarea_code),
+                        'supplier_code': str(subarea_code),
+                        'society_zip': int(row[5].value) if row[5].value else None,
+                        'society_latitude': float(row[6].value) if row[6].value else None,
+                        'society_longitude': float(row[7].value) if row[7].value else None,
+                        'tower_count': int(row[8].value) if row[8].value else None,
+                        'flat_count': int(row[9].value) if row[9].value else None,
+                    }))
+                content_type = ui_utils.get_content_type('RS').data['data']
+                contact_data_list.append(ContactDetails ** ({
+                    'name': row[18].value if row[18].value else None,
+                    'designation': 'Manager',
+                    'salutation': 'Mr',
+                    'mobile': row[19].value if row[18].value else None,
+                    'content_type': content_type,
+                    'object_id': supplier_id
+                }))
+                data =  {
+                    'id': supplier_id,
+                    'poster_count': row[10].value if row[10].value else row[8].value,
+                    'poster_date': row[12].value if row[12].value else None,
+                    'stall_count': row[13].value if row[13].value else None,
+                    'standee_count': row[17].value if row[17].value else None,
+                    'flyer_count': 1,
+                    'flyer_date': row[16].value if row[16].value else None
+                }
+                total_society_id_list.append(supplier_id)
+        SupplierTypeSociety.objects.bulk_create(society_data_list)
+        ContactDetails.objects.bulk_create(contact_data_list)
+    except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
 
 class CreateInitialProposal(APIView):
     """
@@ -1892,6 +1977,11 @@ class convertDirectProposalToCampaign(APIView):
         """
         class_name = self.__class__.__name__
         try:
+            import pdb
+            pdb.set_trace()
+            is_import_sheet = request.data['is_import_sheet']
+            if is_import_sheet:
+                genrate_supplier_data(request.data)
             proposal_data = request.data
             center_id = proposal_data['center_id']
             proposal = ProposalInfo.objects.get(pk=proposal_data['proposal_id'])
@@ -1905,7 +1995,12 @@ class convertDirectProposalToCampaign(APIView):
                 response = website_utils.save_shortlisted_suppliers_data(center, supplier_code, proposal_data, proposal)
                 if not response.data['status']:
                     return response
-                response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
+                if is_import_sheet:
+                    create_inv_act_data = True
+                    response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
+                                                                            proposal_data, proposal,create_inv_act_data)
+                else:
+                    response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
                                                                                          proposal_data, proposal)
                 if not response.data['status']:
                     return response

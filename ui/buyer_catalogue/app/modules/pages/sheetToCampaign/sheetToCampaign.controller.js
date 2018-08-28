@@ -207,11 +207,12 @@ angular.module('catalogueApp')
 
         $scope.submit = function(){
           var filterAndSupplierData = getFilterAndSupplierData();
-          filterAndSupplierData['proposal_id'] = $scope.proposalId;
-          filterAndSupplierData['center_id'] = $scope.centerData.id;
-          filterAndSupplierData['invoice_number'] = $scope.invoiceNumber.id;
-          filterAndSupplierData['tentative_start_date'] = $scope.dateData.tentative_start_date;
-          filterAndSupplierData['tentative_end_date'] = $scope.dateData.tentative_end_date;
+          filterAndSupplierData['is_import_sheet'] = true;
+          // filterAndSupplierData['proposal_id'] = $scope.proposalId;
+          // filterAndSupplierData['center_id'] = $scope.centerData.id;
+          // filterAndSupplierData['invoice_number'] = $scope.invoiceNumber.id;
+          // filterAndSupplierData['tentative_start_date'] = $scope.dateData.tentative_start_date;
+          // filterAndSupplierData['tentative_end_date'] = $scope.dateData.tentative_end_date;
           console.log(filterAndSupplierData);
           sheetToCampaignService.convertDirectProposalToCampaign(filterAndSupplierData)
           .then(function onSuccess(response){
@@ -231,6 +232,7 @@ angular.module('catalogueApp')
             }
           return data;
         }
+
         $scope.importProposal = function(){
           $scope.importProposal = true;
         }
@@ -249,4 +251,6 @@ angular.module('catalogueApp')
             console.log(response);
           })
         }
+        getSocieties();
+
 }]);

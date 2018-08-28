@@ -6480,6 +6480,7 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
 
     function_name = save_shortlisted_inventory_pricing_details_data.__name__
     try:
+        is_import_sheet = proposal_data['is_import_sheet']
         supplier_ids = [id['id'] for id in proposal_data['center_data'][supplier_code]['supplier_data']]
         supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
         supplier_objects_mapping = {sup_obj.supplier_id: sup_obj for sup_obj in supplier_objects}
@@ -6495,11 +6496,14 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
             if supplier_id not in inventory_summary_objects_mapping:
                 create_inventory_summary_data_for_supplier()
             for filter_code in proposal_data['center_data'][supplier_code]['filter_codes']:
-                inventory_objects = getattr(inventory_models, v0_constants.model_to_codes[filter_code['id']]).objects.filter(
-                    Q(object_id=supplier_id))
-                if not inventory_objects or str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL' or str(
-                        filter_code['id']) == 'GA':
-                    inventory_objects = create_inventory_ids(supplier_objects_mapping[supplier_id], filter_code)
+                if is_import_sheet:
+                    inventory_objects = create_inventory_ids(supplier_objects_mapping[supplier_id], filter_code, is_import_sheet)
+                else:
+                    inventory_objects = getattr(inventory_models, v0_constants.model_to_codes[filter_code['id']]).objects.filter(
+                        Q(object_id=supplier_id))
+                    if not inventory_objects or str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL' or str(
+                            filter_code['id']) == 'GA':
+                        inventory_objects = create_inventory_ids(supplier_objects_mapping[supplier_id], filter_code)
                 response = make_final_list(filter_code, inventory_objects, shortlisted_suppliers_mapping[supplier_id])
                 if not response.data['status']:
                     return response
@@ -6543,6 +6547,9 @@ def create_inventory_ids(supplier_object, filter_code):
     function_name = create_inventory_ids.__name__
     try:
         tower_count = supplier_object.tower_count
+        if is_import_sheet:
+            tower_count = 1
+
         inventory_ids = []
         Struct = namedtuple('Struct', 'adinventory_id')
         data = {}
