@@ -5,6 +5,7 @@
 
     var url_base = 'v0/ui/website/';
     var url_base_ui = 'v0/ui/';
+    var url_base_proposal = 'v0/ui/proposal/';
     var releaseCampaignService = {};
 
 
@@ -67,5 +68,15 @@
        $rootScope.societyId = null;
      }
     };
+    releaseCampaignService.getPhases = function(campaignId){
+      var url = url_base_proposal  + "supplier-phase/?campaign_id=" + campaignId;
+      return machadaloHttp.get(url);
+    }
+
+    releaseCampaignService.savePhases = function(data,campaignId){
+      var url = url_base_proposal  + "supplier-phase/?campaign_id=" + campaignId;
+      return machadaloHttp.post(url,data);
+    }
+
     return releaseCampaignService;
 }]);

@@ -1,6 +1,6 @@
 angular.module('catalogueApp')
 .controller('ReleaseCampaignCtrl',
-    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','permissions','Upload','cfpLoadingBar','constants','mapViewService','$timeout',
+    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','permissions','Upload','cfpLoadingBar','constants','mapViewService','$timeout','commonDataShare',
     function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams, permissions, Upload, cfpLoadingBar,constants, mapViewService, $timeout, commonDataShare) {
   $scope.campaign_id = $stateParams.proposal_id;
   $scope.positiveNoError = constants.positive_number_error;
@@ -628,7 +628,45 @@ $scope.multiSelect =
          }
 
        }
+       $scope.getPhases = function(){
+         $scope.editPhase = false;
+         releaseCampaignService.getPhases($scope.campaign_id)
+         .then(function onSuccess(response){
+           console.log(response);
+           angular.forEach(response.data.data, function(phase){
+             phase.start_date = new Date(phase.start_date);
+             phase.end_date = new Date(phase.end_date);
+           })
+           $scope.phases = response.data.data;
 
+         }).catch(function onError(response){
+           console.log(response);
+         })
+       }
+       $scope.removePhase = function(index){
+         $scope.phases.splice(index,1);
+       }
+       $scope.editPhaseDetails = function(){
+         $scope.editPhase = true;
+       }
+       $scope.savePhases = function(){
+         releaseCampaignService.savePhases($scope.phases,$scope.campaign_id)
+         .then(function onSuccess(response){
+           console.log(response);
+           angular.forEach(response.data.data, function(phase){
+             phase.start_date = new Date(phase.start_date);
+             phase.end_date = new Date(phase.end_date);
+           })
+           $scope.phases = response.data.data;
+           $scope.editPhase = false;
+         }).catch(function onError(response){
+           console.log(response);
+         })
+       }
+       $scope.addNewPhase = function(){
+         $scope.phases.push({});
+       }
+       $scope.getPhases();
 
        $scope.phaseDetails;
        $scope.addNewPhase = function(){
