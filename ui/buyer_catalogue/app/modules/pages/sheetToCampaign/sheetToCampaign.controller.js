@@ -134,6 +134,8 @@ angular.module('catalogueApp')
       $scope.createProposal = function(){
         console.log($scope.model);
         $scope.proposalCreated = true;
+        $scope.importProposal = false;
+        $scope.importsheets = false;
         if($scope.model.centers[0].center.pincode)
           $scope.model.centers[0].center.pincode = $scope.model.centers[0].center.pincode.toString();
         createProposalService.saveInitialProposal($scope.model.account_id, $scope.model)
@@ -231,10 +233,14 @@ angular.module('catalogueApp')
             }
           return data;
         }
-        $scope.importProposal = function(){
+        $scope.Proposalimport = function(){
           $scope.importProposal = true;
+          $scope.createProposal = false;
+          $scope.importsheets = false;
         }
         $scope.importProposalSheet = function(){
+          $scope.importProposal = false;
+          $scope.createProposal = false;
           $scope.importsheets = true;
         }
         $scope.importThroughSheet = function(){

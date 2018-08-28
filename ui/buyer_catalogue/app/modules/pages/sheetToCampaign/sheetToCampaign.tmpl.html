@@ -121,26 +121,24 @@
           <button type="button" class="btn btn-danger" name="button" ng-click="createProposal()">Create Proposal</button>
         </div>
 
-        <div class="col-md-4" style="text-align:right">
-          <button type="button" class="btn btn-danger" name="button" ng-click="importProposal()">Import Proposal</button>
+        <div class="col-md-2" style="text-align:right">
+          <button type="button" class="btn btn-danger" name="button" ng-click="Proposalimport()">Import Proposal</button>
         </div>
-        <div class="col-md-4" style="text-align:right">
+        <div class="col-md-2" style="text-align:right">
           <button type="button" class="btn btn-danger" name="button" ng-click="importProposalSheet()">Import Sheet</button>
         </div>
-        <div class="col-md-4" style="text-align:right">
-          <button type="button" class="btn btn-danger" name="button" ng-click="createProposal()">Manually Insert Proposal</button>
-        </div>
-      </div>
 
+      </div>
+<br /><br /><br />
   </div>
 
 
-  <div class="panel-body panel-default panel col-md-12" ng-if="proposalCreated">
+  <div class="panel-body panel-default panel col-md-12" ng-if="proposalCreated && !importProposal && !importsheets">
     <div class="panel-heading" style="text-align:center">
       <h4>Proposal Basic Details</h4>
     </div>
   </div>
-    <div class="panel-default panel col-md-12" ng-if="proposalCreated && !importProposal">
+    <div class="panel-default panel col-md-12" ng-if="proposalCreated && !importProposal && !importsheets">
       <div class="panel-heading" style="text-align:center">
         <h4>Convert Proposal To Campaign</h4>
       </div>
@@ -216,7 +214,7 @@
       </div>
     </div>
 
-    <div class="panel-default panel col-md-12" ng-if="importProposal">
+    <div class="panel-default panel col-md-12" ng-if="!proposalCreated && importProposal && !importsheets">
       <div class="panel-heading" style="text-align:center">
         <h4>Import Proposal Sheet To Campaign</h4>
       </div>
@@ -304,7 +302,7 @@
       </div>
     </div>
 
-    <div class="panel" ng-show="importsheets">
+    <div class="panel"  ng-if="!proposalCreated && !importProposal && importsheets">
 
       <div class="panel-body">
         <label>Select Sheet</label>
