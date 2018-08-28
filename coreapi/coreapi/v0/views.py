@@ -51,6 +51,8 @@ from v0.ui.supplier.models import SupplierInfo, SupplierTypeCorporate, SupplierA
 
 from v0.ui.events.models import Events
 from v0.ui.events.serializers import EventsSerializer
+import re
+
 
 class PopulateContentTypeFields(APIView):
     """
@@ -727,52 +729,6 @@ class RatioDetailsAPIListView(APIView):
         return Response(serializer.errors, status=400)
 
 
-class SignupAPIView(APIView):
-
-    def get(self, request, id, format=None):
-        try:
-            item = Signup.objects.get(pk=id)
-            serializer = SignupSerializer(item)
-            return Response(serializer.data)
-        except Signup.DoesNotExist:
-            return Response(status=404)
-
-    def put(self, request, id, format=None):
-        try:
-            item = Signup.objects.get(pk=id)
-        except Signup.DoesNotExist:
-            return Response(status=404)
-        serializer = SignupSerializer(item, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=400)
-
-    def delete(self, request, id, format=None):
-        try:
-            item = Signup.objects.get(pk=id)
-        except Signup.DoesNotExist:
-            return Response(status=404)
-        item.delete()
-        return Response(status=204)
-
-class SignupAPIListView(APIView):
-
-    def get(self, request, format=None):
-        items = Signup.objects.all()
-        paginator = PageNumberPagination()
-        result_page = paginator.paginate_queryset(items, request)
-        serializer = SignupSerializer(result_page, many=True)
-        return paginator.get_paginated_response(serializer.data)
-
-    def post(self, request, format=None):
-        serializer = SignupSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
-
-
 class SocietyTowerAPIView(APIView):
 
     def get(self, request, id, format=None):
@@ -1307,6 +1263,25 @@ class PopulateAmenities(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
+def validate_password(new_password):
+    # used to check whether the new password is strong enough
+    valid = 1
+    if not any(x.isupper() for x in new_password):
+        valid = 0
+    if re.match("[^a-zA-Z0-9_]", new_password):
+        valid = 0
+    if len(new_password)<8:
+        valid = 0
+    # rules = [lambda s: any(x.isupper() for x in s),  # must have at least one uppercase
+    #          lambda s: re.match("[^a-zA-Z0-9_]", s)==False,  # must have at least one special char
+    #          lambda s: len(s) >= 8  # must be at least 8 characters
+    #          ]
+    # if all(rule(new_password) for rule in rules):
+    #     valid = 1
+    #     print 'valid'
+    return valid
+
+
 class UserViewSet(viewsets.ViewSet):
     """
     A View set for handling all the user related logic
@@ -1425,9 +1400,14 @@ class UserViewSet(viewsets.ViewSet):
         try:
             user = BaseUser.objects.get(pk=pk)
             new_password = request.data['password']
-            user.set_password(new_password)
-            user.save()
-            return ui_utils.handle_response(class_name, data='password changed successfully', success=True)
+            password_valid = validate_password(new_password)
+            if password_valid == 1:
+                user.set_password(new_password)
+                user.save()
+                return ui_utils.handle_response(class_name, data='password changed successfully', success=True)
+            else:
+                return ui_utils.handle_response(class_name, data='please make sure to have 1 capital, 1 special '
+                                                                 'character, and total 8 characters', success=False)
         except ObjectDoesNotExist as e:
             return ui_utils.handle_response(class_name, data=pk, exception_object=e)
         except Exception as e:
