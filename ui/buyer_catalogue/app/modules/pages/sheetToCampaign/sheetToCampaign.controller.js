@@ -98,9 +98,26 @@ angular.module('catalogueApp')
     				console.log("Error occured");
     			});
         }
+        var getUsersList = function(){
+          commonDataShare.getUsersList()
+            .then(function onSuccess(response){
+              $scope.userList = response.data.data;
+              console.log($scope.userList);
+              $scope.usersMapListWithObjects = {};
+              angular.forEach($scope.userList, function(data){
+                $scope.usersMapListWithObjects[data.id] = data;
+              })
+              console.log($scope.usersMapListWithObjects);
+            })
+            .catch(function onError(response){
+              console.log("error occured", response.status);
+              commonDataShare.showErrorMessage(response);
+            });
+        }
         var init = function(){
           getCities();
           getOrganisations();
+          getUsersList();
         }
 
         init();
@@ -131,6 +148,9 @@ angular.module('catalogueApp')
         })
 
       }
+
+
+
       $scope.getArea = function(city){
         console.log(city);
         createProposalService.getLocations('areas', city)
@@ -187,11 +207,12 @@ angular.module('catalogueApp')
 
         $scope.submit = function(){
           var filterAndSupplierData = getFilterAndSupplierData();
-          filterAndSupplierData['proposal_id'] = $scope.proposalId;
-          filterAndSupplierData['center_id'] = $scope.centerData.id;
-          filterAndSupplierData['invoice_number'] = $scope.invoiceNumber.id;
-          filterAndSupplierData['tentative_start_date'] = $scope.dateData.tentative_start_date;
-          filterAndSupplierData['tentative_end_date'] = $scope.dateData.tentative_end_date;
+          filterAndSupplierData['is_import_sheet'] = true;
+          // filterAndSupplierData['proposal_id'] = $scope.proposalId;
+          // filterAndSupplierData['center_id'] = $scope.centerData.id;
+          // filterAndSupplierData['invoice_number'] = $scope.invoiceNumber.id;
+          // filterAndSupplierData['tentative_start_date'] = $scope.dateData.tentative_start_date;
+          // filterAndSupplierData['tentative_end_date'] = $scope.dateData.tentative_end_date;
           console.log(filterAndSupplierData);
           sheetToCampaignService.convertDirectProposalToCampaign(filterAndSupplierData)
           .then(function onSuccess(response){
@@ -211,4 +232,25 @@ angular.module('catalogueApp')
             }
           return data;
         }
+
+        $scope.importProposal = function(){
+          $scope.importProposal = true;
+        }
+        $scope.importProposalSheet = function(){
+          $scope.importsheets = true;
+        }
+        $scope.importThroughSheet = function(){
+          var data = {
+            proposal : formattedProposalSheet
+          };
+          console.log(data);
+          campaignLeadsService.importThroughSheet($scope.campaignId, data)
+          .then(function onSuccess(response){
+            console.log(response);
+          }).catch(function onError(response){
+            console.log(response);
+          })
+        }
+        getSocieties();
+
 }]);
