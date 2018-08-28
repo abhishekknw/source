@@ -25,7 +25,7 @@ a.collapse-menu-link:hover {
   margin-top: 20px;
 }
 .dashboard-tab .uib-tab {
-  width: 33.33%;
+  width: 25%;
   text-align: center;
 }
 .dashboard-tab .tab-content {
@@ -607,3 +607,11 @@ div.outer .inner { width:900px; }
 
 div.outerdate { overflow: scroll; }
 div.outerdate .innerdate { width: 500px; }
+
+.dateHeading{
+  width: 240px;
+}
+.dateHeading > * {
+       display: table-cell;
+       width: 3%;
+   }

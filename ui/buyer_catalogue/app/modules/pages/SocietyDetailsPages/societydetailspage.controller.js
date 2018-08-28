@@ -27,8 +27,8 @@ angular.module('catalogueApp')
         $scope.loading = response.data.data.supplier_data;
        $scope.myInterval=300;
        $scope.society_images = response.data.data.supplier_images;
-       console.log($scope.society_images);
-       $scope.amenities = response.data.data.amenities;
+       // console.log($scope.society_images);
+       // $scope.amenities = response.data.data.amenities;
        $scope.society =  response.data.data.supplier_data;
        console.log($scope.society);
       //  $scope.society = response.data.supplier_data;
