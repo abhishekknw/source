@@ -851,15 +851,16 @@ def get_aware_datetime_from_string(date_string):
     try:
         first_format = "%Y-%m-%d"
         second_format = "%Y-%m-%dT%H:%M:%SZ"
+        if date_string:
+            if validate_date_format(date_string, first_format):
+                ret = timezone.make_aware(datetime.datetime.strptime(date_string, first_format), timezone.get_default_timezone())
+            elif validate_date_format(date_string, second_format):
+                ret = parse_datetime(date_string)
+            else:
+                raise ValueError(errors.INVALID_DATE_FORMAT.format(first_format, second_format))
 
-        if validate_date_format(date_string, first_format):
-            ret = timezone.make_aware(datetime.datetime.strptime(date_string, first_format), timezone.get_default_timezone())
-        elif validate_date_format(date_string, second_format):
-            ret = parse_datetime(date_string)
-        else:
-            raise ValueError(errors.INVALID_DATE_FORMAT.format(first_format, second_format))
-
-        return ret
+            return ret
+        return date_string
     except Exception as e:
         raise Exception(e, function)
 

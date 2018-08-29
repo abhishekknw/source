@@ -13,6 +13,8 @@ from v0.ui.inventory.views import AssignInventories, BannerInventoryAPIView, Ban
 from v0.ui.supplier.views import SupplierInfoAPIView, SupplierInfoAPIListView, SupplierTypeSocietyAPIView, \
     SupplierTypeSocietyAPIListView
 
+from v0.ui.account.views import SignupAPIView, SignupAPIListView
+
 
 urlpatterns = [
     url(r'^ui/', include('v0.ui.urls')),
@@ -66,8 +68,8 @@ urlpatterns = [
     url(r'^ratiodetails/(?P<id>[0-9]+)$', views.RatioDetailsAPIView.as_view()),
     url(r'^ratiodetails/$', views.RatioDetailsAPIListView.as_view()),
 
-    url(r'^signup/(?P<id>[0-9]+)$', views.SignupAPIView.as_view()),
-    url(r'^signup/$', views.SignupAPIListView.as_view()),
+    url(r'^signup/(?P<id>[0-9]+)$', SignupAPIView.as_view()),
+    url(r'^signup/$', SignupAPIListView.as_view()),
 
     url(r'^stallinventory/(?P<id>[0-9]+)$', StallInventoryAPIView.as_view()),
     url(r'^stallinventory/$', StallInventoryAPIListView.as_view()),

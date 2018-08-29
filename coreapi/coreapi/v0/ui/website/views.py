@@ -1716,4 +1716,3 @@ class GetRelationshipAndPastCampaignsData(APIView):
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
