@@ -22,7 +22,7 @@ import v0.ui.website.utils as website_utils
 import v0.ui.utils as ui_utils
 from v0.ui.organisation.models import Organisation
 from django.db import transaction
-from v0.ui.location.models import City, CityArea, CitySubArea
+from v0.ui.location.models import City, CityArea
 from v0.ui.campaign.models import GenericExportFileName
 from v0.ui.website.views import GenericExportFileSerializerReadOnly
 from rest_framework.response import Response
@@ -41,7 +41,6 @@ from v0.ui.inventory.models import (AdInventoryType,InventoryActivityAssignment,
 from v0.ui.inventory.serializers import (InventoryTypeSerializer, InventoryTypeVersionSerializer)
 from v0.ui.finances.models import (ShortlistedInventoryPricingDetails, PriceMappingDefault, getPriceDict)
 from v0.ui.campaign.models import Campaign
-from v0.ui.account.models import ContactDetails
 from v0.ui.website.utils import return_price
 import v0.constants as v0_constants
 import v0.ui.website.tasks as tasks

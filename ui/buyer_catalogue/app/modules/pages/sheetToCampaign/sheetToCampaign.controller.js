@@ -133,7 +133,8 @@ angular.module('catalogueApp')
 
       $scope.createProposal = function(){
         console.log($scope.model);
-        $scope.proposalCreated = true;
+        $scope.createsheetProposal = true;
+        $scope.Proposalimport = false;
         if($scope.model.centers[0].center.pincode)
           $scope.model.centers[0].center.pincode = $scope.model.centers[0].center.pincode.toString();
         createProposalService.saveInitialProposal($scope.model.account_id, $scope.model)
@@ -233,24 +234,13 @@ angular.module('catalogueApp')
             }
           return data;
         }
+        $scope.Proposalimport = function(){
+          $scope.createsheetProposal = false;
+          $scope.Proposalsheetimport = true;
+        }
 
-        $scope.importProposal = function(){
-          $scope.importProposal = true;
-        }
-        $scope.importProposalSheet = function(){
-          $scope.importsheets = true;
-        }
         $scope.importThroughSheet = function(){
-          var filterAndSupplierData = {};
-          filterAndSupplierData['is_import_sheet'] = true;
-          // filterAndSupplierData['proposal_id'] = $scope.proposalId;
-          // filterAndSupplierData['center_id'] = $scope.centerData.id;
-          // filterAndSupplierData['invoice_number'] = $scope.invoiceNumber.id;
-          // filterAndSupplierData['tentative_start_date'] = $scope.dateData.tentative_start_date;
-          // filterAndSupplierData['tentative_end_date'] = $scope.dateData.tentative_end_date;
-
-
-          console.log(filterAndSupplierData);
+          console.log("hello");
           var token = $rootScope.globals.currentUser.token;
           if ($scope.file) {
             Upload.upload({
@@ -263,6 +253,8 @@ angular.module('catalogueApp')
                   invoice_number : $scope.invoiceNumber.id,
                   tentative_start_date : $scope.dateData.tentative_start_date,
                   tentative_end_date : $scope.dateData.tentative_end_date,
+                  assigned_by : $scope.assigned_by_user,
+                  assigned_to : $scope.assigned_to_user,
                   data_import_type : "base-data"
                 },
                 headers: {'Authorization': 'JWT ' + token}

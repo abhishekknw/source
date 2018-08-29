@@ -58,7 +58,7 @@ from v0 import errors
 import tasks
 import v0.constants as v0_constants
 from v0.ui.finances.models import (RatioDetails, PrintingCost, LogisticOperationsCost, IdeationDesignCost,
-                                   SpaceBookingCost, EventStaffingCost, DataSciencesCost, 
+                                   SpaceBookingCost, EventStaffingCost, DataSciencesCost,
                                    ShortlistedInventoryPricingDetails, PriceMappingDefault)
 from v0.ui.finances.serializers import ShortlistedSpacesSerializerReadOnly
 from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeSociety
@@ -406,7 +406,7 @@ def space_on_circle(latitude, longitude, radius, space_lat, space_lng):
     Returns: weather the supplier coordinates actually lie within a circle drawn with  given radius  ? The center
     coordinates being latitude, longitude in the params. The function uses simple pythagoras theorem to test this.
     """
-    # if any of the param is False, we return False. 
+    # if any of the param is False, we return False.
     if not latitude or (not longitude) or (not radius) or (not space_lat) or (not space_lng):
         return False
     return (space_lat - latitude) ** 2 + (space_lng - longitude) ** 2 <= (radius / 110.574) ** 2
@@ -430,11 +430,11 @@ def initialize_keys(center_object, supplier_type_code):
 
             center_object['shortlisted_inventory_details'] = []
         else:
-            # if center_object does exist, it can happen that it does not contain entry for this 
-            # supplier_type_code 
+            # if center_object does exist, it can happen that it does not contain entry for this
+            # supplier_type_code
             if not center_object['suppliers'].get(supplier_type_code):
                 center_object['suppliers'][supplier_type_code] = []
-            # if center_object does exist, it can happen that shortlisted_inventory_details does not 
+            # if center_object does exist, it can happen that shortlisted_inventory_details does not
             # exist
             if not center_object.get('shortlisted_inventory_details'):
                 center_object['shortlisted_inventory_details'] = []
@@ -605,7 +605,7 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id, user):
         # fetch all duration objects
         durations_objects = DurationType.objects.filter(duration_name__in=duration_list)
 
-        # return error if atleast one of them is False 
+        # return error if atleast one of them is False
         if not ad_inventory_type_objects or not durations_objects:
             return ui_utils.handle_response(function, data='No ad_inventory_objects or duration objects.', success=True)
 
@@ -1253,7 +1253,7 @@ def save_suppliers_allowed(center_info, proposal_id, center_id, user):
     function_name = save_suppliers_allowed.__name__
 
     try:
-        # fetch all the supplier codes. 'supplier_codes' 
+        # fetch all the supplier codes. 'supplier_codes'
         suppliers_codes = center_info['center']['codes']
         # for all the codes
         for code in suppliers_codes:
@@ -1464,7 +1464,7 @@ def fetch_final_proposal_data(proposal_data, unique_supplier_codes):
             # save data of shortlisted suppliers
             total_shortlisted_suppliers_list.extend(save_shortlisted_suppliers(suppliers, fixed_data))
 
-            # fetch suppliers_meta dict if present 
+            # fetch suppliers_meta dict if present
             suppliers_meta = proposal_data.get('suppliers_meta')
             # check if any filters available for this partcular supplier type
             if suppliers_meta and suppliers_meta.get(code):
@@ -1993,20 +1993,20 @@ def add_inventory_summary_details(supplier_list, inventory_summary_objects_mappi
                                   shortlisted=True, status=True):
     """
     This function adds details from inventory summary table for all the suppliers in
-    supplier_list. 
+    supplier_list.
 
-    Args: 
-        supplier_list:  [{supplier_id: 123, ..}, { }, { }  ] type structure in which 
+    Args:
+        supplier_list:  [{supplier_id: 123, ..}, { }, { }  ] type structure in which
         each item is a dict containing details of only one supplier.
         supplier_type_code: a code to identify a supplier
-        inventory_summary_objects_mapping: { 
-              supplier_id_1: inv_summ_object_1, supplier_id_2: inv_summ_object_2 
-            } type structure in which the right inv_object is put against supplier_id 
+        inventory_summary_objects_mapping: {
+              supplier_id_1: inv_summ_object_1, supplier_id_2: inv_summ_object_2
+            } type structure in which the right inv_object is put against supplier_id
         shortlisted: True. by default we assume suppliers are marked shortlisted = True
-        status : 'X' by default we assume status of each supplier is 'X'. 
+        status : 'X' by default we assume status of each supplier is 'X'.
 
     Returns: adds information like price or count from inv_summary table to each supplier
-    dict . 
+    dict .
     """
     function = add_inventory_summary_details.__name__
     try:
@@ -2168,10 +2168,10 @@ def add_shortlisted_suppliers(supplier_type_code_list, shortlisted_suppliers, in
         supplier_ids = []
 
         # supplier_id : filter object mapping so that we can add relevant info from
-        # filter table to each supplier dict  
+        # filter table to each supplier dict
         supplier_to_filter_object_mapping = {}
 
-        # shortlisted_suppliers array can be empty ! 
+        # shortlisted_suppliers array can be empty !
         shortlisted_suppliers = shortlisted_suppliers if shortlisted_suppliers else []
 
         for supplier in shortlisted_suppliers:
@@ -2220,7 +2220,7 @@ def proposal_shortlisted_spaces(data):
 
         shortlisted_suppliers = manipulate_object_key_values(shortlisted_suppliers)
 
-        # collect all supplier_id's 
+        # collect all supplier_id's
         supplier_ids = [supplier['object_id'] for supplier in shortlisted_suppliers]
 
         # fetch all inventory_summary objects related to each one of suppliers
@@ -2255,7 +2255,7 @@ def proposal_shortlisted_spaces(data):
         if not response.data['status']:
             return response
 
-        # suppliers meta information  is available against each center_id 
+        # suppliers meta information  is available against each center_id
         filter_data = response.data['data']
 
         # final result dict
@@ -2281,27 +2281,27 @@ def proposal_shortlisted_spaces(data):
 
 def add_filters(proposal_id, center_id_list):
     """
-    The function is used to return all filters relatated to proposa_id, center_id, 
-    and supplier_type_code. 
+    The function is used to return all filters relatated to proposa_id, center_id,
+    and supplier_type_code.
     """
     function = add_filters.__name__
     try:
 
         filter_objects = Filters.objects.values().filter(proposal_id=proposal_id)
 
-        # the container to hold all filter objects per center 
+        # the container to hold all filter objects per center
         filter_objects_per_center = {}
 
         for filter_object in filter_objects:
             center_id = filter_object['center_id']
 
-            # if not given space for this center, give it ! 
+            # if not given space for this center, give it !
             if not filter_objects_per_center.get(center_id):
                 filter_objects_per_center[center_id] = []
-            # collect all filter objects for this center here 
+            # collect all filter objects for this center here
             filter_objects_per_center[center_id].append(filter_object)
 
-        # output result. The structure ouf the result is defined here 
+        # output result. The structure ouf the result is defined here
         result = {center_id: {'suppliers_meta': {}} for center_id in center_id_list}
 
         # iterate for valid centers
@@ -2309,7 +2309,7 @@ def add_filters(proposal_id, center_id_list):
 
             filter_objects = filter_objects_per_center[center_id] if filter_objects_per_center.get(center_id) else []
 
-            # iterate for filter objects for this center 
+            # iterate for filter objects for this center
             for filter_object in filter_objects:
 
                 supplier_type_code = filter_object['supplier_type_code']
@@ -3360,7 +3360,7 @@ def get_file_name(user, proposal_id, is_exported=True):
         else:
             user_string = user.get_username()
         file_name = user_string + '_' + organisation.name.lower() + '_' + account.name.lower() + '_' + proposal_id + '_' + datetime_stamp + '.xlsx'
-        # save this file in db 
+        # save this file in db
         data = {
             'user': user,
             'organisation': organisation,
@@ -3459,15 +3459,15 @@ def save_price_mapping_default(supplier_id, supplier_type_code, row):
 def delete_create_final_proposal_data(proposal_id):
     """"
     This function deletes all the data related to this proposal_id whenever create-final-proposal api
-    is called because we do not want extra or duplicate data 
+    is called because we do not want extra or duplicate data
 
-    The data that is deleted is from two tables - shortlisted_spaces, filters. 
+    The data that is deleted is from two tables - shortlisted_spaces, filters.
     """
     function = delete_create_final_proposal_data.__name__
     try:
-        # delete all the shortlisted_spaces rows for this proposal 
+        # delete all the shortlisted_spaces rows for this proposal
         ShortlistedSpaces.objects.filter(proposal_id=proposal_id).delete()
-        # delete all Filter table rows for this proposal 
+        # delete all Filter table rows for this proposal
         Filters.objects.filter(proposal_id=proposal_id).delete()
         return ui_utils.handle_response(function, data='success', success=True)
     except Exception as e:
@@ -5192,7 +5192,7 @@ def save_amenities_for_supplier(supplier_type_code, supplier_id, amenities):
     Args:
         amenities: [ .. ]
 
-    Returns: 
+    Returns:
     """
     function = save_amenities_for_supplier.__name__
     try:
@@ -6483,7 +6483,6 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
 
     function_name = save_shortlisted_inventory_pricing_details_data.__name__
     try:
-        is_import_sheet = proposal_data['is_import_sheet']
         supplier_ids = [id['id'] for id in proposal_data['center_data'][supplier_code]['supplier_data']]
         supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
         supplier_objects_mapping = {sup_obj.supplier_id: sup_obj for sup_obj in supplier_objects}
