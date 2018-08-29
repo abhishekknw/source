@@ -6450,6 +6450,8 @@ def save_shortlisted_suppliers_data(center, supplier_code, proposal_data, propos
                 'proposal': proposal,
                 'supplier_code': supplier_code,
                 'status': supplier['status'],
+                'booking_status' : 'BK',
+                'phase' : 1,
                 'total_negotiated_price': supplier[
                     'total_negotiated_price'] if 'total_negotiated_price' in supplier else None
             }
@@ -6457,6 +6459,7 @@ def save_shortlisted_suppliers_data(center, supplier_code, proposal_data, propos
 
         now_time = timezone.now()
 
+        ShortlistedSpaces.objects.filter(proposal_id=proposal.proposal_id).delete()
         ShortlistedSpaces.objects.bulk_create(shortlisted_suppliers)
         ShortlistedSpaces.objects.filter(proposal_id=proposal.proposal_id).update(created_at=now_time,
                                                                                   updated_at=now_time)
@@ -6480,6 +6483,7 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
 
     function_name = save_shortlisted_inventory_pricing_details_data.__name__
     try:
+        is_import_sheet = proposal_data['is_import_sheet']
         supplier_ids = [id['id'] for id in proposal_data['center_data'][supplier_code]['supplier_data']]
         supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
         supplier_objects_mapping = {sup_obj.supplier_id: sup_obj for sup_obj in supplier_objects}
@@ -6495,16 +6499,21 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
             if supplier_id not in inventory_summary_objects_mapping:
                 create_inventory_summary_data_for_supplier()
             for filter_code in proposal_data['center_data'][supplier_code]['filter_codes']:
-                inventory_objects = getattr(inventory_models, v0_constants.model_to_codes[filter_code['id']]).objects.filter(
-                    Q(object_id=supplier_id))
-                if not inventory_objects or str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL' or str(
-                        filter_code['id']) == 'GA':
-                    inventory_objects = create_inventory_ids(supplier_objects_mapping[supplier_id], filter_code)
+                if is_import_sheet:
+                    supplier_inv_count_mapping = {sup_obj['id'] : sup_obj for sup_obj in proposal_data['center_data'][supplier_code]['supplier_data']}
+                    inventory_objects = create_inventory_ids(supplier_objects_mapping[supplier_id], filter_code, is_import_sheet,supplier_inv_count_mapping)
+                else:
+                    inventory_objects = getattr(inventory_models, v0_constants.model_to_codes[filter_code['id']]).objects.filter(
+                        Q(object_id=supplier_id))
+                    if not inventory_objects or str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL' or str(
+                            filter_code['id']) == 'GA':
+                        inventory_objects = create_inventory_ids(supplier_objects_mapping[supplier_id], filter_code)
                 response = make_final_list(filter_code, inventory_objects, shortlisted_suppliers_mapping[supplier_id])
                 if not response.data['status']:
                     return response
                 shortlisted_inv_objects.extend(response.data['data'])
 
+        # ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces__proposal_id=proposal_data['proposal_data'])
         ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_inv_objects)
         if create_inv_act_data:
             shortlisted_supplier_ids = {space_obj.id for space_obj in shortlisted_suppliers}
@@ -6512,9 +6521,10 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
                 shortlisted_spaces__in=shortlisted_supplier_ids,
                 shortlisted_spaces__proposal=proposal.proposal_id)
 
-            response = create_inventory_activity_data(shortlisted_inventory_objects)
+            response = create_inventory_activity_data(shortlisted_inventory_objects,proposal_data)
             if not response:
                 return response
+
 
         return ui_utils.handle_response(function_name, data={}, success=True)
     except Exception as e:
@@ -6533,7 +6543,7 @@ def create_inventory_summary_data_for_supplier():
         return Exception(function_name, ui_utils.get_system_error(e))
 
 
-def create_inventory_ids(supplier_object, filter_code):
+def create_inventory_ids(supplier_object, filter_code, is_import_sheet=False, supplier_inv_mapping={}):
     """
 
     :param supplier_object:
@@ -6543,11 +6553,14 @@ def create_inventory_ids(supplier_object, filter_code):
     function_name = create_inventory_ids.__name__
     try:
         tower_count = supplier_object.tower_count
+
         inventory_ids = []
         Struct = namedtuple('Struct', 'adinventory_id')
         data = {}
         if str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL' or str(filter_code['id']) == 'GA':
             tower_count = 1
+        if is_import_sheet:
+            tower_count = supplier_inv_mapping[supplier_object.supplier_id][filter_code['id']]
         for count in range(tower_count):
             data = Struct(adinventory_id='TESTINVID' + str(filter_code['id']) + '00' + str(count + 1))
             inventory_ids.append(data)
@@ -6630,7 +6643,7 @@ def create_generic_export_file_data(proposal):
         return Exception(function_name, ui_utils.get_system_error(e))
 
 
-def create_inventory_activity_data(shortlisted_inventory_objects):
+def create_inventory_activity_data(shortlisted_inventory_objects,proposal_data):
     """
 
     :param shortlisted_inventory_objects:
@@ -6646,6 +6659,7 @@ def create_inventory_activity_data(shortlisted_inventory_objects):
                     'activity_type': inv_activity_type[0]
                 }
                 inventory_ativity_objects.append(InventoryActivity(**data))
+        # InventoryActivity.objects.filter(shortlisted_inventory_details__shortlisted_spaces__proposal_id=proposal_data['proposal_id'])
         InventoryActivity.objects.bulk_create(inventory_ativity_objects)
         return ui_utils.handle_response(function_name, data={}, success=True)
     except Exception as e:

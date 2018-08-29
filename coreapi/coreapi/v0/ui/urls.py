@@ -15,11 +15,16 @@ from v0.ui.supplier.views import SocietyAPIView,SocietyAPIFiltersView, SocietyAP
 # from v0.ui.website import views as web_views
 urlpatterns = [
 
-    url(r'^website/', include('v0.ui.website.urls')),
-    url(r'^supplier/', include('v0.ui.supplier.urls')),
-    url(r'^proposal/', include('v0.ui.proposal.urls')),
+    url(r'^website/', include('v0.ui.account.urls')),
+    url(r'^website/', include('v0.ui.campaign.urls')),
+    url(r'^website/', include('v0.ui.checklists.urls')),
+    url(r'^website/', include('v0.ui.finances.urls')),
+    url(r'^website/', include('v0.ui.inventory.urls')),
     url(r'^leads/', include('v0.ui.leads.urls')),
-    url(r'^checklists/', include('v0.ui.checklists.urls')),
+    url(r'^website/', include('v0.ui.permissions.urls')),
+    url(r'^website/', include('v0.ui.proposal.urls')),
+    url(r'^website/', include('v0.ui.supplier.urls')),
+    url(r'^website/', include('v0.ui.website.urls')),
 
     # url(r'^website/create_business/load_business_types/',web_views.getBusinessTypesAPIView.as_view()),
     # url(r'^website/subtypes/(?P<id>[A-Z_a-z0-9]+)/$', web_views.getBusinessSubTypesAPIView.as_view()),

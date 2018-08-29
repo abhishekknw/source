@@ -116,16 +116,31 @@
           </div>
         </div>
       </div></br>
-      <div class="col-md-7" style="text-align:right">
-        <button type="button" class="btn btn-danger" name="button" ng-click="createProposal()">Create Proposal</button>
+      <div class="col-md-12">
+        <div class="col-md-4" style="text-align:right">
+          <button type="button" class="btn btn-danger" name="button" ng-click="createProposal()">Create Proposal</button>
+        </div>
+
+        <div class="col-md-4" style="text-align:right">
+          <button type="button" class="btn btn-danger" name="button" ng-click="importProposal()">Import Proposal</button>
+        </div>
+        <div class="col-md-4" style="text-align:right">
+          <button type="button" class="btn btn-danger" name="button" ng-click="importProposalSheet()">Import Sheet</button>
+        </div>
+        <div class="col-md-4" style="text-align:right">
+          <button type="button" class="btn btn-danger" name="button" ng-click="createProposal()">Manually Insert Proposal</button>
+        </div>
       </div>
+
   </div>
+
+
   <div class="panel-body panel-default panel col-md-12" ng-if="proposalCreated">
     <div class="panel-heading" style="text-align:center">
       <h4>Proposal Basic Details</h4>
     </div>
   </div>
-    <div class="panel-default panel col-md-12" ng-if="proposalCreated">
+    <div class="panel-default panel col-md-12">
       <div class="panel-heading" style="text-align:center">
         <h4>Convert Proposal To Campaign</h4>
       </div>
@@ -201,6 +216,108 @@
       </div>
     </div>
 
+    <div class="panel-default panel col-md-12">
+      <div class="panel-heading" style="text-align:center">
+        <h4>Import Proposal Sheet To Campaign</h4>
+      </div>
+      <div class="panel-body col-md-3">
+
+      <div class=" row">
+        <label for="">Enter Invoice Number</label>
+        <input type="text" class="form-control" ng-model="invoiceNumber.id">
+      </div></br></br>
+      <div class=" row">
+        <div class = "col-md-12">
+          <label>Enter Tentative Start Date</label>
+          <p class="input-group">
+
+            <input type="text" class="form-control col-md-4"  ng-model="dateData.tentative_start_date"  uib-datepicker-popup="yyyy-MM-dd" is-open="popup1"  min-date="" datepicker-options="dateOptions" close-text="Close" ng-model-options="{timezone:'UTC'}"/ required>
+
+            <span class="input-group-btn">
+              <button type="button" class="btn btn-default" ng-click="popup1=true"><i class="glyphicon glyphicon-calendar"></i></button>
+            </span>
+          </p>
+        </div>
+      </div></br></br>
+      <div class=" row">
+        <div class = "col-md-12">
+          <label>Enter Tentative End Date</label>
+          <p class="input-group">
+
+            <input type="text" class="form-control col-md-4"  ng-model="dateData.tentative_end_date"  uib-datepicker-popup="yyyy-MM-dd" is-open="popup2"  min-date="" datepicker-options="dateOptions" close-text="Close" ng-model-options="{timezone:'UTC'}"/ required>
+            <span class="input-group-btn">
+              <button type="button" class="btn btn-default" ng-click="popup2=true"><i class="glyphicon glyphicon-calendar"></i></button>
+            </span>
+          </p>
+        </div>
+      </div></br></br>
+      <div class=" row">
+        <div class = "col-md-12">
+          <label>Assigned By</label>
+          <p class="input-group">
+            <div class = "col-md-7">
+              <select class="form-control" ng-model="user" required>
+                <option ng-repeat="user in userList" value="{{user.id}}">{{user.username}}</option>
+              </select>
+            </div>
+          </p>
+        </div>
+      </div></br></br>
+      <div class=" row">
+        <div class = "col-md-12">
+          <label>Assigned To</label>
+          <p class="input-group">
+            <div class = "col-md-7">
+              <select class="form-control" ng-model="user" required>
+                <option ng-repeat="user in userList" value="{{user.id}}">{{user.username}}</option>
+              </select>
+            </div>
+          </p>
+        </div>
+      </div></br></br>
+      <div class="row">
+        <button type="button" class="btn btn-danger" name="button" ng-click="submit()">Submit</button>
+      </div>
+      </div>
+      <div class="col-md-3">
+
+      </div>
+      <div class="panel-body col-md-6">
+        <div class="" style="height:60vh;overflow:">
+          <h4>Suppliers List</h4>
+          <table class="table-responsive table table-bordered/">
+              <thead>
+                <tr>
+                  <th>Index</th>
+                  <th>Name Of Supplier</th>
+                </tr>
+
+              </thead>
+              <tbody>
+                <tr ng-repeat="data in searchSelectAllModel">
+                  <td>{{$index+1}}</td>
+                  <td>{{societyData[data.id].name}}</td>
+                </tr>
+              </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+
+      <div class="panel-body">
+        <label>Select Sheet</label>
+        <input type="file" ngf-select = "uploadFiles($file, 1)" class="buttonfile" accept=".xlsx"/>
+
+      </div>
+      <div class="panel-body" >
+        <br />
+        <div class="">
+          <button ng-click="importThroughSheet()" class="btn btn-danger">Submit</button>
+        </div>
+      </div>
+    </div>
     <!-- </div> -->
   </div>
 </div>

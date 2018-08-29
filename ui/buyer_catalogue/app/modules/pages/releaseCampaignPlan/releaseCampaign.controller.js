@@ -1,14 +1,18 @@
 angular.module('catalogueApp')
 .controller('ReleaseCampaignCtrl',
-    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','permissions','Upload','cfpLoadingBar','constants','mapViewService','$timeout',
-    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams, permissions, Upload, cfpLoadingBar,constants, mapViewService, $timeout) {
+    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','permissions','Upload','cfpLoadingBar','constants','mapViewService','$timeout','commonDataShare',
+    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams, permissions, Upload, cfpLoadingBar,constants, mapViewService, $timeout, commonDataShare) {
   $scope.campaign_id = $stateParams.proposal_id;
   $scope.positiveNoError = constants.positive_number_error;
   $scope.campaign_manager = constants.campaign_manager;
   $scope.editPaymentDetails = true;
+
   $scope.body = {
     message : '',
   };
+  $scope.editContactDetails = true;
+  $scope.addContactDetails = true;
+
   if($rootScope.globals.userInfo.is_superuser == true){
     $scope.backButton = true;
   }
@@ -17,6 +21,9 @@ angular.module('catalogueApp')
   $scope.permissions = permissions.supplierBookingPage;
   $scope.showSummaryTab = false;
   $scope.editPaymentDetails = true;
+  $scope.editContactDetails = true;
+  $scope.addContactDetails = true;
+
  	$scope.headings = [
         {header : 'Index'},
         {header : 'Supplier Name'},
@@ -70,6 +77,7 @@ angular.module('catalogueApp')
     {header : 'STD Code'},
     {header : 'Landline No'},
     {header : 'Mobile No'},
+    {header : 'Remove'},
 
   ];
   $scope.payment_headings = [
@@ -173,10 +181,10 @@ angular.module('catalogueApp')
     }
     //Start:To set contacts to show in contactModal
     $scope.setContact = function(supplier){
-      if(supplier.contacts.length > 0)
-        $scope.contacts = supplier.contacts;
-      else
-        $scope.contacts = null;
+      $scope.payment = supplier;
+      $scope.editContactDetails = true;
+      console.log(supplier);
+
     }
     //End:To set contacts to show in contactModal
     //Start:To set payment details to show in paymentModal
@@ -465,10 +473,46 @@ $scope.multiSelect =
           })
         }
 
-        $scope.setEditPaymentDetails = function(){
+      $scope.setEditPaymentDetails = function(){
           $scope.editPaymentDetails = false;
           console.log($scope.editPaymentDetails);
         }
+
+        var temp_data = [];
+
+        $scope.saveContactDetails = function(){
+          $scope.payment['basic_contact_available'] = true;
+          $scope.payment['basic_contacts'] = $scope.payment.contacts;
+          releaseCampaignService.saveContactDetails($scope.payment,$scope.payment.supplier_id)
+          .then(function onSuccess(response){
+            console.log(response);
+            $scope.editContactDetails = true;
+            swal(constants.name, constants.add_data_success, constants.success);
+          }).catch(function onError(response){
+            console.log(response);
+          })
+
+        }
+        $scope.setEditContactDetails = function(){
+            $scope.editContactDetails = false;
+            console.log($scope.editContactDetails);
+          }
+          $scope.addRow = ({});
+          $scope.addContactDetail = function(){
+            $scope.addRow = $scope.payment.contacts;
+            $scope.addContactDetails = false;
+            console.log($scope.addRow);
+          $scope.addRow.push({});
+          }
+
+          $scope.removeContact = function(index){
+            $scope.payment.contacts.splice(index , 1);
+          }
+        $scope.IsVisible = false;
+       $scope.updateSupplierStatus = function (value) {
+      //If DIV is visible it will be hidden and vice versa.
+      $scope.IsVisible = value == "Y";
+      }
 
    $scope.uploadImage = function(file,supplier){
      console.log(supplier);
@@ -584,6 +628,181 @@ $scope.multiSelect =
          }
 
        }
+       $scope.getPhases = function(){
+         $scope.editPhase = false;
+         releaseCampaignService.getPhases($scope.campaign_id)
+         .then(function onSuccess(response){
+           console.log(response);
+           angular.forEach(response.data.data, function(phase){
+             phase.start_date = new Date(phase.start_date);
+             phase.end_date = new Date(phase.end_date);
+           })
+           $scope.phases = response.data.data;
+
+         }).catch(function onError(response){
+           console.log(response);
+         })
+       }
+       $scope.removePhase = function(index){
+         $scope.phases.splice(index,1);
+       }
+       $scope.editPhaseDetails = function(){
+         $scope.editPhase = true;
+       }
+       $scope.savePhases = function(){
+         releaseCampaignService.savePhases($scope.phases,$scope.campaign_id)
+         .then(function onSuccess(response){
+           console.log(response);
+           angular.forEach(response.data.data, function(phase){
+             phase.start_date = new Date(phase.start_date);
+             phase.end_date = new Date(phase.end_date);
+           })
+           $scope.phases = response.data.data;
+           $scope.editPhase = false;
+         }).catch(function onError(response){
+           console.log(response);
+         })
+       }
+       $scope.addNewPhase = function(){
+         $scope.phases.push({});
+       }
+       $scope.getPhases();
+
+       $scope.phaseDetails;
+       $scope.addNewPhase = function(){
+         $scope.phaseDetails.push({
+                 'phaseno': "",
+                 'startdate': "",
+                 'enddate': "",
+             });
+       }
+
+       var setSocietyLocationOnMap = function(supplier){
+         var mapOptions = {
+              center:new google.maps.LatLng(0,0),
+             //  zoom:13
+              mapTypeId: google.maps.MapTypeId.ROADMAP
+           }
+           var map = new google.maps.Map(document.getElementById("supplierMap"),mapOptions);
+
+           var marker = new google.maps.Marker({
+              position: new google.maps.LatLng(supplier.society_latitude, supplier.society_longitude),
+              map: map,
+              mapTypeId: google.maps.MapTypeId.ROADMAP
+           });
+
+
+           var latlngbounds = new google.maps.LatLngBounds();
+           latlngbounds.extend(marker.position);
+           // map.setCenter(latlngbounds.getCenter());
+           map.fitBounds(latlngbounds);
+           //  map.setZoom(15);
+           // map.setCenter(marker.getPosition());
+
+           google.maps.event.addListenerOnce(map, 'bounds_changed', function(event) {
+             //  map.setCenter(marker.getPosition());
+               if (this.getZoom()){
+                   this.setZoom(16);
+               }
+             });
+
+             google.maps.event.addListenerOnce(map, 'idle', function() {
+               google.maps.event.trigger(map, 'resize');
+             });
+             // map.panToBounds(latlngbounds);
+
+           // bounds.extend(new google.maps.LatLngBounds(19.088291, 72.442383));
+           // map.fitBounds(bounds);
+
+         }
+         function inventoryCount (inventoryDetails){
+                var totalPoster = inventoryDetails.lift_count + inventoryDetails.nb_count ;
+                $scope.totalInventoryCount = {
+                   totalPoster  : totalPoster,
+                };
+                return $scope.totalInventoryCount;
+         }
+
+       $scope.getSocietyDetails = function(supplier,supplierId,center,index){
+         console.log(supplier);
+         // $location.path('/' + supplierId + '/SocietyDetailsPages' , '_blank');
+         $scope.temp_index = index;
+         $scope.center = center;
+         mapViewService.processParam();
+         var supplier_id = supplier.supplier_id;
+         $scope.society = {};
+         $scope.disable = false;
+         $scope.residentCount = {};
+         $scope.inventoryDetails = {};
+         $scope.totalInventoryCount = {};
+         $scope.supplier_type_code = "RS";
+         mapViewService.getSociety(supplier_id,$scope.supplier_type_code)
+          .then(function onSuccess(response) {
+            console.log(response);
+            $scope.loading = response;
+            setSocietyLocationOnMap(response.data.data.supplier_data);
+             $scope.loading = response.data.data.supplier_data;
+            $scope.myInterval=300;
+            $scope.society_images = response.data.data.supplier_images;
+            $scope.amenities = response.data.data.amenities;
+            $scope.society = supplier;
+           //  $scope.society = response.data.supplier_data;
+            //$rootScope.societyname = response.society_data.society_name;
+            $scope.residentCount = estimatedResidents(response.data.data.supplier_data.flat_count);
+            $scope.flatcountflier = response.data.data.supplier_data.flat_count;
+            var baseUrl = constants.aws_bucket_url;
+
+            // Start : Code added to seperate images by their image tag names
+            var imageUrl;
+            $scope.SocietyImages = [],$scope.FlierImages=[],$scope.PosterImages=[],$scope.StandeeImages=[],$scope.StallImages=[],$scope.CarImages=[];
+            for(var i=0;i<$scope.society_images.length;i++){
+              if($scope.society_images[i].name == 'Society'){
+                imageUrl = baseUrl + $scope.society_images[i].image_url;
+                $scope.SocietyImages.push(imageUrl);
+              }
+              if($scope.society_images[i].name == 'Standee Space'){
+                imageUrl = baseUrl + $scope.society_images[i].image_url;
+                $scope.StandeeImages.push(imageUrl);
+              }
+              if($scope.society_images[i].name == 'Stall Space'){
+                imageUrl = baseUrl + $scope.society_images[i].image_url;
+                $scope.StallImages.push(imageUrl);
+              }
+              if($scope.society_images[i].name == 'Fliers'){
+                imageUrl = baseUrl + $scope.society_images[i].image_url;
+                $scope.FlierImages.push(imageUrl);
+              }
+              if($scope.society_images[i].name == 'Car Display'){
+                imageUrl = baseUrl + $scope.society_images[i].image_url;
+                $scope.CarImages.push(imageUrl);
+              }
+              if($scope.society_images[i].name == 'Lift' || $scope.society_images[i].name == 'Notice Board'){
+                imageUrl = baseUrl + $scope.society_images[i].image_url;
+                $scope.PosterImages.push(imageUrl);
+              }
+          }
+          // End : Code added to seperate images by their image tag names
+         });
+
+         mapViewService.get_inventory_summary(supplier_id, $scope.supplier_type_code)
+         .then(function onSuccess(response){
+           console.log(response);
+           $scope.societyDetails = true;
+           if('inventory' in response.data){
+             $scope.inventoryDetails = response.data.inventory;
+              $scope.totalInventoryCount = inventoryCount($scope.inventoryDetails);
+              $scope.model = response.data.inventory;
+              $scope.inventories_allowed = response.data.inventories_allowed_codes;
+              $scope.show_inventory = true;
+            }
+         }).catch(function onError(response){
+           console.log("error",response);
+           commonDataShare.showErrorMessage(response);
+         });
+       }//End of function getSocietyDetails
+
+
+
 
 
 }]);//Controller function ends here

@@ -58,7 +58,7 @@ angular
     'catalogueApp.theme',
     'angular-circular-progress',
     'ngMap',
-    
+
 
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider, $locationProvider,cfpLoadingBarProvider) {
@@ -240,12 +240,18 @@ angular
             controller : 'MapCtrl',
             templateUrl : 'modules/pages/mapview/mapview.tmpl.html',
         })
+        .state('societydetailspage',{
+             // url : '/SocietyDetailsPages',
+             url : '/:supplierId/SocietyDetailsPages',
+               controller : 'SocietyDetailsPagesCtrl',
+             templateUrl : 'modules/pages/SocietyDetailsPages/societydetailspage.tmpl.html',
+         })
       .state('releasePlan',{
            url : '/:proposal_id/releasePlan',
            controller : 'ReleaseCampaignCtrl',
            templateUrl : 'modules/pages/releaseCampaignPlan/releaseCampaign.tmpl.html',
            ncyBreadcrumb: {
-             label:'ReleasePlan',
+             label:'BookingPlan',
              parent : 'CampaignList'
            }
        })
@@ -278,7 +284,7 @@ angular
             controller : 'AuditReleasePlanCtrl',
             templateUrl : 'modules/pages/operations/auditReleasePlan/auditReleasePlan.tmpl.html',
             ncyBreadcrumb: {
-              label:'AuditReleasePlan',
+              label:'CampaignAndAuditPlan',
               parent : 'releasePlan'
             }
       })
@@ -373,7 +379,7 @@ angular
         //    $location.path('/forbiddenPage');
         //  }
         console.log(event);
-         console.log("location change start - Whence: " + whence);         
+         console.log("location change start - Whence: " + whence);
          // redirect to login page if not logged in
          $rootScope.globals.currentUser = AuthService.UserInfo();
          if (!$rootScope.globals.currentUser) {

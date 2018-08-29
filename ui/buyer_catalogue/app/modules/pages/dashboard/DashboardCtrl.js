@@ -1164,13 +1164,17 @@
 
     }
     $scope.getSupplierAndInvData = function(data){
+      $scope.societyCampaignName = true;
+      $scope.campaignName = false;
       $scope.supplierStatus = data.status;
       $scope.supplierAndInvData = $scope.campaignSupplierAndInvData[data.status];
       $scope.invStatusKeys = angular.copy(invStatusKeys);
       $scope.countLeads = 0;
+      console.log($scope.supplierAndInvData);
       angular.forEach($scope.supplierAndInvData, function(supplier){
         $scope.latitude = supplier.supplier.society_latitude;
         $scope.longitude = supplier.supplier.society_longitude;
+        $scope.societyName = supplier.supplier.society_name;
         $scope.length = $scope.supplierAndInvData.length;
           angular.forEach(supplier.supplier.inv_data, function(inv,key){
           $scope.invStatusKeys[key].status = true;
@@ -1291,6 +1295,8 @@ $scope.switchToInventory = function(inv){
 $scope.setImageUrl = function(item,images){
   console.log(item);
   $scope.campaignNameOnImageModal = item.name;
+  $scope.campaignName = true;
+  $scope.societyCampaignName = false;
   $scope.imageUrlList = [];
   angular.forEach(images, function(data){
     for(var i=0; i<data.length; i++){
