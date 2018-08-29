@@ -18,7 +18,10 @@ angular.module('catalogueApp')
         formatYear: 'yy',
         startingDay: 1
       };
-
+      $scope.assign = {
+        to : '',
+        by : '',
+      }
       // $scope.formats = ['dd-MMMM-yyyy', 'yyyy-MM-dd', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
       $scope.formats = ['yyyy-MM-dd'];
       $scope.format = $scope.formats[1];
@@ -240,7 +243,8 @@ angular.module('catalogueApp')
         }
 
         $scope.importThroughSheet = function(){
-          console.log("hello");
+
+          console.log("hello", $scope.assign);
           var token = $rootScope.globals.currentUser.token;
           if ($scope.file) {
             Upload.upload({
@@ -253,17 +257,21 @@ angular.module('catalogueApp')
                   invoice_number : $scope.invoiceNumber.id,
                   tentative_start_date : $scope.dateData.tentative_start_date,
                   tentative_end_date : $scope.dateData.tentative_end_date,
-                  assigned_by : $scope.assigned_by_user,
-                  assigned_to : $scope.assigned_to_user,
+                  assigned_by : $scope.assign.to,
+                  assigned_to : $scope.assign.by,
                   data_import_type : "base-data"
                 },
                 headers: {'Authorization': 'JWT ' + token}
             }).then(function onSuccess(response){
                   console.log(response);
+
             })
             .catch(function onError(response) {
                 console.log(response);
-            });
+                if(response.data){
+                  swal(constants.name,response.data.data.general_error,constants.error);
+                }
+              });
         }
       }
         $scope.uploadFiles = function(file){
