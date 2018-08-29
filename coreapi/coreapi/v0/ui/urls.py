@@ -20,7 +20,7 @@ urlpatterns = [
     url(r'^website/', include('v0.ui.checklists.urls')),
     url(r'^website/', include('v0.ui.finances.urls')),
     url(r'^website/', include('v0.ui.inventory.urls')),
-    url(r'^leads/', include('v0.ui.leads.urls')),
+    url(r'^website/', include('v0.ui.leads.urls')),
     url(r'^website/', include('v0.ui.permissions.urls')),
     url(r'^website/', include('v0.ui.proposal.urls')),
     url(r'^website/', include('v0.ui.supplier.urls')),

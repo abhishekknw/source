@@ -2762,8 +2762,6 @@ class addSupplierDirectToCampaign(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            import pdb
-            pdb.set_trace()
             campaign_data = request.data
             center = ProposalCenterMapping.objects.filter(proposal=campaign_data['campaign_id'])[0]
             campaign = ProposalInfo.objects.get(pk=campaign_data['campaign_id'])

@@ -17,7 +17,7 @@ from models import ProposalInfo, ProposalCenterMapping
 from serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer, ProposalCenterMappingSpaceSerializer,
                          ProposalCenterMappingVersionSpaceSerializer)
 from rest_framework.decorators import detail_route, list_route
-from v0.ui.account.models import AccountInfo
+from v0.ui.account.models import AccountInfo, ContactDetails
 import v0.ui.website.utils as website_utils
 import v0.ui.utils as ui_utils
 from v0.ui.organisation.models import Organisation
@@ -26,6 +26,7 @@ from v0.ui.location.models import City, CityArea, CitySubArea
 from v0.ui.campaign.models import GenericExportFileName
 from v0.ui.website.views import GenericExportFileSerializerReadOnly
 from rest_framework.response import Response
+from v0.ui.proposal.models import HashTagImages
 from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer,
                                         ProposalCenterMappingVersionSerializer, ProposalInfoVersionSerializer,
                                         SpaceMappingSerializer, ProposalCenterMappingSpaceSerializer,
@@ -40,7 +41,6 @@ from v0.ui.inventory.models import (AdInventoryType,InventoryActivityAssignment,
 from v0.ui.inventory.serializers import (InventoryTypeSerializer, InventoryTypeVersionSerializer)
 from v0.ui.finances.models import (ShortlistedInventoryPricingDetails, PriceMappingDefault, getPriceDict)
 from v0.ui.campaign.models import Campaign
-from v0.ui.account.models import ContactDetails
 from v0.ui.website.utils import return_price
 import v0.constants as v0_constants
 import v0.ui.website.tasks as tasks
@@ -163,8 +163,6 @@ def genrate_supplier_data(data):
             ContactDetails.objects.bulk_create(contact_data_list)
         except Exception as e:
             return ui_utils.handle_response(function_name, data="error in bulk create contact")
-        import pdb
-        pdb.set_trace()
         try:
             result = {
                 'center_data' : {
@@ -192,7 +190,7 @@ def genrate_supplier_data(data):
             return ui_utils.handle_response(function_name, data="error in data creation")
 
 
-        return result
+        return ui_utils.handle_response(function_name, data=result, success=True)
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
 
@@ -207,8 +205,6 @@ def assign_inv_dates(data):
             values('id','space_id', 'inv_name','activity_type','supplier_id')
         supplier_ids_mapping = {supplier['id'] : supplier for supplier in data['center_data']['RS']['supplier_data']}
         format_str = '%d/%m/%Y'  # The format
-        import pdb
-        pdb.set_trace()
         assigned_by_user = BaseUser.objects.get(id=data['assigned_by'])
         assigned_to_user = BaseUser.objects.get(id=data['assigned_to'])
         inv_act_assignement_list = []
@@ -268,8 +264,8 @@ def assign_inv_dates(data):
                     try:
                         if supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']]:
                             date = supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']][stall_count_cl]
-                            assigned_to = assigned_to
-                            assigned_by = assigned_by
+                            assigned_to = assigned_to_user
+                            assigned_by = assigned_by_user
                         temp_data = InventoryActivityAssignment(**{
                             'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
                             'activity_date': date,
@@ -1352,6 +1348,16 @@ class HashtagImagesViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+    def list(self, request):
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get('campaign_id')
+            images = HashTagImages.objects.filter(campaign=campaign_id)
+            serializer = HashtagImagesSerializer(images, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 
 
 class CreateFinalProposal(APIView):
@@ -2119,7 +2125,10 @@ class convertDirectProposalToCampaign(APIView):
             data = request.data.copy()
             is_import_sheet = data['is_import_sheet']
             if is_import_sheet:
-                proposal_data = genrate_supplier_data(data)
+                response = genrate_supplier_data(data)
+                if not response.data['status']:
+                    return response
+                proposal_data = response.data['data']
             else:
                 proposal_data = data
             center_id = proposal_data['center_id']

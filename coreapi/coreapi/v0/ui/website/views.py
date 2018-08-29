@@ -47,7 +47,7 @@ from v0.ui.account.serializers import (BusinessInfoSerializer, BusinessAccountCo
 from v0.ui.account.models import BusinessAccountContact, ContactDetails, AccountInfo, Profile
 from v0.ui.inventory.models import (AdInventoryType, SocietyInventoryBooking,InventoryActivityAssignment,
                                     InventoryActivityImage, InventorySummary,InventoryTypeVersion, InventoryType,
-                                    InventoryActivity, INVENTORY_ACTIVITY_TYPES, Filters)
+                                    InventoryActivity, INVENTORY_ACTIVITY_TYPES)
 from v0.ui.inventory.serializers import SocietyInventoryBookingSerializer, InventoryTypeSerializer, \
     InventoryActivityAssignmentSerializerReadOnly, InventoryActivityAssignmentSerializer, \
     InventoryTypeVersionSerializer, CampaignInventorySerializer
@@ -55,7 +55,6 @@ from v0.ui.inventory.serializers import SocietyInventoryBookingSerializer, Inven
 from v0.ui.organisation.models import Organisation, OrganisationMap, ORGANIZATION_CATEGORY
 from v0.ui.organisation.serializers import OrganisationMapNestedSerializer, OrganisationSerializer
 from v0.ui.location.models import State, City, CityArea, CitySubArea
-from v0.ui.location.serializers import CitySerializer
 
 from v0.ui.common.models import BaseUser
 from v0.ui.user.serializers import UserProfileSerializer, UserSerializer, BaseUserSerializer, BaseUserUpdateSerializer, \
@@ -72,7 +71,6 @@ from v0.ui.supplier.serializers import (SupplierAmenitiesMapSerializer, Supplier
                                         SupplierTypeSocietySerializer)
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails, PriceMappingDefault, getPriceDict
 from v0.ui.permissions.models import ObjectLevelPermission, GeneralUserPermission, Role, RoleHierarchy
-from v0.ui.base.models import DurationType
 from v0.ui.base.serializers import ContentTypeSerializer
 
 import utils as website_utils
