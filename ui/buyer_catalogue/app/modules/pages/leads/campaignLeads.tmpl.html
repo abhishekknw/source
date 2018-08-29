@@ -174,28 +174,8 @@
   <div class="pageTitle">
     <h3>Import Leads for {{campaignName}} Campaign</h3>
   </div>
-  <div class="panel-body">
-    <label>Select Lead Sheet</label>
-    <js-xls onread="read" onerror="error"></js-xls></br>
-    <button class="btn btn-danger " ng-click="resetData()" >Reset</button>
-  </div>
   <div class="panel-body" >
-    <table class="table table-bordered table-responsive" ng-if="showImportTable">
-      <thead>
-        <tr>
-          <th>Index</th>
-          <th ng-repeat="header in aliasData">
-              {{header.alias}}
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr ng-repeat="data in importLeadsData">
-          <td>{{$index +1}}</td>
-          <td ng-repeat="alias in aliasData">{{data[alias.alias]}}</td>
-        </tr>
-      </tbody>
-    </table>
+    <input type="file" class="buttonfile" accept=".xlsx" ngf-select = "uploadFiles($file, 6)"/>
     <br />
     <div class="">
       <button ng-click="importLeadsThroughSheet()" class="btn btn-danger">Submit</button>
