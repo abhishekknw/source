@@ -2,9 +2,9 @@ angular.module('catalogueApp')
 
 .controller('sheetToCampaignController', ['$scope', '$rootScope', '$window',
               '$location','commonDataShare','constants','campaignListService',
-              'pagesService','createProposalService','sheetToCampaignService',
+              'pagesService','createProposalService','sheetToCampaignService','Upload',
     function ($scope, $rootScope, $window, $location , commonDataShare,constants,
-                campaignListService, pagesService,createProposalService,sheetToCampaignService) {
+                campaignListService, pagesService,createProposalService,sheetToCampaignService, Upload) {
       console.log($rootScope);
       $scope.invoiceNumber = {
         id : null
@@ -207,12 +207,13 @@ angular.module('catalogueApp')
 
         $scope.submit = function(){
           var filterAndSupplierData = getFilterAndSupplierData();
-          filterAndSupplierData['is_import_sheet'] = true;
-          // filterAndSupplierData['proposal_id'] = $scope.proposalId;
-          // filterAndSupplierData['center_id'] = $scope.centerData.id;
-          // filterAndSupplierData['invoice_number'] = $scope.invoiceNumber.id;
-          // filterAndSupplierData['tentative_start_date'] = $scope.dateData.tentative_start_date;
-          // filterAndSupplierData['tentative_end_date'] = $scope.dateData.tentative_end_date;
+          console.log(filterAndSupplierData);
+          filterAndSupplierData['is_import_sheet'] = false;
+          filterAndSupplierData['proposal_id'] = $scope.proposalId;
+          filterAndSupplierData['center_id'] = $scope.centerData.id;
+          filterAndSupplierData['invoice_number'] = $scope.invoiceNumber.id;
+          filterAndSupplierData['tentative_start_date'] = $scope.dateData.tentative_start_date;
+          filterAndSupplierData['tentative_end_date'] = $scope.dateData.tentative_end_date;
           console.log(filterAndSupplierData);
           sheetToCampaignService.convertDirectProposalToCampaign(filterAndSupplierData)
           .then(function onSuccess(response){
@@ -240,16 +241,41 @@ angular.module('catalogueApp')
           $scope.importsheets = true;
         }
         $scope.importThroughSheet = function(){
-          var data = {
-            proposal : formattedProposalSheet
-          };
-          console.log(data);
-          campaignLeadsService.importThroughSheet($scope.campaignId, data)
-          .then(function onSuccess(response){
-            console.log(response);
-          }).catch(function onError(response){
-            console.log(response);
-          })
+          var filterAndSupplierData = {};
+          filterAndSupplierData['is_import_sheet'] = true;
+          // filterAndSupplierData['proposal_id'] = $scope.proposalId;
+          // filterAndSupplierData['center_id'] = $scope.centerData.id;
+          // filterAndSupplierData['invoice_number'] = $scope.invoiceNumber.id;
+          // filterAndSupplierData['tentative_start_date'] = $scope.dateData.tentative_start_date;
+          // filterAndSupplierData['tentative_end_date'] = $scope.dateData.tentative_end_date;
+
+
+          console.log(filterAndSupplierData);
+          var token = $rootScope.globals.currentUser.token;
+          if ($scope.file) {
+            Upload.upload({
+                url: constants.base_url + constants.url_base + "convert-direct-proposal-to-campaign/",
+                data: {
+                  file: $scope.file,
+                  is_import_sheet : true,
+                  proposal_id : $scope.proposalId,
+                  center_id : $scope.centerData.id,
+                  invoice_number : $scope.invoiceNumber.id,
+                  tentative_start_date : $scope.dateData.tentative_start_date,
+                  tentative_end_date : $scope.dateData.tentative_end_date,
+                  data_import_type : "base-data"
+                },
+                headers: {'Authorization': 'JWT ' + token}
+            }).then(function onSuccess(response){
+                  console.log(response);
+            })
+            .catch(function onError(response) {
+                console.log(response);
+            });
+        }
+      }
+        $scope.uploadFiles = function(file){
+          $scope.file = file;
         }
         getSocieties();
 

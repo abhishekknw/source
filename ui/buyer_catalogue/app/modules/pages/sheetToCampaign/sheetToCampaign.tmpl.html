@@ -140,7 +140,7 @@
       <h4>Proposal Basic Details</h4>
     </div>
   </div>
-    <div class="panel-default panel col-md-12" ng-if="proposalCreated && !importProposal">
+    <div class="panel-default panel col-md-12">
       <div class="panel-heading" style="text-align:center">
         <h4>Convert Proposal To Campaign</h4>
       </div>
@@ -216,7 +216,7 @@
       </div>
     </div>
 
-    <div class="panel-default panel col-md-12" ng-if="importProposal">
+    <div class="panel-default panel col-md-12">
       <div class="panel-heading" style="text-align:center">
         <h4>Import Proposal Sheet To Campaign</h4>
       </div>
@@ -304,30 +304,14 @@
       </div>
     </div>
 
-    <div class="panel" ng-show="importsheets">
+    <div class="panel">
 
       <div class="panel-body">
         <label>Select Sheet</label>
-        <js-xls onread="read" onerror="error"></js-xls></br>
-        <button class="btn btn-danger " ng-click="resetData()" >Reset</button>
+        <input type="file" ngf-select = "uploadFiles($file, 1)" class="buttonfile" accept=".xlsx"/>
+
       </div>
       <div class="panel-body" >
-        <!-- <table class="table table-bordered table-responsive" ng-if="showImportTable">
-          <thead>
-            <tr>
-              <th>Index</th>
-              <th ng-repeat="header in aliasData">
-                  {{header.alias}}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr ng-repeat="data in importLeadsData">
-              <td>{{$index +1}}</td>
-              <td ng-repeat="alias in aliasData">{{data[alias.alias]}}</td>
-            </tr>
-          </tbody>
-        </table> -->
         <br />
         <div class="">
           <button ng-click="importThroughSheet()" class="btn btn-danger">Submit</button>

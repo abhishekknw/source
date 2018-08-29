@@ -35,8 +35,7 @@ urlpatterns = [
     url(r'^export-all-supplier_data/$', views.ExportAllSupplierData.as_view()),
     url(r'^clone-profile/$', views.CloneProfile.as_view()),
     url(r'^get-relationship-and-past-campaigns-data/$', views.GetRelationshipAndPastCampaignsData.as_view()),
-    url(r'^create-supplier-phase-data/$', CreateSupplierPhaseData.as_view()),
-    url(r'^advanced-transaction-data-sheet/$', views.AdvancedTransactionDataSheet.as_view()),
+    url(r'^create-supplier-phase-data/$', CreateSupplierPhaseData.as_view())
 ]
 
 router = DefaultRouter()
