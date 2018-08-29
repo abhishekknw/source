@@ -8,10 +8,10 @@ from rest_framework.response import Response
 from serializers import BusinessTypesSerializer, AccountInfoSerializer
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.organisation.models import Organisation
-from v0.ui.account.models import ContactDetails
+from v0.ui.account.models import ContactDetails, Signup
 from v0.ui.account.serializers import (BusinessInfoSerializer, BusinessSubTypesSerializer, UIBusinessInfoSerializer,
                                        UIAccountInfoSerializer, BusinessAccountContactSerializer,
-                                       ContactDetailsSerializer)
+                                       ContactDetailsSerializer, SignupSerializer)
 from django.contrib.contenttypes.models import ContentType
 import v0.ui.website.utils as website_utils
 
@@ -478,3 +478,47 @@ class AccountViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
+class SignupAPIView(APIView):
+
+    def get(self, request, id, format=None):
+        try:
+            item = Signup.objects.get(pk=id)
+            serializer = SignupSerializer(item)
+            return Response(serializer.data)
+        except Signup.DoesNotExist:
+            return Response(status=404)
+
+    def put(self, request, id, format=None):
+        try:
+            item = Signup.objects.get(pk=id)
+        except Signup.DoesNotExist:
+            return Response(status=404)
+        serializer = SignupSerializer(item, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+    def delete(self, request, id, format=None):
+        try:
+            item = Signup.objects.get(pk=id)
+        except Signup.DoesNotExist:
+            return Response(status=404)
+        item.delete()
+        return Response(status=204)
+
+class SignupAPIListView(APIView):
+
+    def get(self, request, format=None):
+        items = Signup.objects.all()
+        paginator = PageNumberPagination()
+        result_page = paginator.paginate_queryset(items, request)
+        serializer = SignupSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+    def post(self, request, format=None):
+        serializer = SignupSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
