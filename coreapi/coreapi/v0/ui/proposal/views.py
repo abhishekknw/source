@@ -1352,9 +1352,14 @@ class HashtagImagesViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get('campaign_id')
-            images = HashTagImages.objects.filter(campaign=campaign_id)
-            serializer = HashtagImagesSerializer(images, many=True)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            try:
+                images = HashTagImages.objects.filter(campaign=campaign_id).values()
+            except ObjectDoesNotExist:
+                return ui_utils.handle_response(class_name, data={}, success=True)
+            for image in images:
+                #This is static, need to change by supplier code
+                image['supplier_data'] = SupplierTypeSociety.objects.get(supplier_id=image['object_id'])
+            return ui_utils.handle_response(class_name, data=images, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 

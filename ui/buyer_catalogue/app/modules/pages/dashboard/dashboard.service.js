@@ -6,7 +6,7 @@
   function (machadaloHttp, $stateParams, $rootScope, $routeParams, $location) {
 
     var url_base = 'v0/ui/website/';
-
+    var url_base_proposal = 'v0/ui/proposal/'
     var DashboardService = {};
 
 

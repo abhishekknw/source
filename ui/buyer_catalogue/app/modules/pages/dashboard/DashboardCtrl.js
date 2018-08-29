@@ -1370,9 +1370,10 @@ $scope.setHashtagImageUrl = function(item,images){
   })
   console.log($scope.hashTagImageUrl);
 }
-$scope.viewHashtagImages = function(campaignId){
+$scope.getHashtagImages = function(item){
+  console.log($scope.campaignReleaseData,item);
     $scope.hashTagImageUrl = [];
-  DashboardService.getHashtagImages(campaignId)
+  DashboardService.getHashtagImages(item.proposalId)
   .then(function onSuccess(response){
     console.log(response);
 
@@ -1380,7 +1381,6 @@ $scope.viewHashtagImages = function(campaignId){
       var imageData = {
         image_url : 'http://androidtokyo.s3.amazonaws.com/' + data.image_path,
         comment : data.comment,
-        distance : data.distance
       };
       $scope.hashTagImageUrl.push(imageData);
     })

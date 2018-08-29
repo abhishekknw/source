@@ -281,7 +281,8 @@
                                          ({{(item.offLocationDistance/item.inv_count)/1000|limitTo:10||0}}km)</td>
                                       <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(item,item.images)">View Images</a></td>
                                       <td ng-if="item.images.length == 0"><label>No Image<label></td>
-                                      <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageHashtag" data-toggle="modal" ng-click="setHashtagImageUrl(item,item.images)">View Other Images</a></td>
+                                      <td class="col-md-2" ng-if="item.images.length > 0">
+                                        <a data-target="#imageHashtag" data-toggle="modal" ng-click="getHashtagImages(item)">View Other Images</a></td>
 
                                       </tr>
                                   </tbody>
