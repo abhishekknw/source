@@ -254,7 +254,7 @@
         <label>Assigned By</label>
         <p class="input-group">
           <div class = "col-md-7">
-            <select class="form-control" ng-model="assigned_by_user" required>
+            <select class="form-control" ng-model="assign.by" required>
               <option ng-repeat="user in userList" value="{{user.id}}">{{user.username}}</option>
             </select>
           </div>
@@ -266,7 +266,7 @@
         <label>Assigned To</label>
         <p class="input-group">
           <div class = "col-md-7">
-            <select class="form-control" ng-model="assigned_to_user" required>
+            <select class="form-control" ng-model="assign.to" required>
               <option ng-repeat="user in userList" value="{{user.id}}">{{user.username}}</option>
             </select>
           </div>
