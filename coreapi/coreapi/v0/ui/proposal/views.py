@@ -110,7 +110,7 @@ def genrate_supplier_data(data):
                 except ObjectDoesNotExist as e:
                     error = 'supplier code error - ' + str(index) + ',' + str(row[3].value)
                     return ui_utils.handle_response(function_name, data=error)
-                supplier_id = city_code + area_code + subarea_code + 'RS' + subarea_code
+                supplier_id = city_code + area_code + subarea_code + 'RS' + supplier_code
                 content_type = ui_utils.get_content_type('RS').data['data']
                 try:
                     supplier = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
@@ -119,10 +119,10 @@ def genrate_supplier_data(data):
                     society_data_list.append(SupplierTypeSociety(**{
                         'supplier_id': supplier_id,
                         'society_name': row[0].value if row[0].value else None,
-                        'society_city': str(city_code),
-                        'society_locality': str(area_code),
-                        'society_subarea': str(subarea_code),
-                        'supplier_code': str(subarea_code),
+                        'society_city': city.city_name,
+                        'society_locality': area.label,
+                        'society_subarea': subarea.subarea_name,
+                        'supplier_code': str(supplier_code),
                         'society_zip': int(row[5].value) if row[5].value else None,
                         'society_latitude': float(row[6].value) if row[6].value else None,
                         'society_longitude': float(row[7].value) if row[7].value else None,
@@ -2151,7 +2151,8 @@ class convertDirectProposalToCampaign(APIView):
                 if is_import_sheet:
                     create_inv_act_data = True
                     response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
-                                                                            proposal_data, proposal,create_inv_act_data)
+                                                                 proposal_data, proposal,create_inv_act_data)
+
                     response = assign_inv_dates(proposal_data)
                 else:
                     response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
