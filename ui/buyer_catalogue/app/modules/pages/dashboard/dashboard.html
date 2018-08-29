@@ -277,11 +277,13 @@
                                       <td>{{invName}}</td>
                                       <td>{{item.inv_count}}</td>
                                       <td>{{item.offTimeDays/item.inv_count*100|limitTo:4||0}} </td>
-                                      <td>{{item.offLocationDistance/item.inv_count|limitTo:10||0}}
+                                      <td class="col-md-2">{{item.offLocationDistance/item.inv_count|limitTo:10||0}}
                                          ({{(item.offLocationDistance/item.inv_count)/1000|limitTo:10||0}}km)</td>
                                       <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageModal" data-toggle="modal" ng-click="setImageUrl(item,item.images)">View Images</a></td>
-                                    <td ng-if="item.images.length == 0"><label>No Image<label></td>
-                                          </tr>
+                                      <td ng-if="item.images.length == 0"><label>No Image<label></td>
+                                      <td class="col-md-2" ng-if="item.images.length > 0"><a data-target="#imageHashtag" data-toggle="modal" ng-click="setHashtagImageUrl(item,item.images)">View Other Images</a></td>
+
+                                      </tr>
                                   </tbody>
                               </table>
                           </div>
@@ -1480,6 +1482,41 @@
 
     <!--Start: Code for showing image Modal Window -->
     <div id="imageModal" class="modal fade">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">{{campaignNameOnImageModal}} Image Details</h4>
+            <hr/>
+            <div class = "modal-body">
+              <div class="carousel" id="slider">
+                 <div class="carousel-inner">
+                   <div class="item" ng-class="{active:!$index}" ng-repeat="image in imageUrlList">
+                     <div class="row">
+                        <img ng-src="{{image.image_url}}" style="width:600px; height:400px;" class="img-responsive" alt="No Image Found"/></br>
+                       </div>
+                       <div class="row" style="margin-left:10px;">
+                         Comment : {{image.comment}} </br>
+                         Distance : {{image.distance|limitTo:10}} mtrs, ({{image.distance/1000|limitTo:10}} kms)
+
+                       </div>
+                   </div>
+
+                 </div>
+                  <a style="height:400px;" class="left carousel-control"  data-toggle="carousel" data-target = "#slider" role="button" data-slide="prev">
+                     <span class="glyphicon glyphicon-chevron-left"></span>
+                  </a>
+                 <a style="height:400px;" class="right carousel-control" data-toggle = "carousel" data-target = "#slider" role="button" data-slide="next">
+                   <span class="glyphicon glyphicon-chevron-right"></span>
+                 </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="imageHashtag" class="modal fade">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">

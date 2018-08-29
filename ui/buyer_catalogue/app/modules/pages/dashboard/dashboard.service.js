@@ -82,6 +82,11 @@
       var url = url_base + "dashboard/get_activity_images_by_suppliers/?supplier_id=" + supplierId + "&inv_code=" + invType + "&act_type=" + activityType;
       return machadaloHttp.get(url);
     }
+
+    DashboardService.getHashtagImages = function(campaignId){
+      var url = url_base + "hashtag_images/?campaign_id=" + campaignId;
+      return machadaloHttp.get(url);
+    }
     return DashboardService;
 
  }]);
