@@ -6483,6 +6483,7 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
 
     function_name = save_shortlisted_inventory_pricing_details_data.__name__
     try:
+        is_import_sheet = proposal_data['is_import_sheet']
         supplier_ids = [id['id'] for id in proposal_data['center_data'][supplier_code]['supplier_data']]
         supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
         supplier_objects_mapping = {sup_obj.supplier_id: sup_obj for sup_obj in supplier_objects}

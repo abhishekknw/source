@@ -17,12 +17,12 @@ from models import ProposalInfo, ProposalCenterMapping
 from serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer, ProposalCenterMappingSpaceSerializer,
                          ProposalCenterMappingVersionSpaceSerializer)
 from rest_framework.decorators import detail_route, list_route
-from v0.ui.account.models import AccountInfo
+from v0.ui.account.models import AccountInfo, ContactDetails
 import v0.ui.website.utils as website_utils
 import v0.ui.utils as ui_utils
 from v0.ui.organisation.models import Organisation
 from django.db import transaction
-from v0.ui.location.models import City, CityArea
+from v0.ui.location.models import City, CityArea, CitySubArea
 from v0.ui.campaign.models import GenericExportFileName
 from v0.ui.website.views import GenericExportFileSerializerReadOnly
 from rest_framework.response import Response
@@ -190,7 +190,7 @@ def genrate_supplier_data(data):
             return ui_utils.handle_response(function_name, data="error in data creation")
 
 
-        return result
+        return ui_utils.handle_response(function_name, data=result, success=True)
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
 
@@ -264,8 +264,8 @@ def assign_inv_dates(data):
                     try:
                         if supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']]:
                             date = supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']][stall_count_cl]
-                            assigned_to = assigned_to
-                            assigned_by = assigned_by
+                            assigned_to = assigned_to_user
+                            assigned_by = assigned_by_user
                         temp_data = InventoryActivityAssignment(**{
                             'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
                             'activity_date': date,
@@ -2128,6 +2128,7 @@ class convertDirectProposalToCampaign(APIView):
                 response = genrate_supplier_data(data)
                 if not response.data['status']:
                     return response
+                proposal_data = response.data['data']
             else:
                 proposal_data = data
             center_id = proposal_data['center_id']
