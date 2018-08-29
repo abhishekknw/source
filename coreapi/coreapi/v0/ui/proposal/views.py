@@ -164,8 +164,6 @@ def genrate_supplier_data(data):
             ContactDetails.objects.bulk_create(contact_data_list)
         except Exception as e:
             return ui_utils.handle_response(function_name, data="error in bulk create contact")
-        import pdb
-        pdb.set_trace()
         try:
             result = {
                 'center_data' : {
@@ -208,8 +206,6 @@ def assign_inv_dates(data):
             values('id','space_id', 'inv_name','activity_type','supplier_id')
         supplier_ids_mapping = {supplier['id'] : supplier for supplier in data['center_data']['RS']['supplier_data']}
         format_str = '%d/%m/%Y'  # The format
-        import pdb
-        pdb.set_trace()
         assigned_by_user = BaseUser.objects.get(id=data['assigned_by'])
         assigned_to_user = BaseUser.objects.get(id=data['assigned_to'])
         inv_act_assignement_list = []
@@ -2130,7 +2126,9 @@ class convertDirectProposalToCampaign(APIView):
             data = request.data.copy()
             is_import_sheet = data['is_import_sheet']
             if is_import_sheet:
-                proposal_data = genrate_supplier_data(data)
+                response = genrate_supplier_data(data)
+                if not response.data['status']:
+                    return response
             else:
                 proposal_data = data
             center_id = proposal_data['center_id']
