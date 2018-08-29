@@ -40,6 +40,7 @@
           {header : 'Average Delay(%)', key : 'act_name'},
           {header : 'Average Off Location(Meters)', key : 'act_name'},
           {header : 'Images', key : 'images'},
+          {header : 'Other Images', key : 'hashtagimages'},
         ];
         $scope.campaignStatus = {
           ongoing : {
@@ -1299,6 +1300,7 @@ $scope.setImageUrl = function(item,images){
   $scope.societyCampaignName = false;
   $scope.imageUrlList = [];
   angular.forEach(images, function(data){
+    console.log(data);
     for(var i=0; i<data.length; i++){
       var imageData = {
         image_url : 'http://androidtokyo.s3.amazonaws.com/' + data[i].image_path,
@@ -1343,6 +1345,44 @@ $scope.viewSupplierImages = function(supplierId, invType, activityType){
         distance : data.distance
       };
       $scope.imageUrlList.push(imageData);
+    })
+  }).catch(function onError(response){
+    console.log(response);
+  })
+}
+
+$scope.setHashtagImageUrl = function(item,images){
+  console.log(item);
+  $scope.campaignNameOnImageModal = item.name;
+  $scope.campaignName = true;
+  $scope.societyCampaignName = false;
+  $scope.hashTagImageUrl = [];
+  angular.forEach(images, function(data){
+    console.log(data);
+    for(var i=0; i<data.length; i++){
+      var imageData = {
+        image_url : 'http://androidtokyo.s3.amazonaws.com/' + data[i].image_path,
+        comment : data[i].comment,
+        distance : data[i].distance,
+      };
+      $scope.hashTagImageUrl.push(imageData);
+    }
+  })
+  console.log($scope.hashTagImageUrl);
+}
+$scope.getHashtagImages = function(item){
+  console.log($scope.campaignReleaseData,item);
+    $scope.hashTagImageUrl = [];
+  DashboardService.getHashtagImages(item.proposalId)
+  .then(function onSuccess(response){
+    console.log(response);
+
+    angular.forEach(response.data.data, function(data){
+      var imageData = {
+        image_url : 'http://androidtokyo.s3.amazonaws.com/' + data.image_path,
+        comment : data.comment,
+      };
+      $scope.hashTagImageUrl.push(imageData);
     })
   }).catch(function onError(response){
     console.log(response);

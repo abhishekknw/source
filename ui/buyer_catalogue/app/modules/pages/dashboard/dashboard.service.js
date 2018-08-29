@@ -6,7 +6,7 @@
   function (machadaloHttp, $stateParams, $rootScope, $routeParams, $location) {
 
     var url_base = 'v0/ui/website/';
-
+    var url_base_proposal = 'v0/ui/proposal/'
     var DashboardService = {};
 
 
@@ -80,6 +80,11 @@
 
     DashboardService.getSupplierImages = function(supplierId,invType,activityType){
       var url = url_base + "dashboard/get_activity_images_by_suppliers/?supplier_id=" + supplierId + "&inv_code=" + invType + "&act_type=" + activityType;
+      return machadaloHttp.get(url);
+    }
+
+    DashboardService.getHashtagImages = function(campaignId){
+      var url = url_base + "hashtag_images/?campaign_id=" + campaignId;
       return machadaloHttp.get(url);
     }
     return DashboardService;

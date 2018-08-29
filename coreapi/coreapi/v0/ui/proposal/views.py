@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework import viewsets, status
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, F
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from pygeocoder import Geocoder, GeocoderError
@@ -12,11 +12,12 @@ import os
 import pytz
 import v0.permissions as v0_permissions
 from django.conf import settings
+import datetime
 from models import ProposalInfo, ProposalCenterMapping
 from serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer, ProposalCenterMappingSpaceSerializer,
                          ProposalCenterMappingVersionSpaceSerializer)
 from rest_framework.decorators import detail_route, list_route
-from v0.ui.account.models import AccountInfo
+from v0.ui.account.models import AccountInfo, ContactDetails
 import v0.ui.website.utils as website_utils
 import v0.ui.utils as ui_utils
 from v0.ui.organisation.models import Organisation
@@ -25,6 +26,7 @@ from v0.ui.location.models import City, CityArea, CitySubArea
 from v0.ui.campaign.models import GenericExportFileName
 from v0.ui.website.views import GenericExportFileSerializerReadOnly
 from rest_framework.response import Response
+from v0.ui.proposal.models import HashTagImages
 from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer,
                                         ProposalCenterMappingVersionSerializer, ProposalInfoVersionSerializer,
                                         SpaceMappingSerializer, ProposalCenterMappingSpaceSerializer,
@@ -39,7 +41,6 @@ from v0.ui.inventory.models import (AdInventoryType,InventoryActivityAssignment,
 from v0.ui.inventory.serializers import (InventoryTypeSerializer, InventoryTypeVersionSerializer)
 from v0.ui.finances.models import (ShortlistedInventoryPricingDetails, PriceMappingDefault, getPriceDict)
 from v0.ui.campaign.models import Campaign
-from v0.ui.account.models import ContactDetails
 from v0.ui.website.utils import return_price
 import v0.constants as v0_constants
 import v0.ui.website.tasks as tasks
@@ -50,6 +51,7 @@ from rest_framework import viewsets
 from models import SupplierPhase, ProposalInfo
 from serializers import SupplierPhaseSerializer
 from v0.ui.utils import handle_response
+from v0.ui.common.models import BaseUser
 
 
 
@@ -72,8 +74,6 @@ def genrate_supplier_data(data):
     function_name = genrate_supplier_data.__name__
     try:
 
-        import pdb
-        pdb.set_trace()
         supplier_data = SupplierTypeSociety.objects.all()
         society_data_list = []
         contact_data_list = []
@@ -107,11 +107,11 @@ def genrate_supplier_data(data):
                         supplier_code = row[4].value
                     else:
                         return ui_utils.handle_response(function_name, data=error)
-
                 except ObjectDoesNotExist as e:
-                    error = 'No SubArea Found at - ' + str(index) + ',' + str(row[3].value)
+                    error = 'supplier code error - ' + str(index) + ',' + str(row[3].value)
                     return ui_utils.handle_response(function_name, data=error)
                 supplier_id = city_code + area_code + subarea_code + 'RS' + subarea_code
+                content_type = ui_utils.get_content_type('RS').data['data']
                 try:
                     supplier = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
                 except ObjectDoesNotExist as e:
@@ -129,28 +129,163 @@ def genrate_supplier_data(data):
                         'tower_count': int(row[8].value) if row[8].value else None,
                         'flat_count': int(row[9].value) if row[9].value else None,
                     }))
-                content_type = ui_utils.get_content_type('RS').data['data']
-                contact_data_list.append(ContactDetails ** ({
-                    'name': row[18].value if row[18].value else None,
-                    'designation': 'Manager',
-                    'salutation': 'Mr',
-                    'mobile': row[19].value if row[18].value else None,
-                    'content_type': content_type,
-                    'object_id': supplier_id
-                }))
-                data =  {
+                    contact_data_list.append(ContactDetails(**{
+                        'name': row[18].value if row[18].value else None,
+                        'designation': 'Manager',
+                        'salutation': 'Mr',
+                        'mobile': row[19].value if row[18].value else None,
+                        'object_id': supplier_id,
+                        'content_type': content_type
+                    }))
+
+                temp_data =  {
                     'id': supplier_id,
-                    'poster_count': row[10].value if row[10].value else row[8].value,
-                    'poster_date': row[12].value if row[12].value else None,
-                    'stall_count': row[13].value if row[13].value else None,
-                    'standee_count': row[17].value if row[17].value else None,
-                    'flyer_count': 1,
-                    'flyer_date': row[16].value if row[16].value else None
+                    'PO': row[10].value if row[10].value else row[8].value,
+                    'SL': row[13].value if row[13].value else None,
+                    'ST': row[17].value if row[17].value else None,
+                    'FL': 1,
+                    'inv_code' : {
+                        'POSTER' : row[12].value if row[12].value else None,
+                        'FLIER' : row[16].value if row[16].value else None,
+                        'STALL' : [
+                            datetime.datetime.strptime(x,"%d/%m/%Y") for x in str(row[15].value).split(',')
+                        ] if row[15].value else None,
+                        'STANDEE': datetime.datetime.strptime(str(row[15].value).split(',')[0],"%d/%m/%Y") if row[15].value else None
+                    },
+                    'status' : 'F',
                 }
-                total_society_id_list.append(supplier_id)
-        SupplierTypeSociety.objects.bulk_create(society_data_list)
-        ContactDetails.objects.bulk_create(contact_data_list)
+                total_society_id_list.append(temp_data)
+        try:
+            SupplierTypeSociety.objects.bulk_create(society_data_list)
+        except Exception as e:
+            return ui_utils.handle_response(function_name, data="error in bulk create society")
+        try:
+            ContactDetails.objects.bulk_create(contact_data_list)
+        except Exception as e:
+            return ui_utils.handle_response(function_name, data="error in bulk create contact")
+        try:
+            result = {
+                'center_data' : {
+                    'RS' : {
+                        'supplier_data' : total_society_id_list,
+                        'filter_codes' : [
+                            { 'id' : 'PO'},
+                            {'id': 'SL'},
+                            {'id': 'ST'},
+                            {'id': 'FL'}
+                        ]
+                    }
+                },
+                'proposal_id' : data['proposal_id'],
+                'center_id' : data['center_id'],
+                'invoice_number' : data['invoice_number'],
+                'tentative_start_date' : data['tentative_start_date'],
+                'tentative_end_date' : data['tentative_end_date'],
+                'is_import_sheet' : True,
+                'assigned_by' : data['assigned_by'],
+                'assigned_to' : data['assigned_to']
+            }
+
+        except Exception as e:
+            return ui_utils.handle_response(function_name, data="error in data creation")
+
+
+        return ui_utils.handle_response(function_name, data=result, success=True)
     except Exception as e:
+        return Exception(function_name, ui_utils.get_system_error(e))
+
+def assign_inv_dates(data):
+    function_name = assign_inv_dates.__name__
+    try:
+        inv_data = InventoryActivity.objects.select_related('shortlisted_inventory_details',
+                                                 'shortlisted_inventory_details__shortlisted_spaces').filter(
+            shortlisted_inventory_details__shortlisted_spaces__proposal_id=data['proposal_id']).\
+            annotate(space_id=F('shortlisted_inventory_details__shortlisted_spaces'),inv_name=F('shortlisted_inventory_details__ad_inventory_type__adinventory_name'),
+                     supplier_id=F('shortlisted_inventory_details__shortlisted_spaces__object_id')).\
+            values('id','space_id', 'inv_name','activity_type','supplier_id')
+        supplier_ids_mapping = {supplier['id'] : supplier for supplier in data['center_data']['RS']['supplier_data']}
+        format_str = '%d/%m/%Y'  # The format
+        assigned_by_user = BaseUser.objects.get(id=data['assigned_by'])
+        assigned_to_user = BaseUser.objects.get(id=data['assigned_to'])
+        inv_act_assignement_list = []
+        stall_count_rl = 0
+        stall_count_cl = 0
+        for inv in inv_data:
+            assigned_by = None
+            assigned_to = None
+            if inv['inv_name'] == 'POSTER' or inv['inv_name'] == 'FLIER' or inv['inv_name'] == 'STANDEE':
+
+                date = supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']]
+
+                if date:
+                    assigned_by = assigned_by_user
+                    assigned_to = assigned_to_user
+
+                if inv['activity_type'] == 'RELEASE':
+                    temp_data = InventoryActivityAssignment(**{
+                        'inventory_activity' : InventoryActivity.objects.get(id=inv['id']),
+                        'activity_date' : date,
+                        'assigned_by' : assigned_by,
+                        'assigned_to' : assigned_to
+                    })
+                    inv_act_assignement_list.append(temp_data)
+
+                elif inv['activity_type'] == 'CLOSURE' and inv['inv_name'] == 'POSTER':
+                    temp_data = InventoryActivityAssignment(**{
+                        'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
+                        'activity_date': date + datetime.timedelta(days=3),
+                        'assigned_by': assigned_by,
+                        'assigned_to': assigned_to
+                    })
+                    inv_act_assignement_list.append(temp_data)
+
+            if inv['inv_name'] == 'STALL':
+                date = None
+
+                if inv['activity_type'] == 'RELEASE':
+                    try:
+                        if supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']]:
+                            date = supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']][stall_count_rl]
+                            assigned_to = assigned_to_user
+                            assigned_by = assigned_by_user
+                        temp_data = InventoryActivityAssignment(**{
+                            'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
+                            'activity_date': date,
+                            'assigned_by': assigned_by,
+                            'assigned_to': assigned_to
+                        })
+                        inv_act_assignement_list.append(temp_data)
+                        stall_count_rl += 1
+                    except KeyError:
+                        error = "Stall count and date not matching" + str(inv['supplier_id'])
+                        return ui_utils.handle_response(function_name, error)
+
+                elif inv['activity_type'] == 'CLOSURE':
+                    try:
+                        if supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']]:
+                            date = supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']][stall_count_cl]
+                            assigned_to = assigned_to_user
+                            assigned_by = assigned_by_user
+                        temp_data = InventoryActivityAssignment(**{
+                            'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
+                            'activity_date': date,
+                            'assigned_by': assigned_by,
+                            'assigned_to': assigned_to
+                        })
+                        inv_act_assignement_list.append(temp_data)
+                        stall_count_cl += 1
+                    except KeyError:
+                        error = "Stall count and date not matching" + str(inv['supplier_id'])
+                        return ui_utils.handle_response(function_name, error)
+
+
+
+        # InventoryActivityAssignment.objects.filter(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id=data['proposal_id']).delete()
+
+        InventoryActivityAssignment.objects.bulk_create(inv_act_assignement_list)
+        return ui_utils.handle_response(function_name, data={}, success=True)
+    except Exception as e:
+
         return Exception(function_name, ui_utils.get_system_error(e))
 
 class CreateInitialProposal(APIView):
@@ -1213,6 +1348,21 @@ class HashtagImagesViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+    def list(self, request):
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get('campaign_id')
+            try:
+                images = HashTagImages.objects.filter(campaign=campaign_id).values()
+            except ObjectDoesNotExist:
+                return ui_utils.handle_response(class_name, data={}, success=True)
+            for image in images:
+                #This is static, need to change by supplier code
+                image['supplier_data'] = SupplierTypeSociety.objects.get(supplier_id=image['object_id'])
+            return ui_utils.handle_response(class_name, data=images, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 
 
 class CreateFinalProposal(APIView):
@@ -1977,12 +2127,15 @@ class convertDirectProposalToCampaign(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            import pdb
-            pdb.set_trace()
-            is_import_sheet = request.data['is_import_sheet']
+            data = request.data.copy()
+            is_import_sheet = data['is_import_sheet']
             if is_import_sheet:
-                genrate_supplier_data(request.data)
-            proposal_data = request.data
+                response = genrate_supplier_data(data)
+                if not response.data['status']:
+                    return response
+                proposal_data = response.data['data']
+            else:
+                proposal_data = data
             center_id = proposal_data['center_id']
             proposal = ProposalInfo.objects.get(pk=proposal_data['proposal_id'])
             center = ProposalCenterMapping.objects.get(pk=center_id)
@@ -1999,6 +2152,7 @@ class convertDirectProposalToCampaign(APIView):
                     create_inv_act_data = True
                     response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
                                                                             proposal_data, proposal,create_inv_act_data)
+                    response = assign_inv_dates(proposal_data)
                 else:
                     response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
                                                                                          proposal_data, proposal)
