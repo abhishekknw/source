@@ -26,6 +26,7 @@ from v0.ui.location.models import City, CityArea, CitySubArea
 from v0.ui.campaign.models import GenericExportFileName
 from v0.ui.website.views import GenericExportFileSerializerReadOnly
 from rest_framework.response import Response
+from v0.ui.proposal.models import HashTagImages
 from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer,
                                         ProposalCenterMappingVersionSerializer, ProposalInfoVersionSerializer,
                                         SpaceMappingSerializer, ProposalCenterMappingSpaceSerializer,
@@ -1352,6 +1353,16 @@ class HashtagImagesViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+    def list(self, request):
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get('campaign_id')
+            images = HashTagImages.objects.filter(campaign=campaign_id)
+            serializer = HashtagImagesSerializer(images, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 
 
 class CreateFinalProposal(APIView):
