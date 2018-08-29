@@ -263,6 +263,10 @@ class ShortlistedSpaces(BaseModel):
     transaction_or_check_number = models.CharField(max_length=50, null=True, blank=True)
     phase_no = models.ForeignKey('SupplierPhase', blank=True, null=True)
 
+    class Meta:
+        db_table = 'shortlisted_spaces'
+
+
 class HashTagImages(BaseModel):
     """
     This model stores campaign images which is hashtagged by BANNER,RECEIPT...etc
