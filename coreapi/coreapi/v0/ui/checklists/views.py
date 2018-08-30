@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from models import Checklist, ChecklistColumns, ChecklistRows, ChecklistData
-from serializers import ChecklistSerializer
+from serializers import ChecklistSerializer, ChecklistColumnsSerializer
 import v0.ui.utils as ui_utils
 
 class CreateChecklistTemplate(APIView):
@@ -103,10 +103,21 @@ class GetChecklistData(APIView):
         checklist_columns = ChecklistColumns.objects.filter(checklist_id=checklist_id).exclude(status='inactive')
         checklist_data = ChecklistData.objects.filter(checklist_id=checklist_id).exclude(status='inactive')
         checklist_rows = []
+
+        values = []
+        checklist_items_dict = {}
+        checklist_items_dict_part = []
+        for item in checklist_columns:
+            curr_item = ChecklistColumnsSerializer(item).data
+            checklist_items_dict[item.item_id] = curr_item
+            curr_item_part = {key:curr_item[key] for key in ['item_id', 'key_name']}
+            checklist_items_dict_part.append(curr_item_part)
+
+        previous_entry_id = -1
+        current_list = []
         for i in range(1, last_entry_id+1):
             entry_data = checklist_data.filter(entry_id = i)
            # if entry_data is not None:
-            current_row = {}
             for keys in checklist_columns:
                 key_name = keys.key_name
                 item_id = keys.item_id
@@ -114,10 +125,24 @@ class GetChecklistData(APIView):
                 if (not key_query):
                     continue
                 key_value = key_query.item_value
-                current_row[key_name] = key_value
-            if current_row != {}:
-                checklist_rows.append(current_row)
-        return ui_utils.handle_response({}, data=checklist_rows, success=True)
+                #current_row[key_name] = key_value
+                current_row = ({
+                    "item_id": item_id,
+                    "value": key_value
+                })
+                if i != previous_entry_id and current_list != []:
+                    values.append(current_list)
+                    current_list = []
+                current_list.append(current_row)
+                previous_entry_id = i
+        values.append(current_list)
+
+        all_data = {
+            'headers': checklist_items_dict_part,
+            'values': values,
+        }
+
+        return ui_utils.handle_response({}, data=all_data, success=True)
 
 class DeleteChecklist(APIView):
     # deactivating a full checklist

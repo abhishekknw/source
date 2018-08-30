@@ -45,6 +45,8 @@ class GetLeadsEntries(APIView):
         current_list = []
         for entry in lead_form_entries_list:
             entry_id = entry.entry_id - 1
+            if entry.item_id not in lead_form_items_dict:
+                continue
             new_entry = ({
                 "order_id": lead_form_items_dict[entry.item_id]["order_id"],
                 "value": entry.item_value
