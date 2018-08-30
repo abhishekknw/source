@@ -134,7 +134,7 @@ angular.module('catalogueApp')
              .then(function onSuccess(response){
                console.log(response);
                $scope.showLeads = true;
-               $scope.entryListLeadsData = response.data.data;               
+               $scope.entryListLeadsData = response.data.data;
                console.log($scope.entryListLeadsData.values);
              }).catch(function onError(response){
                console.log(response);
@@ -344,16 +344,24 @@ angular.module('catalogueApp')
 
       // START: call to create leads API through sheet
       $scope.importLeadsThroughSheet = function(){
-        var data = {
-          leads : formatedLeadsList
-        };
-        console.log(data);
-        campaignLeadsService.importLeadsThroughSheet($scope.campaignId, data)
-        .then(function onSuccess(response){
-          console.log(response);
-        }).catch(function onError(response){
-          console.log(response);
-        })
+        var token = $rootScope.globals.currentUser.token;
+        if ($scope.file) {
+          Upload.upload({
+              url: constants.base_url + constants.url_base + "leads/" + $scope.formId + "/import_leads",
+              data: {
+                file: $scope.file,
+                data_import_type : "base-data"
+              },
+              headers: {'Authorization': 'JWT ' + token}
+          }).then(function onSuccess(response){
+                console.log(response);
+
+          })
+          .catch(function onError(response) {
+              console.log(response);
+
+            });
+      }
       }
       // END:   call to create leads API through sheet
       // START: add lead form fields
@@ -442,6 +450,9 @@ angular.module('catalogueApp')
           };
         });
         console.log($scope.leadChBoxKeyOptions);
+      }
+      $scope.uploadFiles = function(file){
+        $scope.file = file;
       }
 
     });//Controller ends here
