@@ -1342,7 +1342,15 @@ class UserViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            serializer = BaseUserCreateSerializer(data=request.data)
+            data = request.data
+            password = data['password']
+            confirm_password = data['confirm_password']
+            serializer = BaseUserCreateSerializer(data=data)
+            if password != confirm_password:
+                return ui_utils.handle_response(class_name, data='passwords do not match', success=False)
+            if validate_password(password) == 0:
+                return ui_utils.handle_response(class_name, data='password should have 8 chars including a capital'
+                                                                 'and a special char', success=False)
             if serializer.is_valid():
                 user = serializer.save()
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
@@ -1538,6 +1546,7 @@ class GuestUser(APIView):
             first_name = request.data['first_name']
             user, is_created = BaseUser.objects.get_or_create(username=username)
             password = website_utils.get_random_pattern()
+            password_valid = validate_password(password)
             user.set_password(password)
             user.mobile = mobile
             user.first_name = first_name
@@ -1551,7 +1560,11 @@ class GuestUser(APIView):
                 'password': password,
                 'username': user.username
             }
-            return ui_utils.handle_response(class_name, data=data, success=True)
+            if password_valid == 1:
+                return ui_utils.handle_response(class_name, data=data, success=True)
+            else:
+                return ui_utils.handle_response(class_name, data='password must have at least 8 characters'
+                                                                 ' including a capital and a special char', success=False)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
