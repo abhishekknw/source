@@ -15,12 +15,13 @@ from v0.ui.supplier.views import SocietyAPIView,SocietyAPIFiltersView, SocietyAP
 # from v0.ui.website import views as web_views
 urlpatterns = [
 
+    url(r'^leads/', include('v0.ui.leads.urls')),
+    url(r'^checklists/', include('v0.ui.checklists.urls')),
+
     url(r'^website/', include('v0.ui.account.urls')),
     url(r'^website/', include('v0.ui.campaign.urls')),
-    url(r'^website/', include('v0.ui.checklists.urls')),
     url(r'^website/', include('v0.ui.finances.urls')),
     url(r'^website/', include('v0.ui.inventory.urls')),
-    url(r'^leads/', include('v0.ui.leads.urls')),
     url(r'^website/', include('v0.ui.permissions.urls')),
     url(r'^website/', include('v0.ui.proposal.urls')),
     url(r'^website/', include('v0.ui.supplier.urls')),
