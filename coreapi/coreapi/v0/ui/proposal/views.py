@@ -54,6 +54,22 @@ from v0.ui.utils import handle_response
 from v0.ui.common.models import BaseUser
 
 
+def get_Date_Values(values):
+    function_name = get_Date_Values.__name__
+    try:
+        result = []
+        if values:
+            values_list = [x for x in str(values).split(',')]
+            if len(values_list) > 1:
+                for value in values_list:
+                    result.append(datetime.datetime.strptime(value, "%d/%m/%Y"))
+            else:
+                result = values_list
+        return result
+
+    except Exception as e:
+        return ui_utils.handle_response(function_name, data="error in Date conversion")
+
 
 def create_proposal_object(organisation_id, account_id, user, tentative_cost, name):
     account = AccountInfo.objects.get_permission(user=user, account_id=account_id)
@@ -83,6 +99,7 @@ def genrate_supplier_data(data):
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
         for index, row in enumerate(ws.iter_rows()):
             if index > 0:
+                print "row is " + str(index)
                 try:
                     city = City.objects.get(city_name=row[1].value)
                     city_code = city.city_code
@@ -90,13 +107,13 @@ def genrate_supplier_data(data):
                     error = 'No City Found at - ' + str(index) + ',' + str(row[1].value)
                     return ui_utils.handle_response(function_name, data=error)
                 try:
-                    area = CityArea.objects.get(label=row[2].value)
+                    area = CityArea.objects.filter(label=row[2].value)[0]
                     area_code = area.area_code
                 except ObjectDoesNotExist as e:
                     error = 'No Area Found at - ' + str(index) + ',' + str(row[2].value)
                     return ui_utils.handle_response(function_name, data=error)
                 try:
-                    subarea = CitySubArea.objects.get(subarea_name=row[3].value)
+                    subarea = CitySubArea.objects.filter(subarea_name=row[3].value)[0]
                     subarea_code = subarea.subarea_code
                 except ObjectDoesNotExist as e:
                     error = 'No SubArea Found at - ' + str(index) + ',' + str(row[3].value)
@@ -147,14 +164,17 @@ def genrate_supplier_data(data):
                     'inv_code' : {
                         'POSTER' : row[12].value if row[12].value else None,
                         'FLIER' : row[16].value if row[16].value else None,
-                        'STALL' : [
-                            datetime.datetime.strptime(x,"%d/%m/%Y") for x in str(row[15].value).split(',')
-                        ] if row[15].value else None,
-                        'STANDEE': datetime.datetime.strptime(str(row[15].value).split(',')[0],"%d/%m/%Y") if row[15].value else None
+                        'STALL' : get_Date_Values(row[15].value)if row[15].value else None,
+                        'STANDEE': get_Date_Values(row[15].value)[0] if row[15].value else None,
                     },
                     'status' : 'F',
+                    'index' : 0,
+                    'rl_count' : 0,
+                    'cl_count' : 0,
                 }
+                temp_data['index'] = len(temp_data['inv_code']['STALL']) if temp_data['inv_code']['STALL'] else None
                 total_society_id_list.append(temp_data)
+
         try:
             SupplierTypeSociety.objects.bulk_create(society_data_list)
         except Exception as e:
@@ -208,9 +228,10 @@ def assign_inv_dates(data):
         assigned_by_user = BaseUser.objects.get(id=data['assigned_by'])
         assigned_to_user = BaseUser.objects.get(id=data['assigned_to'])
         inv_act_assignement_list = []
-        stall_count_rl = 0
-        stall_count_cl = 0
+        index = 0
         for inv in inv_data:
+            print "Assignment inv : " + str(index)
+            index += 1
             assigned_by = None
             assigned_to = None
             if inv['inv_name'] == 'POSTER' or inv['inv_name'] == 'FLIER' or inv['inv_name'] == 'STANDEE':
@@ -245,7 +266,10 @@ def assign_inv_dates(data):
                 if inv['activity_type'] == 'RELEASE':
                     try:
                         if supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']]:
-                            date = supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']][stall_count_rl]
+                            if supplier_ids_mapping[inv['supplier_id']]['rl_count'] >= supplier_ids_mapping[inv['supplier_id']]['index']:
+                                supplier_ids_mapping[inv['supplier_id']]['rl_count'] = supplier_ids_mapping[inv['supplier_id']]['index'] -1
+                            date = supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']][supplier_ids_mapping[inv['supplier_id']]['rl_count']]
+                            supplier_ids_mapping[inv['supplier_id']]['rl_count'] += 1
                             assigned_to = assigned_to_user
                             assigned_by = assigned_by_user
                         temp_data = InventoryActivityAssignment(**{
@@ -255,7 +279,7 @@ def assign_inv_dates(data):
                             'assigned_to': assigned_to
                         })
                         inv_act_assignement_list.append(temp_data)
-                        stall_count_rl += 1
+
                     except KeyError:
                         error = "Stall count and date not matching" + str(inv['supplier_id'])
                         return ui_utils.handle_response(function_name, error)
@@ -263,7 +287,10 @@ def assign_inv_dates(data):
                 elif inv['activity_type'] == 'CLOSURE':
                     try:
                         if supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']]:
-                            date = supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']][stall_count_cl]
+                            if supplier_ids_mapping[inv['supplier_id']]['cl_count'] >= supplier_ids_mapping[inv['supplier_id']]['index']:
+                                supplier_ids_mapping[inv['supplier_id']]['cl_count'] = supplier_ids_mapping[inv['supplier_id']]['index'] -1
+                            date = supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']][supplier_ids_mapping[inv['supplier_id']]['cl_count']]
+
                             assigned_to = assigned_to_user
                             assigned_by = assigned_by_user
                         temp_data = InventoryActivityAssignment(**{
@@ -273,7 +300,7 @@ def assign_inv_dates(data):
                             'assigned_to': assigned_to
                         })
                         inv_act_assignement_list.append(temp_data)
-                        stall_count_cl += 1
+
                     except KeyError:
                         error = "Stall count and date not matching" + str(inv['supplier_id'])
                         return ui_utils.handle_response(function_name, error)
@@ -281,7 +308,6 @@ def assign_inv_dates(data):
 
 
         # InventoryActivityAssignment.objects.filter(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal_id=data['proposal_id']).delete()
-
         InventoryActivityAssignment.objects.bulk_create(inv_act_assignement_list)
         return ui_utils.handle_response(function_name, data={}, success=True)
     except Exception as e:
