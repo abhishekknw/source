@@ -38,22 +38,32 @@ class GetLeadsEntries(APIView):
         for item in lead_form_items_list:
             curr_item = LeadsFormItemsSerializer(item).data
             lead_form_items_dict[item.item_id] = curr_item
-            curr_item_part = {key:curr_item[key] for key in ['order_id', 'key_name']}
+            curr_item_part = {key:curr_item[key] for key in ['order_id', 'key_name','hot_lead_criteria']}
             lead_form_items_dict_part.append(curr_item_part)
 
         previous_entry_id = -1
         current_list = []
+        hot_leads = []
+        counter = 0
+        hot_lead = False
         for entry in lead_form_entries_list:
             entry_id = entry.entry_id - 1
             if entry.item_id not in lead_form_items_dict:
                 continue
+            hot_lead_criteria = lead_form_items_dict[entry.item_id]["hot_lead_criteria"]
+            value = entry.item_value
+            if value == hot_lead_criteria and hot_lead is False:
+                hot_lead = True
+                hot_leads.append(counter)
             new_entry = ({
                 "order_id": lead_form_items_dict[entry.item_id]["order_id"],
-                "value": entry.item_value
+                "value": value,
             })
             if entry_id != previous_entry_id and current_list != []:
+                hot_lead = False
                 values.append(current_list)
                 current_list = []
+                counter = counter + 1
 
             current_list.append(new_entry)
             # values.append([new_entry])
@@ -65,6 +75,7 @@ class GetLeadsEntries(APIView):
             'supplier_id': supplier_id,
             'headers': lead_form_items_dict_part,
             'values': values,
+            'hot_leads': hot_leads
         }
         return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
 
@@ -87,9 +98,11 @@ class CreateLeadsForm(APIView):
                 "leads_form": new_dynamic_form,
                 "key_name": item["key_name"],
                 "key_type": item["key_type"],
-                "key_options": ",".join(item["key_options"]) if "key_options" in item else None,
+                #"key_options": ",".join(item["key_options"]) if "key_options" in item else None,
+                "key_options": item["key_options"] if "key_options" in item else None,
                 "order_id": item["order_id"],
-                "item_id": item_id
+                "item_id": item_id,
+                "hot_lead_criteria": item["hot_lead_criteria"] if "hot_lead_criteria" in item else None
             })
             form_items_list.append(item_object)
             item_object.save()
@@ -111,13 +124,15 @@ class GetLeadsForm(APIView):
                 "leads_form_id": lead_from.id,
                 "leads_form_items": []
             }
+
             for item in all_items:
                 lead_form_dict[lead_from.id]["leads_form_items"].append({
                     "key_name": item.key_name,
                     "key_type": item.key_type,
                     "key_options": item.key_options.split(",") if item.key_options else None,
                     "item_id": item.item_id,
-                    "order_id": item.order_id
+                    "order_id": item.order_id,
+                    "hot_lead_criteria": item.hot_lead_criteria if item.hot_lead_criteria else None
                 })
         return ui_utils.handle_response({}, data=lead_form_dict, success=True)
 
