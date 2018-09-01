@@ -19,6 +19,4 @@ urlpatterns = [
 
 router = DefaultRouter()
 router.include_format_suffixes = False
-router.register(r'^lead-alias', LeadAliasViewSet, base_name='lead-alias')
-router.register(r'^leads', LeadsViewSet, base_name='leads')
 urlpatterns += router.urls
