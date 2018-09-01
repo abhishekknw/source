@@ -17,7 +17,7 @@ urlpatterns = [
 
     url(r'^website/', include('v0.ui.account.urls')),
     url(r'^website/', include('v0.ui.campaign.urls')),
-    url(r'^website/', include('v0.ui.checklists.urls')),
+    url(r'^checklists/', include('v0.ui.checklists.urls')),
     url(r'^website/', include('v0.ui.finances.urls')),
     url(r'^website/', include('v0.ui.inventory.urls')),
     url(r'^leads/', include('v0.ui.leads.urls')),
