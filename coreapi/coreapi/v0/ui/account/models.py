@@ -5,6 +5,7 @@ from v0.ui.base.models import BaseModel
 from v0 import managers
 from django.contrib.contenttypes.models import ContentType
 from v0.constants import supplier_id_max_length
+from v0.ui.common.models import BaseUser
 
 
 class Profile(BaseModel):
@@ -216,3 +217,10 @@ class BusinessSubTypes(BaseModel):
 
     class Meta:
         db_table = 'business_subtypes'
+
+
+class ActivityLog(BaseModel):
+    user = models.ForeignKey('BaseUser', null=False, blank=False)
+
+    class Meta:
+        db_table = 'activity_log'

@@ -6495,6 +6495,7 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
                                                                  proposal=proposal.proposal_id)
         shortlisted_suppliers_mapping = {sup_obj.object_id: sup_obj for sup_obj in shortlisted_suppliers}
         shortlisted_inv_objects = []
+        index = 0
         for supplier_id in supplier_ids:
             if supplier_id not in inventory_summary_objects_mapping:
                 create_inventory_summary_data_for_supplier()
@@ -6512,7 +6513,6 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
                 if not response.data['status']:
                     return response
                 shortlisted_inv_objects.extend(response.data['data'])
-
         # ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces__proposal_id=proposal_data['proposal_data'])
         ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_inv_objects)
         if create_inv_act_data:
@@ -6553,7 +6553,6 @@ def create_inventory_ids(supplier_object, filter_code, is_import_sheet=False, su
     function_name = create_inventory_ids.__name__
     try:
         tower_count = supplier_object.tower_count
-
         inventory_ids = []
         Struct = namedtuple('Struct', 'adinventory_id')
         data = {}
@@ -6561,6 +6560,8 @@ def create_inventory_ids(supplier_object, filter_code, is_import_sheet=False, su
             tower_count = 1
         if is_import_sheet:
             tower_count = supplier_inv_mapping[supplier_object.supplier_id][filter_code['id']]
+            if tower_count is None:
+                tower_count = 1
         for count in range(tower_count):
             data = Struct(adinventory_id='TESTINVID' + str(filter_code['id']) + '00' + str(count + 1))
             inventory_ids.append(data)
