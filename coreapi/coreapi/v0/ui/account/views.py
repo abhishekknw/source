@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework import viewsets, status
 from django.db import transaction
 import v0.ui.utils as ui_utils
-from models import AccountInfo, BusinessAccountContact, BusinessSubTypes, BusinessTypes
+from models import AccountInfo, BusinessAccountContact, BusinessSubTypes, BusinessTypes, ActivityLog
 from rest_framework.response import Response
 from serializers import BusinessTypesSerializer, AccountInfoSerializer
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -11,7 +11,8 @@ from v0.ui.organisation.models import Organisation
 from v0.ui.account.models import ContactDetails, Signup
 from v0.ui.account.serializers import (BusinessInfoSerializer, BusinessSubTypesSerializer, UIBusinessInfoSerializer,
                                        UIAccountInfoSerializer, BusinessAccountContactSerializer,
-                                       ContactDetailsSerializer, SignupSerializer)
+                                       ContactDetailsSerializer, SignupSerializer, ActivityLogSerializer)
+from v0.ui.common.models import BaseUser
 from django.contrib.contenttypes.models import ContentType
 import v0.ui.website.utils as website_utils
 
@@ -522,3 +523,23 @@ class SignupAPIListView(APIView):
             serializer.save()
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
+
+
+class LoginLog(APIView):
+
+    def post(self, request):
+        username = request.data["username"]
+        user_id = BaseUser.objects.get(username=username).id
+        serializer = ActivityLogSerializer(data={"user": user_id})
+        if serializer.is_valid():
+            serializer.save()
+            return ui_utils.handle_response({}, data='success', success=True)
+        return Response(serializer.errors, status=400)
+
+    def get(self, request, user_id):
+        activity_log = ActivityLog.objects.filter(user_id = user_id)
+        log_data = []
+        for activity in activity_log:
+            curr_activity = ActivityLogSerializer(activity).data
+            log_data.append(curr_activity)
+        return ui_utils.handle_response({}, data=log_data, success=True)

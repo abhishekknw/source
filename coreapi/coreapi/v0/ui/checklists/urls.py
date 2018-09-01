@@ -11,5 +11,4 @@ urlpatterns = [
     url(r'^(?P<checklist_id>[A-Z_a-z0-9]+)/delete_checklist$', DeleteChecklist.as_view()),
     url(r'^(?P<checklist_id>[A-Z_a-z0-9]+)/delete_field/(?P<item_id>[A-Z_a-z0-9]+)$', DeleteChecklistItems.as_view()),
     url(r'^(?P<checklist_id>[A-Z_a-z0-9]+)/delete_entry/(?P<entry_id>[A-Z_a-z0-9]+)$', DeleteChecklistRow.as_view()),
-
 ]
