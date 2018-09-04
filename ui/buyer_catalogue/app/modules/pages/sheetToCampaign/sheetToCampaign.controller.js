@@ -268,9 +268,9 @@ angular.module('catalogueApp')
             })
             .catch(function onError(response) {
                 console.log(response);
-                if(response.data){
-                  swal(constants.name,response.data.data.general_error,constants.error);
-                }
+                // if(response.data){
+                //   swal(constants.name,response.data.data.general_error,constants.error);
+                // }
               });
         }
       }
