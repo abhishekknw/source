@@ -81,6 +81,12 @@ def convert_date_format(date):
     except Exception as ex:
         print ex
     try:
+        date = datetime.datetime.strptime(str(date), '%Y-%d-%m %H:%M:%S')
+        print date
+        return date
+    except Exception as ex:
+        print ex
+    try:
         date = datetime.datetime.strptime(str(date), '%m-%d-%y')
         return date
     except Exception as ex:
