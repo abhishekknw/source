@@ -61,12 +61,27 @@ def convert_date_format(date):
     except Exception as ex:
         print ex
     try:
+        date = datetime.datetime.strptime(str(date), '%d/%m/%y')
+        return date
+    except Exception as ex:
+        print ex
+    try:
         date = datetime.datetime.strptime(str(date), '%d-%m-%Y')
         return date
     except Exception as ex:
         print ex
     try:
+        date = datetime.datetime.strptime(str(date), '%d-%m-%y')
+        return date
+    except Exception as ex:
+        print ex
+    try:
         date = datetime.datetime.strptime(str(date), '%m-%d-%Y')
+        return date
+    except Exception as ex:
+        print ex
+    try:
+        date = datetime.datetime.strptime(str(date), '%m-%d-%y')
         return date
     except Exception as ex:
         print ex
@@ -81,7 +96,7 @@ def get_Date_Values(values):
             values_list = [x for x in str(values).split(',')]
             if len(values_list) > 1:
                 for value in values_list:
-                    result.append(datetime.datetime.strptime(value, "%d/%m/%Y"))
+                    result.append(convert_date_format(value))
             else:
                 result = values_list
         return result
