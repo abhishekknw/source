@@ -53,6 +53,24 @@ from serializers import SupplierPhaseSerializer
 from v0.ui.utils import handle_response
 from v0.ui.common.models import BaseUser
 
+def convert_date_format(date):
+    try:
+        date = datetime.datetime.strptime(date, '%d/%m/%Y')
+        return date
+    except Exception as ex:
+        print ex
+    try:
+        date = datetime.datetime.strptime(date, '%d-%m-%Y')
+        return date
+    except Exception as ex:
+        print ex
+    try:
+        date = datetime.datetime.strptime(date, '%m-%d-%Y')
+        return date
+    except Exception as ex:
+        print ex
+        return date
+
 
 def get_Date_Values(values):
     function_name = get_Date_Values.__name__
@@ -162,8 +180,8 @@ def genrate_supplier_data(data):
                     'ST': row[17].value if row[17].value else None,
                     'FL': 1,
                     'inv_code' : {
-                        'POSTER' : row[12].value if row[12].value else None,
-                        'FLIER' : row[16].value if row[16].value else None,
+                        'POSTER' : convert_date_format(row[12].value) if row[12].value else None,
+                        'FLIER' : convert_date_format(row[16].value) if row[16].value else None,
                         'STALL' : get_Date_Values(row[15].value)if row[15].value else None,
                         'STANDEE': get_Date_Values(row[15].value)[0] if row[15].value else None,
                     },
