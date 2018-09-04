@@ -53,19 +53,20 @@ from serializers import SupplierPhaseSerializer
 from v0.ui.utils import handle_response
 from v0.ui.common.models import BaseUser
 
+
 def convert_date_format(date):
     try:
-        date = datetime.datetime.strptime(date, '%d/%m/%Y')
+        date = datetime.datetime.strptime(str(date), '%d/%m/%Y')
         return date
     except Exception as ex:
         print ex
     try:
-        date = datetime.datetime.strptime(date, '%d-%m-%Y')
+        date = datetime.datetime.strptime(str(date), '%d-%m-%Y')
         return date
     except Exception as ex:
         print ex
     try:
-        date = datetime.datetime.strptime(date, '%m-%d-%Y')
+        date = datetime.datetime.strptime(str(date), '%m-%d-%Y')
         return date
     except Exception as ex:
         print ex
