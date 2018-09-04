@@ -2,7 +2,7 @@ from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntries,
                    LeadsFormBulkEntry, GenerateLeadForm, DeleteLeadItems, DeleteLeadForm, DeleteLeadEntry,
-                   LeadFormUpdate, LeadAliasViewSet, LeadsViewSet)
+                   LeadFormUpdate)
 
 urlpatterns = [
     url(r'^(?P<campaign_id>[A-Z_a-z0-9]+)/create$', CreateLeadsForm.as_view()),
@@ -19,6 +19,4 @@ urlpatterns = [
 
 router = DefaultRouter()
 router.include_format_suffixes = False
-router.register(r'^lead-alias', LeadAliasViewSet, base_name='lead-alias')
-router.register(r'^leads', LeadsViewSet, base_name='leads')
 urlpatterns += router.urls

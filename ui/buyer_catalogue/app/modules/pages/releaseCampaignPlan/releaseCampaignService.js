@@ -5,7 +5,7 @@
 
     var url_base = 'v0/ui/website/';
     var url_base_ui = 'v0/ui/';
-    var url_base_proposal = 'v0/ui/proposal/';
+    var url_base_proposal = 'v0/ui/website/';
     var releaseCampaignService = {};
 
 

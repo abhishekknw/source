@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 from models import BusinessAccountContact, AccountInfo, ContactDetails, ContactDetailsGeneric, BusinessTypes,\
-    BusinessSubTypes, OperationsInfo
+    BusinessSubTypes, OperationsInfo, ActivityLog
 from v0.ui.organisation.models import Organisation
 from v0.ui.base.serializers import BaseModelPermissionSerializer
 from v0.ui.account.models import Signup, Profile
@@ -136,3 +136,10 @@ class UIAccountInfoSerializer(ModelSerializer):
         fields = '__all__'
 
         # depth = 2
+
+class ActivityLogSerializer(ModelSerializer):
+
+    class Meta:
+        model = ActivityLog
+        fields = '__all__'
+

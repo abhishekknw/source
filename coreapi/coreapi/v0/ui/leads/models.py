@@ -97,6 +97,7 @@ class LeadsFormItems(BaseModel):
     item_id = models.IntegerField(blank=False, null=True)
     status = models.CharField(max_length=70, null=True, choices=LEAD_ITEM_STATUS)
     is_required = models.BooleanField(default=False)
+    hot_lead_criteria = models.CharField(max_length=70, null=True, blank=True)
 
     class Meta:
         db_table = 'leads_form_items'
@@ -111,3 +112,5 @@ class LeadsFormData(BaseModel):
     status = models.CharField(max_length=70, null=True, choices=LEAD_ITEM_STATUS)
     class Meta:
         db_table = 'leads_form_data'
+
+

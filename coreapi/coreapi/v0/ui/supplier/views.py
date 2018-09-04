@@ -1,13 +1,17 @@
 import json
+import requests
+from django.core.urlresolvers import reverse
+from django.forms.models import model_to_dict
 from openpyxl import load_workbook
-from pathlib import Path
+import csv
 from rest_framework.views import APIView
 from rest_framework import viewsets
 from rest_framework.decorators import list_route
 from v0.ui.utils import (get_supplier_id, handle_response, get_content_type, save_flyer_locations, make_supplier_data,
                          get_model, get_serializer, save_supplier_data, get_region_based_query, get_supplier_image,
                          save_basic_supplier_details)
-from v0.ui.website.utils import manipulate_object_key_values
+from v0.ui.website.utils import manipulate_object_key_values, return_price
+import v0.ui.website.utils as website_utils
 from models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeGym,
                     SupplierTypeRetailShop, CorporateParkCompanyList, CorporateBuilding, SupplierTypeBusDepot,
                     SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE)
@@ -17,7 +21,6 @@ from serializers import (UICorporateSerializer, SupplierTypeSocietySerializer, S
                          CorporateBuildingGetSerializer, CorporateParkCompanyListSerializer, CorporateBuildingSerializer,
                          SupplierTypeSalonSerializer, BusDepotSerializer, CorporateParkCompanySerializer,
                          BusShelterSerializer, SupplierTypeBusShelterSerializer)
-from v0.ui.location.models import City, CityArea, CitySubArea
 from v0.ui.location.serializers import CityAreaSerializer
 from v0.ui.account.models import ContactDetails
 from v0.ui.inventory.models import AdInventoryType
@@ -28,14 +31,14 @@ from v0.ui.proposal.serializers import ImageMappingSerializer
 from v0.ui.proposal.models import ImageMapping
 from v0.ui.account.serializers import (ContactDetailsSerializer, ContactDetailsGenericSerializer)
 from v0.ui.account.models import ContactDetailsGeneric
-from v0.ui.components.models import (SocietyTower, CorporateBuildingWing, CompanyFloor)
+from v0.ui.components.models import (SocietyTower, CorporateBuildingWing, CompanyFloor, FlatType)
 from v0.ui.components.serializers import CorporateBuildingWingSerializer
+from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping)
 import v0.constants as v0_constants
 from rest_framework.response import Response
-from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
 from rest_framework.pagination import PageNumberPagination
-from django.db.models import Q
+from django.db.models import Q, Sum
 from rest_framework import status
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from v0.ui.utils import get_from_dict
@@ -45,6 +48,16 @@ from v0.ui.inventory.models import InventorySummary
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from v0.ui.utils import get_supplier_id
+import openpyxl
+from v0.ui.location.models import State, City, CityArea, CitySubArea
+from coreapi.settings import BASE_DIR, BASE_URL
+from v0.ui.proposal.models import ProposalInfo
+from v0.constants import flat_type_dict
+from v0 import errors
+from django.db import transaction
+from v0.utils import create_cache_key
+from django.conf import settings
+from django.apps import apps
 
 
 def get_state_map():
@@ -1866,7 +1879,7 @@ class FilteredSuppliers(APIView):
             inventory_type_query_suppliers = []
 
             # this is the main list. if no filter is selected this is what is returned by default
-            # cache_key = v0_utils.create_cache_key(class_name, proposal_id, supplier_type_code, common_filters_query)
+            # cache_key = create_cache_key(class_name, proposal_id, supplier_type_code, common_filters_query)
             # cache_key = None
             #
             #
@@ -1886,7 +1899,7 @@ class FilteredSuppliers(APIView):
 
                 inventory_type_query &= Q(content_type=content_type)
 
-                # cache_key = v0_utils.create_cache_key(class_name, proposal_id, supplier_type_code, inventory_type_query)
+                # cache_key = create_cache_key(class_name, proposal_id, supplier_type_code, inventory_type_query)
                 # cache_key = None
                 # if cache.get(cache_key):
                 #     inventory_type_query_suppliers = cache.get(cache_key)
@@ -1907,7 +1920,7 @@ class FilteredSuppliers(APIView):
             result = {}
 
             # query now for real objects for supplier_id in the list
-            cache_key = v0_utils.create_cache_key(class_name, final_suppliers_id_list)
+            cache_key = create_cache_key(class_name, final_suppliers_id_list)
             # if cache.get(cache_key):
             #     import pdb
             #     pdb.set_trace()
@@ -1937,7 +1950,7 @@ class FilteredSuppliers(APIView):
             # supplier_id's.
             final_suppliers_id_list = total_suppliers.keys()
 
-            # cache_key = v0_utils.create_cache_key(class_name, proposal_id, supplier_type_code, priority_index_filters, final_suppliers_id_list)
+            # cache_key = create_cache_key(class_name, proposal_id, supplier_type_code, priority_index_filters, final_suppliers_id_list)
             # cache_key = None
             # if cache.get(cache_key):
             #     pi_index_map = cache.get(cache_key)
