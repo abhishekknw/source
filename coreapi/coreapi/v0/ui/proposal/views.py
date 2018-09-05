@@ -141,6 +141,8 @@ def genrate_supplier_data(data):
             if index > 0:
                 print "row is " + str(index)
                 try:
+                    if not row[1].value:
+                        continue
                     city = City.objects.get(city_name=row[1].value)
                     city_code = city.city_code
                 except ObjectDoesNotExist as e:
