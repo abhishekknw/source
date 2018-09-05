@@ -54,6 +54,46 @@ from v0.ui.utils import handle_response
 from v0.ui.common.models import BaseUser
 
 
+def convert_date_format(date):
+    try:
+        date = datetime.datetime.strptime(str(date), '%d/%m/%Y')
+        return date
+    except Exception as ex:
+        print ex
+    try:
+        date = datetime.datetime.strptime(str(date), '%d/%m/%y')
+        return date
+    except Exception as ex:
+        print ex
+    try:
+        date = datetime.datetime.strptime(str(date), '%d-%m-%Y')
+        return date
+    except Exception as ex:
+        print ex
+    try:
+        date = datetime.datetime.strptime(str(date), '%d-%m-%y')
+        return date
+    except Exception as ex:
+        print ex
+    try:
+        date = datetime.datetime.strptime(str(date), '%m-%d-%Y')
+        return date
+    except Exception as ex:
+        print ex
+    try:
+        date = datetime.datetime.strptime(str(date), '%Y-%d-%m %H:%M:%S')
+        print date
+        return date
+    except Exception as ex:
+        print ex
+    try:
+        date = datetime.datetime.strptime(str(date), '%m-%d-%y')
+        return date
+    except Exception as ex:
+        print ex
+        return date
+
+
 def get_Date_Values(values):
     function_name = get_Date_Values.__name__
     try:
@@ -62,7 +102,7 @@ def get_Date_Values(values):
             values_list = [x for x in str(values).split(',')]
             if len(values_list) > 1:
                 for value in values_list:
-                    result.append(datetime.datetime.strptime(value, "%d/%m/%Y"))
+                    result.append(convert_date_format(value))
             else:
                 result = values_list
         return result
@@ -101,6 +141,8 @@ def genrate_supplier_data(data):
             if index > 0:
                 print "row is " + str(index)
                 try:
+                    if not row[1].value:
+                        continue
                     city = City.objects.get(city_name=row[1].value)
                     city_code = city.city_code
                 except ObjectDoesNotExist as e:
@@ -162,8 +204,8 @@ def genrate_supplier_data(data):
                     'ST': row[17].value if row[17].value else None,
                     'FL': 1,
                     'inv_code' : {
-                        'POSTER' : row[12].value if row[12].value else None,
-                        'FLIER' : row[16].value if row[16].value else None,
+                        'POSTER' : convert_date_format(row[12].value) if row[12].value else None,
+                        'FLIER' : convert_date_format(row[16].value) if row[16].value else None,
                         'STALL' : get_Date_Values(row[15].value)if row[15].value else None,
                         'STANDEE': get_Date_Values(row[15].value)[0] if row[15].value else None,
                     },
@@ -245,7 +287,7 @@ def assign_inv_dates(data):
                 if inv['activity_type'] == 'RELEASE':
                     temp_data = InventoryActivityAssignment(**{
                         'inventory_activity' : InventoryActivity.objects.get(id=inv['id']),
-                        'activity_date' : date,
+                        'activity_date' : convert_date_format(date),
                         'assigned_by' : assigned_by,
                         'assigned_to' : assigned_to
                     })
@@ -254,7 +296,7 @@ def assign_inv_dates(data):
                 elif inv['activity_type'] == 'CLOSURE' and inv['inv_name'] == 'POSTER':
                     temp_data = InventoryActivityAssignment(**{
                         'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
-                        'activity_date': date + datetime.timedelta(days=3),
+                        'activity_date': convert_date_format(date + datetime.timedelta(days=3)),
                         'assigned_by': assigned_by,
                         'assigned_to': assigned_to
                     })
@@ -274,7 +316,7 @@ def assign_inv_dates(data):
                             assigned_by = assigned_by_user
                         temp_data = InventoryActivityAssignment(**{
                             'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
-                            'activity_date': date,
+                            'activity_date': convert_date_format(date),
                             'assigned_by': assigned_by,
                             'assigned_to': assigned_to
                         })
@@ -295,7 +337,7 @@ def assign_inv_dates(data):
                             assigned_by = assigned_by_user
                         temp_data = InventoryActivityAssignment(**{
                             'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
-                            'activity_date': date,
+                            'activity_date': convert_date_format(date),
                             'assigned_by': assigned_by,
                             'assigned_to': assigned_to
                         })

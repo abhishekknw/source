@@ -6459,7 +6459,7 @@ def save_shortlisted_suppliers_data(center, supplier_code, proposal_data, propos
 
         now_time = timezone.now()
 
-        ShortlistedSpaces.objects.filter(proposal_id=proposal.proposal_id).delete()
+        # ShortlistedSpaces.objects.filter(proposal_id=proposal.proposal_id).delete()
         ShortlistedSpaces.objects.bulk_create(shortlisted_suppliers)
         ShortlistedSpaces.objects.filter(proposal_id=proposal.proposal_id).update(created_at=now_time,
                                                                                   updated_at=now_time)
