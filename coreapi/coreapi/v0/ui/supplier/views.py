@@ -2776,6 +2776,7 @@ class addSupplierDirectToCampaign(APIView):
         class_name = self.__class__.__name__
         try:
             campaign_data = request.data
+            campaign_data['is_import_sheet'] = False
             center = ProposalCenterMapping.objects.filter(proposal=campaign_data['campaign_id'])[0]
             campaign = ProposalInfo.objects.get(pk=campaign_data['campaign_id'])
 
