@@ -285,7 +285,7 @@ def assign_inv_dates(data):
                 if inv['activity_type'] == 'RELEASE':
                     temp_data = InventoryActivityAssignment(**{
                         'inventory_activity' : InventoryActivity.objects.get(id=inv['id']),
-                        'activity_date' : date,
+                        'activity_date' : convert_date_format(date),
                         'assigned_by' : assigned_by,
                         'assigned_to' : assigned_to
                     })
@@ -294,7 +294,7 @@ def assign_inv_dates(data):
                 elif inv['activity_type'] == 'CLOSURE' and inv['inv_name'] == 'POSTER':
                     temp_data = InventoryActivityAssignment(**{
                         'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
-                        'activity_date': date + datetime.timedelta(days=3),
+                        'activity_date': convert_date_format(date + datetime.timedelta(days=3)),
                         'assigned_by': assigned_by,
                         'assigned_to': assigned_to
                     })
@@ -314,7 +314,7 @@ def assign_inv_dates(data):
                             assigned_by = assigned_by_user
                         temp_data = InventoryActivityAssignment(**{
                             'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
-                            'activity_date': date,
+                            'activity_date': convert_date_format(date),
                             'assigned_by': assigned_by,
                             'assigned_to': assigned_to
                         })
@@ -335,7 +335,7 @@ def assign_inv_dates(data):
                             assigned_by = assigned_by_user
                         temp_data = InventoryActivityAssignment(**{
                             'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
-                            'activity_date': date,
+                            'activity_date': convert_date_format(date),
                             'assigned_by': assigned_by,
                             'assigned_to': assigned_to
                         })
