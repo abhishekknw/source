@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
-from serializers import LeadsFormItemsSerializer
-from models import LeadsForm, LeadsFormItems, LeadsFormData
+from serializers import LeadsFormItemsSerializer, LeadAliasSerializer
+from models import LeadsForm, LeadsFormItems, LeadsFormData, Leads, LeadAlias
 import v0.ui.utils as ui_utils
 import boto3
 import os
@@ -182,7 +182,7 @@ class GenerateLeadForm(APIView):
         lead_form_items_dict = {}
         keys_list = []
         for item in lead_form_items_list:
-            curr_row = LeadsFormItemsSerializer(item).data
+            curr_row = (item).dataLeadsFormItemsSerializer
             lead_form_items_dict[item.item_id] = curr_row
             keys_list.append(curr_row['key_name'])
         book = Workbook()
@@ -290,3 +290,96 @@ class LeadFormUpdate(APIView):
 #             return ui_utils.handle_response(class_name, data=result, success=True)
 #         except Exception as e:
 #             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+def save_items (datatype_dict, fixed_fields,campaign_id, form_id, last_entry_id):
+    items = []
+    alias_data_object = LeadAlias.objects.filter(campaign_id = campaign_id)
+    order_id = 0
+    new_form_id = form_id+1
+    for curr_row in alias_data_object:
+        original_name = curr_row.original_name
+        order_id = order_id + 1
+        items.append(LeadsFormItems(**{
+             'key_name': curr_row.alias,
+             'key_type': datatype_dict[original_name],
+             'order_id': order_id,
+             'item_id': order_id,
+             'leads_form_id': new_form_id
+             }))
+    for field in fixed_fields:
+        order_id = order_id + 1
+        added_fields = {
+            'order_id': order_id,
+            'item_id': order_id,
+            'leads_form_id': new_form_id
+        }
+        field.update(added_fields)
+        items.append(LeadsFormItems(**field))
+
+    leads_form_details = LeadsForm(**{
+             'campaign_id': campaign_id,
+             'fields_count': len(items),
+             'last_entry_id': last_entry_id
+             })
+    leads_form_details.save()
+    LeadsFormItems.objects.bulk_create(items)
+
+class MigrateLeadsData(APIView):
+
+    def put(self, request):
+        class_name = self.__class__.__name__
+        leads = Leads.objects.all()
+        unique_forms = leads.values('object_id','campaign_id').distinct()
+
+        fields = {
+            'firstname1': 'STRING',
+            'firstname2': 'STRING',
+            'lastname1': 'STRING',
+            'lastname2': 'STRING',
+            'mobile1': 'INT',
+            'mobile2': 'INT',
+            'phone': 'INT',
+            'email1': 'EMAIL',
+            'email2': 'EMAIL',
+            'address': 'TEXTAREA',
+            'alphanumeric1': 'STRING',
+            'alphanumeric2': 'STRING',
+            'alphanumeric3': 'STRING',
+            'alphanumeric4': 'STRING',
+            'boolean1': 'INT',
+            'boolean2': 'INT',
+            'boolean3': 'INT',
+            'boolean4': 'INT',
+            'float1': 'FLOAT',
+            'float2': 'FLOAT',
+            'date1': 'DATE',
+            'date2': 'DATE',
+            'number1': 'INT',
+            'number2': 'INT',
+            'is_interested': 'BOOLEAN'
+        }
+
+        fixed_fields = [
+            {'key_name': 'is_from_sheet', 'key_type': 'BOOLEAN'}
+        ]
+
+        for lead in leads:
+            curr_data = lead.__dict__
+            supplier_id = curr_data["object_id"]
+            campaign_id = curr_data["campaign_id"]
+            is_from_sheet = curr_data["is_from_sheet"]
+            is_interested = curr_data["is_interested"]
+
+        for form in unique_forms:
+            last_form_id_query = LeadsForm.objects.order_by('-id')
+            last_form_id = last_form_id_query[0].id if len(last_form_id_query)>0 else 0
+            last_entry_id = last_form_id_query[0].last_entry_id if len(last_form_id_query)>0 else 0
+            if last_entry_id is None:
+                last_entry_id = 0
+            campaign_id = form["campaign_id"]
+            supplier_id = form["object_id"]
+            save_items(fields, fixed_fields, campaign_id, last_form_id, last_entry_id)
+        # leads form import successful
+        
+        return ui_utils.handle_response({}, data='success', success=True)
