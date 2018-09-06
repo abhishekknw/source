@@ -98,7 +98,10 @@
               </select>
             </td>
             <td  class="col-md-2" rowspan="{{key.length}}" ng-show="$first" ng-form name="phaseform">
-              <input type="number" name="phase" class="form-control spacing input-width-phase" ng-model="supplier.phase" min="1" permission = "[permissions.addPhase, permissions.viewPhase]">
+              <select name="phase" class="form-control spacing input-width-phase"ng-model="supplier.phase" min="1" permission = "[permissions.addPhase, permissions.viewPhase]">
+                <option value="" disabled>Select Phase</option>
+                <option ng-repeat="phase in phases | unique:'phase_no'" value="{{phase.phase_no}}">{{phase.phase_no}}</option>
+              </select>
               <span class="error" ng-show="phaseform.phase.$error.min">{{positiveNoError}}</span>
             </td>
             <!--mode of payment  -->
@@ -624,7 +627,7 @@
                 </tr>
                 <tr ng-repeat="phase in phases" ng-show="editPhase">
                   <td>{{$index+1}}</td>
-                  <td><input type="text" ng-model="phase.phase_no"></td>
+                  <td><input type="text" ng-model="phase.phase_no" required></td>
                   <td><input type="date" ng-model="phase.start_date"></td>
                   <td><input type="date" ng-model="phase.end_date"></td>
                   <td>
@@ -636,7 +639,7 @@
               </tbody>
             </table>
               <button class="btn btn-success" ng-click="editPhaseDetails()">Edit</button>
-              <button class="btn btn-success" type="button" name="button" ng-click="addNewPhase()">Add</button>
+              <button class="btn btn-success" type="button" name="button" ng-click="addPhases()">Add</button>
               <button class="btn btn-success" type="button" name="button" ng-click="savePhases()">Save</button>
             </div>
         </div>
