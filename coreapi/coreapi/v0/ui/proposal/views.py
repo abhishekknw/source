@@ -81,6 +81,12 @@ def convert_date_format(date):
     except Exception as ex:
         print ex
     try:
+        date = datetime.datetime.strptime(str(date), '%Y-%d-%m %H:%M:%S')
+        print date
+        return date
+    except Exception as ex:
+        print ex
+    try:
         date = datetime.datetime.strptime(str(date), '%m-%d-%y')
         return date
     except Exception as ex:
@@ -135,19 +141,25 @@ def genrate_supplier_data(data):
             if index > 0:
                 print "row is " + str(index)
                 try:
-                    city = City.objects.get(city_name=row[1].value)
+                    if not row[1].value:
+                        continue
+                    city = City.objects.get(city_name=row[1].value.strip())
                     city_code = city.city_code
                 except ObjectDoesNotExist as e:
                     error = 'No City Found at - ' + str(index) + ',' + str(row[1].value)
                     return ui_utils.handle_response(function_name, data=error)
                 try:
-                    area = CityArea.objects.filter(label=row[2].value)[0]
+                    if not row[2].value:
+                        continue
+                    area = CityArea.objects.filter(label=row[2].value.strip())[0]
                     area_code = area.area_code
                 except ObjectDoesNotExist as e:
                     error = 'No Area Found at - ' + str(index) + ',' + str(row[2].value)
                     return ui_utils.handle_response(function_name, data=error)
                 try:
-                    subarea = CitySubArea.objects.filter(subarea_name=row[3].value)[0]
+                    if not row[3].value:
+                        continue
+                    subarea = CitySubArea.objects.filter(subarea_name=row[3].value.strip())[0]
                     subarea_code = subarea.subarea_code
                 except ObjectDoesNotExist as e:
                     error = 'No SubArea Found at - ' + str(index) + ',' + str(row[3].value)
@@ -155,7 +167,7 @@ def genrate_supplier_data(data):
                 try:
                     error = 'No Supplier Code - ' + str(index) + ',' + str(row[3].value)
                     if row[4].value:
-                        supplier_code = row[4].value
+                        supplier_code = row[4].value.strip()
                     else:
                         return ui_utils.handle_response(function_name, data=error)
                 except ObjectDoesNotExist as e:
@@ -166,10 +178,9 @@ def genrate_supplier_data(data):
                 try:
                     supplier = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
                 except ObjectDoesNotExist as e:
-
                     society_data_list.append(SupplierTypeSociety(**{
                         'supplier_id': supplier_id,
-                        'society_name': row[0].value if row[0].value else None,
+                        'society_name': row[0].value.strip() if row[0].value else None,
                         'society_city': city.city_name,
                         'society_locality': area.label,
                         'society_subarea': subarea.subarea_name,
@@ -181,19 +192,19 @@ def genrate_supplier_data(data):
                         'flat_count': int(row[9].value) if row[9].value else None,
                     }))
                     contact_data_list.append(ContactDetails(**{
-                        'name': row[18].value if row[18].value else None,
+                        'name': row[18].value.strip() if row[18].value else None,
                         'designation': 'Manager',
                         'salutation': 'Mr',
-                        'mobile': row[19].value if row[18].value else None,
+                        'mobile': row[19].value if row[19].value else None,
                         'object_id': supplier_id,
                         'content_type': content_type
                     }))
 
                 temp_data =  {
                     'id': supplier_id,
-                    'PO': row[10].value if row[10].value else row[8].value,
-                    'SL': row[13].value if row[13].value else None,
-                    'ST': row[17].value if row[17].value else None,
+                    'PO': int(row[10].value) if row[10].value else row[8].value,
+                    'SL': int(row[13].value) if row[13].value else None,
+                    'ST': int(row[17].value) if row[17].value else None,
                     'FL': 1,
                     'inv_code' : {
                         'POSTER' : convert_date_format(row[12].value) if row[12].value else None,
@@ -279,7 +290,7 @@ def assign_inv_dates(data):
                 if inv['activity_type'] == 'RELEASE':
                     temp_data = InventoryActivityAssignment(**{
                         'inventory_activity' : InventoryActivity.objects.get(id=inv['id']),
-                        'activity_date' : date,
+                        'activity_date' : convert_date_format(date),
                         'assigned_by' : assigned_by,
                         'assigned_to' : assigned_to
                     })
@@ -288,7 +299,7 @@ def assign_inv_dates(data):
                 elif inv['activity_type'] == 'CLOSURE' and inv['inv_name'] == 'POSTER':
                     temp_data = InventoryActivityAssignment(**{
                         'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
-                        'activity_date': date + datetime.timedelta(days=3),
+                        'activity_date': convert_date_format(date + datetime.timedelta(days=3)),
                         'assigned_by': assigned_by,
                         'assigned_to': assigned_to
                     })
@@ -308,7 +319,7 @@ def assign_inv_dates(data):
                             assigned_by = assigned_by_user
                         temp_data = InventoryActivityAssignment(**{
                             'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
-                            'activity_date': date,
+                            'activity_date': convert_date_format(date),
                             'assigned_by': assigned_by,
                             'assigned_to': assigned_to
                         })
@@ -329,7 +340,7 @@ def assign_inv_dates(data):
                             assigned_by = assigned_by_user
                         temp_data = InventoryActivityAssignment(**{
                             'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
-                            'activity_date': date,
+                            'activity_date': convert_date_format(date),
                             'assigned_by': assigned_by,
                             'assigned_to': assigned_to
                         })
@@ -2188,7 +2199,9 @@ class convertDirectProposalToCampaign(APIView):
         class_name = self.__class__.__name__
         try:
             data = request.data.copy()
+
             is_import_sheet = data['is_import_sheet']
+
             if is_import_sheet:
                 response = genrate_supplier_data(data)
                 if not response.data['status']:
@@ -2199,12 +2212,11 @@ class convertDirectProposalToCampaign(APIView):
             center_id = proposal_data['center_id']
             proposal = ProposalInfo.objects.get(pk=proposal_data['proposal_id'])
             center = ProposalCenterMapping.objects.get(pk=center_id)
-
             for supplier_code in proposal_data['center_data']:
-
                 response = website_utils.save_filters(center, supplier_code, proposal_data, proposal)
                 if not response.data['status']:
                     return response
+
                 response = website_utils.save_shortlisted_suppliers_data(center, supplier_code, proposal_data, proposal)
                 if not response.data['status']:
                     return response

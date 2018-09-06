@@ -3,12 +3,12 @@ from rest_framework.views import APIView
 from rest_framework import viewsets, status
 from django.db import transaction
 import v0.ui.utils as ui_utils
-from models import AccountInfo, BusinessAccountContact, BusinessSubTypes, BusinessTypes, ActivityLog
+from models import AccountInfo, BusinessAccountContact, BusinessSubTypes, BusinessTypes
 from rest_framework.response import Response
 from serializers import BusinessTypesSerializer, AccountInfoSerializer
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.organisation.models import Organisation
-from v0.ui.account.models import ContactDetails, Signup
+from v0.ui.account.models import ContactDetails, Signup, ActivityLog
 from v0.ui.account.serializers import (BusinessInfoSerializer, BusinessSubTypesSerializer, UIBusinessInfoSerializer,
                                        UIAccountInfoSerializer, BusinessAccountContactSerializer,
                                        ContactDetailsSerializer, SignupSerializer, ActivityLogSerializer)

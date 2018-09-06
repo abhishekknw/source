@@ -17,7 +17,9 @@ LEAD_KEY_TYPES = (
     ('RADIO', 'RADIO'),
     ('DROPDOWN', 'DROPDOWN'),
     ('CHECKBOX', 'CHECKBOX'),
-    ('TEXTAREA', 'TEXTAREA')
+    ('TEXTAREA', 'TEXTAREA'),
+    ('FLOAT', 'FLOAT'),
+    ('DATE', 'DATE')
 )
 
 LEAD_ITEM_STATUS = (
