@@ -6552,7 +6552,7 @@ def create_inventory_ids(supplier_object, filter_code, is_import_sheet=False, su
     """
     function_name = create_inventory_ids.__name__
     try:
-        tower_count = supplier_object.tower_count
+        tower_count = int(supplier_object.tower_count)
         inventory_ids = []
         Struct = namedtuple('Struct', 'adinventory_id')
         data = {}
