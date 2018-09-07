@@ -5,7 +5,36 @@ from v0.ui.base.models import BaseModel
 from v0 import managers
 from django.contrib.contenttypes.models import ContentType
 from v0.constants import supplier_id_max_length
+from v0.ui.common.models import BaseUser
 
+
+class Profile(BaseModel):
+    """
+    This model describes profile. a user can only have one profile.
+    """
+    name = models.CharField(max_length=255)
+    organisation = models.ForeignKey('Organisation')
+    is_standard = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'profile'
+
+class Signup(models.Model):
+    user_id = models.AutoField(db_column='USER_ID', primary_key=True)
+    first_name = models.TextField(db_column='FIRST_NAME', blank=True, null=True)
+    email = models.TextField(db_column='EMAIL', blank=True, null=True)
+    password = models.TextField(db_column='PASSWORD', blank=True, null=True)
+    login_type = models.TextField(db_column='LOGIN_TYPE', blank=True, null=True)
+    system_generated_id = models.BigIntegerField(db_column='SYSTEM_GENERATED_ID')
+    adminstrator_approved = models.CharField(db_column='ADMINSTRATOR_APPROVED', max_length=255, blank=True, null=True)
+    company_name = models.CharField(db_column='COMPANY_NAME', max_length=255, blank=True, null=True)
+    name = models.CharField(db_column='NAME', max_length=255, blank=True, null=True)
+    mobile_no = models.CharField(db_column='MOBILE_NO', max_length=255, blank=True, null=True)
+    signup_status = models.CharField(db_column='SIGNUP_STATUS', max_length=255, blank=True, null=True)
+
+    class Meta:
+
+        db_table = 'signup'
 
 class BusinessAccountContact(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -142,3 +171,56 @@ class ContactDetailsGeneric(models.Model):
     class Meta:
 
         db_table = 'contact_details_generic'
+
+class OperationsInfo(models.Model):
+    operator_id = models.CharField(db_column='OPERATOR_ID', primary_key=True, max_length=10)
+    operator_name = models.CharField(db_column='OPERATOR_NAME', max_length=100, blank=True, null=True)
+    operator_email = models.CharField(db_column='OPERATOR_EMAIL', max_length=50, blank=True, null=True)
+    operator_company = models.CharField(db_column='OPERATOR_COMPANY', max_length=100, blank=True, null=True)
+    operator_phone_number = models.IntegerField(db_column='OPERATOR_PHONE_NUMBER', blank=True, null=True)
+    comments_1 = models.CharField(db_column='COMMENTS_1', max_length=500, blank=True, null=True)
+    comments_2 = models.CharField(db_column='COMMENTS_2', max_length=500, blank=True, null=True)
+    company_id = models.CharField(db_column='COMPANY_ID', max_length=50, blank=True, null=True)
+    company_address = models.CharField(db_column='COMPANY_ADDRESS', max_length=250, blank=True, null=True)
+
+    class Meta:
+
+        db_table = 'operations_info'
+
+class BusinessTypes(BaseModel):
+    id              = models.AutoField(db_column='ID', primary_key=True)
+    business_type   = models.CharField(db_column='BUSINESS_TYPE', max_length=100, blank=True)
+    business_type_code = models.CharField(db_column='TYPE_CODE',unique=True, max_length=4, blank=True, null=True)
+
+    def __str__(self):
+        return self.business_type
+
+    def __unicode__(self):
+        return self.business_type
+
+    class Meta:
+        #db_table = 'BUSINESS_TYPES'
+        db_table = 'business_types'
+
+class BusinessSubTypes(BaseModel):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    business_type = models.ForeignKey(BusinessTypes, related_name='business_subtypes', db_column='BUSINESS_TYPE',
+                                      null=True, on_delete=models.CASCADE)  ## changed -> business
+    business_sub_type = models.CharField(db_column='SUBTYPE', max_length=100, blank=True)
+    business_sub_type_code = models.CharField(db_column='SUBTYPE_CODE', max_length=3, blank=True, null=True)
+
+    def __str__(self):
+        return self.business_sub_type
+
+    def __unicode__(self):
+        return self.business_sub_type
+
+    class Meta:
+        db_table = 'business_subtypes'
+
+
+class ActivityLog(BaseModel):
+    user = models.ForeignKey('BaseUser', null=False, blank=False)
+
+    class Meta:
+        db_table = 'activity_log'

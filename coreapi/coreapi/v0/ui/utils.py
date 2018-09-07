@@ -29,19 +29,29 @@ from rest_framework.response import Response
 from rest_framework import status
 from bulk_update.helper import bulk_update
 
-import v0.models
-import v0.serializers
-import v0.models as models
 import v0.errors as errors
 import v0.constants as v0_constants
 import v0.ui.serializers as ui_serializers
 from v0.ui.location.models import State, City, CityArea, CitySubArea
+from v0.ui.supplier.serializers import (SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SupplierTypeBusShelterSerializer,
+                                        SupplierTypeGymSerializer, SupplierTypeRetailShopSerializer,
+                                        SupplierTypeSalonSerializer, BusDepotSerializer)
+from v0.ui.supplier.models import SupplierTypeSociety
+from v0.ui.finances.serializers import (IdeationDesignCostSerializer, DataSciencesCostSerializer, EventStaffingCostSerializer,
+                                        LogisticOperationsCostSerializer, SpaceBookingCostSerializer, PrintingCostSerializer)
+from v0.ui.proposal.serializers import ProposalMetricsSerializer, ProposalMasterCostSerializer
+from v0.ui.proposal.models import (ImageMapping)
+from v0.ui.inventory.models import (AdInventoryType, InventorySummary, FlyerInventory, StallInventory,
+                                    GatewayArchInventory, PosterInventory)
+from v0.ui.base.models import DurationType
+from v0.ui.finances.models import PriceMappingDefault
+
 
 def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False, request=None):
     """
     Args:
-        success: determines wether to send success or failure messages
-        object_name: The function or class where the error occurrs
+        success: determines whether to send success or failure messages
+        object_name: The function or class where the error occurs
         data: The user error which you want to display to user's on screens
         exception_object: The exception object caught. an instance of Exception, KeyError etc.
         headers: the dict of headers
@@ -54,12 +64,14 @@ def handle_response(object_name, data=None, headers=None, content_type=None, exc
 
     """
     if not success:
+
         # prepare the object to be sent in error response
         data = {
             'general_error': data,
             'system_error': get_system_error(exception_object),
             'culprit_module': object_name,
         }
+
         if request:
             # fill the data with more information about request
             data['request_data'] = request.data
@@ -86,8 +98,8 @@ def handle_response(object_name, data=None, headers=None, content_type=None, exc
             except Exception as e:
                 # email sending failed. let it go.
                 pass
-
         if isinstance(exception_object, PermissionDenied):
+
             return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_403_FORBIDDEN)
         else:
             return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_400_BAD_REQUEST)
@@ -194,14 +206,14 @@ def make_supplier_data(data):
         try:
             state_name = v0_constants.state_name
             state_code = v0_constants.state_code
-            state_object = v0.models.State.objects.get(state_name=state_name, state_code=state_code)
-            city = v0.models.City.objects.get(city_code=data.get('city_code'), state_code=state_object)
-            area = v0.models.CityArea.objects.get(area_code=data.get('area_code'), city_code=city)
-            subarea = v0.models.CitySubArea.objects.get(subarea_code=data.get('subarea_code'), area_code=area)
+            state_object = State.objects.get(state_name=state_name, state_code=state_code)
+            city = City.objects.get(city_code=data.get('city_code'), state_code=state_object)
+            area = CityArea.objects.get(area_code=data.get('area_code'), city_code=city)
+            subarea = CitySubArea.objects.get(subarea_code=data.get('subarea_code'), area_code=area)
         except ObjectDoesNotExist as e:
-            city = v0.models.City.objects.get(id=data['city_id'])
-            area = v0.models.CityArea.objects.get(id=data['area_id'])
-            subarea = v0.models.CitySubArea.objects.get(id=data['subarea_id'], area_code=area)
+            city = City.objects.get(id=data['city_id'])
+            area = CityArea.objects.get(id=data['area_id'])
+            subarea = CitySubArea.objects.get(id=data['subarea_id'], area_code=area)
 
         all_supplier_data = defaultdict(dict)
 
@@ -288,8 +300,8 @@ def set_default_pricing(supplier_id, supplier_type_code):
         # supplier = supplier_code_filter_params[supplier_type_code]['MODEL'].objects.get(pk=supplier_id)
         content_type = ContentType.objects.get_for_model(supplier)
         # SupplierTypeSociety.objects.get(pk=society_id)
-        ad_types = v0.models.AdInventoryType.objects.all()
-        duration_types = v0.models.DurationType.objects.all()
+        ad_types = AdInventoryType.objects.all()
+        duration_types = DurationType.objects.all()
 
         price_mapping_list = []
 
@@ -297,23 +309,23 @@ def set_default_pricing(supplier_id, supplier_type_code):
             for duration in duration_types:
                 if (type.adinventory_name == 'POSTER'):
                     if ((duration.duration_name == 'Unit Daily')):
-                        pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                        pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
                                                                   adinventory_type=type, duration_type=duration)
                         price_mapping_list.append(pmdefault)
                     if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (
                                 duration.duration_name == 'Unit Monthly') | (duration.duration_name == 'Unit Weekly')):
-                        pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                        pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
                                                                   adinventory_type=type, duration_type=duration)
                         price_mapping_list.append(pmdefault)
 
                 if (type.adinventory_name == 'POSTER LIFT'):
                     if ((duration.duration_name == 'Unit Daily')):
-                        pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                        pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
                                                                   adinventory_type=type, duration_type=duration)
                         price_mapping_list.append(pmdefault)
                     if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (
                                 duration.duration_name == 'Unit Monthly') | (duration.duration_name == 'Unit Weekly')):
-                        pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                        pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
                                                                   adinventory_type=type, duration_type=duration)
                         price_mapping_list.append(pmdefault)
 
@@ -321,38 +333,38 @@ def set_default_pricing(supplier_id, supplier_type_code):
                     if ((duration.duration_name == 'Campaign Monthly') | (duration.duration_name == 'Campaign Weekly') | (
                                 duration.duration_name == 'Unit Weekly') | (duration.duration_name == 'Unit Monthly')):
                         if (type.adinventory_type == 'Large'):
-                            pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                            pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
                                                                       adinventory_type=type, duration_type=duration)
                             price_mapping_list.append(pmdefault)
                         else:
-                            pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                            pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
                                                                       adinventory_type=type, duration_type=duration)
                             price_mapping_list.append(pmdefault)
                 if (type.adinventory_name == 'STALL'):
                     if ((duration.duration_name == 'Unit Daily') | (duration.duration_name == '2 Days')):
                         if ((type.adinventory_type == 'Canopy') | (type.adinventory_type == 'Small') | (
                                     type.adinventory_type == 'Large')):
-                            pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                            pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
                                                                       adinventory_type=type, duration_type=duration)
                             price_mapping_list.append(pmdefault)
                         if (type.adinventory_type == 'Customize'):
-                            pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                            pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
                                                                       adinventory_type=type, duration_type=duration)
                             price_mapping_list.append(pmdefault)
                 if (type.adinventory_name == 'CAR DISPLAY'):
                     if ((duration.duration_name == 'Unit Daily') | (duration.duration_name == '2 Days')):
                         if ((type.adinventory_type == 'Standard') | (type.adinventory_type == 'Premium')):
-                            pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                            pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
                                                                       adinventory_type=type, duration_type=duration)
                             price_mapping_list.append(pmdefault)
                 if ((type.adinventory_name == 'FLIER') & (duration.duration_name == 'Unit Daily')):
                     if ((type.adinventory_type == 'Door-to-Door') | (type.adinventory_type == 'Mailbox') | (
                                 type.adinventory_type == 'Lobby')):
-                        pmdefault = v0.models.PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                        pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
                                                                   adinventory_type=type, duration_type=duration)
                         price_mapping_list.append(pmdefault)
 
-        v0.models.PriceMappingDefault.objects.bulk_create(price_mapping_list)
+        PriceMappingDefault.objects.bulk_create(price_mapping_list)
         return True
     except Exception as e:
         raise Exception(function, get_system_error(e))
@@ -362,7 +374,7 @@ def adinventory_func():
     """
     :return: functions makes a dict containing adinventory_dict
     """
-    adinventory_objects = v0.models.AdInventoryType.objects.all()
+    adinventory_objects = AdInventoryType.objects.all()
     adinventory_dict = {}
     for adinventory in adinventory_objects:
         if adinventory.adinventory_name == 'POSTER':
@@ -433,7 +445,7 @@ def get_supplier_inventory(data, id):
         content_type = ContentType.objects.get_for_model(supplier_class)
 #       inventory_object = InventorySummary.objects.get(content_object=supplier_object, object_id=id, content_type=content_type)
 
-        (inventory_object, is_created) = v0.models.InventorySummary.objects.get_or_create(object_id=id, content_type=content_type)
+        (inventory_object, is_created) = InventorySummary.objects.get_or_create(object_id=id, content_type=content_type)
         data['object_id'] = id
         data['content_type'] = content_type.id
 
@@ -475,7 +487,7 @@ def get_supplier_inventory(data, id):
 #
 
 def duration_type_func():
-    duration_type_objects = v0.models.DurationType.objects.all()
+    duration_type_objects = DurationType.objects.all()
     duration_type_dict = {}
 
     for duration_type in duration_type_objects:
@@ -506,7 +518,7 @@ def save_stall_locations(c1, c2, supplier, supplier_type_code):
             data = {
                 'adinventory_id': stall_id,
             }
-            stall = v0.models.StallInventory.objects.get_or_create_objects(data, supplier.supplier_id, supplier_type_code)
+            stall = StallInventory.objects.get_or_create_objects(data, supplier.supplier_id, supplier_type_code)
             stall.save()
 
     except Exception as e:
@@ -515,14 +527,13 @@ def save_stall_locations(c1, c2, supplier, supplier_type_code):
 
 def save_flyer_locations(c1, c2, supplier, supplier_type_code):
     count = int(c2) + 1
-
     try:
-        for i in range(c1 + 1, count):
+        for i in range(c1 + 1, count+1):
             flyer_id = supplier.supplier_id + "0000FL" + str(i).zfill(2)
             data = {
                 'adinventory_id': flyer_id,
             }
-            flyer = v0.models.FlyerInventory.objects.get_or_create_objects(data, supplier.supplier_id, supplier_type_code)
+            flyer = FlyerInventory.objects.get_or_create_objects(data, supplier.supplier_id, supplier_type_code)
             flyer.flat_count = supplier.flat_count
             flyer.save()
 
@@ -533,10 +544,10 @@ def save_flyer_locations(c1, c2, supplier, supplier_type_code):
 def delete(request, id, format=None):
     try:
         invId = request.query_params.get('invId', None)
-        stall = v0.models.StallInventory.objects.get(pk=invId)
+        stall = StallInventory.objects.get(pk=invId)
         stall.delete()
         return Response(status=204)
-    except v0.models.StallInventory.DoesNotExist:
+    except StallInventory.DoesNotExist:
         return Response(status=404)
 
 def make_dict_manager(adinvenory_type, duration_type):
@@ -700,21 +711,21 @@ def get_serializer(query):
     try:
         serializers = {
 
-            v0_constants.society_code: v0.serializers.SupplierTypeSocietySerializer,
-            v0_constants.corporate_code: v0.serializers.SupplierTypeCorporateSerializer,
-            v0_constants.gym: v0.serializers.SupplierTypeGymSerializer,
-            v0_constants.salon: v0.serializers.SupplierTypeSalonSerializer,
-            v0_constants.bus_shelter: v0.serializers.SupplierTypeBusShelterSerializer,
-            v0_constants.retail_shop_code: v0.serializers.SupplierTypeRetailShopSerializer,
-            v0_constants.bus_depot_code: ui_serializers.BusDepotSerializer,
-            'ideation_design_cost': v0.serializers.IdeationDesignCostSerializer,
-            'logistic_operations_cost': v0.serializers.LogisticOperationsCostSerializer,
-            'space_booking_cost': v0.serializers.SpaceBookingCostSerializer,
-            'event_staffing_cost': v0.serializers.EventStaffingCostSerializer,
-            'data_sciences_cost': v0.serializers.DataSciencesCostSerializer,
-            'printing_cost': v0.serializers.PrintingCostSerializer,
-            'proposal_metrics': v0.serializers.ProposalMetricsSerializer,
-            'proposal_master_cost': v0.serializers.ProposalMasterCostSerializer
+            v0_constants.society_code: SupplierTypeSocietySerializer,
+            v0_constants.corporate_code: SupplierTypeCorporateSerializer,
+            v0_constants.gym: SupplierTypeGymSerializer,
+            v0_constants.salon: SupplierTypeSalonSerializer,
+            v0_constants.bus_shelter: SupplierTypeBusShelterSerializer,
+            v0_constants.retail_shop_code: SupplierTypeRetailShopSerializer,
+            v0_constants.bus_depot_code: BusDepotSerializer,
+            'ideation_design_cost': IdeationDesignCostSerializer,
+            'logistic_operations_cost': LogisticOperationsCostSerializer,
+            'space_booking_cost': SpaceBookingCostSerializer,
+            'event_staffing_cost': EventStaffingCostSerializer,
+            'data_sciences_cost': DataSciencesCostSerializer,
+            'printing_cost': PrintingCostSerializer,
+            'proposal_metrics': ProposalMetricsSerializer,
+            'proposal_master_cost': ProposalMasterCostSerializer
 
         }
         return serializers[query]
@@ -734,7 +745,7 @@ def get_supplier_image(supplier_objects, supplier_name):
     function = get_supplier_image.__name__
     try:
         supplier_ids = [data['supplier_id'] for data in supplier_objects]
-        images = v0.models.ImageMapping.objects.filter(object_id__in=supplier_ids)
+        images = ImageMapping.objects.filter(object_id__in=supplier_ids)
         image_dict = {instance.object_id: instance.image_url for instance in images}
         for data in supplier_objects:
             supplier_id = data['supplier_id']
@@ -754,7 +765,7 @@ def generate_poster_objects(count, nb, society, society_content_type):
         for i in range(1, pos):
             nb_id = society.supplier_id + nb_tag + "PO" + str(i).zfill(2)
             supplier_id = society.supplier_id
-            nb = models.PosterInventory(adinventory_id=nb_id, poster_location=nb_tag, tower_name=nb_tower, supplier=society, object_id=supplier_id, content_type=society_content_type)
+            nb = PosterInventory(adinventory_id=nb_id, poster_location=nb_tag, tower_name=nb_tower, supplier=society, object_id=supplier_id, content_type=society_content_type)
             nb.save()
         return handle_response(function, data='success', success=True)
     except Exception as e:
@@ -804,7 +815,7 @@ def get_region_based_query(user, region, supplier_type_code):
     function = get_region_based_query.__name__
     try:
         authorized_region_codes = [group.split('-')[2] for group in user.groups.all().values_list('name', flat=True) if group.startswith("Form-" + region)]
-        city_names = models.City.objects.filter(city_code__in=authorized_region_codes).values_list('city_name', flat=True)
+        city_names = City.objects.filter(city_code__in=authorized_region_codes).values_list('city_name', flat=True)
         if supplier_type_code == 'RS':
             city_query = Q(society_city__in=city_names)
         else:
@@ -840,15 +851,16 @@ def get_aware_datetime_from_string(date_string):
     try:
         first_format = "%Y-%m-%d"
         second_format = "%Y-%m-%dT%H:%M:%SZ"
+        if date_string:
+            if validate_date_format(date_string, first_format):
+                ret = timezone.make_aware(datetime.datetime.strptime(date_string, first_format), timezone.get_default_timezone())
+            elif validate_date_format(date_string, second_format):
+                ret = parse_datetime(date_string)
+            else:
+                raise ValueError(errors.INVALID_DATE_FORMAT.format(first_format, second_format))
 
-        if validate_date_format(date_string, first_format):
-            ret = timezone.make_aware(datetime.datetime.strptime(date_string, first_format), timezone.get_default_timezone())
-        elif validate_date_format(date_string, second_format):
-            ret = parse_datetime(date_string)
-        else:
-            raise ValueError(errors.INVALID_DATE_FORMAT.format(first_format, second_format))
-
-        return ret
+            return ret
+        return date_string
     except Exception as e:
         raise Exception(e, function)
 
@@ -909,7 +921,7 @@ def save_gateway_arch_location(supplier, supplier_type_code):
         data = {
             'adinventory_id': gateway_arch_id,
         }
-        gateway_arch = v0.models.GatewayArchInventory.objects.get_or_create_objects(data, supplier.supplier_id, supplier_type_code)
+        gateway_arch = GatewayArchInventory.objects.get_or_create_objects(data, supplier.supplier_id, supplier_type_code)
         gateway_arch.save()
     except Exception as e:
         raise Exception(function, "Error " + get_system_error(e))
@@ -939,7 +951,7 @@ def save_society_payment_details(data):
     try:
         society_ids = [cell[1].value for cell in data]
         data_by_society_ids = {cell[1].value:cell for cell in data}
-        society_objects = models.SupplierTypeSociety.objects.filter(supplier_id__in=society_ids)
+        society_objects = SupplierTypeSociety.objects.filter(supplier_id__in=society_ids)
         for society in society_objects:
             society.name_for_payment = data_by_society_ids[society.supplier_id][2].value
             society.ifsc_code = data_by_society_ids[society.supplier_id][3].value
@@ -950,3 +962,11 @@ def save_society_payment_details(data):
         return True
     except Exception as e:
         raise Exception(function, "Error " + get_system_error(e))
+
+
+def get_from_dict(dict, key):
+    if key in dict:
+        if dict[key]:
+            return dict[key]
+    else:
+        return None

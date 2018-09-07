@@ -84,7 +84,6 @@ module.exports = function(config) {
       'bower_components/jquery-ui/jquery-ui.js',
       'bower_components/angular-ui-sortable/sortable.js',
       'bower_components/angular-toastr/dist/angular-toastr.tpls.js',
-      'bower_components/AngularJS-Toaster/toaster.js',
       'bower_components/amcharts3/amcharts/amcharts.js',
       'bower_components/amcharts-stock/dist/amcharts/amstock.js',
       'bower_components/eve-raphael/eve.js',

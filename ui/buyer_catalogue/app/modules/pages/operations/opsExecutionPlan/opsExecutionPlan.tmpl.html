@@ -40,14 +40,35 @@
   <div class="" ng-hide="hideData">
   <div class="">
     <div class="">
-      <table st-table="campaignDataList" st-safe-src="Data" class="table table-striped">
-        <thead>
+      <table st-table="campaignDataList" st-safe-src="paginationData" class="table table-striped" default-sort-reverse="true">
+       <thead>
+         <tr>
+           <th colspan='9' style="background-color:#ffffff;">
+             <input st-search="" placeholder="Search ..." class="form-control"  type="search"/>
+           </th>
+         </tr>
           <tr>
             <th ng-repeat="header in headings" class="col-md-1" style="text-align: center;">{{header.header}}</th>
           </tr>
         </thead>
         <tbody>
-          <tr style="text-align: center;" ng-repeat="inventory in campaignDataList">
+          <tr st-select-row='inventory' style="text-align: center;" ng-repeat="inventory in campaignDataList | filter:query | filter: dateCode | filter:invCode">
+            <div class="col-md-3">
+              <select class="form-control spacing" ng-model="invCode">
+                <option value="" disabled>FilterBy Inventory Type</option>
+                <option value="{{paginationData.id}}">ALL</option>
+                <option ng-repeat="inv in paginationData | orderBy : 'inv_type' | unique:'inv_type' | filter : {act_date: dateCode}" value="{{inv.inv_type}}">{{inv.inv_type}}</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <select class="form-control spacing" ng-model="dateCode">
+                <option value="" disabled>FilterBy Date</option>
+                <option value="{{paginationData.id}}">ALL</option>
+                <option ng-repeat="date in paginationData | orderBy : 'act_date' | unique:'act_date' | filter : {inv_type: invCode}" value="{{date.act_date}}">{{date.act_date}}</option>
+              </select>
+            </div>
+
+            <br /><br />
             <td>{{$index+1}}</td>
             <td class="col-md-1"><a data-target="#supplierModal" data-toggle="modal" ng-click="getSupplierDetails(inventory)" permission = "[permissions.viewSupplierDetails]">{{inventory.supplier_name}}</a></td>
             <!-- <td class="col-md-1">{{inventory.inv_id}}</td> -->
@@ -69,7 +90,7 @@
         <tfoot>
           <tr>
             <td colspan="10" class="text-center">
-              <div st-pagination="" st-items-by-page="itemsByPage" st-displayed-pages="3"></div>
+              <div st-pagination="" st-items-by-page="10" st-displayed-pages=""></div>
             </td>
           </tr>
         </tfoot>

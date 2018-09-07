@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 import csv, sys
-from v0.models import SupplierTypeSociety, SocietyLeads
+from v0.ui.leads.models import SocietyLeads
+from v0.ui.supplier.models import SupplierTypeSociety
 
 
 class Command(BaseCommand):

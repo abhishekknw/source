@@ -10,7 +10,9 @@
  */
 
 // var APIBaseUrl = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/';
-var APIBaseUrl = 'http://127.0.0.1:8000/';
+//var APIBaseUrl = 'http://13.232.210.224:8000/';
+//var APIBaseUrl = 'http://localhost:8000/';
+var APIBaseUrl = 'http://13.127.154.33:8000/';
 
 angular.module('Authentication', []);
 
@@ -58,6 +60,7 @@ angular
     'catalogueApp.theme',
     'angular-circular-progress',
     'ngMap',
+
 
   ])
   .config(function ($routeProvider, $stateProvider, $urlRouterProvider, $httpProvider, $qProvider, $locationProvider,cfpLoadingBarProvider) {
@@ -239,12 +242,18 @@ angular
             controller : 'MapCtrl',
             templateUrl : 'modules/pages/mapview/mapview.tmpl.html',
         })
+        .state('societydetailspage',{
+             // url : '/SocietyDetailsPages',
+             url : '/:supplierId/SocietyDetailsPages',
+               controller : 'SocietyDetailsPagesCtrl',
+             templateUrl : 'modules/pages/SocietyDetailsPages/societydetailspage.tmpl.html',
+         })
       .state('releasePlan',{
            url : '/:proposal_id/releasePlan',
            controller : 'ReleaseCampaignCtrl',
            templateUrl : 'modules/pages/releaseCampaignPlan/releaseCampaign.tmpl.html',
            ncyBreadcrumb: {
-             label:'ReleasePlan',
+             label:'BookingPlan',
              parent : 'CampaignList'
            }
        })
@@ -253,7 +262,7 @@ angular
            controller : 'OpsDashCtrl',
            templateUrl : 'modules/pages/DashBoard/OperationsDashBoard/opsdashboard.tmpl.html',
            ncyBreadcrumb: {
-             label:'DashBoard',
+             label:'OpsDashBoard',
              parent : 'manageCampaign.create'
            }
        })
@@ -277,7 +286,7 @@ angular
             controller : 'AuditReleasePlanCtrl',
             templateUrl : 'modules/pages/operations/auditReleasePlan/auditReleasePlan.tmpl.html',
             ncyBreadcrumb: {
-              label:'AuditReleasePlan',
+              label:'CampaignAndAuditPlan',
               parent : 'releasePlan'
             }
       })
@@ -351,8 +360,8 @@ angular
       //$qProvider.errorOnUnhandledRejections(false);
       $locationProvider.hashPrefix('');
 })
-.run(['$rootScope', '$window', '$location', 'AuthService','$state',
-     function ($rootScope, $window, $location, AuthService, $state) {
+.run(['$rootScope', '$window', '$location', 'AuthService','$state','$cookieStore',
+     function ($rootScope, $window, $location, AuthService, $state, $cookieStore) {
        $rootScope.globals = $rootScope.globals || {};
        $rootScope.globals.currentUser = AuthService.UserInfo();
        $rootScope.getCurState = function() {
@@ -373,16 +382,20 @@ angular
         //  }
         console.log(event);
          console.log("location change start - Whence: " + whence);
-
          // redirect to login page if not logged in
          $rootScope.globals.currentUser = AuthService.UserInfo();
          if (!$rootScope.globals.currentUser) {
+           if($location.path() != '/login')
+              $cookieStore.put('returnUrl', $location.url());
            $location.path('/login');
          }else if ($rootScope.globals.currentUser && $location.path() == '/guestHomePage') {
            $location.path("/guestHomePage");
          }else if ($rootScope.globals.currentUser && $location.path() == '/logout'){
            AuthService.Logout();
            $location.path("/login");
+         }else if ($rootScope.globals.currentUser && typeof $cookieStore.get('returnUrl') != 'undefined' && $cookieStore.get('returnUrl')){
+           $location.path($cookieStore.get('returnUrl'));
+           $cookieStore.remove('returnUrl');
          }else if ($rootScope.globals.currentUser && ($location.path() == '/login' || $location.path() == '/') && ($window.localStorage.user_code != 'guestUser')){
            $location.path("/manageCampaign/create");
          }else {

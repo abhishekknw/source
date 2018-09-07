@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
-from v0.models import BaseModel, managers, fields
+from v0.ui.base.models import BaseModel
+from v0 import managers
+from django.contrib.contenttypes import fields
 from django.contrib.contenttypes.models import ContentType
 from v0.constants import supplier_id_max_length
 
@@ -36,6 +38,7 @@ def getPriceDict():
     }
 
     return price_dict
+
 class DoorToDoorInfo(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='door_to_doors', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)
@@ -246,3 +249,24 @@ class AuditorSocietyMapping(models.Model):
     class Meta:
 
         db_table = 'auditor_society_mapping'
+
+class ProposalMasterCost(BaseModel):
+    """
+    A table to store revenue related costs. currently it's content will be populated by a sheet. only fixed fields
+    and relations are covered up.
+    Only one instance of MasterCost exists for one proposal version, proposal
+    proposal_version alone does not make any sense. it's always tied to a proposal instance.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
+    proposal = models.OneToOneField('ProposalInfo', null=True, blank=True)
+    agency_cost = models.FloatField(null=True, blank=True)
+    basic_cost = models.FloatField(null=True, blank=True)
+    discount = models.FloatField(null=True, blank=True)
+    total_cost = models.FloatField(null=True, blank=True)
+    tax = models.FloatField(null=True, blank=True)
+    total_impressions = models.FloatField(null=True, blank=True)
+    average_cost_per_impression = models.FloatField(null=True, blank=True)
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'proposal_master_cost_details'

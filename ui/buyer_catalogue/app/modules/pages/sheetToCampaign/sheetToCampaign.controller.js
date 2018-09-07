@@ -2,9 +2,9 @@ angular.module('catalogueApp')
 
 .controller('sheetToCampaignController', ['$scope', '$rootScope', '$window',
               '$location','commonDataShare','constants','campaignListService',
-              'pagesService','createProposalService','sheetToCampaignService',
+              'pagesService','createProposalService','sheetToCampaignService','Upload',
     function ($scope, $rootScope, $window, $location , commonDataShare,constants,
-                campaignListService, pagesService,createProposalService,sheetToCampaignService) {
+                campaignListService, pagesService,createProposalService,sheetToCampaignService, Upload) {
       console.log($rootScope);
       $scope.invoiceNumber = {
         id : null
@@ -18,7 +18,10 @@ angular.module('catalogueApp')
         formatYear: 'yy',
         startingDay: 1
       };
-
+      $scope.assign = {
+        to : '',
+        by : '',
+      }
       // $scope.formats = ['dd-MMMM-yyyy', 'yyyy-MM-dd', 'yyyy/MM/dd', 'dd.MM.yyyy', 'shortDate'];
       $scope.formats = ['yyyy-MM-dd'];
       $scope.format = $scope.formats[1];
@@ -98,9 +101,26 @@ angular.module('catalogueApp')
     				console.log("Error occured");
     			});
         }
+        var getUsersList = function(){
+          commonDataShare.getUsersList()
+            .then(function onSuccess(response){
+              $scope.userList = response.data.data;
+              console.log($scope.userList);
+              $scope.usersMapListWithObjects = {};
+              angular.forEach($scope.userList, function(data){
+                $scope.usersMapListWithObjects[data.id] = data;
+              })
+              console.log($scope.usersMapListWithObjects);
+            })
+            .catch(function onError(response){
+              console.log("error occured", response.status);
+              commonDataShare.showErrorMessage(response);
+            });
+        }
         var init = function(){
           getCities();
           getOrganisations();
+          getUsersList();
         }
 
         init();
@@ -116,7 +136,8 @@ angular.module('catalogueApp')
 
       $scope.createProposal = function(){
         console.log($scope.model);
-        $scope.proposalCreated = true;
+        $scope.createsheetProposal = true;
+        $scope.Proposalimport = false;
         if($scope.model.centers[0].center.pincode)
           $scope.model.centers[0].center.pincode = $scope.model.centers[0].center.pincode.toString();
         createProposalService.saveInitialProposal($scope.model.account_id, $scope.model)
@@ -131,6 +152,9 @@ angular.module('catalogueApp')
         })
 
       }
+
+
+
       $scope.getArea = function(city){
         console.log(city);
         createProposalService.getLocations('areas', city)
@@ -187,6 +211,8 @@ angular.module('catalogueApp')
 
         $scope.submit = function(){
           var filterAndSupplierData = getFilterAndSupplierData();
+          console.log(filterAndSupplierData);
+          filterAndSupplierData['is_import_sheet'] = false;
           filterAndSupplierData['proposal_id'] = $scope.proposalId;
           filterAndSupplierData['center_id'] = $scope.centerData.id;
           filterAndSupplierData['invoice_number'] = $scope.invoiceNumber.id;
@@ -211,4 +237,46 @@ angular.module('catalogueApp')
             }
           return data;
         }
+        $scope.Proposalimport = function(){
+          $scope.createsheetProposal = false;
+          $scope.Proposalsheetimport = true;
+        }
+
+        $scope.importThroughSheet = function(){
+
+          console.log("hello", $scope.assign);
+          var token = $rootScope.globals.currentUser.token;
+          if ($scope.file) {
+            Upload.upload({
+                url: constants.base_url + constants.url_base + "convert-direct-proposal-to-campaign/",
+                data: {
+                  file: $scope.file,
+                  is_import_sheet : true,
+                  proposal_id : $scope.proposalId,
+                  center_id : $scope.centerData.id,
+                  invoice_number : $scope.invoiceNumber.id,
+                  tentative_start_date : $scope.dateData.tentative_start_date,
+                  tentative_end_date : $scope.dateData.tentative_end_date,
+                  assigned_by : $scope.assign.to,
+                  assigned_to : $scope.assign.by,
+                  data_import_type : "base-data"
+                },
+                headers: {'Authorization': 'JWT ' + token}
+            }).then(function onSuccess(response){
+                  console.log(response);
+
+            })
+            .catch(function onError(response) {
+                console.log(response);
+                // if(response.data){
+                //   swal(constants.name,response.data.data.general_error,constants.error);
+                // }
+              });
+        }
+      }
+        $scope.uploadFiles = function(file){
+          $scope.file = file;
+        }
+        getSocieties();
+
 }]);

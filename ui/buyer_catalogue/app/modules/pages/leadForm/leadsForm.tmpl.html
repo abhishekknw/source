@@ -1,16 +1,27 @@
+
 <!DOCTYPE html>
 <html>
 <link rel="stylesheet" href="/modules/pages/leadForm/leadsForm.tmpl.css">
+<link rel="stylesheet" type="text/css" media="screen and (min-device-width:320px) and (max-device-width:500px)" href="css/mobile.css" />
+
 <body class="container">
-  <div><nav-bar></nav-bar></div></br></br> <br /> <br /> <br />
+  <div><nav-bar></nav-bar></div></br></br> <br />
+
+  <div class="row">
+    <a href="/#/logout" class=" lipadding" ng-click="closeModal()"><button style="margin-top:20px;margin-right:30px" type="button" class="btn btn-primary pull-right" name="button">LOGOUT</button></a>
+  </div>
+
+
+<br /><br />
   <div class="pageTitle">
     <h3 ng-if="!showLeads">Lead Form</h3>
+    <h3 ng-if="showLeads">Leads Data Of Campaign </h3>
   </div>
     <div class="panel-body" style="text-align:center;margin-top:-20px"  >
   <div class="row" >
     <div class="panel panel-default">
       <div class="panel-heading">
-          <Label  ng-if="showLeads">Leads Data Of Campaign :</Label><span class = "proposal-details">{{campaignName}}</span>
+        <span class = "proposal-details">{{campaignName}}</span>
         <Label>Campaign Name:</Label><span class = "proposal-details">{{proposalInfo.name}}</span>
         <Label class = "labels">Society Name:</Label><span class = "proposal-details">{{supplierInfo.society_name}}</span>
         </div>
@@ -30,11 +41,12 @@
                 <input type="{{getFieldType(model.original_name)}}" id="firstName" class="form-control"
                     ng-if="checkValidFields(model.original_name)" ng-model="modelData[model.original_name]" style="margin-left:10px;"/>
 
-                    <div class="" ng-hide="checkValidFields(model.original_name)">Yes
+
+                    <div style="margin-left:20px;" class="" ng-hide="checkValidFields(model.original_name)">Yes
                       <input type="{{getFieldType(model.original_name)}}"  ng-value="true"
                         ng-model="modelData[model.original_name]" style="margin-left:20px;"/>
                     </div>
-                    <div class="" ng-hide="checkValidFields(model.original_name)">No
+                    <div style="margin-left:20px;" class="" ng-hide="checkValidFields(model.original_name)">No
                       <input type="{{getFieldType(model.original_name)}}"  ng-value="false"
                         ng-model="modelData[model.original_name]" style="margin-left:20px;"/>
                     </div>
@@ -63,7 +75,7 @@
                 <button type="button" class="btn btn-danger pull-right" ng-click="changeView()">  Create New Lead</button><br />
             </div>
 
-
+<br />
             <div class="col-md-12 scroll">
               <table class="table table-bordered table-responsive" export-csv="csv" separator=";" ng-if="leadsData.leads.length">
                 <br /><thead>
@@ -81,8 +93,8 @@
                     <td><button type="button" class="btn btn-danger" ng-click="editView(lead)">EDIT</button></td>
                   </tr>
                 </tbody>
-              </table><br />
-              <a class="btn btn-danger" title="{{campaignName}} Leads" ng-click='csv.generate()' ng-href="{{ csv.link() }}"
+              </table>
+              <a class="btn btn-danger" title="{{campaignName}} Leads" style="margin-top:30px;" ng-click='csv.generate()' ng-href="{{ csv.link() }}"
                    download="{{campaignName}}_leads.csv" ng-if="leadsData.leads.length">
                   <i class="glyphicon glyphicon-new-window"></i> Download As Excel
               </a>

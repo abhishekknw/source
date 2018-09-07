@@ -100,7 +100,7 @@ angular.module('catalogueApp')
         reAssign_date : '',
       };
       $scope.campaignDataList = [];
-      $scope.Data = [];
+      $scope.paginationData = [];
 
       function createList(){
         angular.forEach($scope.campaignData.shortlisted_suppliers,function(suppliers,spaceId){
@@ -135,8 +135,9 @@ angular.module('catalogueApp')
             }
           });
         });
-        $scope.Data = $scope.campaignDataList;
+        $scope.paginationData = $scope.campaignDataList;
         console.log($scope.campaignDataList);
+        $scope.dateCode ;
       }
 
 
@@ -294,5 +295,7 @@ angular.module('catalogueApp')
             });
           }
         }
+
+
 
 }]);

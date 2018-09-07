@@ -1,6 +1,22 @@
 from rest_framework.serializers import ModelSerializer
 from models import DoorToDoorInfo, DataSciencesCost, EventStaffingCost, IdeationDesignCost, LogisticOperationsCost, \
-    PriceMapping, PriceMappingDefault, PrintingCost, RatioDetails, SpaceBookingCost
+    PriceMapping, PriceMappingDefault, PrintingCost, RatioDetails, SpaceBookingCost, SpaceBookingCost, \
+    ShortlistedInventoryPricingDetails, AuditDate
+from v0.ui.inventory.serializers import InventoryActivitySerializerWithInventoryAssignmentsAndImages, \
+    AdInventoryTypeSerializer, ShortlistedInventoryPricingSerializerReadOnly
+from v0.ui.proposal.models import ShortlistedSpaces
+from v0.ui.base.serializers import DurationTypeSerializer
+
+class AuditDateSerializer(ModelSerializer):
+
+    class Meta:
+        model = AuditDate
+        fields = '__all__'
+
+class SpaceBookingCostSerializer(ModelSerializer):
+    class Meta:
+        model = SpaceBookingCost
+        fields = '__all__'
 
 class DataSciencesCostSerializer(ModelSerializer):
     class Meta:
@@ -54,4 +70,23 @@ class RatioDetailsSerializer(ModelSerializer):
 class SpaceBookingCostSerializer(ModelSerializer):
     class Meta:
         model = SpaceBookingCost
+        fields = '__all__'
+
+
+
+class ShortlistedSpacesSerializerReadOnly(ModelSerializer):
+
+    shortlisted_inventories = ShortlistedInventoryPricingSerializerReadOnly(many=True, source='shortlistedinventorypricingdetails_set')
+
+    class Meta:
+        model = ShortlistedSpaces
+        exclude = ('created_at', 'updated_at', 'space_mapping')
+
+class PriceMappingDefaultSerializerReadOnly(ModelSerializer):
+
+    inventory_type = AdInventoryTypeSerializer(source='adinventory_type')
+    inventory_duration = DurationTypeSerializer(source='duration_type')
+
+    class Meta:
+        model = PriceMappingDefault
         fields = '__all__'

@@ -1,10 +1,18 @@
 angular.module('catalogueApp')
 .controller('ReleaseCampaignCtrl',
-    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','constants','permissions','mapViewService',
-    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams,constants, permissions, mapViewService) {
+    ['$scope', '$rootScope', '$window', '$location','releaseCampaignService','$stateParams','permissions','Upload','cfpLoadingBar','constants','mapViewService','$timeout','commonDataShare',
+    function ($scope, $rootScope, $window, $location, releaseCampaignService, $stateParams, permissions, Upload, cfpLoadingBar,constants, mapViewService, $timeout, commonDataShare) {
   $scope.campaign_id = $stateParams.proposal_id;
   $scope.positiveNoError = constants.positive_number_error;
   $scope.campaign_manager = constants.campaign_manager;
+  $scope.editPaymentDetails = true;
+
+  $scope.body = {
+    message : '',
+  };
+  $scope.editContactDetails = true;
+  $scope.addContactDetails = true;
+$scope.addNewPhase = true;
   if($rootScope.globals.userInfo.is_superuser == true){
     $scope.backButton = true;
   }
@@ -12,6 +20,10 @@ angular.module('catalogueApp')
   $scope.shortlistedSuppliersIdList = {}
   $scope.permissions = permissions.supplierBookingPage;
   $scope.showSummaryTab = false;
+  $scope.editPaymentDetails = true;
+  $scope.editContactDetails = true;
+  $scope.addContactDetails = true;
+$scope.addNewPhase =true;
  	$scope.headings = [
         {header : 'Index'},
         {header : 'Supplier Name'},
@@ -36,6 +48,8 @@ angular.module('catalogueApp')
         {header : 'Payment Status'},
       ];
   $scope.booking_status = [
+    {name:'Undecided', code : ''},
+    {name:'Decision Pending', code : 'DP'},
     {name:'Confirmed Booking', code : 'BK'},
     {name:'Tentative Booking', code : 'NB'},
     {name:'Phone Booked' , code : 'PB'},
@@ -44,8 +58,8 @@ angular.module('catalogueApp')
     {name:'Send Email', code : 'SE'},
     {name:'Visit Required', code : 'VR'},
     {name:'Call Required', code : 'CR'},
-    {name:'Decision Pending', code : 'DP'},
   ];
+
 
   $scope.payment_status = [
     {name:'Not Initiated', code : 'PNI'},
@@ -53,7 +67,6 @@ angular.module('catalogueApp')
     {name:'Cheque Released' , code : 'PCR'},
     {name:'Paid', code : 'PD'},
     {name:'Rejected', code : 'PR'},
-
   ];
 
   $scope.contact_headings = [
@@ -64,6 +77,7 @@ angular.module('catalogueApp')
     {header : 'STD Code'},
     {header : 'Landline No'},
     {header : 'Mobile No'},
+    {header : 'Remove'},
 
   ];
   $scope.payment_headings = [
@@ -167,10 +181,10 @@ angular.module('catalogueApp')
     }
     //Start:To set contacts to show in contactModal
     $scope.setContact = function(supplier){
-      if(supplier.contacts.length > 0)
-        $scope.contacts = supplier.contacts;
-      else
-        $scope.contacts = null;
+      $scope.payment = supplier;
+      $scope.editContactDetails = true;
+      console.log(supplier);
+
     }
     //End:To set contacts to show in contactModal
     //Start:To set payment details to show in paymentModal
@@ -225,16 +239,16 @@ angular.module('catalogueApp')
       { name: 'Saloon',  code:'SA'},
       { name: 'Retail Store',  code:'RE'},
       ];
-    $scope.search;
+    $scope.search = {};
     $scope.search_status = false;
-    $scope.supplier_type_code;
+    $scope.supplier_type_code = {};
     $scope.center_index = null;
     $scope.searchSuppliers = function(){
      try{
       $scope.search_status = false;
-      console.log($scope.supplier_type_code,$scope.search);
-      if($scope.supplier_type_code && $scope.search){
-        mapViewService.searchSuppliers($scope.supplier_type_code,$scope.search)
+      console.log($scope.supplier_type_code.code,$scope.search.query);
+      if($scope.supplier_type_code.code && $scope.search.query){
+        mapViewService.searchSuppliers($scope.supplier_type_code.code,$scope.search.query)
           .then(function onSuccess(response, status){
             console.log(response);
               $scope.center_index = null;
@@ -282,8 +296,8 @@ angular.module('catalogueApp')
       try{
         $scope.supplierData = [];
         $scope.search_status = false;
-        $scope.supplier_type_code = null;
-        $scope.search = null;
+        $scope.supplier_type_code = {};
+        $scope.search = {};
         $scope.errorMsg = undefined;
         $scope.center_index = null;
 
@@ -428,11 +442,12 @@ $scope.multiSelect =
          };
 
         $scope.selected_customTexts = {buttonDefaultText: 'Stall Location'};
-        $scope.getRelationShipData = function(supplierId){
+        $scope.getRelationShipData = function(supplier){
           $scope.relationshipData = {};
           var supplierCode = 'RS';
           var campaignId = $scope.releaseDetails.campaign.proposal_id;
-          releaseCampaignService.getRelationShipData(supplierId,supplierCode,campaignId)
+          $scope.supplierFlatCount = supplier.flat_count;
+          releaseCampaignService.getRelationShipData(supplier.supplier_id,supplierCode,campaignId)
           .then(function onSuccess(response){
             $scope.relationshipData = response.data.data;
             console.log(response);
@@ -440,6 +455,353 @@ $scope.multiSelect =
             console.log(response);
           })
         }
+
+        $scope.savePaymentDetails = function(){
+          console.log($scope.payment);
+          releaseCampaignService.savePaymentDetails($scope.payment,$scope.payment.supplier_id)
+          .then(function onSuccess(response){
+            $scope.editPaymentDetails = true;
+            console.log($scope.editPaymentDetails);
+
+            // $scope.payment.name_for_payment = response.data.name_for_payment;
+            // $scope.payment.bank_name = response.data.bank_name;
+            // $scope.payment.ifsc_code = response.data.ifsc_code;
+            // $scope.payment.ifsc_code = response.data.account_no;
+            console.log(response);
+          }).catch(function onError(response){
+            console.log(response);
+          })
+        }
+
+      $scope.setEditPaymentDetails = function(){
+          $scope.editPaymentDetails = false;
+          console.log($scope.editPaymentDetails);
+        }
+
+        var temp_data = [];
+
+        $scope.saveContactDetails = function(){
+          $scope.payment['basic_contact_available'] = true;
+          $scope.payment['basic_contacts'] = $scope.payment.contacts;
+          releaseCampaignService.saveContactDetails($scope.payment,$scope.payment.supplier_id)
+          .then(function onSuccess(response){
+            console.log(response);
+            $scope.editContactDetails = true;
+            swal(constants.name, constants.add_data_success, constants.success);
+          }).catch(function onError(response){
+            console.log(response);
+          })
+
+        }
+        $scope.setEditContactDetails = function(){
+            $scope.editContactDetails = false;
+            console.log($scope.editContactDetails);
+          }
+          $scope.addRow = ({});
+          $scope.addContactDetail = function(){
+            $scope.addRow = $scope.payment.contacts;
+            $scope.addContactDetails = false;
+            console.log($scope.addRow);
+          $scope.addRow.push({});
+          }
+
+          $scope.removeContact = function(index){
+            $scope.payment.contacts.splice(index , 1);
+          }
+        $scope.IsVisible = false;
+       $scope.updateSupplierStatus = function (value) {
+      //If DIV is visible it will be hidden and vice versa.
+      $scope.IsVisible = value == "Y";
+      }
+
+   $scope.uploadImage = function(file,supplier){
+     console.log(supplier);
+
+     // cfpLoadingBar.set(0.3)
+
+         var token = $rootScope.globals.currentUser.token;
+         if (file) {
+            // $("#progressBarModal").modal();
+           cfpLoadingBar.start();
+           // cfpLoadingBar.inc();
+           Upload.upload({
+               url: constants.base_url + constants.url_base + constants.upload_image_activity_url,
+               data: {
+                 file: file,
+                 // 'inventory_activity_assignment_id' : inventory.id,
+                 // 'supplier_name' : inventory.supplier_name,
+                 // 'activity_name' : inventory.act_name,
+                 // 'inventory_name' : inventory.inv_type,
+                 // 'activity_date' : inventory.act_date,
+               },
+               headers: {'Authorization': 'JWT ' + token}
+           }).then(function onSuccess(response){
+                 uploaded_image = {'image_path': response.data.data };
+                 supplier.images.push(uploaded_image);
+                 cfpLoadingBar.complete();
+                 // $("#progressBarModal").modal('hide');
+           })
+           .catch(function onError(response) {
+             cfpLoadingBar.complete();
+             console.log(response);
+           });
+         }
+       }
+        //to send email
+        $scope.loadSpinner = true;
+        $scope.sendNotification = function(){
+          console.log($scope.body);
+          $scope.loadSpinner = false;
+          var email_Data = {
+            subject:$scope.paymentStatus + " Details For " + $scope.supplierPaymentData.name,
+            body:$scope.body.message,
+            to:'yogesh.mhetre@machadalo.com',
+          };
+          releaseCampaignService.sendMail(email_Data)
+          .then(function onSuccess(response){
+            console.log(response);
+            $scope.taskId = response.data.data.task_id;
+            sendMailInProgress();
+        	})
+        	.catch(function onError(response){
+            $scope.loadSpinner = true;
+            $('#selectedPaymentModal').modal('hide');
+            // $('#declineModal').modal('hide');
+            commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.onhold_error,constants.error);
+        		console.log("error occured", response);
+        	});
+          $scope.reason = "";
+       }
+
+       var sendMailInProgress = function(){
+         releaseCampaignService.sendMailInProgress($scope.taskId)
+         .then(function onSuccess(response){
+           if(response.data.data.ready != true){
+              $timeout(sendMailInProgress,constants.sleepTime); // This will perform async
+           }
+           else if(response.data.data.status == true){
+             $scope.loadSpinner = true;
+             $('#selectedPaymentModal').modal('hide');
+             // $('#selectedPaymentModal').modal('hide');
+
+             swal(constants.name,constants.email_success,constants.success);
+           }
+           else {
+             $scope.loadSpinner = true;
+             swal(constants.name,constants.email_error,constants.error);
+           }
+         }).catch(function onError(response){
+           $scope.loadSpinner = true;
+           $('#onHoldModal').modal('hide');
+           $('#declineModal').modal('hide');
+           commonDataShare.showErrorMessage(response);
+           swal(constants.name,constants.email_error,constants.error);
+         });
+       }
+
+       $scope.getPaymentDetails = function(supplier,status){
+         console.log(supplier);
+         $scope.body.message = '';
+         $scope.supplierPaymentData = supplier;
+          $scope.paymentStatus = status;
+          if(status == 'NEFT' || status == 'CASH'){
+            supplier.payment_status = 'PP';
+          }else if(status == 'CHEQUE'){
+            supplier.payment_status = 'PCR';
+          }
+
+          supplier.booking_status = 'NB';
+
+          $scope.body.message = "Beneficiary Name : " +  $scope.supplierPaymentData.name_for_payment + ",     " +
+            "Bank Account Number : " + $scope.supplierPaymentData.account_no + ",     " +
+            "IFSC Code : " + $scope.supplierPaymentData.ifsc_code + ",     " +
+            "Negotiated Price :" + $scope.supplierPaymentData.total_negotiated_price + ",     " +
+            "Message : ";
+       }
+
+       $scope.updateSupplierStatus = function(supplier){
+         if(supplier.transaction_or_check_number){
+           console.log("hello");
+           supplier.payment_status = 'PD';
+           supplier.booking_status = 'BK';
+         }
+
+       }
+       $scope.getPhases = function(){
+         $scope.editPhase = false;
+         releaseCampaignService.getPhases($scope.campaign_id)
+         .then(function onSuccess(response){
+           console.log(response);
+           angular.forEach(response.data.data, function(phase){
+             phase.start_date = new Date(phase.start_date);
+             phase.end_date = new Date(phase.end_date);
+           })
+           $scope.phases = response.data.data;
+
+         }).catch(function onError(response){
+           console.log(response);
+         })
+       }
+
+       $scope.editPhaseDetails = function(){
+         $scope.editPhase = true;
+       }
+       $scope.savePhases = function(){
+         releaseCampaignService.savePhases($scope.phases,$scope.campaign_id)
+         .then(function onSuccess(response){
+           console.log(response);
+           angular.forEach($scope.phases, function(phase){
+             phase.start_date = new Date(phase.start_date);
+             phase.end_date = new Date(phase.end_date);
+           })
+           $scope.editPhase = false;
+         }).catch(function onError(response){
+           console.log(response);
+         })
+       }
+
+        $scope.getPhases();
+        $scope.addPhase = ({});
+        $scope.addPhases = function(){
+          $scope.addPhase = $scope.phases;
+          $scope.addNewPhase = false;
+          console.log($scope.addPhase);
+        $scope.phases.push({});
+        }
+
+        $scope.removePhase = function(index){
+          $scope.phases.splice(index , 1);
+          $scope.editPhase = false;
+
+        }
+
+       var setSocietyLocationOnMap = function(supplier){
+         var mapOptions = {
+              center:new google.maps.LatLng(0,0),
+             //  zoom:13
+              mapTypeId: google.maps.MapTypeId.ROADMAP
+           }
+           var map = new google.maps.Map(document.getElementById("supplierMap"),mapOptions);
+
+           var marker = new google.maps.Marker({
+              position: new google.maps.LatLng(supplier.society_latitude, supplier.society_longitude),
+              map: map,
+              mapTypeId: google.maps.MapTypeId.ROADMAP
+           });
+
+
+           var latlngbounds = new google.maps.LatLngBounds();
+           latlngbounds.extend(marker.position);
+           // map.setCenter(latlngbounds.getCenter());
+           map.fitBounds(latlngbounds);
+           //  map.setZoom(15);
+           // map.setCenter(marker.getPosition());
+
+           google.maps.event.addListenerOnce(map, 'bounds_changed', function(event) {
+             //  map.setCenter(marker.getPosition());
+               if (this.getZoom()){
+                   this.setZoom(16);
+               }
+             });
+
+             google.maps.event.addListenerOnce(map, 'idle', function() {
+               google.maps.event.trigger(map, 'resize');
+             });
+             // map.panToBounds(latlngbounds);
+
+           // bounds.extend(new google.maps.LatLngBounds(19.088291, 72.442383));
+           // map.fitBounds(bounds);
+
+         }
+         function inventoryCount (inventoryDetails){
+                var totalPoster = inventoryDetails.lift_count + inventoryDetails.nb_count ;
+                $scope.totalInventoryCount = {
+                   totalPoster  : totalPoster,
+                };
+                return $scope.totalInventoryCount;
+         }
+
+       $scope.getSocietyDetails = function(supplier,supplierId,center,index){
+         console.log(supplier);
+         // $location.path('/' + supplierId + '/SocietyDetailsPages' , '_blank');
+         $scope.temp_index = index;
+         $scope.center = center;
+         mapViewService.processParam();
+         var supplier_id = supplier.supplier_id;
+         $scope.society = {};
+         $scope.disable = false;
+         $scope.residentCount = {};
+         $scope.inventoryDetails = {};
+         $scope.totalInventoryCount = {};
+         $scope.supplier_type_code = "RS";
+         mapViewService.getSociety(supplier_id,$scope.supplier_type_code)
+          .then(function onSuccess(response) {
+            console.log(response);
+            $scope.loading = response;
+            setSocietyLocationOnMap(response.data.data.supplier_data);
+             $scope.loading = response.data.data.supplier_data;
+            $scope.myInterval=300;
+            $scope.society_images = response.data.data.supplier_images;
+            $scope.amenities = response.data.data.amenities;
+            $scope.society = supplier;
+           //  $scope.society = response.data.supplier_data;
+            //$rootScope.societyname = response.society_data.society_name;
+            $scope.residentCount = estimatedResidents(response.data.data.supplier_data.flat_count);
+            $scope.flatcountflier = response.data.data.supplier_data.flat_count;
+            var baseUrl = constants.aws_bucket_url;
+
+            // Start : Code added to seperate images by their image tag names
+            var imageUrl;
+            $scope.SocietyImages = [],$scope.FlierImages=[],$scope.PosterImages=[],$scope.StandeeImages=[],$scope.StallImages=[],$scope.CarImages=[];
+            for(var i=0;i<$scope.society_images.length;i++){
+              if($scope.society_images[i].name == 'Society'){
+                imageUrl = baseUrl + $scope.society_images[i].image_url;
+                $scope.SocietyImages.push(imageUrl);
+              }
+              if($scope.society_images[i].name == 'Standee Space'){
+                imageUrl = baseUrl + $scope.society_images[i].image_url;
+                $scope.StandeeImages.push(imageUrl);
+              }
+              if($scope.society_images[i].name == 'Stall Space'){
+                imageUrl = baseUrl + $scope.society_images[i].image_url;
+                $scope.StallImages.push(imageUrl);
+              }
+              if($scope.society_images[i].name == 'Fliers'){
+                imageUrl = baseUrl + $scope.society_images[i].image_url;
+                $scope.FlierImages.push(imageUrl);
+              }
+              if($scope.society_images[i].name == 'Car Display'){
+                imageUrl = baseUrl + $scope.society_images[i].image_url;
+                $scope.CarImages.push(imageUrl);
+              }
+              if($scope.society_images[i].name == 'Lift' || $scope.society_images[i].name == 'Notice Board'){
+                imageUrl = baseUrl + $scope.society_images[i].image_url;
+                $scope.PosterImages.push(imageUrl);
+              }
+          }
+          // End : Code added to seperate images by their image tag names
+         });
+
+         mapViewService.get_inventory_summary(supplier_id, $scope.supplier_type_code)
+         .then(function onSuccess(response){
+           console.log(response);
+           $scope.societyDetails = true;
+           if('inventory' in response.data){
+             $scope.inventoryDetails = response.data.inventory;
+              $scope.totalInventoryCount = inventoryCount($scope.inventoryDetails);
+              $scope.model = response.data.inventory;
+              $scope.inventories_allowed = response.data.inventories_allowed_codes;
+              $scope.show_inventory = true;
+            }
+         }).catch(function onError(response){
+           console.log("error",response);
+           commonDataShare.showErrorMessage(response);
+         });
+       }//End of function getSocietyDetails
+
+
+
 
 
 }]);//Controller function ends here

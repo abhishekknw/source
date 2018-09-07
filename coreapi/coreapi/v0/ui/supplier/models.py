@@ -3,7 +3,8 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import fields
 from v0.ui.base.models import BaseModel
-from v0.ui.account.models import ContactDetailsGeneric
+from v0.ui.account.models import ContactDetailsGeneric, ContactDetails
+
 from v0 import managers
 
 RETAIL_SHOP_TYPE = (
@@ -12,6 +13,38 @@ RETAIL_SHOP_TYPE = (
     ('SANITARY_STORE', 'SANITARY_STORE'),
     ('STATIONARY_STORE', 'STATIONARY_STORE')
 )
+
+class CorporateCompanyDetails(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    company_id = models.ForeignKey('CorporateParkCompanyList', db_column='COMPANY_ID', related_name='companydetails', blank=True, null=True, on_delete=models.CASCADE)
+    building_name = models.CharField(db_column='BUILDING_NAME', max_length=20, blank=True, null=True)
+    wing_name = models.CharField(db_column='WING_NAME', max_length=20, blank=True, null=True)
+
+    def get_floors(self):
+        return self.wingfloor.all()
+
+    class Meta:
+        db_table='corporate_company_details'
+
+class CorporateParkCompanyList(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    name = models.CharField(db_column='COMPANY_NAME',max_length=50, blank=True, null=True)
+    supplier_id = models.ForeignKey('SupplierTypeCorporate', db_column='CORPORATEPARK_ID', related_name='corporatecompany', blank=True, null=True, on_delete=models.CASCADE)
+
+    def get_company_details(self):
+        return self.companydetails.all()
+
+    class Meta:
+      db_table = 'corporateparkcompanylist'
+
+class FlatTypeCode(models.Model):
+    id = models.AutoField(db_column='ID', primary_key=True)
+    flat_type_name = models.CharField(db_column='FLAT_TYPE_NAME', max_length=20, null=True)
+    flat_type_code = models.CharField(db_column='FLAT_TYPE_CODE', max_length=5, null=True)
+
+    class Meta:
+
+        db_table = 'flat_type_code'
 
 class BasicSupplierDetails(BaseModel):
     """
@@ -49,6 +82,13 @@ class BasicSupplierDetails(BaseModel):
 
 
 class SupplierTypeSociety(BaseModel):
+
+    SUPPLIER_STATUS = (
+        ('Tapped', 'Tapped'),
+        ('LetterGiven', 'LetterGiven'),
+        ('MeetingRequired', 'MeetingRequired'),
+        ('Other', 'Other')
+    )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     objects = managers.GeneralManager()
@@ -145,6 +185,8 @@ class SupplierTypeSociety(BaseModel):
     landmark = models.CharField(max_length=255, null=True, blank=True)
     feedback = models.CharField(max_length=255, null=True, blank=True)
     representative = models.ForeignKey('Organisation', null=True, blank=True)
+    supplier_status = models.CharField(max_length=80, null=True,  choices=SUPPLIER_STATUS)
+    comments = models.CharField(max_length=255, null=True, blank=True)
 
     def get_society_image(self):
         try:
