@@ -71,8 +71,13 @@ class SupplierTypeSocietySerializer(ModelSerializer):
                   'society_state', 'society_longitude', 'society_locality', 'society_subarea', 'society_latitude', 'society_location_type',
                   'society_type_quality', 'society_type_quantity', 'flat_count', 'flat_avg_rental_persqft', 'flat_sale_cost_persqft',
                   'tower_count', 'payment_details_available', 'age_of_society','total_tenant_flat_count','landmark','feedback',
-                  'name_for_payment','bank_name','ifsc_code','account_no'
+                  'name_for_payment','bank_name','ifsc_code','account_no',
                   )
+
+class SupplierTypeSocietySerializer2(ModelSerializer):
+    class Meta:
+        model = SupplierTypeSociety
+        fields = '__all__'
 
 class CorporateBuildingSerializer(ModelSerializer):
     class Meta:

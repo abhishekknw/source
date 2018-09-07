@@ -13,14 +13,15 @@ from django.db.models import Count
 from models import (CampaignSocietyMapping, Campaign)
 from serializers import (CampaignListSerializer, CampaignSerializer)
 from v0.ui.proposal.models import ShortlistedSpaces
-from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2
 from v0.ui.inventory.models import InventoryActivityImage
 from rest_framework import viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework import status
 import gpxpy.geo
-from v0.ui.leads.models import Leads
-
+from v0.ui.leads.models import Leads, LeadsForm, LeadsFormItems, LeadsFormData
+from v0.ui.leads.serializers import LeadsFormItemsSerializer
+import json, datetime
 
 class CampaignAPIView(APIView):
 
@@ -480,6 +481,72 @@ class DashBoardViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    @list_route()
+    def get_leads_by_campaign_new(self, request):
+        class_name = self.__class__.__name__
+        campaign_id = request.query_params.get('campaign_id', None)
+        leads_form_objects = LeadsForm.objects.filter(campaign_id=campaign_id).exclude(status='inactive')
+        leads_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id).exclude(status='inactive')
+        supplier_ids = leads_form_data.values('supplier_id').distinct()
+
+        all_suppliers_list = {}
+        hot_leads_global = 0
+        all_leads_global = 0
+
+        for supplier_id in supplier_ids:
+            supplier = supplier_id['supplier_id']
+            lead_form_items_list = LeadsFormItems.objects.filter(campaign_id = campaign_id, supplier_id = supplier).\
+                exclude(status='inactive')
+            lead_form_data = LeadsFormData.objects.filter(campaign_id = campaign_id, supplier_id = supplier).\
+                exclude(status='inactive')
+            form_id = lead_form_items_list[0].leads_form_id
+            leads_form_details = LeadsForm.objects.get(id=form_id)
+            total_leads = leads_form_details.last_entry_id
+            hot_leads = 0
+
+            # counting hot leads for current supplier
+            for x in range(total_leads):
+                entry_id = x+1
+                current_entry = lead_form_data.filter(entry_id= entry_id)
+                hot_lead=False
+                for item_data in current_entry:
+                    item_value = item_data.item_value
+                    item_id = item_data.item_id
+                    hot_lead_criteria = lead_form_items_list.get(item_id=item_id).hot_lead_criteria
+                    if item_value == hot_lead_criteria:
+                        if hot_lead==False:
+                            hot_leads = hot_leads+1
+                        hot_lead = True
+                        continue
+            # getting society information
+            society_data_1 = SupplierTypeSociety.objects.get(supplier_id=supplier)
+            society_data = SupplierTypeSocietySerializer2(society_data_1).data
+            now = datetime.datetime.now()
+            current_supplier_data = {
+                "is_interested": False,
+                "campaign": campaign_id,
+                "object_id": supplier,
+                "interested": hot_leads,
+                "total": total_leads,
+                "data": society_data,
+                }
+            all_suppliers_list.update({supplier: current_supplier_data})
+            hot_leads_global = hot_leads_global+hot_leads
+            all_leads_global = all_leads_global+total_leads
+
+        time = now
+        date = now.strftime("%Y-%m-%d")
+        date_data = {str(date):
+                         {
+                             "total": all_leads_global,
+                             "created_at": str(time),
+                             "is_interested": False,
+                             "interested": hot_leads_global
+                         }}
+        all_suppliers_list.update({"date_data": date_data})
+
+        return ui_utils.handle_response({}, data={'supplier_data': all_suppliers_list}, success=True)
 
     @detail_route(methods=['POST'])
     def get_leads_by_multiple_campaigns(self, request, pk=None):
