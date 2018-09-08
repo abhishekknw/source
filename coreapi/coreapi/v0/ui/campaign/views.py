@@ -535,6 +535,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             hot_leads_global = hot_leads_global+hot_leads
             all_leads_global = all_leads_global+total_leads
 
+        now = datetime.datetime.now()
         time = now
         date = now.strftime("%Y-%m-%d")
         date_data = {str(date):
