@@ -4,6 +4,7 @@ from rest_framework.routers import DefaultRouter
 
 from v0.ui.website import views
 from v0.ui.campaign.views import CreateSupplierPhaseData
+from v0.ui.proposal.views import HashtagImagesViewSet
 
 urlpatterns = [
 
@@ -46,5 +47,6 @@ router.register(r'^content-type', views.ContentTypeViewSet, base_name='Content-T
 router.register(r'^organisation', views.OrganisationViewSet, base_name='Organisation')
 router.register(r'^organisation-map', views.OrganisationMapViewSet, base_name='organisation-map')
 router.register(r'^proposal-center-mapping', views.proposalCenterMappingViewSet, base_name='proposal-center-mapping')
+router.register(r'^hashtag_images', HashtagImagesViewSet, base_name='hashtag-images')
 
 urlpatterns += router.urls
