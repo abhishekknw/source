@@ -143,6 +143,7 @@ simple serializer for HashtagImages
 
     class Meta:
         model = HashTagImages
+        fields = '__all__'
 
 class SupplierPhaseSerializer(ModelSerializer):
     class Meta:

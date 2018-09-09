@@ -292,27 +292,43 @@ class LeadFormUpdate(APIView):
 #             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
-def save_items (datatype_dict, fixed_fields,campaign_id, form_id, last_entry_id):
+def save_items (fields_dict, fixed_fields,form, current_form_id, entry_id):
+    campaign_id = form["campaign_id"]
+    supplier_id = form["object_id"]
     items = []
+    data = []
     alias_data_object = LeadAlias.objects.filter(campaign_id = campaign_id)
+    leads_old_object = Leads.objects.filter(campaign_id = campaign_id, object_id = supplier_id)
     order_id = 0
-    new_form_id = form_id+1
     for curr_row in alias_data_object:
         original_name = curr_row.original_name
         order_id = order_id + 1
         items.append(LeadsFormItems(**{
              'key_name': curr_row.alias,
-             'key_type': datatype_dict[original_name],
+             'key_type': fields_dict[original_name],
              'order_id': order_id,
              'item_id': order_id,
-             'leads_form_id': new_form_id
+             'leads_form_id': current_form_id
              }))
+        current_entry_id = entry_id
+        for lead in leads_old_object:
+            col_value = getattr(lead, original_name)
+            if col_value is not None:
+                data.append(LeadsFormData(**{
+                    'supplier_id': supplier_id,
+                    'item_id': order_id,
+                    'item_value': col_value,
+                    'leads_form_id': current_form_id,
+                    'entry_id': current_entry_id
+                    }))
+            current_entry_id = current_entry_id + 1
+
     for field in fixed_fields:
         order_id = order_id + 1
         added_fields = {
             'order_id': order_id,
             'item_id': order_id,
-            'leads_form_id': new_form_id
+            'leads_form_id': current_form_id
         }
         field.update(added_fields)
         items.append(LeadsFormItems(**field))
@@ -320,17 +336,18 @@ def save_items (datatype_dict, fixed_fields,campaign_id, form_id, last_entry_id)
     leads_form_details = LeadsForm(**{
              'campaign_id': campaign_id,
              'fields_count': len(items),
-             'last_entry_id': last_entry_id
+             'last_entry_id': entry_id
              })
     leads_form_details.save()
     LeadsFormItems.objects.bulk_create(items)
+    LeadsFormData.objects.bulk_create(data)
 
 class MigrateLeadsData(APIView):
 
     def put(self, request):
         class_name = self.__class__.__name__
-        leads = Leads.objects.all()
-        unique_forms = leads.values('object_id','campaign_id').distinct()
+        leads_old = Leads.objects.all()
+        unique_forms = leads_old.values('object_id','campaign_id').distinct()
 
         fields = {
             'firstname1': 'STRING',
@@ -364,22 +381,22 @@ class MigrateLeadsData(APIView):
             {'key_name': 'is_from_sheet', 'key_type': 'BOOLEAN'}
         ]
 
-        for lead in leads:
-            curr_data = lead.__dict__
-            supplier_id = curr_data["object_id"]
-            campaign_id = curr_data["campaign_id"]
-            is_from_sheet = curr_data["is_from_sheet"]
-            is_interested = curr_data["is_interested"]
-
+        leads_query = LeadsForm.objects.order_by('-id')
+        last_form_id = leads_query[0].id if len(leads_query) > 0 else 0
+        last_entry_id = leads_query[0].last_entry_id if len(leads_query) > 0 else 0
+        if last_entry_id is None:
+            last_entry_id = 0
+        form_id = last_form_id
+        entry_id = last_entry_id+1
+        # iterating by form
         for form in unique_forms:
-            last_form_id_query = LeadsForm.objects.order_by('-id')
-            last_form_id = last_form_id_query[0].id if len(last_form_id_query)>0 else 0
-            last_entry_id = last_form_id_query[0].last_entry_id if len(last_form_id_query)>0 else 0
-            if last_entry_id is None:
-                last_entry_id = 0
             campaign_id = form["campaign_id"]
             supplier_id = form["object_id"]
-            save_items(fields, fixed_fields, campaign_id, last_form_id, last_entry_id)
+            form_id = form_id+1
+            save_items(fields, fixed_fields, form, form_id, entry_id)
         # leads form import successful
-        
+            leads_old_data = leads_old.filter(campaign_id=campaign_id, object_id=supplier_id)
+            alias_data_object = LeadAlias.objects.filter(campaign_id=campaign_id)
+            # iterating by enteries for a given form
+
         return ui_utils.handle_response({}, data='success', success=True)

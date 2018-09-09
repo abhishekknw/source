@@ -6552,7 +6552,7 @@ def create_inventory_ids(supplier_object, filter_code, is_import_sheet=False, su
     """
     function_name = create_inventory_ids.__name__
     try:
-        tower_count = supplier_object.tower_count
+        tower_count = int(supplier_object.tower_count)
         inventory_ids = []
         Struct = namedtuple('Struct', 'adinventory_id')
         data = {}
@@ -6562,13 +6562,14 @@ def create_inventory_ids(supplier_object, filter_code, is_import_sheet=False, su
             tower_count = supplier_inv_mapping[supplier_object.supplier_id][filter_code['id']]
             if tower_count is None:
                 tower_count = 1
-        for count in range(tower_count):
+        for count in range(int(tower_count)):
             data = Struct(adinventory_id='TESTINVID' + str(filter_code['id']) + '00' + str(count + 1))
             inventory_ids.append(data)
         # inventory_objects = namedtuple("Struct", inventory_ids.keys())(*inventory_ids.values())
 
         return inventory_ids
     except Exception as e:
+        print e
         return Exception(function_name, ui_utils.get_system_error(e))
 
 
