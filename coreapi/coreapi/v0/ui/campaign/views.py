@@ -115,6 +115,32 @@ class campaignListAPIVIew(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+def lead_counter(campaign_id, supplier_id):
+    lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id, supplier_id=supplier_id). \
+        exclude(status='inactive')
+    lead_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id, supplier_id=supplier_id). \
+        exclude(status='inactive')
+    form_id = lead_form_items_list[0].leads_form_id
+    leads_form_details = LeadsForm.objects.get(id=form_id)
+    total_leads = leads_form_details.last_entry_id
+    hot_leads = 0
+
+    for x in range(total_leads):
+        entry_id = x + 1
+        current_entry = lead_form_data.filter(entry_id=entry_id)
+        hot_lead = False
+        for item_data in current_entry:
+            item_value = item_data.item_value
+            item_id = item_data.item_id
+            hot_lead_criteria = lead_form_items_list.get(item_id=item_id).hot_lead_criteria
+            if item_value == hot_lead_criteria:
+                if hot_lead is False:
+                    hot_leads = hot_leads + 1
+                hot_lead = True
+                continue
+    result = {'total_leads': total_leads, 'hot_leads': hot_leads}
+    return result
+
 
 class DashBoardViewSet(viewsets.ViewSet):
     """
@@ -485,6 +511,8 @@ class DashBoardViewSet(viewsets.ViewSet):
     @list_route()
     def get_leads_by_campaign_new(self, request):
         class_name = self.__class__.__name__
+        now = datetime.datetime.now()
+        date_old = now.strftime("%Y-%m-%d")
         campaign_id = request.query_params.get('campaign_id', None)
         leads_form_objects = LeadsForm.objects.filter(campaign_id=campaign_id).exclude(status='inactive')
         leads_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id).exclude(status='inactive')
@@ -493,32 +521,14 @@ class DashBoardViewSet(viewsets.ViewSet):
         all_suppliers_list = {}
         hot_leads_global = 0
         all_leads_global = 0
+        date_data = {}
 
         for supplier_id in supplier_ids:
             supplier = supplier_id['supplier_id']
-            lead_form_items_list = LeadsFormItems.objects.filter(campaign_id = campaign_id, supplier_id = supplier).\
-                exclude(status='inactive')
-            lead_form_data = LeadsFormData.objects.filter(campaign_id = campaign_id, supplier_id = supplier).\
-                exclude(status='inactive')
-            form_id = lead_form_items_list[0].leads_form_id
-            leads_form_details = LeadsForm.objects.get(id=form_id)
-            total_leads = leads_form_details.last_entry_id
-            hot_leads = 0
 
-            # counting hot leads for current supplier
-            for x in range(total_leads):
-                entry_id = x+1
-                current_entry = lead_form_data.filter(entry_id= entry_id)
-                hot_lead=False
-                for item_data in current_entry:
-                    item_value = item_data.item_value
-                    item_id = item_data.item_id
-                    hot_lead_criteria = lead_form_items_list.get(item_id=item_id).hot_lead_criteria
-                    if item_value == hot_lead_criteria:
-                        if hot_lead==False:
-                            hot_leads = hot_leads+1
-                        hot_lead = True
-                        continue
+            lead_count = lead_counter(campaign_id, supplier)
+            hot_leads = lead_count['hot_leads']
+            total_leads = lead_count['total_leads']
             # getting society information
             society_data_1 = SupplierTypeSociety.objects.get(supplier_id=supplier)
             society_data = SupplierTypeSocietySerializer2(society_data_1).data
@@ -535,9 +545,6 @@ class DashBoardViewSet(viewsets.ViewSet):
             hot_leads_global = hot_leads_global+hot_leads
             all_leads_global = all_leads_global+total_leads
 
-        now = datetime.datetime.now()
-        time = now
-        date = now.strftime("%Y-%m-%d")
         date_data = {str(date):
                          {
                              "total": all_leads_global,

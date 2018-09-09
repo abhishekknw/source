@@ -315,7 +315,6 @@ def save_items (fields_dict, fixed_fields,form, current_form_id, entry_id):
              'leads_form_id': current_form_id,
              'campaign_id': campaign_id,
              'supplier_id': supplier_id,
-
         }
         if original_name=='is_interested':
             curr_element['hot_lead_criteria']=True
@@ -330,7 +329,9 @@ def save_items (fields_dict, fixed_fields,form, current_form_id, entry_id):
                     'item_id': order_id,
                     'item_value': col_value,
                     'leads_form_id': current_form_id,
-                    'entry_id': current_entry_id
+                    'entry_id': current_entry_id,
+                    'created_at': lead.created_at,
+                    'updated_at': lead.updated_at
                     }))
             current_entry_id = current_entry_id + 1
 
@@ -356,7 +357,9 @@ def save_items (fields_dict, fixed_fields,form, current_form_id, entry_id):
                     'item_id': order_id,
                     'item_value': col_value,
                     'leads_form_id': current_form_id,
-                    'entry_id': current_entry_id
+                    'entry_id': current_entry_id,
+                    'created_at': lead.created_at,
+                    'updated_at': lead.updated_at,
                     }))
             current_entry_id = current_entry_id + 1
 
@@ -366,7 +369,9 @@ def save_items (fields_dict, fixed_fields,form, current_form_id, entry_id):
              'last_entry_id': current_entry_id-1
              })
     leads_form_details.save()
-    LeadsFormItems.objects.bulk_create(items)
+    for item in items:
+        item.save()
+    #LeadsFormItems.objects.bulk_create(items)
     LeadsFormData.objects.bulk_create(data)
 
 class MigrateLeadsData(APIView):
