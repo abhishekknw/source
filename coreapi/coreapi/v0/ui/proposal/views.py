@@ -1424,8 +1424,9 @@ class HashtagImagesViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get('campaign_id')
+            date = request.query_params.get('date')
             try:
-                images = HashTagImages.objects.filter(campaign=campaign_id).values()
+                images = HashTagImages.objects.filter(campaign=campaign_id, created_at__date=date).values()
             except ObjectDoesNotExist:
                 return ui_utils.handle_response(class_name, data={}, success=True)
             for image in images:
