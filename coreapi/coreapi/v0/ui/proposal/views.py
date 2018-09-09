@@ -45,6 +45,7 @@ from v0.ui.website.utils import return_price
 import v0.constants as v0_constants
 import v0.ui.website.tasks as tasks
 from v0.ui.supplier.models import SupplierTypeCorporate
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
 from v0.ui.base.models import DurationType
 from v0 import errors
 from rest_framework import viewsets
@@ -1426,7 +1427,9 @@ class HashtagImagesViewSet(viewsets.ViewSet):
                 return ui_utils.handle_response(class_name, data={}, success=True)
             for image in images:
                 #This is static, need to change by supplier code
-                image['supplier_data'] = SupplierTypeSociety.objects.get(supplier_id=image['object_id'])
+                supplier = SupplierTypeSociety.objects.get(supplier_id=image['object_id'])
+                serializer = SupplierTypeSocietySerializer(supplier)
+                image['supplier_data'] = serializer.data
             return ui_utils.handle_response(class_name, data=images, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
