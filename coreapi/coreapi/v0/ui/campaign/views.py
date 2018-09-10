@@ -116,21 +116,23 @@ class campaignListAPIVIew(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 def lead_counter(campaign_id, supplier_id):
-    lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id, supplier_id=supplier_id). \
+    lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id). \
         exclude(status='inactive')
     lead_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id, supplier_id=supplier_id). \
         exclude(status='inactive')
-    hot_lead_details = []
+
     total_leads = 0
     hot_leads = 0
+    hot_lead_details = []
 
-    for item in lead_form_items_list:
-        form_id = item.leads_form_id
+    form_id_data = lead_form_data.values('leads_form_id').distinct()
+    for current_form in form_id_data:
+        form_id = current_form['leads_form_id']
         leads_form_details = LeadsForm.objects.get(id=form_id)
-        total_leads = total_leads + leads_form_details.last_entry_id
-        hot_leads = 0
+        current_leads = leads_form_details.last_entry_id if leads_form_details.last_entry_id else 0
+        total_leads = total_leads + current_leads
 
-        for x in range(total_leads):
+        for x in range(current_leads):
             entry_id = x + 1
             current_entry = lead_form_data.filter(entry_id=entry_id)
             hot_lead = False
@@ -138,7 +140,7 @@ def lead_counter(campaign_id, supplier_id):
                 item_value = item_data.item_value
                 item_id = item_data.item_id
                 leads_form_id = item_data.leads_form_id
-                hot_lead_criteria = lead_form_items_list.get(item_id=item_id).hot_lead_criteria
+                hot_lead_criteria = lead_form_items_list.get(item_id=item_id, leads_form_id=leads_form_id).hot_lead_criteria
                 if item_value == hot_lead_criteria:
                     if hot_lead is False:
                         hot_leads = hot_leads + 1
@@ -554,16 +556,23 @@ class DashBoardViewSet(viewsets.ViewSet):
             all_leads_global = all_leads_global+total_leads
 
         date_data = {}
+        all_entries_checked = []
         data_first_values = leads_form_data.filter(item_id=1)
-        for curr_data in data_first_values:
-            time = curr_data.created_at
-            curr_date = str(time.date())
-            curr_time = str(time)
-
+        for curr_data in leads_form_data:
             curr_entry_details = {
                 'leads_form_id': curr_data.leads_form_id,
                 'entry_id': curr_data.entry_id
             }
+            if curr_entry_details in all_entries_checked:
+                continue
+            else:
+                all_entries_checked.append(curr_entry_details)
+            
+            time = curr_data.created_at
+            curr_date = str(time.date())
+            curr_time = str(time)
+
+
             campaign_id = curr_data.campaign_id
             supplier_id = curr_data.supplier_id
             lead_count = lead_counter(campaign_id, supplier_id)
