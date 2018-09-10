@@ -120,30 +120,34 @@ def lead_counter(campaign_id, supplier_id):
         exclude(status='inactive')
     lead_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id, supplier_id=supplier_id). \
         exclude(status='inactive')
-    form_id = lead_form_items_list[0].leads_form_id
-    leads_form_details = LeadsForm.objects.get(id=form_id)
-    total_leads = leads_form_details.last_entry_id
+    hot_lead_details = []
+    total_leads = 0
     hot_leads = 0
 
-    hot_lead_details = []
-    for x in range(total_leads):
-        entry_id = x + 1
-        current_entry = lead_form_data.filter(entry_id=entry_id)
-        hot_lead = False
-        for item_data in current_entry:
-            item_value = item_data.item_value
-            item_id = item_data.item_id
-            leads_form_id = item_data.leads_form_id
-            hot_lead_criteria = lead_form_items_list.get(item_id=item_id).hot_lead_criteria
-            if item_value == hot_lead_criteria:
-                if hot_lead is False:
-                    hot_leads = hot_leads + 1
-                    hot_lead_details.append({
-                        'leads_form_id': leads_form_id,
-                        'entry_id': entry_id
-                    })
-                hot_lead = True
-                continue
+    for item in lead_form_items_list:
+        form_id = item.leads_form_id
+        leads_form_details = LeadsForm.objects.get(id=form_id)
+        total_leads = total_leads + leads_form_details.last_entry_id
+        hot_leads = 0
+
+        for x in range(total_leads):
+            entry_id = x + 1
+            current_entry = lead_form_data.filter(entry_id=entry_id)
+            hot_lead = False
+            for item_data in current_entry:
+                item_value = item_data.item_value
+                item_id = item_data.item_id
+                leads_form_id = item_data.leads_form_id
+                hot_lead_criteria = lead_form_items_list.get(item_id=item_id).hot_lead_criteria
+                if item_value == hot_lead_criteria:
+                    if hot_lead is False:
+                        hot_leads = hot_leads + 1
+                        hot_lead_details.append({
+                            'leads_form_id': leads_form_id,
+                            'entry_id': entry_id
+                        })
+                    hot_lead = True
+                    continue
     result = {'total_leads': total_leads, 'hot_leads': hot_leads, 'hot_lead_details':hot_lead_details}
     return result
 
@@ -518,7 +522,6 @@ class DashBoardViewSet(viewsets.ViewSet):
     def get_leads_by_campaign_new(self, request):
         class_name = self.__class__.__name__
         now = datetime.datetime.now()
-        date_old = now.strftime("%Y-%m-%d")
         campaign_id = request.query_params.get('campaign_id', None)
         leads_form_objects = LeadsForm.objects.filter(campaign_id=campaign_id).exclude(status='inactive')
         leads_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id).exclude(status='inactive')
@@ -527,9 +530,6 @@ class DashBoardViewSet(viewsets.ViewSet):
         all_suppliers_list = {}
         hot_leads_global = 0
         all_leads_global = 0
-        date_data = {}
-
-        print supplier_ids
 
         for supplier_id in supplier_ids:
             supplier = supplier_id['supplier_id']
@@ -552,8 +552,6 @@ class DashBoardViewSet(viewsets.ViewSet):
             all_suppliers_list.update({supplier: current_supplier_data})
             hot_leads_global = hot_leads_global+hot_leads
             all_leads_global = all_leads_global+total_leads
-
-        supplier_data = {'supplier_data': all_suppliers_list}
 
         date_data = {}
         data_first_values = leads_form_data.filter(item_id=1)
@@ -580,13 +578,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             date_data[curr_date]['total'] = date_data[curr_date]['total']+1
             if curr_entry_details in hot_lead_details:
                 date_data[curr_date]['interested'] = date_data[curr_date]['interested'] + 1
-            #if curr_entry_details in hot_lead_details:
 
-            # if date is already there, append to it, else create a new entry
-            hot_lead_criteria = leads_form_objects
-            #if str(curr_date) in dates:
-
-        date_data_all = {'date_data': date_data}
         # date_data = {str(now.date()):
         #                  {
         #                      "total": all_leads_global,
