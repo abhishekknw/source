@@ -94,6 +94,7 @@ class CreateLeadsForm(APIView):
         for item in leads_form_items:
             item_id = item_id + 1
             item_object = LeadsFormItems(**{
+                "campaign_id" : campaign_id,
                 "leads_form": new_dynamic_form,
                 "key_name": item["key_name"],
                 "key_type": item["key_type"],
