@@ -10,10 +10,10 @@ class Config():
 
 class ConfigProd():
     DATABASE = {
-        'NAME': 'mdtestnew',
+        'NAME': 'mdproddb',
         'ENGINE': 'django.db.backends.mysql',
-        'HOST': 'mdtest.cncgdhp3beic.ap-southeast-1.rds.amazonaws.com',
-        'USER': 'mdtest',
-        'PASSWORD': 'mdtestmachadalo',
+        'HOST': 'mdprod.cow21ijx99fo.ap-south-1.rds.amazonaws.com',
+        'USER': 'md1',
+        'PASSWORD': 'pwd4mdprod',
     }
     BASE_URL = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/'
