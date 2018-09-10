@@ -27,6 +27,7 @@ LEAD_ITEM_STATUS = (
     ('INACTIVE', 'INACTIVE')
 )
 
+
 class Leads(BaseModel):
     """
     This model defines Leads
@@ -92,6 +93,8 @@ class LeadsForm(BaseModel):
 
 class LeadsFormItems(BaseModel):
     leads_form = models.ForeignKey('LeadsForm', null=False, blank=False)
+    campaign_id = models.CharField(max_length=70, null=True, blank=True)
+    supplier_id = models.CharField(max_length=70, null=True, blank=True)
     key_name = models.CharField(max_length=70, null=True, blank=True)
     key_options = models.CharField(max_length=200, null=True, blank=True)  # delimiter separated
     key_type = models.CharField(max_length=70, null=True, choices=LEAD_KEY_TYPES)
@@ -108,6 +111,7 @@ class LeadsFormItems(BaseModel):
 class LeadsFormData(BaseModel):
     leads_form = models.ForeignKey('LeadsForm', null=False, blank=False)
     supplier_id = models.CharField(max_length=70, null=True, blank=True)
+    campaign_id = models.CharField(max_length=70, null=True, blank=True)
     item_value = models.CharField(max_length=200, null=True, blank=True)
     entry_id = models.IntegerField(blank=False, null=True)
     item_id = models.IntegerField(blank=False, null=True)
