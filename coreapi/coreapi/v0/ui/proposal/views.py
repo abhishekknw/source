@@ -2294,3 +2294,17 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
             return handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
+
+    def destroy(self, request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            SupplierPhase.objects.get(pk=pk).delete()
+            return ui_utils.handle_response(class_name, data=True, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
