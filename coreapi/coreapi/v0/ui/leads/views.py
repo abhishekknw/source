@@ -144,6 +144,7 @@ class LeadsFormBulkEntry(APIView):
         wb = load_workbook(source_file)
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
         lead_form = LeadsForm.objects.get(id=leads_form_id)
+        fields = lead_form.fields_count
         campaign_id = lead_form.campaign_id
         entry_id = lead_form.last_entry_id + 1 if lead_form.last_entry_id else 1
 
@@ -151,7 +152,7 @@ class LeadsFormBulkEntry(APIView):
             if index > 0:
                 form_entry_list = []
                 supplier_id = row[0].value if row[0].value else None
-                for item_id in range(1, len(row)):
+                for item_id in range(1, fields+1):
                     form_entry_list.append(LeadsFormData(**{
                         "campaign_id": campaign_id,
                         "supplier_id": supplier_id,

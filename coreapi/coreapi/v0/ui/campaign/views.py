@@ -120,6 +120,7 @@ def lead_counter(campaign_id, supplier_id):
         exclude(status='inactive')
     lead_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id, supplier_id=supplier_id). \
         exclude(status='inactive')
+    #total_leads = leads_form_data.values('entry_id', 'leads_form_id').distinct()
 
     total_leads = 0
     hot_leads = 0
@@ -128,8 +129,9 @@ def lead_counter(campaign_id, supplier_id):
     form_id_data = lead_form_data.values('leads_form_id').distinct()
     for current_form in form_id_data:
         form_id = current_form['leads_form_id']
-        leads_form_details = LeadsForm.objects.get(id=form_id)
-        current_leads = leads_form_details.last_entry_id if leads_form_details.last_entry_id else 0
+        #current_leads = leads_form_details.last_entry_id if leads_form_details.last_entry_id else 0
+        current_leads_data = lead_form_data.filter(leads_form_id = form_id)
+        current_leads = current_leads_data.values('entry_id').distinct().count()
         total_leads = total_leads + current_leads
 
         for x in range(current_leads):
