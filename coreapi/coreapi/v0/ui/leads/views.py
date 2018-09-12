@@ -18,7 +18,8 @@ def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
             "item_id": entry["item_id"],
             "item_value": entry["value"],
             "leads_form": lead_form,
-            "entry_id": entry_id
+            "entry_id": entry_id,
+            "created_at": datetime.datetime.now()
         }))
     LeadsFormData.objects.bulk_create(form_entry_list)
     lead_form.last_entry_id = entry_id
@@ -152,14 +153,16 @@ class LeadsFormBulkEntry(APIView):
             if index > 0:
                 form_entry_list = []
                 supplier_id = row[0].value if row[0].value else None
-                for item_id in range(1, fields+1):
+                created_at = row[1].value if row[1].value else None
+                for item_id in range(2, fields+1):
                     form_entry_list.append(LeadsFormData(**{
                         "campaign_id": campaign_id,
                         "supplier_id": supplier_id,
                         "item_id": item_id,
                         "item_value": row[item_id].value if row[item_id].value else None,
                         "leads_form": lead_form,
-                        "entry_id": entry_id
+                        "entry_id": entry_id,
+                        "created_at": created_at
                     }))
                 LeadsFormData.objects.bulk_create(form_entry_list)
                 entry_id = entry_id + 1  # will be saved in the end
@@ -186,9 +189,9 @@ class GenerateLeadForm(APIView):
     def get(request, leads_form_id):
         lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
         lead_form_items_dict = {}
-        keys_list = []
+        keys_list = ['supplier_id', 'lead_entry_date (format: dd/mm/yyyy)']
         for item in lead_form_items_list:
-            curr_row = (item).dataLeadsFormItemsSerializer
+            curr_row = LeadsFormItemsSerializer(item).data
             lead_form_items_dict[item.item_id] = curr_row
             keys_list.append(curr_row['key_name'])
         book = Workbook()
