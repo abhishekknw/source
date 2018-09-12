@@ -34,7 +34,6 @@ router = DefaultRouter()
 router.include_format_suffixes = False
 
 router.register(r'^hashtag-images', HashtagImagesViewSet, base_name='hashtag-images')
-router.register(r'^supplier-phase', SupplierPhaseViewSet, base_name='supplier-phase')
 router.register(r'^proposal', ProposalViewSet, base_name='Proposal')
 
 urlpatterns += router.urls

@@ -12,7 +12,7 @@ angular.module('catalogueApp')
   };
   $scope.editContactDetails = true;
   $scope.addContactDetails = true;
-
+$scope.addNewPhase = true;
   if($rootScope.globals.userInfo.is_superuser == true){
     $scope.backButton = true;
   }
@@ -23,7 +23,7 @@ angular.module('catalogueApp')
   $scope.editPaymentDetails = true;
   $scope.editContactDetails = true;
   $scope.addContactDetails = true;
-
+$scope.addNewPhase =true;
  	$scope.headings = [
         {header : 'Index'},
         {header : 'Supplier Name'},
@@ -643,9 +643,7 @@ $scope.multiSelect =
            console.log(response);
          })
        }
-       $scope.removePhase = function(index){
-         $scope.phases.splice(index,1);
-       }
+
        $scope.editPhaseDetails = function(){
          $scope.editPhase = true;
        }
@@ -653,29 +651,30 @@ $scope.multiSelect =
          releaseCampaignService.savePhases($scope.phases,$scope.campaign_id)
          .then(function onSuccess(response){
            console.log(response);
-           angular.forEach(response.data.data, function(phase){
+           angular.forEach($scope.phases, function(phase){
              phase.start_date = new Date(phase.start_date);
              phase.end_date = new Date(phase.end_date);
            })
-           $scope.phases = response.data.data;
            $scope.editPhase = false;
          }).catch(function onError(response){
            console.log(response);
          })
        }
-       $scope.addNewPhase = function(){
-         $scope.phases.push({});
-       }
-       $scope.getPhases();
 
-       $scope.phaseDetails;
-       $scope.addNewPhase = function(){
-         $scope.phaseDetails.push({
-                 'phaseno': "",
-                 'startdate': "",
-                 'enddate': "",
-             });
-       }
+        $scope.getPhases();
+        $scope.addPhase = ({});
+        $scope.addPhases = function(){
+          $scope.addPhase = $scope.phases;
+          $scope.addNewPhase = false;
+          console.log($scope.addPhase);
+        $scope.phases.push({});
+        }
+
+        $scope.removePhase = function(index){
+          $scope.phases.splice(index , 1);
+          $scope.editPhase = false;
+
+        }
 
        var setSocietyLocationOnMap = function(supplier){
          var mapOptions = {

@@ -1,11 +1,13 @@
 "use strict";
 angular.module('catalogueApp')
-    .controller('CampaignLeadsCtrl', function($scope, $rootScope, $stateParams, $window, $location, campaignLeadsService ,$http, constants, permissions, commonDataShare) {
+    .controller('CampaignLeadsCtrl', function($scope, $rootScope, $stateParams, $window, $location, campaignLeadsService ,$http, constants, permissions, commonDataShare,  Upload) {
       $scope.modelData = {};
       $scope.modelData['alias_data'] = [];
       $scope.savedFormFields = [];
       $scope.importLeadsData = [];
       $scope.showImportTable = false;
+      $scope.uploadfile = true; // added for loading spinner active/deactive
+
       $scope.formName = {
         name : undefined
       }
@@ -209,7 +211,7 @@ angular.module('catalogueApp')
             $scope.campaignId = campaign.campaign.proposal_id;
             $scope.campaignName = campaign.campaign.name;
             $scope.aliasData = [];
-            getAliasData($scope.campaignId);
+            // getAliasData($scope.campaignId);
             $scope.importLeadsData = [];
             $scope.showImportTable = false;
             break;
@@ -284,15 +286,15 @@ angular.module('catalogueApp')
         }
         console.log($scope.importLeadsData);
       }
-      var getAliasData = function(campaign){
-        campaignLeadsService.getAliasData(campaign)
-        .then(function onSuccess(response){
-          $scope.aliasData = response.data.data;
-          console.log(response);
-        }).catch(function onError(response){
-          console.log(response);
-        })
-      }
+      // var getAliasData = function(campaign){
+      //   campaignLeadsService.getAliasData(campaign)
+      //   .then(function onSuccess(response){
+      //     $scope.aliasData = response.data.data;
+      //     console.log(response);
+      //   }).catch(function onError(response){
+      //     console.log(response);
+      //   })
+      // }
 
       // START : check sheet headers with aliasData headers
       var checkHeaders = function(headersList){
@@ -347,7 +349,7 @@ angular.module('catalogueApp')
         var token = $rootScope.globals.currentUser.token;
         if ($scope.file) {
           Upload.upload({
-              url: constants.base_url + constants.url_base + "leads/" + $scope.formId + "/import_leads",
+              url: constants.base_url + constants.url_base + "leads/" + $scope.formId + "/import_lead",
               data: {
                 file: $scope.file,
                 data_import_type : "base-data"
@@ -365,8 +367,30 @@ angular.module('catalogueApp')
       }
       // END:   call to create leads API through sheet
       // START: add lead form fields
+      $scope.upload = function (file,proposal_id) {
+        $scope.uploadfile = false;
+        var uploadUrl = constants.base_url + constants.url_base;
+        var token = $rootScope.globals.currentUser.token;
+        if(file){
+          Upload.upload({
+              url: uploadUrl + proposal_id + '/import_lead/',
+              data: {file: file, 'username': $scope.username},
+              headers: {'Authorization': 'JWT ' + token},
+          }).then(function (response) {
+            console.log(response);
+            $scope.uploadfile = true;
+            swal(constants.name,constants.uploadfile_success,constants.success);
+            // uploadFileToAmazonServer(response.data.data,file);
+          }).catch(function onError(response) {
+            console.log(response);
+            commonDataShare.showErrorMessage(response);
+            // swal(constants.name,constants.errorMsg,constants.error);
+            $scope.uploadfile = true;
+            // commonDataShare.showMessage(constants.importfile_error);
+          });
+        }
+      };
 
-      $scope.leadFormFields.push(angular.copy(leadFormField));
 
       $scope.addLeadFormFields = function(){
         console.log($scope.leadFormFields);
@@ -455,4 +479,7 @@ angular.module('catalogueApp')
         $scope.file = file;
       }
 
+      $scope.uploadFiles = function(file){
+               $scope.file = file;
+             }
     });//Controller ends here
