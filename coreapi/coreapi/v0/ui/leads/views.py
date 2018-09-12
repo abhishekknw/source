@@ -9,15 +9,17 @@ import datetime
 from django.conf import settings
 
 
-def enter_lead(lead_data, supplier_id, lead_form, entry_id):
+def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
     form_entry_list = []
     for entry in lead_data:
         form_entry_list.append(LeadsFormData(**{
             "supplier_id": supplier_id,
+            "campaign_id": campaign_id,
             "item_id": entry["item_id"],
             "item_value": entry["value"],
             "leads_form": lead_form,
-            "entry_id": entry_id
+            "entry_id": entry_id,
+            "created_at": datetime.datetime.now()
         }))
     LeadsFormData.objects.bulk_create(form_entry_list)
     lead_form.last_entry_id = entry_id
@@ -93,6 +95,7 @@ class CreateLeadsForm(APIView):
         for item in leads_form_items:
             item_id = item_id + 1
             item_object = LeadsFormItems(**{
+                "campaign_id" : campaign_id,
                 "leads_form": new_dynamic_form,
                 "key_name": item["key_name"],
                 "key_type": item["key_type"],
@@ -142,19 +145,24 @@ class LeadsFormBulkEntry(APIView):
         wb = load_workbook(source_file)
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
         lead_form = LeadsForm.objects.get(id=leads_form_id)
+        fields = lead_form.fields_count
+        campaign_id = lead_form.campaign_id
         entry_id = lead_form.last_entry_id + 1 if lead_form.last_entry_id else 1
 
         for index, row in enumerate(ws.iter_rows()):
             if index > 0:
                 form_entry_list = []
                 supplier_id = row[0].value if row[0].value else None
-                for item_id in range(1, len(row)):
+                created_at = row[1].value if row[1].value else None
+                for item_id in range(2, fields+1):
                     form_entry_list.append(LeadsFormData(**{
+                        "campaign_id": campaign_id,
                         "supplier_id": supplier_id,
                         "item_id": item_id,
                         "item_value": row[item_id].value if row[item_id].value else None,
                         "leads_form": lead_form,
-                        "entry_id": entry_id
+                        "entry_id": entry_id,
+                        "created_at": created_at
                     }))
                 LeadsFormData.objects.bulk_create(form_entry_list)
                 entry_id = entry_id + 1  # will be saved in the end
@@ -170,8 +178,9 @@ class LeadsFormEntry(APIView):
         form_entry_list = []
         lead_form = LeadsForm.objects.get(id=leads_form_id)
         entry_id = lead_form.last_entry_id + 1 if lead_form.last_entry_id else 1
+        campaign_id = lead_form.campaign_id
         lead_data = request.data["leads_form_entries"]
-        enter_lead(lead_data, supplier_id, lead_form, entry_id)
+        enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id)
         return ui_utils.handle_response({}, data='success', success=True)
 
 
@@ -180,9 +189,9 @@ class GenerateLeadForm(APIView):
     def get(request, leads_form_id):
         lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
         lead_form_items_dict = {}
-        keys_list = []
+        keys_list = ['supplier_id', 'lead_entry_date (format: dd/mm/yyyy)']
         for item in lead_form_items_list:
-            curr_row = (item).dataLeadsFormItemsSerializer
+            curr_row = LeadsFormItemsSerializer(item).data
             lead_form_items_dict[item.item_id] = curr_row
             keys_list.append(curr_row['key_name'])
         book = Workbook()
@@ -303,23 +312,31 @@ def save_items (fields_dict, fixed_fields,form, current_form_id, entry_id):
     for curr_row in alias_data_object:
         original_name = curr_row.original_name
         order_id = order_id + 1
-        items.append(LeadsFormItems(**{
+        curr_element = {
              'key_name': curr_row.alias,
              'key_type': fields_dict[original_name],
              'order_id': order_id,
              'item_id': order_id,
-             'leads_form_id': current_form_id
-             }))
-        current_entry_id = entry_id
+             'leads_form_id': current_form_id,
+             'campaign_id': campaign_id,
+             'supplier_id': supplier_id,
+        }
+        if original_name=='is_interested':
+            curr_element['hot_lead_criteria']=True
+        items.append(LeadsFormItems(**curr_element))
+        current_entry_id = 1
         for lead in leads_old_object:
             col_value = getattr(lead, original_name)
             if col_value is not None:
                 data.append(LeadsFormData(**{
                     'supplier_id': supplier_id,
+                    'campaign_id': campaign_id,
                     'item_id': order_id,
                     'item_value': col_value,
                     'leads_form_id': current_form_id,
-                    'entry_id': current_entry_id
+                    'entry_id': current_entry_id,
+                    'created_at': lead.created_at,
+                    'updated_at': lead.updated_at
                     }))
             current_entry_id = current_entry_id + 1
 
@@ -328,18 +345,38 @@ def save_items (fields_dict, fixed_fields,form, current_form_id, entry_id):
         added_fields = {
             'order_id': order_id,
             'item_id': order_id,
-            'leads_form_id': current_form_id
+            'leads_form_id': current_form_id,
+            'campaign_id': campaign_id,
+            'supplier_id': supplier_id,
         }
         field.update(added_fields)
         items.append(LeadsFormItems(**field))
+        current_entry_id = 1
+        name = field['key_name']
+        for lead in leads_old_object:
+            col_value = getattr(lead, name)
+            if col_value is not None:
+                data.append(LeadsFormData(**{
+                    'supplier_id': supplier_id,
+                    'campaign_id': campaign_id,
+                    'item_id': order_id,
+                    'item_value': col_value,
+                    'leads_form_id': current_form_id,
+                    'entry_id': current_entry_id,
+                    'created_at': lead.created_at,
+                    'updated_at': lead.updated_at,
+                    }))
+            current_entry_id = current_entry_id + 1
 
     leads_form_details = LeadsForm(**{
              'campaign_id': campaign_id,
              'fields_count': len(items),
-             'last_entry_id': entry_id
+             'last_entry_id': current_entry_id-1
              })
     leads_form_details.save()
-    LeadsFormItems.objects.bulk_create(items)
+    for item in items:
+        item.save()
+    #LeadsFormItems.objects.bulk_create(items)
     LeadsFormData.objects.bulk_create(data)
 
 class MigrateLeadsData(APIView):
@@ -374,7 +411,7 @@ class MigrateLeadsData(APIView):
             'date2': 'DATE',
             'number1': 'INT',
             'number2': 'INT',
-            'is_interested': 'BOOLEAN'
+            'is_interested': 'INT'
         }
 
         fixed_fields = [

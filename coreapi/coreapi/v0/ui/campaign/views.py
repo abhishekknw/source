@@ -13,14 +13,15 @@ from django.db.models import Count
 from models import (CampaignSocietyMapping, Campaign)
 from serializers import (CampaignListSerializer, CampaignSerializer)
 from v0.ui.proposal.models import ShortlistedSpaces
-from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2
 from v0.ui.inventory.models import InventoryActivityImage
 from rest_framework import viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework import status
 import gpxpy.geo
-from v0.ui.leads.models import Leads
-
+from v0.ui.leads.models import Leads, LeadsForm, LeadsFormItems, LeadsFormData
+from v0.ui.leads.serializers import LeadsFormItemsSerializer
+import json, datetime
 
 class CampaignAPIView(APIView):
 
@@ -113,6 +114,50 @@ class campaignListAPIVIew(APIView):
             return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+def lead_counter(campaign_id, supplier_id,lead_form_items_list):
+    hot_lead_criteria_dict = {}
+    for lead in lead_form_items_list:
+        if lead.leads_form_id not in hot_lead_criteria_dict:
+            hot_lead_criteria_dict[lead.leads_form_id] = {}
+        if lead.item_id not in hot_lead_criteria_dict[lead.leads_form_id]:
+            hot_lead_criteria_dict[lead.leads_form_id][lead.item_id] = {}
+        hot_lead_criteria_dict[lead.leads_form_id][lead.item_id]['hot_lead_criteria'] = lead.hot_lead_criteria
+    lead_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id, supplier_id=supplier_id). \
+        exclude(status='inactive')
+    #total_leads = leads_form_data.values('entry_id', 'leads_form_id').distinct()
+
+    total_leads = 0
+    hot_leads = 0
+    hot_lead_details = []
+
+    form_id_data = lead_form_data.values('leads_form_id').distinct()
+    for current_form in form_id_data:
+        form_id = current_form['leads_form_id']
+        #current_leads = leads_form_details.last_entry_id if leads_form_details.last_entry_id else 0
+        current_leads_data = lead_form_data.filter(leads_form_id = form_id)
+        current_leads = current_leads_data.values('entry_id').distinct().count()
+        total_leads = total_leads + current_leads
+        for x in range(current_leads):
+            entry_id = x + 1
+            current_entry = lead_form_data.filter(entry_id=entry_id)
+            hot_lead = False
+            for item_data in current_entry:
+                item_value = item_data.item_value
+                item_id = item_data.item_id
+                leads_form_id = item_data.leads_form_id
+                hot_lead_criteria = hot_lead_criteria_dict[leads_form_id][item_id]['hot_lead_criteria']
+                if item_value and hot_lead_criteria and hot_lead_criteria in item_value:
+                    if hot_lead is False:
+                        hot_leads = hot_leads + 1
+                        hot_lead_details.append({
+                            'leads_form_id': leads_form_id,
+                            'entry_id': entry_id
+                        })
+                    hot_lead = True
+                    continue
+    result = {'total_leads': total_leads, 'hot_leads': hot_leads, 'hot_lead_details':hot_lead_details}
+    return result
 
 
 class DashBoardViewSet(viewsets.ViewSet):
@@ -480,6 +525,76 @@ class DashBoardViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    @list_route()
+    def get_leads_by_campaign_new(self, request):
+        class_name = self.__class__.__name__
+        campaign_id = request.query_params.get('campaign_id', None)
+        leads_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
+        supplier_ids = leads_form_data.values('supplier_id').distinct()
+
+        all_suppliers_list = {}
+        hot_leads_global = 0
+        all_leads_global = 0
+        lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
+        supplier_wise_lead_count = {}
+        for supplier in supplier_ids:
+            supplier_id = supplier['supplier_id']
+
+            lead_count = lead_counter(campaign_id, supplier_id, lead_form_items_list)
+            supplier_wise_lead_count[supplier_id] = lead_count
+            hot_leads = lead_count['hot_leads']
+            total_leads = lead_count['total_leads']
+            # getting society information
+            society_data_1 = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
+            society_data = SupplierTypeSocietySerializer2(society_data_1).data
+            now = datetime.datetime.now()
+            current_supplier_data = {
+                "is_interested": True,
+                "campaign": campaign_id,
+                "object_id": supplier_id,
+                "interested": hot_leads,
+                "total": total_leads,
+                "data": society_data,
+                }
+            all_suppliers_list[supplier_id] = current_supplier_data
+            hot_leads_global = hot_leads_global+hot_leads
+            all_leads_global = all_leads_global+total_leads
+        date_data = {}
+        all_entries_checked = []
+        for curr_data in leads_form_data:
+            curr_entry_details = {
+                'leads_form_id': curr_data.leads_form_id,
+                'entry_id': curr_data.entry_id
+            }
+            if curr_entry_details in all_entries_checked:
+                continue
+            else:
+                all_entries_checked.append(curr_entry_details)
+            
+            time = curr_data.created_at
+            curr_date = str(time.date())
+            curr_time = str(time)
+
+
+            campaign_id = curr_data.campaign_id
+            supplier_id = curr_data.supplier_id
+            lead_count = supplier_wise_lead_count[supplier_id]
+            hot_lead_details = lead_count['hot_lead_details']
+
+            if curr_date not in date_data:
+                date_data[curr_date] = {
+                    'total': 0,
+                    'is_interested': True,
+                    'interested': 0,
+                    'created_at': curr_time
+                }
+            date_data[curr_date]['total'] = date_data[curr_date]['total']+1
+            if curr_entry_details in hot_lead_details:
+                date_data[curr_date]['interested'] = date_data[curr_date]['interested'] + 1
+        final_data =  {'supplier_data': all_suppliers_list, 'date_data': date_data}
+
+        return ui_utils.handle_response(class_name, data=final_data, success=True)
 
     @detail_route(methods=['POST'])
     def get_leads_by_multiple_campaigns(self, request, pk=None):

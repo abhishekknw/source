@@ -45,6 +45,7 @@ from v0.ui.website.utils import return_price
 import v0.constants as v0_constants
 import v0.ui.website.tasks as tasks
 from v0.ui.supplier.models import SupplierTypeCorporate
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
 from v0.ui.base.models import DurationType
 from v0 import errors
 from rest_framework import viewsets
@@ -1423,13 +1424,16 @@ class HashtagImagesViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get('campaign_id')
+            date = request.query_params.get('date')
             try:
-                images = HashTagImages.objects.filter(campaign=campaign_id).values()
+                images = HashTagImages.objects.filter(campaign=campaign_id, created_at__date=date).values()
             except ObjectDoesNotExist:
                 return ui_utils.handle_response(class_name, data={}, success=True)
             for image in images:
                 #This is static, need to change by supplier code
-                image['supplier_data'] = SupplierTypeSociety.objects.get(supplier_id=image['object_id'])
+                supplier = SupplierTypeSociety.objects.get(supplier_id=image['object_id'])
+                serializer = SupplierTypeSocietySerializer(supplier)
+                image['supplier_data'] = serializer.data
             return ui_utils.handle_response(class_name, data=images, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -2290,3 +2294,17 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
             return handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
+
+    def destroy(self, request, pk):
+        """
+
+        :param request:
+        :param pk:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            SupplierPhase.objects.get(pk=pk).delete()
+            return ui_utils.handle_response(class_name, data=True, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
