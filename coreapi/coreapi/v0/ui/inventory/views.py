@@ -1273,7 +1273,7 @@ class CampaignsAssignedInventoryCountApiView(APIView):
             result = {}
             for item in inv_act_assignment_objects:
                 inventory = str(item['inventory'])
-                activity_date = str(item['activity_date'].date())
+                activity_date = str(item['activity_date'].date()) if item['activity_date'] else None
                 activity_type = str(item['activity_type'])
                 if not result.get(item['inventory']):
                     result[inventory] = {}
