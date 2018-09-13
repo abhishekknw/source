@@ -2789,3 +2789,4 @@ class addSupplierDirectToCampaign(APIView):
             return ui_utils.handle_response(class_name, data={}, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+

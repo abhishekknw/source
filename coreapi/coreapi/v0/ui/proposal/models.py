@@ -261,7 +261,7 @@ class ShortlistedSpaces(BaseModel):
     booking_status = models.CharField(max_length=10, null=True, blank=True)
     is_completed = models.BooleanField(default=False)
     transaction_or_check_number = models.CharField(max_length=50, null=True, blank=True)
-    phase_no = models.ForeignKey('SupplierPhase', blank=True, null=True)
+    phase_no = models.ForeignKey('SupplierPhase', blank=True, null=True, on_delete=models.PROTECT)
 
     class Meta:
         db_table = 'shortlisted_spaces'
