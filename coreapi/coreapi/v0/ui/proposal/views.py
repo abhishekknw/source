@@ -2308,3 +2308,17 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=True, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class getSupplierListByStatus(APIView):
+    @staticmethod
+    def get(request, campaign_id):
+        shortlisted_spaces_list = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
+        shortlisted_spaces_dict = {'BK':[], 'NB': [], 'PB': [], 'VB': [], 'SR': [], 'SE': [], 'VR': [], 'CR': [],
+                                    'DP': []}
+        for space in shortlisted_spaces_list:
+            supplier_society = SupplierTypeSociety.objects.filter(supplier_id=space.object_id)
+            supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society[0]).data
+            if space.booking_status:
+                shortlisted_spaces_dict[space.booking_status].append(supplier_society_serialized)
+        return ui_utils.handle_response({}, data=shortlisted_spaces_dict, success=True)
