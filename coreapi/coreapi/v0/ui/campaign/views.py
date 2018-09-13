@@ -20,7 +20,7 @@ from rest_framework.decorators import detail_route, list_route
 from rest_framework import status
 import gpxpy.geo
 from v0.ui.leads.models import Leads, LeadsForm, LeadsFormItems, LeadsFormData
-from v0.ui.leads.serializers import LeadsFormItemsSerializer
+from v0.ui.leads.serializers import LeadsFormItemsSerializer, LeadsFormDataSerializer
 import json, datetime
 
 class CampaignAPIView(APIView):
@@ -159,6 +159,8 @@ def lead_counter(campaign_id, supplier_id,lead_form_items_list):
     result = {'total_leads': total_leads, 'hot_leads': hot_leads, 'hot_lead_details':hot_lead_details}
     return result
 
+# def hot_lead(hot_lead_criteria_query):
+#
 
 class DashBoardViewSet(viewsets.ViewSet):
     """
@@ -592,6 +594,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             date_data[curr_date]['total'] = date_data[curr_date]['total']+1
             if curr_entry_details in hot_lead_details:
                 date_data[curr_date]['interested'] = date_data[curr_date]['interested'] + 1
+
         final_data =  {'supplier_data': all_suppliers_list, 'date_data': date_data}
 
         return ui_utils.handle_response(class_name, data=final_data, success=True)
@@ -619,6 +622,69 @@ class DashBoardViewSet(viewsets.ViewSet):
                     data[campaign['campaign']]['data'] = campaign_objects_list[campaign['campaign']]
                 if campaign['is_interested']:
                     data[campaign['campaign']]['interested'] += campaign['total']
+
+            return ui_utils.handle_response(class_name, data=data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    @detail_route(methods=['POST'])
+    def get_leads_by_multiple_campaigns_new(self, request, pk=None):
+        class_name = self.__class__.__name__
+        try:
+            campaign_list = request.data
+            campaign_objects = ProposalInfo.objects.filter(proposal_id__in=campaign_list).values()
+            campaign_objects_list = {campaign['proposal_id']: campaign for campaign in campaign_objects}
+            valid_campaign_list = campaign_objects_list.keys()
+            # leads_from_data = LeadsFormData.filter(campaign_id__in = campaign_list)
+            # lead_items = LeadsFormItems.filter(campaign_id__in=campaign_list)
+            data = {}
+            for campaign_id in valid_campaign_list:
+                leads_form_data = LeadsFormData.objects.filter(campaign_id = campaign_id)
+                leads_form_items = LeadsFormItems.objects.filter(campaign_id = campaign_id)
+                leads_form_data_array = []
+                for curr_object in leads_form_data:
+                    curr_data = LeadsFormDataSerializer(curr_object).data
+                    leads_form_data_array.append(curr_data)
+                # combination of entry and form id is a lead
+                total_leads = leads_form_data.values('entry_id','leads_form_id').distinct()
+                total_leads_count = len(total_leads)
+                # for curr_lead in total_leads:
+                #     curr_data = curr_lead.__dict__
+                #     total_leads_data.append(curr_data)
+                # total_leads_count = len(total_leads_data)
+                # now computing hot leads
+
+                hot_leads = 0
+                hot_lead_fields = leads_form_items.exclude(hot_lead_criteria__isnull=True).\
+                    values('item_id','leads_form_id','hot_lead_criteria')
+                for curr_lead in total_leads:
+                    hot_lead = False
+                    leads_form_id = curr_lead['leads_form_id']
+                    entry_id = curr_lead['entry_id']
+                    # get all forms with hot lead criteria
+                    hot_lead_items_current = [x for x in hot_lead_fields if x['leads_form_id'] == leads_form_id]
+                    data_current = [x for x in leads_form_data_array if x['leads_form'] == leads_form_id
+                                    and x['entry_id'] == entry_id]
+                    for lead_item in hot_lead_items_current:
+                        hot_lead_item = lead_item['item_id']
+                        hot_lead_value = lead_item['hot_lead_criteria']
+                        data_current_hot = [x for x in data_current if x['item_id'] == hot_lead_item and \
+                            x['item_value'] == hot_lead_value]
+                        if len(data_current_hot)>0 and hot_lead == False:
+                            hot_lead = True
+                            hot_leads = hot_leads+1
+                if hot_leads > 0:
+                    is_interested = 'true'
+                else:
+                    is_interested = 'false'
+
+                data[campaign_id] = {
+                            'total': total_leads_count,
+                            'is_interested': is_interested,
+                            'data': campaign_objects_list[campaign_id],
+                            'interested': hot_leads,
+                            'campaign': campaign_id
+                        }
 
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
