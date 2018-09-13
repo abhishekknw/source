@@ -4,7 +4,7 @@ from views import (CreateInitialProposalBulkBasic, HashtagImagesViewSet, Initial
                    GetAccountProposalsAPIView, CurrentProposalAPIView, ProposalHistoryAPIView, ChildProposals,
                    CreateInitialProposal, ProposalViewSet, CreateFinalProposal, ProposalVersion, ProposalToCampaign,
                    FinalProposalAPIView, CreateProposalAPIView, ProposalImagesPath, convertDirectProposalToCampaign,
-                   CampaignToProposal, SupplierPhaseViewSet)
+                   CampaignToProposal, SupplierPhaseViewSet, getSupplierListByStatus)
 
 urlpatterns = [
     url(r'^create-initial-proposal-basic/$', CreateInitialProposalBulkBasic.as_view()),
@@ -26,6 +26,7 @@ urlpatterns = [
     url(r'^proposal-images-path/$', ProposalImagesPath.as_view()),
     url(r'^convert-direct-proposal-to-campaign/$', convertDirectProposalToCampaign.as_view()),
     url(r'^(?P<campaign_id>[A-Z_a-z0-9-]+)/convert-to-proposal/$', CampaignToProposal.as_view()),
+    url(r'^(?P<campaign_id>[A-Z_a-z0-9-]+)/get-suppliers-by-status/$', getSupplierListByStatus.as_view()),
 
 ]
 
@@ -33,7 +34,6 @@ router = DefaultRouter()
 router.include_format_suffixes = False
 
 router.register(r'^hashtag-images', HashtagImagesViewSet, base_name='hashtag-images')
-router.register(r'^supplier-phase', SupplierPhaseViewSet, base_name='supplier-phase')
 router.register(r'^proposal', ProposalViewSet, base_name='Proposal')
 
 urlpatterns += router.urls

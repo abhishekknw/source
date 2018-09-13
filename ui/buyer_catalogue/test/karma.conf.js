@@ -21,6 +21,8 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
+	// google maps
+	'https://maps.googleapis.com/maps/api/js?sensor=false',
       // bower:js
       'bower_components/jquery/dist/jquery.js',
       'bower_components/angular/angular.js',

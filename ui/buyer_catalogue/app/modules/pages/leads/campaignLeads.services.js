@@ -43,14 +43,15 @@
           return machadaloHttp.get(url);
         }
 
-        campaignLeadsService.importLeadsThroughSheet = function(campaignId,data){
-          var url = url_base + "leads/" + campaignId + "/import_leads/";
-          return machadaloHttp.post(url,data);
-        }
 
         campaignLeadsService.saveLeads = function(formId, data){
           var url = url_base_leads + formId + "/insert_lead";
           return machadaloHttp.post(url, data);
+        }
+
+        campaignLeadsService.importLeadsThroughSheet = function(formId){
+          var url = url_base_leads + formId + "/import_lead/";
+          return machadaloHttp.post(url);
         }
         return campaignLeadsService;
 

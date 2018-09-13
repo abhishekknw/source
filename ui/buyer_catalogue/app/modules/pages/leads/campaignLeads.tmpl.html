@@ -174,8 +174,12 @@
   <div class="pageTitle">
     <h3>Import Leads for {{campaignName}} Campaign</h3>
   </div>
+  <div class="panel-body">
+    <label>Select Lead Sheet</label>
+    <input type="file" ngf-select = "uploadFiles($file, 1)" class="buttonfile" accept=".xlsx"/>
+    <button class="btn btn-danger " ng-click="resetData()" >Reset</button>
+  </div>
   <div class="panel-body" >
-    <input type="file" class="buttonfile" accept=".xlsx" ngf-select = "uploadFiles($file, 6)"/>
     <br />
     <div class="">
       <button ng-click="importLeadsThroughSheet()" class="btn btn-danger">Submit</button>
