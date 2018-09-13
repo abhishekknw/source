@@ -1236,11 +1236,11 @@ class CampaignsAssignedInventoryCountApiView(APIView):
                     q1 = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__user=user)
                     q2 = Q(
                         inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__user=user)
-                if category.upper() == v0_constants.category['supplier_agency']:
+                if category.upper() == v0_constants.category['supplier_agency'] or category.upper() == v0_constants.category['machadalo']:
                     q1 = Q(
-                        inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignemnt__assigned_to=user)
+                        inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignment__assigned_to=user)
                     q2 = Q(
-                        inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignemnt__assigned_to=user)
+                        inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignment__assigned_to=user)
             inv_act_assignment_objects = InventoryActivityAssignment.objects. \
                 select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
                                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
@@ -1255,11 +1255,11 @@ class CampaignsAssignedInventoryCountApiView(APIView):
                 annotate(total=Count('id')). \
                 order_by('-activity_date')
             inv_act_assignment_objects2 = InventoryActivityImage.objects. \
-                select_related('inventory_activity_assignment', 'inventory_activity',
-                               'inventory_activity__shortlisted_inventory_details',
-                               'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
-                               'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal',
-                               'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account'). \
+                select_related('inventory_activity_assignment', 'inventory_activity_assignment__inventory_activity',
+                               'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
+                               'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
+                               'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal',
+                               'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account'). \
                 filter(proposal_query_images, q2). \
                 annotate(activity_type=F('inventory_activity_assignment__inventory_activity__activity_type'),
                          inventory=F(

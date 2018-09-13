@@ -6897,7 +6897,7 @@ def get_query_by_organisation_category(category, campaign_query, user):
             query = Q(**{v0_constants.business_category_campaign_query[campaign_query]: organisation_id})
         if category.upper() == v0_constants.category['business_agency']:
             query = Q(**{v0_constants.bus_agency_campaign_query[campaign_query]: user})
-        if category.upper() == v0_constants.category['supplier_agency']:
+        if category.upper() == v0_constants.category['supplier_agency'] or category.upper() == v0_constants.category['machadalo']:
             query = Q(**{v0_constants.sup_agency_campaign_query[campaign_query]: user})
         return query
     except Exception as e:

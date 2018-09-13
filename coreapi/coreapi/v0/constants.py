@@ -1250,7 +1250,8 @@ permission_contants = {
 category = {
     'business' : 'BUSINESS',
     'business_agency' : 'BUSINESS_AGENCY',
-    'supplier_agency' : 'SUPPLIER_AGENCY'
+    'supplier_agency' : 'SUPPLIER_AGENCY',
+    'machadalo' : 'MACHADALO',
 }
 query_status = {
     'supplier_code' : 'supplier_code',
@@ -1280,7 +1281,7 @@ bus_agency_campaign_query = {
     'campaign' : 'campaign__user'
 }
 sup_agency_campaign_query = {
-    'campaign' : 'campaign__assigned_to'
+    'campaign' : 'assigned_to'
 }
 category_query_status = {
     'campaign_query' : 'campaign'

@@ -1638,12 +1638,13 @@ class GetAssignedIdImagesListApiView(APIView):
                 if category.upper() == v0_constants.category['business_agency']:
                     query = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__user=user)
 
-                if category.upper() == v0_constants.category['supplier_agency']:
-                    query = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignemnt__assigned_to=user)
+                if category.upper() == v0_constants.category['supplier_agency'] or category.upper() == v0_constants.category['machadalo']:
+                    query = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignment__assigned_to=user)
             proposal_alias_name ='inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__name'
             proposal_alias_id = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__proposal_id'
             shortlisted_inv_alias = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details'
             supplier_id = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id'
+
 
             inv_act_image_objects = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
                                                                      'inventory_activity_assignment__inventory_activity',

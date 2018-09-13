@@ -8,13 +8,13 @@ import v0.ui.utils as ui_utils
 import v0.constants as v0_constants
 from v0.ui.supplier.models import (SupplierTypeSociety)
 import v0.ui.website.utils as website_utils
-from django.db.models import Q
+from django.db.models import Q, F
 from django.db.models import Count
 from models import (CampaignSocietyMapping, Campaign)
 from serializers import (CampaignListSerializer, CampaignSerializer)
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2
-from v0.ui.inventory.models import InventoryActivityImage
+from v0.ui.inventory.models import InventoryActivityImage, InventoryActivityAssignment, InventoryActivity
 from rest_framework import viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework import status
@@ -722,6 +722,64 @@ class DashBoardViewSet(viewsets.ViewSet):
             inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(
                 result, supplier)
             return ui_utils.handle_response(class_name, data=inv_act_image_objects_with_distance, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    @list_route()
+    def get_datewise_suppliers_inventory_status(self, request):
+        """
+        It will retrieve the images of suppliers
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get("campaign_id",None)
+            date = request.query_params.get("date",None)
+            inv_type = request.query_params.get("inv_type",None)
+            act_type = request.query_params.get("act_type",None)
+            if campaign_id is None or date is None or inv_type is None or act_type is None:
+                return Response("Campaign Id or Date or inv type or act type is not provided")
+            assigned_objects = InventoryActivityAssignment.objects.select_related('inventory_activity',
+                                    'inventory_activity__shortlisted_inventory_details','inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
+                filter(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id,
+                       activity_date=date,
+                       inventory_activity__activity_type=act_type,
+                       inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name=inv_type).\
+                annotate(supplier_id=F('inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id'),
+                         assignment_id=F('id')). \
+                values('supplier_id'). \
+                annotate(total=Count('supplier_id'))
+
+            completed_objects = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
+                                                          'inventory_activity_assignment__inventory_activity',
+                                                          'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
+                                                          'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
+                filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id,
+                inventory_activity_assignment__activity_date=date,
+                inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name=inv_type,
+                inventory_activity_assignment__inventory_activity__activity_type=act_type). \
+                annotate(supplier_id=F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id')). \
+                values('supplier_id'). \
+                annotate(total=Count('inventory_activity_assignment', distinct=True))
+            assigned_objects_map = {supplier['supplier_id'] : supplier for supplier in assigned_objects}
+            completed_objects_map = {supplier['supplier_id']: supplier for supplier in completed_objects}
+
+            # need to do by different supplier wise
+            suppliers = SupplierTypeSociety.objects.filter(supplier_id__in=assigned_objects_map.keys()).values()
+            suppliers_map = {supplier['supplier_id']:supplier for supplier in suppliers}
+            result = {}
+            for supplier in assigned_objects_map:
+                if supplier not in result:
+                    result[supplier] = {}
+                result[supplier]['assigned'] = assigned_objects_map[supplier]['total']
+                if supplier not in completed_objects_map:
+                    result[supplier]['completed'] = 0
+                else:
+                    result[supplier]['completed'] = completed_objects_map[supplier]['total']
+                result[supplier]['supplier_data'] = suppliers_map[supplier]
+            return handle_response(class_name, data=result, success=True)
+
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
