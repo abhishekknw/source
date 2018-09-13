@@ -83,6 +83,11 @@
       return machadaloHttp.post(url,data);
     }
 
+     DashboardService.getCompareCampaignChartData = function(data){
+      var url = url_base + "dashboard/campaign_id/get_leads_by_multiple_campaigns_new/";
+      return machadaloHttp.post(url,data);
+    }
+
     DashboardService.getSupplierImages = function(supplierId,invType,activityType){
       var url = url_base + "dashboard/get_activity_images_by_suppliers/?supplier_id=" + supplierId + "&inv_code=" + invType + "&act_type=" + activityType;
       return machadaloHttp.get(url);
