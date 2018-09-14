@@ -137,9 +137,10 @@ def lead_counter(campaign_id, supplier_id,lead_form_items_list):
         #current_leads = leads_form_details.last_entry_id if leads_form_details.last_entry_id else 0
         current_leads_data = lead_form_data.filter(leads_form_id = form_id)
         current_leads = current_leads_data.values('entry_id').distinct().count()
+        current_leads_list = current_leads_data.values('entry_id').distinct().all()
+        current_leads_list = [x['entry_id'] for x in current_leads_list]
         total_leads = total_leads + current_leads
-        for x in range(current_leads):
-            entry_id = x + 1
+        for entry_id in current_leads_list:
             current_entry = lead_form_data.filter(entry_id=entry_id)
             hot_lead = False
             for item_data in current_entry:
@@ -147,7 +148,7 @@ def lead_counter(campaign_id, supplier_id,lead_form_items_list):
                 item_id = item_data.item_id
                 leads_form_id = item_data.leads_form_id
                 hot_lead_criteria = hot_lead_criteria_dict[leads_form_id][item_id]['hot_lead_criteria']
-                if item_value and hot_lead_criteria and hot_lead_criteria in item_value:
+                if item_value == hot_lead_criteria:
                     if hot_lead is False:
                         hot_leads = hot_leads + 1
                         hot_lead_details.append({
@@ -599,36 +600,36 @@ class DashBoardViewSet(viewsets.ViewSet):
 
         return ui_utils.handle_response(class_name, data=final_data, success=True)
 
+    # @detail_route(methods=['POST'])
+    # def get_leads_by_multiple_campaigns(self, request, pk=None):
+    #     """
+    #
+    #     :param request:
+    #     :return:
+    #     """
+    #     class_name = self.__class__.__name__
+    #     try:
+    #         campaign_list = request.data
+    #         leads = Leads.objects.filter(campaign__proposal_id__in=campaign_list). \
+    #             values('campaign', 'is_interested'). \
+    #             annotate(total=Count('campaign'))
+    #         campaign_objects = ProposalInfo.objects.filter(proposal_id__in=campaign_list).values()
+    #         campaign_objects_list = {campaign['proposal_id']: campaign for campaign in campaign_objects}
+    #         data = {}
+    #         for campaign in leads:
+    #             if campaign['campaign'] not in data:
+    #                 data[campaign['campaign']] = campaign
+    #                 data[campaign['campaign']]['interested'] = 0
+    #                 data[campaign['campaign']]['data'] = campaign_objects_list[campaign['campaign']]
+    #             if campaign['is_interested']:
+    #                 data[campaign['campaign']]['interested'] += campaign['total']
+    #
+    #         return ui_utils.handle_response(class_name, data=data, success=True)
+    #     except Exception as e:
+    #         return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
     @detail_route(methods=['POST'])
     def get_leads_by_multiple_campaigns(self, request, pk=None):
-        """
-
-        :param request:
-        :return:
-        """
-        class_name = self.__class__.__name__
-        try:
-            campaign_list = request.data
-            leads = Leads.objects.filter(campaign__proposal_id__in=campaign_list). \
-                values('campaign', 'is_interested'). \
-                annotate(total=Count('campaign'))
-            campaign_objects = ProposalInfo.objects.filter(proposal_id__in=campaign_list).values()
-            campaign_objects_list = {campaign['proposal_id']: campaign for campaign in campaign_objects}
-            data = {}
-            for campaign in leads:
-                if campaign['campaign'] not in data:
-                    data[campaign['campaign']] = campaign
-                    data[campaign['campaign']]['interested'] = 0
-                    data[campaign['campaign']]['data'] = campaign_objects_list[campaign['campaign']]
-                if campaign['is_interested']:
-                    data[campaign['campaign']]['interested'] += campaign['total']
-
-            return ui_utils.handle_response(class_name, data=data, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
-    @detail_route(methods=['POST'])
-    def get_leads_by_multiple_campaigns_new(self, request, pk=None):
         class_name = self.__class__.__name__
         try:
             campaign_list = request.data

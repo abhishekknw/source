@@ -158,7 +158,7 @@ class LeadsFormBulkEntry(APIView):
                     form_entry_list.append(LeadsFormData(**{
                         "campaign_id": campaign_id,
                         "supplier_id": supplier_id,
-                        "item_id": item_id,
+                        "item_id": item_id - 1,
                         "item_value": row[item_id].value if row[item_id].value else None,
                         "leads_form": lead_form,
                         "entry_id": entry_id,
