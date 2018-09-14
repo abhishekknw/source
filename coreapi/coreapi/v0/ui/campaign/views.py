@@ -703,16 +703,26 @@ class DashBoardViewSet(viewsets.ViewSet):
             supplier_id = request.query_params.get('supplier_id', None)
             inv_code = request.query_params.get('inv_code', None)
             act_type = request.query_params.get('act_type', None)
+            date = request.query_params.get('date', None)
 
             content_type = ui_utils.fetch_content_type(inv_code)
             content_type_id = content_type.id
 
-            result = InventoryActivityImage.objects. \
-                filter(
-                inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id=supplier_id,
-                inventory_activity_assignment__inventory_activity__activity_type=act_type,
-                inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id). \
-                values()
+            if date:
+                result = InventoryActivityImage.objects. \
+                    filter(
+                    inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id=supplier_id,
+                    inventory_activity_assignment__inventory_activity__activity_type=act_type,
+                    inventory_activity_assignment__activity_date = date,
+                    inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id). \
+                    values()
+            else:
+                result = InventoryActivityImage.objects. \
+                    filter(
+                    inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id=supplier_id,
+                    inventory_activity_assignment__inventory_activity__activity_type=act_type,
+                    inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id). \
+                    values()
 
             for imageInstance in result:
                 imageInstance['object_id'] = supplier_id
