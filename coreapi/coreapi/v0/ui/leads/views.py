@@ -28,9 +28,13 @@ def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
 
 class GetLeadsEntries(APIView):
     @staticmethod
-    def get(request, leads_form_id, supplier_id):
+    def get(request, leads_form_id, supplier_id = 'All'):
         lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
-        lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
+        if supplier_id == 'All':
+            lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id). exclude(status='inactive')
+        else:
+            lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id)\
+                .filter(supplier_id = supplier_id).exclude(status='inactive')
 
         values = []
         lead_form_items_dict = {}
@@ -44,7 +48,7 @@ class GetLeadsEntries(APIView):
         previous_entry_id = -1
         current_list = []
         hot_leads = []
-        counter = 0
+        counter = 1
         hot_lead = False
         for entry in lead_form_entries_list:
             entry_id = entry.entry_id - 1
@@ -77,6 +81,8 @@ class GetLeadsEntries(APIView):
             'values': values,
             'hot_leads': hot_leads
         }
+        if supplier_id == 'All':
+            supplier_all_lead_entries.pop('supplier_id')
         return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
 
 
