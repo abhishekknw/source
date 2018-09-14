@@ -8,13 +8,13 @@ import v0.ui.utils as ui_utils
 import v0.constants as v0_constants
 from v0.ui.supplier.models import (SupplierTypeSociety)
 import v0.ui.website.utils as website_utils
-from django.db.models import Q
+from django.db.models import Q, F
 from django.db.models import Count
 from models import (CampaignSocietyMapping, Campaign)
 from serializers import (CampaignListSerializer, CampaignSerializer)
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2
-from v0.ui.inventory.models import InventoryActivityImage
+from v0.ui.inventory.models import InventoryActivityImage, InventoryActivityAssignment, InventoryActivity
 from rest_framework import viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework import status
@@ -156,7 +156,7 @@ def lead_counter(campaign_id, supplier_id,lead_form_items_list):
                 #leads_form_id = item_data.leads_form_id
                 leads_form_id = item_data['leads_form_id']
                 hot_lead_criteria = hot_lead_criteria_dict[leads_form_id][item_id]['hot_lead_criteria']
-                if item_value and hot_lead_criteria and hot_lead_criteria in item_value:
+                if item_value and hot_lead_criteria and str(item_value) == str(hot_lead_criteria):
                     if hot_lead is False:
                         hot_leads = hot_leads + 1
                         hot_lead_details.append({
@@ -611,36 +611,36 @@ class DashBoardViewSet(viewsets.ViewSet):
 
         return ui_utils.handle_response(class_name, data=final_data, success=True)
 
+    # @detail_route(methods=['POST'])
+    # def get_leads_by_multiple_campaigns(self, request, pk=None):
+    #     """
+    #
+    #     :param request:
+    #     :return:
+    #     """
+    #     class_name = self.__class__.__name__
+    #     try:
+    #         campaign_list = request.data
+    #         leads = Leads.objects.filter(campaign__proposal_id__in=campaign_list). \
+    #             values('campaign', 'is_interested'). \
+    #             annotate(total=Count('campaign'))
+    #         campaign_objects = ProposalInfo.objects.filter(proposal_id__in=campaign_list).values()
+    #         campaign_objects_list = {campaign['proposal_id']: campaign for campaign in campaign_objects}
+    #         data = {}
+    #         for campaign in leads:
+    #             if campaign['campaign'] not in data:
+    #                 data[campaign['campaign']] = campaign
+    #                 data[campaign['campaign']]['interested'] = 0
+    #                 data[campaign['campaign']]['data'] = campaign_objects_list[campaign['campaign']]
+    #             if campaign['is_interested']:
+    #                 data[campaign['campaign']]['interested'] += campaign['total']
+    #
+    #         return ui_utils.handle_response(class_name, data=data, success=True)
+    #     except Exception as e:
+    #         return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
     @detail_route(methods=['POST'])
     def get_leads_by_multiple_campaigns(self, request, pk=None):
-        """
-
-        :param request:
-        :return:
-        """
-        class_name = self.__class__.__name__
-        try:
-            campaign_list = request.data
-            leads = Leads.objects.filter(campaign__proposal_id__in=campaign_list). \
-                values('campaign', 'is_interested'). \
-                annotate(total=Count('campaign'))
-            campaign_objects = ProposalInfo.objects.filter(proposal_id__in=campaign_list).values()
-            campaign_objects_list = {campaign['proposal_id']: campaign for campaign in campaign_objects}
-            data = {}
-            for campaign in leads:
-                if campaign['campaign'] not in data:
-                    data[campaign['campaign']] = campaign
-                    data[campaign['campaign']]['interested'] = 0
-                    data[campaign['campaign']]['data'] = campaign_objects_list[campaign['campaign']]
-                if campaign['is_interested']:
-                    data[campaign['campaign']]['interested'] += campaign['total']
-
-            return ui_utils.handle_response(class_name, data=data, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
-    @detail_route(methods=['POST'])
-    def get_leads_by_multiple_campaigns_new(self, request, pk=None):
         class_name = self.__class__.__name__
         try:
             campaign_list = request.data
@@ -654,8 +654,8 @@ class DashBoardViewSet(viewsets.ViewSet):
                 leads_form_data = LeadsFormData.objects.filter(campaign_id = campaign_id)
                 leads_form_items = LeadsFormItems.objects.filter(campaign_id = campaign_id)
                 leads_form_data_array = []
-                for curr_object in leads_form_data:
-                    curr_data = LeadsFormDataSerializer(curr_object).data
+                serialized_leads_form_data = LeadsFormDataSerializer(leads_form_data, many=True).data
+                for curr_data in serialized_leads_form_data:
                     leads_form_data_array.append(curr_data)
                 # combination of entry and form id is a lead
                 total_leads = leads_form_data.values('entry_id','leads_form_id').distinct()
@@ -714,16 +714,26 @@ class DashBoardViewSet(viewsets.ViewSet):
             supplier_id = request.query_params.get('supplier_id', None)
             inv_code = request.query_params.get('inv_code', None)
             act_type = request.query_params.get('act_type', None)
+            date = request.query_params.get('date', None)
 
             content_type = ui_utils.fetch_content_type(inv_code)
             content_type_id = content_type.id
 
-            result = InventoryActivityImage.objects. \
-                filter(
-                inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id=supplier_id,
-                inventory_activity_assignment__inventory_activity__activity_type=act_type,
-                inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id). \
-                values()
+            if date:
+                result = InventoryActivityImage.objects. \
+                    filter(
+                    inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id=supplier_id,
+                    inventory_activity_assignment__inventory_activity__activity_type=act_type,
+                    inventory_activity_assignment__activity_date = date,
+                    inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id). \
+                    values()
+            else:
+                result = InventoryActivityImage.objects. \
+                    filter(
+                    inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id=supplier_id,
+                    inventory_activity_assignment__inventory_activity__activity_type=act_type,
+                    inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__inventory_content_type_id=content_type_id). \
+                    values()
 
             for imageInstance in result:
                 imageInstance['object_id'] = supplier_id
@@ -733,6 +743,64 @@ class DashBoardViewSet(viewsets.ViewSet):
             inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(
                 result, supplier)
             return ui_utils.handle_response(class_name, data=inv_act_image_objects_with_distance, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    @list_route()
+    def get_datewise_suppliers_inventory_status(self, request):
+        """
+        It will retrieve the images of suppliers
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get("campaign_id",None)
+            date = request.query_params.get("date",None)
+            inv_type = request.query_params.get("inv_type",None)
+            act_type = request.query_params.get("act_type",None)
+            if campaign_id is None or date is None or inv_type is None or act_type is None:
+                return Response("Campaign Id or Date or inv type or act type is not provided")
+            assigned_objects = InventoryActivityAssignment.objects.select_related('inventory_activity',
+                                    'inventory_activity__shortlisted_inventory_details','inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
+                filter(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id,
+                       activity_date=date,
+                       inventory_activity__activity_type=act_type,
+                       inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name=inv_type).\
+                annotate(supplier_id=F('inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id'),
+                         assignment_id=F('id')). \
+                values('supplier_id'). \
+                annotate(total=Count('supplier_id'))
+
+            completed_objects = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
+                                                          'inventory_activity_assignment__inventory_activity',
+                                                          'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
+                                                          'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
+                filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id,
+                inventory_activity_assignment__activity_date=date,
+                inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name=inv_type,
+                inventory_activity_assignment__inventory_activity__activity_type=act_type). \
+                annotate(supplier_id=F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id')). \
+                values('supplier_id'). \
+                annotate(total=Count('inventory_activity_assignment', distinct=True))
+            assigned_objects_map = {supplier['supplier_id'] : supplier for supplier in assigned_objects}
+            completed_objects_map = {supplier['supplier_id']: supplier for supplier in completed_objects}
+
+            # need to do by different supplier wise
+            suppliers = SupplierTypeSociety.objects.filter(supplier_id__in=assigned_objects_map.keys()).values()
+            suppliers_map = {supplier['supplier_id']:supplier for supplier in suppliers}
+            result = {}
+            for supplier in assigned_objects_map:
+                if supplier not in result:
+                    result[supplier] = {}
+                result[supplier]['assigned'] = assigned_objects_map[supplier]['total']
+                if supplier not in completed_objects_map:
+                    result[supplier]['completed'] = 0
+                else:
+                    result[supplier]['completed'] = completed_objects_map[supplier]['total']
+                result[supplier]['supplier_data'] = suppliers_map[supplier]
+            return handle_response(class_name, data=result, success=True)
+
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -787,4 +855,16 @@ class CreateSupplierPhaseData(APIView):
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
 
+class DeleteInventoryActivityAssignment(APIView):
+
+    def post(self, request, id):
+        class_name = self.__class__.__name__
+        try:
+            if not InventoryActivityImage.objects.filter(inventory_activity_assignment=id):
+                InventoryActivityAssignment.objects.get(pk=id).delete()
+                return ui_utils.handle_response(class_name, data=True, success=True)
+            else:
+                return ui_utils.handle_response(class_name, data="Image for this assignment is already present, Can not delete it", success=False)
+        except Exception as e:
+            return handle_response(class_name, exception_object=e, request=request)
 
