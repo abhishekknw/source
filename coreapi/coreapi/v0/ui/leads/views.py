@@ -2,6 +2,9 @@ from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
 from serializers import LeadsFormItemsSerializer, LeadAliasSerializer
 from models import LeadsForm, LeadsFormItems, LeadsFormData, Leads, LeadAlias
+from v0.ui.supplier.models import SupplierTypeSociety
+from v0.ui.finances.models import ShortlistedInventoryPricingDetails
+from v0.ui.proposal.models import ShortlistedSpaces
 import v0.ui.utils as ui_utils
 import boto3
 import os
@@ -139,6 +142,68 @@ class GetLeadsForm(APIView):
 
 
 class LeadsFormBulkEntry(APIView):
+    @staticmethod
+    def post(request, leads_form_id):
+        source_file = request.data['file']
+        wb = load_workbook(source_file)
+        ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+        lead_form = LeadsForm.objects.get(id=leads_form_id)
+        fields = lead_form.fields_count
+        campaign_id = lead_form.campaign_id
+        entry_id = lead_form.last_entry_id + 1 if lead_form.last_entry_id else 1
+        unresolved_societies = []
+        for index, row in enumerate(ws.iter_rows()):
+            if index == 0:
+                for idx, i in enumerate(row):
+                    if 'apartment' in i.value.lower():
+                        apartment_index = idx
+                        break
+            if index > 0:
+                form_entry_list = []
+                # supplier_id = row[0].value if row[0].value else None
+                # created_at = row[1].value if row[1].value else None
+                society_name = row[apartment_index].value
+                supplier = SupplierTypeSociety.objects.filter(society_name=society_name).values('supplier_id', 'society_name').all()
+                if len(supplier) == 0:
+                    if society_name not in unresolved_societies:
+                        unresolved_societies.append(society_name)
+                    continue
+                else:
+                    found_supplier_id = supplier[0]['supplier_id']
+
+                shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=found_supplier_id).filter(proposal_id=campaign_id).all()
+                if len(shortlisted_spaces) == 0:
+                    continue
+                inventory_list = ShortlistedInventoryPricingDetails.objects.filter(
+                    shortlisted_spaces_id=shortlisted_spaces[0]).all()
+                stall=None
+                for inventory in inventory_list:
+                    if inventory.ad_inventory_type_id >= 8 and inventory.ad_inventory_type_id <=11:
+                        stall= inventory
+                        break
+                if not stall:
+                    continue
+                created_at = stall.created_at
+                for item_id in range(0, fields):
+                    form_entry_list.append(LeadsFormData(**{
+                        "campaign_id": campaign_id,
+                        "supplier_id": found_supplier_id,
+                        "item_id": item_id+1,
+                        "item_value": row[item_id].value if row[item_id].value else None,
+                        "leads_form": lead_form,
+                        "entry_id": entry_id,
+                        "created_at": created_at
+                    }))
+                LeadsFormData.objects.bulk_create(form_entry_list)
+                entry_id = entry_id + 1  # will be saved in the end
+        lead_form.last_entry_id = entry_id-1
+        lead_form.save()
+        unresolved_societies.sort()
+        print unresolved_societies
+        return ui_utils.handle_response({}, data='success', success=True)
+
+
+class LeadsFormBulkEntryOriginal(APIView):
     @staticmethod
     def post(request, leads_form_id):
         source_file = request.data['file']
