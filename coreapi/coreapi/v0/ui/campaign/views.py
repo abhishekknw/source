@@ -643,8 +643,8 @@ class DashBoardViewSet(viewsets.ViewSet):
                 leads_form_data = LeadsFormData.objects.filter(campaign_id = campaign_id)
                 leads_form_items = LeadsFormItems.objects.filter(campaign_id = campaign_id)
                 leads_form_data_array = []
-                for curr_object in leads_form_data:
-                    curr_data = LeadsFormDataSerializer(curr_object).data
+                serialized_leads_form_data = LeadsFormDataSerializer(leads_form_data, many=True).data
+                for curr_data in serialized_leads_form_data:
                     leads_form_data_array.append(curr_data)
                 # combination of entry and form id is a lead
                 total_leads = leads_form_data.values('entry_id','leads_form_id').distinct()
