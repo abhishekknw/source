@@ -2326,12 +2326,13 @@ class getSupplierListByStatus(APIView):
                                          'comments': phase.comments
                                          }
         for space in shortlisted_spaces_list:
-            supplier_society = SupplierTypeSociety.objects.filter(supplier_id=space.object_id)
-            supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society[0]).data
-            if space.phase_no_id not in shortlisted_spaces_by_phase_dict:
-                shortlisted_spaces_by_phase_dict[space.phase_no_id] = shortlisted_spaces_dict
-            if space.booking_status:
-                shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(supplier_society_serialized)
+            if space.phase_no_id:
+                supplier_society = SupplierTypeSociety.objects.filter(supplier_id=space.object_id)
+                supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society[0]).data
+                if space.phase_no_id not in shortlisted_spaces_by_phase_dict:
+                    shortlisted_spaces_by_phase_dict[space.phase_no_id] = shortlisted_spaces_dict
+                if space.booking_status:
+                    shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(supplier_society_serialized)
         shortlisted_spaces_by_phase_list = []
         for phase_id in shortlisted_spaces_by_phase_dict:
             shortlisted_spaces_by_phase_list.append({
