@@ -148,7 +148,7 @@ def lead_counter(campaign_id, supplier_id,lead_form_items_list):
                 item_id = item_data.item_id
                 leads_form_id = item_data.leads_form_id
                 hot_lead_criteria = hot_lead_criteria_dict[leads_form_id][item_id]['hot_lead_criteria']
-                if item_value == hot_lead_criteria:
+                if item_value and hot_lead_criteria and str(item_value) == str(hot_lead_criteria):
                     if hot_lead is False:
                         hot_leads = hot_leads + 1
                         hot_lead_details.append({
