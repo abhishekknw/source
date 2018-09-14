@@ -1,7 +1,7 @@
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 from views import (ShortlistSocietyCountAPIView, BookCampaignAPIView,
-                   FinalCampaignBookingAPIView, campaignListAPIVIew, CampaignAPIView, DashBoardViewSet)
+                   FinalCampaignBookingAPIView, campaignListAPIVIew, CampaignAPIView, DashBoardViewSet, DeleteInventoryActivityAssignment)
 from v0.ui.website.views import (GetAssignedIdImagesListApiView)
 
 urlpatterns = [
@@ -11,6 +11,7 @@ urlpatterns = [
     url(r'^finalbooking/(?P<id>[A-Z_a-z0-9]+)/$', FinalCampaignBookingAPIView.as_view()),
     url(r'^campaign-list/(?P<organisation_id>[A-Z_a-z0-9-]+)/$', campaignListAPIVIew.as_view()),
     url(r'^campaigns-assigned-inventory-ids-and-images/(?P<organisation_id>[A-Z_a-z0-9-]+)/$', GetAssignedIdImagesListApiView.as_view()),
+    url(r'^delete-inv-activity-assignment/(?P<id>[A-Z_a-z0-9]+)/$', DeleteInventoryActivityAssignment.as_view()),
 ]
 
 router = DefaultRouter()

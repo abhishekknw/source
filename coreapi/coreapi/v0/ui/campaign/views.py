@@ -844,4 +844,16 @@ class CreateSupplierPhaseData(APIView):
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
 
+class DeleteInventoryActivityAssignment(APIView):
+
+    def post(self, request, id):
+        class_name = self.__class__.__name__
+        try:
+            if not InventoryActivityImage.objects.filter(inventory_activity_assignment=id):
+                InventoryActivityAssignment.objects.get(pk=id).delete()
+                return ui_utils.handle_response(class_name, data=True, success=True)
+            else:
+                return ui_utils.handle_response(class_name, data="Image for this assignment is already present, Can not delete it", success=False)
+        except Exception as e:
+            return handle_response(class_name, exception_object=e, request=request)
 
