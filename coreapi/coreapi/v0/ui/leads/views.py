@@ -151,6 +151,7 @@ class LeadsFormBulkEntry(APIView):
         fields = lead_form.fields_count
         campaign_id = lead_form.campaign_id
         entry_id = lead_form.last_entry_id + 1 if lead_form.last_entry_id else 1
+        missing_societies = []
         unresolved_societies = []
         for index, row in enumerate(ws.iter_rows()):
             if index == 0:
@@ -163,23 +164,33 @@ class LeadsFormBulkEntry(APIView):
                 # supplier_id = row[0].value if row[0].value else None
                 # created_at = row[1].value if row[1].value else None
                 society_name = row[apartment_index].value
-                supplier = SupplierTypeSociety.objects.filter(society_name=society_name).values('supplier_id', 'society_name').all()
-                if len(supplier) == 0:
-                    if society_name not in unresolved_societies:
-                        unresolved_societies.append(society_name)
+                suppliers = SupplierTypeSociety.objects.filter(society_name=society_name).values('supplier_id', 'society_name').all()
+                if len(suppliers) == 0:
+                    if society_name not in missing_societies:
+                        missing_societies.append(society_name)
                     continue
                 else:
-                    found_supplier_id = supplier[0]['supplier_id']
-
+                    if len(suppliers) == 1:
+                        found_supplier_id = suppliers[0]['supplier_id']
+                    else:
+                        supplier_ids = []
+                        for s in suppliers:
+                            supplier_ids.append(s['supplier_id'])
+                        shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id, object_id__in=supplier_ids).values('object_id', 'id').all()
+                        if len(shortlisted_spaces) > 1:
+                            unresolved_societies.append(society_name)
+                            continue
+                        else:
+                            found_supplier_id = shortlisted_spaces[0]['object_id']
                 shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=found_supplier_id).filter(proposal_id=campaign_id).all()
                 if len(shortlisted_spaces) == 0:
                     continue
                 inventory_list = ShortlistedInventoryPricingDetails.objects.filter(
-                    shortlisted_spaces_id=shortlisted_spaces[0]).all()
-                stall=None
+                    shortlisted_spaces_id=shortlisted_spaces[0].id).all()
+                stall = None
                 for inventory in inventory_list:
                     if inventory.ad_inventory_type_id >= 8 and inventory.ad_inventory_type_id <=11:
-                        stall= inventory
+                        stall = inventory
                         break
                 if not stall:
                     continue
@@ -198,7 +209,8 @@ class LeadsFormBulkEntry(APIView):
                 entry_id = entry_id + 1  # will be saved in the end
         lead_form.last_entry_id = entry_id-1
         lead_form.save()
-        unresolved_societies.sort()
+        missing_societies.sort()
+        print missing_societies
         print unresolved_societies
         return ui_utils.handle_response({}, data='success', success=True)
 
