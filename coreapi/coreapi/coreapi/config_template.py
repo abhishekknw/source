@@ -1,6 +1,6 @@
 class Config():
     DATABASE = {
-        'NAME': 'machadalotech',
+        'NAME': 'mdtech8',
         'ENGINE': 'django.db.backends.mysql',
         'HOST': 'localhost',
         'USER': 'root',
