@@ -5,6 +5,8 @@ from models import LeadsForm, LeadsFormItems, LeadsFormData, Leads, LeadAlias
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
+from v0.ui.inventory.models import (InventoryActivityAssignment, InventoryActivity)
+
 import v0.ui.utils as ui_utils
 import boto3
 import os
@@ -184,17 +186,29 @@ class LeadsFormBulkEntry(APIView):
                             found_supplier_id = shortlisted_spaces[0]['object_id']
                 shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=found_supplier_id).filter(proposal_id=campaign_id).all()
                 if len(shortlisted_spaces) == 0:
+                    unresolved_societies.append(society_name)
                     continue
                 inventory_list = ShortlistedInventoryPricingDetails.objects.filter(
                     shortlisted_spaces_id=shortlisted_spaces[0].id).all()
                 stall = None
                 for inventory in inventory_list:
-                    if inventory.ad_inventory_type_id >= 8 and inventory.ad_inventory_type_id <=11:
+                    if inventory.ad_inventory_type_id >= 8 and inventory.ad_inventory_type_id <= 11:
                         stall = inventory
                         break
                 if not stall:
                     continue
-                created_at = stall.created_at
+                shortlisted_inventory_details_id = stall.id
+                inventory_list = InventoryActivity.objects.filter(shortlisted_inventory_details_id=shortlisted_inventory_details_id, activity_type='RELEASE').all()
+                if len(inventory_list) == 0:
+                    unresolved_societies.append(society_name)
+                    continue
+                inventory_activity_id = inventory_list[0].id
+                inventory_activity_list = InventoryActivityAssignment.objects.filter(inventory_activity_id=inventory_activity_id).all()
+                if len(inventory_activity_list) == 0:
+                    unresolved_societies.append(society_name)
+                    continue
+
+                created_at = inventory_activity_list[0].activity_date
                 for item_id in range(0, fields):
                     form_entry_list.append(LeadsFormData(**{
                         "campaign_id": campaign_id,
