@@ -154,6 +154,8 @@ class LeadsFormBulkEntry(APIView):
         campaign_id = lead_form.campaign_id
         entry_id = lead_form.last_entry_id + 1 if lead_form.last_entry_id else 1
         missing_societies = []
+        inv_activity_assignment_missing_societies = []
+        not_present_in_shortlisted_societies = []
         unresolved_societies = []
         for index, row in enumerate(ws.iter_rows()):
             if index == 0:
@@ -186,7 +188,7 @@ class LeadsFormBulkEntry(APIView):
                             found_supplier_id = shortlisted_spaces[0]['object_id']
                 shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=found_supplier_id).filter(proposal_id=campaign_id).all()
                 if len(shortlisted_spaces) == 0:
-                    unresolved_societies.append(society_name)
+                    not_present_in_shortlisted_societies.append(society_name)
                     continue
                 inventory_list = ShortlistedInventoryPricingDetails.objects.filter(
                     shortlisted_spaces_id=shortlisted_spaces[0].id).all()
@@ -200,7 +202,7 @@ class LeadsFormBulkEntry(APIView):
                 shortlisted_inventory_details_id = stall.id
                 inventory_list = InventoryActivity.objects.filter(shortlisted_inventory_details_id=shortlisted_inventory_details_id, activity_type='RELEASE').all()
                 if len(inventory_list) == 0:
-                    unresolved_societies.append(society_name)
+                    inv_activity_assignment_missing_societies.append(society_name)
                     continue
                 inventory_activity_id = inventory_list[0].id
                 inventory_activity_list = InventoryActivityAssignment.objects.filter(inventory_activity_id=inventory_activity_id).all()
@@ -224,8 +226,10 @@ class LeadsFormBulkEntry(APIView):
         lead_form.last_entry_id = entry_id-1
         lead_form.save()
         missing_societies.sort()
-        print missing_societies
-        print unresolved_societies
+        print "missing societies", missing_societies
+        print "unresolved_societies", list(set(unresolved_societies))
+        print "inv_activity_assignment_missing_societies", list(set(inv_activity_assignment_missing_societies))
+        print "not_present_in_shortlisted_societies", list(set(not_present_in_shortlisted_societies))
         return ui_utils.handle_response({}, data='success', success=True)
 
 
