@@ -155,7 +155,9 @@ class LeadsFormBulkEntry(APIView):
         entry_id = lead_form.last_entry_id + 1 if lead_form.last_entry_id else 1
         missing_societies = []
         inv_activity_assignment_missing_societies = []
+        inv_activity_missing_societies = []
         not_present_in_shortlisted_societies = []
+        more_than_ones_same_shortlisted_society = []
         unresolved_societies = []
         for index, row in enumerate(ws.iter_rows()):
             if index == 0:
@@ -182,7 +184,11 @@ class LeadsFormBulkEntry(APIView):
                             supplier_ids.append(s['supplier_id'])
                         shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id, object_id__in=supplier_ids).values('object_id', 'id').all()
                         if len(shortlisted_spaces) > 1:
-                            unresolved_societies.append(society_name)
+                            more_than_ones_same_shortlisted_society.append(society_name)
+                            continue
+                        if len(shortlisted_spaces) == 0:
+                            if society_name not in missing_societies:
+                                missing_societies.append(society_name)
                             continue
                         else:
                             found_supplier_id = shortlisted_spaces[0]['object_id']
@@ -202,12 +208,12 @@ class LeadsFormBulkEntry(APIView):
                 shortlisted_inventory_details_id = stall.id
                 inventory_list = InventoryActivity.objects.filter(shortlisted_inventory_details_id=shortlisted_inventory_details_id, activity_type='RELEASE').all()
                 if len(inventory_list) == 0:
-                    inv_activity_assignment_missing_societies.append(society_name)
+                    inv_activity_missing_societies.append(society_name)
                     continue
                 inventory_activity_id = inventory_list[0].id
                 inventory_activity_list = InventoryActivityAssignment.objects.filter(inventory_activity_id=inventory_activity_id).all()
                 if len(inventory_activity_list) == 0:
-                    unresolved_societies.append(society_name)
+                    inv_activity_assignment_missing_societies.append(society_name)
                     continue
 
                 created_at = inventory_activity_list[0].activity_date
@@ -228,7 +234,9 @@ class LeadsFormBulkEntry(APIView):
         missing_societies.sort()
         print "missing societies", missing_societies
         print "unresolved_societies", list(set(unresolved_societies))
+        print "more_than_ones_same_shortlisted_society", list(set(more_than_ones_same_shortlisted_society))
         print "inv_activity_assignment_missing_societies", list(set(inv_activity_assignment_missing_societies))
+        print "inv_activit_missing_societies", list(set(inv_activity_missing_societies))
         print "not_present_in_shortlisted_societies", list(set(not_present_in_shortlisted_societies))
         return ui_utils.handle_response({}, data='success', success=True)
 
