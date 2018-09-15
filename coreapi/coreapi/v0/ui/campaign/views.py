@@ -143,10 +143,10 @@ def lead_counter(campaign_id, supplier_id,lead_form_items_list):
     form_id_data = get_distinct_from_dict_array(lead_form_data_array,'leads_form_id')
     for form_id in form_id_data:
         current_leads_data = [x for x in lead_form_data_array if x['leads_form_id'] == form_id]
-        current_leads = len(get_distinct_from_dict_array(current_leads_data,'entry_id'))
+        current_lead_entries = get_distinct_from_dict_array(current_leads_data,'entry_id')
+        current_leads = len(current_lead_entries)
         total_leads = total_leads + current_leads
-        for x in range(current_leads):
-            entry_id = x + 1
+        for entry_id in current_lead_entries:
             current_entry = [x for x in lead_form_data_array if x['entry_id'] == entry_id]
             hot_lead = False
             for item_data in current_entry:
