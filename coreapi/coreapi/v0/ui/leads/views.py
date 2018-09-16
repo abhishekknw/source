@@ -2,6 +2,11 @@ from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
 from serializers import LeadsFormItemsSerializer, LeadAliasSerializer
 from models import LeadsForm, LeadsFormItems, LeadsFormData, Leads, LeadAlias
+from v0.ui.supplier.models import SupplierTypeSociety
+from v0.ui.finances.models import ShortlistedInventoryPricingDetails
+from v0.ui.proposal.models import ShortlistedSpaces
+from v0.ui.inventory.models import (InventoryActivityAssignment, InventoryActivity)
+
 import v0.ui.utils as ui_utils
 import boto3
 import os
@@ -28,9 +33,13 @@ def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
 
 class GetLeadsEntries(APIView):
     @staticmethod
-    def get(request, leads_form_id, supplier_id):
+    def get(request, leads_form_id, supplier_id = 'All'):
         lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
-        lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
+        if supplier_id == 'All':
+            lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id). exclude(status='inactive')
+        else:
+            lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id)\
+                .filter(supplier_id = supplier_id).exclude(status='inactive')
 
         values = []
         lead_form_items_dict = {}
@@ -44,7 +53,7 @@ class GetLeadsEntries(APIView):
         previous_entry_id = -1
         current_list = []
         hot_leads = []
-        counter = 0
+        counter = 1
         hot_lead = False
         for entry in lead_form_entries_list:
             entry_id = entry.entry_id - 1
@@ -77,6 +86,8 @@ class GetLeadsEntries(APIView):
             'values': values,
             'hot_leads': hot_leads
         }
+        if supplier_id == 'All':
+            supplier_all_lead_entries.pop('supplier_id')
         return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
 
 
@@ -139,6 +150,104 @@ class GetLeadsForm(APIView):
 
 
 class LeadsFormBulkEntry(APIView):
+    @staticmethod
+    def post(request, leads_form_id):
+        source_file = request.data['file']
+        wb = load_workbook(source_file)
+        ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+        lead_form = LeadsForm.objects.get(id=leads_form_id)
+        fields = lead_form.fields_count
+        campaign_id = lead_form.campaign_id
+        entry_id = lead_form.last_entry_id + 1 if lead_form.last_entry_id else 1
+        missing_societies = []
+        inv_activity_assignment_missing_societies = []
+        inv_activity_missing_societies = []
+        not_present_in_shortlisted_societies = []
+        more_than_ones_same_shortlisted_society = []
+        unresolved_societies = []
+        for index, row in enumerate(ws.iter_rows()):
+            if index == 0:
+                for idx, i in enumerate(row):
+                    if 'apartment' in i.value.lower():
+                        apartment_index = idx
+                        break
+            if index > 0:
+                form_entry_list = []
+                # supplier_id = row[0].value if row[0].value else None
+                # created_at = row[1].value if row[1].value else None
+                society_name = row[apartment_index].value
+                suppliers = SupplierTypeSociety.objects.filter(society_name=society_name).values('supplier_id', 'society_name').all()
+                if len(suppliers) == 0:
+                    if society_name not in missing_societies:
+                        missing_societies.append(society_name)
+                    continue
+                else:
+                    if len(suppliers) == 1:
+                        found_supplier_id = suppliers[0]['supplier_id']
+                    else:
+                        supplier_ids = []
+                        for s in suppliers:
+                            supplier_ids.append(s['supplier_id'])
+                        shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id, object_id__in=supplier_ids).values('object_id', 'id').all()
+                        if len(shortlisted_spaces) > 1:
+                            more_than_ones_same_shortlisted_society.append(society_name)
+                            continue
+                        if len(shortlisted_spaces) == 0:
+                            if society_name not in missing_societies:
+                                missing_societies.append(society_name)
+                            continue
+                        else:
+                            found_supplier_id = shortlisted_spaces[0]['object_id']
+                shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=found_supplier_id).filter(proposal_id=campaign_id).all()
+                if len(shortlisted_spaces) == 0:
+                    not_present_in_shortlisted_societies.append(society_name)
+                    continue
+                inventory_list = ShortlistedInventoryPricingDetails.objects.filter(
+                    shortlisted_spaces_id=shortlisted_spaces[0].id).all()
+                stall = None
+                for inventory in inventory_list:
+                    if inventory.ad_inventory_type_id >= 8 and inventory.ad_inventory_type_id <= 11:
+                        stall = inventory
+                        break
+                if not stall:
+                    continue
+                shortlisted_inventory_details_id = stall.id
+                inventory_list = InventoryActivity.objects.filter(shortlisted_inventory_details_id=shortlisted_inventory_details_id, activity_type='RELEASE').all()
+                if len(inventory_list) == 0:
+                    inv_activity_missing_societies.append(society_name)
+                    continue
+                inventory_activity_id = inventory_list[0].id
+                inventory_activity_list = InventoryActivityAssignment.objects.filter(inventory_activity_id=inventory_activity_id).all()
+                if len(inventory_activity_list) == 0:
+                    inv_activity_assignment_missing_societies.append(society_name)
+                    continue
+
+                created_at = inventory_activity_list[0].activity_date
+                for item_id in range(0, fields):
+                    form_entry_list.append(LeadsFormData(**{
+                        "campaign_id": campaign_id,
+                        "supplier_id": found_supplier_id,
+                        "item_id": item_id+1,
+                        "item_value": row[item_id].value if row[item_id].value else None,
+                        "leads_form": lead_form,
+                        "entry_id": entry_id,
+                        "created_at": created_at
+                    }))
+                LeadsFormData.objects.bulk_create(form_entry_list)
+                entry_id = entry_id + 1  # will be saved in the end
+        lead_form.last_entry_id = entry_id-1
+        lead_form.save()
+        missing_societies.sort()
+        print "missing societies", missing_societies
+        print "unresolved_societies", list(set(unresolved_societies))
+        print "more_than_ones_same_shortlisted_society", list(set(more_than_ones_same_shortlisted_society))
+        print "inv_activity_assignment_missing_societies", list(set(inv_activity_assignment_missing_societies))
+        print "inv_activit_missing_societies", list(set(inv_activity_missing_societies))
+        print "not_present_in_shortlisted_societies", list(set(not_present_in_shortlisted_societies))
+        return ui_utils.handle_response({}, data='success', success=True)
+
+
+class LeadsFormBulkEntryOriginal(APIView):
     @staticmethod
     def post(request, leads_form_id):
         source_file = request.data['file']

@@ -132,7 +132,7 @@ class CampaignAssignment(BaseModel):
     """
     assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name='assigned_by')
     assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, related_name='assigned_to')
-    campaign = models.OneToOneField(ProposalInfo, unique=True)
+    campaign = models.ForeignKey(ProposalInfo, null=False, blank=False)
     # possible primary key should be campaign_id
 
     class Meta:
@@ -160,7 +160,11 @@ class GenericExportFileName(BaseModel):
         campaign. This can be used as a field in a serializer class.
         """
         try:
-            instance = CampaignAssignment.objects.get(campaign=self.proposal)
+            instance = CampaignAssignment.objects.filter(campaign=self.proposal).all()
+            if len(instance) > 0:
+                instance = instance[0]
+            else:
+                raise ObjectDoesNotExist
             # can use caching here to avoid BaseUser calls.
             return {
                 'assigned_by': BaseUser.objects.get(pk=instance.assigned_by.pk).username,
