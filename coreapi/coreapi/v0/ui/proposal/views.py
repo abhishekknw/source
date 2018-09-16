@@ -2317,6 +2317,8 @@ class getSupplierListByStatus(APIView):
     @staticmethod
     def get(request, campaign_id):
         shortlisted_spaces_list = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
+        shortlisted_spaces_dict = {'BK':[], 'NB': [], 'PB': [], 'VB': [], 'SR': [], 'SE': [], 'VR': [], 'CR': [],
+                                    'DP': [], 'TB' : []}
         shortlisted_spaces_by_phase_dict = {}
         all_phases = SupplierPhase.objects.filter(campaign_id=campaign_id).all()
         all_phase_by_id = {}
