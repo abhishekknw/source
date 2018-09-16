@@ -856,7 +856,8 @@ booking_status = {
     'send_email' : 'SE',
     'visit_required' : 'VR',
     'call_required' : 'CR',
-    'decision_pending' : 'DP'
+    'decision_pending' : 'DP',
+    'tentative_booking' : 'TB',
 }
 
 # different campaign states
