@@ -573,3 +573,8 @@ def create_cache_key(module_name, *args):
     except Exception as e:
         raise Exception(e, function)
 
+def get_values(list_name,key):
+    values = []
+    for item in list_name:
+        values.append(item[key])
+    return values

@@ -10,8 +10,8 @@ from v0.ui.supplier.models import (SupplierTypeSociety)
 import v0.ui.website.utils as website_utils
 from django.db.models import Q, F
 from django.db.models import Count
-from models import (CampaignSocietyMapping, Campaign)
-from serializers import (CampaignListSerializer, CampaignSerializer)
+from models import (CampaignSocietyMapping, Campaign, CampaignAssignment)
+from serializers import (CampaignListSerializer, CampaignSerializer, CampaignAssignmentSerializer)
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2
 from v0.ui.inventory.models import InventoryActivityImage, InventoryActivityAssignment, InventoryActivity
@@ -868,3 +868,16 @@ class DeleteInventoryActivityAssignment(APIView):
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
 
+class GetCampaignAssignments(APIView):
+    @staticmethod
+    def get(request, campaign_id):
+        campaign_list_query = CampaignAssignment.objects.filter(campaign_id = campaign_id)
+        campaign_list = CampaignAssignmentSerializer(campaign_list_query,many=True).data
+        return ui_utils.handle_response({}, data=campaign_list, success=True)
+
+class DeleteCampaignAssignments(APIView):
+    @staticmethod
+    def delete(request, assignment_id):
+        assignment_query = CampaignAssignment.objects.get(id=assignment_id)
+        assignment_query.delete()
+        return ui_utils.handle_response({}, data='success', success=True)

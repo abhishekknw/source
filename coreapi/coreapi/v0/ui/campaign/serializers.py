@@ -55,6 +55,13 @@ class CampaignAssignmentSerializerReadOnly(ModelSerializer):
         fields = '__all__'
 
 
+class CampaignAssignmentSerializer(ModelSerializer):
+
+    class Meta:
+        model = CampaignAssignment
+        fields = '__all__'
+
+
 class GenericExportFileSerializer(ModelSerializer):
     """
     simple serializer for generic export file name
