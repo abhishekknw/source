@@ -1409,6 +1409,10 @@ class UserViewSet(viewsets.ViewSet):
             user = BaseUser.objects.get(pk=pk)
             new_password = request.data['password']
             password_valid = validate_password(new_password)
+            if user.username != 'admin':
+                old_input_password = request.data['old_password']
+                if not user.check_password('{}'.format(old_input_password)):
+                    return ui_utils.handle_response(class_name, data='Your Old Password is wrong', success=False)
             if password_valid == 1:
                 user.set_password(new_password)
                 user.save()
