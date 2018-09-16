@@ -50,7 +50,7 @@ from v0.ui.inventory.models import (AdInventoryType, InventoryActivityAssignment
 from v0.ui.inventory.serializers import (InventoryActivityAssignmentSerializer)
 from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping, ProposalCenterSuppliers, ProposalMetrics,
-    ProposalInfoVersion, ProposalMasterCost, ShortlistedSpaces)
+    ProposalInfoVersion, ProposalMasterCost, ShortlistedSpaces, SupplierPhase)
 from v0.ui.proposal.serializers import ProposalInfoSerializer, ProposalCenterMappingSerializer
 from v0.ui.campaign.models import CampaignAssignment, GenericExportFileName
 import v0.ui.utils as ui_utils
@@ -4074,6 +4074,7 @@ def handle_update_campaign_inventories(user, data):
 
             shortlisted_spaces[ss_global_id] = {
                 'phase': supplier['phase'],
+                'phase_no': supplier['phase_no'],
                 'payment_status': supplier['payment_status'],
                 'payment_method': supplier['payment_method'],
                 'total_negotiated_price': supplier['total_negotiated_price'],
@@ -4153,6 +4154,7 @@ def update_campaign_inventories(data):
 
         for obj in ss_objects:
             ss_global_id = obj.id
+            obj.phase_no = SupplierPhase.objects.get(id=shortlisted_spaces[ss_global_id]['phase_no'])
             obj.phase = shortlisted_spaces[ss_global_id]['phase']
             obj.payment_status = shortlisted_spaces[ss_global_id]['payment_status']
             obj.payment_method = shortlisted_spaces[ss_global_id]['payment_method']
@@ -6430,7 +6432,7 @@ def save_filters(center, supplier_code, proposal_data, proposal):
         return Exception(function_name, ui_utils.get_system_error(e))
 
 
-def save_shortlisted_suppliers_data(center, supplier_code, proposal_data, proposal):
+def save_shortlisted_suppliers_data(center, supplier_code, proposal_data, proposal, old_shortlisted_suppliers_map={}):
     """
 
     :param center:
@@ -6441,21 +6443,23 @@ def save_shortlisted_suppliers_data(center, supplier_code, proposal_data, propos
     function_name = save_shortlisted_suppliers_data.__name__
     try:
         content_type = ui_utils.fetch_content_type(supplier_code)
+
         shortlisted_suppliers = []
         for supplier in proposal_data['center_data'][supplier_code]['supplier_data']:
-            data = {
-                'content_type': content_type,
-                'object_id': supplier['id'],
-                'center': center,
-                'proposal': proposal,
-                'supplier_code': supplier_code,
-                'status': supplier['status'],
-                'booking_status' : 'BK',
-                'phase' : 1,
-                'total_negotiated_price': supplier[
-                    'total_negotiated_price'] if 'total_negotiated_price' in supplier else None
-            }
-            shortlisted_suppliers.append(ShortlistedSpaces(**data))
+            if supplier['id'] not in old_shortlisted_suppliers_map:
+                data = {
+                    'content_type': content_type,
+                    'object_id': supplier['id'],
+                    'center': center,
+                    'proposal': proposal,
+                    'supplier_code': supplier_code,
+                    'status': supplier['status'],
+                    'booking_status' : 'BK',
+                    'phase' : 1,
+                    'total_negotiated_price': supplier[
+                        'total_negotiated_price'] if 'total_negotiated_price' in supplier else None
+                }
+                shortlisted_suppliers.append(ShortlistedSpaces(**data))
 
         now_time = timezone.now()
 
@@ -6470,7 +6474,7 @@ def save_shortlisted_suppliers_data(center, supplier_code, proposal_data, propos
 
 
 def save_shortlisted_inventory_pricing_details_data(center, supplier_code, proposal_data, proposal,
-                                                    create_inv_act_data=False):
+                                                    create_inv_act_data=False, old_shortlisted_suppliers_map={}):
     """
 
     :param center:
@@ -6552,6 +6556,7 @@ def create_inventory_ids(supplier_object, filter_code, is_import_sheet=False, su
     """
     function_name = create_inventory_ids.__name__
     try:
+        print supplier_object.society_name
         tower_count = int(supplier_object.tower_count)
         inventory_ids = []
         Struct = namedtuple('Struct', 'adinventory_id')
