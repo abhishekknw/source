@@ -726,9 +726,11 @@ class AssignCampaign(APIView):
             # todo: check for dates also. you should not assign a past campaign to any user. left for later
 
             # create the object.
-            instance, is_created = CampaignAssignment.objects.get_or_create(campaign=proposal)
-            instance.assigned_by = assigned_by
-            instance.assigned_to = assigned_to
+            pre_assignment = CampaignAssignment.objects.filter(campaign_id=campaign_id, assigned_to=assigned_to)
+            if len(pre_assignment) > 0:
+                return ui_utils.handle_response(class_name, data='Campaign Already assigned to this user')
+            instance = CampaignAssignment(
+                **{'campaign_id': campaign_id, 'assigned_by': assigned_by, 'assigned_to': assigned_to})
             instance.save()
 
             return ui_utils.handle_response(class_name, data='success', success=True)
