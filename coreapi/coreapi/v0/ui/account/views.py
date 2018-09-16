@@ -531,16 +531,18 @@ class SignupAPIListView(APIView):
 @receiver(user_logged_in)
 def on_login(sender, user, request, **kwargs):
     user_id = user.id
-    serializer = ActivityLogSerializer(data={"user": user_id})
+    organisation_id = Organisation.objects.get(user_id=user_id).organisation_id
+    serializer = ActivityLogSerializer(data={"user": user_id, "organisation": organisation_id})
     if serializer.is_valid():
         serializer.save()
     return
 
 
 class LoginLog(APIView):
-
-    def get(self, request, user_id):
-        activity_log = ActivityLog.objects.filter(user_id = user_id)
+    def get(self, request):
+        user_id = request.user.id
+        organisation_id = Organisation.objects.get(user_id=user_id).organisation_id
+        activity_log = ActivityLog.objects.filter(organisation_id = organisation_id)
         log_data = []
         for activity in activity_log:
             curr_activity = ActivityLogSerializer(activity).data

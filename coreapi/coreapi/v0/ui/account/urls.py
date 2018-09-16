@@ -12,8 +12,7 @@ urlpatterns = [
     url(r'^newAccountCampaign/$', AccountContacts.as_view()),
     url(r'^create_business/load_business_types/$', GetBusinessTypesAPIView.as_view(), name='get-business-types'),
     url(r'^subtypes/(?P<id>[A-Z_a-z0-9]+)/$', GetBusinessSubTypesAPIView.as_view(), name='get-business-subtypes'),
-    url(r'^log_login/$', LoginLog.as_view()),
-    url(r'^get_login_log/(?P<user_id>[A-Z_a-z0-9]+)$', LoginLog.as_view(), name='get-login-log'),
+    url(r'^get_login_log/$', LoginLog.as_view(), name='get-login-log'),
 ]
 
 router = DefaultRouter()

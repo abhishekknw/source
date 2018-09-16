@@ -221,6 +221,6 @@ class BusinessSubTypes(BaseModel):
 
 class ActivityLog(BaseModel):
     user = models.ForeignKey('BaseUser', null=False, blank=False)
-
+    organisation = models.ForeignKey('Organisation')
     class Meta:
         db_table = 'activity_log'
