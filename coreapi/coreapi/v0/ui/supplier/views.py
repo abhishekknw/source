@@ -56,10 +56,15 @@ from v0.ui.proposal.models import ProposalInfo
 from v0.constants import flat_type_dict
 from v0 import errors
 from django.db import transaction
-from v0.utils import create_cache_key
+from v0.utils import create_cache_key, get_values
 from django.conf import settings
 from django.apps import apps
 
+def get_values(list_name,key):
+    values = []
+    for item in list_name:
+        values.append(item[key])
+    return values
 
 def get_state_map():
     all_city = City.objects.all()
@@ -2791,11 +2796,6 @@ class addSupplierDirectToCampaign(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-def get_values(list_name,key):
-    values = []
-    for item in list_name:
-        values.append(item[key])
-    return values
 
 class deleteSuppliers(APIView):
     # delete supplier if it is not shortlisted

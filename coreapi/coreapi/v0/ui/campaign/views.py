@@ -21,7 +21,7 @@ from rest_framework import status
 import gpxpy.geo
 from v0.ui.leads.models import Leads, LeadsForm, LeadsFormItems, LeadsFormData
 from v0.ui.leads.serializers import LeadsFormItemsSerializer, LeadsFormDataSerializer
-import json, datetime
+from v0.utils import get_values
 from time import clock
 
 class CampaignAPIView(APIView):
@@ -151,9 +151,7 @@ def lead_counter(campaign_id, supplier_id,lead_form_items_list):
             hot_lead = False
             for item_data in current_entry:
                 item_value = item_data['item_value']
-                #item_id = item_data.item_id
                 item_id = item_data['item_id']
-                #leads_form_id = item_data.leads_form_id
                 leads_form_id = item_data['leads_form_id']
                 hot_lead_criteria = hot_lead_criteria_dict[leads_form_id][item_id]['hot_lead_criteria']
                 if item_value and hot_lead_criteria and str(item_value) == str(hot_lead_criteria):
@@ -546,6 +544,7 @@ class DashBoardViewSet(viewsets.ViewSet):
         supplier_ids = list(set(leads_form_data.values_list('supplier_id', flat=True)))
 
         all_suppliers_list = {}
+        all_localities_data = {}
         hot_leads_global = 0
         all_leads_global = 0
         lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
@@ -555,6 +554,7 @@ class DashBoardViewSet(viewsets.ViewSet):
 
         for curr_supplier_data in supplier_data:
             supplier_id = curr_supplier_data['supplier_id']
+            supplier_locality = curr_supplier_data['society_locality']
             lead_count = lead_counter(campaign_id, supplier_id, lead_form_items_list)
             supplier_wise_lead_count[supplier_id] = lead_count
             hot_leads = lead_count['hot_leads']
@@ -570,11 +570,26 @@ class DashBoardViewSet(viewsets.ViewSet):
                 "data": curr_supplier_data,
                 }
             all_suppliers_list[supplier_id] = curr_supplier_lead_data
+
+            if supplier_locality in all_localities_data:
+                all_localities_data[supplier_locality]["interested"] = all_localities_data[supplier_locality]["interested"]+hot_leads
+                all_localities_data[supplier_locality]["total"]=all_localities_data[supplier_locality]["total"]+total_leads
+            else:
+                curr_locality_data = {
+                    "is_interested": True,
+                    "campaign": campaign_id,
+                    "locality": supplier_locality,
+                    "interested": hot_leads,
+                    "total": total_leads,
+                }
+                all_localities_data[supplier_locality] = curr_locality_data
+
             hot_leads_global = hot_leads_global+hot_leads
             all_leads_global = all_leads_global+total_leads
 
         # date-wise
         date_data = {}
+        weekday_data = {}
         all_entries_checked = []
         for curr_data in leads_form_data:
             curr_entry_details = {
@@ -586,12 +601,14 @@ class DashBoardViewSet(viewsets.ViewSet):
             else:
                 all_entries_checked.append(curr_entry_details)
 
-
             time = curr_data.created_at
             curr_date = str(time.date())
             curr_time = str(time)
 
-            #campaign_id = curr_data.campaign_id
+            weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
+                             '4': 'Friday', '5': 'Saturday', '6': 'Sunday'}
+            curr_weekday = weekday_names[str(time.weekday())]
+
             supplier_id = curr_data.supplier_id
             lead_count = supplier_wise_lead_count[supplier_id]
             hot_lead_details = lead_count['hot_lead_details']
@@ -603,11 +620,22 @@ class DashBoardViewSet(viewsets.ViewSet):
                     'interested': 0,
                     'created_at': curr_time
                 }
+
+            if curr_weekday not in weekday_data:
+                weekday_data[curr_weekday] = {
+                    'total': 0,
+                    'interested': 0,
+                }
+
             date_data[curr_date]['total'] = date_data[curr_date]['total']+1
+            weekday_data[curr_weekday]['total'] = weekday_data[curr_weekday]['total']+1
+
             if curr_entry_details in hot_lead_details:
                 date_data[curr_date]['interested'] = date_data[curr_date]['interested'] + 1
+                weekday_data[curr_weekday]['interested'] = weekday_data[curr_weekday]['interested'] + 1
 
-        final_data =  {'supplier_data': all_suppliers_list, 'date_data': date_data}
+        final_data = {'supplier_data': all_suppliers_list, 'date_data': date_data,
+                      'locality_data': all_localities_data, 'weekday_data': weekday_data}
 
         return ui_utils.handle_response(class_name, data=final_data, success=True)
 
@@ -690,9 +718,12 @@ class DashBoardViewSet(viewsets.ViewSet):
                 else:
                     is_interested = 'false'
 
+                hot_lead_ratio = hot_leads/total_leads_count
+
                 data[campaign_id] = {
                             'total': total_leads_count,
                             'is_interested': is_interested,
+                            'hot_lead_ratio': hot_lead_ratio,
                             'data': campaign_objects_list[campaign_id],
                             'interested': hot_leads,
                             'campaign': campaign_id
