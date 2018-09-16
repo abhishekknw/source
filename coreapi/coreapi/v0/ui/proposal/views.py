@@ -277,54 +277,56 @@ def assign_inv_dates(data):
         index = 0
         for inv in inv_data:
             print "Assignment inv : " + str(index)
+            print inv['supplier_id']
             index += 1
             assigned_by = None
             assigned_to = None
             if inv['inv_name'] == 'POSTER' or inv['inv_name'] == 'FLIER' or inv['inv_name'] == 'STANDEE':
+                if inv['supplier_id'] in supplier_ids_mapping:
+                    date = supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']]
 
-                date = supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']]
+                    if date:
+                        assigned_by = assigned_by_user
+                        assigned_to = assigned_to_user
 
-                if date:
-                    assigned_by = assigned_by_user
-                    assigned_to = assigned_to_user
+                    if inv['activity_type'] == 'RELEASE':
+                        temp_data = InventoryActivityAssignment(**{
+                            'inventory_activity' : InventoryActivity.objects.get(id=inv['id']),
+                            'activity_date' : convert_date_format(date),
+                            'assigned_by' : assigned_by,
+                            'assigned_to' : assigned_to
+                        })
+                        inv_act_assignement_list.append(temp_data)
 
-                if inv['activity_type'] == 'RELEASE':
-                    temp_data = InventoryActivityAssignment(**{
-                        'inventory_activity' : InventoryActivity.objects.get(id=inv['id']),
-                        'activity_date' : convert_date_format(date),
-                        'assigned_by' : assigned_by,
-                        'assigned_to' : assigned_to
-                    })
-                    inv_act_assignement_list.append(temp_data)
-
-                elif inv['activity_type'] == 'CLOSURE' and inv['inv_name'] == 'POSTER':
-                    temp_data = InventoryActivityAssignment(**{
-                        'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
-                        'activity_date': convert_date_format(date + datetime.timedelta(days=3)),
-                        'assigned_by': assigned_by,
-                        'assigned_to': assigned_to
-                    })
-                    inv_act_assignement_list.append(temp_data)
+                    elif inv['activity_type'] == 'CLOSURE' and inv['inv_name'] == 'POSTER':
+                        temp_data = InventoryActivityAssignment(**{
+                            'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
+                            'activity_date': convert_date_format(date + datetime.timedelta(days=3)),
+                            'assigned_by': assigned_by,
+                            'assigned_to': assigned_to
+                        })
+                        inv_act_assignement_list.append(temp_data)
 
             if inv['inv_name'] == 'STALL':
                 date = None
 
                 if inv['activity_type'] == 'RELEASE':
                     try:
-                        if supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']]:
-                            if supplier_ids_mapping[inv['supplier_id']]['rl_count'] >= supplier_ids_mapping[inv['supplier_id']]['index']:
-                                supplier_ids_mapping[inv['supplier_id']]['rl_count'] = supplier_ids_mapping[inv['supplier_id']]['index'] -1
-                            date = supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']][supplier_ids_mapping[inv['supplier_id']]['rl_count']]
-                            supplier_ids_mapping[inv['supplier_id']]['rl_count'] += 1
-                            assigned_to = assigned_to_user
-                            assigned_by = assigned_by_user
-                        temp_data = InventoryActivityAssignment(**{
-                            'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
-                            'activity_date': convert_date_format(date),
-                            'assigned_by': assigned_by,
-                            'assigned_to': assigned_to
-                        })
-                        inv_act_assignement_list.append(temp_data)
+                        if inv['supplier_id'] in supplier_ids_mapping:
+                            if supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']]:
+                                if supplier_ids_mapping[inv['supplier_id']]['rl_count'] >= supplier_ids_mapping[inv['supplier_id']]['index']:
+                                    supplier_ids_mapping[inv['supplier_id']]['rl_count'] = supplier_ids_mapping[inv['supplier_id']]['index'] -1
+                                date = supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']][supplier_ids_mapping[inv['supplier_id']]['rl_count']]
+                                supplier_ids_mapping[inv['supplier_id']]['rl_count'] += 1
+                                assigned_to = assigned_to_user
+                                assigned_by = assigned_by_user
+                            temp_data = InventoryActivityAssignment(**{
+                                'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
+                                'activity_date': convert_date_format(date),
+                                'assigned_by': assigned_by,
+                                'assigned_to': assigned_to
+                            })
+                            inv_act_assignement_list.append(temp_data)
 
                     except KeyError:
                         error = "Stall count and date not matching" + str(inv['supplier_id'])
@@ -332,20 +334,21 @@ def assign_inv_dates(data):
 
                 elif inv['activity_type'] == 'CLOSURE':
                     try:
-                        if supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']]:
-                            if supplier_ids_mapping[inv['supplier_id']]['cl_count'] >= supplier_ids_mapping[inv['supplier_id']]['index']:
-                                supplier_ids_mapping[inv['supplier_id']]['cl_count'] = supplier_ids_mapping[inv['supplier_id']]['index'] -1
-                            date = supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']][supplier_ids_mapping[inv['supplier_id']]['cl_count']]
+                        if inv['supplier_id'] in supplier_ids_mapping:
+                            if supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']]:
+                                if supplier_ids_mapping[inv['supplier_id']]['cl_count'] >= supplier_ids_mapping[inv['supplier_id']]['index']:
+                                    supplier_ids_mapping[inv['supplier_id']]['cl_count'] = supplier_ids_mapping[inv['supplier_id']]['index'] -1
+                                date = supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']][supplier_ids_mapping[inv['supplier_id']]['cl_count']]
 
-                            assigned_to = assigned_to_user
-                            assigned_by = assigned_by_user
-                        temp_data = InventoryActivityAssignment(**{
-                            'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
-                            'activity_date': convert_date_format(date),
-                            'assigned_by': assigned_by,
-                            'assigned_to': assigned_to
-                        })
-                        inv_act_assignement_list.append(temp_data)
+                                assigned_to = assigned_to_user
+                                assigned_by = assigned_by_user
+                            temp_data = InventoryActivityAssignment(**{
+                                'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
+                                'activity_date': convert_date_format(date),
+                                'assigned_by': assigned_by,
+                                'assigned_to': assigned_to
+                            })
+                            inv_act_assignement_list.append(temp_data)
 
                     except KeyError:
                         error = "Stall count and date not matching" + str(inv['supplier_id'])
@@ -2343,3 +2346,61 @@ class getSupplierListByStatus(APIView):
                 'supplier_data': shortlisted_spaces_by_phase_dict[phase_id]
             })
         return ui_utils.handle_response({}, data=shortlisted_spaces_by_phase_list, success=True)
+
+class ImportSheetInExistingCampaign(APIView):
+    """
+    This will convert proposal to campaign where supplier id's should be provided in sheet
+    """
+
+    def post(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            data = request.data.copy()
+
+            is_import_sheet = data['is_import_sheet']
+
+            if is_import_sheet:
+                response = genrate_supplier_data(data)
+                if not response.data['status']:
+                    return response
+                proposal_data = response.data['data']
+            else:
+                proposal_data = data
+            center_id = proposal_data['center_id']
+            proposal = ProposalInfo.objects.get(pk=proposal_data['proposal_id'])
+            center = ProposalCenterMapping.objects.get(pk=center_id)
+            for supplier_code in proposal_data['center_data']:
+                # response = website_utils.save_filters(center, supplier_code, proposal_data, proposal)
+                # if not response.data['status']:
+                #     return response
+
+                old_shortlisted_suppliers = ShortlistedSpaces.objects.filter(proposal_id=proposal_data['proposal_id'])
+                old_shortlisted_suppliers_map = {}
+                if old_shortlisted_suppliers:
+                    old_shortlisted_suppliers_map = {supplier.object_id: supplier for supplier in
+                                                     old_shortlisted_suppliers}
+                response = website_utils.save_shortlisted_suppliers_data(center, supplier_code, proposal_data, proposal)
+                if not response.data['status']:
+                    return response
+                if is_import_sheet:
+                    create_inv_act_data = True
+                    response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
+                                                                 proposal_data, proposal,create_inv_act_data , old_shortlisted_suppliers_map)
+                    if not response.data['status']:
+                        return response
+
+                    response = assign_inv_dates(proposal_data)
+                    if not response.data['status']:
+                        return response
+                # else:
+                #     response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
+                #                                                                          proposal_data, proposal)
+
+            return ui_utils.handle_response(class_name, data={}, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
