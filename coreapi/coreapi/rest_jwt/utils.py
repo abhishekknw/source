@@ -3,6 +3,7 @@ import jwt
 from datetime import datetime
 
 from rest_jwt.settings import api_settings
+from django.contrib.auth.signals import user_logged_in
 
 
 def get_user_model():
@@ -112,10 +113,13 @@ def myjwt_response_payload_handler(token, user=None, request=None):
         }
 
     """
+    username = getattr(user, 'username', None)
+    if user and request:
+        user_logged_in.send(sender=user.__class__, request=request, user=user)
     return {
         'token': token,
         'user_id': getattr(user, 'id', None),
-        'username': getattr(user, 'username', None),
+        'username': username,
         'name': user.get_full_name(),
         'email': getattr(user, 'email', None),
         'user_code':getattr(user, 'user_code', None)

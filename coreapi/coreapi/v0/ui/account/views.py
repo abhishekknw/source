@@ -15,6 +15,10 @@ from v0.ui.account.serializers import (BusinessInfoSerializer, BusinessSubTypesS
 from v0.ui.common.models import BaseUser
 from django.contrib.contenttypes.models import ContentType
 import v0.ui.website.utils as website_utils
+from django.dispatch import receiver
+from django.contrib.auth.signals import user_logged_in
+from rest_framework.pagination import PageNumberPagination
+
 
 
 class GetBusinessTypesAPIView(APIView):
@@ -524,17 +528,16 @@ class SignupAPIListView(APIView):
             return Response(serializer.data, status=201)
         return Response(serializer.errors, status=400)
 
+@receiver(user_logged_in)
+def on_login(sender, user, request, **kwargs):
+    user_id = user.id
+    serializer = ActivityLogSerializer(data={"user": user_id})
+    if serializer.is_valid():
+        serializer.save()
+    return
+
 
 class LoginLog(APIView):
-
-    def post(self, request):
-        username = request.data["username"]
-        user_id = BaseUser.objects.get(username=username).id
-        serializer = ActivityLogSerializer(data={"user": user_id})
-        if serializer.is_valid():
-            serializer.save()
-            return ui_utils.handle_response({}, data='success', success=True)
-        return Response(serializer.errors, status=400)
 
     def get(self, request, user_id):
         activity_log = ActivityLog.objects.filter(user_id = user_id)
