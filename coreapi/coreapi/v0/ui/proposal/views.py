@@ -2317,8 +2317,6 @@ class getSupplierListByStatus(APIView):
     @staticmethod
     def get(request, campaign_id):
         shortlisted_spaces_list = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
-        shortlisted_spaces_dict = {'BK':[], 'NB': [], 'PB': [], 'VB': [], 'SR': [], 'SE': [], 'VR': [], 'CR': [],
-                                    'DP': []}
         shortlisted_spaces_by_phase_dict = {}
         all_phases = SupplierPhase.objects.filter(campaign_id=campaign_id).all()
         all_phase_by_id = {}
@@ -2333,8 +2331,10 @@ class getSupplierListByStatus(APIView):
                 supplier_society = SupplierTypeSociety.objects.filter(supplier_id=space.object_id)
                 supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society[0]).data
                 if space.phase_no_id not in shortlisted_spaces_by_phase_dict:
-                    shortlisted_spaces_by_phase_dict[space.phase_no_id] = shortlisted_spaces_dict
+                    shortlisted_spaces_by_phase_dict[space.phase_no_id] = {'BK':[], 'NB': [], 'PB': [], 'VB': [], 'SR': [], 'SE': [], 'VR': [], 'CR': [],
+                                    'DP': []}
                 if space.booking_status:
+                    supplier_society_serialized['booking_status'] = space.booking_status
                     shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(supplier_society_serialized)
         shortlisted_spaces_by_phase_list = []
         for phase_id in shortlisted_spaces_by_phase_dict:
