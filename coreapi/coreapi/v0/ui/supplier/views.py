@@ -21,17 +21,18 @@ from serializers import (UICorporateSerializer, SupplierTypeSocietySerializer, S
                          CorporateBuildingGetSerializer, CorporateParkCompanyListSerializer, CorporateBuildingSerializer,
                          SupplierTypeSalonSerializer, BusDepotSerializer, CorporateParkCompanySerializer,
                          BusShelterSerializer, SupplierTypeBusShelterSerializer)
+from v0.ui.inventory.serializers import ShortlistedSpacesSerializer
 from v0.ui.location.serializers import CityAreaSerializer
 from v0.ui.account.models import ContactDetails
-from v0.ui.inventory.models import AdInventoryType
+from v0.ui.inventory.models import AdInventoryType, PosterInventory, StandeeInventory
 from v0.ui.finances.models import PriceMappingDefault
 from v0.ui.base.models import DurationType
 from v0.ui.serializers import (UISocietySerializer, SocietyListSerializer)
 from v0.ui.proposal.serializers import ImageMappingSerializer
-from v0.ui.proposal.models import ImageMapping
+from v0.ui.proposal.models import ImageMapping, ShortlistedSpaces
 from v0.ui.account.serializers import (ContactDetailsSerializer, ContactDetailsGenericSerializer)
 from v0.ui.account.models import ContactDetailsGeneric
-from v0.ui.components.models import (SocietyTower, CorporateBuildingWing, CompanyFloor, FlatType)
+from v0.ui.components.models import (SocietyTower, CorporateBuildingWing, CompanyFloor, FlatType, LiftDetails)
 from v0.ui.components.serializers import CorporateBuildingWingSerializer
 from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping)
 import v0.constants as v0_constants
@@ -2790,3 +2791,42 @@ class addSupplierDirectToCampaign(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+def get_values(list_name,key):
+    values = []
+    for item in list_name:
+        values.append(item[key])
+    return values
+
+class deleteSuppliers(APIView):
+    # delete supplier if it is not shortlisted
+    @staticmethod
+    def put(request):
+        try:
+            supplier_id_array = request.data
+            remaining_suppliers = get_values(SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_array).\
+                values('supplier_id'),'supplier_id')
+            shortlisted_query = ShortlistedSpaces.objects.filter(object_id__in=remaining_suppliers).\
+                values('object_id').distinct()
+            unremoved_suppliers = []
+            for supplier in shortlisted_query:
+                unremoved_suppliers.append(supplier['object_id'])
+                remaining_suppliers.remove(supplier['object_id'])
+
+            for supplier_id in remaining_suppliers:
+                models_list = [FlatType, InventorySummary, PosterInventory, PriceMappingDefault, LiftDetails,
+                                SocietyTower]
+                tower_ids = get_values(SocietyTower.objects.filter(object_id=supplier_id).values('tower_id'),'tower_id')
+                StandeeInventory.objects.filter(tower_id__in=tower_ids).delete()
+                LiftDetails.objects.filter(tower_id__in=tower_ids).delete()
+                SocietyTower.objects.filter(object_id=supplier_id).delete()
+                PriceMappingDefault.objects.filter(object_id=supplier_id).delete()
+                PosterInventory.objects.filter(object_id=supplier_id).delete()
+                InventorySummary.objects.filter(object_id=supplier_id).delete()
+                FlatType.objects.filter(object_id=supplier_id).delete()
+                SupplierTypeSociety.objects.filter(supplier_id=supplier_id).delete()
+
+            print "Suppliers in shortlisted spaces (not deleted)", unremoved_suppliers
+
+            return ui_utils.handle_response({}, data='success', success=True)
+        except Exception as e:
+            return ui_utils.handle_response({}, exception_object=e, request=request)
