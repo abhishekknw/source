@@ -531,7 +531,10 @@ class SignupAPIListView(APIView):
 @receiver(user_logged_in)
 def on_login(sender, user, request, **kwargs):
     user_id = user.id
-    organisation_id = Organisation.objects.get(user_id=user_id).organisation_id
+    organisation_user = Organisation.objects.filter(user_id=user_id).all()
+    if len(organisation_user) == 0:
+        return
+    organisation_id = organisation_user[0].organisation_id
     serializer = ActivityLogSerializer(data={"user": user_id, "organisation": organisation_id})
     if serializer.is_valid():
         serializer.save()
