@@ -537,7 +537,6 @@ class DashBoardViewSet(viewsets.ViewSet):
 
     @list_route()
     def get_leads_by_campaign_new(self, request):
-        start_time = clock()
         class_name = self.__class__.__name__
         campaign_id = request.query_params.get('campaign_id', None)
         leads_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
@@ -637,6 +636,7 @@ class DashBoardViewSet(viewsets.ViewSet):
         final_data = {'supplier_data': all_suppliers_list, 'date_data': date_data,
                       'locality_data': all_localities_data, 'weekday_data': weekday_data}
 
+
         return ui_utils.handle_response(class_name, data=final_data, success=True)
 
     # @detail_route(methods=['POST'])
@@ -670,68 +670,83 @@ class DashBoardViewSet(viewsets.ViewSet):
     @detail_route(methods=['POST'])
     def get_leads_by_multiple_campaigns(self, request, pk=None):
         class_name = self.__class__.__name__
-        try:
-            campaign_list = request.data
-            campaign_objects = ProposalInfo.objects.filter(proposal_id__in=campaign_list).values()
-            campaign_objects_list = {campaign['proposal_id']: campaign for campaign in campaign_objects}
-            valid_campaign_list = campaign_objects_list.keys()
-            # leads_from_data = LeadsFormData.filter(campaign_id__in = campaign_list)
-            # lead_items = LeadsFormItems.filter(campaign_id__in=campaign_list)
-            data = {}
-            for campaign_id in valid_campaign_list:
-                leads_form_data = LeadsFormData.objects.filter(campaign_id = campaign_id)
-                leads_form_items = LeadsFormItems.objects.filter(campaign_id = campaign_id)
-                leads_form_data_array = []
-                serialized_leads_form_data = LeadsFormDataSerializer(leads_form_data, many=True).data
-                for curr_data in serialized_leads_form_data:
-                    leads_form_data_array.append(curr_data)
-                # combination of entry and form id is a lead
-                total_leads = leads_form_data.values('entry_id','leads_form_id').distinct()
-                total_leads_count = len(total_leads)
-                # for curr_lead in total_leads:
-                #     curr_data = curr_lead.__dict__
-                #     total_leads_data.append(curr_data)
-                # total_leads_count = len(total_leads_data)
-                # now computing hot leads
+        #try:
+        start_time = clock()
+        campaign_list = request.data
+        campaign_objects = ProposalInfo.objects.filter(proposal_id__in=campaign_list).values()
+        campaign_objects_list = {campaign['proposal_id']: campaign for campaign in campaign_objects}
+        valid_campaign_list = campaign_objects_list.keys()
+        # leads_from_data = LeadsFormData.filter(campaign_id__in = campaign_list)
+        # lead_items = LeadsFormItems.filter(campaign_id__in=campaign_list)
+        data = {}
+        print clock() - start_time, ' 1'
+        for campaign_id in valid_campaign_list:
+            leads_form_data = LeadsFormData.objects.filter(campaign_id = campaign_id)
+            print clock() - start_time
+            #leads_form_items = LeadsFormItems.objects.filter(campaign_id = campaign_id)
+            leads_form_data_array = []
+            for curr_object in leads_form_data:
+                curr_data = curr_object.__dict__
+                leads_form_data_array.append(curr_data)
+            #print leads_form_data_array
+            #serialized_leads_form_data = LeadsFormDataSerializer(leads_form_data, many=True).data
+            #print serialized_leads_form_data
+            print clock() - start_time, 'serializer'
+            #            print leads_form_data_array for curr_data in serialized_leads_form_data:
+            #     leads_form_data_array.append(curr_data)
+            # print serialized_leads_form_data
+            # print leads_form_data_array
+            #leads_form_data_array = serialized_leads_form_data
+            # combination of entry and form id is a lead
+            total_leads = leads_form_data.values('entry_id','leads_form_id').distinct()
+            total_leads_count = len(total_leads)
+            # for curr_lead in total_leads:
+            #     curr_data = curr_lead.__dict__
+            #     total_leads_data.append(curr_data)
+            # total_leads_count = len(total_leads_data)
+            # now computing hot leads
 
-                hot_leads = 0
-                hot_lead_fields = leads_form_items.exclude(hot_lead_criteria__isnull=True).\
-                    values('item_id','leads_form_id','hot_lead_criteria')
-                for curr_lead in total_leads:
-                    hot_lead = False
-                    leads_form_id = curr_lead['leads_form_id']
-                    entry_id = curr_lead['entry_id']
-                    # get all forms with hot lead criteria
-                    hot_lead_items_current = [x for x in hot_lead_fields if x['leads_form_id'] == leads_form_id]
-                    data_current = [x for x in leads_form_data_array if x['leads_form'] == leads_form_id
-                                    and x['entry_id'] == entry_id]
-                    for lead_item in hot_lead_items_current:
-                        hot_lead_item = lead_item['item_id']
-                        hot_lead_value = lead_item['hot_lead_criteria']
-                        data_current_hot = [x for x in data_current if x['item_id'] == hot_lead_item and \
-                            x['item_value'] == hot_lead_value]
-                        if len(data_current_hot)>0 and hot_lead == False:
-                            hot_lead = True
-                            hot_leads = hot_leads+1
-                if hot_leads > 0:
-                    is_interested = 'true'
-                else:
-                    is_interested = 'false'
+            hot_leads = 0
+            hot_lead_fields = LeadsFormItems.objects.filter(campaign_id = campaign_id)\
+                .exclude(hot_lead_criteria__isnull=True).values('item_id','leads_form_id','hot_lead_criteria')
+            print clock() - start_time, ' 2'
+            for curr_lead in total_leads:
+                hot_lead = False
+                leads_form_id = curr_lead['leads_form_id']
+                entry_id = curr_lead['entry_id']
+                # get all forms with hot lead criteria
+                hot_lead_items_current = [x for x in hot_lead_fields if x['leads_form_id'] == leads_form_id]
+                #data_current = [x for x in leads_form_data_array if x['leads_form'] == leads_form_id
+                #                and x['entry_id'] == entry_id]
+                for lead_item in hot_lead_items_current:
+                    hot_lead_item = lead_item['item_id']
+                    hot_lead_value = lead_item['hot_lead_criteria']
+                    data_current_hot = [x for x in leads_form_data_array if x['item_id'] == hot_lead_item and
+                        x['item_value'] == hot_lead_value and x['leads_form_id']==leads_form_id
+                        and x['entry_id']==entry_id]
+                    if len(data_current_hot)>0 and hot_lead==False:
+                        hot_lead = True
+                        hot_leads = hot_leads+1
+            print clock() - start_time, ' 3'
+            if hot_leads > 0:
+                is_interested = 'true'
+            else:
+                is_interested = 'false'
 
-                hot_lead_ratio = hot_leads/total_leads_count
+            hot_lead_ratio = float(hot_leads/total_leads_count)
 
-                data[campaign_id] = {
-                            'total': total_leads_count,
-                            'is_interested': is_interested,
-                            'hot_lead_ratio': hot_lead_ratio,
-                            'data': campaign_objects_list[campaign_id],
-                            'interested': hot_leads,
-                            'campaign': campaign_id
-                        }
-
-            return ui_utils.handle_response(class_name, data=data, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            data[campaign_id] = {
+                        'total': total_leads_count,
+                        'is_interested': is_interested,
+                        'hot_lead_ratio': hot_lead_ratio,
+                        'data': campaign_objects_list[campaign_id],
+                        'interested': hot_leads,
+                        'campaign': campaign_id
+                    }
+        print clock() - start_time, ' final_time'
+        return ui_utils.handle_response(class_name, data=data, success=True)
+        # except Exception as e:
+        #     return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     @list_route()
     def get_activity_images_by_suppliers(self, request):
