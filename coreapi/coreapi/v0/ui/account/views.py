@@ -18,8 +18,8 @@ import v0.ui.website.utils as website_utils
 from django.dispatch import receiver
 from django.contrib.auth.signals import user_logged_in
 from rest_framework.pagination import PageNumberPagination
-
-
+from datetime import datetime
+from dateutil import tz
 
 class GetBusinessTypesAPIView(APIView):
     """
@@ -531,7 +531,10 @@ class SignupAPIListView(APIView):
 @receiver(user_logged_in)
 def on_login(sender, user, request, **kwargs):
     user_id = user.id
-    organisation_id = Organisation.objects.get(user_id=user_id).organisation_id
+    organisation_user = Organisation.objects.filter(user_id=user_id).all()
+    if len(organisation_user) == 0:
+        return
+    organisation_id = organisation_user[0].organisation_id
     serializer = ActivityLogSerializer(data={"user": user_id, "organisation": organisation_id})
     if serializer.is_valid():
         serializer.save()
@@ -540,11 +543,23 @@ def on_login(sender, user, request, **kwargs):
 
 class LoginLog(APIView):
     def get(self, request):
-        user_id = request.user.id
-        organisation_id = Organisation.objects.get(user_id=user_id).organisation_id
-        activity_log = ActivityLog.objects.filter(organisation_id = organisation_id)
+        user = request.user
+        user_id = user.id
+        organisation = Organisation.objects.get(user_id=user_id)
+        organisation_id = organisation.organisation_id
+        activity_log = ActivityLog.objects.filter(organisation_id=organisation_id).order_by('-created_at').all()
         log_data = []
         for activity in activity_log:
-            curr_activity = ActivityLogSerializer(activity).data
+            curr_activity = {}
+            curr_activity['organisation_name'] = organisation.name
+            curr_activity['organisation_id'] = organisation.organisation_id
+            curr_activity['user_id'] = user.id
+            curr_activity['username'] = user.username
+            curr_activity['first_name'] = user.first_name
+            curr_activity['last_name'] = user.last_name
+            curr_activity['email'] = user.email
+            from_zone = tz.gettz('UTC')
+            to_zone = tz.gettz('Asia/Kolkata')
+            curr_activity['login_timestamp'] = activity.created_at.replace(tzinfo=from_zone).astimezone(to_zone)
             log_data.append(curr_activity)
         return ui_utils.handle_response({}, data=log_data, success=True)
