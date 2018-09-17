@@ -679,37 +679,24 @@ class DashBoardViewSet(viewsets.ViewSet):
         # leads_from_data = LeadsFormData.filter(campaign_id__in = campaign_list)
         # lead_items = LeadsFormItems.filter(campaign_id__in=campaign_list)
         data = {}
-        print clock() - start_time, ' 1'
         for campaign_id in valid_campaign_list:
             leads_form_data = LeadsFormData.objects.filter(campaign_id = campaign_id)
-            print clock() - start_time
             #leads_form_items = LeadsFormItems.objects.filter(campaign_id = campaign_id)
             leads_form_data_array = []
             for curr_object in leads_form_data:
-                curr_data = curr_object.__dict__
+                curr_data_1 = curr_object.__dict__
+                curr_data = {key: curr_data_1[key] for key in ['item_id', 'item_value', 'leads_form_id','entry_id']}
                 leads_form_data_array.append(curr_data)
-            #print leads_form_data_array
-            #serialized_leads_form_data = LeadsFormDataSerializer(leads_form_data, many=True).data
-            #print serialized_leads_form_data
-            print clock() - start_time, 'serializer'
-            #            print leads_form_data_array for curr_data in serialized_leads_form_data:
-            #     leads_form_data_array.append(curr_data)
-            # print serialized_leads_form_data
-            # print leads_form_data_array
-            #leads_form_data_array = serialized_leads_form_data
+
             # combination of entry and form id is a lead
             total_leads = leads_form_data.values('entry_id','leads_form_id').distinct()
             total_leads_count = len(total_leads)
-            # for curr_lead in total_leads:
-            #     curr_data = curr_lead.__dict__
-            #     total_leads_data.append(curr_data)
-            # total_leads_count = len(total_leads_data)
+
             # now computing hot leads
 
             hot_leads = 0
             hot_lead_fields = LeadsFormItems.objects.filter(campaign_id = campaign_id)\
                 .exclude(hot_lead_criteria__isnull=True).values('item_id','leads_form_id','hot_lead_criteria')
-            print clock() - start_time, ' 2'
             for curr_lead in total_leads:
                 hot_lead = False
                 leads_form_id = curr_lead['leads_form_id']
@@ -727,7 +714,6 @@ class DashBoardViewSet(viewsets.ViewSet):
                     if len(data_current_hot)>0 and hot_lead==False:
                         hot_lead = True
                         hot_leads = hot_leads+1
-            print clock() - start_time, ' 3'
             if hot_leads > 0:
                 is_interested = 'true'
             else:
