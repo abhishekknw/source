@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from views import (ShortlistSocietyCountAPIView, BookCampaignAPIView,
                    FinalCampaignBookingAPIView, campaignListAPIVIew, CampaignAPIView, DashBoardViewSet,
                    DeleteInventoryActivityAssignment, GetCampaignAssignments, DeleteCampaignAssignments,
-                   GetAdInventoryTypeAndDurationTypeData)
+                   GetAdInventoryTypeAndDurationTypeData, AddDynamicInventoryIds, DeleteAdInventoryIds)
 from v0.ui.website.views import (GetAssignedIdImagesListApiView)
 
 urlpatterns = [
@@ -17,6 +17,8 @@ urlpatterns = [
     url(r'^view-campaign-assignments/(?P<campaign_id>[A-Z_a-z0-9]+)/$', GetCampaignAssignments.as_view()),
     url(r'^delete-campaign-assignments/(?P<assignment_id>[A-Z_a-z0-9]+)/$', DeleteCampaignAssignments.as_view()),
     url(r'^get-adinventorytype-and-durationtype-data/$', GetAdInventoryTypeAndDurationTypeData.as_view()),
+    url(r'^add-dynamic-inventory-ids/$', AddDynamicInventoryIds.as_view()),
+    url(r'^delete-ad-inventory-ids/$', DeleteAdInventoryIds.as_view()),
 ]
 
 router = DefaultRouter()
