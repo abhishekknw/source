@@ -193,8 +193,7 @@ class LeadsFormBulkEntry(APIView):
                             more_than_ones_same_shortlisted_society.append(society_name)
                             continue
                         if len(shortlisted_spaces) == 0:
-                            if society_name not in missing_societies:
-                                missing_societies.append(society_name)
+                            not_present_in_shortlisted_societies.append(society_name)
                             continue
                         else:
                             found_supplier_id = shortlisted_spaces[0]['object_id']
