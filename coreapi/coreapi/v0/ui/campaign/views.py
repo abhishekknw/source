@@ -14,7 +14,7 @@ from models import (CampaignSocietyMapping, Campaign, CampaignAssignment)
 from serializers import (CampaignListSerializer, CampaignSerializer, CampaignAssignmentSerializer)
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2
-from v0.ui.inventory.models import InventoryActivityImage, InventoryActivityAssignment, InventoryActivity
+from v0.ui.inventory.models import InventoryActivityImage, InventoryActivityAssignment, InventoryActivity, AdInventoryType
 from rest_framework import viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework import status
@@ -23,6 +23,7 @@ from v0.ui.leads.models import Leads, LeadsForm, LeadsFormItems, LeadsFormData
 from v0.ui.leads.serializers import LeadsFormItemsSerializer, LeadsFormDataSerializer
 from v0.utils import get_values
 from time import clock
+from v0.ui.base.models import DurationType
 
 class CampaignAPIView(APIView):
 
@@ -913,3 +914,14 @@ class DeleteCampaignAssignments(APIView):
         assignment_query = CampaignAssignment.objects.get(id=assignment_id)
         assignment_query.delete()
         return ui_utils.handle_response({}, data='success', success=True)
+
+class GetAdInventoryTypeAndDurationTypeData(APIView):
+    @staticmethod
+    def get(request):
+        inventory_types = AdInventoryType.objects.all().values()
+        duration_types = DurationType.objects.all().values()
+        data = {
+            'inventory_types' : inventory_types,
+            'duration_types' : duration_types
+        }
+        return ui_utils.handle_response({}, data=data, success=True)
