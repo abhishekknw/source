@@ -1025,9 +1025,9 @@ class RetailShopViewSet(viewsets.ViewSet):
             if user.is_superuser:
                 retail_shop_objects = SupplierTypeRetailShop.objects.all().order_by('name')
             else:
-                city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
-                                                             v0_constants.retail_shop_code)
-                retail_shop_objects = SupplierTypeRetailShop.objects.filter(city_query)
+                # city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
+                #                                              v0_constants.retail_shop_code)
+                retail_shop_objects = SupplierTypeRetailShop.objects.all().order_by('name')
             serializer = RetailShopSerializer(retail_shop_objects, many=True)
             retail_shop_with_images = get_supplier_image(serializer.data, 'Retail Shop')
 
