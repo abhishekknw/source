@@ -2322,12 +2322,17 @@ class getSupplierListByStatus(APIView):
         shortlisted_spaces_by_phase_dict = {}
         all_phases = SupplierPhase.objects.filter(campaign_id=campaign_id).all()
         all_phase_by_id = {}
+        current_date = datetime.datetime.now()
         for phase in all_phases:
-            all_phase_by_id[phase.id] = {'start_date': phase.start_date,
-                                         'end_date': phase.end_date,
-                                         'phase_no': phase.phase_no,
-                                         'comments': phase.comments
-                                         }
+            start_date_aware = phase.start_date
+            start_date = start_date_aware.replace(tzinfo=None) if start_date_aware is not None else None
+            if start_date is not None and start_date >= current_date:
+                all_phase_by_id[phase.id] = {'start_date': start_date,
+                                             'end_date': phase.end_date,
+                                             'phase_no': phase.phase_no,
+                                             'comments': phase.comments
+                                             }
+
         for space in shortlisted_spaces_list:
             if space.phase_no_id:
                 supplier_society = SupplierTypeSociety.objects.filter(supplier_id=space.object_id)
@@ -2340,13 +2345,15 @@ class getSupplierListByStatus(APIView):
                     shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(supplier_society_serialized)
         shortlisted_spaces_by_phase_list = []
         for phase_id in shortlisted_spaces_by_phase_dict:
-            shortlisted_spaces_by_phase_list.append({
-                'phase_no': all_phase_by_id[phase_id]['phase_no'],
-                'start_date': all_phase_by_id[phase_id]['start_date'],
-                'end_date': all_phase_by_id[phase_id]['end_date'],
-                'comments': all_phase_by_id[phase_id]['comments'],
-                'supplier_data': shortlisted_spaces_by_phase_dict[phase_id]
-            })
+            start_date = all_phase_by_id[phase_id]['start_date'] if phase_id in all_phase_by_id else None
+            if start_date is not None and start_date >= current_date:
+                shortlisted_spaces_by_phase_list.append({
+                    'phase_no': all_phase_by_id[phase_id]['phase_no'],
+                    'start_date': all_phase_by_id[phase_id]['start_date'],
+                    'end_date': all_phase_by_id[phase_id]['end_date'],
+                    'comments': all_phase_by_id[phase_id]['comments'],
+                    'supplier_data': shortlisted_spaces_by_phase_dict[phase_id]
+                })
         return ui_utils.handle_response({}, data=shortlisted_spaces_by_phase_list, success=True)
 
 class ImportSheetInExistingCampaign(APIView):

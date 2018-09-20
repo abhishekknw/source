@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
-from serializers import LeadsFormItemsSerializer, LeadAliasSerializer
-from models import LeadsForm, LeadsFormItems, LeadsFormData, Leads, LeadAlias
+from serializers import LeadsFormItemsSerializer, LeadsFormContactsSerializer
+from models import LeadsForm, LeadsFormItems, LeadsFormData, Leads, LeadAlias, LeadsFormContacts
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
@@ -545,3 +545,26 @@ class MigrateLeadsData(APIView):
             # iterating by enteries for a given form
 
         return ui_utils.handle_response({}, data='success', success=True)
+
+class SmsContact(APIView):
+
+    def post(self, request, form_id):
+        class_name = self.__class__.__name__
+        contact_details = request.data
+        contact_mobile = contact_details['mobile']
+        data = (LeadsFormContacts(**{
+            'contact_name': contact_details['name'],
+            'contact_mobile': contact_details['mobile'],
+            'form_id': form_id
+        }))
+        data.save()
+        return ui_utils.handle_response(class_name, data='success', success=True)
+
+    def get(self, request, form_id):
+         class_name = self.__class__.__name__
+         contacts_data_object = LeadsFormContacts.objects.filter(form_id=form_id).values('contact_name','contact_mobile')
+         contacts_data = []
+         for data in contacts_data_object:
+            contacts_data.append(data)
+         return ui_utils.handle_response(class_name, data=contacts_data, success=True)
+

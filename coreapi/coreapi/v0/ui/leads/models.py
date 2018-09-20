@@ -85,6 +85,7 @@ class LeadsForm(BaseModel):
     leads_form_name = models.CharField(max_length=100, null=True, blank=True)
     last_entry_id = models.IntegerField(blank=False, null=True)
     fields_count = models.IntegerField(blank=False, null=True, default = 0)
+    last_contact_id = models.IntegerField(blank=False, null=True)
     status = models.CharField(max_length=70, null=True, choices=LEAD_ITEM_STATUS)
 
     class Meta:
@@ -116,7 +117,15 @@ class LeadsFormData(BaseModel):
     entry_id = models.IntegerField(blank=False, null=True)
     item_id = models.IntegerField(blank=False, null=True)
     status = models.CharField(max_length=70, null=True, choices=LEAD_ITEM_STATUS)
+
     class Meta:
         db_table = 'leads_form_data'
 
 
+class LeadsFormContacts(BaseModel):
+    form = models.ForeignKey('LeadsForm', null=False, blank=False)
+    contact_name = models.CharField(max_length=70, null=True, blank=True)
+    contact_mobile = models.IntegerField(blank=False, null=True)
+
+    class Meta:
+        db_table = 'leads_form_contacts'
