@@ -962,7 +962,7 @@ class DeleteAdInventoryIds(APIView):
         data = request.data
         total = 0
         for inventory in range(len(data)):
-            if not InventoryActivityImage.objects.filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details=data[inventory]):
+            if not InventoryActivityImage.objects.select_related('inventory_activity_assignment','inventory_activity_assignment__inventory_activity','inventory_activity_assignment__inventory_activity__shortlisted_inventory_details').filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__id=data[inventory]):
                 ShortlistedInventoryPricingDetails.objects.get(id=data[inventory]).delete()
                 total += 1
         result = {
