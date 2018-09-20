@@ -129,7 +129,9 @@ class SupplierInfoSerializer(ModelSerializer):
 class RetailShopSerializer(ModelSerializer):
     class Meta:
         model = SupplierTypeRetailShop
+        fields = '__all__'
 
 class BusDepotSerializer(ModelSerializer):
     class Meta:
         model = SupplierTypeBusDepot
+        fields = '__all__'

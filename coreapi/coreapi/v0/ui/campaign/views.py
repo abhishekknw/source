@@ -1,3 +1,4 @@
+import random
 from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, SupplierPhase
 from v0.ui.utils import handle_response
 from django.utils import timezone
@@ -14,7 +15,7 @@ from models import (CampaignSocietyMapping, Campaign, CampaignAssignment)
 from serializers import (CampaignListSerializer, CampaignSerializer, CampaignAssignmentSerializer)
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2
-from v0.ui.inventory.models import InventoryActivityImage, InventoryActivityAssignment, InventoryActivity
+from v0.ui.inventory.models import InventoryActivityImage, InventoryActivityAssignment, InventoryActivity, AdInventoryType
 from rest_framework import viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework import status
@@ -23,6 +24,8 @@ from v0.ui.leads.models import Leads, LeadsForm, LeadsFormItems, LeadsFormData
 from v0.ui.leads.serializers import LeadsFormItemsSerializer, LeadsFormDataSerializer
 from v0.utils import get_values
 from time import clock
+from v0.ui.base.models import DurationType
+from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 
 class CampaignAPIView(APIView):
 
@@ -913,3 +916,56 @@ class DeleteCampaignAssignments(APIView):
         assignment_query = CampaignAssignment.objects.get(id=assignment_id)
         assignment_query.delete()
         return ui_utils.handle_response({}, data='success', success=True)
+
+class GetAdInventoryTypeAndDurationTypeData(APIView):
+    @staticmethod
+    def get(request):
+        inventory_types = AdInventoryType.objects.all().values()
+        duration_types = DurationType.objects.all().values()
+        data = {
+            'inventory_types' : inventory_types,
+            'duration_types' : duration_types
+        }
+        return ui_utils.handle_response({}, data=data, success=True)
+
+class AddDynamicInventoryIds(APIView):
+    @staticmethod
+    def post(request):
+        data = request.data
+        inv = AdInventoryType.objects.get(id=data['ad_inv_id'])
+        duration = DurationType.objects.get(id=data['duration_id'])
+        content_type = ui_utils.fetch_content_type(str(inv.adinventory_name))
+        space = ShortlistedSpaces.objects.get(id=data['space_id'])
+        now_time = timezone.now()
+        shortlisted_inventories = []
+        for inventory in range(data['inv_count']):
+            inventory_id = "TEST" + str(inv.adinventory_name.strip()) + str(random.randint(1,2000)) + str(inventory)
+            data = {
+                'ad_inventory_type': inv,
+                'ad_inventory_duration': duration,
+                'inventory_id': inventory_id,
+                'shortlisted_spaces': space,
+                'created_at': now_time,
+                'updated_at': now_time,
+                'inventory_content_type_id': content_type.id
+            }
+
+            shortlisted_inventories.append(ShortlistedInventoryPricingDetails(**data))
+        ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_inventories)
+        return ui_utils.handle_response({}, data={}, success=True)
+
+class DeleteAdInventoryIds(APIView):
+    @staticmethod
+    def post(request):
+        import pdb
+        pdb.set_trace()
+        data = request.data
+        total = 0
+        for inventory in range(len(data)):
+            if not InventoryActivityImage.objects.filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details=data[inventory]):
+                ShortlistedInventoryPricingDetails.objects.get(id=data[inventory]).delete()
+                total += 1
+        result = {
+         'msg' : str(total) + " Inventories Deleted"
+        }
+        return ui_utils.handle_response({}, data=result, success=True)
