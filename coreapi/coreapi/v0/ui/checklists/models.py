@@ -20,7 +20,7 @@ class Checklist(BaseModel):
     checklist_name = models.CharField(max_length=100, null=True, blank=True)
     status = models.CharField(max_length=70, null=True, choices=LEAD_ITEM_STATUS)
     checklist_type = models.CharField(max_length=70, null=True, choices=CHECKLIST_TYPE)
-    last_entry_id = models.IntegerField(blank=False, null=True)
+    rows = models.IntegerField(blank=False, null=True)
 
     class Meta:
         db_table = 'checklist'
@@ -42,11 +42,11 @@ class ChecklistRows(BaseModel):
 
 class ChecklistColumns(BaseModel):
     checklist = models.ForeignKey('Checklist', null=False, blank=False)
-    key_name = models.CharField(max_length=70, null=True, blank=True)
-    key_options = models.CharField(max_length=200, null=True, blank=True)  # delimiter separated
-    key_type = models.CharField(max_length=70, null=True, choices=LEAD_KEY_TYPES)
+    column_name = models.CharField(max_length=70, null=True, blank=True)
+    column_options = models.CharField(max_length=200, null=True, blank=True)  # delimiter separated
+    column_type = models.CharField(max_length=70, null=True, choices=LEAD_KEY_TYPES)
     order_id = models.IntegerField(blank=False, null=True)
-    item_id = models.IntegerField(blank=False, null=True)
+    column_id = models.IntegerField(blank=False, null=True)
     status = models.CharField(max_length=70, null=True, choices=LEAD_ITEM_STATUS)
 
     class Meta:
@@ -55,9 +55,9 @@ class ChecklistColumns(BaseModel):
 class ChecklistData(BaseModel):
     checklist = models.ForeignKey('Checklist', null=False, blank=False)
     supplier_id = models.CharField(max_length=70, null=True, blank=True)
-    item_value = models.CharField(max_length=200, null=True, blank=True)
-    entry_id = models.IntegerField(blank=False, null=True)
-    item_id = models.IntegerField(blank=False, null=True)
+    cell_value = models.CharField(max_length=200, null=True, blank=True)
+    row_id = models.IntegerField(blank=False, null=True)
+    column_id = models.IntegerField(blank=False, null=True)
     status = models.CharField(max_length=70, null=True, choices=LEAD_ITEM_STATUS)
     class Meta:
         db_table = 'checklist_data'
