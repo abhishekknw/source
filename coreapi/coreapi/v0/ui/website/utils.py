@@ -4154,7 +4154,7 @@ def update_campaign_inventories(data):
 
         for obj in ss_objects:
             ss_global_id = obj.id
-            obj.phase_no = SupplierPhase.objects.get(id=shortlisted_spaces[ss_global_id]['phase_no'])
+            obj.phase_no = SupplierPhase.objects.get(id=shortlisted_spaces[ss_global_id]['phase_no']) if shortlisted_spaces[ss_global_id]['phase_no'] else None
             obj.phase = shortlisted_spaces[ss_global_id]['phase']
             obj.payment_status = shortlisted_spaces[ss_global_id]['payment_status']
             obj.payment_method = shortlisted_spaces[ss_global_id]['payment_method']
