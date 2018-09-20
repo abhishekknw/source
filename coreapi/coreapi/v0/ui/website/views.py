@@ -785,12 +785,16 @@ class AssignCampaign(APIView):
             else:
                     assigned_objects = CampaignAssignment.objects.filter(Q(assigned_to=user) | Q(assigned_by=user) | Q(campaign__created_by=user.username))
             campaigns = []
+            all_proposal_ids = []
             # check each one of them weather they are campaign or not
             for assign_object in assigned_objects:
                 response = website_utils.is_campaign(assign_object.campaign)
                 # if it is a campaign.
                 if response.data['status']:
-                    campaigns.append(assign_object)
+                    proposal_id = assign_object.campaign.proposal_id
+                    if proposal_id not in all_proposal_ids:
+                        all_proposal_ids.append(proposal_id)
+                        campaigns.append(assign_object)
                     # assign statuses to each of the campaigns.
 
             serializer = CampaignAssignmentSerializerReadOnly(campaigns, many=True)

@@ -543,11 +543,13 @@ def on_login(sender, user, request, **kwargs):
 
 class LoginLog(APIView):
     def get(self, request):
+        page_no = int(request.GET.get('page', 1))
+        total_logs = 25
         user = request.user
         user_id = user.id
         organisation = Organisation.objects.get(user_id=user_id)
         organisation_id = organisation.organisation_id
-        activity_log = ActivityLog.objects.filter(organisation_id=organisation_id).order_by('-created_at').all()
+        activity_log = ActivityLog.objects.filter(organisation_id=organisation_id).order_by('-created_at')[total_logs * (page_no-1):total_logs * (page_no)].all()
         log_data = []
         for activity in activity_log:
             curr_activity = {}
