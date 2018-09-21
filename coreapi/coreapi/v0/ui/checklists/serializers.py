@@ -13,3 +13,9 @@ class ChecklistColumnsSerializer(ModelSerializer):
     class Meta:
         model = ChecklistColumns
         fields = '__all__'
+
+
+class ChecklistDataSerializer(ModelSerializer):
+    class Meta:
+        model = ChecklistColumns
+        fields = '__all__'
