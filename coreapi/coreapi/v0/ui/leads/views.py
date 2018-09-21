@@ -105,13 +105,15 @@ class CreateLeadsForm(APIView):
         item_id = 0
         for item in leads_form_items:
             item_id = item_id + 1
+            key_options = item["key_options"] if 'key_options' in item else None
+            if key_options and isinstance(key_options, list):
+                key_options = ','.join(key_options)
             item_object = LeadsFormItems(**{
                 "campaign_id" : campaign_id,
                 "leads_form": new_dynamic_form,
                 "key_name": item["key_name"],
                 "key_type": item["key_type"],
-                #"key_options": ",".join(item["key_options"]) if "key_options" in item else None,
-                "key_options": item["key_options"] if "key_options" in item else None,
+                "key_options": key_options,
                 "order_id": item["order_id"],
                 "item_id": item_id,
                 "hot_lead_criteria": item["hot_lead_criteria"] if "hot_lead_criteria" in item else None
