@@ -957,8 +957,6 @@ class AddDynamicInventoryIds(APIView):
 class DeleteAdInventoryIds(APIView):
     @staticmethod
     def post(request):
-        import pdb
-        pdb.set_trace()
         data = request.data
         total = 0
         for inventory in range(len(data)):

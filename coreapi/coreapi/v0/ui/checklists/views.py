@@ -75,23 +75,27 @@ class ChecklistEntry(APIView):
             print 'inactive checklist'
         else:
             supplier_id = checklist_info.supplier_id if checklist_info.checklist_type == 'supplier' else None
-            row_id = request.data["row_id"]
-            checklist_data = request.data["row_data"]
+            rows_data = request.data
+            #checklist_data = request.data["row_data"]
+            rows = dict.keys(rows_data)
             checklist_entry_list = []
-            for item in checklist_data:
-                if item['column_id'] == 1:
-                    print "Cannot override static column"
-                    continue
-                row = (ChecklistData(**{
-                    "checklist_id": checklist_info.id,
-                    "column_id": item["column_id"],
-                    "cell_value": item["cell_value"],
-                    "status": "active",
-                    "supplier_id": supplier_id,
-                    "row_id": row_id
-                }))
-                checklist_entry_list.append(row)
-                row.save()
+            for row_id_str in rows:
+                row_data = rows_data[row_id_str]
+                row_id = int(row_id_str)
+                for item in row_data:
+                    if item['column_id'] == 1:
+                        print "Cannot edit static column"
+                        continue
+                    row = (ChecklistData(**{
+                        "checklist_id": checklist_info.id,
+                        "column_id": item["column_id"],
+                        "cell_value": item["cell_value"],
+                        "status": "active",
+                        "supplier_id": supplier_id,
+                        "row_id": row_id
+                    }))
+                    checklist_entry_list.append(row)
+                    row.save()
 
             #checklist_info.last_row_id = row_id
             checklist_info.save()
@@ -155,6 +159,7 @@ class GetChecklistData(APIView):
                 key_value = key_query.cell_value
                 #current_row[key_name] = key_value
                 current_row = ({
+                    "row_id": i,
                     "column_id": item_id,
                     "value": key_value
                 })
