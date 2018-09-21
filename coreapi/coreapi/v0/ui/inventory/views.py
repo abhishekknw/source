@@ -1227,20 +1227,20 @@ class CampaignsAssignedInventoryCountApiView(APIView):
             q2 = Q()
             if not request.user.is_superuser:
                 category = request.query_params.get('category', None)
-                if category.upper() == v0_constants.category['business']:
-                    q1 = Q(
-                        inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account__organisation__organisation_id=organisation_id)
-                    q2 = Q(
-                        inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account__organisation__organisation_id=organisation_id)
-                if category.upper() == v0_constants.category['business_agency']:
-                    q1 = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__user=user)
-                    q2 = Q(
-                        inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__user=user)
-                if category.upper() == v0_constants.category['supplier_agency'] or category.upper() == v0_constants.category['machadalo']:
-                    q1 = Q(
-                        inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignment__assigned_to=user)
-                    q2 = Q(
-                        inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignment__assigned_to=user)
+                # if category.upper() == v0_constants.category['business']:
+                #     q1 = Q(
+                #         inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account__organisation__organisation_id=organisation_id)
+                #     q2 = Q(
+                #         inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account__organisation__organisation_id=organisation_id)
+                # if category.upper() == v0_constants.category['business_agency']:
+                #     q1 = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__user=user)
+                #     q2 = Q(
+                #         inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__user=user)
+                # if category.upper() == v0_constants.category['supplier_agency'] or category.upper() == v0_constants.category['machadalo']:
+                q1 = Q(
+                    inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignment__assigned_to=user)
+                q2 = Q(
+                    inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignment__assigned_to=user)
             inv_act_assignment_objects = InventoryActivityAssignment.objects. \
                 select_related('inventory_activity', 'inventory_activity__shortlisted_inventory_details',
                                'inventory_activity__shortlisted_inventory_details__shortlisted_spaces',

@@ -105,13 +105,15 @@ class CreateLeadsForm(APIView):
         item_id = 0
         for item in leads_form_items:
             item_id = item_id + 1
+            key_options = item["key_options"] if 'key_options' in item else None
+            if key_options and isinstance(key_options, list):
+                key_options = ','.join(key_options)
             item_object = LeadsFormItems(**{
                 "campaign_id" : campaign_id,
                 "leads_form": new_dynamic_form,
                 "key_name": item["key_name"],
                 "key_type": item["key_type"],
-                #"key_options": ",".join(item["key_options"]) if "key_options" in item else None,
-                "key_options": item["key_options"] if "key_options" in item else None,
+                "key_options": key_options,
                 "order_id": item["order_id"],
                 "item_id": item_id,
                 "hot_lead_criteria": item["hot_lead_criteria"] if "hot_lead_criteria" in item else None
@@ -360,12 +362,21 @@ class LeadFormUpdate(APIView):
     # this function is used to add fields to an existing form using form id
     @staticmethod
     def put(request, form_id):
-        new_field = request.data
-        new_field_object = LeadsFormItems(**new_field)
-        new_field_object.leads_form_id = form_id
-        last_item_id = LeadsForm.objects.get(id=form_id).fields_count
-        new_field_object.item_id = last_item_id + 1
-        new_field_object.save()
+        new_field_list = request.data
+        lead_form = LeadsForm.objects.get(id=form_id)
+        for new_field in new_field_list:
+            if 'key_options' in new_field:
+                if new_field['key_options'] and isinstance(new_field['key_options'], list):
+                    new_field['key_options'] = ','.join(new_field['key_options'])
+            new_field_object = LeadsFormItems(**new_field)
+            new_field_object.leads_form_id = form_id
+            last_item_id = LeadsForm.objects.get(id=form_id).fields_count
+            new_field_object.item_id = last_item_id + 1
+            new_field_object.campaign_id = lead_form.campaign_id
+            new_field_object.save()
+        leads_form_items_count = LeadsFormItems.objects.filter(leads_form_id=form_id).count()
+        lead_form.fields_count = leads_form_items_count
+        lead_form.save()
         return ui_utils.handle_response({}, data='success', success=True)
 
 

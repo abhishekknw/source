@@ -1624,33 +1624,51 @@ class GetAssignedIdImagesListApiView(APIView):
         try:
             user = request.user
             proposal_query = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaign_state='PTC')
+            proposal_query_assignment = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaign_state='PTC')
 
             activity_type = request.query_params.get('type', None)
             activity_type_query = Q(inventory_activity_assignment__inventory_activity__activity_type=activity_type)
+            activity_type_query_assignment = Q(inventory_activity__activity_type=activity_type)
 
             activity_date = request.query_params.get('date', None)
             activity_date_query = Q(inventory_activity_assignment__activity_date=activity_date)
+            activity_date_query_assignment = Q(activity_date=activity_date)
 
             inventory = request.query_params.get('inventory', None)
             inv_query = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name = inventory)
+            inv_query_assignment = Q(inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name=inventory)
             all_users = BaseUser.objects.all().values('id', 'username')
             user_map = {detail['id']: detail['username'] for detail in all_users}
 
             query = Q()
             if not request.user.is_superuser:
                 category = request.query_params.get('category', None)
-                if category.upper() == v0_constants.category['business']:
-                    query = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account__organisation__organisation_id=organisation_id)
-                if category.upper() == v0_constants.category['business_agency']:
-                    query = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__user=user)
+                # if category.upper() == v0_constants.category['business']:
+                #     query = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__account__organisation__organisation_id=organisation_id)
+                # if category.upper() == v0_constants.category['business_agency']:
+                #     query = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__user=user)
+                #
+                # if category.upper() == v0_constants.category['supplier_agency'] or category.upper() == v0_constants.category['machadalo']:
+                query = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignment__assigned_to=user)
 
-                if category.upper() == v0_constants.category['supplier_agency'] or category.upper() == v0_constants.category['machadalo']:
-                    query = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignment__assigned_to=user)
             proposal_alias_name ='inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__name'
-            proposal_alias_id = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__proposal_id'
-            shortlisted_inv_alias = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details'
-            supplier_id = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id'
+            proposal_alias_name_assignment = 'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__name'
 
+            proposal_alias_id = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__proposal_id'
+            proposal_alias_id_assignment = 'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__proposal_id'
+            shortlisted_inv_alias = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details'
+            shortlisted_inv_alias_assignment = 'inventory_activity__shortlisted_inventory_details'
+
+            supplier_id = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id'
+            supplier_id_assignment = 'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id'
+
+            inv_act_assignment_objects = InventoryActivityAssignment.objects.select_related('inventory_activity',
+                                                                                  'inventory_activity__shortlisted_inventory_details',
+                                                                                  'inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
+                filter(proposal_query_assignment, query, activity_type_query_assignment, activity_date_query_assignment, inv_query_assignment). \
+                annotate(name=F(proposal_alias_name_assignment), inv_id=F(shortlisted_inv_alias_assignment), object_id=F(supplier_id_assignment),
+                         proposal_id=F(proposal_alias_id_assignment)). \
+                values('name', 'inv_id', 'object_id', 'proposal_id')
 
             inv_act_image_objects = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
                                                                      'inventory_activity_assignment__inventory_activity',
@@ -1667,14 +1685,22 @@ class GetAssignedIdImagesListApiView(APIView):
             suppliers = serializer.data
 
             inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(inv_act_image_objects, suppliers)
+            inv_act_image_objects_with_distance_map = {inv['inv_id'] : inv for inv in inv_act_image_objects_with_distance}
 
             result = {}
-            for object in inv_act_image_objects:
+            for object in inv_act_assignment_objects:
                 if object['name'] not in result:
                     result[object['name']] = {}
-                if object['inv_id'] not in result[object['name']]:
-                    result[object['name']][object['inv_id']] = []
-                result[object['name']][object['inv_id']].append(object)
+                    result[object['name']]['assigned'] = {}
+                    result[object['name']]['completed'] = {}
+                if object['inv_id'] not in result[object['name']]['assigned']:
+                    result[object['name']]['assigned'][object['inv_id']] = []
+                    # result[object['name']]['completed'][object['inv_id']] = []
+                result[object['name']]['assigned'][object['inv_id']].append(object)
+                if object['inv_id'] in inv_act_image_objects_with_distance_map:
+                    if object['inv_id'] not in result[object['name']]['completed']:
+                        result[object['name']]['completed'][object['inv_id']] = []
+                    result[object['name']]['completed'][object['inv_id']].append(inv_act_image_objects_with_distance_map[object['inv_id']])
             return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
