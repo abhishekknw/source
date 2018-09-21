@@ -365,6 +365,9 @@ class LeadFormUpdate(APIView):
         new_field_list = request.data
         lead_form = LeadsForm.objects.get(id=form_id)
         for new_field in new_field_list:
+            if 'key_options' in new_field:
+                if new_field['key_options'] and isinstance(new_field['key_options'], list):
+                    new_field['key_options'] = ','.join(new_field['key_options'])
             new_field_object = LeadsFormItems(**new_field)
             new_field_object.leads_form_id = form_id
             last_item_id = LeadsForm.objects.get(id=form_id).fields_count
