@@ -360,12 +360,18 @@ class LeadFormUpdate(APIView):
     # this function is used to add fields to an existing form using form id
     @staticmethod
     def put(request, form_id):
-        new_field = request.data
-        new_field_object = LeadsFormItems(**new_field)
-        new_field_object.leads_form_id = form_id
-        last_item_id = LeadsForm.objects.get(id=form_id).fields_count
-        new_field_object.item_id = last_item_id + 1
-        new_field_object.save()
+        new_field_list = request.data
+        lead_form = LeadsForm.objects.get(id=form_id)
+        for new_field in new_field_list:
+            new_field_object = LeadsFormItems(**new_field)
+            new_field_object.leads_form_id = form_id
+            last_item_id = LeadsForm.objects.get(id=form_id).fields_count
+            new_field_object.item_id = last_item_id + 1
+            new_field_object.campaign_id = lead_form.campaign_id
+            new_field_object.save()
+        leads_form_items_count = LeadsFormItems.objects.filter(leads_form_id=form_id).count()
+        lead_form.fields_count = leads_form_items_count
+        lead_form.save()
         return ui_utils.handle_response({}, data='success', success=True)
 
 

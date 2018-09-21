@@ -15,7 +15,7 @@ urlpatterns = [
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_form_element/(?P<item_id>[A-Z_a-z0-9]+)$', DeleteLeadItems.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_form$', DeleteLeadForm.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_entry/(?P<entry_id>[A-Z_a-z0-9]+)$', DeleteLeadEntry.as_view()),
-    url(r'^(?P<form_id>[A-Z_a-z0-9]+)/add_field$', LeadFormUpdate.as_view()),
+    url(r'^(?P<form_id>[A-Z_a-z0-9]+)/add_fields$', LeadFormUpdate.as_view()),
     url(r'^migrate_data/$', MigrateLeadsData.as_view()),
     url(r'^(?P<form_id>[0-9]+)/add_sms_contact$', SmsContact.as_view()),
     url(r'^(?P<form_id>[0-9]+)/get_sms_contacts$', SmsContact.as_view()),
