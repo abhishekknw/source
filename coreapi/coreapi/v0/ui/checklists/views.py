@@ -109,6 +109,28 @@ class ChecklistEntry(APIView):
             success = True
         return ui_utils.handle_response({}, data=data, success=success)
 
+class ChecklistEdit(APIView):
+    def post(self, request, checklist_id):
+        class_name = self.__class__.__name__
+        columns = request.data['columns']
+        static_column = request.data['static_column']
+        n_rows = len(static_column)
+        n_cols = len(columns)
+        column_ids = [x["column_id"] for x in columns]
+        for column in columns:
+            column_id = column['column_id']
+            column_data = ChecklistColumns.objects.get(column_id=column_id, checklist_id = checklist_id)
+            column_data.column_name = column['column_name']
+            column_data.column_type = column['column_type']
+            column_data.save()
+        for row in static_column:
+            row_id = row['row_id']
+            row_data = ChecklistData.objects.get(row_id=row_id, column_id = 1, checklist_id = checklist_id)
+            row_data.cell_value = row['cell_value']
+            row_data.save()
+        return ui_utils.handle_response({}, data='success', success=True)
+
+
 class GetCampaignChecklists(APIView):
     # used for getting a list of all checklists of a campaign
     def get(self, request, campaign_id):
