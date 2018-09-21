@@ -21,6 +21,7 @@ class Checklist(BaseModel):
     status = models.CharField(max_length=70, null=True, choices=LEAD_ITEM_STATUS)
     checklist_type = models.CharField(max_length=70, null=True, choices=CHECKLIST_TYPE)
     rows = models.IntegerField(blank=False, null=True)
+    is_template = models.BooleanField(blank=False, null=False)
 
     class Meta:
         db_table = 'checklist'

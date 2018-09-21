@@ -15,6 +15,7 @@ class CreateChecklistTemplate(APIView):
         checklist_type = request.data['checklist_type']
         static_column_values = request.data['static_column_values']
         supplier_id = request.data['supplier_id'] if checklist_type == 'supplier'else None
+        is_template = True if "is_template" in request.data and request.data['is_template'] == 1 else False
         rows = len(static_column_values)
         new_form = Checklist(**{
             'campaign_id': campaign_id,
@@ -22,7 +23,8 @@ class CreateChecklistTemplate(APIView):
             'status': 'active',
             'supplier_id': supplier_id,
             'checklist_type': checklist_type,
-            'rows': rows
+            'rows': rows,
+            'is_template': is_template
         })
         new_form.save()
         form_columns_list = []
@@ -72,7 +74,11 @@ class ChecklistEntry(APIView):
         #row_id = checklist_info.last_entry_id + 1 if checklist_info.last_row_id else 1
         #checklist_type = checklist_info.checklist_type
         if checklist_info.status=='inactive':
-            print 'inactive checklist'
+            data = 'deleted checklist'
+            success = False
+        elif checklist_info.is_template == 1:
+            data = 'checklist is a template'
+            success = False
         else:
             supplier_id = checklist_info.supplier_id if checklist_info.checklist_type == 'supplier' else None
             rows_data = request.data
@@ -99,22 +105,37 @@ class ChecklistEntry(APIView):
 
             #checklist_info.last_row_id = row_id
             checklist_info.save()
-        return ui_utils.handle_response({}, data='success', success=True)
+            data = 'success'
+            success = True
+        return ui_utils.handle_response({}, data=data, success=success)
 
 class GetCampaignChecklists(APIView):
     # used for getting a list of all checklists of a campaign
     def get(self, request, campaign_id):
+        checklist_type = request.query_params.get('query_type')
         checklists = Checklist.objects.filter(campaign_id = campaign_id).exclude(status='inactive')
+        if checklist_type == 'list':
+            checklists = checklists.exclude(is_template=1)
+        if checklist_type == 'template':
+            checklists = checklists.filter(is_template=1)
+
         checklist_dict = []
         for item in checklists:
             list_item = ChecklistSerializer(item).data
             checklist_dict.append(list_item)
         return ui_utils.handle_response({}, data=checklist_dict, success=True)
 
+
 class GetSupplierChecklists(APIView):
     # used for getting a list of all checklists of a particular supplier within a campaign
     def get(self, request, campaign_id, supplier_id):
         checklists = Checklist.objects.filter(campaign_id=campaign_id, supplier_id = supplier_id).exclude(status='inactive')
+        checklist_type = request.query_params.get('query_type')
+        if checklist_type == 'list':
+            checklists = checklists.exclude(is_template=1)
+        if checklist_type == 'template':
+            checklists = checklists.filter(is_template=1)
+
         checklist_dict = []
         for item in checklists:
             list_item = ChecklistSerializer(item).data
