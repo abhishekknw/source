@@ -1639,8 +1639,9 @@ class GetAssignedIdImagesListApiView(APIView):
             inv_query_assignment = Q(inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name=inventory)
             all_users = BaseUser.objects.all().values('id', 'username')
             user_map = {detail['id']: detail['username'] for detail in all_users}
-            
+
             query = Q()
+            query_assignment = Q()
             if not request.user.is_superuser:
                 category = request.query_params.get('category', None)
                 # if category.upper() == v0_constants.category['business']:
