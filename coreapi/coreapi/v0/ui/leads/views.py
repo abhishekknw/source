@@ -21,7 +21,7 @@ def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
             "supplier_id": supplier_id,
             "campaign_id": campaign_id,
             "item_id": entry["item_id"],
-            "item_value": entry["value"],
+            "item_value": entry["value"] if 'value' in entry else None,
             "leads_form": lead_form,
             "entry_id": entry_id,
             "created_at": datetime.datetime.now()

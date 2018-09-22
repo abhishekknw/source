@@ -1639,7 +1639,7 @@ class GetAssignedIdImagesListApiView(APIView):
             inv_query_assignment = Q(inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name=inventory)
             all_users = BaseUser.objects.all().values('id', 'username')
             user_map = {detail['id']: detail['username'] for detail in all_users}
-
+            
             query = Q()
             if not request.user.is_superuser:
                 category = request.query_params.get('category', None)
@@ -1650,6 +1650,7 @@ class GetAssignedIdImagesListApiView(APIView):
                 #
                 # if category.upper() == v0_constants.category['supplier_agency'] or category.upper() == v0_constants.category['machadalo']:
                 query = Q(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignment__assigned_to=user)
+                query_assignment = Q(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__campaignassignment__assigned_to=user)
 
             proposal_alias_name ='inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__name'
             proposal_alias_name_assignment = 'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__name'
@@ -1665,7 +1666,7 @@ class GetAssignedIdImagesListApiView(APIView):
             inv_act_assignment_objects = InventoryActivityAssignment.objects.select_related('inventory_activity',
                                                                                   'inventory_activity__shortlisted_inventory_details',
                                                                                   'inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
-                filter(proposal_query_assignment, query, activity_type_query_assignment, activity_date_query_assignment, inv_query_assignment). \
+                filter(proposal_query_assignment, query_assignment, activity_type_query_assignment, activity_date_query_assignment, inv_query_assignment). \
                 annotate(name=F(proposal_alias_name_assignment), inv_id=F(shortlisted_inv_alias_assignment), object_id=F(supplier_id_assignment),
                          proposal_id=F(proposal_alias_id_assignment)). \
                 values('name', 'inv_id', 'object_id', 'proposal_id')
