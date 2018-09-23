@@ -1,9 +1,11 @@
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
+from django.views.decorators.cache import cache_page
 from views import (ShortlistSocietyCountAPIView, BookCampaignAPIView,
                    FinalCampaignBookingAPIView, campaignListAPIVIew, CampaignAPIView, DashBoardViewSet,
                    DeleteInventoryActivityAssignment, GetCampaignAssignments, DeleteCampaignAssignments,
-                   GetAdInventoryTypeAndDurationTypeData, AddDynamicInventoryIds, DeleteAdInventoryIds)
+                   GetAdInventoryTypeAndDurationTypeData, AddDynamicInventoryIds, DeleteAdInventoryIds,
+                   CampaignLeads)
 from v0.ui.website.views import (GetAssignedIdImagesListApiView)
 
 urlpatterns = [
@@ -19,6 +21,7 @@ urlpatterns = [
     url(r'^get-adinventorytype-and-durationtype-data/$', GetAdInventoryTypeAndDurationTypeData.as_view()),
     url(r'^add-dynamic-inventory-ids/$', AddDynamicInventoryIds.as_view()),
     url(r'^delete-ad-inventory-ids/$', DeleteAdInventoryIds.as_view()),
+    url(r'^dashboard/get_leads_by_campaign_new/$',  cache_page(60*60)(CampaignLeads.as_view())),
 ]
 
 router = DefaultRouter()

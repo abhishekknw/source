@@ -538,109 +538,6 @@ class DashBoardViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-    @list_route()
-    def get_leads_by_campaign_new(self, request):
-        class_name = self.__class__.__name__
-        campaign_id = request.query_params.get('campaign_id', None)
-        leads_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
-        supplier_ids = list(set(leads_form_data.values_list('supplier_id', flat=True)))
-
-        all_suppliers_list = {}
-        all_localities_data = {}
-        hot_leads_global = 0
-        all_leads_global = 0
-        lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
-        supplier_wise_lead_count = {}
-        supplier_data_1 = SupplierTypeSociety.objects.filter(supplier_id__in = supplier_ids)
-        supplier_data = SupplierTypeSocietySerializer2(supplier_data_1, many=True).data
-
-        for curr_supplier_data in supplier_data:
-            supplier_id = curr_supplier_data['supplier_id']
-            supplier_locality = curr_supplier_data['society_locality']
-            lead_count = lead_counter(campaign_id, supplier_id, lead_form_items_list)
-            supplier_wise_lead_count[supplier_id] = lead_count
-            hot_leads = lead_count['hot_leads']
-            total_leads = lead_count['total_leads']
-            # getting society information
-
-            curr_supplier_lead_data = {
-                "is_interested": True,
-                "campaign": campaign_id,
-                "object_id": supplier_id,
-                "interested": hot_leads,
-                "total": total_leads,
-                "data": curr_supplier_data,
-                }
-            all_suppliers_list[supplier_id] = curr_supplier_lead_data
-
-            if supplier_locality in all_localities_data:
-                all_localities_data[supplier_locality]["interested"] = all_localities_data[supplier_locality]["interested"]+hot_leads
-                all_localities_data[supplier_locality]["total"]=all_localities_data[supplier_locality]["total"]+total_leads
-            else:
-                curr_locality_data = {
-                    "is_interested": True,
-                    "campaign": campaign_id,
-                    "locality": supplier_locality,
-                    "interested": hot_leads,
-                    "total": total_leads,
-                }
-                all_localities_data[supplier_locality] = curr_locality_data
-
-            hot_leads_global = hot_leads_global+hot_leads
-            all_leads_global = all_leads_global+total_leads
-
-        # date-wise
-        date_data = {}
-        weekday_data = {}
-        all_entries_checked = []
-        for curr_data in leads_form_data:
-            curr_entry_details = {
-                'leads_form_id': curr_data.leads_form_id,
-                'entry_id': curr_data.entry_id
-            }
-            if curr_entry_details in all_entries_checked:
-                continue
-            else:
-                all_entries_checked.append(curr_entry_details)
-
-            time = curr_data.created_at
-            curr_date = str(time.date())
-            curr_time = str(time)
-
-            weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
-                             '4': 'Friday', '5': 'Saturday', '6': 'Sunday'}
-            curr_weekday = weekday_names[str(time.weekday())]
-
-            supplier_id = curr_data.supplier_id
-            lead_count = supplier_wise_lead_count[supplier_id]
-            hot_lead_details = lead_count['hot_lead_details']
-
-            if curr_date not in date_data:
-                date_data[curr_date] = {
-                    'total': 0,
-                    'is_interested': True,
-                    'interested': 0,
-                    'created_at': curr_time
-                }
-
-            if curr_weekday not in weekday_data:
-                weekday_data[curr_weekday] = {
-                    'total': 0,
-                    'interested': 0,
-                }
-
-            date_data[curr_date]['total'] = date_data[curr_date]['total']+1
-            weekday_data[curr_weekday]['total'] = weekday_data[curr_weekday]['total']+1
-
-            if curr_entry_details in hot_lead_details:
-                date_data[curr_date]['interested'] = date_data[curr_date]['interested'] + 1
-                weekday_data[curr_weekday]['interested'] = weekday_data[curr_weekday]['interested'] + 1
-
-        final_data = {'supplier_data': all_suppliers_list, 'date_data': date_data,
-                      'locality_data': all_localities_data, 'weekday_data': weekday_data}
-
-
-        return ui_utils.handle_response(class_name, data=final_data, success=True)
 
     # @detail_route(methods=['POST'])
     # def get_leads_by_multiple_campaigns(self, request, pk=None):
@@ -967,3 +864,109 @@ class DeleteAdInventoryIds(APIView):
          'msg' : str(total) + " Inventories Deleted"
         }
         return ui_utils.handle_response({}, data=result, success=True)
+
+
+class CampaignLeads(APIView):
+
+    def get(self, request):
+        class_name = self.__class__.__name__
+        campaign_id = request.query_params.get('campaign_id', None)
+        leads_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
+        supplier_ids = list(set(leads_form_data.values_list('supplier_id', flat=True)))
+
+        all_suppliers_list = {}
+        all_localities_data = {}
+        hot_leads_global = 0
+        all_leads_global = 0
+        lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
+        supplier_wise_lead_count = {}
+        supplier_data_1 = SupplierTypeSociety.objects.filter(supplier_id__in = supplier_ids)
+        supplier_data = SupplierTypeSocietySerializer2(supplier_data_1, many=True).data
+
+        for curr_supplier_data in supplier_data:
+            supplier_id = curr_supplier_data['supplier_id']
+            supplier_locality = curr_supplier_data['society_locality']
+            lead_count = lead_counter(campaign_id, supplier_id, lead_form_items_list)
+            supplier_wise_lead_count[supplier_id] = lead_count
+            hot_leads = lead_count['hot_leads']
+            total_leads = lead_count['total_leads']
+            # getting society information
+
+            curr_supplier_lead_data = {
+                "is_interested": True,
+                "campaign": campaign_id,
+                "object_id": supplier_id,
+                "interested": hot_leads,
+                "total": total_leads,
+                "data": curr_supplier_data,
+                }
+            all_suppliers_list[supplier_id] = curr_supplier_lead_data
+
+            if supplier_locality in all_localities_data:
+                all_localities_data[supplier_locality]["interested"] = all_localities_data[supplier_locality]["interested"]+hot_leads
+                all_localities_data[supplier_locality]["total"]=all_localities_data[supplier_locality]["total"]+total_leads
+            else:
+                curr_locality_data = {
+                    "is_interested": True,
+                    "campaign": campaign_id,
+                    "locality": supplier_locality,
+                    "interested": hot_leads,
+                    "total": total_leads,
+                }
+                all_localities_data[supplier_locality] = curr_locality_data
+
+            hot_leads_global = hot_leads_global+hot_leads
+            all_leads_global = all_leads_global+total_leads
+
+        # date-wise
+        date_data = {}
+        weekday_data = {}
+        all_entries_checked = []
+        for curr_data in leads_form_data:
+            curr_entry_details = {
+                'leads_form_id': curr_data.leads_form_id,
+                'entry_id': curr_data.entry_id
+            }
+            if curr_entry_details in all_entries_checked:
+                continue
+            else:
+                all_entries_checked.append(curr_entry_details)
+
+            time = curr_data.created_at
+            curr_date = str(time.date())
+            curr_time = str(time)
+
+            weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
+                             '4': 'Friday', '5': 'Saturday', '6': 'Sunday'}
+            curr_weekday = weekday_names[str(time.weekday())]
+
+            supplier_id = curr_data.supplier_id
+            lead_count = supplier_wise_lead_count[supplier_id]
+            hot_lead_details = lead_count['hot_lead_details']
+
+            if curr_date not in date_data:
+                date_data[curr_date] = {
+                    'total': 0,
+                    'is_interested': True,
+                    'interested': 0,
+                    'created_at': curr_time
+                }
+
+            if curr_weekday not in weekday_data:
+                weekday_data[curr_weekday] = {
+                    'total': 0,
+                    'interested': 0,
+                }
+
+            date_data[curr_date]['total'] = date_data[curr_date]['total']+1
+            weekday_data[curr_weekday]['total'] = weekday_data[curr_weekday]['total']+1
+
+            if curr_entry_details in hot_lead_details:
+                date_data[curr_date]['interested'] = date_data[curr_date]['interested'] + 1
+                weekday_data[curr_weekday]['interested'] = weekday_data[curr_weekday]['interested'] + 1
+
+        final_data = {'supplier_data': all_suppliers_list, 'date_data': date_data,
+                      'locality_data': all_localities_data, 'weekday_data': weekday_data}
+
+
+        return ui_utils.handle_response(class_name, data=final_data, success=True)
