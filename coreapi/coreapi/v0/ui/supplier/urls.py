@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 
 from views import (TransactionDataImport, SocietyDataImport, FilteredSuppliersAPIView, ImportSocietyData,
                    ImportContactDetails, FilteredSuppliers, SupplierSearch, SupplierDetails, ImportSupplierDataFromSheet,
-                   ImportSupplierData, addSupplierDirectToCampaign, deleteSuppliers)
+                   ImportSupplierData, addSupplierDirectToCampaign, deleteSuppliers, deleteShortlistedSpaces)
 
 urlpatterns = [
     url(r'^society-transaction-data-import-excel/$', TransactionDataImport.as_view()),
@@ -19,5 +19,6 @@ urlpatterns = [
     url(r'^(?P<proposal_id>[A-Z_a-z0-9-]+)/import-supplier-data/$', ImportSupplierData.as_view()),
     url(r'^add-suppliers-direct-to-campaign/$', addSupplierDirectToCampaign.as_view()),
     url(r'^delete-suppliers/$', deleteSuppliers.as_view()),
+    url(r'^delete-shortlisted-spaces/$', deleteShortlistedSpaces.as_view()),
 ]
 
