@@ -12,6 +12,7 @@ import boto3
 import os
 import datetime
 from django.conf import settings
+from bulk_update.helper import bulk_update
 
 
 def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
@@ -248,37 +249,44 @@ class LeadsFormBulkEntry(APIView):
         return ui_utils.handle_response({}, data='success', success=True)
 
 
-class LeadsFormBulkEntryOriginal(APIView):
-    @staticmethod
-    def post(request, leads_form_id):
-        source_file = request.data['file']
-        wb = load_workbook(source_file)
-        ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
-        lead_form = LeadsForm.objects.get(id=leads_form_id)
-        fields = lead_form.fields_count
-        campaign_id = lead_form.campaign_id
-        entry_id = lead_form.last_entry_id + 1 if lead_form.last_entry_id else 1
-
-        for index, row in enumerate(ws.iter_rows()):
-            if index > 0:
-                form_entry_list = []
-                supplier_id = row[0].value if row[0].value else None
-                created_at = row[1].value if row[1].value else None
-                for item_id in range(2, fields+1):
-                    form_entry_list.append(LeadsFormData(**{
-                        "campaign_id": campaign_id,
-                        "supplier_id": supplier_id,
-                        "item_id": item_id - 1,
-                        "item_value": row[item_id].value if row[item_id].value else None,
-                        "leads_form": lead_form,
-                        "entry_id": entry_id,
-                        "created_at": created_at
-                    }))
-                LeadsFormData.objects.bulk_create(form_entry_list)
-                entry_id = entry_id + 1  # will be saved in the end
-        lead_form.last_entry_id = entry_id-1
-        lead_form.save()
-        return ui_utils.handle_response({}, data='success', success=True)
+# class LeadsFormBulkEntryOriginal(APIView):
+#     @staticmethod
+#     def post(request, leads_form_id):
+#         source_file = request.data['file']
+#         wb = load_workbook(source_file)
+#         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+#         lead_form = LeadsForm.objects.get(id=leads_form_id)
+#         fields = lead_form.fields_count
+#         campaign_id = lead_form.campaign_id
+#         entry_id = lead_form.last_entry_id + 1 if lead_form.last_entry_id else 1
+#
+#         for index, row in enumerate(ws.iter_rows()):
+#             if index > 0:
+#                 form_entry_list = []
+#                 supplier_id = row[0].value if row[0].value else None
+#                 created_at = row[1].value if row[1].value else None
+#                 for index, row in enumerate(ws.iter_rows()):
+#                     if index > 0:
+#                         form_entry_list = []
+#                         supplier_id = row[0].value if row[0].value else None
+#                         created_at = row[1].value if row[1].value else None
+#                         for item_id in range(2, fields + 1):
+#                             form_entry_list.append(LeadsFormData(**{
+#                                 "campaign_id": campaign_id,
+#                                 "supplier_id": supplier_id,
+#                                 "item_id": item_id - 1,
+#                                 "item_value": row[item_id].value if row[item_id].value else None,
+#                                 "leads_form": lead_form,
+#                                 "entry_id": entry_id,
+#                                 "created_at": created_at
+#                             }))
+#                         LeadsFormData.objects.bulk_create(form_entry_list)
+#                         entry_id = entry_id + 1  # will be saved in the end
+#                 lead_form.last_entry_id = entry_id - 1
+#                 lead_form.save()
+#         lead_form.last_entry_id = entry_id-1
+#         lead_form.save()
+#         return ui_utils.handle_response({}, data='success', success=True)
 
 
 class LeadsFormEntry(APIView):
@@ -378,6 +386,57 @@ class LeadFormUpdate(APIView):
         lead_form.fields_count = leads_form_items_count
         lead_form.save()
         return ui_utils.handle_response({}, data='success', success=True)
+
+
+class EditLeadsData(APIView):
+    def put(self,request, form_id):
+        class_name = self.__class__.__name__
+        form_data = request.data
+        leads_form_edit_data = []
+        entries = form_data.keys()
+        full_query = LeadsFormData.objects.filter(leads_form_id = form_id).filter(entry_id__in=entries).all()
+        form_data_complete = []
+        for entry_id in entries:
+            entry_data = form_data[entry_id]
+            items = entry_data.keys()
+            for item_id in items:
+                form_query = full_query.get(entry_id=entry_id,item_id=item_id)
+                form_query.item_value = entry_data[item_id]
+                form_data_complete.append(form_query)
+        bulk_update(form_data_complete)
+        return ui_utils.handle_response(class_name, data='success', success=True)
+
+
+class EditLeadFormItems(APIView):
+    # this function is used to add or edit lead form items
+    # if edited, lead form items are removed from the table forever
+    def put(self, request, form_id):
+        class_name = self.__class__.__name__
+        items_dict = request.data
+        full_query = LeadsFormItems.objects.filter(leads_form_id = form_id).all()
+        items_array = []
+        item_ids = items_dict.keys()
+        for item_id in item_ids:
+            key_name = items_dict[item_id]["Name"]
+            key_type = items_dict[item_id]["Type"]
+            form_query = full_query.get(item_id=item_id)
+            form_query.key_name = key_name
+            form_query.key_type = key_type
+            items_array.append(form_query)
+        bulk_update(items_array)
+        return ui_utils.handle_response(class_name, data='success', success=True)
+
+
+class EditLeadsForm(APIView):
+    # For now, only name can be edited
+    def put(self,request,form_id):
+        class_name = self.__class__.__name__
+        name = request.data
+        form_query = LeadsForm.objects.get(id=form_id)
+        form_query.leads_form_name = name
+        form_query.save()
+        return ui_utils.handle_response(class_name, data='success', success=True)
+
 
 
 # class ImportCampaignLeads(APIView):
