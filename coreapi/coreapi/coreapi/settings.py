@@ -24,7 +24,7 @@ SECRET_KEY = 'ewis(omy!u-rgpf%9hp1^3@8ivz!upuwc&tp!0trx%#vjqs!&2'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = 'true'
 
-ALLOWED_HOSTS = ['13.232.210.224', 'localhost','13.127.154.33', 'api.machadalo.com', 'dashboard.machadalo.com']
+ALLOWED_HOSTS = ['13.232.210.224', 'localhost','13.127.154.33', 'api.machadalo.com', 'platform.machadalo.com']
 
 
 # Application definition
@@ -224,3 +224,16 @@ CELERY_TIMEZONE = 'Africa/Nairobi'
 
 # sends mail to developer about errors in api if this is true. usually set it to true  when deploying.
 TEST_DEPLOYED = True
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/2',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
+        "KEY_PREFIX": "machadalo"
+    }
+}
+
+CACHE_TTL = 60 * 60
