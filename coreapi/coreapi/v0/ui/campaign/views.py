@@ -754,7 +754,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             content_type = ui_utils.fetch_content_type(inv_code)
             content_type_id = content_type.id
 
-            if date:
+            if str(date) != 'undefined':
                 result = InventoryActivityImage.objects. \
                     filter(
                     inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id=supplier_id,
