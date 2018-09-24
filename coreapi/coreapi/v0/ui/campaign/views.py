@@ -119,10 +119,21 @@ class campaignListAPIVIew(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+
 def get_distinct_from_dict_array(dict_array, key_name):
     all_values = {x[key_name] for x in dict_array}
     distinct_values = list(set(all_values))
     return distinct_values
+
+
+def hot_lead_ratio_calculator(data_array):
+    for data in data_array:
+        total_leads = data_array[data]['total']
+        hot_leads = data_array[data]['interested']
+        hot_lead_ratio = round(float(hot_leads)/float(total_leads), 3) if total_leads>0 else 0
+        data_array[data]['hot_lead_ratio'] = hot_lead_ratio
+    return data_array
+
 
 def lead_counter(campaign_id, supplier_id,lead_form_items_list):
     hot_lead_criteria_dict = {}
@@ -563,6 +574,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             total_leads = lead_count['total_leads']
             # getting society information
 
+            hot_lead_ratio = round(float(hot_leads)/float(total_leads),3) if total_leads>0 else 0
             curr_supplier_lead_data = {
                 "is_interested": True,
                 "campaign": campaign_id,
@@ -570,6 +582,7 @@ class DashBoardViewSet(viewsets.ViewSet):
                 "interested": hot_leads,
                 "total": total_leads,
                 "data": curr_supplier_data,
+                "hot_lead_ratio": hot_lead_ratio
                 }
             all_suppliers_list[supplier_id] = curr_supplier_lead_data
 
@@ -588,6 +601,7 @@ class DashBoardViewSet(viewsets.ViewSet):
 
             hot_leads_global = hot_leads_global+hot_leads
             all_leads_global = all_leads_global+total_leads
+            hot_lead_ratio_global = round(float(hot_leads_global)/float(all_leads_global),3)
 
         # date-wise
         date_data = {}
@@ -635,6 +649,16 @@ class DashBoardViewSet(viewsets.ViewSet):
             if curr_entry_details in hot_lead_details:
                 date_data[curr_date]['interested'] = date_data[curr_date]['interested'] + 1
                 weekday_data[curr_weekday]['interested'] = weekday_data[curr_weekday]['interested'] + 1
+
+        # for locality in all_localities_data:
+        #     total_leads = all_localities_data[locality]['total']
+        #     hot_leads = all_localities_data[locality]['interested']
+        #     hot_lead_ratio = round(float(hot_leads)/float(total_leads), 3) if total_leads>0 else 0
+        #     all_localities_data[locality]["hot_lead_ratio"] = hot_lead_ratio
+
+        all_localities_data = hot_lead_ratio_calculator(all_localities_data)
+        date_data = hot_lead_ratio_calculator(date_data)
+        weekday_data = hot_lead_ratio_calculator(weekday_data)
 
         final_data = {'supplier_data': all_suppliers_list, 'date_data': date_data,
                       'locality_data': all_localities_data, 'weekday_data': weekday_data}
