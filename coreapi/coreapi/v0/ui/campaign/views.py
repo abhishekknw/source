@@ -710,11 +710,11 @@ class DashBoardViewSet(viewsets.ViewSet):
                                     'inventory_activity__shortlisted_inventory_details','inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
                 filter(inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id,
                        activity_date=date,
-                       inventory_activity__activity_type=act_type,
-                       inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name=inv_type).\
+                       inventory_activity__activity_type=act_type).\
                 annotate(supplier_id=F('inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id'),
-                         assignment_id=F('id')). \
-                values('supplier_id'). \
+                         assignment_id=F('id'),
+                         inv_name=F('inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name')). \
+                values('supplier_id','inv_name'). \
                 annotate(total=Count('supplier_id'))
 
             completed_objects = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
@@ -723,10 +723,10 @@ class DashBoardViewSet(viewsets.ViewSet):
                                                           'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
                 filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id,
                 inventory_activity_assignment__activity_date=date,
-                inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name=inv_type,
                 inventory_activity_assignment__inventory_activity__activity_type=act_type). \
-                annotate(supplier_id=F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id')). \
-                values('supplier_id'). \
+                annotate(supplier_id=F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id'),
+                         inv_name=F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name')). \
+                values('supplier_id','inv_name'). \
                 annotate(total=Count('inventory_activity_assignment', distinct=True))
             assigned_objects_map = {supplier['supplier_id'] : supplier for supplier in assigned_objects}
             completed_objects_map = {supplier['supplier_id']: supplier for supplier in completed_objects}
@@ -735,15 +735,19 @@ class DashBoardViewSet(viewsets.ViewSet):
             suppliers = SupplierTypeSociety.objects.filter(supplier_id__in=assigned_objects_map.keys()).values()
             suppliers_map = {supplier['supplier_id']:supplier for supplier in suppliers}
             result = {}
-            for supplier in assigned_objects_map:
-                if supplier not in result:
-                    result[supplier] = {}
-                result[supplier]['assigned'] = assigned_objects_map[supplier]['total']
-                if supplier not in completed_objects_map:
-                    result[supplier]['completed'] = 0
-                else:
-                    result[supplier]['completed'] = completed_objects_map[supplier]['total']
-                result[supplier]['supplier_data'] = suppliers_map[supplier]
+            for supplier in assigned_objects:
+                if supplier['supplier_id'] not in result:
+                    result[supplier['supplier_id']] = {}
+                if supplier['inv_name'] not in result[supplier['supplier_id']]:
+                    result[supplier['supplier_id']][supplier['inv_name']] = {}
+                result[supplier['supplier_id']][supplier['inv_name']]['assigned'] = supplier['total']
+                result[supplier['supplier_id']][supplier['inv_name']]['completed'] = 0
+                result[supplier['supplier_id']]['supplier_data'] = suppliers_map[supplier['supplier_id']]
+            for supplier in completed_objects:
+                if supplier['supplier_id'] in result:
+                    if supplier['inv_name'] in result[supplier['supplier_id']]:
+                        result[supplier['supplier_id']][supplier['inv_name']]['completed'] = supplier['total']
+
             return handle_response(class_name, data=result, success=True)
 
         except Exception as e:
