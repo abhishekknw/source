@@ -301,11 +301,15 @@ class DashBoardViewSet(viewsets.ViewSet):
             all_leads_count = LeadsFormSummary.objects.filter(campaign_id=campaign_id).all()
             supplier_wise_leads_count = {}
             for leads in all_leads_count:
-                flat_count = supplier_objects_id_list[leads.supplier_id]['flat_count']
+                if 'flat_count' in supplier_objects_id_list[leads.supplier_id] and supplier_objects_id_list[leads.supplier_id]['flat_count']:
+                    flat_count = supplier_objects_id_list[leads.supplier_id]['flat_count']
+                else:
+                    flat_count = 0
                 supplier_wise_leads_count[leads.supplier_id] = {
                     'hot_leads_count': leads.hot_leads_count,
                     'total_leads_count': leads.total_leads_count,
                     'hot_leads_percentage': leads.hot_leads_percentage,
+                    'flat_count': flat_count,
                     'leads_flat_percentage': (float(leads.total_leads_count)/(float(flat_count)) * 100) if flat_count > 0 else 0
                 }
             leads = website_utils.get_campaign_leads(campaign_id)
@@ -331,8 +335,11 @@ class DashBoardViewSet(viewsets.ViewSet):
 
             upcoming_supplier_id_list = set(shortlisted_suppliers_id_list) - set(
                 ongoing_supplier_id_list + completed_supplier_id_list)
-
             ongoing_suppliers_list = []
+            total_ongoing_leads_count = 0
+            total_ongoing_hot_leads_count = 0
+            total_ongoing_flat_count = 0
+
             for id in ongoing_supplier_id_list:
                 data = {
                     'supplier': supplier_objects_id_list[id],
@@ -342,10 +349,16 @@ class DashBoardViewSet(viewsets.ViewSet):
                     data['leads_data'] = leads[id]
                 if id in inv_data_objects_list:
                     data['supplier']['inv_data'] = inv_data_objects_list[id]
-
                 ongoing_suppliers_list.append(data)
+                if 'total_leads_count' in data['leads_data']:
+                    total_ongoing_leads_count = total_ongoing_leads_count + data['leads_data']['total_leads_count']
+                    total_ongoing_hot_leads_count = total_ongoing_hot_leads_count + data['leads_data']['hot_leads_count']
+                    total_ongoing_flat_count = total_ongoing_flat_count + supplier_objects_id_list[id]['flat_count']
 
             completed_suppliers_list = []
+            total_completed_leads_count = 0
+            total_completed_hot_leads_count = 0
+            total_completed_flat_count = 0
             for id in completed_supplier_id_list:
                 data = {
                     'supplier': supplier_objects_id_list[id],
@@ -356,8 +369,15 @@ class DashBoardViewSet(viewsets.ViewSet):
                 if id in inv_data_objects_list:
                     data['supplier']['inv_data'] = inv_data_objects_list[id]
                 completed_suppliers_list.append(data)
+                if 'total_leads_count' in data['leads_data']:
+                    total_completed_leads_count = total_completed_leads_count + data['leads_data']['total_leads_count']
+                    total_completed_hot_leads_count = total_completed_hot_leads_count + data['leads_data']['hot_leads_count']
+                    total_completed_flat_count = total_completed_flat_count + supplier_objects_id_list[id]['flat_count']
 
             upcoming_suppliers_list = []
+            total_upcoming_leads_count = 0
+            total_upcoming_hot_leads_count = 0
+            total_upcoming_flat_count = 0
             for id in upcoming_supplier_id_list:
                 data = {
                     'supplier': supplier_objects_id_list[id],
@@ -368,15 +388,49 @@ class DashBoardViewSet(viewsets.ViewSet):
                 if id in inv_data_objects_list:
                     data['supplier']['inv_data'] = inv_data_objects_list[id]
                 upcoming_suppliers_list.append(data)
-
+                if 'total_leads_count' in data['leads_data']:
+                    total_upcoming_leads_count = total_upcoming_leads_count + data['leads_data']['total_leads_count']
+                    total_upcoming_hot_leads_count = total_upcoming_hot_leads_count + data['leads_data']['hot_leads_count']
+                    if supplier_objects_id_list[id]['flat_count']:
+                        total_upcoming_flat_count = total_upcoming_flat_count + supplier_objects_id_list[id]['flat_count']
             data = {
                 'ongoing': ongoing_suppliers_list,
                 'completed': completed_suppliers_list,
-                'upcoming': upcoming_suppliers_list
+                'upcoming': upcoming_suppliers_list,
+                'overall_metrics': {
+                    'ongoing': {
+                        'total_leads_count': total_ongoing_leads_count,
+                        'total_hot_leads_count': total_ongoing_hot_leads_count,
+                        'hot_leads_percentage': float(total_ongoing_hot_leads_count) / float(
+                            total_ongoing_leads_count) * 100 if total_ongoing_leads_count > 0 else 0,
+                        'flat_count': total_ongoing_flat_count,
+                        'leads_flat_percentage': float(total_ongoing_leads_count) / float(
+                            total_ongoing_flat_count) * 100 if total_ongoing_flat_count > 0 else 0
+                    },
+                    'completed': {
+                        'total_leads_count': total_completed_leads_count,
+                        'total_hot_leads_count': total_completed_hot_leads_count,
+                        'hot_leads_percentage': float(total_completed_hot_leads_count) / float(
+                            total_completed_leads_count) * 100 if total_completed_leads_count > 0 else 0,
+                        'flat_count': total_completed_flat_count,
+                        'leads_flat_percentage': float(total_completed_leads_count) / float(
+                            total_completed_flat_count) * 100 if total_completed_flat_count > 0 else 0
+                    },
+                    'upcoming': {
+                        'total_leads_count': total_upcoming_leads_count,
+                        'total_hot_leads_count': total_upcoming_hot_leads_count,
+                        'hot_leads_percentage': float(total_upcoming_hot_leads_count) / float(
+                            total_upcoming_leads_count) * 100 if total_upcoming_leads_count > 0 else 0,
+                        'flat_count': total_upcoming_flat_count,
+                        'leads_flat_percentage': float(total_upcoming_leads_count) / float(
+                            total_upcoming_flat_count) * 100 if total_upcoming_flat_count > 0 else 0
+                    }
+                }
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
 
         except Exception as e:
+            print e
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     @list_route()
