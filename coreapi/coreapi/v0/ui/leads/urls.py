@@ -2,7 +2,7 @@ from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntries,
                    LeadsFormBulkEntry, GenerateLeadForm, DeleteLeadItems, DeleteLeadForm, DeleteLeadEntry,
-                   LeadFormUpdate, MigrateLeadsData, SmsContact)
+                   LeadFormUpdate, MigrateLeadsData, SmsContact, EditLeadsData, EditLeadFormItems, EditLeadsForm)
 
 urlpatterns = [
     url(r'^(?P<campaign_id>[A-Z_a-z0-9]+)/create$', CreateLeadsForm.as_view()),
@@ -19,6 +19,9 @@ urlpatterns = [
     url(r'^migrate_data/$', MigrateLeadsData.as_view()),
     url(r'^(?P<form_id>[0-9]+)/add_sms_contact$', SmsContact.as_view()),
     url(r'^(?P<form_id>[0-9]+)/get_sms_contacts$', SmsContact.as_view()),
+    url(r'^(?P<form_id>[0-9]+)/edit_leads_data', EditLeadsData.as_view()),
+    url(r'^(?P<form_id>[0-9]+)/edit_form_items', EditLeadFormItems.as_view()),
+    url(r'^(?P<form_id>[0-9]+)/edit_form_name', EditLeadsForm.as_view()),
 ]
 
 router = DefaultRouter()

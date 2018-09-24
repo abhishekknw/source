@@ -25,7 +25,7 @@ from v0.ui.inventory.serializers import ShortlistedSpacesSerializer
 from v0.ui.location.serializers import CityAreaSerializer
 from v0.ui.account.models import ContactDetails
 from v0.ui.inventory.models import AdInventoryType, PosterInventory, StandeeInventory
-from v0.ui.finances.models import PriceMappingDefault
+from v0.ui.finances.models import PriceMappingDefault, ShortlistedInventoryPricingDetails
 from v0.ui.base.models import DurationType
 from v0.ui.serializers import (UISocietySerializer, SocietyListSerializer)
 from v0.ui.proposal.serializers import ImageMappingSerializer
@@ -45,7 +45,7 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from v0.ui.utils import get_from_dict
 from v0.ui.controller import inventory_summary_insert
 import v0.ui.utils as ui_utils
-from v0.ui.inventory.models import InventorySummary
+from v0.ui.inventory.models import InventorySummary, InventoryActivityImage
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from v0.ui.utils import get_supplier_id
@@ -2800,7 +2800,7 @@ class addSupplierDirectToCampaign(APIView):
 class deleteSuppliers(APIView):
     # delete supplier if it is not shortlisted
     @staticmethod
-    def put(request):
+    def delete(request):
         try:
             supplier_id_array = request.data
             remaining_suppliers = get_values(SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_array).\
@@ -2813,8 +2813,6 @@ class deleteSuppliers(APIView):
                 remaining_suppliers.remove(supplier['object_id'])
 
             for supplier_id in remaining_suppliers:
-                models_list = [FlatType, InventorySummary, PosterInventory, PriceMappingDefault, LiftDetails,
-                                SocietyTower]
                 tower_ids = get_values(SocietyTower.objects.filter(object_id=supplier_id).values('tower_id'),'tower_id')
                 StandeeInventory.objects.filter(tower_id__in=tower_ids).delete()
                 LiftDetails.objects.filter(tower_id__in=tower_ids).delete()
@@ -2827,6 +2825,29 @@ class deleteSuppliers(APIView):
 
             print "Suppliers in shortlisted spaces (not deleted)", unremoved_suppliers
 
+            return ui_utils.handle_response({}, data='success', success=True)
+        except Exception as e:
+            return ui_utils.handle_response({}, exception_object=e, request=request)
+
+
+class deleteShortlistedSpaces(APIView):
+    # delete shortlisted_spaces (with pricing) if there is no assocaited image
+    @staticmethod
+    def delete(request):
+        try:
+            shortlisted_spaces_id_array = request.data
+            remaining_spaces = get_values(ShortlistedSpaces.objects.filter(id__in=shortlisted_spaces_id_array).\
+                values('id'),'id')
+            spaces_containing_images = []
+            for space_id in remaining_spaces:
+                inventory_activity_images = InventoryActivityImage.objects.filter(inventory_activity_assignment__inventory_activity__shortlisted_inventory_details_id=space_id).all()
+                if len(inventory_activity_images) > 0:
+                    spaces_containing_images.append(space_id)
+                    remaining_spaces.remove(space_id)
+            for shortlisted_space_id in remaining_spaces:
+                ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces_id=shortlisted_space_id).delete()
+                ShortlistedSpaces.objects.filter(id=shortlisted_space_id).delete()
+            print "ShortlistedSpaces containing images (not deleted)", spaces_containing_images
             return ui_utils.handle_response({}, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response({}, exception_object=e, request=request)
