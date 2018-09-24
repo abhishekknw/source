@@ -336,8 +336,8 @@ class MigrateLeadsSummary(APIView):
             for supplier_id in shortlisted_suppliers_id_list:
                 lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
                 lead_count = lead_counter(campaign_id, supplier_id, lead_form_items_list)
-                hot_lead_percentage = (float(lead_count['hot_leads']) / float(lead_count['total_leads'])) * 100 if lead_count[
-                                                                                                                       'total_leads'] > 0 else 0
+                hot_lead_percentage = round((float(lead_count['hot_leads']) / float(lead_count['total_leads'])) * 100, 3) \
+                    if lead_count['total_leads'] > 0 else 0
                 LeadsFormSummary.objects.update_or_create(leads_form_id=leads_form_id, supplier_id=supplier_id, defaults={
                     'leads_form': lead_form,
                     'campaign_id': campaign_id,
