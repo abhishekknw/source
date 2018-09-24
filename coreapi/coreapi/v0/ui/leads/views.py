@@ -1,12 +1,12 @@
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
 from serializers import LeadsFormItemsSerializer, LeadsFormContactsSerializer
-from models import LeadsForm, LeadsFormItems, LeadsFormData, Leads, LeadAlias, LeadsFormContacts
+from models import LeadsForm, LeadsFormItems, LeadsFormData, Leads, LeadAlias, LeadsFormContacts, LeadsFormSummary
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.inventory.models import (InventoryActivityAssignment, InventoryActivity)
-
+from v0.ui.campaign.views import lead_counter
 import v0.ui.utils as ui_utils
 import boto3
 import os
@@ -34,13 +34,14 @@ def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
 
 class GetLeadsEntries(APIView):
     @staticmethod
-    def get(request, leads_form_id, supplier_id = 'All'):
+    def get(request, leads_form_id, supplier_id='All'):
         lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
         if supplier_id == 'All':
-            lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id). exclude(status='inactive')
+            lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id).exclude(
+                status='inactive')
         else:
-            lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id)\
-                .filter(supplier_id = supplier_id).exclude(status='inactive')
+            lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id) \
+                .filter(supplier_id=supplier_id).exclude(status='inactive')
 
         values = []
         lead_form_items_dict = {}
@@ -48,7 +49,7 @@ class GetLeadsEntries(APIView):
         for item in lead_form_items_list:
             curr_item = LeadsFormItemsSerializer(item).data
             lead_form_items_dict[item.item_id] = curr_item
-            curr_item_part = {key:curr_item[key] for key in ['order_id', 'key_name','hot_lead_criteria']}
+            curr_item_part = {key: curr_item[key] for key in ['order_id', 'key_name', 'hot_lead_criteria']}
             lead_form_items_dict_part.append(curr_item_part)
 
         previous_entry_id = -1
@@ -110,7 +111,7 @@ class CreateLeadsForm(APIView):
             if key_options and isinstance(key_options, list):
                 key_options = ','.join(key_options)
             item_object = LeadsFormItems(**{
-                "campaign_id" : campaign_id,
+                "campaign_id": campaign_id,
                 "leads_form": new_dynamic_form,
                 "key_name": item["key_name"],
                 "key_type": item["key_type"],
@@ -121,7 +122,7 @@ class CreateLeadsForm(APIView):
             })
             form_items_list.append(item_object)
             item_object.save()
-        #LeadsFormItems.objects.bulk_create(form_items_list)
+        # LeadsFormItems.objects.bulk_create(form_items_list)
         new_dynamic_form.fields_count = item_id
         new_dynamic_form.save()
         return ui_utils.handle_response({}, data='success', success=True)
@@ -179,7 +180,8 @@ class LeadsFormBulkEntry(APIView):
                 # supplier_id = row[0].value if row[0].value else None
                 # created_at = row[1].value if row[1].value else None
                 society_name = row[apartment_index].value
-                suppliers = SupplierTypeSociety.objects.filter(society_name=society_name).values('supplier_id', 'society_name').all()
+                suppliers = SupplierTypeSociety.objects.filter(society_name=society_name).values('supplier_id',
+                                                                                                 'society_name').all()
                 if len(suppliers) == 0:
                     if society_name not in missing_societies:
                         missing_societies.append(society_name)
@@ -191,7 +193,9 @@ class LeadsFormBulkEntry(APIView):
                         supplier_ids = []
                         for s in suppliers:
                             supplier_ids.append(s['supplier_id'])
-                        shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id, object_id__in=supplier_ids).values('object_id', 'id').all()
+                        shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id,
+                                                                              object_id__in=supplier_ids).values(
+                            'object_id', 'id').all()
                         if len(shortlisted_spaces) > 1:
                             more_than_ones_same_shortlisted_society.append(society_name)
                             continue
@@ -200,7 +204,8 @@ class LeadsFormBulkEntry(APIView):
                             continue
                         else:
                             found_supplier_id = shortlisted_spaces[0]['object_id']
-                shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=found_supplier_id).filter(proposal_id=campaign_id).all()
+                shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=found_supplier_id).filter(
+                    proposal_id=campaign_id).all()
                 if len(shortlisted_spaces) == 0:
                     not_present_in_shortlisted_societies.append(society_name)
                     continue
@@ -214,12 +219,14 @@ class LeadsFormBulkEntry(APIView):
                 if not stall:
                     continue
                 shortlisted_inventory_details_id = stall.id
-                inventory_list = InventoryActivity.objects.filter(shortlisted_inventory_details_id=shortlisted_inventory_details_id, activity_type='RELEASE').all()
+                inventory_list = InventoryActivity.objects.filter(
+                    shortlisted_inventory_details_id=shortlisted_inventory_details_id, activity_type='RELEASE').all()
                 if len(inventory_list) == 0:
                     inv_activity_missing_societies.append(society_name)
                     continue
                 inventory_activity_id = inventory_list[0].id
-                inventory_activity_list = InventoryActivityAssignment.objects.filter(inventory_activity_id=inventory_activity_id).all()
+                inventory_activity_list = InventoryActivityAssignment.objects.filter(
+                    inventory_activity_id=inventory_activity_id).all()
                 if len(inventory_activity_list) == 0:
                     inv_activity_assignment_missing_societies.append(society_name)
                     continue
@@ -229,7 +236,7 @@ class LeadsFormBulkEntry(APIView):
                     form_entry_list.append(LeadsFormData(**{
                         "campaign_id": campaign_id,
                         "supplier_id": found_supplier_id,
-                        "item_id": item_id+1,
+                        "item_id": item_id + 1,
                         "item_value": row[item_id].value if row[item_id].value else None,
                         "leads_form": lead_form,
                         "entry_id": entry_id,
@@ -237,7 +244,7 @@ class LeadsFormBulkEntry(APIView):
                     }))
                 LeadsFormData.objects.bulk_create(form_entry_list)
                 entry_id = entry_id + 1  # will be saved in the end
-        lead_form.last_entry_id = entry_id-1
+        lead_form.last_entry_id = entry_id - 1
         lead_form.save()
         missing_societies.sort()
         print "missing societies", missing_societies
@@ -299,8 +306,47 @@ class LeadsFormEntry(APIView):
         campaign_id = lead_form.campaign_id
         lead_data = request.data["leads_form_entries"]
         enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id)
+        lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
+        lead_count = lead_counter(campaign_id, supplier_id, lead_form_items_list)
+        hot_lead_percentage = (float(lead_count['hot_leads']) / float(lead_count['total_leads'])) * 100 if lead_count[
+                                                                                                               'total_leads'] > 0 else 0
+        LeadsFormSummary.objects.update_or_create(leads_form_id=leads_form_id, supplier_id=supplier_id, defaults={
+            'leads_form': lead_form,
+            'campaign_id': campaign_id,
+            'supplier_id': supplier_id,
+            'hot_leads_count': lead_count['hot_leads'],
+            'total_leads_count': lead_count['total_leads'],
+            'hot_leads_percentage': hot_lead_percentage
+        })
         return ui_utils.handle_response({}, data='success', success=True)
 
+
+class MigrateLeadsSummary(APIView):
+    def put(self, request):
+        class_name = self.__class__.__name__
+        all_leads_form = LeadsForm.objects.all()
+
+        for leads_form in all_leads_form:
+            leads_form_id = leads_form.id
+            lead_form = LeadsForm.objects.get(id=leads_form_id)
+            campaign_id = leads_form.campaign_id
+            shortlisted_suppliers = LeadsFormData.objects.filter(campaign_id=campaign_id).values('supplier_id').distinct()
+            shortlisted_suppliers_id_list = [supplier['supplier_id'] for supplier in shortlisted_suppliers]
+            print shortlisted_suppliers_id_list
+            for supplier_id in shortlisted_suppliers_id_list:
+                lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
+                lead_count = lead_counter(campaign_id, supplier_id, lead_form_items_list)
+                hot_lead_percentage = (float(lead_count['hot_leads']) / float(lead_count['total_leads'])) * 100 if lead_count[
+                                                                                                                       'total_leads'] > 0 else 0
+                LeadsFormSummary.objects.update_or_create(leads_form_id=leads_form_id, supplier_id=supplier_id, defaults={
+                    'leads_form': lead_form,
+                    'campaign_id': campaign_id,
+                    'supplier_id': supplier_id,
+                    'hot_leads_count': lead_count['hot_leads'],
+                    'total_leads_count': lead_count['total_leads'],
+                    'hot_leads_percentage': hot_lead_percentage
+                })
+        return ui_utils.handle_response({}, data='success', success=True)
 
 class GenerateLeadForm(APIView):
     @staticmethod
@@ -333,13 +379,14 @@ class GenerateLeadForm(APIView):
                 os.unlink(filepath)
             except Exception as ex:
                 print ex
-        return ui_utils.handle_response({}, data={'filepath': 'https://s3.ap-south-1.amazonaws.com/leads-forms-templates/' + filename}, success=True)
+        return ui_utils.handle_response({}, data={
+            'filepath': 'https://s3.ap-south-1.amazonaws.com/leads-forms-templates/' + filename}, success=True)
 
 
 class DeleteLeadItems(APIView):
     # Items are marked inactive, while still present in DB
     @staticmethod
-    def put (request, form_id, item_id):
+    def put(request, form_id, item_id):
         lead_form_item = LeadsFormItems.objects.get(leads_form_id=form_id, item_id=item_id)
         lead_form_item.status = 'inactive'
         lead_form_item.save()
@@ -389,18 +436,18 @@ class LeadFormUpdate(APIView):
 
 
 class EditLeadsData(APIView):
-    def put(self,request, form_id):
+    def put(self, request, form_id):
         class_name = self.__class__.__name__
         form_data = request.data
         leads_form_edit_data = []
         entries = form_data.keys()
-        full_query = LeadsFormData.objects.filter(leads_form_id = form_id).filter(entry_id__in=entries).all()
+        full_query = LeadsFormData.objects.filter(leads_form_id=form_id).filter(entry_id__in=entries).all()
         form_data_complete = []
         for entry_id in entries:
             entry_data = form_data[entry_id]
             items = entry_data.keys()
             for item_id in items:
-                form_query = full_query.get(entry_id=entry_id,item_id=item_id)
+                form_query = full_query.get(entry_id=entry_id, item_id=item_id)
                 form_query.item_value = entry_data[item_id]
                 form_data_complete.append(form_query)
         bulk_update(form_data_complete)
@@ -413,7 +460,7 @@ class EditLeadFormItems(APIView):
     def put(self, request, form_id):
         class_name = self.__class__.__name__
         items_dict = request.data
-        full_query = LeadsFormItems.objects.filter(leads_form_id = form_id).all()
+        full_query = LeadsFormItems.objects.filter(leads_form_id=form_id).all()
         items_array = []
         item_ids = items_dict.keys()
         for item_id in item_ids:
@@ -429,14 +476,13 @@ class EditLeadFormItems(APIView):
 
 class EditLeadsForm(APIView):
     # For now, only name can be edited
-    def put(self,request,form_id):
+    def put(self, request, form_id):
         class_name = self.__class__.__name__
         name = request.data
         form_query = LeadsForm.objects.get(id=form_id)
         form_query.leads_form_name = name
         form_query.save()
         return ui_utils.handle_response(class_name, data='success', success=True)
-
 
 
 # class ImportCampaignLeads(APIView):
@@ -479,28 +525,28 @@ class EditLeadsForm(APIView):
 #             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
-def save_items (fields_dict, fixed_fields,form, current_form_id, entry_id):
+def save_items(fields_dict, fixed_fields, form, current_form_id, entry_id):
     campaign_id = form["campaign_id"]
     supplier_id = form["object_id"]
     items = []
     data = []
-    alias_data_object = LeadAlias.objects.filter(campaign_id = campaign_id)
-    leads_old_object = Leads.objects.filter(campaign_id = campaign_id, object_id = supplier_id)
+    alias_data_object = LeadAlias.objects.filter(campaign_id=campaign_id)
+    leads_old_object = Leads.objects.filter(campaign_id=campaign_id, object_id=supplier_id)
     order_id = 0
     for curr_row in alias_data_object:
         original_name = curr_row.original_name
         order_id = order_id + 1
         curr_element = {
-             'key_name': curr_row.alias,
-             'key_type': fields_dict[original_name],
-             'order_id': order_id,
-             'item_id': order_id,
-             'leads_form_id': current_form_id,
-             'campaign_id': campaign_id,
-             'supplier_id': supplier_id,
+            'key_name': curr_row.alias,
+            'key_type': fields_dict[original_name],
+            'order_id': order_id,
+            'item_id': order_id,
+            'leads_form_id': current_form_id,
+            'campaign_id': campaign_id,
+            'supplier_id': supplier_id,
         }
-        if original_name=='is_interested':
-            curr_element['hot_lead_criteria']=True
+        if original_name == 'is_interested':
+            curr_element['hot_lead_criteria'] = True
         items.append(LeadsFormItems(**curr_element))
         current_entry_id = 1
         for lead in leads_old_object:
@@ -515,7 +561,7 @@ def save_items (fields_dict, fixed_fields,form, current_form_id, entry_id):
                     'entry_id': current_entry_id,
                     'created_at': lead.created_at,
                     'updated_at': lead.updated_at
-                    }))
+                }))
             current_entry_id = current_entry_id + 1
 
     for field in fixed_fields:
@@ -543,26 +589,27 @@ def save_items (fields_dict, fixed_fields,form, current_form_id, entry_id):
                     'entry_id': current_entry_id,
                     'created_at': lead.created_at,
                     'updated_at': lead.updated_at,
-                    }))
+                }))
             current_entry_id = current_entry_id + 1
 
     leads_form_details = LeadsForm(**{
-             'campaign_id': campaign_id,
-             'fields_count': len(items),
-             'last_entry_id': current_entry_id-1
-             })
+        'campaign_id': campaign_id,
+        'fields_count': len(items),
+        'last_entry_id': current_entry_id - 1
+    })
     leads_form_details.save()
     for item in items:
         item.save()
-    #LeadsFormItems.objects.bulk_create(items)
+    # LeadsFormItems.objects.bulk_create(items)
     LeadsFormData.objects.bulk_create(data)
+
 
 class MigrateLeadsData(APIView):
 
     def put(self, request):
         class_name = self.__class__.__name__
         leads_old = Leads.objects.all()
-        unique_forms = leads_old.values('object_id','campaign_id').distinct()
+        unique_forms = leads_old.values('object_id', 'campaign_id').distinct()
 
         fields = {
             'firstname1': 'STRING',
@@ -602,19 +649,20 @@ class MigrateLeadsData(APIView):
         if last_entry_id is None:
             last_entry_id = 0
         form_id = last_form_id
-        entry_id = last_entry_id+1
+        entry_id = last_entry_id + 1
         # iterating by form
         for form in unique_forms:
             campaign_id = form["campaign_id"]
             supplier_id = form["object_id"]
-            form_id = form_id+1
+            form_id = form_id + 1
             save_items(fields, fixed_fields, form, form_id, entry_id)
-        # leads form import successful
+            # leads form import successful
             leads_old_data = leads_old.filter(campaign_id=campaign_id, object_id=supplier_id)
             alias_data_object = LeadAlias.objects.filter(campaign_id=campaign_id)
             # iterating by enteries for a given form
 
         return ui_utils.handle_response({}, data='success', success=True)
+
 
 class SmsContact(APIView):
 
@@ -631,10 +679,10 @@ class SmsContact(APIView):
         return ui_utils.handle_response(class_name, data='success', success=True)
 
     def get(self, request, form_id):
-         class_name = self.__class__.__name__
-         contacts_data_object = LeadsFormContacts.objects.filter(form_id=form_id).values('contact_name','contact_mobile')
-         contacts_data = []
-         for data in contacts_data_object:
+        class_name = self.__class__.__name__
+        contacts_data_object = LeadsFormContacts.objects.filter(form_id=form_id).values('contact_name',
+                                                                                        'contact_mobile')
+        contacts_data = []
+        for data in contacts_data_object:
             contacts_data.append(data)
-         return ui_utils.handle_response(class_name, data=contacts_data, success=True)
-
+        return ui_utils.handle_response(class_name, data=contacts_data, success=True)

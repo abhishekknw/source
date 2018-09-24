@@ -2,7 +2,7 @@ from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntries,
                    LeadsFormBulkEntry, GenerateLeadForm, DeleteLeadItems, DeleteLeadForm, DeleteLeadEntry,
-                   LeadFormUpdate, MigrateLeadsData, SmsContact, EditLeadsData, EditLeadFormItems, EditLeadsForm)
+                   LeadFormUpdate, MigrateLeadsData, MigrateLeadsSummary, SmsContact, EditLeadsData, EditLeadFormItems, EditLeadsForm)
 
 urlpatterns = [
     url(r'^(?P<campaign_id>[A-Z_a-z0-9]+)/create$', CreateLeadsForm.as_view()),
@@ -17,6 +17,7 @@ urlpatterns = [
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_entry/(?P<entry_id>[A-Z_a-z0-9]+)$', DeleteLeadEntry.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/add_fields$', LeadFormUpdate.as_view()),
     url(r'^migrate_data/$', MigrateLeadsData.as_view()),
+    url(r'^migrate_summary/$', MigrateLeadsSummary.as_view()),
     url(r'^(?P<form_id>[0-9]+)/add_sms_contact$', SmsContact.as_view()),
     url(r'^(?P<form_id>[0-9]+)/get_sms_contacts$', SmsContact.as_view()),
     url(r'^(?P<form_id>[0-9]+)/edit_leads_data', EditLeadsData.as_view()),
