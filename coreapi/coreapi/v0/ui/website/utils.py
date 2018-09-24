@@ -6223,7 +6223,8 @@ def get_campaigns_with_status(category, user):
         campaign_data = {
             'ongoing_campaigns': [],
             'upcoming_campaigns': [],
-            'completed_campaigns': []
+            'completed_campaigns': [],
+            'onhold_campaigns': []
         }
         campaign_query = Q()
         if not user.is_superuser:
@@ -6231,14 +6232,17 @@ def get_campaigns_with_status(category, user):
                                                                 v0_constants.category_query_status['campaign_query'],
                                                                 user)
         campaign_data['completed_campaigns'] = CampaignAssignment.objects. \
-            filter(campaign_query, campaign__tentative_end_date__lt=current_date). \
+            filter(campaign_query, campaign__tentative_end_date__lt=current_date, campaign__campaign_state='PTC'). \
             annotate(name=F('campaign__name')).values('campaign', 'name').distinct()
         campaign_data['upcoming_campaigns'] = CampaignAssignment.objects. \
-            filter(campaign_query, campaign__tentative_start_date__gt=current_date). \
+            filter(campaign_query, campaign__tentative_start_date__gt=current_date, campaign__campaign_state='PTC'). \
             annotate(name=F('campaign__name')).values('campaign', 'name').distinct()
         campaign_data['ongoing_campaigns'] = CampaignAssignment.objects. \
             filter(campaign_query, Q(campaign__tentative_start_date__lte=current_date) & Q(
-            campaign__tentative_end_date__gte=current_date)). \
+            campaign__tentative_end_date__gte=current_date), campaign__campaign_state='PTC'). \
+            annotate(name=F('campaign__name')).values('campaign', 'name').distinct()
+        campaign_data['onhold_campaigns'] = CampaignAssignment.objects. \
+            filter(campaign_query, campaign__campaign_state='POH'). \
             annotate(name=F('campaign__name')).values('campaign', 'name').distinct()
         return campaign_data
     except Exception as e:
