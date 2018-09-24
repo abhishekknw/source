@@ -970,3 +970,12 @@ def get_from_dict(dict, key):
             return dict[key]
     else:
         return None
+
+
+def calculate_percentage(numerator, denominator):
+    numerator = float(numerator)
+    denominator = float(denominator)
+    if denominator > 0:
+        return round(numerator/denominator*100, 3)
+    else:
+        return 0

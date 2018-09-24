@@ -8,6 +8,7 @@ from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.inventory.models import (InventoryActivityAssignment, InventoryActivity)
 from v0.ui.campaign.views import lead_counter
 import v0.ui.utils as ui_utils
+from v0.ui.utils import calculate_percentage
 import boto3
 import os
 import datetime
@@ -308,8 +309,7 @@ class LeadsFormEntry(APIView):
         enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id)
         lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
         lead_count = lead_counter(campaign_id, supplier_id, lead_form_items_list)
-        hot_lead_percentage = (float(lead_count['hot_leads']) / float(lead_count['total_leads'])) * 100 if lead_count[
-                                                                                                               'total_leads'] > 0 else 0
+        hot_lead_percentage = calculate_percentage(lead_count['hot_leads'], lead_count['total_leads'])
         LeadsFormSummary.objects.update_or_create(leads_form_id=leads_form_id, supplier_id=supplier_id, defaults={
             'leads_form': lead_form,
             'campaign_id': campaign_id,
@@ -332,12 +332,10 @@ class MigrateLeadsSummary(APIView):
             campaign_id = leads_form.campaign_id
             shortlisted_suppliers = LeadsFormData.objects.filter(campaign_id=campaign_id).values('supplier_id').distinct()
             shortlisted_suppliers_id_list = [supplier['supplier_id'] for supplier in shortlisted_suppliers]
-            print shortlisted_suppliers_id_list
             for supplier_id in shortlisted_suppliers_id_list:
                 lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
                 lead_count = lead_counter(campaign_id, supplier_id, lead_form_items_list)
-                hot_lead_percentage = round((float(lead_count['hot_leads']) / float(lead_count['total_leads'])) * 100, 3) \
-                    if lead_count['total_leads'] > 0 else 0
+                hot_lead_percentage = calculate_percentage(lead_count['hot_leads'], lead_count['total_leads'])
                 LeadsFormSummary.objects.update_or_create(leads_form_id=leads_form_id, supplier_id=supplier_id, defaults={
                     'leads_form': lead_form,
                     'campaign_id': campaign_id,

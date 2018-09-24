@@ -1,6 +1,6 @@
 import random
 from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, SupplierPhase
-from v0.ui.utils import handle_response
+from v0.ui.utils import handle_response, calculate_percentage
 from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -321,7 +321,7 @@ class DashBoardViewSet(viewsets.ViewSet):
                     'total_leads_count': leads.total_leads_count,
                     'hot_leads_percentage': leads.hot_leads_percentage,
                     'flat_count': flat_count,
-                    'leads_flat_percentage': (float(leads.total_leads_count)/(float(flat_count)) * 100) if flat_count > 0 else 0
+                    'leads_flat_percentage': calculate_percentage(leads.total_leads_count, flat_count)
                 }
             leads = website_utils.get_campaign_leads(campaign_id)
             inv_data_objects_list = website_utils.get_campaign_inv_data(campaign_id)
@@ -412,29 +412,23 @@ class DashBoardViewSet(viewsets.ViewSet):
                     'ongoing': {
                         'total_leads_count': total_ongoing_leads_count,
                         'total_hot_leads_count': total_ongoing_hot_leads_count,
-                        'hot_leads_percentage': float(total_ongoing_hot_leads_count) / float(
-                            total_ongoing_leads_count) * 100 if total_ongoing_leads_count > 0 else 0,
+                        'hot_leads_percentage': calculate_percentage(total_ongoing_hot_leads_count, total_ongoing_leads_count),
                         'flat_count': total_ongoing_flat_count,
-                        'leads_flat_percentage': float(total_ongoing_leads_count) / float(
-                            total_ongoing_flat_count) * 100 if total_ongoing_flat_count > 0 else 0
+                        'leads_flat_percentage': calculate_percentage(total_ongoing_leads_count, total_ongoing_flat_count)
                     },
                     'completed': {
                         'total_leads_count': total_completed_leads_count,
                         'total_hot_leads_count': total_completed_hot_leads_count,
-                        'hot_leads_percentage': float(total_completed_hot_leads_count) / float(
-                            total_completed_leads_count) * 100 if total_completed_leads_count > 0 else 0,
+                        'hot_leads_percentage': calculate_percentage(total_completed_hot_leads_count, total_completed_leads_count),
                         'flat_count': total_completed_flat_count,
-                        'leads_flat_percentage': float(total_completed_leads_count) / float(
-                            total_completed_flat_count) * 100 if total_completed_flat_count > 0 else 0
+                        'leads_flat_percentage': calculate_percentage(total_completed_leads_count, total_completed_flat_count)
                     },
                     'upcoming': {
                         'total_leads_count': total_upcoming_leads_count,
                         'total_hot_leads_count': total_upcoming_hot_leads_count,
-                        'hot_leads_percentage': float(total_upcoming_hot_leads_count) / float(
-                            total_upcoming_leads_count) * 100 if total_upcoming_leads_count > 0 else 0,
+                        'hot_leads_percentage': calculate_percentage(total_upcoming_hot_leads_count, total_upcoming_leads_count),
                         'flat_count': total_upcoming_flat_count,
-                        'leads_flat_percentage': float(total_upcoming_leads_count) / float(
-                            total_upcoming_flat_count) * 100 if total_upcoming_flat_count > 0 else 0
+                        'leads_flat_percentage': calculate_percentage(total_upcoming_leads_count, total_upcoming_flat_count)
                     }
                 }
             }
