@@ -20,7 +20,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework import status
 import gpxpy.geo
-from v0.ui.leads.models import Leads, LeadsForm, LeadsFormItems, LeadsFormData
+from v0.ui.leads.models import Leads, LeadsForm, LeadsFormItems, LeadsFormData, LeadsFormSummary
 from v0.ui.leads.serializers import LeadsFormItemsSerializer, LeadsFormDataSerializer
 from v0.utils import get_values
 from v0.ui.base.models import DurationType
@@ -298,12 +298,20 @@ class DashBoardViewSet(viewsets.ViewSet):
             suppliers = supplier_serializer.data
 
             supplier_objects_id_list = {supplier['supplier_id']: supplier for supplier in suppliers}
-
+            all_leads_count = LeadsFormSummary.objects.filter(campaign_id=campaign_id).all()
+            supplier_wise_leads_count = {}
+            for leads in all_leads_count:
+                flat_count = supplier_objects_id_list[leads.supplier_id]['flat_count']
+                supplier_wise_leads_count[leads.supplier_id] = {
+                    'hot_leads_count': leads.hot_leads_count,
+                    'total_leads_count': leads.total_leads_count,
+                    'hot_leads_percentage': leads.hot_leads_percentage,
+                    'leads_flat_percentage': (float(leads.total_leads_count)/(float(flat_count)) * 100) if flat_count > 0 else 0
+                }
             leads = website_utils.get_campaign_leads(campaign_id)
             inv_data_objects_list = website_utils.get_campaign_inv_data(campaign_id)
             # inv_data_objects_list = {inv['object_id']:inv for inv in inv_data}
             ongoing_suppliers = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
-                                                                              'inventory_activity_assignment__inventory_activity',
                                                                               'inventory_activity_assignment__inventory_activity',
                                                                               'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
                                                                               'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
@@ -328,7 +336,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             for id in ongoing_supplier_id_list:
                 data = {
                     'supplier': supplier_objects_id_list[id],
-                    'leads_data': []
+                    'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {}
                 }
                 if leads and (id in leads):
                     data['leads_data'] = leads[id]
@@ -341,7 +349,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             for id in completed_supplier_id_list:
                 data = {
                     'supplier': supplier_objects_id_list[id],
-                    'leads_data': []
+                    'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {}
                 }
                 if leads and (id in leads):
                     data['leads_data'] = leads[id]
@@ -353,7 +361,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             for id in upcoming_supplier_id_list:
                 data = {
                     'supplier': supplier_objects_id_list[id],
-                    'leads_data': []
+                    'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {}
                 }
                 if leads and (id in leads):
                     data['leads_data'] = leads[id]
@@ -366,7 +374,6 @@ class DashBoardViewSet(viewsets.ViewSet):
                 'completed': completed_suppliers_list,
                 'upcoming': upcoming_suppliers_list
             }
-
             return ui_utils.handle_response(class_name, data=data, success=True)
 
         except Exception as e:
