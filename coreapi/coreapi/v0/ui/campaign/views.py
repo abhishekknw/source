@@ -1,5 +1,5 @@
 import random
-from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, SupplierPhase
+from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, SupplierPhase, HashTagImages
 from v0.ui.utils import handle_response, calculate_percentage
 from django.utils import timezone
 from rest_framework.response import Response
@@ -344,17 +344,37 @@ class DashBoardViewSet(viewsets.ViewSet):
             for inventory_image in all_inventory_activity_images:
                 supplier_id = shortlisted_spaces_id_dict[
                     inventory_image.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details_id]
+                inventory_name = inventory_image.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details.ad_inventory_type.adinventory_name
+                inventory_type = inventory_image.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details.ad_inventory_type.adinventory_type
                 if supplier_id not in all_images_by_supplier:
-                    all_images_by_supplier[supplier_id] = []
-                all_images_by_supplier[supplier_id].append({
+                    all_images_by_supplier[supplier_id] = {}
+                if inventory_name not in all_images_by_supplier[supplier_id]:
+                    all_images_by_supplier[supplier_id][inventory_name] = {"images": [], "total_count":0}
+                all_images_by_supplier[supplier_id][inventory_name]["images"].append({
                     'image_path': inventory_image.image_path,
                     'actual_activity_date': str(inventory_image.actual_activity_date),
                     'latitude': str(inventory_image.latitude),
                     'longitude': str(inventory_image.longitude),
                     'comment': str(inventory_image.comment),
-                    'inventory_name':inventory_image.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details.ad_inventory_type.adinventory_name,
-                    'inventory_type': inventory_image.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details.ad_inventory_type.adinventory_type
+                    'inventory_name': inventory_name
                 })
+                all_images_by_supplier[supplier_id][inventory_name]["total_count"] += 1
+            all_hashtag_images = HashTagImages.objects.filter(campaign_id=campaign_id).all()
+            for hashtag_image in all_hashtag_images:
+                supplier_id = hashtag_image.object_id
+                if supplier_id not in all_images_by_supplier:
+                    all_images_by_supplier[supplier_id] = {}
+                if hashtag_image.hashtag not in all_images_by_supplier[supplier_id]:
+                    all_images_by_supplier[supplier_id][hashtag_image.hashtag] = {"images": [], "total_count":0}
+                all_images_by_supplier[supplier_id][hashtag_image.hashtag]["images"].append({
+                    'image_path': hashtag_image.image_path,
+                    'actual_activity_date': str(hashtag_image.created_at),
+                    'latitude': str(hashtag_image.latitude),
+                    'longitude': str(hashtag_image.longitude),
+                    'comment': str(hashtag_image.comment),
+                    'inventory_name': hashtag_image.hashtag
+                })
+                all_images_by_supplier[supplier_id][hashtag_image.hashtag]["total_count"] += 1
             ongoing_supplier_id_list = [supplier[object_id_alias] for supplier in ongoing_suppliers]
 
             completed_suppliers = ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id,
