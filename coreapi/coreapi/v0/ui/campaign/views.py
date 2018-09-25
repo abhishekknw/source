@@ -1,6 +1,5 @@
 import random
 import numpy as np
-from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, SupplierPhase
 from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, SupplierPhase, HashTagImages
 from v0.ui.utils import handle_response, calculate_percentage
 from django.utils import timezone
@@ -710,7 +709,6 @@ class DashBoardViewSet(viewsets.ViewSet):
         #except Exception as e:
         #    return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-
     @detail_route(methods=['POST'])
     def get_leads_by_multiple_campaigns(self, request, pk=None):
         class_name = self.__class__.__name__
@@ -1040,9 +1038,31 @@ class CampaignLeads(APIView):
         supplier_data_1 = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
         supplier_data = SupplierTypeSocietySerializer2(supplier_data_1, many=True).data
 
+        all_flat_data = {
+            "0-150":{
+                "campaign": campaign_id,
+                "flat_category": 1,
+                "interested": 0,
+                "total": 0
+            },
+            "151-399": {
+                "campaign": campaign_id,
+                "flat_category": 2,
+                "interested": 0,
+                "total": 0
+            },
+            "400+": {
+                "campaign": campaign_id,
+                "flat_category": 3,
+                "interested": 0,
+                "total": 0
+            }
+        }
+
         for curr_supplier_data in supplier_data:
             supplier_id = curr_supplier_data['supplier_id']
             supplier_locality = curr_supplier_data['society_locality']
+            supplier_flat_count = curr_supplier_data['flat_count']
             lead_count = lead_counter(campaign_id, supplier_id, lead_form_items_list)
             supplier_wise_lead_count[supplier_id] = lead_count
             hot_leads = lead_count['hot_leads']
@@ -1075,6 +1095,22 @@ class CampaignLeads(APIView):
                     "total": total_leads,
                 }
                 all_localities_data_non_analytics[supplier_locality] = curr_locality_data
+
+            if supplier_flat_count<150:
+                curr_flat_data = all_flat_data['0-150']
+                curr_flat_data['interested'] = curr_flat_data['interested']+hot_leads
+                curr_flat_data['total'] = curr_flat_data['total']+total_leads
+                all_flat_data['0-150'] = curr_flat_data
+            elif supplier_flat_count<400:
+                curr_flat_data = all_flat_data['151-399']
+                curr_flat_data['interested'] = curr_flat_data['interested']+hot_leads
+                curr_flat_data['total'] = curr_flat_data['total']+total_leads
+                all_flat_data['151-399'] = curr_flat_data
+            else:
+                curr_flat_data = all_flat_data['400+']
+                curr_flat_data['interested'] = curr_flat_data['interested'] + hot_leads
+                curr_flat_data['total'] = curr_flat_data['total'] + total_leads
+                all_flat_data['400+'] = curr_flat_data
 
             # hot_leads_global = hot_leads_global + hot_leads
             # all_leads_global = all_leads_global + total_leads
@@ -1137,8 +1173,10 @@ class CampaignLeads(APIView):
         weekday_data_hot_ratio = hot_lead_ratio_calculator(weekday_data)
         all_dates_data = z_calculator_dict(date_data_hot_ratio,"hot_lead_ratio")
         all_weekdays_data = z_calculator_dict(weekday_data_hot_ratio,"hot_lead_ratio")
+        all_flat_data = hot_lead_ratio_calculator(all_flat_data)
 
         final_data = {'supplier_data': all_suppliers_list, 'date_data': all_dates_data,
-                      'locality_data': all_localities_data, 'weekday_data': all_weekdays_data}
+                      'locality_data': all_localities_data, 'weekday_data': all_weekdays_data,
+                      'flat_data': all_flat_data}
 
         return ui_utils.handle_response(class_name, data=final_data, success=True)
