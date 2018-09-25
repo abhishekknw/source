@@ -788,6 +788,8 @@ class AssignCampaign(APIView):
             all_proposal_ids = []
             # check each one of them weather they are campaign or not
             for assign_object in assigned_objects:
+                if assign_object.campaign.is_disabled:
+                    continue
                 response = website_utils.is_campaign(assign_object.campaign)
                 # if it is a campaign.
                 if response.data['status']:
