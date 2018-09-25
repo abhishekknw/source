@@ -7,21 +7,22 @@ from v0.ui.finances.models import ProposalMasterCost
 from v0.constants import supplier_id_max_length
 from django.contrib.contenttypes import fields
 
+
 class ProposalCenterMapping(BaseModel):
     """
     for a given proposal, stores lat, long, radius, city, pincode etc.
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
-    proposal    = models.ForeignKey('ProposalInfo', db_index=True, related_name='centers', on_delete=models.CASCADE)
+    proposal = models.ForeignKey('ProposalInfo', db_index=True, related_name='centers', on_delete=models.CASCADE)
     center_name = models.CharField(max_length=50)
-    address     = models.CharField(max_length=150,null=True, blank=True)
-    latitude    = models.FloatField(default=0.0)
-    longitude   = models.FloatField(default=0.0)
-    radius      = models.FloatField(default=0.0)
-    subarea     = models.CharField(max_length=35)
-    area        = models.CharField(max_length=35)
-    city        = models.CharField(max_length=35)
-    pincode     = models.IntegerField()
+    address = models.CharField(max_length=150, null=True, blank=True)
+    latitude = models.FloatField(default=0.0)
+    longitude = models.FloatField(default=0.0)
+    radius = models.FloatField(default=0.0)
+    subarea = models.CharField(max_length=35)
+    area = models.CharField(max_length=35)
+    city = models.CharField(max_length=35)
+    pincode = models.IntegerField()
     objects = managers.GeneralManager()
 
     def get_space_mappings(self):
@@ -29,44 +30,48 @@ class ProposalCenterMapping(BaseModel):
 
     class Meta:
         db_table = 'proposal_center_mapping'
-        unique_together = (('proposal','center_name'),)
+        unique_together = (('proposal', 'center_name'),)
+
 
 class ProposalCenterMappingVersion(models.Model):
-    proposal_version    = models.ForeignKey("ProposalInfoVersion", db_index=True, related_name='centers_version', on_delete=models.CASCADE)
+    proposal_version = models.ForeignKey("ProposalInfoVersion", db_index=True, related_name='centers_version',
+                                         on_delete=models.CASCADE)
     center_name = models.CharField(max_length=50)
-    address     = models.CharField(max_length=150, null=True, blank=True)
-    latitude    = models.FloatField()
-    longitude   = models.FloatField()
-    radius      = models.FloatField()
-    subarea     = models.CharField(max_length=35, default='')
-    area        = models.CharField(max_length=35, default='')
-    city        = models.CharField(max_length=35, default='')
-    pincode     = models.IntegerField(default=0)
+    address = models.CharField(max_length=150, null=True, blank=True)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    radius = models.FloatField()
+    subarea = models.CharField(max_length=35, default='')
+    area = models.CharField(max_length=35, default='')
+    city = models.CharField(max_length=35, default='')
+    pincode = models.IntegerField(default=0)
 
     def get_space_mappings_versions(self):
         return SpaceMappingVersion.objects.get(center_version=self)
 
     class Meta:
         db_table = 'proposal_center_mapping_version'
-        unique_together = (('proposal_version','center_name'),)
+        unique_together = (('proposal_version', 'center_name'),)
+
 
 class SpaceMapping(models.Model):
     """
     This model talks about what spaces or suppliers are allowed or not at a center for a given proposal.
     """
-    center              = models.OneToOneField(ProposalCenterMapping,db_index=True, related_name='space_mappings', on_delete=models.CASCADE)
-    proposal            = models.ForeignKey('ProposalInfo', related_name='space_mapping', on_delete=models.CASCADE)
-    society_allowed     = models.BooleanField(default=False)
-    society_count       = models.IntegerField(default=0)
+    center = models.OneToOneField(ProposalCenterMapping, db_index=True, related_name='space_mappings',
+                                  on_delete=models.CASCADE)
+    proposal = models.ForeignKey('ProposalInfo', related_name='space_mapping', on_delete=models.CASCADE)
+    society_allowed = models.BooleanField(default=False)
+    society_count = models.IntegerField(default=0)
     society_buffer_count = models.IntegerField(default=0)
-    corporate_allowed   = models.BooleanField(default=False)
-    corporate_count     = models.IntegerField(default=0)
+    corporate_allowed = models.BooleanField(default=False)
+    corporate_count = models.IntegerField(default=0)
     corporate_buffer_count = models.IntegerField(default=0)
-    gym_allowed         = models.BooleanField(default=False)
-    gym_count           = models.IntegerField(default=0)
-    gym_buffer_count    = models.IntegerField(default=0)
-    salon_allowed      = models.BooleanField(default=False)
-    salon_count        = models.IntegerField(default=0)
+    gym_allowed = models.BooleanField(default=False)
+    gym_count = models.IntegerField(default=0)
+    gym_buffer_count = models.IntegerField(default=0)
+    salon_allowed = models.BooleanField(default=False)
+    salon_count = models.IntegerField(default=0)
     salon_buffer_count = models.IntegerField(default=0)
 
     def get_all_inventories(self):
@@ -100,27 +105,31 @@ class SpaceMapping(models.Model):
         return self.spaces.filter(supplier_code='SA')
 
     class Meta:
-        #db_table = 'SPACE_MAPPING'
+        # db_table = 'SPACE_MAPPING'
         db_table = 'space_mapping'
 
+
 class SpaceMappingVersion(models.Model):
-    center_version      = models.OneToOneField(ProposalCenterMappingVersion,db_index=True, related_name='space_mappings_version', on_delete=models.CASCADE)
-    proposal_version    = models.ForeignKey('ProposalInfoVersion', related_name='space_mapping_version', on_delete=models.CASCADE)
-    society_allowed     = models.BooleanField(default=False)
-    society_count       = models.IntegerField(default=0)
+    center_version = models.OneToOneField(ProposalCenterMappingVersion, db_index=True,
+                                          related_name='space_mappings_version', on_delete=models.CASCADE)
+    proposal_version = models.ForeignKey('ProposalInfoVersion', related_name='space_mapping_version',
+                                         on_delete=models.CASCADE)
+    society_allowed = models.BooleanField(default=False)
+    society_count = models.IntegerField(default=0)
     society_buffer_count = models.IntegerField(default=0)
-    corporate_allowed   = models.BooleanField(default=False)
-    corporate_count     = models.IntegerField(default=0)
+    corporate_allowed = models.BooleanField(default=False)
+    corporate_count = models.IntegerField(default=0)
     corporate_buffer_count = models.IntegerField(default=0)
-    gym_allowed         = models.BooleanField(default=False)
-    gym_count           = models.IntegerField(default=0)
-    gym_buffer_count    = models.IntegerField(default=0)
-    salon_allowed      = models.BooleanField(default=False)
-    salon_count        = models.IntegerField(default=0)
+    gym_allowed = models.BooleanField(default=False)
+    gym_count = models.IntegerField(default=0)
+    gym_buffer_count = models.IntegerField(default=0)
+    salon_allowed = models.BooleanField(default=False)
+    salon_count = models.IntegerField(default=0)
     salon_buffer_count = models.IntegerField(default=0)
 
     class Meta:
         db_table = 'space_mapping_version'
+
 
 class ProposalInfo(BaseModel):
     """
@@ -130,9 +139,9 @@ class ProposalInfo(BaseModel):
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
     proposal_id = models.CharField(max_length=255, primary_key=True)
-    account = models.ForeignKey('AccountInfo', related_name='proposals',on_delete=models.CASCADE, null=True)
+    account = models.ForeignKey('AccountInfo', related_name='proposals', on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=50, blank=True, null=True)
-    payment_status = models.BooleanField(default=False,)
+    payment_status = models.BooleanField(default=False, )
     updated_on = models.DateTimeField(auto_now=True, auto_now_add=False)
     updated_by = models.CharField(max_length=50, default='Admin')
     created_on = models.DateTimeField(auto_now_add=True, auto_now=False)
@@ -143,6 +152,7 @@ class ProposalInfo(BaseModel):
     campaign_state = models.CharField(max_length=10, null=True, blank=True)
     parent = models.ForeignKey('ProposalInfo', null=True, blank=True, default=None)
     objects = managers.GeneralManager()
+    is_disabled = models.BooleanField(default=False)
     invoice_number = models.CharField(max_length=1000, null=True, blank=True)
 
     def get_centers(self):
@@ -150,6 +160,7 @@ class ProposalInfo(BaseModel):
             return self.centers.all()
         except:
             return None
+
     def get_proposal_versions(self):
         return self.proposal_versions.all().order_by('-timestamp')
 
@@ -157,24 +168,27 @@ class ProposalInfo(BaseModel):
 
         db_table = 'proposal_info'
 
+
 class ProposalInfoVersion(models.Model):
     # proposal_id         = models.CharField(db_column = 'PROPOSAL ID',max_length=15,primary_key=True)
     # account             = models.ForeignKey(AccountInfo,related_name='proposals', db_column ='ACCOUNT',on_delete=models.CASCADE)
-    proposal            = models.ForeignKey('ProposalInfo', related_name='proposal_versions', db_column='PROPOSAL', on_delete=models.CASCADE)
-    name                = models.CharField(db_column='NAME', max_length=50,blank=True)
-    payment_status      = models.BooleanField(default=False, db_column='PAYMENT STATUS')
+    proposal = models.ForeignKey('ProposalInfo', related_name='proposal_versions', db_column='PROPOSAL',
+                                 on_delete=models.CASCADE)
+    name = models.CharField(db_column='NAME', max_length=50, blank=True)
+    payment_status = models.BooleanField(default=False, db_column='PAYMENT STATUS')
     # updated_on          = models.DateTimeField(auto_now=True, auto_now_add=False)
     # updated_by          = models.CharField(max_length=50,default='Admin')
-    created_on          = models.DateTimeField()
-    created_by          = models.CharField(max_length=50, default='Admin')
-    tentative_cost      = models.IntegerField(default=5000)
+    created_on = models.DateTimeField()
+    created_by = models.CharField(max_length=50, default='Admin')
+    tentative_cost = models.IntegerField(default=5000)
     tentative_start_date = models.DateTimeField(null=True)
-    tentative_end_date  = models.DateTimeField(null=True)
-    timestamp           = models.DateTimeField(auto_now=True, auto_now_add=False)
+    tentative_end_date = models.DateTimeField(null=True)
+    timestamp = models.DateTimeField(auto_now=True, auto_now_add=False)
 
     class Meta:
-        #db_table = 'PROPOSAL_INFO_VERSION'
+        # db_table = 'PROPOSAL_INFO_VERSION'
         db_table = 'proposal_info_version'
+
 
 class ProposalMetrics(BaseModel):
     """
@@ -192,6 +206,7 @@ class ProposalMetrics(BaseModel):
     class Meta:
         db_table = 'proposal_metrics'
 
+
 class ProposalCenterSuppliers(BaseModel):
     """
     which suppliers are allowed in a given center under a proposal ?
@@ -208,11 +223,13 @@ class ProposalCenterSuppliers(BaseModel):
     class Meta:
         db_table = 'proposal_center_suppliers'
 
+
 class ImageMapping(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
     location_id = models.CharField(db_column='LOCATION_ID', max_length=20, blank=True, null=True)
     location_type = models.CharField(db_column='LOCATION_TYPE', max_length=20, blank=True, null=True)
-    supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='images', blank=True, null=True, on_delete=models.CASCADE)
+    supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='images', blank=True,
+                                 null=True, on_delete=models.CASCADE)
     image_url = models.CharField(db_column='IMAGE_URL', max_length=100)
     comments = models.CharField(db_column='COMMENTS', max_length=100, blank=True, null=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True, null=True)
@@ -224,17 +241,20 @@ class ImageMapping(BaseModel):
     class Meta:
         db_table = 'image_mapping'
 
+
 class ShortlistedSpacesVersion(models.Model):
-    space_mapping_version   = models.ForeignKey('SpaceMappingVersion',db_index=True, related_name='spaces_version',on_delete=models.CASCADE)
-    supplier_code   = models.CharField(max_length=4)
-    content_type    = models.ForeignKey(ContentType, related_name='spaces_version')
-    object_id       = models.CharField(max_length=12)
-    content_object  = fields.GenericForeignKey('content_type', 'object_id')
-    buffer_status   = models.BooleanField(default=False)
+    space_mapping_version = models.ForeignKey('SpaceMappingVersion', db_index=True, related_name='spaces_version',
+                                              on_delete=models.CASCADE)
+    supplier_code = models.CharField(max_length=4)
+    content_type = models.ForeignKey(ContentType, related_name='spaces_version')
+    object_id = models.CharField(max_length=12)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    buffer_status = models.BooleanField(default=False)
 
     class Meta:
-        #db_table = 'SHORTLISTED_SPACES_VERSION'
+        # db_table = 'SHORTLISTED_SPACES_VERSION'
         db_table = 'shortlisted_spaces_version'
+
 
 class ShortlistedSpaces(BaseModel):
     """
@@ -243,7 +263,8 @@ class ShortlistedSpaces(BaseModel):
     for mapping such relations.
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
-    space_mapping = models.ForeignKey('SpaceMapping', db_index=True, related_name='spaces', on_delete=models.CASCADE, null=True, blank=True)
+    space_mapping = models.ForeignKey('SpaceMapping', db_index=True, related_name='spaces', on_delete=models.CASCADE,
+                                      null=True, blank=True)
     center = models.ForeignKey('ProposalCenterMapping', null=True, blank=True)
     proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
     supplier_code = models.CharField(max_length=4, null=True, blank=True)
@@ -254,7 +275,7 @@ class ShortlistedSpaces(BaseModel):
     status = models.CharField(max_length=10, null=True, blank=True)
     objects = managers.GeneralManager()
     campaign_status = models.CharField(max_length=10, default='', null=True, blank=True)
-    phase = models.CharField(max_length=10, default='',  null=True, blank=True)
+    phase = models.CharField(max_length=10, default='', null=True, blank=True)
     payment_status = models.CharField(max_length=255, null=True, blank=True)
     payment_method = models.CharField(max_length=255, null=True, blank=True)
     total_negotiated_price = models.CharField(max_length=255, null=True, blank=True)
@@ -283,12 +304,12 @@ class HashTagImages(BaseModel):
     class Meta:
         db_table = 'hashtag_images'
 
-class SupplierPhase(BaseModel):
 
+class SupplierPhase(BaseModel):
     """
     This model stores phase no of supplier and start date and end date
     """
-    phase_no = models.CharField(max_length=10, default='',  null=True, blank=True)
+    phase_no = models.CharField(max_length=10, default='', null=True, blank=True)
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
     comments = models.CharField(max_length=255, null=True, blank=True)

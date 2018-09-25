@@ -28,6 +28,7 @@ jdcal==1.2
 jmespath==0.9.3
 kombu==3.0.37
 MySQL-python==1.2.5
+numpy==1.15.2
 openpyxl==2.4.0
 pathlib==1.0.1
 pygeocoder==1.2.5
