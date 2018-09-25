@@ -337,15 +337,13 @@ class DashBoardViewSet(viewsets.ViewSet):
                 inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__is_completed=False). \
                 values(object_id_alias). \
                 distinct()
-
             all_inventory_activity_images = InventoryActivityImage.objects.filter(
-                inventory_activity_assignment__inventory_activity__shortlisted_inventory_details_id__in=shortlisted_spaces_id_list).all()
+                inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces_id__in=shortlisted_spaces_id_list).all()
             all_images_by_supplier = {}
             for inventory_image in all_inventory_activity_images:
                 supplier_id = shortlisted_spaces_id_dict[
-                    inventory_image.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details_id]
+                    inventory_image.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details.shortlisted_spaces_id]
                 inventory_name = inventory_image.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details.ad_inventory_type.adinventory_name
-                inventory_type = inventory_image.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details.ad_inventory_type.adinventory_type
                 if supplier_id not in all_images_by_supplier:
                     all_images_by_supplier[supplier_id] = {}
                 if inventory_name not in all_images_by_supplier[supplier_id]:
@@ -359,6 +357,7 @@ class DashBoardViewSet(viewsets.ViewSet):
                     'inventory_name': inventory_name
                 })
                 all_images_by_supplier[supplier_id][inventory_name]["total_count"] += 1
+
             all_hashtag_images = HashTagImages.objects.filter(campaign_id=campaign_id).all()
             for hashtag_image in all_hashtag_images:
                 supplier_id = hashtag_image.object_id
@@ -375,6 +374,7 @@ class DashBoardViewSet(viewsets.ViewSet):
                     'inventory_name': hashtag_image.hashtag
                 })
                 all_images_by_supplier[supplier_id][hashtag_image.hashtag]["total_count"] += 1
+
             ongoing_supplier_id_list = [supplier[object_id_alias] for supplier in ongoing_suppliers]
 
             completed_suppliers = ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id,
