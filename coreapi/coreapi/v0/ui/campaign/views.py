@@ -1,6 +1,7 @@
 import random
 import numpy as np
 from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, SupplierPhase
+from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, SupplierPhase, HashTagImages
 from v0.ui.utils import handle_response, calculate_percentage
 from django.utils import timezone
 from rest_framework.response import Response
@@ -325,6 +326,8 @@ class DashBoardViewSet(viewsets.ViewSet):
 
             shortlisted_suppliers = ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id)
             shortlisted_suppliers_id_list = [supplier.object_id for supplier in shortlisted_suppliers]
+            shortlisted_spaces_id_list = [supplier.id for supplier in shortlisted_suppliers]
+            shortlisted_spaces_id_dict = {supplier.id: supplier.object_id for supplier in shortlisted_suppliers}
 
             suppliers_instances = SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_suppliers_id_list)
             supplier_serializer = SupplierTypeSocietySerializer(suppliers_instances, many=True)
@@ -345,7 +348,6 @@ class DashBoardViewSet(viewsets.ViewSet):
                     'flat_count': flat_count,
                     'leads_flat_percentage': calculate_percentage(leads.total_leads_count, flat_count)
                 }
-            leads = website_utils.get_campaign_leads(campaign_id)
             inv_data_objects_list = website_utils.get_campaign_inv_data(campaign_id)
             # inv_data_objects_list = {inv['object_id']:inv for inv in inv_data}
             ongoing_suppliers = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
@@ -358,6 +360,43 @@ class DashBoardViewSet(viewsets.ViewSet):
                 inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__is_completed=False). \
                 values(object_id_alias). \
                 distinct()
+            all_inventory_activity_images = InventoryActivityImage.objects.filter(
+                inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces_id__in=shortlisted_spaces_id_list).all()
+            all_images_by_supplier = {}
+            for inventory_image in all_inventory_activity_images:
+                supplier_id = shortlisted_spaces_id_dict[
+                    inventory_image.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details.shortlisted_spaces_id]
+                inventory_name = inventory_image.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details.ad_inventory_type.adinventory_name
+                if supplier_id not in all_images_by_supplier:
+                    all_images_by_supplier[supplier_id] = {}
+                if inventory_name not in all_images_by_supplier[supplier_id]:
+                    all_images_by_supplier[supplier_id][inventory_name] = {"images": [], "total_count":0}
+                all_images_by_supplier[supplier_id][inventory_name]["images"].append({
+                    'image_path': inventory_image.image_path,
+                    'actual_activity_date': str(inventory_image.actual_activity_date),
+                    'latitude': str(inventory_image.latitude),
+                    'longitude': str(inventory_image.longitude),
+                    'comment': str(inventory_image.comment),
+                    'inventory_name': inventory_name
+                })
+                all_images_by_supplier[supplier_id][inventory_name]["total_count"] += 1
+
+            all_hashtag_images = HashTagImages.objects.filter(campaign_id=campaign_id).all()
+            for hashtag_image in all_hashtag_images:
+                supplier_id = hashtag_image.object_id
+                if supplier_id not in all_images_by_supplier:
+                    all_images_by_supplier[supplier_id] = {}
+                if hashtag_image.hashtag not in all_images_by_supplier[supplier_id]:
+                    all_images_by_supplier[supplier_id][hashtag_image.hashtag] = {"images": [], "total_count":0}
+                all_images_by_supplier[supplier_id][hashtag_image.hashtag]["images"].append({
+                    'image_path': hashtag_image.image_path,
+                    'actual_activity_date': str(hashtag_image.created_at),
+                    'latitude': str(hashtag_image.latitude),
+                    'longitude': str(hashtag_image.longitude),
+                    'comment': str(hashtag_image.comment),
+                    'inventory_name': hashtag_image.hashtag
+                })
+                all_images_by_supplier[supplier_id][hashtag_image.hashtag]["total_count"] += 1
 
             ongoing_supplier_id_list = [supplier[object_id_alias] for supplier in ongoing_suppliers]
 
@@ -376,10 +415,9 @@ class DashBoardViewSet(viewsets.ViewSet):
             for id in ongoing_supplier_id_list:
                 data = {
                     'supplier': supplier_objects_id_list[id],
-                    'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {}
+                    'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
+                    'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {}
                 }
-                if leads and (id in leads):
-                    data['leads_data'] = leads[id]
                 if id in inv_data_objects_list:
                     data['supplier']['inv_data'] = inv_data_objects_list[id]
                 ongoing_suppliers_list.append(data)
@@ -395,10 +433,9 @@ class DashBoardViewSet(viewsets.ViewSet):
             for id in completed_supplier_id_list:
                 data = {
                     'supplier': supplier_objects_id_list[id],
-                    'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {}
+                    'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
+                    'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {}
                 }
-                if leads and (id in leads):
-                    data['leads_data'] = leads[id]
                 if id in inv_data_objects_list:
                     data['supplier']['inv_data'] = inv_data_objects_list[id]
                 completed_suppliers_list.append(data)
@@ -414,10 +451,9 @@ class DashBoardViewSet(viewsets.ViewSet):
             for id in upcoming_supplier_id_list:
                 data = {
                     'supplier': supplier_objects_id_list[id],
-                    'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {}
+                    'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
+                    'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {}
                 }
-                if leads and (id in leads):
-                    data['leads_data'] = leads[id]
                 if id in inv_data_objects_list:
                     data['supplier']['inv_data'] = inv_data_objects_list[id]
                 upcoming_suppliers_list.append(data)

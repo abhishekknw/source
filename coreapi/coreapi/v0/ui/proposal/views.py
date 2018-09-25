@@ -284,7 +284,8 @@ def assign_inv_dates(data):
             if inv['inv_name'] == 'POSTER' or inv['inv_name'] == 'FLIER' or inv['inv_name'] == 'STANDEE':
                 if inv['supplier_id'] in supplier_ids_mapping:
                     date = supplier_ids_mapping[inv['supplier_id']]['inv_code'][inv['inv_name']]
-
+                    if not date:
+                        continue
                     if date:
                         assigned_by = assigned_by_user
                         assigned_to = assigned_to_user
