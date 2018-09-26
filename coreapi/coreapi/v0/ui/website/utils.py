@@ -4015,7 +4015,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
 
             supplier_content_type_id = supplier['content_type']
             supplier_id = supplier['object_id']
-
+            supplier['freebies'] = supplier['freebies'].split(',') if supplier['freebies'] else None
             supplier_tuple = (supplier_content_type_id, supplier_id)
             for key, value in supplier_specific_info[supplier_tuple].iteritems():
                 supplier[key] = value
@@ -4071,7 +4071,9 @@ def handle_update_campaign_inventories(user, data):
                                          supplier['booking_status'])
             if not response.data['status']:
                 return response
-
+            supplier_freebies = supplier['freebies'] if 'freebies' in supplier else None
+            if supplier_freebies and isinstance(supplier_freebies,list):
+                supplier_freebies = ','.join(supplier_freebies)
             shortlisted_spaces[ss_global_id] = {
                 'phase': supplier['phase'],
                 'phase_no': supplier['phase_no'],
@@ -4079,7 +4081,8 @@ def handle_update_campaign_inventories(user, data):
                 'payment_method': supplier['payment_method'],
                 'total_negotiated_price': supplier['total_negotiated_price'],
                 'booking_status': supplier['booking_status'],
-                'transaction_or_check_number' : supplier['transaction_or_check_number']
+                'transaction_or_check_number': supplier['transaction_or_check_number'],
+                'freebies': supplier_freebies
             }
 
             shortlisted_inventories = supplier['shortlisted_inventories']
@@ -4161,6 +4164,7 @@ def update_campaign_inventories(data):
             obj.total_negotiated_price = shortlisted_spaces[ss_global_id]['total_negotiated_price']
             obj.booking_status = shortlisted_spaces[ss_global_id]['booking_status']
             obj.transaction_or_check_number = shortlisted_spaces[ss_global_id]['transaction_or_check_number']
+            obj.freebies = shortlisted_spaces[ss_global_id]['freebies']
 
         sid_ids = shortlisted_inventory_details.keys()
         sid_objects = ShortlistedInventoryPricingDetails.objects.filter(id__in=sid_ids)
