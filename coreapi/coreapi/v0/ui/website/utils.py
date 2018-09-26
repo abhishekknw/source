@@ -65,8 +65,6 @@ from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeSociety
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
 from v0.ui.permissions.models import Role
 from v0.ui.permissions.serializers import RoleHierarchySerializer
-from v0.ui.leads.serializers import LeadsSerializer
-from v0.ui.leads.models import Leads
 from v0.ui.events.models import Events
 from v0.ui.base.models import DurationType
 from v0.ui.account.serializers import ContactDetailsSerializer
@@ -6769,28 +6767,6 @@ def get_filters_by_campaign(campaign_id):
         return Exception(function_name, ui_utils.get_system_error(e))
 
 
-def get_campaign_leads(campaign_id):
-    """
-
-    :param campaign_id:
-    :return:
-    """
-    function_name = get_campaign_leads.__name__
-    try:
-        leads_instance = Leads.objects.filter(campaign__proposal_id=campaign_id)
-        serializer = LeadsSerializer(leads_instance, many=True)
-        leads = serializer.data
-        leads_data = {}
-        if leads:
-            for lead in leads:
-                if lead['object_id'] not in leads_data:
-                    leads_data[lead['object_id']] = []
-                leads_data[lead['object_id']].append(lead)
-        return leads_data
-    except Exception as e:
-        return Exception(function_name, ui_utils.get_system_error(e))
-
-
 def get_campaign_inventory_activity_data(campaign_id):
     """
 
@@ -7056,25 +7032,6 @@ def get_total_assigned_inv_act_data(campaign_id, content_type_id, act_type):
             inventory_activity__activity_type=act_type). \
             values('inventory_activity__shortlisted_inventory_details__id').distinct().count()
         return result
-    except Exception as e:
-        return Exception(function_name, ui_utils.get_system_error(e))
-
-
-def get_leads_count_by_campaign(data):
-    """
-    This function will return leads of every campaign if available
-    :param data:
-    :return:
-    """
-    function_name = get_leads_count_by_campaign.__name__
-    try:
-        proposal_id_list = [proposal['proposal_id'] for proposal in data]
-        leads = Leads.objects.filter(campaign__in=proposal_id_list).values('campaign').annotate(total=Count('id'))
-        leads_id_objects = {lead['campaign']: lead for lead in leads}
-        for proposal in data:
-            if proposal['proposal_id'] in leads_id_objects:
-                proposal['leads'] = leads_id_objects[proposal['proposal_id']]
-        return data
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
 
