@@ -29,6 +29,8 @@ from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from django.core.cache import cache
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.conf import settings
+from v0.ui.base.models import BaseModel
+from v0.ui.common.models import BaseUser
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 print CACHE_TTL
 
@@ -1180,3 +1182,76 @@ class CampaignLeads(APIView):
                       'flat_data': all_flat_data}
 
         return ui_utils.handle_response(class_name, data=final_data, success=True)
+
+
+class CityWiseMultipleCampaignLeads(APIView):
+    def get(self, request):
+        username = request.user
+        user_id = BaseUser.objects.get(username=username).id
+        campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id).values_list('campaign_id', flat=True)\
+                             .distinct()
+        campaign_leads = LeadsFormSummary.objects.filter(campaign_id__in=campaign_list).values(
+            'supplier_id', 'campaign_id','total_leads_count','hot_leads_count')
+        supplier_ids = campaign_leads.values_list('supplier_id',flat = True).distinct()
+        supplier_properties = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)\
+            .values('supplier_id', 'society_city', 'flat_count')
+        city_list = supplier_properties.values_list('society_city',flat=True).distinct()
+        city_leads_data = {}
+        for curr_city in city_list:
+            supplier_ids = list(set([x['supplier_id'] for x in supplier_properties if x['society_city'] == curr_city]))
+            curr_city_campaign_data = [x for x in campaign_leads if x['supplier_id'] in supplier_ids]
+            curr_city_supplier_data = [x for x in supplier_properties if x['supplier_id'] in supplier_ids and
+                                       x['flat_count'] is not None]
+            hot_leads = sum(x['hot_leads_count'] for x in curr_city_campaign_data)
+            total_leads = sum(x['total_leads_count'] for x in curr_city_campaign_data)
+            flat_count = sum(x['flat_count'] for x in curr_city_supplier_data)
+            hot_leads_percentage = round(float(hot_leads)/float(total_leads)*100, 3)
+            curr_city_leads = {
+                "interested": hot_leads,
+                "total": total_leads,
+                "hot_leads_percentage": hot_leads_percentage,
+                "flat count": flat_count
+            }
+            city_leads_data[curr_city] = curr_city_leads
+
+        city_leads_data_z = z_calculator_dict(city_leads_data,"hot_leads_percentage")
+
+        #campaign_suppliers = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list)
+        return ui_utils.handle_response({}, data=city_leads_data_z, success=True)
+
+
+
+# class FlatWiseCampaignLeads(APIView):
+#
+#     def get(self, request):
+#         class_name = self.__class__.__name__
+#         campaign_id = request.query_params.get('campaign_id', None)
+#         #leads_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
+#         supplier_ids = list(set(leads_form_data.values_list('supplier_id', flat=True)))
+#         supplier_data_query = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
+#         supplier_data = SupplierTypeSocietySerializer2(supplier_data_1, many=True).data
+#         leads_form_summary_data = LeadsFormSummary.objects.filter(campaign_id=campaign_id) \
+#             .values('supplier_id', 'total_leads_count', 'hot_leads_count', 'hot_leads_percentage')
+#
+#         all_flat_data = {
+#             "0-150":{
+#                 "campaign": campaign_id,
+#                 "flat_category": 1,
+#                 "interested": 0,
+#                 "total": 0
+#             },
+#             "151-399": {
+#                 "campaign": campaign_id,
+#                 "flat_category": 2,
+#                 "interested": 0,
+#                 "total": 0
+#             },
+#             "400+": {
+#                 "campaign": campaign_id,
+#                 "flat_category": 3,
+#                 "interested": 0,
+#                 "total": 0
+#             }
+#         }
+#
+#         for curr_supplier_data in supplier_data:
