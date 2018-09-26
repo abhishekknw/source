@@ -21,7 +21,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework import status
 import gpxpy.geo
-from v0.ui.leads.models import Leads, LeadsForm, LeadsFormItems, LeadsFormData, LeadsFormSummary
+from v0.ui.leads.models import LeadsForm, LeadsFormItems, LeadsFormData, LeadsFormSummary
 from v0.ui.leads.serializers import LeadsFormItemsSerializer, LeadsFormDataSerializer
 from v0.utils import get_values
 from v0.ui.base.models import DurationType
@@ -276,7 +276,6 @@ class DashBoardViewSet(viewsets.ViewSet):
                                                                                            'center__latitude',
                                                                                            'center__longitude'). \
                     annotate(total=Count('object_id'))
-                proposal_data = website_utils.get_leads_count_by_campaign(proposal_data)
 
             if campaign_status == v0_constants.campaign_status['completed_campaigns']:
                 query = Q(proposal__tentative_start_date__lt=current_date) & Q(proposal__campaign_state='PTC')
@@ -287,7 +286,6 @@ class DashBoardViewSet(viewsets.ViewSet):
                                                                                            'center__latitude',
                                                                                            'center__longitude'). \
                     annotate(total=Count('object_id'))
-                proposal_data = website_utils.get_leads_count_by_campaign(proposal_data)
 
             if campaign_status == v0_constants.campaign_status['upcoming_campaigns']:
                 query = Q(proposal__tentative_start_date__gt=current_date) & Q(proposal__campaign_state='PTC')
@@ -298,7 +296,6 @@ class DashBoardViewSet(viewsets.ViewSet):
                                                                                            'center__latitude',
                                                                                            'center__longitude'). \
                     annotate(total=Count('object_id'))
-                proposal_data = website_utils.get_leads_count_by_campaign(proposal_data)
 
             data = {}
             for proposal in proposal_data:

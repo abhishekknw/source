@@ -65,8 +65,6 @@ from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeSociety
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
 from v0.ui.permissions.models import Role
 from v0.ui.permissions.serializers import RoleHierarchySerializer
-from v0.ui.leads.serializers import LeadsSerializer
-from v0.ui.leads.models import Leads
 from v0.ui.events.models import Events
 from v0.ui.base.models import DurationType
 from v0.ui.account.serializers import ContactDetailsSerializer
@@ -4015,7 +4013,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
 
             supplier_content_type_id = supplier['content_type']
             supplier_id = supplier['object_id']
-
+            supplier['freebies'] = supplier['freebies'].split(',') if supplier['freebies'] else None
             supplier_tuple = (supplier_content_type_id, supplier_id)
             for key, value in supplier_specific_info[supplier_tuple].iteritems():
                 supplier[key] = value
@@ -4071,7 +4069,9 @@ def handle_update_campaign_inventories(user, data):
                                          supplier['booking_status'])
             if not response.data['status']:
                 return response
-
+            supplier_freebies = supplier['freebies'] if 'freebies' in supplier else None
+            if supplier_freebies and isinstance(supplier_freebies,list):
+                supplier_freebies = ','.join(supplier_freebies)
             shortlisted_spaces[ss_global_id] = {
                 'phase': supplier['phase'],
                 'phase_no': supplier['phase_no'],
@@ -4079,7 +4079,8 @@ def handle_update_campaign_inventories(user, data):
                 'payment_method': supplier['payment_method'],
                 'total_negotiated_price': supplier['total_negotiated_price'],
                 'booking_status': supplier['booking_status'],
-                'transaction_or_check_number' : supplier['transaction_or_check_number']
+                'transaction_or_check_number': supplier['transaction_or_check_number'],
+                'freebies': supplier_freebies
             }
 
             shortlisted_inventories = supplier['shortlisted_inventories']
@@ -4161,6 +4162,7 @@ def update_campaign_inventories(data):
             obj.total_negotiated_price = shortlisted_spaces[ss_global_id]['total_negotiated_price']
             obj.booking_status = shortlisted_spaces[ss_global_id]['booking_status']
             obj.transaction_or_check_number = shortlisted_spaces[ss_global_id]['transaction_or_check_number']
+            obj.freebies = shortlisted_spaces[ss_global_id]['freebies']
 
         sid_ids = shortlisted_inventory_details.keys()
         sid_objects = ShortlistedInventoryPricingDetails.objects.filter(id__in=sid_ids)
@@ -6765,28 +6767,6 @@ def get_filters_by_campaign(campaign_id):
         return Exception(function_name, ui_utils.get_system_error(e))
 
 
-def get_campaign_leads(campaign_id):
-    """
-
-    :param campaign_id:
-    :return:
-    """
-    function_name = get_campaign_leads.__name__
-    try:
-        leads_instance = Leads.objects.filter(campaign__proposal_id=campaign_id)
-        serializer = LeadsSerializer(leads_instance, many=True)
-        leads = serializer.data
-        leads_data = {}
-        if leads:
-            for lead in leads:
-                if lead['object_id'] not in leads_data:
-                    leads_data[lead['object_id']] = []
-                leads_data[lead['object_id']].append(lead)
-        return leads_data
-    except Exception as e:
-        return Exception(function_name, ui_utils.get_system_error(e))
-
-
 def get_campaign_inventory_activity_data(campaign_id):
     """
 
@@ -7052,25 +7032,6 @@ def get_total_assigned_inv_act_data(campaign_id, content_type_id, act_type):
             inventory_activity__activity_type=act_type). \
             values('inventory_activity__shortlisted_inventory_details__id').distinct().count()
         return result
-    except Exception as e:
-        return Exception(function_name, ui_utils.get_system_error(e))
-
-
-def get_leads_count_by_campaign(data):
-    """
-    This function will return leads of every campaign if available
-    :param data:
-    :return:
-    """
-    function_name = get_leads_count_by_campaign.__name__
-    try:
-        proposal_id_list = [proposal['proposal_id'] for proposal in data]
-        leads = Leads.objects.filter(campaign__in=proposal_id_list).values('campaign').annotate(total=Count('id'))
-        leads_id_objects = {lead['campaign']: lead for lead in leads}
-        for proposal in data:
-            if proposal['proposal_id'] in leads_id_objects:
-                proposal['leads'] = leads_id_objects[proposal['proposal_id']]
-        return data
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
 

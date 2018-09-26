@@ -1,23 +1,7 @@
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
-from models import Leads, LeadAlias, LeadsForm, LeadsFormItems, LeadsFormData, LeadsFormContacts
-
-
-class LeadsSerializer(ModelSerializer):
-    class Meta:
-        model = Leads
-        fields = '__all__'
-
-
-class LeadAliasSerializer(ModelSerializer):
-    """
-    simple serializer for LeadAlias
-    """
-
-    class Meta:
-        model = LeadAlias
-        fields = '__all__'
+from models import LeadsForm, LeadsFormItems, LeadsFormData, LeadsFormContacts
 
 
 class LeadsFormSerializer(ModelSerializer):
