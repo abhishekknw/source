@@ -5,7 +5,7 @@ from views import (ShortlistSocietyCountAPIView, BookCampaignAPIView,
                    FinalCampaignBookingAPIView, campaignListAPIVIew, CampaignAPIView, DashBoardViewSet,
                    DeleteInventoryActivityAssignment, GetCampaignAssignments, DeleteCampaignAssignments,
                    GetAdInventoryTypeAndDurationTypeData, AddDynamicInventoryIds, DeleteAdInventoryIds,
-                   CampaignLeads)
+                   CampaignLeads, CityWiseMultipleCampaignLeads)
 from v0.ui.website.views import (GetAssignedIdImagesListApiView)
 
 urlpatterns = [
@@ -22,6 +22,7 @@ urlpatterns = [
     url(r'^add-dynamic-inventory-ids/$', AddDynamicInventoryIds.as_view()),
     url(r'^delete-ad-inventory-ids/$', DeleteAdInventoryIds.as_view()),
     url(r'^dashboard/get_leads_by_campaign_new/$',  cache_page(60*60)(CampaignLeads.as_view())),
+    url(r'^city-wise-multiple-campaign/$', CityWiseMultipleCampaignLeads.as_view()),
 ]
 
 router = DefaultRouter()
