@@ -1,11 +1,13 @@
 from rest_framework.serializers import ModelSerializer
 from models import DoorToDoorInfo, DataSciencesCost, EventStaffingCost, IdeationDesignCost, LogisticOperationsCost, \
     PriceMapping, PriceMappingDefault, PrintingCost, RatioDetails, SpaceBookingCost, SpaceBookingCost, \
-    ShortlistedInventoryPricingDetails, AuditDate
+    ShortlistedInventoryPricingDetails, AuditDate, ShortlistedInventoryComments
 from v0.ui.inventory.serializers import InventoryActivitySerializerWithInventoryAssignmentsAndImages, \
     AdInventoryTypeSerializer, ShortlistedInventoryPricingSerializerReadOnly
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.base.serializers import DurationTypeSerializer
+from v0.ui.user.serializers import BaseUserSerializer
+
 
 class AuditDateSerializer(ModelSerializer):
 
@@ -90,3 +92,4 @@ class PriceMappingDefaultSerializerReadOnly(ModelSerializer):
     class Meta:
         model = PriceMappingDefault
         fields = '__all__'
+

@@ -39,43 +39,59 @@ def getPriceDict():
 
     return price_dict
 
+
 class DoorToDoorInfo(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    supplier = models.ForeignKey('SupplierTypeSociety', related_name='door_to_doors', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)
+    supplier = models.ForeignKey('SupplierTypeSociety', related_name='door_to_doors', db_column='SUPPLIER_ID',
+                                 blank=True, null=True, on_delete=models.CASCADE)
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, blank=True, null=True)
-    flier_distribution_frequency_door = models.CharField(db_column='FLIER_DISTRIBUTION_FREQUENCY_DOOR', max_length=20, blank=True, null=True)
-    door_to_door_inventory_status = models.CharField(db_column='DOOR_TO_DOOR_INVENTORY_STATUS', max_length=15, blank=True, null=True)
-    door_to_door_price_society = models.FloatField(db_column='DOOR_TO_DOOR_PRICE_SOCIETY', default=0.0, blank=True, null=True)
-    door_to_door_price_business = models.FloatField(db_column='DOOR_TO_DOOR_PRICE_BUSINESS', default=0.0, blank=True, null=True)
-    master_door_to_door_flyer_price_society = models.FloatField(db_column='MASTER_DOOR_TO_DOOR_FLYER_PRICE_SOCIETY', default=0.0, blank=True, null=True)
-    master_door_to_door_flyer_price_business = models.FloatField(db_column='MASTER_DOOR_TO_DOOR_FLYER_PRICE_BUSINESS', default=0.0, blank=True, null=True)
+    flier_distribution_frequency_door = models.CharField(db_column='FLIER_DISTRIBUTION_FREQUENCY_DOOR', max_length=20,
+                                                         blank=True, null=True)
+    door_to_door_inventory_status = models.CharField(db_column='DOOR_TO_DOOR_INVENTORY_STATUS', max_length=15,
+                                                     blank=True, null=True)
+    door_to_door_price_society = models.FloatField(db_column='DOOR_TO_DOOR_PRICE_SOCIETY', default=0.0, blank=True,
+                                                   null=True)
+    door_to_door_price_business = models.FloatField(db_column='DOOR_TO_DOOR_PRICE_BUSINESS', default=0.0, blank=True,
+                                                    null=True)
+    master_door_to_door_flyer_price_society = models.FloatField(db_column='MASTER_DOOR_TO_DOOR_FLYER_PRICE_SOCIETY',
+                                                                default=0.0, blank=True, null=True)
+    master_door_to_door_flyer_price_business = models.FloatField(db_column='MASTER_DOOR_TO_DOOR_FLYER_PRICE_BUSINESS',
+                                                                 default=0.0, blank=True, null=True)
     leaflet_handover = models.CharField(db_column='LEAFLET_HANDOVER', max_length=50, blank=True, null=True)
     activities = models.CharField(db_column='ACTIVITIES', max_length=255, blank=True, null=True)
     banner_spaces_count = models.IntegerField(db_column='BANNER_SPACES_COUNT', blank=True, null=True)
 
     class Meta:
-
         db_table = 'door_to_door_info'
+
 
 class PriceMapping(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='inv_prices', blank=True, null=True, on_delete=models.CASCADE)
-    adinventory_id = models.ForeignKey('AdInventoryLocationMapping', db_column='ADINVENTORY_LOCATION_MAPPING_ID', related_name='prices', blank=True, null=True, on_delete=models.CASCADE)
-    adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True, on_delete=models.CASCADE)
+    supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='inv_prices', blank=True,
+                                 null=True, on_delete=models.CASCADE)
+    adinventory_id = models.ForeignKey('AdInventoryLocationMapping', db_column='ADINVENTORY_LOCATION_MAPPING_ID',
+                                       related_name='prices', blank=True, null=True, on_delete=models.CASCADE)
+    adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True,
+                                         on_delete=models.CASCADE)
     society_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE')
     business_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE')
-    duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True, on_delete=models.CASCADE)
+    duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True,
+                                      on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'price_mapping'
 
+
 class PriceMappingDefault(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
-    supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='default_prices', blank=True, null=True, on_delete=models.CASCADE)
-    adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True, on_delete=models.CASCADE)
+    supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='default_prices',
+                                 blank=True, null=True, on_delete=models.CASCADE)
+    adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True,
+                                         on_delete=models.CASCADE)
     suggested_supplier_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE', null=True, blank=True)
     actual_supplier_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE', null=True, blank=True)
-    duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True, on_delete=models.CASCADE)
+    duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True,
+                                      on_delete=models.CASCADE)
     content_type = models.ForeignKey(ContentType, null=True)
     object_id = models.CharField(db_index=True, max_length=supplier_id_max_length, null=True)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
@@ -83,6 +99,7 @@ class PriceMappingDefault(BaseModel):
 
     class Meta:
         db_table = 'price_mapping_default'
+
 
 class ShortlistedInventoryPricingDetails(BaseModel):
     """
@@ -104,24 +121,39 @@ class ShortlistedInventoryPricingDetails(BaseModel):
     inventory_object = fields.GenericForeignKey('inventory_content_type', 'inventory_id')
     comment = models.CharField(max_length=1000, null=True, blank=True)
 
-
     class Meta:
         db_table = 'shortlisted_inventory_pricing_details'
+
+
+class ShortlistedInventoryComments(BaseModel):
+    shortlisted_inventory_details = models.ForeignKey('ShortlistedInventoryPricingDetails', null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False)
+    comment = models.CharField(max_length=500, null=True, blank=True)
+    campaign_id = models.CharField(max_length=70, null=True, blank=True)
+
+    class Meta:
+        db_table = 'shortlisted_inventory_comments'
+
 
 class RatioDetails(models.Model):
     supplier_id = models.CharField(db_column='SUPPLIER_ID', max_length=20)  # Field name made lowercase.
     machadalo_index = models.CharField(db_column='MACHADALO_INDEX', max_length=30)  # Field name made lowercase.
-    age_proportions = models.CharField(db_column='AGE_PROPORTIONS', max_length=15, blank=True, null=True)  # Field name made lowercase.
-    flat_avg_rental_persqft = models.CharField(db_column='FLAT_AVG_RENTAL_PERSQFT', max_length=10, blank=True, null=True)  # Field name made lowercase.
-    flat_avg_size = models.CharField(db_column='FLAT_AVG_SIZE', max_length=5, blank=True, null=True)  # Field name made lowercase.
-    flat_sale_cost_persqft = models.CharField(db_column='FLAT_SALE_COST_PERSQFT', max_length=5, blank=True, null=True)  # Field name made lowercase.
+    age_proportions = models.CharField(db_column='AGE_PROPORTIONS', max_length=15, blank=True,
+                                       null=True)  # Field name made lowercase.
+    flat_avg_rental_persqft = models.CharField(db_column='FLAT_AVG_RENTAL_PERSQFT', max_length=10, blank=True,
+                                               null=True)  # Field name made lowercase.
+    flat_avg_size = models.CharField(db_column='FLAT_AVG_SIZE', max_length=5, blank=True,
+                                     null=True)  # Field name made lowercase.
+    flat_sale_cost_persqft = models.CharField(db_column='FLAT_SALE_COST_PERSQFT', max_length=5, blank=True,
+                                              null=True)  # Field name made lowercase.
     wall_count = models.IntegerField(db_column='WALL_COUNT', blank=True, null=True)  # Field name made lowercase.
-    major_event_count = models.IntegerField(db_column='MAJOR_EVENT_COUNT', blank=True, null=True)  # Field name made lowercase.
+    major_event_count = models.IntegerField(db_column='MAJOR_EVENT_COUNT', blank=True,
+                                            null=True)  # Field name made lowercase.
 
     class Meta:
-
         db_table = 'ratio_details'
         unique_together = (('supplier_id', 'machadalo_index'),)
+
 
 class AbstractGeneralCost(BaseModel):
     """
@@ -138,12 +170,15 @@ class AbstractGeneralCost(BaseModel):
     class Meta:
         abstract = True
 
+
 class PrintingCost(AbstractGeneralCost):
     """
     Printing cost is broken down into various costs. Hence a model is made to store it's pieces.
     """
+
     class Meta:
         db_table = 'printing_cost'
+
 
 class LogisticOperationsCost(AbstractGeneralCost):
     """
@@ -153,6 +188,7 @@ class LogisticOperationsCost(AbstractGeneralCost):
     class Meta:
         db_table = 'logistic_operations_cost'
 
+
 class IdeationDesignCost(AbstractGeneralCost):
     """
     IdeationDesignCost  is broken down into various costs. Hence a model is made to store it's pieces.
@@ -160,6 +196,7 @@ class IdeationDesignCost(AbstractGeneralCost):
 
     class Meta:
         db_table = 'ideation_design_cost'
+
 
 class SpaceBookingCost(AbstractGeneralCost):
     """
@@ -170,6 +207,7 @@ class SpaceBookingCost(AbstractGeneralCost):
     class Meta:
         db_table = 'space_booking_cost'
 
+
 class EventStaffingCost(AbstractGeneralCost):
     """
     EventStaffingCost  is broken down into various costs. Hence a model is made to store it's pieces.
@@ -177,6 +215,7 @@ class EventStaffingCost(AbstractGeneralCost):
 
     class Meta:
         db_table = 'event_staffing_cost'
+
 
 class DataSciencesCost(AbstractGeneralCost):
     """
@@ -186,49 +225,60 @@ class DataSciencesCost(AbstractGeneralCost):
     class Meta:
         db_table = 'data_sciences_cost'
 
-class FlierThroughLobbyInfo(models.Model):
 
+class FlierThroughLobbyInfo(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
-    supplier = models.ForeignKey('SupplierTypeSociety', related_name='flier_lobby', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
-    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, blank=True, null=True)  # Field name made lowercase.
-    flier_distribution_frequency_lobby = models.CharField(db_column='FLIER_DISTRIBUTION_FREQUENCY_LOBBY', max_length=20, blank=True, null=True)  # Field name made lowercase.
-    flier_lobby_inventory_status = models.CharField(db_column='FLIER_LOBBY_INVENTORY_STATUS', max_length=15, blank=True, null=True)  # Field name made lowercase.
-    flier_lobby_price_society = models.FloatField(db_column='FLIER_LOBBY_PRICE_SOCIETY', default=0.0, blank=True, null=True)  # Field name made lowercase.
-    flier_lobby_price_business = models.FloatField(db_column='FLIER_LOBBY_PRICE_BUSINESS', default=0.0, blank=True, null=True)  # Field name made lowercase.
-    master_flier_lobby_price_society = models.FloatField(db_column='MASTER_FLIER_LOBBY_PRICE_SOCIETY', default=0.0, blank=True, null=True)  # Field name made lowercase.
-    master_flier_lobby_price_business = models.FloatField(db_column='MASTER_FLIER_LOBBY_PRICE_BUSINESS', default=0.0, blank=True, null=True)  # Field name made lowercase.
+    supplier = models.ForeignKey('SupplierTypeSociety', related_name='flier_lobby', db_column='SUPPLIER_ID', blank=True,
+                                 null=True, on_delete=models.CASCADE)  # Field name made lowercase.
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, blank=True,
+                                      null=True)  # Field name made lowercase.
+    flier_distribution_frequency_lobby = models.CharField(db_column='FLIER_DISTRIBUTION_FREQUENCY_LOBBY', max_length=20,
+                                                          blank=True, null=True)  # Field name made lowercase.
+    flier_lobby_inventory_status = models.CharField(db_column='FLIER_LOBBY_INVENTORY_STATUS', max_length=15, blank=True,
+                                                    null=True)  # Field name made lowercase.
+    flier_lobby_price_society = models.FloatField(db_column='FLIER_LOBBY_PRICE_SOCIETY', default=0.0, blank=True,
+                                                  null=True)  # Field name made lowercase.
+    flier_lobby_price_business = models.FloatField(db_column='FLIER_LOBBY_PRICE_BUSINESS', default=0.0, blank=True,
+                                                   null=True)  # Field name made lowercase.
+    master_flier_lobby_price_society = models.FloatField(db_column='MASTER_FLIER_LOBBY_PRICE_SOCIETY', default=0.0,
+                                                         blank=True, null=True)  # Field name made lowercase.
+    master_flier_lobby_price_business = models.FloatField(db_column='MASTER_FLIER_LOBBY_PRICE_BUSINESS', default=0.0,
+                                                          blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-
         db_table = 'flier_through_lobby_info'
+
 
 class AssignedAudits(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     ad_inventory_id = models.CharField(db_column='AD_INVENTORY_ID', max_length=50, blank=True)
     ad_inventory_type = models.CharField(db_column='AD_INVENTORY_TYPE', null=True, max_length=50, blank=True)
     supplier_name = models.CharField(db_column='SUPPLIER_NAME', max_length=50, blank=True)
-    ad_location = models.CharField(db_column='AD_LOCATION', max_length=50, blank=True) #ops to enter the location during finalization
+    ad_location = models.CharField(db_column='AD_LOCATION', max_length=50,
+                                   blank=True)  # ops to enter the location during finalization
     address = models.CharField(db_column='ADDRESS', max_length=100, blank=True)
     date = models.DateField(db_column='DATE', null=True)
     business_name = models.CharField(db_column='BUSINESS_NAME', max_length=50, blank=True)
-    audit_type = models.CharField(db_column='AUDIT_TYPE', max_length=20, blank=True) #change to enum
+    audit_type = models.CharField(db_column='AUDIT_TYPE', max_length=20, blank=True)  # change to enum
     image_url = models.CharField(db_column='IMAGE_URL', max_length=100, null=True)
     db_table = 'assigned_audits'
 
+
 class Audits(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    society_booking = models.ForeignKey('SocietyInventoryBooking', related_name='audits', db_column='SOCIETY_BOOKING_ID', null=True, on_delete=models.CASCADE)
+    society_booking = models.ForeignKey('SocietyInventoryBooking', related_name='audits',
+                                        db_column='SOCIETY_BOOKING_ID', null=True, on_delete=models.CASCADE)
     latitude = models.FloatField(db_column='LATITUDE', null=True)
     longitude = models.FloatField(db_column='LONGITUDE', null=True)
     timestamp = models.DateTimeField(db_column='TIMESTAMP', null=True)
-    barcode = models.FloatField(db_column='BARCODE', null=True) #split to 2 barcode fields
-    audited_by = models.IntegerField(db_column='USER_ID', null=True) #change to user id FK
-    audit_type = models.CharField(db_column='AUDIT_TYPE', max_length=20, blank=True) #change to enum
+    barcode = models.FloatField(db_column='BARCODE', null=True)  # split to 2 barcode fields
+    audited_by = models.IntegerField(db_column='USER_ID', null=True)  # change to user id FK
+    audit_type = models.CharField(db_column='AUDIT_TYPE', max_length=20, blank=True)  # change to enum
     image_url = models.CharField(db_column='IMAGE_URL', max_length=100, null=True)
 
     class Meta:
-
         db_table = 'audits'
+
 
 class AuditDate(BaseModel):
     """
@@ -241,14 +291,16 @@ class AuditDate(BaseModel):
     class Meta:
         db_table = 'audit_date'
 
+
 class AuditorSocietyMapping(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    user_id = models.IntegerField(db_column='USER_ID', null=True) #change to user id FK
-    society = models.ForeignKey('SupplierTypeSociety', related_name='auditors', db_column='SUPPLIER_ID', null=True, on_delete=models.CASCADE)
+    user_id = models.IntegerField(db_column='USER_ID', null=True)  # change to user id FK
+    society = models.ForeignKey('SupplierTypeSociety', related_name='auditors', db_column='SUPPLIER_ID', null=True,
+                                on_delete=models.CASCADE)
 
     class Meta:
-
         db_table = 'auditor_society_mapping'
+
 
 class ProposalMasterCost(BaseModel):
     """
