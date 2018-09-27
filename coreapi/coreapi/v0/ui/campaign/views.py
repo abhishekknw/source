@@ -1,5 +1,7 @@
 import random
 import numpy as np
+from datetime import datetime
+from datetime import timedelta
 from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, SupplierPhase, HashTagImages
 from v0.ui.utils import handle_response, calculate_percentage
 from django.utils import timezone
@@ -22,14 +24,12 @@ from rest_framework.decorators import detail_route, list_route
 from rest_framework import status
 import gpxpy.geo
 from v0.ui.leads.models import LeadsForm, LeadsFormItems, LeadsFormData, LeadsFormSummary
-from v0.ui.leads.serializers import LeadsFormItemsSerializer, LeadsFormDataSerializer
 from v0.utils import get_values
 from v0.ui.base.models import DurationType
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from django.core.cache import cache
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.conf import settings
-from v0.ui.base.models import BaseModel
 from v0.ui.common.models import BaseUser
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 print CACHE_TTL
@@ -1024,14 +1024,15 @@ class CampaignLeads(APIView):
 
     def get(self, request):
         class_name = self.__class__.__name__
+        # will be used later
+        #start_date = request.query_params.get('start_date', None)
+        #end_date = request.query_params.get('start_date', None)
         campaign_id = request.query_params.get('campaign_id', None)
         leads_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
         supplier_ids = list(set(leads_form_data.values_list('supplier_id', flat=True)))
 
         all_suppliers_list_non_analytics = {}
         all_localities_data_non_analytics = {}
-        hot_leads_global = 0
-        all_leads_global = 0
         lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
         supplier_wise_lead_count = {}
         supplier_data_1 = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
@@ -1097,7 +1098,6 @@ class CampaignLeads(APIView):
                 all_localities_data_non_analytics[supplier_locality]["flat count"] = \
                     all_localities_data_non_analytics[supplier_locality]["flat count"] + supplier_flat_count
 
-
             else:
                 curr_locality_data = {
                     "is_interested": True,
@@ -1139,8 +1139,29 @@ class CampaignLeads(APIView):
         # date-wise
         date_data = {}
         weekday_data = {}
+        phase_data = {}
         all_entries_checked = []
+        campaign_dates = leads_form_data.order_by('created_at').values_list('created_at',flat=True).distinct()
+        start_datetime = campaign_dates[0]
+        end_datetime = campaign_dates[len(campaign_dates)-1]
+
+        start_datetime_phase = start_datetime - timedelta(days=start_datetime.weekday())
+        end_datetime_phase = end_datetime + timedelta(days=6-end_datetime.weekday())
+
+        prev_phase = 0
+
+        # for curr_date in campaign_dates:
+        #     curr_phase = 1+((curr_date-start_datetime_phase).days)/7
+        #     if curr_phase > prev_phase:
+        #         phase_data['curr_phase'] = {
+        #
+        #         }
+
+        weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
+                         '4': 'Friday', '5': 'Saturday', '6': 'Sunday'}
+
         for curr_data in leads_form_data:
+
             curr_entry_details = {
                 'leads_form_id': curr_data.leads_form_id,
                 'entry_id': curr_data.entry_id
@@ -1153,9 +1174,22 @@ class CampaignLeads(APIView):
             time = curr_data.created_at
             curr_date = str(time.date())
             curr_time = str(time)
+            curr_phase_int = 1 + (time - start_datetime_phase).days / 7
+            curr_phase_start = time - timedelta(days=time.weekday())
+            curr_phase_end = curr_phase_start + timedelta(days=7)
+            curr_phase = str(curr_phase_int)
+            if curr_phase not in phase_data:
+                phase_data[curr_phase] = {
+                    'total': 0,
+                    'interested': 0,
+                    'suppliers': [],
+                    'supplier_count': 0,
+                    'flat count': 0,
+                    'phase': curr_phase,
+                    'start date': curr_phase_start,
+                    'end date': curr_phase_end
+                }
 
-            weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
-                             '4': 'Friday', '5': 'Saturday', '6': 'Sunday'}
             curr_weekday = weekday_names[str(time.weekday())]
 
             supplier_id = curr_data.supplier_id
@@ -1186,10 +1220,12 @@ class CampaignLeads(APIView):
 
             date_data[curr_date]['total'] = date_data[curr_date]['total'] + 1
             weekday_data[curr_weekday]['total'] = weekday_data[curr_weekday]['total'] + 1
+            phase_data[curr_phase]['total']=phase_data[curr_phase]['total']+1
 
             if curr_entry_details in hot_lead_details:
                 date_data[curr_date]['interested'] = date_data[curr_date]['interested'] + 1
                 weekday_data[curr_weekday]['interested'] = weekday_data[curr_weekday]['interested'] + 1
+                phase_data[curr_phase]['interested'] = phase_data[curr_phase]['interested'] + 1
 
             if supplier_id not in date_data[curr_date]['suppliers']:
                 date_data[curr_date]['supplier_count'] = date_data[curr_date]['supplier_count'] + 1
@@ -1201,16 +1237,22 @@ class CampaignLeads(APIView):
                 weekday_data[curr_weekday]['flat count'] = weekday_data[curr_weekday]['flat count'] + flat_count
                 weekday_data[curr_weekday]['suppliers'].append(supplier_id)
 
-                #all_localities_data = hot_lead_ratio_calculator(all_localities_data)
+            if supplier_id not in phase_data[curr_phase]['suppliers']:
+                phase_data[curr_phase]['supplier_count'] = phase_data[curr_phase]['supplier_count'] + 1
+                phase_data[curr_phase]['flat count'] = phase_data[curr_phase]['flat count'] + flat_count
+                phase_data[curr_phase]['suppliers'].append(supplier_id)
+
         date_data_hot_ratio = hot_lead_ratio_calculator(date_data)
         weekday_data_hot_ratio = hot_lead_ratio_calculator(weekday_data)
+        phase_data_hot_ratio = hot_lead_ratio_calculator(phase_data)
         all_dates_data = z_calculator_dict(date_data_hot_ratio,"hot_lead_ratio")
         all_weekdays_data = z_calculator_dict(weekday_data_hot_ratio,"hot_lead_ratio")
+        all_phase_data = z_calculator_dict(phase_data_hot_ratio,"hot_lead_ratio")
         all_flat_data = hot_lead_ratio_calculator(all_flat_data)
 
         final_data = {'supplier_data': all_suppliers_list, 'date_data': all_dates_data,
                       'locality_data': all_localities_data, 'weekday_data': all_weekdays_data,
-                      'flat_data': all_flat_data}
+                      'flat_data': all_flat_data, 'phase_data': phase_data}
 
         return ui_utils.handle_response(class_name, data=final_data, success=True)
 
@@ -1252,8 +1294,11 @@ class CityWiseMultipleCampaignLeads(APIView):
         return ui_utils.handle_response({}, data=city_leads_data_z, success=True)
 
 
-
-# class FlatWiseCampaignLeads(APIView):
+# class PhaseWiseMultipleCampaignLeads(APIView):
+#     def get(self, request):
+#         campaign_list = request.data
+#
+# # class FlatWiseCampaignLeads(APIView):
 #
 #     def get(self, request):
 #         class_name = self.__class__.__name__
