@@ -231,12 +231,15 @@ class ManualGeneralUserPermissions(APIView):
     def post(self, request):
         class_name = self.__class__.__name__
         permissions_list = request.data
-        for permission in permissions_list:
-            data = (GeneralUserPermission(**{
-                'name': permission['name'],
-                'is_allowed': False,
-                'profile_id': permission['profile_id'],
-            }))
-            data.save()
+        all_profile_ids = Profile.objects.values_list('id', flat=True)
+        all_permission_object_list = []
+        for profile_id in all_profile_ids:
+            for permission in permissions_list:
+                all_permission_object_list.append(GeneralUserPermission(**{
+                    'name': permission,
+                    'is_allowed': False,
+                    'profile_id': profile_id,
+                }))
+        GeneralUserPermission.objects.bulk_create(all_permission_object_list)
         return ui_utils.handle_response(class_name, data='success', success=True)
 
