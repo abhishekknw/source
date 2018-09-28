@@ -14,7 +14,8 @@ import os
 import datetime
 from django.conf import settings
 from bulk_update.helper import bulk_update
-
+from v0.ui.common.models import BaseUser
+from v0.ui.campaign.models import CampaignAssignment
 
 def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
     form_entry_list = []
@@ -481,6 +482,63 @@ class EditLeadsForm(APIView):
         form_query.leads_form_name = name
         form_query.save()
         return ui_utils.handle_response(class_name, data='success', success=True)
+
+
+class LeadsSummary(APIView):
+
+    def get(self, request):
+        class_name = self.__class__.__name__
+        username = request.user
+        user_id = BaseUser.objects.get(username=username).id
+        campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id).values_list('campaign_id', flat=True).distinct()
+        all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).values('proposal_id',
+                                                                                                          'object_id',
+                                                                                                          'phase_no_id',
+                                                                                                          'is_completed',
+                                                                                                          'proposal__name',
+                                                                                                          'proposal__tentative_start_date',
+                                                                                                          'proposal__tentative_end_date')
+        all_campaign_dict = {}
+        all_shortlisted_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier]
+        all_supplier_society = SupplierTypeSociety.objects.filter(supplier_id__in=all_shortlisted_supplier_id).values('supplier_id', 'flat_count')
+        all_supplier_society_dict = {}
+        for supplier in all_supplier_society:
+            all_supplier_society_dict[supplier['supplier_id']] = {'flat_count': supplier['flat_count']}
+        for shortlisted_supplier in all_shortlisted_supplier:
+            if shortlisted_supplier['proposal_id'] not in all_campaign_dict:
+                all_campaign_dict[shortlisted_supplier['proposal_id']] = {
+                'all_supplier_ids': [], 'all_phase_ids': [], 'total_flat_counts': 0, 'total_leads':0, 'hot_leads':0}
+            if shortlisted_supplier['object_id'] not in all_campaign_dict[shortlisted_supplier['proposal_id']]['all_supplier_ids']:
+                all_campaign_dict[shortlisted_supplier['proposal_id']]['all_supplier_ids'].append(shortlisted_supplier['object_id'])
+                if shortlisted_supplier['object_id'] in all_supplier_society_dict and all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count']:
+                    all_campaign_dict[shortlisted_supplier['proposal_id']]['total_flat_counts'] += all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count']
+            if shortlisted_supplier['phase_no_id'] and shortlisted_supplier['phase_no_id'] not in all_campaign_dict[shortlisted_supplier['proposal_id']]['all_phase_ids']:
+                all_campaign_dict[shortlisted_supplier['proposal_id']]['all_phase_ids'].append(
+                    shortlisted_supplier['phase_no_id'])
+            all_campaign_dict[shortlisted_supplier['proposal_id']]['name'] = shortlisted_supplier['proposal__name']
+            all_campaign_dict[shortlisted_supplier['proposal_id']]['start_date'] = shortlisted_supplier['proposal__tentative_start_date']
+            all_campaign_dict[shortlisted_supplier['proposal_id']]['end_date'] = shortlisted_supplier['proposal__tentative_end_date']
+
+        all_campaign_summary = LeadsFormSummary.objects.filter(campaign_id__in=campaign_list).values(
+            'supplier_id', 'campaign_id', 'total_leads_count', 'hot_leads_count', 'campaign_id')
+        all_leads_summary = []
+        for campaign_summary in all_campaign_summary:
+            all_campaign_dict[campaign_summary['campaign_id']]['hot_leads'] += campaign_summary['hot_leads_count']
+            all_campaign_dict[campaign_summary['campaign_id']]['total_leads'] += campaign_summary['total_leads_count']
+
+        for campaign_id in all_campaign_dict:
+            all_leads_summary.append({
+                "campaign_id": campaign_id,
+                "name": all_campaign_dict[campaign_id]['name'],
+                "start_date": all_campaign_dict[campaign_id]['start_date'],
+                "end_date": all_campaign_dict[campaign_id]['end_date'],
+                "phase_complete": len(all_campaign_dict[campaign_id]['all_phase_ids']),
+                "supplier_count": len(all_campaign_dict[campaign_id]['all_supplier_ids']),
+                "flat_count": all_campaign_dict[campaign_id]['total_flat_counts'],
+                "total_leads": all_campaign_dict[campaign_id]['total_leads'],
+                "hot_leads": all_campaign_dict[campaign_id]['hot_leads'],
+            })
+        return ui_utils.handle_response(class_name, data=all_leads_summary, success=True)
 
 
 class SmsContact(APIView):
