@@ -16,6 +16,8 @@ from django.conf import settings
 from bulk_update.helper import bulk_update
 from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignAssignment
+from v0.constants import campaign_status, proposal_on_hold
+
 
 def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
     form_entry_list = []
@@ -497,7 +499,8 @@ class LeadsSummary(APIView):
                                                                                                           'is_completed',
                                                                                                           'proposal__name',
                                                                                                           'proposal__tentative_start_date',
-                                                                                                          'proposal__tentative_end_date')
+                                                                                                          'proposal__tentative_end_date',
+                                                                                                          'proposal__campaign_state')
         all_campaign_dict = {}
         all_shortlisted_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier]
         all_supplier_society = SupplierTypeSociety.objects.filter(supplier_id__in=all_shortlisted_supplier_id).values('supplier_id', 'flat_count')
@@ -518,6 +521,7 @@ class LeadsSummary(APIView):
             all_campaign_dict[shortlisted_supplier['proposal_id']]['name'] = shortlisted_supplier['proposal__name']
             all_campaign_dict[shortlisted_supplier['proposal_id']]['start_date'] = shortlisted_supplier['proposal__tentative_start_date']
             all_campaign_dict[shortlisted_supplier['proposal_id']]['end_date'] = shortlisted_supplier['proposal__tentative_end_date']
+            all_campaign_dict[shortlisted_supplier['proposal_id']]['campaign_status'] = shortlisted_supplier['proposal__campaign_state']
 
         all_campaign_summary = LeadsFormSummary.objects.filter(campaign_id__in=campaign_list).values(
             'supplier_id', 'campaign_id', 'total_leads_count', 'hot_leads_count', 'campaign_id')
@@ -525,8 +529,18 @@ class LeadsSummary(APIView):
         for campaign_summary in all_campaign_summary:
             all_campaign_dict[campaign_summary['campaign_id']]['hot_leads'] += campaign_summary['hot_leads_count']
             all_campaign_dict[campaign_summary['campaign_id']]['total_leads'] += campaign_summary['total_leads_count']
-
+        current_date = datetime.datetime.now().date()
         for campaign_id in all_campaign_dict:
+            this_campaign_status = None
+            if not all_campaign_dict[campaign_id]['campaign_status'] == proposal_on_hold:
+                if all_campaign_dict[campaign_id]['start_date'].date() > current_date:
+                    this_campaign_status = campaign_status['upcoming_campaigns']
+                elif all_campaign_dict[campaign_id]['end_date'].date() <= current_date:
+                    this_campaign_status = campaign_status['ongoing_campaigns']
+                elif all_campaign_dict[campaign_id]['end_date'].date() > current_date:
+                    this_campaign_status = campaign_status['completed_campaigns']
+            else:
+                this_campaign_status = "on_hold"
             all_leads_summary.append({
                 "campaign_id": campaign_id,
                 "name": all_campaign_dict[campaign_id]['name'],
@@ -537,6 +551,7 @@ class LeadsSummary(APIView):
                 "flat_count": all_campaign_dict[campaign_id]['total_flat_counts'],
                 "total_leads": all_campaign_dict[campaign_id]['total_leads'],
                 "hot_leads": all_campaign_dict[campaign_id]['hot_leads'],
+                "campaign_status": this_campaign_status
             })
         return ui_utils.handle_response(class_name, data=all_leads_summary, success=True)
 
