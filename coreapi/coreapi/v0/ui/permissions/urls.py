@@ -1,8 +1,10 @@
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
-from views import RoleViewSet, GeneralUserPermissionViewSet, RoleHierarchyViewSet, ObjectLevelPermissionViewSet
-urlpatterns = [
+from views import (RoleViewSet, GeneralUserPermissionViewSet, RoleHierarchyViewSet, ObjectLevelPermissionViewSet,
+                   ManualGeneralUserPermissions)
 
+urlpatterns = [
+    url(r'^manual-general-user-permission', ManualGeneralUserPermissions.as_view()),
 ]
 
 router = DefaultRouter()

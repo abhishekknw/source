@@ -1086,7 +1086,7 @@ class CampaignLeads(APIView):
         for curr_supplier_data in supplier_data:
             supplier_id = curr_supplier_data['supplier_id']
             supplier_locality = curr_supplier_data['society_locality']
-            supplier_flat_count = curr_supplier_data['flat_count']
+            supplier_flat_count = curr_supplier_data['flat_count'] if curr_supplier_data['flat_count'] else 0
             lead_count = lead_counter(campaign_id, supplier_id, lead_form_items_list)
             supplier_wise_lead_count[supplier_id] = lead_count
             hot_leads = lead_count['hot_leads']

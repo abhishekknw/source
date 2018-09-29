@@ -2,13 +2,15 @@ from rest_framework import viewsets
 from serializers import (ObjectLevelPermissionSerializer, GeneralUserPermissionSerializer, RoleSerializer)
 from models import ObjectLevelPermission, GeneralUserPermission, Role, RoleHierarchy
 import v0.ui.utils as ui_utils
-import v0.ui.website as website_utils
+import v0.ui.website.utils as website_utils
 from rest_framework.response import Response
 from v0.ui.organisation.models import Organisation
 from v0.ui.common.models import BaseUser
 from v0.ui.account.models import Profile, AccountInfo
 from v0.ui.proposal.models import ProposalInfo
 from django.contrib.contenttypes.models import ContentType
+from rest_framework.views import APIView
+from datetime import datetime
 
 
 class GeneralUserPermissionViewSet(viewsets.ViewSet):
@@ -223,4 +225,24 @@ class RoleHierarchyViewSet(viewsets.ViewSet):
             return Response(status=200)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class ManualGeneralUserPermissions(APIView):
+
+    def post(self, request):
+        class_name = self.__class__.__name__
+        permissions_list = request.data
+        all_profile_ids = Profile.objects.values_list('id', flat=True)
+        all_permission_object_list = []
+        for profile_id in all_profile_ids:
+            for permission in permissions_list:
+                all_permission_object_list.append(GeneralUserPermission(**{
+                    'name': permission,
+                    'is_allowed': False,
+                    'profile_id': profile_id,
+                    'codename': "".join(permission.split("_")[:2]).upper(),
+                    'created_at': datetime.now()
+                }))
+        GeneralUserPermission.objects.bulk_create(all_permission_object_list)
+        return ui_utils.handle_response(class_name, data='success', success=True)
 

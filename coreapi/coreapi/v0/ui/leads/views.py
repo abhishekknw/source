@@ -14,7 +14,10 @@ import os
 import datetime
 from django.conf import settings
 from bulk_update.helper import bulk_update
-
+from v0.ui.common.models import BaseUser
+from v0.ui.campaign.models import CampaignAssignment
+from v0.constants import campaign_status, proposal_on_hold
+from django.http import HttpResponse
 
 def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
     form_entry_list = []
@@ -33,64 +36,76 @@ def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
     lead_form.save()
 
 
+def get_supplier_all_leads_entries(leads_form_id, supplier_id):
+    lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
+    if supplier_id == 'All':
+        lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id).exclude(
+            status='inactive')
+    else:
+        lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id) \
+            .filter(supplier_id=supplier_id).exclude(status='inactive')
+
+    values = []
+    lead_form_items_dict = {}
+    lead_form_items_dict_part = []
+    for item in lead_form_items_list:
+        curr_item = LeadsFormItemsSerializer(item).data
+        lead_form_items_dict[item.item_id] = curr_item
+        curr_item_part = {key: curr_item[key] for key in ['order_id', 'key_name', 'hot_lead_criteria']}
+        lead_form_items_dict_part.append(curr_item_part)
+
+    previous_entry_id = -1
+    current_list = []
+    hot_leads = []
+    counter = 1
+    for entry in lead_form_entries_list:
+        entry_id = entry.entry_id - 1
+        if entry.item_id not in lead_form_items_dict:
+            continue
+        hot_lead_criteria = lead_form_items_dict[entry.item_id]["hot_lead_criteria"]
+        value = entry.item_value
+        if value and value == hot_lead_criteria:
+            if counter not in hot_leads:
+                hot_leads.append(counter)
+        new_entry = ({
+            "order_id": lead_form_items_dict[entry.item_id]["order_id"],
+            "value": value,
+        })
+        if entry_id != previous_entry_id and current_list != []:
+            values.append(current_list)
+            current_list = []
+            counter = counter + 1
+
+        current_list.append(new_entry)
+
+        # values.append([new_entry])
+
+        previous_entry_id = entry_id
+    values.append(current_list)
+
+    supplier_all_lead_entries = {
+        'supplier_id': supplier_id,
+        'headers': lead_form_items_dict_part,
+        'values': values,
+        'hot_leads': hot_leads
+    }
+    if supplier_id == 'All':
+        supplier_all_lead_entries.pop('supplier_id')
+    return supplier_all_lead_entries
+
+
 class GetLeadsEntries(APIView):
     @staticmethod
     def get(request, leads_form_id, supplier_id='All'):
-        lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
-        if supplier_id == 'All':
-            lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id).exclude(
-                status='inactive')
-        else:
-            lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id) \
-                .filter(supplier_id=supplier_id).exclude(status='inactive')
+        supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id)
+        return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
 
-        values = []
-        lead_form_items_dict = {}
-        lead_form_items_dict_part = []
-        for item in lead_form_items_list:
-            curr_item = LeadsFormItemsSerializer(item).data
-            lead_form_items_dict[item.item_id] = curr_item
-            curr_item_part = {key: curr_item[key] for key in ['order_id', 'key_name', 'hot_lead_criteria']}
-            lead_form_items_dict_part.append(curr_item_part)
 
-        previous_entry_id = -1
-        current_list = []
-        hot_leads = []
-        counter = 1
-        hot_lead = False
-        for entry in lead_form_entries_list:
-            entry_id = entry.entry_id - 1
-            if entry.item_id not in lead_form_items_dict:
-                continue
-            hot_lead_criteria = lead_form_items_dict[entry.item_id]["hot_lead_criteria"]
-            value = entry.item_value
-            if value == hot_lead_criteria and hot_lead is False:
-                hot_lead = True
-                hot_leads.append(counter)
-            new_entry = ({
-                "order_id": lead_form_items_dict[entry.item_id]["order_id"],
-                "value": value,
-            })
-            if entry_id != previous_entry_id and current_list != []:
-                hot_lead = False
-                values.append(current_list)
-                current_list = []
-                counter = counter + 1
-
-            current_list.append(new_entry)
-            # values.append([new_entry])
-
-            previous_entry_id = entry_id
-        values.append(current_list)
-
-        supplier_all_lead_entries = {
-            'supplier_id': supplier_id,
-            'headers': lead_form_items_dict_part,
-            'values': values,
-            'hot_leads': hot_leads
-        }
-        if supplier_id == 'All':
-            supplier_all_lead_entries.pop('supplier_id')
+class GetLeadsEntriesByCampaignId(APIView):
+    @staticmethod
+    def get(request, campaign_id, supplier_id='All'):
+        first_leads_form_id = LeadsForm.objects.filter(campaign_id=campaign_id).all()[0].id
+        supplier_all_lead_entries = get_supplier_all_leads_entries(first_leads_form_id, supplier_id)
         return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
 
 
@@ -346,6 +361,7 @@ class MigrateLeadsSummary(APIView):
                 })
         return ui_utils.handle_response({}, data='success', success=True)
 
+
 class GenerateLeadForm(APIView):
     @staticmethod
     def get(request, leads_form_id):
@@ -379,6 +395,37 @@ class GenerateLeadForm(APIView):
                 print ex
         return ui_utils.handle_response({}, data={
             'filepath': 'https://s3.ap-south-1.amazonaws.com/leads-forms-templates/' + filename}, success=True)
+
+
+class GenerateLeadDataExcel(APIView):
+    @staticmethod
+    def get(request, leads_form_id):
+        lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
+        supplier_id = request.GET.get('supplier_id', 'ALL')
+        all_leads = get_supplier_all_leads_entries(leads_form_id, supplier_id)
+        lead_form_items_dict = {}
+        # keys_list = ['supplier_id', 'lead_entry_date (format: dd/mm/yyyy)']
+        keys_list = []
+        for item in lead_form_items_list:
+            curr_row = LeadsFormItemsSerializer(item).data
+            lead_form_items_dict[item.item_id] = curr_row
+            keys_list.append(curr_row['key_name'])
+
+        book = Workbook()
+        sheet = book.active
+        sheet.append(keys_list)
+
+        for lead in all_leads["values"]:
+            value_list = []
+            for item_dict in lead:
+                value_list.append(item_dict["value"])
+            sheet.append(value_list)
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
+
+        book.save(response)
+        return response
+
 
 
 class DeleteLeadItems(APIView):
@@ -481,6 +528,76 @@ class EditLeadsForm(APIView):
         form_query.leads_form_name = name
         form_query.save()
         return ui_utils.handle_response(class_name, data='success', success=True)
+
+
+class LeadsSummary(APIView):
+
+    def get(self, request):
+        class_name = self.__class__.__name__
+        username = request.user
+        user_id = BaseUser.objects.get(username=username).id
+        campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id).values_list('campaign_id', flat=True).distinct()
+        all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).values('proposal_id',
+                                                                                                          'object_id',
+                                                                                                          'phase_no_id',
+                                                                                                          'is_completed',
+                                                                                                          'proposal__name',
+                                                                                                          'proposal__tentative_start_date',
+                                                                                                          'proposal__tentative_end_date',
+                                                                                                          'proposal__campaign_state')
+        all_campaign_dict = {}
+        all_shortlisted_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier]
+        all_supplier_society = SupplierTypeSociety.objects.filter(supplier_id__in=all_shortlisted_supplier_id).values('supplier_id', 'flat_count')
+        all_supplier_society_dict = {}
+        for supplier in all_supplier_society:
+            all_supplier_society_dict[supplier['supplier_id']] = {'flat_count': supplier['flat_count']}
+        for shortlisted_supplier in all_shortlisted_supplier:
+            if shortlisted_supplier['proposal_id'] not in all_campaign_dict:
+                all_campaign_dict[shortlisted_supplier['proposal_id']] = {
+                'all_supplier_ids': [], 'all_phase_ids': [], 'total_flat_counts': 0, 'total_leads':0, 'hot_leads':0}
+            if shortlisted_supplier['object_id'] not in all_campaign_dict[shortlisted_supplier['proposal_id']]['all_supplier_ids']:
+                all_campaign_dict[shortlisted_supplier['proposal_id']]['all_supplier_ids'].append(shortlisted_supplier['object_id'])
+                if shortlisted_supplier['object_id'] in all_supplier_society_dict and all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count']:
+                    all_campaign_dict[shortlisted_supplier['proposal_id']]['total_flat_counts'] += all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count']
+            if shortlisted_supplier['phase_no_id'] and shortlisted_supplier['phase_no_id'] not in all_campaign_dict[shortlisted_supplier['proposal_id']]['all_phase_ids']:
+                all_campaign_dict[shortlisted_supplier['proposal_id']]['all_phase_ids'].append(
+                    shortlisted_supplier['phase_no_id'])
+            all_campaign_dict[shortlisted_supplier['proposal_id']]['name'] = shortlisted_supplier['proposal__name']
+            all_campaign_dict[shortlisted_supplier['proposal_id']]['start_date'] = shortlisted_supplier['proposal__tentative_start_date']
+            all_campaign_dict[shortlisted_supplier['proposal_id']]['end_date'] = shortlisted_supplier['proposal__tentative_end_date']
+            all_campaign_dict[shortlisted_supplier['proposal_id']]['campaign_status'] = shortlisted_supplier['proposal__campaign_state']
+
+        all_campaign_summary = LeadsFormSummary.objects.filter(campaign_id__in=campaign_list).values(
+            'supplier_id', 'campaign_id', 'total_leads_count', 'hot_leads_count', 'campaign_id')
+        all_leads_summary = []
+        for campaign_summary in all_campaign_summary:
+            all_campaign_dict[campaign_summary['campaign_id']]['hot_leads'] += campaign_summary['hot_leads_count']
+            all_campaign_dict[campaign_summary['campaign_id']]['total_leads'] += campaign_summary['total_leads_count']
+        current_date = datetime.datetime.now().date()
+        for campaign_id in all_campaign_dict:
+            this_campaign_status = None
+            if not all_campaign_dict[campaign_id]['campaign_status'] == proposal_on_hold:
+                if all_campaign_dict[campaign_id]['start_date'].date() > current_date:
+                    this_campaign_status = campaign_status['upcoming_campaigns']
+                elif all_campaign_dict[campaign_id]['end_date'].date() <= current_date:
+                    this_campaign_status = campaign_status['ongoing_campaigns']
+                elif all_campaign_dict[campaign_id]['end_date'].date() > current_date:
+                    this_campaign_status = campaign_status['completed_campaigns']
+            else:
+                this_campaign_status = "on_hold"
+            all_leads_summary.append({
+                "campaign_id": campaign_id,
+                "name": all_campaign_dict[campaign_id]['name'],
+                "start_date": all_campaign_dict[campaign_id]['start_date'],
+                "end_date": all_campaign_dict[campaign_id]['end_date'],
+                "phase_complete": len(all_campaign_dict[campaign_id]['all_phase_ids']),
+                "supplier_count": len(all_campaign_dict[campaign_id]['all_supplier_ids']),
+                "flat_count": all_campaign_dict[campaign_id]['total_flat_counts'],
+                "total_leads": all_campaign_dict[campaign_id]['total_leads'],
+                "hot_leads": all_campaign_dict[campaign_id]['hot_leads'],
+                "campaign_status": this_campaign_status
+            })
+        return ui_utils.handle_response(class_name, data=all_leads_summary, success=True)
 
 
 class SmsContact(APIView):
