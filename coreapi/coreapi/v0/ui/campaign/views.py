@@ -1288,6 +1288,9 @@ class CampaignLeadsCustom(APIView):
         all_suppliers_list = {}
         all_localities_data = {}
         all_flat_data = {}
+        supplier_additional_metrics = []
+        locality_additional_metrics = []
+        flat_additional_metrics = []
         if query_type in ['supplier', 'flat', 'locality']:
             leads_form_summary_query = LeadsFormSummary.objects.filter(campaign_id=campaign_id).all()
             leads_form_summary_data = LeadsFormSummarySerializer(leads_form_summary_query, many=True).data
@@ -1345,6 +1348,12 @@ class CampaignLeadsCustom(APIView):
                         "flat count": flat_count
                     }
                     all_suppliers_list_non_analytics[supplier_id] = curr_supplier_lead_data
+                    supplier_additional_metrics.append({
+                        'supplier_id': supplier_id,
+                        'hot_lead_percentage': hot_lead_percentage,
+                        'hot_lead_flat_ratio': round(hot_lead_percentage/float(flat_count), 3)
+                    })
+
                 if query_type == 'locality':
                     if supplier_locality in all_localities_data_non_analytics:
                         all_localities_data_non_analytics[supplier_locality]["interested"] = \
@@ -1396,8 +1405,44 @@ class CampaignLeadsCustom(APIView):
 
             all_suppliers_list = z_calculator_dict(all_suppliers_list_non_analytics, "hot_lead_percentage")
             all_localities_data_hot_ratio = hot_lead_ratio_calculator(all_localities_data_non_analytics)
+
+            localities = all_localities_data_non_analytics.keys()
+            for locality in localities:
+                hot_lead_percentage = all_localities_data_hot_ratio[locality]['hot_lead_percentage']
+                flat_count = all_localities_data_hot_ratio[locality]['flat count']
+                locality_additional_metrics.append({
+                    'locality': locality,
+                    'hot_lead_percentage': hot_lead_percentage,
+                    'hot_lead_flat_ratio': round(hot_lead_percentage / float(flat_count), 3)
+                })
+
             all_localities_data = z_calculator_dict(all_localities_data_hot_ratio, "hot_lead_percentage")
+            flat_types = ['0-150','151-399','400+']
             all_flat_data = hot_lead_ratio_calculator(all_flat_data)
+            for category in flat_types:
+                hot_lead_percentage = all_flat_data[category]['hot_lead_percentage']
+                flat_count = all_flat_data[category]['flat count']
+                flat_additional_metrics.append({
+                    'flat category': category,
+                    'hot_lead_percentage': hot_lead_percentage,
+                    'hot_lead_flat_ratio': round(hot_lead_percentage / float(flat_count), 3)
+                })
+
+
+            supplier_hot_lead_pct = sorted(supplier_additional_metrics, key=itemgetter('hot_lead_percentage'))
+            supplier_hot_lead_flat_ratio = sorted(supplier_additional_metrics, key=itemgetter('hot_lead_flat_ratio'))
+            all_suppliers_list['hot lead % sorted'] = supplier_hot_lead_pct
+            all_suppliers_list['hot lead per flat sorted'] = supplier_hot_lead_flat_ratio
+
+            locality_hot_lead_pct = sorted(locality_additional_metrics, key=itemgetter('hot_lead_percentage'))
+            locality_hot_lead_flat_ratio = sorted(locality_additional_metrics, key=itemgetter('hot_lead_flat_ratio'))
+            all_localities_data['hot lead % sorted'] = locality_hot_lead_pct
+            all_localities_data['hot lead per flat sorted'] = locality_hot_lead_flat_ratio
+
+            flat_hot_lead_pct = sorted(flat_additional_metrics, key=itemgetter('hot_lead_percentage'))
+            flat_hot_lead_flat_ratio = sorted(flat_additional_metrics, key=itemgetter('hot_lead_flat_ratio'))
+            all_flat_data['hot lead % sorted'] = flat_hot_lead_pct
+            all_flat_data['hot lead per flat sorted'] = flat_hot_lead_flat_ratio
 
         if query_type in ['date','weekday','phase']:
             leads_form_items = []
