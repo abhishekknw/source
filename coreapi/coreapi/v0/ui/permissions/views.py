@@ -10,6 +10,7 @@ from v0.ui.account.models import Profile, AccountInfo
 from v0.ui.proposal.models import ProposalInfo
 from django.contrib.contenttypes.models import ContentType
 from rest_framework.views import APIView
+from datetime import datetime
 
 
 class GeneralUserPermissionViewSet(viewsets.ViewSet):
@@ -239,6 +240,8 @@ class ManualGeneralUserPermissions(APIView):
                     'name': permission,
                     'is_allowed': False,
                     'profile_id': profile_id,
+                    'codename': "".join(permission.split("_")[:2]).upper(),
+                    'created_at': datetime.now()
                 }))
         GeneralUserPermission.objects.bulk_create(all_permission_object_list)
         return ui_utils.handle_response(class_name, data='success', success=True)
