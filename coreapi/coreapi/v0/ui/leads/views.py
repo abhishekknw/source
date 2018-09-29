@@ -58,27 +58,26 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id):
     current_list = []
     hot_leads = []
     counter = 1
-    hot_lead = False
     for entry in lead_form_entries_list:
         entry_id = entry.entry_id - 1
         if entry.item_id not in lead_form_items_dict:
             continue
         hot_lead_criteria = lead_form_items_dict[entry.item_id]["hot_lead_criteria"]
         value = entry.item_value
-        if value == hot_lead_criteria and hot_lead is False:
-            hot_lead = True
-            hot_leads.append(counter)
+        if value and value == hot_lead_criteria:
+            if counter not in hot_leads:
+                hot_leads.append(counter)
         new_entry = ({
             "order_id": lead_form_items_dict[entry.item_id]["order_id"],
             "value": value,
         })
         if entry_id != previous_entry_id and current_list != []:
-            hot_lead = False
             values.append(current_list)
             current_list = []
             counter = counter + 1
 
         current_list.append(new_entry)
+
         # values.append([new_entry])
 
         previous_entry_id = entry_id
