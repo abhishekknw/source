@@ -36,66 +36,78 @@ def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
     lead_form.save()
 
 
+def get_supplier_all_leads_entries(leads_form_id, supplier_id):
+    lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
+    if supplier_id == 'All':
+        lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id).exclude(
+            status='inactive')
+    else:
+        lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id) \
+            .filter(supplier_id=supplier_id).exclude(status='inactive')
+
+    values = []
+    lead_form_items_dict = {}
+    lead_form_items_dict_part = []
+    for item in lead_form_items_list:
+        curr_item = LeadsFormItemsSerializer(item).data
+        lead_form_items_dict[item.item_id] = curr_item
+        curr_item_part = {key: curr_item[key] for key in ['order_id', 'key_name', 'hot_lead_criteria']}
+        lead_form_items_dict_part.append(curr_item_part)
+
+    previous_entry_id = -1
+    current_list = []
+    hot_leads = []
+    counter = 1
+    hot_lead = False
+    for entry in lead_form_entries_list:
+        entry_id = entry.entry_id - 1
+        if entry.item_id not in lead_form_items_dict:
+            continue
+        hot_lead_criteria = lead_form_items_dict[entry.item_id]["hot_lead_criteria"]
+        value = entry.item_value
+        if value == hot_lead_criteria and hot_lead is False:
+            hot_lead = True
+            hot_leads.append(counter)
+        new_entry = ({
+            "order_id": lead_form_items_dict[entry.item_id]["order_id"],
+            "value": value,
+        })
+        if entry_id != previous_entry_id and current_list != []:
+            hot_lead = False
+            values.append(current_list)
+            current_list = []
+            counter = counter + 1
+
+        current_list.append(new_entry)
+        # values.append([new_entry])
+
+        previous_entry_id = entry_id
+    values.append(current_list)
+
+    supplier_all_lead_entries = {
+        'supplier_id': supplier_id,
+        'headers': lead_form_items_dict_part,
+        'values': values,
+        'hot_leads': hot_leads
+    }
+    if supplier_id == 'All':
+        supplier_all_lead_entries.pop('supplier_id')
+    return supplier_all_lead_entries
+
+
 class GetLeadsEntries(APIView):
     @staticmethod
     def get(request, leads_form_id, supplier_id='All'):
-        lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
-        if supplier_id == 'All':
-            lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id).exclude(
-                status='inactive')
-        else:
-            lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id) \
-                .filter(supplier_id=supplier_id).exclude(status='inactive')
-
-        values = []
-        lead_form_items_dict = {}
-        lead_form_items_dict_part = []
-        for item in lead_form_items_list:
-            curr_item = LeadsFormItemsSerializer(item).data
-            lead_form_items_dict[item.item_id] = curr_item
-            curr_item_part = {key: curr_item[key] for key in ['order_id', 'key_name', 'hot_lead_criteria']}
-            lead_form_items_dict_part.append(curr_item_part)
-
-        previous_entry_id = -1
-        current_list = []
-        hot_leads = []
-        counter = 1
-        hot_lead = False
-        for entry in lead_form_entries_list:
-            entry_id = entry.entry_id - 1
-            if entry.item_id not in lead_form_items_dict:
-                continue
-            hot_lead_criteria = lead_form_items_dict[entry.item_id]["hot_lead_criteria"]
-            value = entry.item_value
-            if value == hot_lead_criteria and hot_lead is False:
-                hot_lead = True
-                hot_leads.append(counter)
-            new_entry = ({
-                "order_id": lead_form_items_dict[entry.item_id]["order_id"],
-                "value": value,
-            })
-            if entry_id != previous_entry_id and current_list != []:
-                hot_lead = False
-                values.append(current_list)
-                current_list = []
-                counter = counter + 1
-
-            current_list.append(new_entry)
-            # values.append([new_entry])
-
-            previous_entry_id = entry_id
-        values.append(current_list)
-
-        supplier_all_lead_entries = {
-            'supplier_id': supplier_id,
-            'headers': lead_form_items_dict_part,
-            'values': values,
-            'hot_leads': hot_leads
-        }
-        if supplier_id == 'All':
-            supplier_all_lead_entries.pop('supplier_id')
+        supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id)
         return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
 
+
+class GetLeadsEntriesByCampaignId(APIView):
+    @staticmethod
+    def get(request, campaign_id, supplier_id='All'):
+        first_leads_form_id = LeadsForm.objects.filter(campaign_id=campaign_id).all()[0].id
+        supplier_all_lead_entries = get_supplier_all_leads_entries(first_leads_form_id, supplier_id)
+        return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
 
 class CreateLeadsForm(APIView):
     @staticmethod
@@ -348,6 +360,7 @@ class MigrateLeadsSummary(APIView):
                     'hot_leads_percentage': hot_lead_percentage
                 })
         return ui_utils.handle_response({}, data='success', success=True)
+
 
 class GenerateLeadForm(APIView):
     @staticmethod
