@@ -17,7 +17,7 @@ from bulk_update.helper import bulk_update
 from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignAssignment
 from v0.constants import campaign_status, proposal_on_hold
-
+from django.http import HttpResponse
 
 def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
     form_entry_list = []
@@ -107,6 +107,7 @@ class GetLeadsEntriesByCampaignId(APIView):
         first_leads_form_id = LeadsForm.objects.filter(campaign_id=campaign_id).all()[0].id
         supplier_all_lead_entries = get_supplier_all_leads_entries(first_leads_form_id, supplier_id)
         return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
+
 
 class CreateLeadsForm(APIView):
     @staticmethod
@@ -394,6 +395,37 @@ class GenerateLeadForm(APIView):
                 print ex
         return ui_utils.handle_response({}, data={
             'filepath': 'https://s3.ap-south-1.amazonaws.com/leads-forms-templates/' + filename}, success=True)
+
+
+class GenerateLeadDataExcel(APIView):
+    @staticmethod
+    def get(request, leads_form_id):
+        lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
+        supplier_id = request.GET.get('supplier_id', 'ALL')
+        all_leads = get_supplier_all_leads_entries(leads_form_id, supplier_id)
+        lead_form_items_dict = {}
+        # keys_list = ['supplier_id', 'lead_entry_date (format: dd/mm/yyyy)']
+        keys_list = []
+        for item in lead_form_items_list:
+            curr_row = LeadsFormItemsSerializer(item).data
+            lead_form_items_dict[item.item_id] = curr_row
+            keys_list.append(curr_row['key_name'])
+
+        book = Workbook()
+        sheet = book.active
+        sheet.append(keys_list)
+
+        for lead in all_leads["values"]:
+            value_list = []
+            for item_dict in lead:
+                value_list.append(item_dict["value"])
+            sheet.append(value_list)
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
+
+        book.save(response)
+        return response
+
 
 
 class DeleteLeadItems(APIView):
