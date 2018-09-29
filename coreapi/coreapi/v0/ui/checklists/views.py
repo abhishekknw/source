@@ -214,8 +214,8 @@ class GetChecklistData(APIView):
         values.append(current_list)
 
         all_data = {
-            'column headers': checklist_items_dict_part,
-            'row headers': rows,
+            'column_headers': checklist_items_dict_part,
+            'row_headers': rows,
             'values': values,
         }
 
