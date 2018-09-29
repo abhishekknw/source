@@ -129,7 +129,7 @@ class campaignListAPIVIew(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
-def get_extreme_value_keys(main_dict,sub_key):
+def get_sorted_value_keys(main_dict,sub_key):
     keys_list = main_dict.keys()
     sub_array = []
     for curr_key in keys_list:
@@ -1351,7 +1351,8 @@ class CampaignLeadsCustom(APIView):
                     supplier_additional_metrics.append({
                         'supplier_id': supplier_id,
                         'hot_lead_percentage': hot_lead_percentage,
-                        'hot_lead_flat_ratio': round(hot_lead_percentage/float(flat_count), 3)
+                        'hot_lead_flat_ratio': round(hot_leads/float(flat_count), 3),
+                        'total_lead_flat_ratio': round(total_leads/float(flat_count), 3)
                     })
 
                 if query_type == 'locality':
@@ -1410,10 +1411,13 @@ class CampaignLeadsCustom(APIView):
             for locality in localities:
                 hot_lead_percentage = all_localities_data_hot_ratio[locality]['hot_lead_percentage']
                 flat_count = all_localities_data_hot_ratio[locality]['flat count']
+                hot_leads = all_localities_data_hot_ratio[locality]['interested']
+                total_leads = all_localities_data_hot_ratio[locality]['total']
                 locality_additional_metrics.append({
                     'locality': locality,
                     'hot_lead_percentage': hot_lead_percentage,
-                    'hot_lead_flat_ratio': round(hot_lead_percentage / float(flat_count), 3)
+                    'hot_lead_flat_ratio': round(hot_leads / float(flat_count), 3),
+                    'total_lead_flat_ratio': round(total_leads / float(flat_count), 3)
                 })
 
             all_localities_data = z_calculator_dict(all_localities_data_hot_ratio, "hot_lead_percentage")
@@ -1421,28 +1425,38 @@ class CampaignLeadsCustom(APIView):
             all_flat_data = hot_lead_ratio_calculator(all_flat_data)
             for category in flat_types:
                 hot_lead_percentage = all_flat_data[category]['hot_lead_percentage']
+                hot_leads = all_flat_data[category]['interested']
                 flat_count = all_flat_data[category]['flat count']
+                total_leads = all_flat_data[category]['total']
                 flat_additional_metrics.append({
                     'flat category': category,
                     'hot_lead_percentage': hot_lead_percentage,
-                    'hot_lead_flat_ratio': round(hot_lead_percentage / float(flat_count), 3)
+                    'hot_lead_flat_ratio': round(hot_leads / float(flat_count), 3),
+                    'total_lead_flat_ratio': round(total_leads / float(flat_count), 3)
                 })
 
 
             supplier_hot_lead_pct = sorted(supplier_additional_metrics, key=itemgetter('hot_lead_percentage'))
             supplier_hot_lead_flat_ratio = sorted(supplier_additional_metrics, key=itemgetter('hot_lead_flat_ratio'))
+            supplier_total_lead_flat_ratio = sorted(supplier_additional_metrics, key=itemgetter('total_lead_flat_ratio'))
             all_suppliers_list['hot lead % sorted'] = supplier_hot_lead_pct
-            all_suppliers_list['hot lead per flat sorted'] = supplier_hot_lead_flat_ratio
+            all_suppliers_list['hot leads per flat sorted'] = supplier_hot_lead_flat_ratio
+            all_suppliers_list['total leads per flat sorted'] = supplier_total_lead_flat_ratio
 
             locality_hot_lead_pct = sorted(locality_additional_metrics, key=itemgetter('hot_lead_percentage'))
             locality_hot_lead_flat_ratio = sorted(locality_additional_metrics, key=itemgetter('hot_lead_flat_ratio'))
+            locality_total_lead_flat_ratio = sorted(locality_additional_metrics, key=itemgetter('total_lead_flat_ratio'))
             all_localities_data['hot lead % sorted'] = locality_hot_lead_pct
-            all_localities_data['hot lead per flat sorted'] = locality_hot_lead_flat_ratio
+            all_localities_data['hot leads per flat sorted'] = locality_hot_lead_flat_ratio
+            all_localities_data['total leads per flat sorted'] = locality_total_lead_flat_ratio
 
             flat_hot_lead_pct = sorted(flat_additional_metrics, key=itemgetter('hot_lead_percentage'))
             flat_hot_lead_flat_ratio = sorted(flat_additional_metrics, key=itemgetter('hot_lead_flat_ratio'))
+            flat_total_lead_flat_ratio = sorted(flat_additional_metrics, key=itemgetter('total_lead_flat_ratio'))
             all_flat_data['hot lead % sorted'] = flat_hot_lead_pct
-            all_flat_data['hot lead per flat sorted'] = flat_hot_lead_flat_ratio
+            all_flat_data['hot leads per flat sorted'] = flat_hot_lead_flat_ratio
+            all_flat_data['total leads per flat sorted'] = flat_total_lead_flat_ratio
+
 
         if query_type in ['date','weekday','phase']:
             leads_form_items = []
@@ -1596,6 +1610,7 @@ class CityWiseMultipleCampaignLeads(APIView):
             .values('supplier_id', 'society_city', 'flat_count')
         city_list = supplier_properties.values_list('society_city',flat=True).distinct()
         city_leads_data = {}
+        city_additional_metrics = []
         for curr_city in city_list:
             supplier_ids = list(set([x['supplier_id'] for x in supplier_properties if x['society_city'] == curr_city]))
             curr_city_campaign_data = [x for x in campaign_leads if x['supplier_id'] in supplier_ids]
@@ -1614,7 +1629,22 @@ class CityWiseMultipleCampaignLeads(APIView):
             }
             city_leads_data[curr_city] = curr_city_leads
 
+            city_additional_metrics.append({
+                'city': curr_city,
+                'hot_leads_percentage': hot_leads_percentage,
+                'hot_lead_flat_ratio': round(hot_leads / float(flat_count), 3),
+                'total_lead_flat_ratio': round(total_leads / float(flat_count), 3)
+            })
+
         city_leads_data_z = z_calculator_dict(city_leads_data,"hot_leads_percentage")
+        city_hot_lead_pct = sorted(city_additional_metrics, key=itemgetter('hot_leads_percentage'))
+        city_hot_lead_flat_ratio=sorted(city_additional_metrics, key=itemgetter('hot_lead_flat_ratio'))
+        city_total_lead_flat_ratio = sorted(city_additional_metrics, key=itemgetter('total_lead_flat_ratio'))
+        city_leads_data_z.update({
+            'hot lead % sorted': city_hot_lead_pct,
+            'hot lead per flat sorted': city_hot_lead_flat_ratio,
+            'total lead per flat sorted': city_total_lead_flat_ratio
+        })
 
         #campaign_suppliers = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list)
         return ui_utils.handle_response({}, data=city_leads_data_z, success=True)
