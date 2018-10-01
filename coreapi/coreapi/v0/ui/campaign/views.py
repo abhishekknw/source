@@ -177,7 +177,7 @@ def hot_lead_ratio_calculator(data_array):
         total_leads = data_array[data]['total']
         hot_leads = data_array[data]['interested']
         hot_lead_ratio = round(float(hot_leads)/float(total_leads), 5) if total_leads>0 else 0
-        data_array[data]['hot_lead_percentage'] = hot_lead_ratio*100
+        data_array[data]['hot_leads_percentage'] = hot_lead_ratio*100
     return data_array
 
 
@@ -685,42 +685,7 @@ class DashBoardViewSet(viewsets.ViewSet):
         weekday_data = {}
         all_entries_checked = []
 
-        # for curr_data_object in leads_form_data:
-        #     curr_data = curr_data_object.__dict__
-        #     curr_entry_details = {
-        #         'leads_form_id': curr_data['leads_form_id'],
-        #         'entry_id': curr_data['entry_id']
-        #     }
-        #     if curr_entry_details in all_entries_checked:
-        #         continue
-        #     else:
-        #         all_entries_checked.append(curr_entry_details)
-        #
-        #     time = curr_data['created_at']
-        #     curr_date = str(time.date())
-        #     curr_time = str(time)
-        #
-        #     weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
-        #                      '4': 'Friday', '5': 'Saturday', '6': 'Sunday'}
-        #     curr_weekday = weekday_names[str(time.weekday())]
-        #
-        #     supplier_id = curr_data['supplier_id']
-        #     lead_count = supplier_wise_lead_count[supplier_id]
-        #     hot_lead_details = lead_count['hot_lead_details']
-        #
-        #     if curr_date not in date_data:
-        #         date_data[curr_date] = {
-        #             'total': 0,
-        #             'is_interested': True,
-        #             'interested': 0,
-        #             'created_at': curr_time
-        #         }
-        #
-        #     if curr_weekday not in weekday_data:
-        #         weekday_data[curr_weekday] = {
-        #             'total': 0,
-        #             'interested': 0,
-        #         }
+
 
         return ui_utils.handle_response(class_name, data=all_localities_data, success=True)
         #except Exception as e:
@@ -1043,6 +1008,11 @@ class CampaignLeads(APIView):
     def get(self, request):
         class_name = self.__class__.__name__
         query_type = request.query_params.get('query_type')
+        user_start_date_str = request.query_params.get('start_date', None)
+        user_end_date_str = request.query_params.get('end_date', None)
+        format_str = '%d/%m/%Y'
+        user_start_datetime = datetime.strptime(user_start_date_str,format_str) if user_start_date_str is not None else None
+        user_end_datetime = datetime.strptime(user_end_date_str,format_str) if user_start_date_str is not None else None
         # will be used later
 
         campaign_id = request.query_params.get('campaign_id', None)
@@ -1093,7 +1063,7 @@ class CampaignLeads(APIView):
             total_leads = lead_count['total_leads']
             # getting society information
 
-            hot_lead_percentage = round(float(hot_leads) / float(total_leads), 5)*100 if total_leads > 0 else 0
+            hot_leads_percentage = round(float(hot_leads) / float(total_leads), 5)*100 if total_leads > 0 else 0
             curr_supplier_lead_data = {
                 "is_interested": True,
                 "campaign": campaign_id,
@@ -1101,7 +1071,7 @@ class CampaignLeads(APIView):
                 "interested": hot_leads,
                 "total": total_leads,
                 "data": curr_supplier_data,
-                "hot_lead_percentage": hot_lead_percentage,
+                "hot_leads_percentage": hot_leads_percentage,
                 "flat count": supplier_flat_count
             }
             all_suppliers_list_non_analytics[supplier_id] = curr_supplier_lead_data
@@ -1150,9 +1120,9 @@ class CampaignLeads(APIView):
                 curr_flat_data['flat count'] = curr_flat_data['flat count'] + supplier_flat_count
                 all_flat_data['400+'] = curr_flat_data
 
-        all_suppliers_list = z_calculator_dict(all_suppliers_list_non_analytics, "hot_lead_percentage")
+        all_suppliers_list = z_calculator_dict(all_suppliers_list_non_analytics, "hot_leads_percentage")
         all_localities_data_hot_ratio = hot_lead_ratio_calculator(all_localities_data_non_analytics)
-        all_localities_data = z_calculator_dict(all_localities_data_hot_ratio, "hot_lead_percentage")
+        all_localities_data = z_calculator_dict(all_localities_data_hot_ratio, "hot_leads_percentage")
 
         # date-wise
         date_data = {}
@@ -1162,6 +1132,10 @@ class CampaignLeads(APIView):
         campaign_dates = leads_form_data.order_by('created_at').values_list('created_at',flat=True).distinct()
         start_datetime = campaign_dates[0]
         end_datetime = campaign_dates[len(campaign_dates)-1]
+        if user_start_datetime is not None:
+            start_datetime = max(campaign_dates[0], user_start_datetime)
+        if user_end_datetime is not None:
+            end_datetime = min(campaign_dates[len(campaign_dates)-1], user_end_datetime)
 
         start_datetime_phase = start_datetime - timedelta(days=start_datetime.weekday())
         end_datetime_phase = end_datetime + timedelta(days=6-end_datetime.weekday())
@@ -1263,9 +1237,9 @@ class CampaignLeads(APIView):
         date_data_hot_ratio = hot_lead_ratio_calculator(date_data)
         weekday_data_hot_ratio = hot_lead_ratio_calculator(weekday_data)
         phase_data_hot_ratio = hot_lead_ratio_calculator(phase_data)
-        all_dates_data = z_calculator_dict(date_data_hot_ratio,"hot_lead_percentage")
-        all_weekdays_data = z_calculator_dict(weekday_data_hot_ratio,"hot_lead_percentage")
-        all_phase_data = z_calculator_dict(phase_data_hot_ratio,"hot_lead_percentage")
+        all_dates_data = z_calculator_dict(date_data_hot_ratio,"hot_leads_percentage")
+        all_weekdays_data = z_calculator_dict(weekday_data_hot_ratio,"hot_leads_percentage")
+        all_phase_data = z_calculator_dict(phase_data_hot_ratio,"hot_leads_percentage")
         all_flat_data = hot_lead_ratio_calculator(all_flat_data)
 
         final_data = {'supplier_data': all_suppliers_list, 'date_data': all_dates_data,
@@ -1281,6 +1255,11 @@ class CampaignLeadsCustom(APIView):
         class_name = self.__class__.__name__
         query_type = request.query_params.get('query_type')
         campaign_id = request.query_params.get('campaign_id', None)
+        user_start_str = request.query_params.get('start_date', None)
+        user_end_str = request.query_params.get('end_date', None)
+        format_str = '%Y-%m-%d'
+        user_start_datetime = datetime.strptime(user_start_str, format_str) if user_start_str is not None else None
+        user_end_datetime = datetime.strptime(user_end_str, format_str) if user_end_str is not None else None
         final_data = {}
         date_data = {}
         weekday_data = {}
@@ -1333,7 +1312,7 @@ class CampaignLeadsCustom(APIView):
                 curr_supplier_leads = [x for x in leads_form_summary_data if x['supplier_id']==supplier_id][0]
                 total_leads = curr_supplier_leads['total_leads_count']
                 hot_leads = curr_supplier_leads['hot_leads_count']
-                hot_lead_percentage = curr_supplier_leads['hot_leads_percentage']
+                hot_leads_percentage = curr_supplier_leads['hot_leads_percentage']
                 flat_count = curr_supplier_properties['flat_count']
                 supplier_locality = curr_supplier_properties['society_locality']
                 if query_type == 'supplier':
@@ -1344,13 +1323,13 @@ class CampaignLeadsCustom(APIView):
                         "interested": hot_leads,
                         "total": total_leads,
                         "data": curr_supplier_properties,
-                        "hot_lead_percentage": hot_lead_percentage,
+                        "hot_leads_percentage": hot_leads_percentage,
                         "flat count": flat_count
                     }
                     all_suppliers_list_non_analytics[supplier_id] = curr_supplier_lead_data
                     supplier_additional_metrics.append({
                         'supplier_id': supplier_id,
-                        'hot_lead_percentage': hot_lead_percentage,
+                        'hot_leads_percentage': hot_leads_percentage,
                         'hot_lead_flat_ratio': round(hot_leads/float(flat_count), 3),
                         'total_lead_flat_ratio': round(total_leads/float(flat_count), 3)
                     })
@@ -1358,14 +1337,11 @@ class CampaignLeadsCustom(APIView):
                 if query_type == 'locality':
                     if supplier_locality in all_localities_data_non_analytics:
                         all_localities_data_non_analytics[supplier_locality]["interested"] = \
-                        all_localities_data_non_analytics[
-                            supplier_locality]["interested"] + hot_leads
+                            all_localities_data_non_analytics[supplier_locality]["interested"] + hot_leads
                         all_localities_data_non_analytics[supplier_locality]["total"] = \
-                        all_localities_data_non_analytics[
-                            supplier_locality]["total"] + total_leads
+                            all_localities_data_non_analytics[supplier_locality]["total"] + total_leads
                         all_localities_data_non_analytics[supplier_locality]["suppliers"] = \
-                        all_localities_data_non_analytics[
-                            supplier_locality]["suppliers"] + 1
+                            all_localities_data_non_analytics[supplier_locality]["suppliers"] + 1
                         all_localities_data_non_analytics[supplier_locality]["flat count"] = \
                             all_localities_data_non_analytics[supplier_locality]["flat count"] + flat_count
 
@@ -1404,53 +1380,53 @@ class CampaignLeadsCustom(APIView):
                         curr_flat_data['flat count'] = curr_flat_data['flat count'] + flat_count
                         all_flat_data['400+'] = curr_flat_data
 
-            all_suppliers_list = z_calculator_dict(all_suppliers_list_non_analytics, "hot_lead_percentage")
+            all_suppliers_list = z_calculator_dict(all_suppliers_list_non_analytics, "hot_leads_percentage")
             all_localities_data_hot_ratio = hot_lead_ratio_calculator(all_localities_data_non_analytics)
 
             localities = all_localities_data_non_analytics.keys()
             for locality in localities:
-                hot_lead_percentage = all_localities_data_hot_ratio[locality]['hot_lead_percentage']
+                hot_leads_percentage = all_localities_data_hot_ratio[locality]['hot_leads_percentage']
                 flat_count = all_localities_data_hot_ratio[locality]['flat count']
                 hot_leads = all_localities_data_hot_ratio[locality]['interested']
                 total_leads = all_localities_data_hot_ratio[locality]['total']
                 locality_additional_metrics.append({
                     'locality': locality,
-                    'hot_lead_percentage': hot_lead_percentage,
+                    'hot_leads_percentage': hot_leads_percentage,
                     'hot_lead_flat_ratio': round(hot_leads / float(flat_count), 3),
                     'total_lead_flat_ratio': round(total_leads / float(flat_count), 3)
                 })
 
-            all_localities_data = z_calculator_dict(all_localities_data_hot_ratio, "hot_lead_percentage")
+            all_localities_data = z_calculator_dict(all_localities_data_hot_ratio, "hot_leads_percentage")
             flat_types = ['0-150','151-399','400+']
             all_flat_data = hot_lead_ratio_calculator(all_flat_data)
             for category in flat_types:
-                hot_lead_percentage = all_flat_data[category]['hot_lead_percentage']
+                hot_leads_percentage = all_flat_data[category]['hot_leads_percentage']
                 hot_leads = all_flat_data[category]['interested']
                 flat_count = all_flat_data[category]['flat count']
                 total_leads = all_flat_data[category]['total']
                 flat_additional_metrics.append({
                     'flat category': category,
-                    'hot_lead_percentage': hot_lead_percentage,
+                    'hot_leads_percentage': hot_leads_percentage,
                     'hot_lead_flat_ratio': round(hot_leads / float(flat_count), 3),
                     'total_lead_flat_ratio': round(total_leads / float(flat_count), 3)
                 })
 
 
-            supplier_hot_lead_pct = sorted(supplier_additional_metrics, key=itemgetter('hot_lead_percentage'))
+            supplier_hot_lead_pct = sorted(supplier_additional_metrics, key=itemgetter('hot_leads_percentage'))
             supplier_hot_lead_flat_ratio = sorted(supplier_additional_metrics, key=itemgetter('hot_lead_flat_ratio'))
             supplier_total_lead_flat_ratio = sorted(supplier_additional_metrics, key=itemgetter('total_lead_flat_ratio'))
             all_suppliers_list['hot lead % sorted'] = supplier_hot_lead_pct
             all_suppliers_list['hot leads per flat sorted'] = supplier_hot_lead_flat_ratio
             all_suppliers_list['total leads per flat sorted'] = supplier_total_lead_flat_ratio
 
-            locality_hot_lead_pct = sorted(locality_additional_metrics, key=itemgetter('hot_lead_percentage'))
+            locality_hot_lead_pct = sorted(locality_additional_metrics, key=itemgetter('hot_leads_percentage'))
             locality_hot_lead_flat_ratio = sorted(locality_additional_metrics, key=itemgetter('hot_lead_flat_ratio'))
             locality_total_lead_flat_ratio = sorted(locality_additional_metrics, key=itemgetter('total_lead_flat_ratio'))
             all_localities_data['hot lead % sorted'] = locality_hot_lead_pct
             all_localities_data['hot leads per flat sorted'] = locality_hot_lead_flat_ratio
             all_localities_data['total leads per flat sorted'] = locality_total_lead_flat_ratio
 
-            flat_hot_lead_pct = sorted(flat_additional_metrics, key=itemgetter('hot_lead_percentage'))
+            flat_hot_lead_pct = sorted(flat_additional_metrics, key=itemgetter('hot_leads_percentage'))
             flat_hot_lead_flat_ratio = sorted(flat_additional_metrics, key=itemgetter('hot_lead_flat_ratio'))
             flat_total_lead_flat_ratio = sorted(flat_additional_metrics, key=itemgetter('total_lead_flat_ratio'))
             all_flat_data['hot lead % sorted'] = flat_hot_lead_pct
@@ -1467,19 +1443,27 @@ class CampaignLeadsCustom(APIView):
                 status='inactive').all()
             for item in leads_form_items_objects:
                 leads_form_items.append(item.__dict__)
-            for data in leads_form_data_objects:
-                leads_form_data.append(data.__dict__)
             supplier_ids = list(set(leads_form_data_objects.values_list('supplier_id', flat=True)))
             supplier_data_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
             supplier_data = SupplierTypeSocietySerializer2(supplier_data_objects, many=True).data
-            campaign_dates = leads_form_data_objects.order_by('created_at').values_list('created_at', flat=True).distinct()
+            leads_form_data_objects_dates = leads_form_data_objects
+            if user_start_datetime is not None:
+                leads_form_data_objects_dates = leads_form_data_objects.filter(created_at__gte=user_start_datetime)
+            if user_end_datetime is not None:
+                leads_form_data_objects_dates = leads_form_data_objects_dates.filter(created_at__lte=user_end_datetime)
+            campaign_dates = leads_form_data_objects_dates.order_by('created_at').\
+                values_list('created_at', flat=True).distinct()
             start_datetime = campaign_dates[0]
+            end_datetime = campaign_dates[len(campaign_dates) - 1]
             start_datetime_phase = start_datetime - timedelta(days=start_datetime.weekday())
 
             weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
                              '4': 'Friday', '5': 'Saturday', '6': 'Sunday'}
 
             hot_lead_items = {}
+
+            for data in leads_form_data_objects:
+                leads_form_data.append(data.__dict__)
 
             for curr_data in leads_form_data:
 
@@ -1495,6 +1479,10 @@ class CampaignLeadsCustom(APIView):
                     continue
                 else:
                     all_entries_checked.append(curr_entry_details)
+
+                time = curr_data['created_at']
+                curr_date = str(time.date())
+                curr_time = str(time)
 
                 curr_data_all_fields = [x for x in leads_form_data if x['leads_form_id'] == leads_form_id
                                         and x['entry_id'] == entry_id]
@@ -1515,9 +1503,6 @@ class CampaignLeadsCustom(APIView):
                         is_hot_lead = 1
                         break
 
-                time = curr_data['created_at']
-                curr_date = str(time.date())
-                curr_time = str(time)
                 curr_supplier_data = [x for x in supplier_data if x['supplier_id'] == supplier_id][0]
                 flat_count = curr_supplier_data['flat_count']
 
@@ -1584,9 +1569,9 @@ class CampaignLeadsCustom(APIView):
             date_data_hot_ratio = hot_lead_ratio_calculator(date_data)
             weekday_data_hot_ratio = hot_lead_ratio_calculator(weekday_data)
             phase_data_hot_ratio = hot_lead_ratio_calculator(phase_data)
-            date_data = z_calculator_dict(date_data_hot_ratio,"hot_lead_percentage")
-            weekday_data = z_calculator_dict(weekday_data_hot_ratio,"hot_lead_percentage")
-            phase_data = z_calculator_dict(phase_data_hot_ratio,"hot_lead_percentage")
+            date_data = z_calculator_dict(date_data_hot_ratio,"hot_leads_percentage")
+            weekday_data = z_calculator_dict(weekday_data_hot_ratio,"hot_leads_percentage")
+            phase_data = z_calculator_dict(phase_data_hot_ratio,"hot_leads_percentage")
 
         final_data_dict = {'supplier': all_suppliers_list, 'date': date_data,
                            'locality': all_localities_data, 'weekday': weekday_data,
@@ -1736,7 +1721,7 @@ class PhaseWiseMultipleCampaignLeads(APIView):
                 #     phase_data[curr_phase]['suppliers'].append(supplier_id)
 
             phase_data_hot_ratio = hot_lead_ratio_calculator(phase_data)
-            phase_data_campaign = z_calculator_dict(phase_data_hot_ratio, "hot_lead_percentage")
+            phase_data_campaign = z_calculator_dict(phase_data_hot_ratio, "hot_leads_percentage")
             phase_data_all[campaign_id] = phase_data_campaign
 
 
