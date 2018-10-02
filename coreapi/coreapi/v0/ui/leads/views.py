@@ -17,7 +17,7 @@ from bulk_update.helper import bulk_update
 from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignAssignment
 from v0.constants import campaign_status, proposal_on_hold
-
+from django.http import HttpResponse
 
 def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
     form_entry_list = []
@@ -58,27 +58,26 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id):
     current_list = []
     hot_leads = []
     counter = 1
-    hot_lead = False
     for entry in lead_form_entries_list:
         entry_id = entry.entry_id - 1
         if entry.item_id not in lead_form_items_dict:
             continue
         hot_lead_criteria = lead_form_items_dict[entry.item_id]["hot_lead_criteria"]
         value = entry.item_value
-        if value == hot_lead_criteria and hot_lead is False:
-            hot_lead = True
-            hot_leads.append(counter)
+        if value and value == hot_lead_criteria:
+            if counter not in hot_leads:
+                hot_leads.append(counter)
         new_entry = ({
             "order_id": lead_form_items_dict[entry.item_id]["order_id"],
             "value": value,
         })
         if entry_id != previous_entry_id and current_list != []:
-            hot_lead = False
             values.append(current_list)
             current_list = []
             counter = counter + 1
 
         current_list.append(new_entry)
+
         # values.append([new_entry])
 
         previous_entry_id = entry_id
@@ -108,6 +107,7 @@ class GetLeadsEntriesByCampaignId(APIView):
         first_leads_form_id = LeadsForm.objects.filter(campaign_id=campaign_id).all()[0].id
         supplier_all_lead_entries = get_supplier_all_leads_entries(first_leads_form_id, supplier_id)
         return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
+
 
 class CreateLeadsForm(APIView):
     @staticmethod
@@ -395,6 +395,37 @@ class GenerateLeadForm(APIView):
                 print ex
         return ui_utils.handle_response({}, data={
             'filepath': 'https://s3.ap-south-1.amazonaws.com/leads-forms-templates/' + filename}, success=True)
+
+
+class GenerateLeadDataExcel(APIView):
+    @staticmethod
+    def get(request, leads_form_id):
+        lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
+        supplier_id = request.GET.get('supplier_id', 'ALL')
+        all_leads = get_supplier_all_leads_entries(leads_form_id, supplier_id)
+        lead_form_items_dict = {}
+        # keys_list = ['supplier_id', 'lead_entry_date (format: dd/mm/yyyy)']
+        keys_list = []
+        for item in lead_form_items_list:
+            curr_row = LeadsFormItemsSerializer(item).data
+            lead_form_items_dict[item.item_id] = curr_row
+            keys_list.append(curr_row['key_name'])
+
+        book = Workbook()
+        sheet = book.active
+        sheet.append(keys_list)
+
+        for lead in all_leads["values"]:
+            value_list = []
+            for item_dict in lead:
+                value_list.append(item_dict["value"])
+            sheet.append(value_list)
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
+
+        book.save(response)
+        return response
+
 
 
 class DeleteLeadItems(APIView):

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
-from models import LeadsForm, LeadsFormItems, LeadsFormData, LeadsFormContacts
+from models import LeadsForm, LeadsFormItems, LeadsFormData, LeadsFormContacts, LeadsFormSummary
 
 
 class LeadsFormSerializer(ModelSerializer):
@@ -28,4 +28,10 @@ class LeadsFormContactsSerializer(ModelSerializer):
 
     class Meta:
         model= LeadsFormContacts
+        fields = '__all__'
+
+class LeadsFormSummarySerializer(ModelSerializer):
+
+    class Meta:
+        model= LeadsFormSummary
         fields = '__all__'
