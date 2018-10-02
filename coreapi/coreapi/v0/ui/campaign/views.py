@@ -1394,11 +1394,13 @@ class CampaignLeadsCustom(APIView):
                 flat_count = all_localities_data_hot_ratio[locality]['flat_count']
                 hot_leads = all_localities_data_hot_ratio[locality]['interested']
                 total_leads = all_localities_data_hot_ratio[locality]['total']
+                hot_lead_flat_ratio = round(hot_leads / float(flat_count), 3) if flat_count>0 else 0
+                total_lead_flat_ratio = round(total_leads / float(flat_count), 3) if flat_count>0 else 0
                 locality_additional_metrics.append({
                     'locality': locality,
                     'hot_leads_percentage': hot_leads_percentage,
-                    'hot_lead_flat_ratio': round(hot_leads / float(flat_count), 3),
-                    'total_lead_flat_ratio': round(total_leads / float(flat_count), 3)
+                    'hot_lead_flat_ratio': hot_lead_flat_ratio,
+                    'total_lead_flat_ratio': total_lead_flat_ratio
                 })
 
             all_localities_data = z_calculator_dict(all_localities_data_hot_ratio, "hot_leads_percentage")
@@ -1409,11 +1411,13 @@ class CampaignLeadsCustom(APIView):
                 hot_leads = all_flat_data[category]['interested']
                 flat_count = all_flat_data[category]['flat_count']
                 total_leads = all_flat_data[category]['total']
+                hot_lead_flat_ratio = round(hot_leads / float(flat_count), 3) if flat_count>0 else 0
+                total_lead_flat_ratio = round(total_leads / float(flat_count), 3) if flat_count>0 else 0
                 flat_additional_metrics.append({
                     'flat category': category,
                     'hot_leads_percentage': hot_leads_percentage,
-                    'hot_lead_flat_ratio': round(hot_leads / float(flat_count), 3),
-                    'total_lead_flat_ratio': round(total_leads / float(flat_count), 3)
+                    'hot_lead_flat_ratio': hot_lead_flat_ratio,
+                    'total_lead_flat_ratio': total_lead_flat_ratio
                 })
 
 
