@@ -1179,6 +1179,7 @@ codes_to_model_names = {
     car_display_inventory_code: 'StallInventory',
     'GA' : 'GatewayArchInventory',
     'gateway arch' : 'GatewayArchInventory',
+    'GATEWAY ARCH': 'GatewayArchInventory',
 }
 # model to codes
 model_to_codes = {
