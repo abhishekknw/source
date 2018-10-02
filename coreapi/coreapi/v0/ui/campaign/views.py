@@ -1033,7 +1033,7 @@ class CampaignLeads(APIView):
                 "interested": 0,
                 "total": 0,
                 "suppliers": 0,
-                "flat count": 0
+                "flat_count": 0
             },
             "151-399": {
                 "campaign": campaign_id,
@@ -1041,7 +1041,7 @@ class CampaignLeads(APIView):
                 "interested": 0,
                 "total": 0,
                 "suppliers": 0,
-                "flat count": 0
+                "flat_count": 0
             },
             "400+": {
                 "campaign": campaign_id,
@@ -1049,7 +1049,7 @@ class CampaignLeads(APIView):
                 "interested": 0,
                 "total": 0,
                 "suppliers": 0,
-                "flat count": 0
+                "flat_count": 0
             }
         }
 
@@ -1072,7 +1072,7 @@ class CampaignLeads(APIView):
                 "total": total_leads,
                 "data": curr_supplier_data,
                 "hot_leads_percentage": hot_leads_percentage,
-                "flat count": supplier_flat_count
+                "flat_count": supplier_flat_count
             }
             all_suppliers_list_non_analytics[supplier_id] = curr_supplier_lead_data
 
@@ -1083,8 +1083,8 @@ class CampaignLeads(APIView):
                                                                     supplier_locality]["total"] + total_leads
                 all_localities_data_non_analytics[supplier_locality]["suppliers"] = all_localities_data_non_analytics[
                                                                     supplier_locality][ "suppliers"] + 1
-                all_localities_data_non_analytics[supplier_locality]["flat count"] = \
-                    all_localities_data_non_analytics[supplier_locality]["flat count"] + supplier_flat_count
+                all_localities_data_non_analytics[supplier_locality]["flat_count"] = \
+                    all_localities_data_non_analytics[supplier_locality]["flat_count"] + supplier_flat_count
 
             else:
                 curr_locality_data = {
@@ -1094,7 +1094,7 @@ class CampaignLeads(APIView):
                     "interested": hot_leads,
                     "total": total_leads,
                     "suppliers": 1,
-                    "flat count": supplier_flat_count
+                    "flat_count": supplier_flat_count
                 }
                 all_localities_data_non_analytics[supplier_locality] = curr_locality_data
 
@@ -1103,21 +1103,21 @@ class CampaignLeads(APIView):
                 curr_flat_data['interested'] = curr_flat_data['interested']+hot_leads
                 curr_flat_data['total'] = curr_flat_data['total']+total_leads
                 curr_flat_data['suppliers'] = curr_flat_data['suppliers'] + 1
-                curr_flat_data['flat count'] = curr_flat_data['flat count'] + supplier_flat_count
+                curr_flat_data['flat_count'] = curr_flat_data['flat_count'] + supplier_flat_count
                 all_flat_data['0-150'] = curr_flat_data
             elif supplier_flat_count<400:
                 curr_flat_data = all_flat_data['151-399']
                 curr_flat_data['interested'] = curr_flat_data['interested']+hot_leads
                 curr_flat_data['total'] = curr_flat_data['total']+total_leads
                 curr_flat_data['suppliers'] = curr_flat_data['suppliers'] + 1
-                curr_flat_data['flat count'] = curr_flat_data['flat count'] + supplier_flat_count
+                curr_flat_data['flat_count'] = curr_flat_data['flat_count'] + supplier_flat_count
                 all_flat_data['151-399'] = curr_flat_data
             else:
                 curr_flat_data = all_flat_data['400+']
                 curr_flat_data['interested'] = curr_flat_data['interested'] + hot_leads
                 curr_flat_data['total'] = curr_flat_data['total'] + total_leads
                 curr_flat_data['suppliers'] = curr_flat_data['suppliers'] + 1
-                curr_flat_data['flat count'] = curr_flat_data['flat count'] + supplier_flat_count
+                curr_flat_data['flat_count'] = curr_flat_data['flat_count'] + supplier_flat_count
                 all_flat_data['400+'] = curr_flat_data
 
         all_suppliers_list = z_calculator_dict(all_suppliers_list_non_analytics, "hot_leads_percentage")
@@ -1181,7 +1181,7 @@ class CampaignLeads(APIView):
                     'interested': 0,
                     'suppliers': [],
                     'supplier_count': 0,
-                    'flat count': 0,
+                    'flat_count': 0,
                     'phase': curr_phase,
                     'start date': curr_phase_start,
                     'end date': curr_phase_end
@@ -1203,7 +1203,7 @@ class CampaignLeads(APIView):
                     'created_at': curr_time,
                     'suppliers': [],
                     'supplier_count': 0,
-                    'flat count': 0
+                    'flat_count': 0
                 }
 
             if curr_weekday not in weekday_data:
@@ -1212,7 +1212,7 @@ class CampaignLeads(APIView):
                     'interested': 0,
                     'suppliers': [],
                     'supplier_count': 0,
-                    'flat count': 0
+                    'flat_count': 0
                 }
 
             date_data[curr_date]['total'] = date_data[curr_date]['total'] + 1
@@ -1226,17 +1226,17 @@ class CampaignLeads(APIView):
 
             if supplier_id not in date_data[curr_date]['suppliers']:
                 date_data[curr_date]['supplier_count'] = date_data[curr_date]['supplier_count'] + 1
-                date_data[curr_date]['flat count'] = date_data[curr_date]['flat count'] + flat_count
+                date_data[curr_date]['flat_count'] = date_data[curr_date]['flat_count'] + flat_count
                 date_data[curr_date]['suppliers'].append(supplier_id)
 
             if supplier_id not in weekday_data[curr_weekday]['suppliers']:
                 weekday_data[curr_weekday]['supplier_count'] = weekday_data[curr_weekday]['supplier_count'] + 1
-                weekday_data[curr_weekday]['flat count'] = weekday_data[curr_weekday]['flat count'] + flat_count
+                weekday_data[curr_weekday]['flat_count'] = weekday_data[curr_weekday]['flat_count'] + flat_count
                 weekday_data[curr_weekday]['suppliers'].append(supplier_id)
 
             if supplier_id not in phase_data[curr_phase]['suppliers']:
                 phase_data[curr_phase]['supplier_count'] = phase_data[curr_phase]['supplier_count'] + 1
-                phase_data[curr_phase]['flat count'] = phase_data[curr_phase]['flat count'] + flat_count
+                phase_data[curr_phase]['flat_count'] = phase_data[curr_phase]['flat_count'] + flat_count
                 phase_data[curr_phase]['suppliers'].append(supplier_id)
 
         date_data_hot_ratio = hot_lead_ratio_calculator(date_data)
@@ -1291,7 +1291,7 @@ class CampaignLeadsCustom(APIView):
                     "interested": 0,
                     "total": 0,
                     "suppliers": 0,
-                    "flat count": 0
+                    "flat_count": 0
                 },
                 "151-399": {
                     "campaign": campaign_id,
@@ -1299,7 +1299,7 @@ class CampaignLeadsCustom(APIView):
                     "interested": 0,
                     "total": 0,
                     "suppliers": 0,
-                    "flat count": 0
+                    "flat_count": 0
                 },
                 "400+": {
                     "campaign": campaign_id,
@@ -1307,7 +1307,7 @@ class CampaignLeadsCustom(APIView):
                     "interested": 0,
                     "total": 0,
                     "suppliers": 0,
-                    "flat count": 0
+                    "flat_count": 0
                 }
             }
 
@@ -1329,7 +1329,7 @@ class CampaignLeadsCustom(APIView):
                         "total": total_leads,
                         "data": curr_supplier_properties,
                         "hot_leads_percentage": hot_leads_percentage,
-                        "flat count": flat_count
+                        "flat_count": flat_count
                     }
                     all_suppliers_list_non_analytics[supplier_id] = curr_supplier_lead_data
                     supplier_additional_metrics.append({
@@ -1347,8 +1347,8 @@ class CampaignLeadsCustom(APIView):
                             all_localities_data_non_analytics[supplier_locality]["total"] + total_leads
                         all_localities_data_non_analytics[supplier_locality]["suppliers"] = \
                             all_localities_data_non_analytics[supplier_locality]["suppliers"] + 1
-                        all_localities_data_non_analytics[supplier_locality]["flat count"] = \
-                            all_localities_data_non_analytics[supplier_locality]["flat count"] + flat_count
+                        all_localities_data_non_analytics[supplier_locality]["flat_count"] = \
+                            all_localities_data_non_analytics[supplier_locality]["flat_count"] + flat_count
 
                     else:
                         curr_locality_data = {
@@ -1358,7 +1358,7 @@ class CampaignLeadsCustom(APIView):
                             "interested": hot_leads,
                             "total": total_leads,
                             "suppliers": 1,
-                            "flat count": flat_count
+                            "flat_count": flat_count
                         }
                         all_localities_data_non_analytics[supplier_locality] = curr_locality_data
 
@@ -1368,21 +1368,21 @@ class CampaignLeadsCustom(APIView):
                         curr_flat_data['interested'] = curr_flat_data['interested'] + hot_leads
                         curr_flat_data['total'] = curr_flat_data['total'] + total_leads
                         curr_flat_data['suppliers'] = curr_flat_data['suppliers'] + 1
-                        curr_flat_data['flat count'] = curr_flat_data['flat count'] + flat_count
+                        curr_flat_data['flat_count'] = curr_flat_data['flat_count'] + flat_count
                         all_flat_data['0-150'] = curr_flat_data
                     elif flat_count < 400:
                         curr_flat_data = all_flat_data['151-399']
                         curr_flat_data['interested'] = curr_flat_data['interested'] + hot_leads
                         curr_flat_data['total'] = curr_flat_data['total'] + total_leads
                         curr_flat_data['suppliers'] = curr_flat_data['suppliers'] + 1
-                        curr_flat_data['flat count'] = curr_flat_data['flat count'] + flat_count
+                        curr_flat_data['flat_count'] = curr_flat_data['flat_count'] + flat_count
                         all_flat_data['151-399'] = curr_flat_data
                     else:
                         curr_flat_data = all_flat_data['400+']
                         curr_flat_data['interested'] = curr_flat_data['interested'] + hot_leads
                         curr_flat_data['total'] = curr_flat_data['total'] + total_leads
                         curr_flat_data['suppliers'] = curr_flat_data['suppliers'] + 1
-                        curr_flat_data['flat count'] = curr_flat_data['flat count'] + flat_count
+                        curr_flat_data['flat_count'] = curr_flat_data['flat_count'] + flat_count
                         all_flat_data['400+'] = curr_flat_data
 
             all_suppliers_list = z_calculator_dict(all_suppliers_list_non_analytics, "hot_leads_percentage")
@@ -1391,7 +1391,7 @@ class CampaignLeadsCustom(APIView):
             localities = all_localities_data_non_analytics.keys()
             for locality in localities:
                 hot_leads_percentage = all_localities_data_hot_ratio[locality]['hot_leads_percentage']
-                flat_count = all_localities_data_hot_ratio[locality]['flat count']
+                flat_count = all_localities_data_hot_ratio[locality]['flat_count']
                 hot_leads = all_localities_data_hot_ratio[locality]['interested']
                 total_leads = all_localities_data_hot_ratio[locality]['total']
                 locality_additional_metrics.append({
@@ -1407,7 +1407,7 @@ class CampaignLeadsCustom(APIView):
             for category in flat_types:
                 hot_leads_percentage = all_flat_data[category]['hot_leads_percentage']
                 hot_leads = all_flat_data[category]['interested']
-                flat_count = all_flat_data[category]['flat count']
+                flat_count = all_flat_data[category]['flat_count']
                 total_leads = all_flat_data[category]['total']
                 flat_additional_metrics.append({
                     'flat category': category,
@@ -1528,7 +1528,7 @@ class CampaignLeadsCustom(APIView):
                             'interested': 0,
                             'suppliers': [],
                             'supplier_count': 0,
-                            'flat count': 0,
+                            'flat_count': 0,
                             'phase': curr_phase,
                             'start date': curr_phase_start,
                             'end date': curr_phase_end
@@ -1538,7 +1538,7 @@ class CampaignLeadsCustom(APIView):
 
                     if supplier_id not in phase_data[curr_phase]['suppliers']:
                         phase_data[curr_phase]['supplier_count'] = phase_data[curr_phase]['supplier_count'] + 1
-                        phase_data[curr_phase]['flat count'] = phase_data[curr_phase]['flat count'] + flat_count
+                        phase_data[curr_phase]['flat_count'] = phase_data[curr_phase]['flat_count'] + flat_count
                         phase_data[curr_phase]['suppliers'].append(supplier_id)
 
                 if query_type == 'date':
@@ -1550,14 +1550,14 @@ class CampaignLeadsCustom(APIView):
                             'created_at': curr_time,
                             'suppliers': [],
                             'supplier_count': 0,
-                            'flat count': 0
+                            'flat_count': 0
                         }
                     date_data[curr_date]['total'] = date_data[curr_date]['total'] + 1
                     date_data[curr_date]['interested'] = date_data[curr_date]['interested'] + is_hot_lead
 
                     if supplier_id not in date_data[curr_date]['suppliers']:
                         date_data[curr_date]['supplier_count'] = date_data[curr_date]['supplier_count'] + 1
-                        date_data[curr_date]['flat count'] = date_data[curr_date]['flat count'] + flat_count
+                        date_data[curr_date]['flat_count'] = date_data[curr_date]['flat_count'] + flat_count
                         date_data[curr_date]['suppliers'].append(supplier_id)
 
                 if query_type == 'weekday':
@@ -1568,14 +1568,14 @@ class CampaignLeadsCustom(APIView):
                             'interested': 0,
                             'suppliers': [],
                             'supplier_count': 0,
-                            'flat count': 0
+                            'flat_count': 0
                         }
                     weekday_data[curr_weekday]['total'] = weekday_data[curr_weekday]['total'] + 1
                     weekday_data[curr_weekday]['interested'] = weekday_data[curr_weekday]['interested'] + is_hot_lead
 
                     if supplier_id not in weekday_data[curr_weekday]['suppliers']:
                         weekday_data[curr_weekday]['supplier_count'] = weekday_data[curr_weekday]['supplier_count'] + 1
-                        weekday_data[curr_weekday]['flat count'] = weekday_data[curr_weekday]['flat count'] + flat_count
+                        weekday_data[curr_weekday]['flat_count'] = weekday_data[curr_weekday]['flat_count'] + flat_count
                         weekday_data[curr_weekday]['suppliers'].append(supplier_id)
             date_data_hot_ratio = hot_lead_ratio_calculator(date_data)
             weekday_data_hot_ratio = hot_lead_ratio_calculator(weekday_data)
@@ -1620,7 +1620,7 @@ class CityWiseMultipleCampaignLeads(APIView):
                 "interested": hot_leads,
                 "total": total_leads,
                 "hot_leads_percentage": hot_leads_percentage,
-                "flat count": flat_count,
+                "flat_count": flat_count,
                 "supplier count": len(supplier_ids)
             }
             city_leads_data[curr_city] = curr_city_leads
@@ -1728,7 +1728,7 @@ class PhaseWiseMultipleCampaignLeads(APIView):
                 phase_data[curr_phase]['interested'] = phase_data[curr_phase]['interested'] + is_hot_lead
                 # if supplier_id not in phase_data[curr_phase]['suppliers']:
                 #     phase_data[curr_phase]['supplier_count'] = phase_data[curr_phase]['supplier_count'] + 1
-                #     phase_data[curr_phase]['flat count'] = phase_data[curr_phase]['flat count'] + flat_count
+                #     phase_data[curr_phase]['flat_count'] = phase_data[curr_phase]['flat_count'] + flat_count
                 #     phase_data[curr_phase]['suppliers'].append(supplier_id)
 
             phase_data_hot_ratio = hot_lead_ratio_calculator(phase_data)
