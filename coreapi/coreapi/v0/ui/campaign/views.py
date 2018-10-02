@@ -1191,7 +1191,7 @@ class CampaignLeads(APIView):
 
             supplier_id = curr_data.supplier_id
             curr_supplier_data = [x for x in supplier_data if x['supplier_id']==supplier_id][0]
-            flat_count = curr_supplier_data['flat_count']
+            flat_count = curr_supplier_data['flat_count'] if curr_supplier_data['flat_count'] else 0
             lead_count = supplier_wise_lead_count[supplier_id]
             hot_lead_details = lead_count['hot_lead_details']
 
@@ -1515,7 +1515,7 @@ class CampaignLeadsCustom(APIView):
                         break
 
                 curr_supplier_data = [x for x in supplier_data if x['supplier_id'] == supplier_id][0]
-                flat_count = curr_supplier_data['flat_count']
+                flat_count = curr_supplier_data['flat_count'] if curr_supplier_data['flat_count'] else 0
 
                 if query_type == 'phase':
                     curr_phase_int = 1 + (time - start_datetime_phase).days / 7
