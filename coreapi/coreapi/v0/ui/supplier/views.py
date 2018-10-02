@@ -1628,13 +1628,12 @@ class BusShelter(APIView):
 
         try:
             user = request.user
-
             if user.is_superuser:
                 bus_objects = SupplierTypeBusShelter.objects.all().order_by('name')
             else:
-                city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
-                                                             v0_constants.bus_shelter)
-                bus_objects = SupplierTypeBusShelter.objects.filter(city_query)
+                # city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
+                #                                              v0_constants.bus_shelter)
+                bus_objects = SupplierTypeBusShelter.objects.all().order_by('name')
 
             bus_shelter_serializer = BusShelterSerializer(bus_objects, many=True)
             items = get_supplier_image(bus_shelter_serializer.data, 'Bus Shelter')

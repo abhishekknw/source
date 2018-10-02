@@ -6814,8 +6814,14 @@ def calculate_location_difference_between_inventory_and_supplier(data, suppliers
             lat1 = item['latitude']
             lon1 = item['longitude']
             # need to be changed for other suppliers i.e society_latitude
-            lat2 = supplier_objects_id_map[item['object_id']]['society_latitude']
-            lon2 = supplier_objects_id_map[item['object_id']]['society_longitude']
+            if 'society_latitude' in supplier_objects_id_map[item['object_id']]:
+                lat2 = supplier_objects_id_map[item['object_id']]['society_latitude']
+            else :
+                lat2 = supplier_objects_id_map[item['object_id']]['latitude']
+            if 'society_longitude' in supplier_objects_id_map[item['object_id']]:
+                lon2 = supplier_objects_id_map[item['object_id']]['society_longitude']
+            else :
+                lon2 = supplier_objects_id_map[item['object_id']]['longitude']
 
             if lat1 and lon1 and lat2 and lon2:
                 distance = gpxpy.geo.haversine_distance(lat1, lon1, lat2, lon2)
