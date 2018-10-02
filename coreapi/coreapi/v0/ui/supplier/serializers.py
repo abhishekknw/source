@@ -7,21 +7,25 @@ from v0.ui.components.serializers import CompanyFloorSerializer, CorporateBuildi
 class UICorporateSerializer(ModelSerializer):
     class Meta:
         model = SupplierTypeCorporate
+        fields = '__all__'
 
 
 class UISalonSerializer(ModelSerializer):
     class Meta:
         model = SupplierTypeSalon
+        fields = '__all__'
 
 
 class UIGymSerializer(ModelSerializer):
     class Meta:
         model = SupplierTypeGym
+        fields = '__all__'
 
 
 class BusShelterSerializer(ModelSerializer):
     class Meta:
         model = SupplierTypeBusShelter
+        fields = '__all__'
 
 class CorporateCompanyDetailsSerializer(ModelSerializer):
     class Meta:
