@@ -1747,7 +1747,7 @@ class CampaignLeadsCacheAll(APIView):
     def get(self, request):
         class_name = self.__class__.__name__
         all_leads_forms = LeadsForm.objects.all()
-        # cache.clear()
+        cache.clear()
         for leads_form in all_leads_forms:
             campaign_id = leads_form.campaign_id
             url = "https://api.machadalo.com/v0/ui/website/dashboard/get_leads_by_campaign_new/"
