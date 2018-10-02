@@ -1160,6 +1160,11 @@ class CampaignLeads(APIView):
         phase_data = {}
         all_entries_checked = []
         campaign_dates = leads_form_data.order_by('created_at').values_list('created_at',flat=True).distinct()
+        if len(campaign_dates) == 0:
+            final_data_dict = {'supplier': {}, 'date': {},
+                               'locality': {}, 'weekday': {},
+                               'flat': {}, 'phase': {}}
+            return ui_utils.handle_response(class_name, data=final_data_dict, success=True)
         start_datetime = campaign_dates[0]
         end_datetime = campaign_dates[len(campaign_dates)-1]
 
@@ -1414,6 +1419,11 @@ class CampaignLeadsCustom(APIView):
             supplier_data_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
             supplier_data = SupplierTypeSocietySerializer2(supplier_data_objects, many=True).data
             campaign_dates = leads_form_data_objects.order_by('created_at').values_list('created_at', flat=True).distinct()
+            if len(campaign_dates) == 0:
+                final_data_dict = {'supplier': {}, 'date': {},
+                                   'locality': {}, 'weekday': {},
+                                   'flat': {}, 'phase': {}}
+                return ui_utils.handle_response(class_name, data=final_data_dict, success=True)
             start_datetime = campaign_dates[0]
             start_datetime_phase = start_datetime - timedelta(days=start_datetime.weekday())
 
