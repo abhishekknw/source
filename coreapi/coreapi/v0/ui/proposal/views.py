@@ -2325,7 +2325,7 @@ class getSupplierListByStatus(APIView):
         all_phase_by_id = {}
         current_date = datetime.datetime.now().date()
         for phase in all_phases:
-            end_date = phase.start_date.date()
+            end_date = phase.end_date.date()
             if end_date is not None and end_date >= current_date:
                 all_phase_by_id[phase.id] = {'start_date': phase.start_date,
                                              'end_date': phase.end_date,
