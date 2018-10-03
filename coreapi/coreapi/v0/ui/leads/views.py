@@ -579,9 +579,9 @@ class LeadsSummary(APIView):
             if not all_campaign_dict[campaign_id]['campaign_status'] == proposal_on_hold:
                 if all_campaign_dict[campaign_id]['start_date'].date() > current_date:
                     this_campaign_status = campaign_status['upcoming_campaigns']
-                elif all_campaign_dict[campaign_id]['end_date'].date() <= current_date:
+                elif all_campaign_dict[campaign_id]['end_date'].date() >= current_date:
                     this_campaign_status = campaign_status['ongoing_campaigns']
-                elif all_campaign_dict[campaign_id]['end_date'].date() > current_date:
+                elif all_campaign_dict[campaign_id]['end_date'].date() < current_date:
                     this_campaign_status = campaign_status['completed_campaigns']
             else:
                 this_campaign_status = "on_hold"
