@@ -1206,7 +1206,7 @@ def get_geo_object_lat_long(address):
     """
     function_name = get_geo_object_lat_long.__name__
     try:
-        # geocoder = Geocoder(api_key='AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY')
+        geocoder = Geocoder(api_key='AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY')
         # geo_object = geocoder.geocode(address)
         # split the address on comma
         address_parts = address.split(',')
@@ -1219,14 +1219,21 @@ def get_geo_object_lat_long(address):
             # get this address
             address = ','.join(part for part in address_parts[:index])
             # try to get geo_object
-            geo_object = geocoder.google(address)
-            if not geo_object.latlng:
+            geo_object = geocoder.geocode(address)
+            if not geo_object.data[0]['geometry']:
+                continue
+            elif not geo_object.data[0]['geometry']['location']:
+                continue
+            elif not geo_object.data[0]['geometry']['location']['lat']:
                 continue
             else:
                 break
         # if found, return lat, long
         if geo_object:
-            latitude, longitude = geo_object.latlng
+            latitude = geo_object.data[0]['geometry']['location']['lat'],
+            longitude = geo_object.data[0]['geometry']['location']['lng'],
+            latitude = latitude[0] if len(latitude) > 0 else latitude
+            longitude = longitude[0] if len(longitude) > 0 else longitude
             return ui_utils.handle_response(function_name, data=(latitude, longitude), success=True)
         else:
             # return right error.
