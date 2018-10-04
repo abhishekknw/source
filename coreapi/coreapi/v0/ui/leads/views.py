@@ -36,7 +36,7 @@ def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
     lead_form.save()
 
 
-def get_supplier_all_leads_entries(leads_form_id, supplier_id):
+def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
     lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
     if supplier_id == 'All':
         lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id).exclude(
@@ -72,6 +72,12 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id):
             "value": value,
         })
         if entry_id != previous_entry_id and current_list != []:
+            if supplier_id == 'All':
+                curr_supplier_id = entry.supplier_id
+                current_list.insert(0, {
+                    'supplier_id': curr_supplier_id,
+                    'entry_id': entry_id
+                })
             values.append(current_list)
             current_list = []
             counter = counter + 1
@@ -81,23 +87,29 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id):
         # values.append([new_entry])
 
         previous_entry_id = entry_id
+    if supplier_id == 'All':
+        curr_supplier_id = entry.supplier_id
+        current_list.insert(0, {
+            'supplier_id': curr_supplier_id,
+            'entry_id': entry_id
+        })
     values.append(current_list)
 
     supplier_all_lead_entries = {
-        'supplier_id': supplier_id,
         'headers': lead_form_items_dict_part,
         'values': values,
         'hot_leads': hot_leads
     }
-    if supplier_id == 'All':
-        supplier_all_lead_entries.pop('supplier_id')
+    if not supplier_id == 'All':
+        print 'adding supplier id'
+        supplier_all_lead_entries.append({'supplier_id':supplier_id})
     return supplier_all_lead_entries
 
 
 class GetLeadsEntries(APIView):
     @staticmethod
-    def get(request, leads_form_id, supplier_id='All'):
-        supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id)
+    def get(request, leads_form_id, supplier_id='All',page_number=0):
+        supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number)
         return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
 
 
