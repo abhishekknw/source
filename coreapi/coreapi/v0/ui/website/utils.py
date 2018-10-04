@@ -1220,13 +1220,20 @@ def get_geo_object_lat_long(address):
             address = ','.join(part for part in address_parts[:index])
             # try to get geo_object
             geo_object = geocoder.geocode(address)
-            if not geo_object.latlng:
+            if not geo_object.data[0]['geometry']:
+                continue
+            elif not geo_object.data[0]['geometry']['location']:
+                continue
+            elif not geo_object.data[0]['geometry']['location']['lat']:
                 continue
             else:
                 break
         # if found, return lat, long
         if geo_object:
-            latitude, longitude = geo_object.latlng
+            latitude = geo_object.data[0]['geometry']['location']['lat'],
+            longitude = geo_object.data[0]['geometry']['location']['lng'],
+            latitude = latitude[0] if len(latitude) > 0 else latitude
+            longitude = longitude[0] if len(longitude) > 0 else longitude
             return ui_utils.handle_response(function_name, data=(latitude, longitude), success=True)
         else:
             # return right error.
