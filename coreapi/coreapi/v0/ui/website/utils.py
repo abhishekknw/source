@@ -1206,7 +1206,7 @@ def get_geo_object_lat_long(address):
     """
     function_name = get_geo_object_lat_long.__name__
     try:
-        # geocoder = Geocoder(api_key='AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY')
+        geocoder = Geocoder(api_key='AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY')
         # geo_object = geocoder.geocode(address)
         # split the address on comma
         address_parts = address.split(',')
@@ -1219,14 +1219,21 @@ def get_geo_object_lat_long(address):
             # get this address
             address = ','.join(part for part in address_parts[:index])
             # try to get geo_object
-            geo_object = geocoder.google(address)
-            if not geo_object.latlng:
+            geo_object = geocoder.geocode(address)
+            if not geo_object.data[0]['geometry']:
+                continue
+            elif not geo_object.data[0]['geometry']['location']:
+                continue
+            elif not geo_object.data[0]['geometry']['location']['lat']:
                 continue
             else:
                 break
         # if found, return lat, long
         if geo_object:
-            latitude, longitude = geo_object.latlng
+            latitude = geo_object.data[0]['geometry']['location']['lat'],
+            longitude = geo_object.data[0]['geometry']['location']['lng'],
+            latitude = latitude[0] if len(latitude) > 0 else latitude
+            longitude = longitude[0] if len(longitude) > 0 else longitude
             return ui_utils.handle_response(function_name, data=(latitude, longitude), success=True)
         else:
             # return right error.
@@ -4080,7 +4087,8 @@ def handle_update_campaign_inventories(user, data):
                 'total_negotiated_price': supplier['total_negotiated_price'],
                 'booking_status': supplier['booking_status'],
                 'transaction_or_check_number': supplier['transaction_or_check_number'],
-                'freebies': supplier_freebies
+                'freebies': supplier_freebies,
+                'is_completed' : supplier['is_completed']
             }
 
             shortlisted_inventories = supplier['shortlisted_inventories']
@@ -4163,6 +4171,7 @@ def update_campaign_inventories(data):
             obj.booking_status = shortlisted_spaces[ss_global_id]['booking_status']
             obj.transaction_or_check_number = shortlisted_spaces[ss_global_id]['transaction_or_check_number']
             obj.freebies = shortlisted_spaces[ss_global_id]['freebies']
+            obj.is_completed = shortlisted_spaces[ss_global_id]['is_completed']
 
         sid_ids = shortlisted_inventory_details.keys()
         sid_objects = ShortlistedInventoryPricingDetails.objects.filter(id__in=sid_ids)
