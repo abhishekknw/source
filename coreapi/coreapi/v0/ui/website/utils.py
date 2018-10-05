@@ -4087,7 +4087,8 @@ def handle_update_campaign_inventories(user, data):
                 'total_negotiated_price': supplier['total_negotiated_price'],
                 'booking_status': supplier['booking_status'],
                 'transaction_or_check_number': supplier['transaction_or_check_number'],
-                'freebies': supplier_freebies
+                'freebies': supplier_freebies,
+                'is_completed' : supplier['is_completed']
             }
 
             shortlisted_inventories = supplier['shortlisted_inventories']
@@ -4170,6 +4171,7 @@ def update_campaign_inventories(data):
             obj.booking_status = shortlisted_spaces[ss_global_id]['booking_status']
             obj.transaction_or_check_number = shortlisted_spaces[ss_global_id]['transaction_or_check_number']
             obj.freebies = shortlisted_spaces[ss_global_id]['freebies']
+            obj.is_completed = shortlisted_spaces[ss_global_id]['is_completed']
 
         sid_ids = shortlisted_inventory_details.keys()
         sid_objects = ShortlistedInventoryPricingDetails.objects.filter(id__in=sid_ids)
