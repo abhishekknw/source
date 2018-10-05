@@ -7,6 +7,8 @@ from v0.ui.proposal.models import ProposalInfo
 from v0.ui.common.models import BaseUser
 from django.core.exceptions import ObjectDoesNotExist
 from v0 import managers
+from v0.ui.inventory.models import AD_INVENTORY_CHOICES
+
 
 class CampaignTypes(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -178,3 +180,20 @@ class GenericExportFileName(BaseModel):
 
     class Meta:
         db_table = 'generic_export_file_name'
+
+
+class CampaignComments(BaseModel):
+    RELATED_TO_CHOICES = (
+        ('BOOKING', 'BOOKING'),
+        ('EXECUTION', 'EXECUTION')
+    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False)
+    comment = models.CharField(max_length=500, null=True, blank=True)
+    campaign_id = models.CharField(max_length=70, null=True, blank=True)
+    shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=False, blank=False)
+    inventory_type = models.CharField(db_column='inventory_type', max_length=20,
+                                        choices=AD_INVENTORY_CHOICES, null=True, blank=True)
+    related_to = models.CharField(db_column='related_to', max_length=20,
+                                        choices=RELATED_TO_CHOICES, null=True, blank=True)
+    class Meta:
+        db_table = 'campaign_comments'
