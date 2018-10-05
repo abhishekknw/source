@@ -4,8 +4,6 @@ import v0.constants as v0_constants
 import v0.ui.website.utils as website_utils
 from django.db import transaction
 import openpyxl
-from models import ShortlistedInventoryComments
-from dateutil import tz
 
 
 class ImportProposalCostData(APIView):
@@ -63,38 +61,4 @@ class ImportProposalCostData(APIView):
                                                 True)
             except Exception as e:
                 return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
-
-class InventoryComment(APIView):
-    @staticmethod
-    def post(request, proposal_id):
-        user_id = request.user.id
-        print user_id
-        comment = request.data['comment']
-        shortlisted_inventory_details_id = request.data['shortlisted_inventory_details_id']
-        inventory_comment = ShortlistedInventoryComments(**{
-            "user_id": user_id,
-            "shortlisted_inventory_details_id": shortlisted_inventory_details_id,
-            "comment": comment,
-            "campaign_id": proposal_id
-        })
-        inventory_comment.save()
-        return ui_utils.handle_response({}, data='success', success=True)
-
-    @staticmethod
-    def get(request, proposal_id):
-        all_proposal_comments = ShortlistedInventoryComments.objects.filter(campaign_id=proposal_id).all()
-        all_proposal_comments_dict = {}
-        for comment in all_proposal_comments:
-            if comment.shortlisted_inventory_details_id not in all_proposal_comments_dict:
-                all_proposal_comments_dict[comment.shortlisted_inventory_details_id] = []
-            from_zone = tz.gettz('UTC')
-            to_zone = tz.gettz('Asia/Kolkata')
-            all_proposal_comments_dict[comment.shortlisted_inventory_details_id].append({
-                'comment': comment.comment,
-                'user_id': comment.user.id,
-                'user_name': comment.user.first_name,
-                'timestamp': comment.created_at.replace(tzinfo=from_zone).astimezone(to_zone)
-            })
-        return ui_utils.handle_response({}, data=all_proposal_comments_dict, success=True)
 

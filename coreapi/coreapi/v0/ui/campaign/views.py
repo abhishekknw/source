@@ -14,7 +14,7 @@ from v0.ui.supplier.models import (SupplierTypeSociety)
 import v0.ui.website.utils as website_utils
 from django.db.models import Q, F
 from django.db.models import Count
-from models import (CampaignSocietyMapping, Campaign, CampaignAssignment)
+from models import (CampaignSocietyMapping, Campaign, CampaignAssignment, CampaignComments)
 from serializers import (CampaignListSerializer, CampaignSerializer, CampaignAssignmentSerializer)
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2
@@ -35,6 +35,9 @@ from v0.ui.common.models import BaseUser
 from operator import itemgetter
 import requests
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
+from dateutil import tz
+
+
 
 class CampaignAPIView(APIView):
 
@@ -1763,3 +1766,56 @@ class CampaignLeadsCacheAll(APIView):
             payload = "[\"" + campaign_id + "\"]"
             response = requests.request("POST", url, data=payload, headers=headers)
         return ui_utils.handle_response(class_name, data={"status": "success"}, success=True)
+
+
+class Comment(APIView):
+    @staticmethod
+    def post(request, campaign_id):
+        user_id = request.user.id
+        comment = request.data['comment']
+        shortlisted_spaces_id = request.data['shortlisted_spaces_id'] if 'shortlisted_spaces_id' in request.data else None
+        if not shortlisted_spaces_id:
+            return ui_utils.handle_response({}, data='Shortlisted Space Id is Mandatory')
+
+        related_to = request.data['related_to'] if 'related_to' in request.data else None
+        inventory_type = request.data['inventory_type'] if 'inventory_type' in request.data else None
+        inventory_comment = CampaignComments(**{
+            "user_id": user_id,
+            "shortlisted_spaces_id": shortlisted_spaces_id,
+            "comment": comment,
+            "campaign_id": campaign_id,
+            "related_to": related_to,
+            "inventory_type": inventory_type
+        })
+        inventory_comment.save()
+        return ui_utils.handle_response({}, data='success', success=True)
+
+    @staticmethod
+    def get(request, campaign_id):
+        from_zone = tz.gettz('UTC')
+        to_zone = tz.gettz('Asia/Kolkata')
+        all_campaign_comments = CampaignComments.objects.filter(campaign_id=campaign_id).all()
+        all_campaign_comments_dict = {}
+        for comment in all_campaign_comments:
+            shortlisted_spaces_id = comment.shortlisted_spaces_id if comment.shortlisted_spaces_id else None
+            if shortlisted_spaces_id not in all_campaign_comments_dict:
+                all_campaign_comments_dict[shortlisted_spaces_id] = {}
+            if not comment.inventory_type:
+                if 'general' not in all_campaign_comments_dict[shortlisted_spaces_id]:
+                    all_campaign_comments_dict[shortlisted_spaces_id]['general'] = []
+            elif comment.inventory_type not in all_campaign_comments_dict[shortlisted_spaces_id]:
+                all_campaign_comments_dict[shortlisted_spaces_id][comment.inventory_type] = []
+            comment_obj = {
+                'comment': comment.comment,
+                'user_id': comment.user.id,
+                'user_name': comment.user.first_name,
+                'shortlisted_spaces_id': shortlisted_spaces_id,
+                'inventory_type': comment.inventory_type,
+                'related_to': comment.related_to,
+                'timestamp': comment.created_at.replace(tzinfo=from_zone).astimezone(to_zone)
+            }
+            if comment.inventory_type:
+                all_campaign_comments_dict[shortlisted_spaces_id][comment.inventory_type].append(comment_obj)
+            else:
+                all_campaign_comments_dict[shortlisted_spaces_id]['general'].append(comment_obj)
+        return ui_utils.handle_response({}, data=all_campaign_comments_dict, success=True)
