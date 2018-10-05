@@ -2,11 +2,8 @@ from __future__ import absolute_import, unicode_literals
 
 import StringIO
 import os
-from smtplib import SMTPException
 
 from django.conf import settings
-from django.core.mail import EmailMessage
-
 import boto
 from boto.s3.key import Key
 from celery import shared_task
@@ -84,33 +81,6 @@ def bulk_download_from_amazon_per_supplier(folder_path, file_name_list):
         return count
     except Exception as e:
         raise Exception(function, get_system_error(e))
-
-
-@shared_task()
-def send_email(email_data, attachment=None):
-    """
-    Args: dict having 'subject', 'body' and 'to' as keys.
-    Returns: success if mail is sent else failure
-    """
-    function = send_email.__name__
-    try:
-        # check if email_data contains the predefined keys
-        email_keys = email_data.keys()
-        for key in v0_constants.valid_email_keys:
-            if key not in email_keys:
-                raise Exception(function,'key {0} not found in the recieved structure'.format(key))
-        # construct the EmailMessage class
-        email = EmailMessage(email_data['subject'], email_data['body'], to=email_data['to'])
-        # attach attachment if available
-        if attachment:
-            file_to_send = open(attachment['file_name'], 'r')
-            email.attach(attachment['file_name'], file_to_send.read(), attachment['mime_type'])
-            file_to_send.close()
-        return email.send()
-    except SMTPException as e:
-        raise Exception(function, "Error " + get_system_error(e))
-    except Exception as e:
-        raise Exception(function, "Error " + get_system_error(e))
 
 
 @shared_task()
