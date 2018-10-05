@@ -125,16 +125,6 @@ class ShortlistedInventoryPricingDetails(BaseModel):
         db_table = 'shortlisted_inventory_pricing_details'
 
 
-class ShortlistedInventoryComments(BaseModel):
-    shortlisted_inventory_details = models.ForeignKey('ShortlistedInventoryPricingDetails', null=True, blank=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False)
-    comment = models.CharField(max_length=500, null=True, blank=True)
-    campaign_id = models.CharField(max_length=70, null=True, blank=True)
-
-    class Meta:
-        db_table = 'shortlisted_inventory_comments'
-
-
 class RatioDetails(models.Model):
     supplier_id = models.CharField(db_column='SUPPLIER_ID', max_length=20)  # Field name made lowercase.
     machadalo_index = models.CharField(db_column='MACHADALO_INDEX', max_length=30)  # Field name made lowercase.
