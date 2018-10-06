@@ -36,7 +36,7 @@ def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
     lead_form.save()
 
 
-def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
+def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0, **kwargs):
     leads_per_page=25
     lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
     if supplier_id == 'All':
@@ -45,7 +45,11 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
     else:
         lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id) \
             .filter(supplier_id=supplier_id).exclude(status='inactive')
+    if 'start_date' in kwargs and kwargs['start_date']:
+        lead_form_entries_list = lead_form_entries_list.filter(created_at__gte=kwargs['start_date'])
 
+    if 'end_date' in kwargs and kwargs['end_date']:
+        lead_form_entries_list = lead_form_entries_list.filter(created_at__lte=kwargs['end_date'])
     values = []
     lead_form_items_dict = {}
     lead_form_items_dict_part = []
@@ -420,33 +424,42 @@ class GenerateLeadForm(APIView):
             'filepath': 'https://s3.ap-south-1.amazonaws.com/leads-forms-templates/' + filename}, success=True)
 
 
+def get_leads_excel_sheet(leads_form_id, supplier_id,**kwargs):
+    lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
+    start_date = kwargs['start_date'] if 'start_date' in kwargs else None
+    end_date = kwargs['end_date'] if 'end_date' in kwargs else None
+    all_leads = get_supplier_all_leads_entries(leads_form_id, supplier_id, start_date=start_date, end_date=end_date)
+    lead_form_items_dict = {}
+    # keys_list = ['supplier_id', 'lead_entry_date (format: dd/mm/yyyy)']
+    keys_list = []
+    for item in lead_form_items_list:
+        curr_row = LeadsFormItemsSerializer(item).data
+        lead_form_items_dict[item.item_id] = curr_row
+        keys_list.append(curr_row['key_name'])
+
+    book = Workbook()
+    sheet = book.active
+    sheet.append(keys_list)
+    total_leads_count = 0
+    for lead in all_leads["values"]:
+        value_list = []
+        for item_dict in lead:
+            value_list.append(item_dict["value"])
+        sheet.append(value_list)
+        if value_list != []:
+            total_leads_count += 1
+    return (book, total_leads_count)
+
+
 class GenerateLeadDataExcel(APIView):
     @staticmethod
     def get(request, leads_form_id):
-        lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
         supplier_id = request.GET.get('supplier_id', 'ALL')
-        all_leads = get_supplier_all_leads_entries(leads_form_id, supplier_id)
-        lead_form_items_dict = {}
-        # keys_list = ['supplier_id', 'lead_entry_date (format: dd/mm/yyyy)']
-        keys_list = []
-        for item in lead_form_items_list:
-            curr_row = LeadsFormItemsSerializer(item).data
-            lead_form_items_dict[item.item_id] = curr_row
-            keys_list.append(curr_row['key_name'])
-
-        book = Workbook()
-        sheet = book.active
-        sheet.append(keys_list)
-
-        for lead in all_leads["values"]:
-            value_list = []
-            for item_dict in lead:
-                value_list.append(item_dict["value"])
-            sheet.append(value_list)
+        (excel_book, total_leads_count) = get_leads_excel_sheet(leads_form_id, supplier_id)
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
 
-        book.save(response)
+        excel_book.save(response)
         return response
 
 
