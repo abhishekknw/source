@@ -1797,7 +1797,16 @@ class Comment(APIView):
     def get(request, campaign_id):
         from_zone = tz.gettz('UTC')
         to_zone = tz.gettz('Asia/Kolkata')
+        shortlisted_spaces_id = request.query_params.get('shortlisted_spaces_id', None)
+        related_to = request.query_params.get('related_to', None)
+        inventory_type = request.query_params.get('inventory_type', None)
         all_campaign_comments = CampaignComments.objects.filter(campaign_id=campaign_id).all()
+        if shortlisted_spaces_id:
+            all_campaign_comments = all_campaign_comments.filter(shortlisted_spaces_id=shortlisted_spaces_id)
+        if related_to:
+            all_campaign_comments = all_campaign_comments.filter(related_to=related_to)
+        if inventory_type:
+            all_campaign_comments = all_campaign_comments.filter(inventory_type=inventory_type)
         all_campaign_comments_dict = {}
         for comment in all_campaign_comments:
             shortlisted_spaces_id = comment.shortlisted_spaces_id if comment.shortlisted_spaces_id else None
@@ -1811,7 +1820,7 @@ class Comment(APIView):
             comment_obj = {
                 'comment': comment.comment,
                 'user_id': comment.user.id,
-                'user_name': comment.user.first_name,
+                'user_name': comment.user.username,
                 'shortlisted_spaces_id': shortlisted_spaces_id,
                 'inventory_type': comment.inventory_type,
                 'related_to': comment.related_to,
@@ -1821,6 +1830,9 @@ class Comment(APIView):
                 all_campaign_comments_dict[shortlisted_spaces_id][comment.inventory_type].append(comment_obj)
             else:
                 all_campaign_comments_dict[shortlisted_spaces_id]['general'].append(comment_obj)
+        if request.query_params.get('shortlisted_spaces_id', None):
+            if shortlisted_spaces_id in all_campaign_comments_dict:
+                all_campaign_comments_dict = all_campaign_comments_dict[shortlisted_spaces_id]
         return ui_utils.handle_response({}, data=all_campaign_comments_dict, success=True)
 
 
