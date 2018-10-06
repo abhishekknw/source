@@ -1830,4 +1830,6 @@ class Comment(APIView):
                 all_campaign_comments_dict[shortlisted_spaces_id][comment.inventory_type].append(comment_obj)
             else:
                 all_campaign_comments_dict[shortlisted_spaces_id]['general'].append(comment_obj)
+            if request.query_params.get('shortlisted_spaces_id', None):
+                all_campaign_comments_dict = all_campaign_comments_dict[shortlisted_spaces_id]
         return ui_utils.handle_response({}, data=all_campaign_comments_dict, success=True)
