@@ -37,6 +37,7 @@ def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
 
 
 def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
+    leads_per_page=25
     lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
     if supplier_id == 'All':
         lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id).exclude(
@@ -58,15 +59,21 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
     current_list = []
     hot_leads = []
     counter = 1
+    if page_number>0:
+        min_counter = leads_per_page*(page_number-1)+1
+        max_counter = leads_per_page*page_number
+        lead_form_entries_list = lead_form_entries_list.filter(entry_id__gte=min_counter).filter(entry_id__lte=max_counter)
+
+    entry_id = None
     for entry in lead_form_entries_list:
-        entry_id = entry.entry_id - 1
         if entry.item_id not in lead_form_items_dict:
             continue
         hot_lead_criteria = lead_form_items_dict[entry.item_id]["hot_lead_criteria"]
         value = entry.item_value
+        entry_id = entry.entry_id
         if value and value == hot_lead_criteria:
-            if counter not in hot_leads:
-                hot_leads.append(counter)
+            if entry_id not in hot_leads:
+                hot_leads.append(entry_id)
         new_entry = ({
             "order_id": lead_form_items_dict[entry.item_id]["order_id"],
             "value": value,
@@ -76,7 +83,7 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
                 curr_supplier_id = entry.supplier_id
                 current_list.insert(0, {
                     'supplier_id': curr_supplier_id,
-                    'entry_id': entry_id
+                    'entry_id': previous_entry_id
                 })
             values.append(current_list)
             current_list = []
@@ -87,7 +94,7 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
         # values.append([new_entry])
 
         previous_entry_id = entry_id
-    if supplier_id == 'All':
+    if supplier_id == 'All' and entry_id is not None:
         curr_supplier_id = entry.supplier_id
         current_list.insert(0, {
             'supplier_id': curr_supplier_id,
@@ -108,16 +115,20 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
 
 class GetLeadsEntries(APIView):
     @staticmethod
-    def get(request, leads_form_id, supplier_id='All',page_number=0):
+    def get(request, leads_form_id):
+        supplier_id = request.query_params.get('supplier_id','All')
+        page_number = int(request.query_params.get('page_number',0))
         supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number)
         return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
 
 
 class GetLeadsEntriesByCampaignId(APIView):
+    # it is assumed that a form belongs to a campaign
     @staticmethod
     def get(request, campaign_id, supplier_id='All'):
+        page_number = int(request.query_params.get('page_number', 0))
         first_leads_form_id = LeadsForm.objects.filter(campaign_id=campaign_id).all()[0].id
-        supplier_all_lead_entries = get_supplier_all_leads_entries(first_leads_form_id, supplier_id)
+        supplier_all_lead_entries = get_supplier_all_leads_entries(first_leads_form_id, supplier_id, page_number)
         return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
 
 
