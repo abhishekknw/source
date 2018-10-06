@@ -42,9 +42,15 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
     if supplier_id == 'All':
         lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id).exclude(
             status='inactive')
+        suppliers_list = lead_form_entries_list.values_list('supplier_id',flat=True)
+        suppliers_names = SupplierTypeSociety.objects.filter(supplier_id__in=suppliers_list).values_list(
+            'supplier_id','society_name')
+        supplier_id_names = dict((x,y) for x,y in suppliers_names)
     else:
         lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id) \
             .filter(supplier_id=supplier_id).exclude(status='inactive')
+        supplier_data = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
+        supplier_name = supplier_data.society_name
 
     values = []
     lead_form_items_dict = {}
@@ -54,6 +60,10 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
         lead_form_items_dict[item.item_id] = curr_item
         curr_item_part = {key: curr_item[key] for key in ['order_id', 'key_name', 'hot_lead_criteria']}
         lead_form_items_dict_part.append(curr_item_part)
+    lead_form_items_dict_part.insert(0,{
+        'order_id': 0,
+        'key_name': 'supplier_id'
+    })
 
     previous_entry_id = -1
     current_list = []
@@ -66,24 +76,31 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
 
     entry_id = None
     for entry in lead_form_entries_list:
-        if entry.item_id not in lead_form_items_dict:
+        curr_item_id = entry.item_id
+        if curr_item_id not in lead_form_items_dict:
             continue
-        hot_lead_criteria = lead_form_items_dict[entry.item_id]["hot_lead_criteria"]
+        curr_item = lead_form_items_dict[curr_item_id]
+        hot_lead_criteria = curr_item["hot_lead_criteria"]
         value = entry.item_value
         entry_id = entry.entry_id
         if value and value == hot_lead_criteria:
             if entry_id not in hot_leads:
                 hot_leads.append(entry_id)
         new_entry = ({
-            "order_id": lead_form_items_dict[entry.item_id]["order_id"],
+            "order_id": curr_item["order_id"],
             "value": value,
         })
         if entry_id != previous_entry_id and current_list != []:
             if supplier_id == 'All':
                 curr_supplier_id = entry.supplier_id
+                curr_supplier_name = supplier_id_names[curr_supplier_id]
                 current_list.insert(0, {
-                    'supplier_id': curr_supplier_id,
-                    'entry_id': previous_entry_id
+                    "order_id": 0,
+                    "value": curr_supplier_id,
+                })
+                current_list.insert(0, {
+                    "order_id": 0,
+                    "value": curr_supplier_name,
                 })
             values.append(current_list)
             current_list = []
@@ -108,8 +125,12 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
         'hot_leads': hot_leads
     }
     if not supplier_id == 'All':
-        print 'adding supplier id'
-        supplier_all_lead_entries.append({'supplier_id':supplier_id})
+        supplier_all_lead_entries.append(
+            {"order_id": 0,
+             "value": supplier_id})
+        supplier_all_lead_entries.append(
+            {"order_id": 0,
+             "value": supplier_name})
     return supplier_all_lead_entries
 
 
@@ -117,6 +138,7 @@ class GetLeadsEntries(APIView):
     @staticmethod
     def get(request, leads_form_id):
         supplier_id = request.query_params.get('supplier_id','All')
+
         page_number = int(request.query_params.get('page_number',0))
         supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number)
         return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
