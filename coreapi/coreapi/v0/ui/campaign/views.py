@@ -498,6 +498,7 @@ class DashBoardViewSet(viewsets.ViewSet):
                         'hot_leads_percentage': calculate_percentage(total_ongoing_hot_leads_count, total_ongoing_leads_count),
                         'flat_count': total_ongoing_flat_count,
                         'leads_flat_percentage': calculate_percentage(total_ongoing_leads_count, total_ongoing_flat_count),
+                        'hot_leads_percentage_by_flat_count': calculate_percentage(total_ongoing_hot_leads_count, total_ongoing_flat_count),
                         'total_suppliers_count': len(ongoing_supplier_id_list)
                     },
                     'completed': {
@@ -506,6 +507,7 @@ class DashBoardViewSet(viewsets.ViewSet):
                         'hot_leads_percentage': calculate_percentage(total_completed_hot_leads_count, total_completed_leads_count),
                         'flat_count': total_completed_flat_count,
                         'leads_flat_percentage': calculate_percentage(total_completed_leads_count, total_completed_flat_count),
+                        'hot_leads_percentage_by_flat_count': calculate_percentage(total_completed_hot_leads_count, total_completed_flat_count),
                         'total_suppliers_count': len(completed_suppliers_list)
                     },
                     'upcoming': {
@@ -514,6 +516,7 @@ class DashBoardViewSet(viewsets.ViewSet):
                         'hot_leads_percentage': calculate_percentage(total_upcoming_hot_leads_count, total_upcoming_leads_count),
                         'flat_count': total_upcoming_flat_count,
                         'leads_flat_percentage': calculate_percentage(total_upcoming_leads_count, total_upcoming_flat_count),
+                        'hot_leads_percentage_by_flat_count': calculate_percentage(total_upcoming_hot_leads_count, total_upcoming_flat_count),
                         'total_suppliers_count': len(upcoming_suppliers_list)
                     }
                 }
