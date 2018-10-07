@@ -365,6 +365,7 @@ class DashBoardViewSet(viewsets.ViewSet):
                     'hot_leads_count': leads.hot_leads_count,
                     'total_leads_count': leads.total_leads_count,
                     'hot_leads_percentage': leads.hot_leads_percentage,
+                    'hot_leads_percentage_by_flat_count': calculate_percentage(leads.hot_leads_count, flat_count),
                     'flat_count': flat_count,
                     'leads_flat_percentage': calculate_percentage(leads.total_leads_count, flat_count)
                 }
