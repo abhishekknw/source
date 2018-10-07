@@ -358,6 +358,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             supplier_objects_id_list = {supplier['supplier_id']: supplier for supplier in suppliers}
             all_leads_count = LeadsFormSummary.objects.filter(campaign_id=campaign_id).all()
             supplier_wise_leads_count = {}
+
             for leads in all_leads_count:
                 if 'flat_count' in supplier_objects_id_list[leads.supplier_id] and supplier_objects_id_list[leads.supplier_id]['flat_count']:
                     flat_count = supplier_objects_id_list[leads.supplier_id]['flat_count']
@@ -402,6 +403,7 @@ class DashBoardViewSet(viewsets.ViewSet):
                     'comment': str(inventory_image.comment),
                     'inventory_name': inventory_name
                 })
+
                 all_images_by_supplier[supplier_id][inventory_name]["total_count"] += 1
 
             all_hashtag_images = HashTagImages.objects.filter(campaign_id=campaign_id).all()
@@ -465,8 +467,8 @@ class DashBoardViewSet(viewsets.ViewSet):
                 if 'total_leads_count' in data['leads_data']:
                     total_completed_leads_count = total_completed_leads_count + data['leads_data']['total_leads_count']
                     total_completed_hot_leads_count = total_completed_hot_leads_count + data['leads_data']['hot_leads_count']
-                    total_completed_flat_count = total_completed_flat_count + supplier_objects_id_list[id]['flat_count']
-
+                    if supplier_objects_id_list[id]['flat_count']:
+                        total_completed_flat_count = total_completed_flat_count + supplier_objects_id_list[id]['flat_count']
             upcoming_suppliers_list = []
             total_upcoming_leads_count = 0
             total_upcoming_hot_leads_count = 0
