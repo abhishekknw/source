@@ -839,8 +839,9 @@ class DashBoardViewSet(viewsets.ViewSet):
                        inventory_activity__activity_type=act_type).\
                 annotate(supplier_id=F('inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id'),
                          assignment_id=F('id'),
-                         inv_name=F('inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name')). \
-                values('supplier_id','inv_name'). \
+                         inv_name=F('inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name'),
+                         space_id=F('inventory_activity__shortlisted_inventory_details__shortlisted_spaces__id')). \
+                values('supplier_id','inv_name','space_id'). \
                 annotate(total=Count('supplier_id'))
 
             completed_objects = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
@@ -869,6 +870,7 @@ class DashBoardViewSet(viewsets.ViewSet):
                 result[supplier['supplier_id']][supplier['inv_name']]['assigned'] = supplier['total']
                 result[supplier['supplier_id']][supplier['inv_name']]['completed'] = 0
                 result[supplier['supplier_id']]['supplier_data'] = suppliers_map[supplier['supplier_id']]
+                result[supplier['supplier_id']]['space_id'] = supplier['space_id']
             for supplier in completed_objects:
                 if supplier['supplier_id'] in result:
                     if supplier['inv_name'] in result[supplier['supplier_id']]:
