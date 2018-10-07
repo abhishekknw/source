@@ -2343,6 +2343,7 @@ class getSupplierListByStatus(APIView):
                                     'DP': []}
                 if space.booking_status:
                     supplier_society_serialized['booking_status'] = space.booking_status
+                    supplier_society_serialized['space_id'] = space.id
                     shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(supplier_society_serialized)
         shortlisted_spaces_by_phase_list = []
         for phase_id in shortlisted_spaces_by_phase_dict:
