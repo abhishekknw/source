@@ -203,7 +203,8 @@ def lead_counter(campaign_id, supplier_id,lead_form_items_list):
     total_leads = 0
     hot_leads = 0
     hot_lead_details = []
-
+    leads_form_items_dict = {item.item_id:item.key_name for item in lead_form_items_list}
+    # print leads_form_items_dict
     form_id_data = get_distinct_from_dict_array(lead_form_data_array,'leads_form_id')
     for form_id in form_id_data:
         current_leads_data = [x for x in lead_form_data_array if x['leads_form_id'] == form_id]
@@ -218,15 +219,16 @@ def lead_counter(campaign_id, supplier_id,lead_form_items_list):
                 item_id = item_data['item_id']
                 leads_form_id = item_data['leads_form_id']
                 hot_lead_criteria = hot_lead_criteria_dict[leads_form_id][item_id]['hot_lead_criteria']
-                if item_value and hot_lead_criteria and str(item_value) == str(hot_lead_criteria):
-                    if hot_lead is False:
-                        hot_leads = hot_leads + 1
-                        hot_lead_details.append({
-                            'leads_form_id': leads_form_id,
-                            'entry_id': entry_id
-                        })
-                    hot_lead = True
-                    continue
+                if item_value:
+                    if (hot_lead_criteria and str(item_value) == str(hot_lead_criteria)) or 'counseling' in leads_form_items_dict[item_id].lower():
+                        if hot_lead is False:
+                            hot_leads = hot_leads + 1
+                            hot_lead_details.append({
+                                'leads_form_id': leads_form_id,
+                                'entry_id': entry_id
+                            })
+                        hot_lead = True
+                        continue
     result = {'total_leads': total_leads, 'hot_leads': hot_leads, 'hot_lead_details':hot_lead_details}
     return result
 

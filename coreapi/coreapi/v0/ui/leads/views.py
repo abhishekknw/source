@@ -92,7 +92,7 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0, **k
         hot_lead_criteria = curr_item["hot_lead_criteria"]
         value = entry.item_value
         entry_id = entry.entry_id
-        if value and value == hot_lead_criteria:
+        if value and (value == hot_lead_criteria or 'counseling' in curr_item['key_name'].lower()):
             if entry_id not in hot_leads:
                 hot_leads.append(entry_id)
         new_entry = ({
