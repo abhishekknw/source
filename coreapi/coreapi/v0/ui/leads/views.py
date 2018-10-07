@@ -64,10 +64,15 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0, **k
         lead_form_items_dict[item.item_id] = curr_item
         curr_item_part = {key: curr_item[key] for key in ['order_id', 'key_name', 'hot_lead_criteria']}
         lead_form_items_dict_part.append(curr_item_part)
+    lead_form_items_dict_part.insert(0, {
+        'order_id': 0,
+        'key_name': 'Lead Date'
+    })
     lead_form_items_dict_part.insert(0,{
         'order_id': 0,
-        'key_name': 'supplier_id'
+        'key_name': 'Supplier Name'
     })
+
 
     previous_entry_id = -1
     current_list = []
@@ -98,29 +103,22 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0, **k
             if supplier_id == 'All':
                 curr_supplier_id = entry.supplier_id
                 curr_supplier_name = supplier_id_names[curr_supplier_id]
-                current_list.insert(0, {
-                    "order_id": 0,
-                    "value": curr_supplier_id,
-                })
-                current_list.insert(0, {
-                    "order_id": 0,
-                    "value": curr_supplier_name,
-                })
+            else:
+                curr_supplier_name = supplier_name
+            current_list.insert(0, {
+                "order_id": 0,
+                "value": entry.created_at,
+            })
+            current_list.insert(0, {
+                "order_id": 0,
+                "value": curr_supplier_name,
+            })
             values.append(current_list)
             current_list = []
             counter = counter + 1
 
         current_list.append(new_entry)
-
-        # values.append([new_entry])
-
         previous_entry_id = entry_id
-    if supplier_id == 'All' and entry_id is not None:
-        curr_supplier_id = entry.supplier_id
-        current_list.insert(0, {
-            'supplier_id': curr_supplier_id,
-            'entry_id': entry_id
-        })
     values.append(current_list)
 
     supplier_all_lead_entries = {
@@ -447,17 +445,12 @@ class GenerateLeadForm(APIView):
 
 
 def get_leads_excel_sheet(leads_form_id, supplier_id,**kwargs):
-    lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
     start_date = kwargs['start_date'] if 'start_date' in kwargs else None
     end_date = kwargs['end_date'] if 'end_date' in kwargs else None
     all_leads = get_supplier_all_leads_entries(leads_form_id, supplier_id, start_date=start_date, end_date=end_date)
-    lead_form_items_dict = {}
-    # keys_list = ['supplier_id', 'lead_entry_date (format: dd/mm/yyyy)']
     keys_list = []
-    for item in lead_form_items_list:
-        curr_row = LeadsFormItemsSerializer(item).data
-        lead_form_items_dict[item.item_id] = curr_row
-        keys_list.append(curr_row['key_name'])
+    for item in all_leads['headers']:
+        keys_list.append(item['key_name'])
 
     book = Workbook()
     sheet = book.active
@@ -466,7 +459,9 @@ def get_leads_excel_sheet(leads_form_id, supplier_id,**kwargs):
     for lead in all_leads["values"]:
         value_list = []
         for item_dict in lead:
-            value_list.append(item_dict["value"])
+            if isinstance(item_dict["value"], basestring):
+                item_dict["value"] = item_dict["value"].encode("utf8")
+            value_list.append(str(item_dict["value"]))
         sheet.append(value_list)
         if value_list != []:
             total_leads_count += 1
