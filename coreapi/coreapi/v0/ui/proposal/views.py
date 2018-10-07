@@ -44,6 +44,7 @@ from v0.ui.campaign.models import Campaign
 from v0.ui.website.utils import return_price
 import v0.constants as v0_constants
 import v0.ui.website.tasks as tasks
+from v0.ui.email.views import send_email
 from v0.ui.supplier.models import SupplierTypeCorporate
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
 from v0.ui.base.models import DurationType
@@ -1619,7 +1620,7 @@ class ProposalVersion(APIView):
             }
 
             # send mail to Bd Head with attachment
-            bd_head_async_id = tasks.send_email.delay(email_data, attachment=attachment).id
+            bd_head_async_id = send_email.delay(email_data, attachment=attachment).id
 
             # send mail to logged in user without attachment
             email_data = {
@@ -1628,7 +1629,7 @@ class ProposalVersion(APIView):
                 'to': [user.email]
             }
 
-            logged_in_user_async_id = tasks.send_email.delay(email_data).id
+            logged_in_user_async_id = send_email.delay(email_data).id
 
             # upload this shit to amazon
             upload_to_amazon_aync_id = tasks.upload_to_amazon.delay(file_name).id

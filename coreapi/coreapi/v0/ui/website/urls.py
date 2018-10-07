@@ -19,10 +19,7 @@ urlpatterns = [
     url(r'^save-corporate-data/$', views.ImportCorporateData.as_view()),
 
     url(r'^(?P<proposal_id>[A-Z_a-z0-9-]+)/export-spaces-data/$', views.GenericExportData.as_view()),
-    url(r'^import-area-subarea/$', views.ImportAreaSubArea.as_view()),
-    url(r'^send-mail/$', views.SendMail.as_view()),
     url(r'^business-data/$', views.Business.as_view()),
-    url(r'^mail/$', views.Mail.as_view()),
     url(r'^campaign-assignment/$', views.AssignCampaign.as_view()),
     url(r'^amenity/$', views.AmenityAPIView.as_view()),
     url(r'^amenity-list/$', views.GetAllAmenities.as_view()),

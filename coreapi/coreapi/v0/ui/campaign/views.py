@@ -1836,3 +1836,16 @@ class Comment(APIView):
             if shortlisted_spaces_id in all_campaign_comments_dict:
                 all_campaign_comments_dict = all_campaign_comments_dict[shortlisted_spaces_id]
         return ui_utils.handle_response({}, data=all_campaign_comments_dict, success=True)
+
+
+class SupplierPhaseUpdate(APIView):
+
+    def put(self,request):
+        class_name = self.__class__.__name__
+        leads_form_data_objects = LeadsFormData.objects.exclude(status='inactive').all()
+        leads_form_items_objects = LeadsFormItems.objects.exclude(status='inactive').all()
+        campaign_list = leads_form_data_objects.values_list('campaign_id',flat=True).distinct()
+        for item in leads_form_items_objects:
+            leads_form_items.append(item.__dict__)
+        for data in leads_form_data_objects:
+            leads_form_data.append(data.__dict__)

@@ -1,42 +1,24 @@
 import csv
 import json
-import random
-import shutil
-import string
-import time
-import datetime
-import pytz
-
-import openpyxl
-from openpyxl import load_workbook
 import os
 import requests
-import gpxpy.geo
-from requests.exceptions import ConnectionError
-from bulk_update.helper import bulk_update
 from celery.result import GroupResult, AsyncResult
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db import transaction
-from django.db.models import Q, F, Sum, Count
-from django.apps import apps
+from django.db.models import Q, F, Sum
 from django.forms.models import model_to_dict
 from django.utils.dateparse import parse_datetime
-from django.utils import timezone
-from openpyxl.compat import range
 from rest_framework import status
-from rest_framework.decorators import detail_route, list_route
+from rest_framework.decorators import list_route
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-# from import_export import resources
 import tasks
 from v0.ui.components.models import SocietyTower, FlatType, Amenity
 from v0.ui.components.serializers import AmenitySerializer
-from v0.ui.account.models import BusinessTypes, BusinessSubTypes
 from v0.ui.account.serializers import (BusinessTypesSerializer, BusinessSubTypesSerializer, ProfileSimpleSerializer,
                                        UIBusinessInfoSerializer, UIAccountInfoSerializer, ProfileNestedSerializer)
 from v0.ui.campaign.models import Campaign, CampaignSocietyMapping, CampaignAssignment, GenericExportFileName
@@ -78,7 +60,6 @@ import v0.ui.utils as ui_utils
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0 import errors
 import v0.constants as v0_constants
-from v0.constants import flat_type_dict
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -522,154 +503,6 @@ class GenericExportData(APIView):
             # attach some custom headers
             # response['Content-Disposition'] = 'attachment; filename=%s' % data['name']
             return response
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
-
-class ImportAreaSubArea(APIView):
-    """
-    This API populates AREA and SUBAREA tables from an excel sheet.
-    """
-    def post(self, request):
-        """
-        Args:
-            request: request data
-            The data structure it makes is to create a list of form
-             [
-                { 'state': {}, 'city': {}, 'area': {}, 'subarea': {} },
-                { 'state': {}, 'city': {}, 'area': {}, 'subarea': {} },
-             ]
-             The structure of this data structure does not follows FK relationships in the table. This is because
-             constructing this data structure is far more easier than constructing the one which follows FK relationships
-             which will add more complexity.
-        Returns:
-
-        """
-        class_name = self.__class__.__name__
-        try:
-            # fetch the file from files dir
-            source_file = request.data['file']
-            wb = openpyxl.load_workbook(source_file)
-            ws = wb.get_sheet_by_name('new_area_sheet')
-
-            result = []
-            result_index = 0
-
-            # iterate through all rows and populate result array
-            for index, row in enumerate(ws.iter_rows()):
-
-                if index == 0 or website_utils.is_empty_row(row):
-                    continue
-
-                result.extend([None])
-                # in order to proceed further we need a dict in which keys are header names with spaces
-                # removed and values are value of the row which we are processing
-                row_response = website_utils.get_mapped_row(ws, row)
-                if not row_response.data['status']:
-                    return row_response
-                row = row_response.data['data']
-
-                response = website_utils.initialize_area_subarea(result, result_index)
-                if not response.data['status']:
-                    return response
-                result = response.data['data']
-
-                response = website_utils.handle_states(result, result_index, row)
-                if not response.data['status']:
-                    return response
-                result = response.data['data']
-
-                response = website_utils.handle_city(result, result_index, row)
-                if not response.data['status']:
-                    return response
-                result = response.data['data']
-
-                response = website_utils.handle_area(result, result_index, row)
-                if not response.data['status']:
-                    return response
-                result = response.data['data']
-
-                response = website_utils.handle_subarea(result, result_index, row)
-                if not response.data['status']:
-                    return response
-                result = response.data['data']
-
-                result_index += 1
-
-            # once the data is collected, time to save it
-            response = website_utils.save_area_subarea(result)
-            if not response.data['status']:
-                return response
-
-            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e,request=request)
-
-
-class SendMail(APIView):
-    """
-    API sends mail. The API sends a file called 'sample_mail_file.xlsx' located in files directory.
-    API  is for testing purpose only.
-
-    """
-    def post(self, request):
-        class_name = self.__class__.__name__
-        try:
-            # file name
-            file_name = 'sample_mail_file.xlsx'
-
-            file_path = BASE_DIR + '/files/sample_mail_file.xlsx'
-            with open(file_path, 'rb') as content_file:
-                my_file = content_file.read()
-
-            # get the predefined template for the body
-            template_body = v0_constants.email['body']
-
-            # define a body_mapping.
-            body_mapping = {
-                 'file': file_name
-            }
-            # call the function to perform the magic
-            # get the modified body
-            modified_body = website_utils.process_template(template_body, body_mapping)
-
-            email_data = {
-                'subject': str(request.data['subject']),
-                'to': [str(request.data['to']), ],
-                'body': modified_body
-            }
-            attachment = None
-            if my_file:
-                attachment = {
-                    'file_name': file_name,
-                    'mime_type': v0_constants.mime['xlsx']
-                }
-            task_id = tasks.send_email.delay(email_data, attachment).id
-            return ui_utils.handle_response(class_name, data={'task_id': task_id}, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
-
-class Mail(APIView):
-    """
-    API sends mail. The API sends a simple mail to a single person
-    """
-    def post(self, request):
-        class_name = self.__class__.__name__
-        try:
-            # takes these params from request
-            subject = request.data['subject']
-            to = request.data['to']
-            body = request.data['body']
-
-            email_data = {
-                'subject': subject,
-                'to': [to, ],
-                'body': body
-            }
-            attachment = None
-            task_id = tasks.send_email.delay(email_data, attachment).id
-            return ui_utils.handle_response(class_name, data={'task_id': task_id}, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 

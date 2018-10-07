@@ -36,16 +36,26 @@ def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
     lead_form.save()
 
 
-def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
+def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0, **kwargs):
     leads_per_page=25
     lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
     if supplier_id == 'All':
         lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id).exclude(
             status='inactive')
+        suppliers_list = lead_form_entries_list.values_list('supplier_id',flat=True)
+        suppliers_names = SupplierTypeSociety.objects.filter(supplier_id__in=suppliers_list).values_list(
+            'supplier_id','society_name')
+        supplier_id_names = dict((x,y) for x,y in suppliers_names)
     else:
         lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id) \
             .filter(supplier_id=supplier_id).exclude(status='inactive')
+        supplier_data = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
+        supplier_name = supplier_data.society_name
+    if 'start_date' in kwargs and kwargs['start_date']:
+        lead_form_entries_list = lead_form_entries_list.filter(created_at__gte=kwargs['start_date'])
 
+    if 'end_date' in kwargs and kwargs['end_date']:
+        lead_form_entries_list = lead_form_entries_list.filter(created_at__lte=kwargs['end_date'])
     values = []
     lead_form_items_dict = {}
     lead_form_items_dict_part = []
@@ -54,6 +64,15 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
         lead_form_items_dict[item.item_id] = curr_item
         curr_item_part = {key: curr_item[key] for key in ['order_id', 'key_name', 'hot_lead_criteria']}
         lead_form_items_dict_part.append(curr_item_part)
+    lead_form_items_dict_part.insert(0, {
+        'order_id': 0,
+        'key_name': 'Lead Date'
+    })
+    lead_form_items_dict_part.insert(0,{
+        'order_id': 0,
+        'key_name': 'Supplier Name'
+    })
+
 
     previous_entry_id = -1
     current_list = []
@@ -66,40 +85,40 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
 
     entry_id = None
     for entry in lead_form_entries_list:
-        if entry.item_id not in lead_form_items_dict:
+        curr_item_id = entry.item_id
+        if curr_item_id not in lead_form_items_dict:
             continue
-        hot_lead_criteria = lead_form_items_dict[entry.item_id]["hot_lead_criteria"]
+        curr_item = lead_form_items_dict[curr_item_id]
+        hot_lead_criteria = curr_item["hot_lead_criteria"]
         value = entry.item_value
         entry_id = entry.entry_id
         if value and value == hot_lead_criteria:
             if entry_id not in hot_leads:
                 hot_leads.append(entry_id)
         new_entry = ({
-            "order_id": lead_form_items_dict[entry.item_id]["order_id"],
+            "order_id": curr_item["order_id"],
             "value": value,
         })
         if entry_id != previous_entry_id and current_list != []:
             if supplier_id == 'All':
                 curr_supplier_id = entry.supplier_id
-                current_list.insert(0, {
-                    'supplier_id': curr_supplier_id,
-                    'entry_id': previous_entry_id
-                })
+                curr_supplier_name = supplier_id_names[curr_supplier_id]
+            else:
+                curr_supplier_name = supplier_name
+            current_list.insert(0, {
+                "order_id": 0,
+                "value": entry.created_at,
+            })
+            current_list.insert(0, {
+                "order_id": 0,
+                "value": curr_supplier_name,
+            })
             values.append(current_list)
             current_list = []
             counter = counter + 1
 
         current_list.append(new_entry)
-
-        # values.append([new_entry])
-
         previous_entry_id = entry_id
-    if supplier_id == 'All' and entry_id is not None:
-        curr_supplier_id = entry.supplier_id
-        current_list.insert(0, {
-            'supplier_id': curr_supplier_id,
-            'entry_id': entry_id
-        })
     values.append(current_list)
 
     supplier_all_lead_entries = {
@@ -108,8 +127,12 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
         'hot_leads': hot_leads
     }
     if not supplier_id == 'All':
-        print 'adding supplier id'
-        supplier_all_lead_entries.append({'supplier_id':supplier_id})
+        supplier_all_lead_entries.append(
+            {"order_id": 0,
+             "value": supplier_id})
+        supplier_all_lead_entries.append(
+            {"order_id": 0,
+             "value": supplier_name})
     return supplier_all_lead_entries
 
 
@@ -117,6 +140,7 @@ class GetLeadsEntries(APIView):
     @staticmethod
     def get(request, leads_form_id):
         supplier_id = request.query_params.get('supplier_id','All')
+
         page_number = int(request.query_params.get('page_number',0))
         supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number)
         return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
@@ -420,33 +444,39 @@ class GenerateLeadForm(APIView):
             'filepath': 'https://s3.ap-south-1.amazonaws.com/leads-forms-templates/' + filename}, success=True)
 
 
+def get_leads_excel_sheet(leads_form_id, supplier_id,**kwargs):
+    start_date = kwargs['start_date'] if 'start_date' in kwargs else None
+    end_date = kwargs['end_date'] if 'end_date' in kwargs else None
+    all_leads = get_supplier_all_leads_entries(leads_form_id, supplier_id, start_date=start_date, end_date=end_date)
+    keys_list = []
+    for item in all_leads['headers']:
+        keys_list.append(item['key_name'])
+
+    book = Workbook()
+    sheet = book.active
+    sheet.append(keys_list)
+    total_leads_count = 0
+    for lead in all_leads["values"]:
+        value_list = []
+        for item_dict in lead:
+            if isinstance(item_dict["value"], basestring):
+                item_dict["value"] = item_dict["value"].encode("utf8")
+            value_list.append(str(item_dict["value"]))
+        sheet.append(value_list)
+        if value_list != []:
+            total_leads_count += 1
+    return (book, total_leads_count)
+
+
 class GenerateLeadDataExcel(APIView):
     @staticmethod
     def get(request, leads_form_id):
-        lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
         supplier_id = request.GET.get('supplier_id', 'ALL')
-        all_leads = get_supplier_all_leads_entries(leads_form_id, supplier_id)
-        lead_form_items_dict = {}
-        # keys_list = ['supplier_id', 'lead_entry_date (format: dd/mm/yyyy)']
-        keys_list = []
-        for item in lead_form_items_list:
-            curr_row = LeadsFormItemsSerializer(item).data
-            lead_form_items_dict[item.item_id] = curr_row
-            keys_list.append(curr_row['key_name'])
-
-        book = Workbook()
-        sheet = book.active
-        sheet.append(keys_list)
-
-        for lead in all_leads["values"]:
-            value_list = []
-            for item_dict in lead:
-                value_list.append(item_dict["value"])
-            sheet.append(value_list)
+        (excel_book, total_leads_count) = get_leads_excel_sheet(leads_form_id, supplier_id)
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
 
-        book.save(response)
+        excel_book.save(response)
         return response
 
 
