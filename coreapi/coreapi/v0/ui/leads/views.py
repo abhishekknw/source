@@ -602,6 +602,7 @@ class LeadsSummary(APIView):
         all_shortlisted_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier]
         all_supplier_society = SupplierTypeSociety.objects.filter(supplier_id__in=all_shortlisted_supplier_id).values('supplier_id', 'flat_count')
         all_supplier_society_dict = {}
+        current_date = datetime.datetime.now().date()
         for supplier in all_supplier_society:
             all_supplier_society_dict[supplier['supplier_id']] = {'flat_count': supplier['flat_count']}
         for shortlisted_supplier in all_shortlisted_supplier:
@@ -613,8 +614,9 @@ class LeadsSummary(APIView):
                 if shortlisted_supplier['object_id'] in all_supplier_society_dict and all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count']:
                     all_campaign_dict[shortlisted_supplier['proposal_id']]['total_flat_counts'] += all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count']
             if shortlisted_supplier['phase_no_id'] and shortlisted_supplier['phase_no_id'] not in all_campaign_dict[shortlisted_supplier['proposal_id']]['all_phase_ids']:
-                all_campaign_dict[shortlisted_supplier['proposal_id']]['all_phase_ids'].append(
-                    shortlisted_supplier['phase_no_id'])
+                if shortlisted_supplier['proposal__tentative_end_date'].date() < current_date:
+                    all_campaign_dict[shortlisted_supplier['proposal_id']]['all_phase_ids'].append(
+                        shortlisted_supplier['phase_no_id'])
             all_campaign_dict[shortlisted_supplier['proposal_id']]['name'] = shortlisted_supplier['proposal__name']
             all_campaign_dict[shortlisted_supplier['proposal_id']]['start_date'] = shortlisted_supplier['proposal__tentative_start_date']
             all_campaign_dict[shortlisted_supplier['proposal_id']]['end_date'] = shortlisted_supplier['proposal__tentative_end_date']
@@ -626,7 +628,6 @@ class LeadsSummary(APIView):
         for campaign_summary in all_campaign_summary:
             all_campaign_dict[campaign_summary['campaign_id']]['hot_leads'] += campaign_summary['hot_leads_count']
             all_campaign_dict[campaign_summary['campaign_id']]['total_leads'] += campaign_summary['total_leads_count']
-        current_date = datetime.datetime.now().date()
         for campaign_id in all_campaign_dict:
             this_campaign_status = None
             if not all_campaign_dict[campaign_id]['campaign_status'] == proposal_on_hold:
