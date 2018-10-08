@@ -311,7 +311,7 @@ class LeadsFormBulkEntry(APIView):
                 LeadsFormData.objects.bulk_create(form_entry_list)
                 entry_id = entry_id + 1  # will be saved in the end
         recreate_leads_summary.delay()
-        get_leads_data_for_campaign.daley(campaign_id, None, None, True)
+        get_leads_data_for_campaign.delay(campaign_id, None, None, True)
         get_leads_data_for_multiple_campaigns.delay([campaign_id], True)
         lead_form.last_entry_id = entry_id - 1
         lead_form.save()
@@ -686,3 +686,21 @@ class SmsContact(APIView):
         for data in contacts_data_object:
             contacts_data.append(data)
         return ui_utils.handle_response(class_name, data=contacts_data, success=True)
+
+
+@shared_task()
+def cache_all_campaign_leads():
+    all_leads_forms = LeadsForm.objects.all()
+    recreate_leads_summary.delay()
+    for leads_form in all_leads_forms:
+        campaign_id = leads_form.campaign_id
+        get_leads_data_for_campaign.delay(campaign_id, None, None, True)
+        get_leads_data_for_multiple_campaigns.delay([campaign_id], True)
+    return
+
+
+class CampaignLeadsCacheAll(APIView):
+    def get(self, request):
+        class_name = self.__class__.__name__
+        cache_all_campaign_leads.delay()
+        return ui_utils.handle_response(class_name, data={"status": "success"}, success=True)

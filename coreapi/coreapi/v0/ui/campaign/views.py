@@ -1783,32 +1783,6 @@ class PhaseWiseMultipleCampaignLeads(APIView):
 
         return ui_utils.handle_response(class_name, data=phase_data_all, success=True)
 
-@shared_task()
-def cache_all_campaign_leads():
-    all_leads_forms = LeadsForm.objects.all()
-    cache.clear()
-    for leads_form in all_leads_forms:
-        campaign_id = leads_form.campaign_id
-        url = "https://api.machadalo.com/v0/ui/website/dashboard/get_leads_by_campaign_new/"
-        querystring = {"campaign_id": campaign_id}
-        headers = {
-            'Authorization': "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1Mzc2OTY3NzIsIm5hbWUiOiIiLCJleHAiOjE1Mzc2OTcwNzIsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.1Z8Us0_1BBWsrDGDCaJ8gLPibYmXn76sUQEo1GLXPY8",
-            'Content-Type': "application/json",
-        }
-        response = requests.request("GET", url, headers=headers, params=querystring)
-
-        url = "https://api.machadalo.com/v0/ui/website/dashboard/campaign_id/get_leads_by_multiple_campaigns/"
-
-        payload = "[\"" + campaign_id + "\"]"
-        response = requests.request("POST", url, data=payload, headers=headers)
-    return
-
-
-class CampaignLeadsCacheAll(APIView):
-    def get(self, request):
-        class_name = self.__class__.__name__
-        cache_all_campaign_leads.delay()
-        return ui_utils.handle_response(class_name, data={"status": "success"}, success=True)
 
 
 class Comment(APIView):

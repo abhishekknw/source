@@ -6,7 +6,7 @@ from views import (ShortlistSocietyCountAPIView, BookCampaignAPIView,
                    DeleteInventoryActivityAssignment, GetCampaignAssignments, DeleteCampaignAssignments,
                    GetAdInventoryTypeAndDurationTypeData, AddDynamicInventoryIds, DeleteAdInventoryIds,
                    CampaignLeads, CityWiseMultipleCampaignLeads, PhaseWiseMultipleCampaignLeads, CampaignLeadsCustom,
-                   CampaignLeadsCacheAll, Comment, CampaignLeadsMultiple)
+                   Comment, CampaignLeadsMultiple)
 from v0.ui.website.views import (GetAssignedIdImagesListApiView)
 
 urlpatterns = [
@@ -23,7 +23,6 @@ urlpatterns = [
     url(r'^add-dynamic-inventory-ids/$', AddDynamicInventoryIds.as_view()),
     url(r'^delete-ad-inventory-ids/$', DeleteAdInventoryIds.as_view()),
     url(r'^dashboard/get_leads_by_campaign_new/$',  CampaignLeads.as_view()),
-    url(r'^dashboard/cache_campaign_leads/$',  CampaignLeadsCacheAll.as_view()),
     url(r'^dashboard/get_leads_by_multiple_campaigns/$',  CampaignLeadsMultiple.as_view()),
     url(r'^city-wise-multiple-campaign/$', CityWiseMultipleCampaignLeads.as_view()),
     url(r'^phase-wise-multiple-campaign/$', PhaseWiseMultipleCampaignLeads.as_view()),
