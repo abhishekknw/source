@@ -6,7 +6,8 @@ from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.inventory.models import (InventoryActivityAssignment, InventoryActivity)
-from v0.ui.campaign.views import lead_counter
+from v0.ui.campaign.views import (lead_counter, get_leads_data_for_campaign,
+                                  get_leads_data_for_multiple_campaigns)
 import v0.ui.utils as ui_utils
 from v0.ui.utils import calculate_percentage
 import boto3
@@ -18,6 +19,8 @@ from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignAssignment
 from v0.constants import campaign_status, proposal_on_hold
 from django.http import HttpResponse
+from celery import shared_task
+
 
 def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
     form_entry_list = []
@@ -307,6 +310,9 @@ class LeadsFormBulkEntry(APIView):
                     }))
                 LeadsFormData.objects.bulk_create(form_entry_list)
                 entry_id = entry_id + 1  # will be saved in the end
+        recreate_leads_summary.delay()
+        get_leads_data_for_campaign.daley(campaign_id, None, None, True)
+        get_leads_data_for_multiple_campaigns.delay([campaign_id], True)
         lead_form.last_entry_id = entry_id - 1
         lead_form.save()
         missing_societies.sort()
@@ -382,30 +388,34 @@ class LeadsFormEntry(APIView):
         })
         return ui_utils.handle_response({}, data='success', success=True)
 
+@shared_task()
+def recreate_leads_summary():
+    all_leads_form = LeadsForm.objects.all()
+    for leads_form in all_leads_form:
+        leads_form_id = leads_form.id
+        lead_form = LeadsForm.objects.get(id=leads_form_id)
+        campaign_id = leads_form.campaign_id
+        shortlisted_suppliers = LeadsFormData.objects.filter(campaign_id=campaign_id).values('supplier_id').distinct()
+        shortlisted_suppliers_id_list = [supplier['supplier_id'] for supplier in shortlisted_suppliers]
+        for supplier_id in shortlisted_suppliers_id_list:
+            lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
+            lead_count = lead_counter(campaign_id, supplier_id, lead_form_items_list)
+            hot_lead_percentage = calculate_percentage(lead_count['hot_leads'], lead_count['total_leads'])
+            LeadsFormSummary.objects.update_or_create(leads_form_id=leads_form_id, supplier_id=supplier_id, defaults={
+                'leads_form': lead_form,
+                'campaign_id': campaign_id,
+                'supplier_id': supplier_id,
+                'hot_leads_count': lead_count['hot_leads'],
+                'total_leads_count': lead_count['total_leads'],
+                'hot_leads_percentage': hot_lead_percentage
+            })
+    return
+
 
 class MigrateLeadsSummary(APIView):
     def put(self, request):
         class_name = self.__class__.__name__
-        all_leads_form = LeadsForm.objects.all()
-
-        for leads_form in all_leads_form:
-            leads_form_id = leads_form.id
-            lead_form = LeadsForm.objects.get(id=leads_form_id)
-            campaign_id = leads_form.campaign_id
-            shortlisted_suppliers = LeadsFormData.objects.filter(campaign_id=campaign_id).values('supplier_id').distinct()
-            shortlisted_suppliers_id_list = [supplier['supplier_id'] for supplier in shortlisted_suppliers]
-            for supplier_id in shortlisted_suppliers_id_list:
-                lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
-                lead_count = lead_counter(campaign_id, supplier_id, lead_form_items_list)
-                hot_lead_percentage = calculate_percentage(lead_count['hot_leads'], lead_count['total_leads'])
-                LeadsFormSummary.objects.update_or_create(leads_form_id=leads_form_id, supplier_id=supplier_id, defaults={
-                    'leads_form': lead_form,
-                    'campaign_id': campaign_id,
-                    'supplier_id': supplier_id,
-                    'hot_leads_count': lead_count['hot_leads'],
-                    'total_leads_count': lead_count['total_leads'],
-                    'hot_leads_percentage': hot_lead_percentage
-                })
+        recreate_leads_summary.delay()
         return ui_utils.handle_response({}, data='success', success=True)
 
 
