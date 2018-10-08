@@ -2340,7 +2340,7 @@ class getSupplierListByStatus(APIView):
                 supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society[0]).data
                 if space.phase_no_id not in shortlisted_spaces_by_phase_dict:
                     shortlisted_spaces_by_phase_dict[space.phase_no_id] = {'BK':[], 'NB': [], 'PB': [], 'VB': [], 'SR': [], 'SE': [], 'VR': [], 'CR': [],
-                                    'DP': []}
+                                    'DP': [], 'TB':[]}
                 if space.booking_status:
                     supplier_society_serialized['booking_status'] = space.booking_status
                     supplier_society_serialized['freebies'] = space.freebies.split(",") if space.freebies else None

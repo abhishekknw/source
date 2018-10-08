@@ -1525,6 +1525,8 @@ class GetAssignedIdImagesListApiView(APIView):
 
             for supplier in inv_act_image_objects:
                 supplier_code_list[supplier['supplier_code']].append(supplier)
+
+            inv_act_image_objects_with_distance = []
             for key, value in supplier_code_list.iteritems():
                 supplier_id_list = []
                 if key == 'RS':
@@ -1551,7 +1553,9 @@ class GetAssignedIdImagesListApiView(APIView):
             # suppliers = serializer.data
 
             # inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(inv_act_image_objects, suppliers)
-            inv_act_image_objects_with_distance_map = {inv['inv_id'] : inv for inv in inv_act_image_objects_with_distance}
+            inv_act_image_objects_with_distance_map = {}
+            if inv_act_image_objects_with_distance:
+                inv_act_image_objects_with_distance_map = {inv['inv_id'] : inv for inv in inv_act_image_objects_with_distance}
 
             result = {}
             for object in inv_act_assignment_objects:
