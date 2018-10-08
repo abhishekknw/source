@@ -6,7 +6,8 @@ from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.inventory.models import (InventoryActivityAssignment, InventoryActivity)
-from v0.ui.campaign.views import lead_counter
+from v0.ui.campaign.views import (lead_counter, get_leads_data_for_campaign,
+                                  get_leads_data_for_multiple_campaigns)
 import v0.ui.utils as ui_utils
 from v0.ui.utils import calculate_percentage
 import boto3
@@ -18,6 +19,8 @@ from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignAssignment
 from v0.constants import campaign_status, proposal_on_hold
 from django.http import HttpResponse
+from celery import shared_task
+
 
 def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
     form_entry_list = []
@@ -36,7 +39,7 @@ def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
     lead_form.save()
 
 
-def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
+def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0, **kwargs):
     leads_per_page=25
     lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
     if supplier_id == 'All':
@@ -51,7 +54,11 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
             .filter(supplier_id=supplier_id).exclude(status='inactive')
         supplier_data = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
         supplier_name = supplier_data.society_name
+    if 'start_date' in kwargs and kwargs['start_date']:
+        lead_form_entries_list = lead_form_entries_list.filter(created_at__gte=kwargs['start_date'])
 
+    if 'end_date' in kwargs and kwargs['end_date']:
+        lead_form_entries_list = lead_form_entries_list.filter(created_at__lte=kwargs['end_date'])
     values = []
     lead_form_items_dict = {}
     lead_form_items_dict_part = []
@@ -60,10 +67,15 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
         lead_form_items_dict[item.item_id] = curr_item
         curr_item_part = {key: curr_item[key] for key in ['order_id', 'key_name', 'hot_lead_criteria']}
         lead_form_items_dict_part.append(curr_item_part)
+    lead_form_items_dict_part.insert(0, {
+        'order_id': 0,
+        'key_name': 'Lead Date'
+    })
     lead_form_items_dict_part.insert(0,{
         'order_id': 0,
-        'key_name': 'supplier_id'
+        'key_name': 'Supplier Name'
     })
+
 
     previous_entry_id = -1
     current_list = []
@@ -83,7 +95,7 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
         hot_lead_criteria = curr_item["hot_lead_criteria"]
         value = entry.item_value
         entry_id = entry.entry_id
-        if value and value == hot_lead_criteria:
+        if value and (value == hot_lead_criteria or 'counseling' in curr_item['key_name'].lower()):
             if entry_id not in hot_leads:
                 hot_leads.append(entry_id)
         new_entry = ({
@@ -94,29 +106,22 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0):
             if supplier_id == 'All':
                 curr_supplier_id = entry.supplier_id
                 curr_supplier_name = supplier_id_names[curr_supplier_id]
-                current_list.insert(0, {
-                    "order_id": 0,
-                    "value": curr_supplier_id,
-                })
-                current_list.insert(0, {
-                    "order_id": 0,
-                    "value": curr_supplier_name,
-                })
+            else:
+                curr_supplier_name = supplier_name
+            current_list.insert(0, {
+                "order_id": 0,
+                "value": entry.created_at,
+            })
+            current_list.insert(0, {
+                "order_id": 0,
+                "value": curr_supplier_name,
+            })
             values.append(current_list)
             current_list = []
             counter = counter + 1
 
         current_list.append(new_entry)
-
-        # values.append([new_entry])
-
         previous_entry_id = entry_id
-    if supplier_id == 'All' and entry_id is not None:
-        curr_supplier_id = entry.supplier_id
-        current_list.insert(0, {
-            'supplier_id': curr_supplier_id,
-            'entry_id': entry_id
-        })
     values.append(current_list)
 
     supplier_all_lead_entries = {
@@ -305,6 +310,7 @@ class LeadsFormBulkEntry(APIView):
                     }))
                 LeadsFormData.objects.bulk_create(form_entry_list)
                 entry_id = entry_id + 1  # will be saved in the end
+        cache_all_campaign_leads(campaign_id)
         lead_form.last_entry_id = entry_id - 1
         lead_form.save()
         missing_societies.sort()
@@ -380,30 +386,34 @@ class LeadsFormEntry(APIView):
         })
         return ui_utils.handle_response({}, data='success', success=True)
 
+@shared_task()
+def recreate_leads_summary():
+    all_leads_form = LeadsForm.objects.all()
+    for leads_form in all_leads_form:
+        leads_form_id = leads_form.id
+        lead_form = LeadsForm.objects.get(id=leads_form_id)
+        campaign_id = leads_form.campaign_id
+        shortlisted_suppliers = LeadsFormData.objects.filter(campaign_id=campaign_id).values('supplier_id').distinct()
+        shortlisted_suppliers_id_list = [supplier['supplier_id'] for supplier in shortlisted_suppliers]
+        for supplier_id in shortlisted_suppliers_id_list:
+            lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
+            lead_count = lead_counter(campaign_id, supplier_id, lead_form_items_list)
+            hot_lead_percentage = calculate_percentage(lead_count['hot_leads'], lead_count['total_leads'])
+            LeadsFormSummary.objects.update_or_create(leads_form_id=leads_form_id, supplier_id=supplier_id, defaults={
+                'leads_form': lead_form,
+                'campaign_id': campaign_id,
+                'supplier_id': supplier_id,
+                'hot_leads_count': lead_count['hot_leads'],
+                'total_leads_count': lead_count['total_leads'],
+                'hot_leads_percentage': hot_lead_percentage
+            })
+    return
+
 
 class MigrateLeadsSummary(APIView):
     def put(self, request):
         class_name = self.__class__.__name__
-        all_leads_form = LeadsForm.objects.all()
-
-        for leads_form in all_leads_form:
-            leads_form_id = leads_form.id
-            lead_form = LeadsForm.objects.get(id=leads_form_id)
-            campaign_id = leads_form.campaign_id
-            shortlisted_suppliers = LeadsFormData.objects.filter(campaign_id=campaign_id).values('supplier_id').distinct()
-            shortlisted_suppliers_id_list = [supplier['supplier_id'] for supplier in shortlisted_suppliers]
-            for supplier_id in shortlisted_suppliers_id_list:
-                lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
-                lead_count = lead_counter(campaign_id, supplier_id, lead_form_items_list)
-                hot_lead_percentage = calculate_percentage(lead_count['hot_leads'], lead_count['total_leads'])
-                LeadsFormSummary.objects.update_or_create(leads_form_id=leads_form_id, supplier_id=supplier_id, defaults={
-                    'leads_form': lead_form,
-                    'campaign_id': campaign_id,
-                    'supplier_id': supplier_id,
-                    'hot_leads_count': lead_count['hot_leads'],
-                    'total_leads_count': lead_count['total_leads'],
-                    'hot_leads_percentage': hot_lead_percentage
-                })
+        recreate_leads_summary.delay()
         return ui_utils.handle_response({}, data='success', success=True)
 
 
@@ -442,33 +452,39 @@ class GenerateLeadForm(APIView):
             'filepath': 'https://s3.ap-south-1.amazonaws.com/leads-forms-templates/' + filename}, success=True)
 
 
+def get_leads_excel_sheet(leads_form_id, supplier_id,**kwargs):
+    start_date = kwargs['start_date'] if 'start_date' in kwargs else None
+    end_date = kwargs['end_date'] if 'end_date' in kwargs else None
+    all_leads = get_supplier_all_leads_entries(leads_form_id, supplier_id, start_date=start_date, end_date=end_date)
+    keys_list = []
+    for item in all_leads['headers']:
+        keys_list.append(item['key_name'])
+
+    book = Workbook()
+    sheet = book.active
+    sheet.append(keys_list)
+    total_leads_count = 0
+    for lead in all_leads["values"]:
+        value_list = []
+        for item_dict in lead:
+            if isinstance(item_dict["value"], basestring):
+                item_dict["value"] = item_dict["value"].encode("utf8")
+            value_list.append(str(item_dict["value"]))
+        sheet.append(value_list)
+        if value_list != []:
+            total_leads_count += 1
+    return (book, total_leads_count)
+
+
 class GenerateLeadDataExcel(APIView):
     @staticmethod
     def get(request, leads_form_id):
-        lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
         supplier_id = request.GET.get('supplier_id', 'ALL')
-        all_leads = get_supplier_all_leads_entries(leads_form_id, supplier_id)
-        lead_form_items_dict = {}
-        # keys_list = ['supplier_id', 'lead_entry_date (format: dd/mm/yyyy)']
-        keys_list = []
-        for item in lead_form_items_list:
-            curr_row = LeadsFormItemsSerializer(item).data
-            lead_form_items_dict[item.item_id] = curr_row
-            keys_list.append(curr_row['key_name'])
-
-        book = Workbook()
-        sheet = book.active
-        sheet.append(keys_list)
-
-        for lead in all_leads["values"]:
-            value_list = []
-            for item_dict in lead:
-                value_list.append(item_dict["value"])
-            sheet.append(value_list)
+        (excel_book, total_leads_count) = get_leads_excel_sheet(leads_form_id, supplier_id)
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
 
-        book.save(response)
+        excel_book.save(response)
         return response
 
 
@@ -594,6 +610,7 @@ class LeadsSummary(APIView):
         all_shortlisted_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier]
         all_supplier_society = SupplierTypeSociety.objects.filter(supplier_id__in=all_shortlisted_supplier_id).values('supplier_id', 'flat_count')
         all_supplier_society_dict = {}
+        current_date = datetime.datetime.now().date()
         for supplier in all_supplier_society:
             all_supplier_society_dict[supplier['supplier_id']] = {'flat_count': supplier['flat_count']}
         for shortlisted_supplier in all_shortlisted_supplier:
@@ -605,8 +622,9 @@ class LeadsSummary(APIView):
                 if shortlisted_supplier['object_id'] in all_supplier_society_dict and all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count']:
                     all_campaign_dict[shortlisted_supplier['proposal_id']]['total_flat_counts'] += all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count']
             if shortlisted_supplier['phase_no_id'] and shortlisted_supplier['phase_no_id'] not in all_campaign_dict[shortlisted_supplier['proposal_id']]['all_phase_ids']:
-                all_campaign_dict[shortlisted_supplier['proposal_id']]['all_phase_ids'].append(
-                    shortlisted_supplier['phase_no_id'])
+                if shortlisted_supplier['proposal__tentative_end_date'].date() < current_date:
+                    all_campaign_dict[shortlisted_supplier['proposal_id']]['all_phase_ids'].append(
+                        shortlisted_supplier['phase_no_id'])
             all_campaign_dict[shortlisted_supplier['proposal_id']]['name'] = shortlisted_supplier['proposal__name']
             all_campaign_dict[shortlisted_supplier['proposal_id']]['start_date'] = shortlisted_supplier['proposal__tentative_start_date']
             all_campaign_dict[shortlisted_supplier['proposal_id']]['end_date'] = shortlisted_supplier['proposal__tentative_end_date']
@@ -618,7 +636,6 @@ class LeadsSummary(APIView):
         for campaign_summary in all_campaign_summary:
             all_campaign_dict[campaign_summary['campaign_id']]['hot_leads'] += campaign_summary['hot_leads_count']
             all_campaign_dict[campaign_summary['campaign_id']]['total_leads'] += campaign_summary['total_leads_count']
-        current_date = datetime.datetime.now().date()
         for campaign_id in all_campaign_dict:
             this_campaign_status = None
             if not all_campaign_dict[campaign_id]['campaign_status'] == proposal_on_hold:
@@ -667,3 +684,26 @@ class SmsContact(APIView):
         for data in contacts_data_object:
             contacts_data.append(data)
         return ui_utils.handle_response(class_name, data=contacts_data, success=True)
+
+
+def cache_all_campaign_leads(campaign_id='ALL'):
+    recreate_leads_summary.delay()
+    if campaign_id == 'ALL':
+        all_leads_forms = LeadsForm.objects.all()
+        for leads_form in all_leads_forms:
+            campaign_id = leads_form.campaign_id
+            get_leads_data_for_campaign.delay(campaign_id, None, None, True)
+            get_leads_data_for_multiple_campaigns.delay([campaign_id], True)
+    else:
+        print "in else"
+        get_leads_data_for_campaign.delay(campaign_id, None, None, True)
+        get_leads_data_for_multiple_campaigns.delay([campaign_id], True)
+    return
+
+
+class CampaignLeadsCacheAll(APIView):
+    def get(self, request):
+        class_name = self.__class__.__name__
+        campaign_id = request.query_params.get('campaign_id', 'All')
+        cache_all_campaign_leads(campaign_id)
+        return ui_utils.handle_response(class_name, data={"status": "success"}, success=True)

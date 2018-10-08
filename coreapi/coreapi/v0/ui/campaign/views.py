@@ -13,7 +13,6 @@ import v0.constants as v0_constants
 from v0.ui.supplier.models import (SupplierTypeSociety)
 import v0.ui.website.utils as website_utils
 from django.db.models import Q, F
-from django.db.models import Count
 from models import (CampaignSocietyMapping, Campaign, CampaignAssignment, CampaignComments)
 from serializers import (CampaignListSerializer, CampaignSerializer, CampaignAssignmentSerializer)
 from v0.ui.proposal.models import ShortlistedSpaces
@@ -34,9 +33,10 @@ from django.conf import settings
 from v0.ui.common.models import BaseUser
 from operator import itemgetter
 import requests
+from celery import shared_task
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 from dateutil import tz
-
+from django.db.models import Count, Sum
 
 
 class CampaignAPIView(APIView):
@@ -202,7 +202,8 @@ def lead_counter(campaign_id, supplier_id,lead_form_items_list):
     total_leads = 0
     hot_leads = 0
     hot_lead_details = []
-
+    leads_form_items_dict = {item.item_id:item.key_name for item in lead_form_items_list}
+    # print leads_form_items_dict
     form_id_data = get_distinct_from_dict_array(lead_form_data_array,'leads_form_id')
     for form_id in form_id_data:
         current_leads_data = [x for x in lead_form_data_array if x['leads_form_id'] == form_id]
@@ -217,15 +218,16 @@ def lead_counter(campaign_id, supplier_id,lead_form_items_list):
                 item_id = item_data['item_id']
                 leads_form_id = item_data['leads_form_id']
                 hot_lead_criteria = hot_lead_criteria_dict[leads_form_id][item_id]['hot_lead_criteria']
-                if item_value and hot_lead_criteria and str(item_value) == str(hot_lead_criteria):
-                    if hot_lead is False:
-                        hot_leads = hot_leads + 1
-                        hot_lead_details.append({
-                            'leads_form_id': leads_form_id,
-                            'entry_id': entry_id
-                        })
-                    hot_lead = True
-                    continue
+                if item_value:
+                    if (hot_lead_criteria and str(item_value) == str(hot_lead_criteria)) or 'counseling' in leads_form_items_dict[item_id].lower():
+                        if hot_lead is False:
+                            hot_leads = hot_leads + 1
+                            hot_lead_details.append({
+                                'leads_form_id': leads_form_id,
+                                'entry_id': entry_id
+                            })
+                        hot_lead = True
+                        continue
     result = {'total_leads': total_leads, 'hot_leads': hot_leads, 'hot_lead_details':hot_lead_details}
     return result
 
@@ -355,6 +357,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             supplier_objects_id_list = {supplier['supplier_id']: supplier for supplier in suppliers}
             all_leads_count = LeadsFormSummary.objects.filter(campaign_id=campaign_id).all()
             supplier_wise_leads_count = {}
+
             for leads in all_leads_count:
                 if 'flat_count' in supplier_objects_id_list[leads.supplier_id] and supplier_objects_id_list[leads.supplier_id]['flat_count']:
                     flat_count = supplier_objects_id_list[leads.supplier_id]['flat_count']
@@ -364,6 +367,7 @@ class DashBoardViewSet(viewsets.ViewSet):
                     'hot_leads_count': leads.hot_leads_count,
                     'total_leads_count': leads.total_leads_count,
                     'hot_leads_percentage': leads.hot_leads_percentage,
+                    'hot_leads_percentage_by_flat_count': calculate_percentage(leads.hot_leads_count, flat_count),
                     'flat_count': flat_count,
                     'leads_flat_percentage': calculate_percentage(leads.total_leads_count, flat_count)
                 }
@@ -398,6 +402,7 @@ class DashBoardViewSet(viewsets.ViewSet):
                     'comment': str(inventory_image.comment),
                     'inventory_name': inventory_name
                 })
+
                 all_images_by_supplier[supplier_id][inventory_name]["total_count"] += 1
 
             all_hashtag_images = HashTagImages.objects.filter(campaign_id=campaign_id).all()
@@ -461,8 +466,8 @@ class DashBoardViewSet(viewsets.ViewSet):
                 if 'total_leads_count' in data['leads_data']:
                     total_completed_leads_count = total_completed_leads_count + data['leads_data']['total_leads_count']
                     total_completed_hot_leads_count = total_completed_hot_leads_count + data['leads_data']['hot_leads_count']
-                    total_completed_flat_count = total_completed_flat_count + supplier_objects_id_list[id]['flat_count']
-
+                    if supplier_objects_id_list[id]['flat_count']:
+                        total_completed_flat_count = total_completed_flat_count + supplier_objects_id_list[id]['flat_count']
             upcoming_suppliers_list = []
             total_upcoming_leads_count = 0
             total_upcoming_hot_leads_count = 0
@@ -492,6 +497,7 @@ class DashBoardViewSet(viewsets.ViewSet):
                         'hot_leads_percentage': calculate_percentage(total_ongoing_hot_leads_count, total_ongoing_leads_count),
                         'flat_count': total_ongoing_flat_count,
                         'leads_flat_percentage': calculate_percentage(total_ongoing_leads_count, total_ongoing_flat_count),
+                        'hot_leads_percentage_by_flat_count': calculate_percentage(total_ongoing_hot_leads_count, total_ongoing_flat_count),
                         'total_suppliers_count': len(ongoing_supplier_id_list)
                     },
                     'completed': {
@@ -500,6 +506,7 @@ class DashBoardViewSet(viewsets.ViewSet):
                         'hot_leads_percentage': calculate_percentage(total_completed_hot_leads_count, total_completed_leads_count),
                         'flat_count': total_completed_flat_count,
                         'leads_flat_percentage': calculate_percentage(total_completed_leads_count, total_completed_flat_count),
+                        'hot_leads_percentage_by_flat_count': calculate_percentage(total_completed_hot_leads_count, total_completed_flat_count),
                         'total_suppliers_count': len(completed_suppliers_list)
                     },
                     'upcoming': {
@@ -508,6 +515,7 @@ class DashBoardViewSet(viewsets.ViewSet):
                         'hot_leads_percentage': calculate_percentage(total_upcoming_hot_leads_count, total_upcoming_leads_count),
                         'flat_count': total_upcoming_flat_count,
                         'leads_flat_percentage': calculate_percentage(total_upcoming_leads_count, total_upcoming_flat_count),
+                        'hot_leads_percentage_by_flat_count': calculate_percentage(total_upcoming_hot_leads_count, total_upcoming_flat_count),
                         'total_suppliers_count': len(upcoming_suppliers_list)
                     }
                 }
@@ -697,81 +705,6 @@ class DashBoardViewSet(viewsets.ViewSet):
         #except Exception as e:
         #    return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-    @detail_route(methods=['POST'])
-    def get_leads_by_multiple_campaigns(self, request, pk=None):
-        class_name = self.__class__.__name__
-        try:
-            campaign_list = request.data
-            multi_campaign_return_data = {}
-
-            # GETTING FROM CACHE START
-            remaining_campaign_list = []
-            for campaign in campaign_list:
-                if str(campaign) in cache:
-                    multi_campaign_return_data[str(campaign)] = cache.get(str(campaign))
-                else:
-                    remaining_campaign_list.append(campaign)
-            # GETTING FROM CACHE ENDS
-
-            campaign_objects = ProposalInfo.objects.filter(proposal_id__in=remaining_campaign_list).values()
-            campaign_objects_list = {campaign['proposal_id']: campaign for campaign in campaign_objects}
-            valid_campaign_list = campaign_objects_list.keys()
-            # leads_from_data = LeadsFormData.filter(campaign_id__in = campaign_list)
-            # lead_items = LeadsFormItems.filter(campaign_id__in=campaign_list)
-            for campaign_id in valid_campaign_list:
-                leads_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id)
-                #leads_form_items = LeadsFormItems.objects.filter(campaign_id = campaign_id)
-                leads_form_data_array = []
-                for curr_object in leads_form_data:
-                    curr_data_1 = curr_object.__dict__
-                    curr_data = {key: curr_data_1[key] for key in ['item_id', 'item_value', 'leads_form_id','entry_id']}
-                    leads_form_data_array.append(curr_data)
-
-                # combination of entry and form id is a lead
-                total_leads = leads_form_data.values('entry_id','leads_form_id').distinct()
-                total_leads_count = len(total_leads)
-
-                # now computing hot leads
-
-                hot_leads = 0
-                hot_lead_fields = LeadsFormItems.objects.filter(campaign_id = campaign_id)\
-                    .exclude(hot_lead_criteria__isnull=True).values('item_id','leads_form_id','hot_lead_criteria')
-                for curr_lead in total_leads:
-                    hot_lead = False
-                    leads_form_id = curr_lead['leads_form_id']
-                    entry_id = curr_lead['entry_id']
-                    # get all forms with hot lead criteria
-                    hot_lead_items_current = [x for x in hot_lead_fields if x['leads_form_id'] == leads_form_id]
-                    #data_current = [x for x in leads_form_data_array if x['leads_form'] == leads_form_id
-                    #                and x['entry_id'] == entry_id]
-                    for lead_item in hot_lead_items_current:
-                        hot_lead_item = lead_item['item_id']
-                        hot_lead_value = lead_item['hot_lead_criteria']
-                        data_current_hot = [x for x in leads_form_data_array if x['item_id'] == hot_lead_item and
-                            x['item_value'] == hot_lead_value and x['leads_form_id']==leads_form_id
-                            and x['entry_id']==entry_id]
-                        if len(data_current_hot)>0 and hot_lead==False:
-                            hot_lead = True
-                            hot_leads = hot_leads+1
-                if hot_leads > 0:
-                    is_interested = 'true'
-                else:
-                    is_interested = 'false'
-
-                hot_lead_ratio = float(hot_leads/total_leads_count) if total_leads_count > 0 else 0
-
-                multi_campaign_return_data[campaign_id] = {
-                            'total': total_leads_count,
-                            'is_interested': is_interested,
-                            'hot_lead_ratio': hot_lead_ratio,
-                            'data': campaign_objects_list[campaign_id],
-                            'interested': hot_leads,
-                            'campaign': campaign_id
-                        }
-                cache.set(str(campaign_id), multi_campaign_return_data[campaign_id], timeout=CACHE_TTL*100)
-            return ui_utils.handle_response(class_name, data=multi_campaign_return_data, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     @list_route()
     def get_activity_images_by_suppliers(self, request):
@@ -839,8 +772,9 @@ class DashBoardViewSet(viewsets.ViewSet):
                        inventory_activity__activity_type=act_type).\
                 annotate(supplier_id=F('inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id'),
                          assignment_id=F('id'),
-                         inv_name=F('inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name')). \
-                values('supplier_id','inv_name'). \
+                         inv_name=F('inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name'),
+                         space_id=F('inventory_activity__shortlisted_inventory_details__shortlisted_spaces__id')). \
+                values('supplier_id','inv_name','space_id'). \
                 annotate(total=Count('supplier_id'))
 
             completed_objects = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
@@ -869,6 +803,7 @@ class DashBoardViewSet(viewsets.ViewSet):
                 result[supplier['supplier_id']][supplier['inv_name']]['assigned'] = supplier['total']
                 result[supplier['supplier_id']][supplier['inv_name']]['completed'] = 0
                 result[supplier['supplier_id']]['supplier_data'] = suppliers_map[supplier['supplier_id']]
+                result[supplier['supplier_id']]['space_id'] = supplier['space_id']
             for supplier in completed_objects:
                 if supplier['supplier_id'] in result:
                     if supplier['inv_name'] in result[supplier['supplier_id']]:
@@ -1009,6 +944,345 @@ class DeleteAdInventoryIds(APIView):
         return ui_utils.handle_response({}, data=result, success=True)
 
 
+@shared_task()
+def get_leads_data_for_multiple_campaigns(campaign_list, cache_again=False):
+    multi_campaign_return_data = {}
+
+    # GETTING FROM CACHE START
+    if cache_again is False:
+        remaining_campaign_list = []
+        for campaign in campaign_list:
+            if str(campaign) in cache:
+                multi_campaign_return_data[str(campaign)] = cache.get(str(campaign))
+            else:
+                remaining_campaign_list.append(campaign)
+    else:
+        remaining_campaign_list = campaign_list
+    # GETTING FROM CACHE ENDS
+    campaign_objects = ProposalInfo.objects.filter(proposal_id__in=remaining_campaign_list).values()
+    campaign_objects_list = {campaign['proposal_id']: campaign for campaign in campaign_objects}
+    valid_campaign_list = campaign_objects_list.keys()
+    # leads_from_data = LeadsFormData.filter(campaign_id__in = campaign_list)
+    # lead_items = LeadsFormItems.filter(campaign_id__in=campaign_list)
+    for campaign_id in valid_campaign_list:
+        shortlisted_supplier_ids = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values_list(
+            'object_id')
+        flat_count = SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_supplier_ids). \
+            values('flat_count').aggregate(Sum('flat_count'))['flat_count__sum']
+        leads_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id)
+        # leads_form_items = LeadsFormItems.objects.filter(campaign_id = campaign_id)
+        leads_form_data_array = []
+        for curr_object in leads_form_data:
+            curr_data_1 = curr_object.__dict__
+            curr_data = {key: curr_data_1[key] for key in ['item_id', 'item_value', 'leads_form_id', 'entry_id']}
+            leads_form_data_array.append(curr_data)
+
+        # combination of entry and form id is a lead
+        total_leads = leads_form_data.values('entry_id', 'leads_form_id').distinct()
+        total_leads_count = len(total_leads)
+
+        # now computing hot leads
+
+        hot_leads = 0
+        hot_lead_fields = LeadsFormItems.objects.filter(campaign_id=campaign_id) \
+            .exclude(hot_lead_criteria__isnull=True).values('item_id', 'leads_form_id', 'hot_lead_criteria')
+        for curr_lead in total_leads:
+            hot_lead = False
+            leads_form_id = curr_lead['leads_form_id']
+            entry_id = curr_lead['entry_id']
+            # get all forms with hot lead criteria
+            hot_lead_items_current = [x for x in hot_lead_fields if x['leads_form_id'] == leads_form_id]
+            # data_current = [x for x in leads_form_data_array if x['leads_form'] == leads_form_id
+            #                and x['entry_id'] == entry_id]
+            for lead_item in hot_lead_items_current:
+                hot_lead_item = lead_item['item_id']
+                hot_lead_value = lead_item['hot_lead_criteria']
+                data_current_hot = [x for x in leads_form_data_array if x['item_id'] == hot_lead_item and
+                                    x['item_value'] == hot_lead_value and x['leads_form_id'] == leads_form_id
+                                    and x['entry_id'] == entry_id]
+                if len(data_current_hot) > 0 and hot_lead == False:
+                    hot_lead = True
+                    hot_leads = hot_leads + 1
+        if hot_leads > 0:
+            is_interested = 'true'
+        else:
+            is_interested = 'false'
+
+        hot_lead_ratio = float(hot_leads / total_leads_count) if total_leads_count > 0 else 0
+
+        multi_campaign_return_data[campaign_id] = {
+            'total': total_leads_count,
+            'is_interested': is_interested,
+            'hot_lead_ratio': hot_lead_ratio,
+            'data': campaign_objects_list[campaign_id],
+            'interested': hot_leads,
+            'campaign': campaign_id,
+            'flat_count': flat_count
+        }
+        cache.set(str(campaign_id), multi_campaign_return_data[campaign_id], timeout=CACHE_TTL * 100)
+        return multi_campaign_return_data
+
+
+class CampaignLeadsMultiple(APIView):
+    def get(self, request, pk=None):
+        class_name = self.__class__.__name__
+        try:
+            campaign_list = request.data
+            get_leads_data_for_multiple_campaigns(campaign_list)
+            return ui_utils.handle_response(class_name, data=multi_campaign_return_data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+@shared_task()
+def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_date_str=None, cache_again=False):
+    cache_string = "single_" + str(campaign_id) + str(user_start_date_str) + str(user_end_date_str)
+    if not cache_again:
+        if cache_string in cache:
+            final_data = cache.get(cache_string)
+            return final_data
+    format_str = '%d/%m/%Y'
+    user_start_datetime = datetime.strptime(user_start_date_str,format_str) if user_start_date_str is not None else None
+    user_end_datetime = datetime.strptime(user_end_date_str,format_str) if user_start_date_str is not None else None
+    # will be used later
+
+    leads_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
+    supplier_ids = list(set(leads_form_data.values_list('supplier_id', flat=True)))
+
+    all_suppliers_list_non_analytics = {}
+    all_localities_data_non_analytics = {}
+    lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
+    supplier_wise_lead_count = {}
+    supplier_data_1 = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
+    supplier_data = SupplierTypeSocietySerializer2(supplier_data_1, many=True).data
+
+    all_flat_data = {
+        "0-150":{
+            "campaign": campaign_id,
+            "flat_category": 1,
+            "interested": 0,
+            "total": 0,
+            "suppliers": 0,
+            "flat_count": 0
+        },
+        "151-399": {
+            "campaign": campaign_id,
+            "flat_category": 2,
+            "interested": 0,
+            "total": 0,
+            "suppliers": 0,
+            "flat_count": 0
+        },
+        "400+": {
+            "campaign": campaign_id,
+            "flat_category": 3,
+            "interested": 0,
+            "total": 0,
+            "suppliers": 0,
+            "flat_count": 0
+        }
+    }
+
+    for curr_supplier_data in supplier_data:
+        supplier_id = curr_supplier_data['supplier_id']
+        supplier_locality = curr_supplier_data['society_locality']
+        supplier_flat_count = curr_supplier_data['flat_count'] if curr_supplier_data['flat_count'] else 0
+        lead_count = lead_counter(campaign_id, supplier_id, lead_form_items_list)
+        supplier_wise_lead_count[supplier_id] = lead_count
+        hot_leads = lead_count['hot_leads']
+        total_leads = lead_count['total_leads']
+        # getting society information
+
+        hot_leads_percentage = round(float(hot_leads) / float(total_leads), 5)*100 if total_leads > 0 else 0
+        curr_supplier_lead_data = {
+            "is_interested": True,
+            "campaign": campaign_id,
+            "object_id": supplier_id,
+            "interested": hot_leads,
+            "total": total_leads,
+            "data": curr_supplier_data,
+            "hot_leads_percentage": hot_leads_percentage,
+            "flat_count": supplier_flat_count
+        }
+        all_suppliers_list_non_analytics[supplier_id] = curr_supplier_lead_data
+
+        if supplier_locality in all_localities_data_non_analytics:
+            all_localities_data_non_analytics[supplier_locality]["interested"] = all_localities_data_non_analytics[
+                                                                supplier_locality]["interested"] + hot_leads
+            all_localities_data_non_analytics[supplier_locality]["total"] = all_localities_data_non_analytics[
+                                                                supplier_locality]["total"] + total_leads
+            all_localities_data_non_analytics[supplier_locality]["suppliers"] = all_localities_data_non_analytics[
+                                                                supplier_locality][ "suppliers"] + 1
+            all_localities_data_non_analytics[supplier_locality]["flat_count"] = \
+                all_localities_data_non_analytics[supplier_locality]["flat_count"] + supplier_flat_count
+
+        else:
+            curr_locality_data = {
+                "is_interested": True,
+                "campaign": campaign_id,
+                "locality": supplier_locality,
+                "interested": hot_leads,
+                "total": total_leads,
+                "suppliers": 1,
+                "flat_count": supplier_flat_count
+            }
+            all_localities_data_non_analytics[supplier_locality] = curr_locality_data
+
+        if supplier_flat_count<150:
+            curr_flat_data = all_flat_data['0-150']
+            curr_flat_data['interested'] = curr_flat_data['interested']+hot_leads
+            curr_flat_data['total'] = curr_flat_data['total']+total_leads
+            curr_flat_data['suppliers'] = curr_flat_data['suppliers'] + 1
+            curr_flat_data['flat_count'] = curr_flat_data['flat_count'] + supplier_flat_count
+            all_flat_data['0-150'] = curr_flat_data
+        elif supplier_flat_count<400:
+            curr_flat_data = all_flat_data['151-399']
+            curr_flat_data['interested'] = curr_flat_data['interested']+hot_leads
+            curr_flat_data['total'] = curr_flat_data['total']+total_leads
+            curr_flat_data['suppliers'] = curr_flat_data['suppliers'] + 1
+            curr_flat_data['flat_count'] = curr_flat_data['flat_count'] + supplier_flat_count
+            all_flat_data['151-399'] = curr_flat_data
+        else:
+            curr_flat_data = all_flat_data['400+']
+            curr_flat_data['interested'] = curr_flat_data['interested'] + hot_leads
+            curr_flat_data['total'] = curr_flat_data['total'] + total_leads
+            curr_flat_data['suppliers'] = curr_flat_data['suppliers'] + 1
+            curr_flat_data['flat_count'] = curr_flat_data['flat_count'] + supplier_flat_count
+            all_flat_data['400+'] = curr_flat_data
+
+    all_suppliers_list = z_calculator_dict(all_suppliers_list_non_analytics, "hot_leads_percentage")
+    all_localities_data_hot_ratio = hot_lead_ratio_calculator(all_localities_data_non_analytics)
+    all_localities_data = z_calculator_dict(all_localities_data_hot_ratio, "hot_leads_percentage")
+
+    # date-wise
+    date_data = {}
+    weekday_data = {}
+    phase_data = {}
+    all_entries_checked = []
+    campaign_dates = leads_form_data.order_by('created_at').values_list('created_at',flat=True).distinct()
+    if len(campaign_dates) == 0:
+        final_data_dict = {'supplier': {}, 'date': {},
+                           'locality': {}, 'weekday': {},
+                           'flat': {}, 'phase': {}}
+        return final_data_dict
+    start_datetime = campaign_dates[0]
+    end_datetime = campaign_dates[len(campaign_dates)-1]
+    if user_start_datetime is not None:
+        start_datetime = max(campaign_dates[0], user_start_datetime)
+    if user_end_datetime is not None:
+        end_datetime = min(campaign_dates[len(campaign_dates)-1], user_end_datetime)
+
+    start_datetime_phase = start_datetime - timedelta(days=start_datetime.weekday())
+    end_datetime_phase = end_datetime + timedelta(days=6-end_datetime.weekday())
+
+    prev_phase = 0
+
+    # for curr_date in campaign_dates:
+    #     curr_phase = 1+((curr_date-start_datetime_phase).days)/7
+    #     if curr_phase > prev_phase:
+    #         phase_data['curr_phase'] = {
+    #
+    #         }
+
+    weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
+                     '4': 'Friday', '5': 'Saturday', '6': 'Sunday'}
+
+    for curr_data in leads_form_data:
+
+        curr_entry_details = {
+            'leads_form_id': curr_data.leads_form_id,
+            'entry_id': curr_data.entry_id
+        }
+        if curr_entry_details in all_entries_checked:
+            continue
+        else:
+            all_entries_checked.append(curr_entry_details)
+
+        time = curr_data.created_at
+        curr_date = str(time.date())
+        curr_time = str(time)
+        curr_phase_int = 1 + (time - start_datetime_phase).days / 7
+        curr_phase_start = time - timedelta(days=time.weekday())
+        curr_phase_end = curr_phase_start + timedelta(days=7)
+        curr_phase = str(curr_phase_int)
+        if curr_phase not in phase_data:
+            phase_data[curr_phase] = {
+                'total': 0,
+                'interested': 0,
+                'suppliers': [],
+                'supplier_count': 0,
+                'flat_count': 0,
+                'phase': curr_phase,
+                'start date': curr_phase_start,
+                'end date': curr_phase_end
+            }
+
+        curr_weekday = weekday_names[str(time.weekday())]
+
+        supplier_id = curr_data.supplier_id
+        curr_supplier_data = [x for x in supplier_data if x['supplier_id']==supplier_id][0]
+        flat_count = curr_supplier_data['flat_count'] if curr_supplier_data['flat_count'] else 0
+        lead_count = supplier_wise_lead_count[supplier_id]
+        hot_lead_details = lead_count['hot_lead_details']
+
+        if curr_date not in date_data:
+            date_data[curr_date] = {
+                'total': 0,
+                'is_interested': True,
+                'interested': 0,
+                'created_at': curr_time,
+                'suppliers': [],
+                'supplier_count': 0,
+                'flat_count': 0
+            }
+
+        if curr_weekday not in weekday_data:
+            weekday_data[curr_weekday] = {
+                'total': 0,
+                'interested': 0,
+                'suppliers': [],
+                'supplier_count': 0,
+                'flat_count': 0
+            }
+
+        date_data[curr_date]['total'] = date_data[curr_date]['total'] + 1
+        weekday_data[curr_weekday]['total'] = weekday_data[curr_weekday]['total'] + 1
+        phase_data[curr_phase]['total']=phase_data[curr_phase]['total']+1
+
+        if curr_entry_details in hot_lead_details:
+            date_data[curr_date]['interested'] = date_data[curr_date]['interested'] + 1
+            weekday_data[curr_weekday]['interested'] = weekday_data[curr_weekday]['interested'] + 1
+            phase_data[curr_phase]['interested'] = phase_data[curr_phase]['interested'] + 1
+
+        if supplier_id not in date_data[curr_date]['suppliers']:
+            date_data[curr_date]['supplier_count'] = date_data[curr_date]['supplier_count'] + 1
+            date_data[curr_date]['flat_count'] = date_data[curr_date]['flat_count'] + flat_count
+            date_data[curr_date]['suppliers'].append(supplier_id)
+
+        if supplier_id not in weekday_data[curr_weekday]['suppliers']:
+            weekday_data[curr_weekday]['supplier_count'] = weekday_data[curr_weekday]['supplier_count'] + 1
+            weekday_data[curr_weekday]['flat_count'] = weekday_data[curr_weekday]['flat_count'] + flat_count
+            weekday_data[curr_weekday]['suppliers'].append(supplier_id)
+
+        if supplier_id not in phase_data[curr_phase]['suppliers']:
+            phase_data[curr_phase]['supplier_count'] = phase_data[curr_phase]['supplier_count'] + 1
+            phase_data[curr_phase]['flat_count'] = phase_data[curr_phase]['flat_count'] + flat_count
+            phase_data[curr_phase]['suppliers'].append(supplier_id)
+
+    date_data_hot_ratio = hot_lead_ratio_calculator(date_data)
+    weekday_data_hot_ratio = hot_lead_ratio_calculator(weekday_data)
+    phase_data_hot_ratio = hot_lead_ratio_calculator(phase_data)
+    all_dates_data = z_calculator_dict(date_data_hot_ratio,"hot_leads_percentage")
+    all_weekdays_data = z_calculator_dict(weekday_data_hot_ratio,"hot_leads_percentage")
+    all_phase_data = z_calculator_dict(phase_data_hot_ratio,"hot_leads_percentage")
+    all_flat_data = hot_lead_ratio_calculator(all_flat_data)
+
+    final_data = {'supplier_data': all_suppliers_list, 'date_data': all_dates_data,
+                  'locality_data': all_localities_data, 'weekday_data': all_weekdays_data,
+                  'flat_data': all_flat_data, 'phase_data': phase_data}
+    cache.set(cache_string, final_data, timeout=CACHE_TTL * 100)
+    return final_data
+
 class CampaignLeads(APIView):
 
     def get(self, request):
@@ -1016,247 +1290,8 @@ class CampaignLeads(APIView):
         query_type = request.query_params.get('query_type')
         user_start_date_str = request.query_params.get('start_date', None)
         user_end_date_str = request.query_params.get('end_date', None)
-        format_str = '%d/%m/%Y'
-        user_start_datetime = datetime.strptime(user_start_date_str,format_str) if user_start_date_str is not None else None
-        user_end_datetime = datetime.strptime(user_end_date_str,format_str) if user_start_date_str is not None else None
-        # will be used later
-
         campaign_id = request.query_params.get('campaign_id', None)
-        leads_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
-        supplier_ids = list(set(leads_form_data.values_list('supplier_id', flat=True)))
-
-        all_suppliers_list_non_analytics = {}
-        all_localities_data_non_analytics = {}
-        lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
-        supplier_wise_lead_count = {}
-        supplier_data_1 = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
-        supplier_data = SupplierTypeSocietySerializer2(supplier_data_1, many=True).data
-
-        all_flat_data = {
-            "0-150":{
-                "campaign": campaign_id,
-                "flat_category": 1,
-                "interested": 0,
-                "total": 0,
-                "suppliers": 0,
-                "flat_count": 0
-            },
-            "151-399": {
-                "campaign": campaign_id,
-                "flat_category": 2,
-                "interested": 0,
-                "total": 0,
-                "suppliers": 0,
-                "flat_count": 0
-            },
-            "400+": {
-                "campaign": campaign_id,
-                "flat_category": 3,
-                "interested": 0,
-                "total": 0,
-                "suppliers": 0,
-                "flat_count": 0
-            }
-        }
-
-        for curr_supplier_data in supplier_data:
-            supplier_id = curr_supplier_data['supplier_id']
-            supplier_locality = curr_supplier_data['society_locality']
-            supplier_flat_count = curr_supplier_data['flat_count'] if curr_supplier_data['flat_count'] else 0
-            lead_count = lead_counter(campaign_id, supplier_id, lead_form_items_list)
-            supplier_wise_lead_count[supplier_id] = lead_count
-            hot_leads = lead_count['hot_leads']
-            total_leads = lead_count['total_leads']
-            # getting society information
-
-            hot_leads_percentage = round(float(hot_leads) / float(total_leads), 5)*100 if total_leads > 0 else 0
-            curr_supplier_lead_data = {
-                "is_interested": True,
-                "campaign": campaign_id,
-                "object_id": supplier_id,
-                "interested": hot_leads,
-                "total": total_leads,
-                "data": curr_supplier_data,
-                "hot_leads_percentage": hot_leads_percentage,
-                "flat_count": supplier_flat_count
-            }
-            all_suppliers_list_non_analytics[supplier_id] = curr_supplier_lead_data
-
-            if supplier_locality in all_localities_data_non_analytics:
-                all_localities_data_non_analytics[supplier_locality]["interested"] = all_localities_data_non_analytics[
-                                                                    supplier_locality]["interested"] + hot_leads
-                all_localities_data_non_analytics[supplier_locality]["total"] = all_localities_data_non_analytics[
-                                                                    supplier_locality]["total"] + total_leads
-                all_localities_data_non_analytics[supplier_locality]["suppliers"] = all_localities_data_non_analytics[
-                                                                    supplier_locality][ "suppliers"] + 1
-                all_localities_data_non_analytics[supplier_locality]["flat_count"] = \
-                    all_localities_data_non_analytics[supplier_locality]["flat_count"] + supplier_flat_count
-
-            else:
-                curr_locality_data = {
-                    "is_interested": True,
-                    "campaign": campaign_id,
-                    "locality": supplier_locality,
-                    "interested": hot_leads,
-                    "total": total_leads,
-                    "suppliers": 1,
-                    "flat_count": supplier_flat_count
-                }
-                all_localities_data_non_analytics[supplier_locality] = curr_locality_data
-
-            if supplier_flat_count<150:
-                curr_flat_data = all_flat_data['0-150']
-                curr_flat_data['interested'] = curr_flat_data['interested']+hot_leads
-                curr_flat_data['total'] = curr_flat_data['total']+total_leads
-                curr_flat_data['suppliers'] = curr_flat_data['suppliers'] + 1
-                curr_flat_data['flat_count'] = curr_flat_data['flat_count'] + supplier_flat_count
-                all_flat_data['0-150'] = curr_flat_data
-            elif supplier_flat_count<400:
-                curr_flat_data = all_flat_data['151-399']
-                curr_flat_data['interested'] = curr_flat_data['interested']+hot_leads
-                curr_flat_data['total'] = curr_flat_data['total']+total_leads
-                curr_flat_data['suppliers'] = curr_flat_data['suppliers'] + 1
-                curr_flat_data['flat_count'] = curr_flat_data['flat_count'] + supplier_flat_count
-                all_flat_data['151-399'] = curr_flat_data
-            else:
-                curr_flat_data = all_flat_data['400+']
-                curr_flat_data['interested'] = curr_flat_data['interested'] + hot_leads
-                curr_flat_data['total'] = curr_flat_data['total'] + total_leads
-                curr_flat_data['suppliers'] = curr_flat_data['suppliers'] + 1
-                curr_flat_data['flat_count'] = curr_flat_data['flat_count'] + supplier_flat_count
-                all_flat_data['400+'] = curr_flat_data
-
-        all_suppliers_list = z_calculator_dict(all_suppliers_list_non_analytics, "hot_leads_percentage")
-        all_localities_data_hot_ratio = hot_lead_ratio_calculator(all_localities_data_non_analytics)
-        all_localities_data = z_calculator_dict(all_localities_data_hot_ratio, "hot_leads_percentage")
-
-        # date-wise
-        date_data = {}
-        weekday_data = {}
-        phase_data = {}
-        all_entries_checked = []
-        campaign_dates = leads_form_data.order_by('created_at').values_list('created_at',flat=True).distinct()
-        if len(campaign_dates) == 0:
-            final_data_dict = {'supplier': {}, 'date': {},
-                               'locality': {}, 'weekday': {},
-                               'flat': {}, 'phase': {}}
-            return ui_utils.handle_response(class_name, data=final_data_dict, success=True)
-        start_datetime = campaign_dates[0]
-        end_datetime = campaign_dates[len(campaign_dates)-1]
-        if user_start_datetime is not None:
-            start_datetime = max(campaign_dates[0], user_start_datetime)
-        if user_end_datetime is not None:
-            end_datetime = min(campaign_dates[len(campaign_dates)-1], user_end_datetime)
-
-        start_datetime_phase = start_datetime - timedelta(days=start_datetime.weekday())
-        end_datetime_phase = end_datetime + timedelta(days=6-end_datetime.weekday())
-
-        prev_phase = 0
-
-        # for curr_date in campaign_dates:
-        #     curr_phase = 1+((curr_date-start_datetime_phase).days)/7
-        #     if curr_phase > prev_phase:
-        #         phase_data['curr_phase'] = {
-        #
-        #         }
-
-        weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
-                         '4': 'Friday', '5': 'Saturday', '6': 'Sunday'}
-
-        for curr_data in leads_form_data:
-
-            curr_entry_details = {
-                'leads_form_id': curr_data.leads_form_id,
-                'entry_id': curr_data.entry_id
-            }
-            if curr_entry_details in all_entries_checked:
-                continue
-            else:
-                all_entries_checked.append(curr_entry_details)
-
-            time = curr_data.created_at
-            curr_date = str(time.date())
-            curr_time = str(time)
-            curr_phase_int = 1 + (time - start_datetime_phase).days / 7
-            curr_phase_start = time - timedelta(days=time.weekday())
-            curr_phase_end = curr_phase_start + timedelta(days=7)
-            curr_phase = str(curr_phase_int)
-            if curr_phase not in phase_data:
-                phase_data[curr_phase] = {
-                    'total': 0,
-                    'interested': 0,
-                    'suppliers': [],
-                    'supplier_count': 0,
-                    'flat_count': 0,
-                    'phase': curr_phase,
-                    'start date': curr_phase_start,
-                    'end date': curr_phase_end
-                }
-
-            curr_weekday = weekday_names[str(time.weekday())]
-
-            supplier_id = curr_data.supplier_id
-            curr_supplier_data = [x for x in supplier_data if x['supplier_id']==supplier_id][0]
-            flat_count = curr_supplier_data['flat_count'] if curr_supplier_data['flat_count'] else 0
-            lead_count = supplier_wise_lead_count[supplier_id]
-            hot_lead_details = lead_count['hot_lead_details']
-
-            if curr_date not in date_data:
-                date_data[curr_date] = {
-                    'total': 0,
-                    'is_interested': True,
-                    'interested': 0,
-                    'created_at': curr_time,
-                    'suppliers': [],
-                    'supplier_count': 0,
-                    'flat_count': 0
-                }
-
-            if curr_weekday not in weekday_data:
-                weekday_data[curr_weekday] = {
-                    'total': 0,
-                    'interested': 0,
-                    'suppliers': [],
-                    'supplier_count': 0,
-                    'flat_count': 0
-                }
-
-            date_data[curr_date]['total'] = date_data[curr_date]['total'] + 1
-            weekday_data[curr_weekday]['total'] = weekday_data[curr_weekday]['total'] + 1
-            phase_data[curr_phase]['total']=phase_data[curr_phase]['total']+1
-
-            if curr_entry_details in hot_lead_details:
-                date_data[curr_date]['interested'] = date_data[curr_date]['interested'] + 1
-                weekday_data[curr_weekday]['interested'] = weekday_data[curr_weekday]['interested'] + 1
-                phase_data[curr_phase]['interested'] = phase_data[curr_phase]['interested'] + 1
-
-            if supplier_id not in date_data[curr_date]['suppliers']:
-                date_data[curr_date]['supplier_count'] = date_data[curr_date]['supplier_count'] + 1
-                date_data[curr_date]['flat_count'] = date_data[curr_date]['flat_count'] + flat_count
-                date_data[curr_date]['suppliers'].append(supplier_id)
-
-            if supplier_id not in weekday_data[curr_weekday]['suppliers']:
-                weekday_data[curr_weekday]['supplier_count'] = weekday_data[curr_weekday]['supplier_count'] + 1
-                weekday_data[curr_weekday]['flat_count'] = weekday_data[curr_weekday]['flat_count'] + flat_count
-                weekday_data[curr_weekday]['suppliers'].append(supplier_id)
-
-            if supplier_id not in phase_data[curr_phase]['suppliers']:
-                phase_data[curr_phase]['supplier_count'] = phase_data[curr_phase]['supplier_count'] + 1
-                phase_data[curr_phase]['flat_count'] = phase_data[curr_phase]['flat_count'] + flat_count
-                phase_data[curr_phase]['suppliers'].append(supplier_id)
-
-        date_data_hot_ratio = hot_lead_ratio_calculator(date_data)
-        weekday_data_hot_ratio = hot_lead_ratio_calculator(weekday_data)
-        phase_data_hot_ratio = hot_lead_ratio_calculator(phase_data)
-        all_dates_data = z_calculator_dict(date_data_hot_ratio,"hot_leads_percentage")
-        all_weekdays_data = z_calculator_dict(weekday_data_hot_ratio,"hot_leads_percentage")
-        all_phase_data = z_calculator_dict(phase_data_hot_ratio,"hot_leads_percentage")
-        all_flat_data = hot_lead_ratio_calculator(all_flat_data)
-
-        final_data = {'supplier_data': all_suppliers_list, 'date_data': all_dates_data,
-                      'locality_data': all_localities_data, 'weekday_data': all_weekdays_data,
-                      'flat_data': all_flat_data, 'phase_data': phase_data}
-
+        final_data = get_leads_data_for_campaign(campaign_id, user_start_date_str, user_end_date_str, cache_again=False)
         return ui_utils.handle_response(class_name, data=final_data, success=True)
 
 
@@ -1749,27 +1784,6 @@ class PhaseWiseMultipleCampaignLeads(APIView):
         return ui_utils.handle_response(class_name, data=phase_data_all, success=True)
 
 
-class CampaignLeadsCacheAll(APIView):
-    def get(self, request):
-        class_name = self.__class__.__name__
-        all_leads_forms = LeadsForm.objects.all()
-        cache.clear()
-        for leads_form in all_leads_forms:
-            campaign_id = leads_form.campaign_id
-            url = "https://api.machadalo.com/v0/ui/website/dashboard/get_leads_by_campaign_new/"
-            querystring = {"campaign_id": campaign_id}
-            headers = {
-                'Authorization': "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1Mzc2OTY3NzIsIm5hbWUiOiIiLCJleHAiOjE1Mzc2OTcwNzIsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.1Z8Us0_1BBWsrDGDCaJ8gLPibYmXn76sUQEo1GLXPY8",
-                'Content-Type': "application/json",
-            }
-            response = requests.request("GET", url, headers=headers, params=querystring)
-
-            url = "https://api.machadalo.com/v0/ui/website/dashboard/campaign_id/get_leads_by_multiple_campaigns/"
-
-            payload = "[\"" + campaign_id + "\"]"
-            response = requests.request("POST", url, data=payload, headers=headers)
-        return ui_utils.handle_response(class_name, data={"status": "success"}, success=True)
-
 
 class Comment(APIView):
     @staticmethod
@@ -1903,4 +1917,3 @@ class SupplierPhaseUpdate(APIView):
 #                 'supplier_id': supplier_id
 #             })
 #         return ui_utils.handle_response(class_name, data={}, success=True)
-
