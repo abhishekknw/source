@@ -1028,6 +1028,10 @@ class CampaignLeads(APIView):
     def get(self, request):
         class_name = self.__class__.__name__
         query_type = request.query_params.get('query_type')
+        campaign_id = request.query_params.get('campaign_id', None)
+        if "single_" + str(campaign_id) in cache:
+            final_data = cache.get("single_" + str(campaign_id))
+            return ui_utils.handle_response(class_name, data=final_data, success=True)
         user_start_date_str = request.query_params.get('start_date', None)
         user_end_date_str = request.query_params.get('end_date', None)
         format_str = '%d/%m/%Y'
@@ -1035,7 +1039,6 @@ class CampaignLeads(APIView):
         user_end_datetime = datetime.strptime(user_end_date_str,format_str) if user_start_date_str is not None else None
         # will be used later
 
-        campaign_id = request.query_params.get('campaign_id', None)
         leads_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
         supplier_ids = list(set(leads_form_data.values_list('supplier_id', flat=True)))
 
@@ -1270,7 +1273,7 @@ class CampaignLeads(APIView):
         final_data = {'supplier_data': all_suppliers_list, 'date_data': all_dates_data,
                       'locality_data': all_localities_data, 'weekday_data': all_weekdays_data,
                       'flat_data': all_flat_data, 'phase_data': phase_data}
-
+        cache.set("single_" + str(campaign_id), final_data, timeout=CACHE_TTL * 100)
         return ui_utils.handle_response(class_name, data=final_data, success=True)
 
 

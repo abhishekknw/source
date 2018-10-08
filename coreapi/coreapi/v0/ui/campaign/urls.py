@@ -22,7 +22,7 @@ urlpatterns = [
     url(r'^get-adinventorytype-and-durationtype-data/$', GetAdInventoryTypeAndDurationTypeData.as_view()),
     url(r'^add-dynamic-inventory-ids/$', AddDynamicInventoryIds.as_view()),
     url(r'^delete-ad-inventory-ids/$', DeleteAdInventoryIds.as_view()),
-    url(r'^dashboard/get_leads_by_campaign_new/$',  cache_page(60*60*100)(CampaignLeads.as_view())),
+    url(r'^dashboard/get_leads_by_campaign_new/$',  CampaignLeads.as_view()),
     url(r'^dashboard/cache_campaign_leads/$',  CampaignLeadsCacheAll.as_view()),
     # url(r'^dashboard/get_leads_by_campaign_new/$',  CampaignLeads.as_view()),
     url(r'^city-wise-multiple-campaign/$', CityWiseMultipleCampaignLeads.as_view()),
