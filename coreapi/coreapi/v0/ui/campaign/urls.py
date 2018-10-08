@@ -6,7 +6,7 @@ from views import (ShortlistSocietyCountAPIView, BookCampaignAPIView,
                    DeleteInventoryActivityAssignment, GetCampaignAssignments, DeleteCampaignAssignments,
                    GetAdInventoryTypeAndDurationTypeData, AddDynamicInventoryIds, DeleteAdInventoryIds,
                    CampaignLeads, CityWiseMultipleCampaignLeads, PhaseWiseMultipleCampaignLeads, CampaignLeadsCustom,
-                   CampaignLeadsCacheAll, Comment)
+                   CampaignLeadsCacheAll, Comment, SupplierPhaseUpdate)
 from v0.ui.website.views import (GetAssignedIdImagesListApiView)
 
 urlpatterns = [
@@ -29,6 +29,8 @@ urlpatterns = [
     url(r'^phase-wise-multiple-campaign/$', PhaseWiseMultipleCampaignLeads.as_view()),
     url(r'^dashboard/get_leads_by_campaign_custom/$',  CampaignLeadsCustom.as_view()),
     url(r'^(?P<campaign_id>[A-Z_a-z0-9-]+)/comment/$', Comment.as_view()),
+    url(r'^update-supplier-phase/$', SupplierPhaseUpdate.as_view()),
+    #url(r'^fix-invalid-dates/$', FixInvalidDates.as_view()),
 ]
 
 router = DefaultRouter()

@@ -1840,10 +1840,67 @@ class SupplierPhaseUpdate(APIView):
 
     def put(self,request):
         class_name = self.__class__.__name__
-        leads_form_data_objects = LeadsFormData.objects.exclude(status='inactive').all()
-        leads_form_items_objects = LeadsFormItems.objects.exclude(status='inactive').all()
+        leads_form_data_objects = LeadsFormData.objects.exclude(status='inactive').order_by('created_at').all()
+        #leads_form_items_objects = LeadsFormItems.objects.exclude(status='inactive').all()
         campaign_list = leads_form_data_objects.values_list('campaign_id',flat=True).distinct()
-        for item in leads_form_items_objects:
-            leads_form_items.append(item.__dict__)
+        leads_form_items = []
+        leads_form_data = []
+        data_keys = ['created_at','supplier_id','campaign_id']
+        # for item in leads_form_items_objects:
+        #     leads_form_items.append(item.__dict__)
+        supplier_phase_data = []
         for data in leads_form_data_objects:
-            leads_form_data.append(data.__dict__)
+            curr_data = data.__dict__
+            data_part = {key:curr_data[key] for key in data_keys}
+            leads_form_data.append(data_part)
+        now_time = timezone.now()
+        for campaign_id in campaign_list:
+            suppliers_list_campaign = []
+            leads_form_data_campaign = [x for x in leads_form_data if x['campaign_id'] == campaign_id]
+            campaign_dates = [x['created_at'] for x in leads_form_data_campaign]
+            start_datetime = campaign_dates[0]
+            print start_datetime
+            start_datetime_phase = start_datetime - timedelta(days=start_datetime.weekday())
+            end_datetime = campaign_dates[len(campaign_dates)-1]
+            print end_datetime
+            end_datetime_phase = end_datetime + timedelta(days=(6-start_datetime.weekday()))
+            total_phases = (end_datetime_phase - start_datetime_phase).days/7
+            actual_phase = 1
+            for curr_phase in range(0, total_phases):
+                start_datetime_curr_phase = start_datetime + timedelta(days=7*curr_phase)
+                print start_datetime_curr_phase
+                end_datetime_curr_phase = start_datetime_curr_phase + timedelta(days=7)
+                print end_datetime_curr_phase
+                suppliers_list = list(set([x['supplier_id'] for x in leads_form_data_campaign if start_datetime_curr_phase <=
+                                        x['created_at'] < end_datetime_curr_phase]))
+                if len(suppliers_list)>0:
+
+                    curr_campaign_phase_data = {
+                        'phase_no': actual_phase,
+                        'start_date': start_datetime_curr_phase,
+                        'end_date': end_datetime_curr_phase,
+                        'campaign_id': campaign_id,
+                        'created_at': now_time,
+                        'updated_at': now_time,
+                        'comments': 'migrated from historic data'
+                    }
+                    supplier_phase_data.append(SupplierPhase(**curr_campaign_phase_data))
+                    for supplier in suppliers_list:
+                        suppliers_list_campaign.append(supplier)
+                        actual_phase = actual_phase+1
+        SupplierPhase.objects.bulk_create(supplier_phase_data)
+        return ui_utils.handle_response(class_name, data={}, success=True)
+
+
+# class FixInvalidDates(APIView):
+#
+#     def put(self,request):
+#         class_name = self.__class__.__name__
+#         invalid_date_suppliers = SupplierTypeSociety.objects.filter(created_at = '0000-00-00 00:00:00.000000').all()
+#         suppliers_list = invalid_date_suppliers.values_list('supplier_id',flat=True)
+#         for supplier_id in suppliers_list:
+#             SupplierTypeSociety.update_or_create(created_at='1970-01-01', defaults = {
+#                 'supplier_id': supplier_id
+#             })
+#         return ui_utils.handle_response(class_name, data={}, success=True)
+

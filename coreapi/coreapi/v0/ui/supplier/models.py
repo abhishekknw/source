@@ -4,6 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import fields
 from v0.ui.base.models import BaseModel
 from v0.ui.account.models import ContactDetailsGeneric, ContactDetails
+from v0.ui.proposal.models import SupplierPhase
 
 from v0 import managers
 
@@ -187,6 +188,7 @@ class SupplierTypeSociety(BaseModel):
     representative = models.ForeignKey('Organisation', null=True, blank=True)
     supplier_status = models.CharField(max_length=80, null=True,  choices=SUPPLIER_STATUS)
     comments = models.CharField(max_length=255, null=True, blank=True)
+    supplier_phase = models.ForeignKey('SupplierPhase', null=True,blank=True)
 
     def get_society_image(self):
         try:
