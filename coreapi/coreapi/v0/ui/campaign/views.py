@@ -13,7 +13,6 @@ import v0.constants as v0_constants
 from v0.ui.supplier.models import (SupplierTypeSociety)
 import v0.ui.website.utils as website_utils
 from django.db.models import Q, F
-from django.db.models import Count
 from models import (CampaignSocietyMapping, Campaign, CampaignAssignment, CampaignComments)
 from serializers import (CampaignListSerializer, CampaignSerializer, CampaignAssignmentSerializer)
 from v0.ui.proposal.models import ShortlistedSpaces
@@ -37,7 +36,7 @@ import requests
 from celery import shared_task
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 from dateutil import tz
-
+from django.db.models import Count, Sum
 
 
 class CampaignAPIView(APIView):
@@ -721,13 +720,16 @@ class DashBoardViewSet(viewsets.ViewSet):
                 else:
                     remaining_campaign_list.append(campaign)
             # GETTING FROM CACHE ENDS
-
             campaign_objects = ProposalInfo.objects.filter(proposal_id__in=remaining_campaign_list).values()
             campaign_objects_list = {campaign['proposal_id']: campaign for campaign in campaign_objects}
             valid_campaign_list = campaign_objects_list.keys()
             # leads_from_data = LeadsFormData.filter(campaign_id__in = campaign_list)
             # lead_items = LeadsFormItems.filter(campaign_id__in=campaign_list)
             for campaign_id in valid_campaign_list:
+                shortlisted_supplier_ids = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values_list(
+                    'object_id')
+                flat_count = SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_supplier_ids). \
+                    values('flat_count').aggregate(Sum('flat_count'))['flat_count__sum']
                 leads_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id)
                 #leads_form_items = LeadsFormItems.objects.filter(campaign_id = campaign_id)
                 leads_form_data_array = []
@@ -775,7 +777,8 @@ class DashBoardViewSet(viewsets.ViewSet):
                             'hot_lead_ratio': hot_lead_ratio,
                             'data': campaign_objects_list[campaign_id],
                             'interested': hot_leads,
-                            'campaign': campaign_id
+                            'campaign': campaign_id,
+                            'flat_count': flat_count
                         }
                 cache.set(str(campaign_id), multi_campaign_return_data[campaign_id], timeout=CACHE_TTL*100)
             return ui_utils.handle_response(class_name, data=multi_campaign_return_data, success=True)
