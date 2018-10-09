@@ -1028,7 +1028,7 @@ class CampaignLeadsMultiple(APIView):
         class_name = self.__class__.__name__
         try:
             campaign_list = request.data
-            get_leads_data_for_multiple_campaigns(campaign_list)
+            multi_campaign_return_data = get_leads_data_for_multiple_campaigns(campaign_list)
             return ui_utils.handle_response(class_name, data=multi_campaign_return_data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
