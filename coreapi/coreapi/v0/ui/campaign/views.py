@@ -1020,7 +1020,7 @@ def get_leads_data_for_multiple_campaigns(campaign_list, cache_again=False):
             'flat_count': flat_count
         }
         cache.set(str(campaign_id), multi_campaign_return_data[campaign_id], timeout=CACHE_TTL * 100)
-        return multi_campaign_return_data
+    return multi_campaign_return_data
 
 
 class CampaignLeadsMultiple(APIView):
