@@ -1024,7 +1024,7 @@ def get_leads_data_for_multiple_campaigns(campaign_list, cache_again=False):
 
 
 class CampaignLeadsMultiple(APIView):
-    def get(self, request, pk=None):
+    def post(self, request, pk=None):
         class_name = self.__class__.__name__
         try:
             campaign_list = request.data
