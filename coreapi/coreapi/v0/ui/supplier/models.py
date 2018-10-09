@@ -188,7 +188,6 @@ class SupplierTypeSociety(BaseModel):
     representative = models.ForeignKey('Organisation', null=True, blank=True)
     supplier_status = models.CharField(max_length=80, null=True,  choices=SUPPLIER_STATUS)
     comments = models.CharField(max_length=255, null=True, blank=True)
-    supplier_phase = models.ForeignKey('SupplierPhase', null=True,blank=True)
 
     def get_society_image(self):
         try:
