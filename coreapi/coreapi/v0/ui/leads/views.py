@@ -695,7 +695,6 @@ def cache_all_campaign_leads(campaign_id='ALL'):
             get_leads_data_for_campaign.delay(campaign_id, None, None, True)
             get_leads_data_for_multiple_campaigns.delay([campaign_id], True)
     else:
-        print "in else"
         get_leads_data_for_campaign.delay(campaign_id, None, None, True)
         get_leads_data_for_multiple_campaigns.delay([campaign_id], True)
     return
@@ -704,6 +703,6 @@ def cache_all_campaign_leads(campaign_id='ALL'):
 class CampaignLeadsCacheAll(APIView):
     def get(self, request):
         class_name = self.__class__.__name__
-        campaign_id = request.query_params.get('campaign_id', 'All')
+        campaign_id = request.query_params.get('campaign_id', 'ALL')
         cache_all_campaign_leads(campaign_id)
         return ui_utils.handle_response(class_name, data={"status": "success"}, success=True)

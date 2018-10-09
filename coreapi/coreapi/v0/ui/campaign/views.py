@@ -1020,15 +1020,15 @@ def get_leads_data_for_multiple_campaigns(campaign_list, cache_again=False):
             'flat_count': flat_count
         }
         cache.set(str(campaign_id), multi_campaign_return_data[campaign_id], timeout=CACHE_TTL * 100)
-        return multi_campaign_return_data
+    return multi_campaign_return_data
 
 
 class CampaignLeadsMultiple(APIView):
-    def get(self, request, pk=None):
+    def post(self, request, pk=None):
         class_name = self.__class__.__name__
         try:
             campaign_list = request.data
-            get_leads_data_for_multiple_campaigns(campaign_list)
+            multi_campaign_return_data = get_leads_data_for_multiple_campaigns(campaign_list)
             return ui_utils.handle_response(class_name, data=multi_campaign_return_data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)

@@ -57,6 +57,8 @@ from v0.ui.common.models import BaseUser
 
 
 def convert_date_format(date):
+    if isinstance(date, datetime.datetime):
+        return date
     try:
         date = datetime.datetime.strptime(str(date), '%d/%m/%Y')
         return date
