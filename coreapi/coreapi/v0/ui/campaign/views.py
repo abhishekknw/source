@@ -437,7 +437,6 @@ class DashBoardViewSet(viewsets.ViewSet):
             total_ongoing_leads_count = 0
             total_ongoing_hot_leads_count = 0
             total_ongoing_flat_count = 0
-
             for id in ongoing_supplier_id_list:
                 data = {
                     'supplier': supplier_objects_id_list[id],
@@ -450,6 +449,7 @@ class DashBoardViewSet(viewsets.ViewSet):
                 if 'total_leads_count' in data['leads_data']:
                     total_ongoing_leads_count = total_ongoing_leads_count + data['leads_data']['total_leads_count']
                     total_ongoing_hot_leads_count = total_ongoing_hot_leads_count + data['leads_data']['hot_leads_count']
+                if supplier_objects_id_list[id]['flat_count']:
                     total_ongoing_flat_count = total_ongoing_flat_count + supplier_objects_id_list[id]['flat_count']
 
             completed_suppliers_list = []
@@ -468,8 +468,8 @@ class DashBoardViewSet(viewsets.ViewSet):
                 if 'total_leads_count' in data['leads_data']:
                     total_completed_leads_count = total_completed_leads_count + data['leads_data']['total_leads_count']
                     total_completed_hot_leads_count = total_completed_hot_leads_count + data['leads_data']['hot_leads_count']
-                    if supplier_objects_id_list[id]['flat_count']:
-                        total_completed_flat_count = total_completed_flat_count + supplier_objects_id_list[id]['flat_count']
+                if supplier_objects_id_list[id]['flat_count']:
+                    total_completed_flat_count = total_completed_flat_count + supplier_objects_id_list[id]['flat_count']
             upcoming_suppliers_list = []
             total_upcoming_leads_count = 0
             total_upcoming_hot_leads_count = 0
@@ -486,8 +486,8 @@ class DashBoardViewSet(viewsets.ViewSet):
                 if 'total_leads_count' in data['leads_data']:
                     total_upcoming_leads_count = total_upcoming_leads_count + data['leads_data']['total_leads_count']
                     total_upcoming_hot_leads_count = total_upcoming_hot_leads_count + data['leads_data']['hot_leads_count']
-                    if supplier_objects_id_list[id]['flat_count']:
-                        total_upcoming_flat_count = total_upcoming_flat_count + supplier_objects_id_list[id]['flat_count']
+                if supplier_objects_id_list[id]['flat_count']:
+                    total_upcoming_flat_count = total_upcoming_flat_count + supplier_objects_id_list[id]['flat_count']
             data = {
                 'ongoing': ongoing_suppliers_list,
                 'completed': completed_suppliers_list,
