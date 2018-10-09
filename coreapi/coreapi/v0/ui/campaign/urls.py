@@ -8,6 +8,7 @@ from views import (ShortlistSocietyCountAPIView, BookCampaignAPIView,
                    CampaignLeads, CityWiseMultipleCampaignLeads, PhaseWiseMultipleCampaignLeads, CampaignLeadsCustom,
                    SupplierPhaseUpdate, Comment, CampaignLeadsMultiple)
 from v0.ui.website.views import (GetAssignedIdImagesListApiView)
+from v0.ui.leads.views import CampaignLeadsCacheAll
 
 urlpatterns = [
     url(r'^getCampaigns/$', CampaignAPIView.as_view()),
