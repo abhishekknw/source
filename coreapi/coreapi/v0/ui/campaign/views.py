@@ -353,6 +353,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             suppliers_instances = SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_suppliers_id_list)
             supplier_serializer = SupplierTypeSocietySerializer(suppliers_instances, many=True)
             suppliers = supplier_serializer.data
+            flat_count = 0
 
             supplier_objects_id_list = {supplier['supplier_id']: supplier for supplier in suppliers}
             all_leads_count = LeadsFormSummary.objects.filter(campaign_id=campaign_id).all()
@@ -431,6 +432,7 @@ class DashBoardViewSet(viewsets.ViewSet):
 
             upcoming_supplier_id_list = set(shortlisted_suppliers_id_list) - set(
                 ongoing_supplier_id_list + completed_supplier_id_list)
+
             ongoing_suppliers_list = []
             total_ongoing_leads_count = 0
             total_ongoing_hot_leads_count = 0
@@ -1544,20 +1546,30 @@ class CampaignLeadsCustom(APIView):
                                         and x['entry_id'] == entry_id]
                 current_form_items = [x for x in leads_form_items if x['leads_form_id'] == leads_form_id]
 
-                if str(leads_form_id) in hot_lead_items:
-                    hot_lead_items_current = hot_lead_items[str(leads_form_id)]
-                else:
-                    hot_lead_items_current = [x['item_id'] for x in current_form_items if x['hot_lead_criteria'] is not None]
-                    hot_lead_items[str(leads_form_id)] = hot_lead_items_current
 
                 is_hot_lead = 0
-                for item_id in hot_lead_items_current:
-                    curr_data_value = [x['item_value'] for x in curr_data_all_fields if x['item_id']==item_id]
-                    hot_lead_criterion = [x['hot_lead_criteria'] for x in current_form_items if x['item_id']==item_id]
+                for curr_item in current_form_items:
+                    if 'counseling' in curr_item['key_name']:
+                        item_id = curr_item['item_id']
+                        curr_data_c = [x for x in curr_data_all_fields if x['item_id']==item_id][0]
+                        item_value = curr_data_c['item_value']
+                        if item_value is not None and len(item_value)>0:
+                            is_hot_lead = 1
+                            break
+                if is_hot_lead == 0:
+                    if str(leads_form_id) in hot_lead_items:
+                        hot_lead_items_current = hot_lead_items[str(leads_form_id)]
+                    else:
+                        hot_lead_items_current = [x['item_id'] for x in current_form_items if x['hot_lead_criteria'] is not None]
+                        hot_lead_items[str(leads_form_id)] = hot_lead_items_current
 
-                    if curr_data_value == hot_lead_criterion:
-                        is_hot_lead = 1
-                        break
+                    for item_id in hot_lead_items_current:
+                        curr_data_value = [x['item_value'] for x in curr_data_all_fields if x['item_id']==item_id]
+                        hot_lead_criterion = [x['hot_lead_criteria'] for x in current_form_items if x['item_id']==item_id]
+
+                        if curr_data_value == hot_lead_criterion:
+                            is_hot_lead = 1
+                            break
 
                 curr_supplier_data = [x for x in supplier_data if x['supplier_id'] == supplier_id][0]
                 flat_count = curr_supplier_data['flat_count'] if curr_supplier_data['flat_count'] else 0
