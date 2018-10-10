@@ -1,5 +1,7 @@
 import random
 import numpy as np
+from django.db.models import Count, Sum
+from dateutil import tz
 from datetime import datetime
 from datetime import timedelta
 from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, SupplierPhase, HashTagImages
@@ -24,7 +26,6 @@ from rest_framework import status
 import gpxpy.geo
 from v0.ui.leads.models import LeadsForm, LeadsFormItems, LeadsFormData, LeadsFormSummary
 from v0.ui.leads.serializers import LeadsFormItemsSerializer, LeadsFormSummarySerializer
-from v0.utils import get_values
 from v0.ui.base.models import DurationType
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from django.core.cache import cache
@@ -35,8 +36,6 @@ from operator import itemgetter
 import requests
 from celery import shared_task
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
-from dateutil import tz
-from django.db.models import Count, Sum
 
 
 class CampaignAPIView(APIView):
@@ -1040,7 +1039,7 @@ class CampaignLeadsMultiple(APIView):
 def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_date_str=None, cache_again=False):
     cache_string = "single_" + str(campaign_id) + str(user_start_date_str) + str(user_end_date_str)
     if not cache_again:
-        if cache_string in cache:
+        if cache_string in cache and user_start_date_str is None and user_end_date_str is None:
             final_data = cache.get(cache_string)
             return final_data
     format_str = '%d/%m/%Y'
@@ -1058,32 +1057,19 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
     supplier_data_1 = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
     supplier_data = SupplierTypeSocietySerializer2(supplier_data_1, many=True).data
 
-    all_flat_data = {
-        "0-150":{
+    all_flat_data = {}
+    flat_categories = ['0-150', '151-399', '400+']
+    flat_category_id = 0
+    for flat_category in flat_categories:
+        flat_category_id = flat_category_id + 1
+        all_flat_data[flat_category] = {
             "campaign": campaign_id,
-            "flat_category": 1,
-            "interested": 0,
-            "total": 0,
-            "suppliers": 0,
-            "flat_count": 0
-        },
-        "151-399": {
-            "campaign": campaign_id,
-            "flat_category": 2,
-            "interested": 0,
-            "total": 0,
-            "suppliers": 0,
-            "flat_count": 0
-        },
-        "400+": {
-            "campaign": campaign_id,
-            "flat_category": 3,
+            "flat_category": flat_category_id,
             "interested": 0,
             "total": 0,
             "suppliers": 0,
             "flat_count": 0
         }
-    }
 
     for curr_supplier_data in supplier_data:
         supplier_id = curr_supplier_data['supplier_id']
@@ -1282,8 +1268,10 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
     final_data = {'supplier_data': all_suppliers_list, 'date_data': all_dates_data,
                   'locality_data': all_localities_data, 'weekday_data': all_weekdays_data,
                   'flat_data': all_flat_data, 'phase_data': phase_data}
-    cache.set(cache_string, final_data, timeout=CACHE_TTL * 100)
+    if user_start_date_str is None and user_end_date_str is None:
+        cache.set(cache_string, final_data, timeout=CACHE_TTL)
     return final_data
+
 
 class CampaignLeads(APIView):
 
@@ -1298,21 +1286,14 @@ class CampaignLeads(APIView):
 
 
 @shared_task()
-def get_campaign_leads_custom(query_params, cache_again=False):
-    query_type = query_params.get('query_type')
-    if query_type not in ['supplier', 'flat', 'locality', 'date', 'weekday', 'phase']:
-        return 'incorrect query type'
-    campaign_id = query_params.get('campaign_id', None)
-    user_start_str = query_params.get('start_date', None)
-    user_end_str = query_params.get('end_date', None)
-    format_str = '%Y-%m-%d'
+def get_campaign_leads_custom(campaign_id, query_type, user_start_str, user_end_str, cache_again=False):
 
     cache_string = "single_" + str(query_type) + str(campaign_id)
     if not cache_again:
-        if cache_string in cache:
+        if cache_string in cache and user_start_str is None and user_end_str is None:
             final_data = cache.get(cache_string)
             return final_data
-
+    format_str = '%d/%m/%Y'
     user_start_datetime = datetime.strptime(user_start_str, format_str) if user_start_str is not None else None
     user_end_datetime = datetime.strptime(user_end_str, format_str) if user_end_str is not None else None
     date_data = {}
@@ -1476,7 +1457,6 @@ def get_campaign_leads_custom(query_params, cache_again=False):
         all_flat_data['hot leads per flat sorted'] = flat_hot_lead_flat_ratio
         all_flat_data['total leads per flat sorted'] = flat_total_lead_flat_ratio
 
-
     if query_type in ['date','weekday','phase']:
         leads_form_items = []
         leads_form_data = []
@@ -1489,7 +1469,6 @@ def get_campaign_leads_custom(query_params, cache_again=False):
         supplier_ids = list(set(leads_form_data_objects.values_list('supplier_id', flat=True)))
         supplier_data_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
         supplier_data = SupplierTypeSocietySerializer2(supplier_data_objects, many=True).data
-        #campaign_dates = leads_form_data_objects.order_by('created_at').values_list('created_at', flat=True).distinct()
         leads_form_data_objects_dates = leads_form_data_objects
         if user_start_datetime is not None:
             leads_form_data_objects_dates = leads_form_data_objects.filter(created_at__gte=user_start_datetime)
@@ -1501,7 +1480,7 @@ def get_campaign_leads_custom(query_params, cache_again=False):
             final_data_dict = {'supplier': {}, 'date': {},
                                'locality': {}, 'weekday': {},
                                'flat': {}, 'phase': {}}
-            return ui_utils.handle_response(class_name, data=final_data_dict, success=True)
+            return final_data_dict[query_type]
         start_datetime = campaign_dates[0]
         end_datetime = campaign_dates[len(campaign_dates) - 1]
         start_datetime_phase = start_datetime - timedelta(days=start_datetime.weekday())
@@ -1636,7 +1615,8 @@ def get_campaign_leads_custom(query_params, cache_again=False):
                        'flat': all_flat_data, 'phase': phase_data}
 
     final_data = final_data_dict[query_type] if query_type in final_data_dict.keys() else 'incorrect query type'
-    cache.set(cache_string, final_data, timeout=CACHE_TTL)
+    if user_start_str is None and user_end_str is None:
+        cache.set(cache_string, final_data, timeout=CACHE_TTL)
     return final_data
 
 
@@ -1645,7 +1625,14 @@ class CampaignLeadsCustom(APIView):
     def get(self, request):
         class_name = self.__class__.__name__
         try:
-            final_data = get_campaign_leads_custom(request.query_params)
+            query_type = request.query_params.get('query_type')
+            if query_type not in ['supplier', 'flat', 'locality', 'date', 'weekday', 'phase']:
+                return 'incorrect query type'
+            campaign_id = request.query_params.get('campaign_id', None)
+            user_start_str = request.query_params.get('start_date', None)
+            user_end_str = request.query_params.get('end_date', None)
+            format_str = '%Y-%m-%d'
+            final_data = get_campaign_leads_custom(campaign_id, query_type, user_start_str, user_end_str)
             return ui_utils.handle_response(class_name, data=final_data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -1795,7 +1782,6 @@ class PhaseWiseMultipleCampaignLeads(APIView):
 
 
         return ui_utils.handle_response(class_name, data=phase_data_all, success=True)
-
 
 
 class Comment(APIView):

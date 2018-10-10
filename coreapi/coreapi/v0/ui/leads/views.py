@@ -7,7 +7,7 @@ from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.inventory.models import (InventoryActivityAssignment, InventoryActivity)
 from v0.ui.campaign.views import (lead_counter, get_leads_data_for_campaign,
-                                  get_leads_data_for_multiple_campaigns)
+                                  get_leads_data_for_multiple_campaigns, get_campaign_leads_custom)
 import v0.ui.utils as ui_utils
 from v0.ui.utils import calculate_percentage
 import boto3
@@ -321,46 +321,6 @@ class LeadsFormBulkEntry(APIView):
         print "inv_activit_missing_societies", list(set(inv_activity_missing_societies))
         print "not_present_in_shortlisted_societies", list(set(not_present_in_shortlisted_societies))
         return ui_utils.handle_response({}, data='success', success=True)
-
-
-# class LeadsFormBulkEntryOriginal(APIView):
-#     @staticmethod
-#     def post(request, leads_form_id):
-#         source_file = request.data['file']
-#         wb = load_workbook(source_file)
-#         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
-#         lead_form = LeadsForm.objects.get(id=leads_form_id)
-#         fields = lead_form.fields_count
-#         campaign_id = lead_form.campaign_id
-#         entry_id = lead_form.last_entry_id + 1 if lead_form.last_entry_id else 1
-#
-#         for index, row in enumerate(ws.iter_rows()):
-#             if index > 0:
-#                 form_entry_list = []
-#                 supplier_id = row[0].value if row[0].value else None
-#                 created_at = row[1].value if row[1].value else None
-#                 for index, row in enumerate(ws.iter_rows()):
-#                     if index > 0:
-#                         form_entry_list = []
-#                         supplier_id = row[0].value if row[0].value else None
-#                         created_at = row[1].value if row[1].value else None
-#                         for item_id in range(2, fields + 1):
-#                             form_entry_list.append(LeadsFormData(**{
-#                                 "campaign_id": campaign_id,
-#                                 "supplier_id": supplier_id,
-#                                 "item_id": item_id - 1,
-#                                 "item_value": row[item_id].value if row[item_id].value else None,
-#                                 "leads_form": lead_form,
-#                                 "entry_id": entry_id,
-#                                 "created_at": created_at
-#                             }))
-#                         LeadsFormData.objects.bulk_create(form_entry_list)
-#                         entry_id = entry_id + 1  # will be saved in the end
-#                 lead_form.last_entry_id = entry_id - 1
-#                 lead_form.save()
-#         lead_form.last_entry_id = entry_id-1
-#         lead_form.save()
-#         return ui_utils.handle_response({}, data='success', success=True)
 
 
 class LeadsFormEntry(APIView):
@@ -688,15 +648,20 @@ class SmsContact(APIView):
 
 def cache_all_campaign_leads(campaign_id='ALL'):
     recreate_leads_summary.delay()
+    query_types = ['supplier', 'flat', 'locality', 'date', 'phase', 'weekday']
     if campaign_id == 'ALL':
         all_leads_forms = LeadsForm.objects.all()
         for leads_form in all_leads_forms:
             campaign_id = leads_form.campaign_id
             get_leads_data_for_campaign.delay(campaign_id, None, None, True)
             get_leads_data_for_multiple_campaigns.delay([campaign_id], True)
+            for query_type in query_types:
+                get_campaign_leads_custom.delay(campaign_id, query_type, None, None, True)
     else:
         get_leads_data_for_campaign.delay(campaign_id, None, None, True)
         get_leads_data_for_multiple_campaigns.delay([campaign_id], True)
+        for query_type in query_types:
+            get_campaign_leads_custom.delay(campaign_id, query_type, None, None, True)
     return
 
 
