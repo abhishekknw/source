@@ -107,13 +107,16 @@ def create_price_mapping_default(days_count, adinventory_name, adinventory_type,
         for dur_type in duration_types:
 
             if dur_type.days_count == days_count and adinv_type.adinventory_name == adinventory_name and adinv_type.adinventory_type == adinventory_type:
-                PriceMappingDefault.objects.get_or_create(supplier=new_society, duration_type=dur_type,
+                obj,created = PriceMappingDefault.objects.get_or_create(supplier=new_society, duration_type=dur_type,
                                               adinventory_type=adinv_type,
-                                              actual_supplier_price=actual_supplier_price,
                                               content_type=content_type,
                                               object_id=supplier_id)
+
+                obj.actual_supplier_price = actual_supplier_price
+                obj.save()
             else:
-                PriceMappingDefault.objects.get_or_create(supplier=new_society, duration_type=dur_type,
+                if (adinv_type.adinventory_name == 'FLIER' and dur_type.duration_name == 'Unit Daily') or adinv_type.adinventory_name != 'FLIER':
+                    PriceMappingDefault.objects.get_or_create(supplier=new_society, duration_type=dur_type,
                                                           adinventory_type=adinv_type,
                                                           content_type=content_type,
                                                           object_id=supplier_id)
