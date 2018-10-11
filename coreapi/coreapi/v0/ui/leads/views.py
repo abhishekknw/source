@@ -20,6 +20,31 @@ from v0.ui.campaign.models import CampaignAssignment
 from v0.constants import campaign_status, proposal_on_hold
 from django.http import HttpResponse
 from celery import shared_task
+from django.conf import settings
+from v0.ui.common.models import mongo_client
+
+
+def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id):
+    all_form_items = LeadsFormItems.objects.filter(leads_form_id=lead_form.id).values('item_id', 'key_name', 'hot_lead_criteria')
+    all_form_items_dict = {item['item_id']: {"key_name": item['key_name'], "hot_lead_criteria": item['hot_lead_criteria']} for item in all_form_items}
+    timestamp = datetime.datetime.utcnow()
+    lead_dict = {"data":[], "is_hot": False, "created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id, "lead_form_id": lead_form.id, "entry_id": entry_id}
+    for lead_item_data in lead_data:
+        item_dict = {}
+        item_id = lead_item_data["item_id"]
+        key_name = all_form_items_dict[item_id]["key_name"]
+        value = lead_item_data["value"]
+        item_dict["key_name"] = key_name
+        item_dict["value"] = value
+        item_dict["item_id"] = item_id
+        lead_dict["data"].append(item_dict)
+        if value:
+            if all_form_items_dict[item_id]["hot_lead_criteria"] and value == all_form_items_dict[item_id]["hot_lead_criteria"]:
+                lead_dict["is_hot"] = True
+            elif 'counseling' in key_name.lower():
+                lead_dict["is_hot"] = True
+    mongo_client.leads.insert_one(lead_dict).inserted_id
+    return
 
 
 def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
@@ -37,7 +62,7 @@ def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
     LeadsFormData.objects.bulk_create(form_entry_list)
     lead_form.last_entry_id = entry_id
     lead_form.save()
-
+    enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id)
 
 def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0, **kwargs):
     leads_per_page=25
