@@ -101,6 +101,7 @@ def get_city_subarea_map():
 
 def create_price_mapping_default(days_count, adinventory_name, adinventory_type, new_society,
                                  actual_supplier_price, content_type, supplier_id):
+    print new_society.society_name
     duration_types = DurationType.objects.filter()
     adinventory_types = AdInventoryType.objects.filter(adinventory_name=adinventory_name)
     for adinv_type in adinventory_types:
@@ -159,25 +160,26 @@ class SocietyDataImport(APIView):
                     'contact_name': row[19].value if row[19].value else None,
                     'email': row[20].value if row[20].value else None,
                     'mobile': row[21].value if row[21].value else None,
-                    'name_for_payment': row[22].value if row[22].value else None,
-                    'ifsc_code': row[23].value if row[23].value else None,
-                    'bank_name': row[24].value if row[24].value else None,
-                    'account_no': row[25].value if row[25].value else None,
-                    'relationship_manager' : row[26].value if row[26].value else None,
-                    'age_of_society' : row[27].value if row[27].value else None,
-                    'stall_allowed': True if row[28].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'total_stall_count': row[29].value if row[29].value else None,
-                    'poster_allowed_nb': True if row[30].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'nb_per_tower': int(row[31].value) if row[31].value else None,
-                    'poster_allowed_lift': True if row[32].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'lift_per_tower': int(row[33].value) if row[33].value else None,
-                    'flier_allowed': True if row[34].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'flier_frequency': int(row[35].value) if row[35].value else None,
-                    'stall_price': float(row[36].value) if row[36].value else None,
-                    'poster_price': float(row[37].value) if row[37].value else None,
-                    'flier_price': float(row[38].value) if row[38].value else None,
-                    'status': row[39].value,
-                    'comments': row[40].value,
+                    'landline': row[22].value if row[22].value else None,
+                    'name_for_payment': row[23].value if row[23].value else None,
+                    'ifsc_code': row[24].value if row[24].value else None,
+                    'bank_name': row[25].value if row[25].value else None,
+                    'account_no': row[26].value if row[26].value else None,
+                    'relationship_manager' : row[27].value if row[27].value else None,
+                    'age_of_society' : row[28].value if row[28].value else None,
+                    'stall_allowed': True if row[29].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'total_stall_count': row[30].value if row[30].value else None,
+                    'poster_allowed_nb': True if row[31].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'nb_per_tower': int(row[32].value) if row[32].value else None,
+                    'poster_allowed_lift': True if row[33].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'lift_per_tower': int(row[34].value) if row[34].value else None,
+                    'flier_allowed': True if row[35].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'flier_frequency': int(row[36].value) if row[36].value else None,
+                    'stall_price': float(row[37].value) if row[37].value else None,
+                    'poster_price': float(row[38].value) if row[38].value else None,
+                    'flier_price': float(row[39].value) if row[39].value else None,
+                    'status': row[40].value,
+                    'comments': row[41].value,
                 })
         all_states_map = get_state_map()
         all_city_map = get_city_map()
@@ -268,6 +270,7 @@ class SocietyDataImport(APIView):
                     'designation': society['designation'],
                     'salutation': society['salutation'],
                     'mobile': society['mobile'],
+                    'landline': society['landline'],
                     'content_type': get_content_type('RS').data['data'],
                     'object_id': supplier_id
                 }
@@ -295,11 +298,11 @@ class SocietyDataImport(APIView):
                     'd2d_allowed': True,
                     'poster_allowed_nb': True,
                     'supplier_type_code': 'RS',
-                    'lift_count': society['tower_count'] * society['lift_per_tower'],
+                    'lift_count': society['tower_count'] * society['lift_per_tower'] if society['tower_count'] and society['lift_per_tower'] else None,
                     'stall_allowed': True,
                     'object_id': supplier_id,
                     'flier_allowed': True,
-                    'nb_count': society['tower_count'] * society['nb_per_tower'],
+                    'nb_count': society['tower_count'] * society['nb_per_tower'] if society['tower_count'] and society['nb_per_tower'] else None,
                     'user': 1,
                     'content_type': 46,
                     'flier_frequency': society['flier_frequency'],
