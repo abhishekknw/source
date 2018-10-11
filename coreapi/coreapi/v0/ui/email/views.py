@@ -12,7 +12,7 @@ from v0.ui.campaign.models import CampaignAssignment
 from v0.ui.proposal.models import ProposalInfo
 import datetime
 import os
-
+import magic
 
 @shared_task()
 def send_email(email_data, attachment=None):
@@ -45,7 +45,6 @@ def send_email(email_data, attachment=None):
 def send_mail_with_attachment(filepath, subject, to):
     filepath = filepath if filepath else BASE_DIR + '/files/sample_mail_file.xlsx'
     filename = filepath[filepath.rfind('/')+1:]
-    print filename
     with open(filepath, 'rb') as content_file:
         my_file = content_file.read()
     template_body = v0_constants.email['body']
@@ -59,10 +58,11 @@ def send_mail_with_attachment(filepath, subject, to):
         'body': modified_body
     }
     attachment = None
+    mime = magic.Magic(mime=True)
     if my_file:
         attachment = {
             'filepath': filepath,
-            'mime_type': v0_constants.mime['xlsx']
+            'mime_type': mime.from_file(filepath)
         }
     task_id = send_email.delay(email_data, attachment).id
     return task_id
@@ -130,7 +130,7 @@ def send_weekly_leads_email():
             filepath = cwd + '/' + filename
             book.save(filepath)
             # to_array = campaign_assignement_by_campaign_id[leads_form['campaign_id']]
-            # to_array = ["kshitij.mittal01@gmail.com", "kshitij.mittal253@gmail.com"]
+            # to_array = ["kshitij.mittal01@gmail.com"]
             # send_mail_with_attachment(filepath, "Weekly Leads Data", to_array)
     return
 
@@ -138,4 +138,22 @@ def send_weekly_leads_email():
 class SendWeeklyLeadsMail(APIView):
     def get(self, request):
         send_weekly_leads_email()
+        return ui_utils.handle_response('', data={}, success=True)
+
+
+class SendGraphPdf(APIView):
+    @staticmethod
+    def post(request):
+        file = request.data['file']
+        campaign_id = request.data['campaign_id']
+        campaign_assignment = CampaignAssignment.objects.filter(campaign_id=campaign_id).values(
+            'campaign_id', 'assigned_to__email').all()
+        # to_array = [x['assigned_to__email'] for x in campaign_assignment]
+        to_array = ["kshitij.mittal01@gmail.com"]
+        email = EmailMessage("test_sub", "test_bod", to=to_array)
+        all_campaign_name = ProposalInfo.objects.filter(proposal_id=campaign_id).values('proposal_id','name')
+        all_campaign_name_dict = {campaign['proposal_id']: campaign['name'] for campaign in all_campaign_name}
+        filename = 'leads_graph_' + str(all_campaign_name_dict[campaign_id]) + '_' + str(datetime.datetime.now().date()) + '.pdf'
+        email.attach(filename, file.read(), 'application/pdf')
+        email.send()
         return ui_utils.handle_response('', data={}, success=True)

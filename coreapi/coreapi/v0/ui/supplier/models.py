@@ -4,6 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import fields
 from v0.ui.base.models import BaseModel
 from v0.ui.account.models import ContactDetailsGeneric, ContactDetails
+from v0.ui.proposal.models import SupplierPhase
 
 from v0 import managers
 
