@@ -30,6 +30,7 @@ from bulk_update.helper import bulk_update
 from django.db.models import Count
 from v0.ui.campaign.models import (CampaignSocietyMapping, Campaign)
 from v0.ui.campaign.serializers import (CampaignSocietyMappingSerializer, CampaignListSerializer)
+import datetime
 
 
 class AssignInventories(APIView):
@@ -945,6 +946,7 @@ class BulkInsertInventoryActivityImage(APIView):
                     # add two more fields to complete image_data dict
                     image_data['inventory_activity_assignment'] = inv_act_assign
                     image_data['activity_by'] = image_taken_by
+                    image_data["created_at"] = datetime.datetime.now()
                     inv_image_objects.append(InventoryActivityImage(**image_data))
 
             InventoryActivityImage.objects.bulk_create(inv_image_objects)
