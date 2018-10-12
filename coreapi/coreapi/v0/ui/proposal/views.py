@@ -2317,69 +2317,78 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
+def get_supplier_list_by_status_ctrl(campaign_id):
+    shortlisted_spaces_list = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
+    shortlisted_spaces_dict = {'BK': [], 'NB': [], 'PB': [], 'VB': [], 'SR': [], 'SE': [], 'VR': [], 'CR': [],
+                               'DP': [], 'TB': []}
+    shortlisted_spaces_by_phase_dict = {}
+    all_phases = SupplierPhase.objects.filter(campaign_id=campaign_id).all()
+    all_phase_by_id = {}
+    current_date = datetime.datetime.now().date()
+    for phase in all_phases:
+        end_date = phase.end_date.date()
+        if end_date is not None and end_date >= current_date:
+            all_phase_by_id[phase.id] = {'start_date': phase.start_date,
+                                         'end_date': phase.end_date,
+                                         'phase_no': phase.phase_no,
+                                         'comments': phase.comments
+                                         }
+    overall_inventory_count_dict = {}
+    for space in shortlisted_spaces_list:
+        if space.phase_no_id:
+            supplier_society = SupplierTypeSociety.objects.filter(supplier_id=space.object_id)
+            supplier_inventories = ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces_id=space.id)
+            inventory_count_dict = {}
+            supplier_tower_count = supplier_society[0].tower_count if supplier_society[0].tower_count else 0
+            supplier_flat_count = supplier_society[0].flat_count if supplier_society[0].flat_count else 0
+            for inventory in supplier_inventories:
+                if inventory.ad_inventory_type.adinventory_name not in inventory_count_dict:
+                    inventory_count_dict[inventory.ad_inventory_type.adinventory_name] = 0
+                if inventory.ad_inventory_type.adinventory_name not in overall_inventory_count_dict:
+                    overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] = 0
+                if inventory.ad_inventory_type.adinventory_name == "POSTER":
+                    inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_tower_count
+                    overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_tower_count
+                elif inventory.ad_inventory_type.adinventory_name == "FLIER":
+                    inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_flat_count
+                    overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_flat_count
+                else:
+                    inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
+                    overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
+
+            supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society[0]).data
+            if space.phase_no_id not in shortlisted_spaces_by_phase_dict:
+                shortlisted_spaces_by_phase_dict[space.phase_no_id] = {'BK': [], 'NB': [], 'PB': [], 'VB': [], 'SR': [],
+                                                                       'SE': [], 'VR': [], 'CR': [],
+                                                                       'DP': [], 'TB': []}
+            if space.booking_status:
+                supplier_society_serialized['booking_status'] = space.booking_status
+                supplier_society_serialized['freebies'] = space.freebies.split(",") if space.freebies else None
+                supplier_society_serialized['space_id'] = space.id
+                supplier_society_serialized['inventory_counts'] = inventory_count_dict
+                shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(
+                    supplier_society_serialized)
+    shortlisted_spaces_by_phase_list = []
+    for phase_id in shortlisted_spaces_by_phase_dict:
+        end_date = all_phase_by_id[phase_id]['end_date'] if phase_id in all_phase_by_id else None
+        if end_date is not None and end_date.date() >= current_date:
+            shortlisted_spaces_by_phase_list.append({
+                'phase_no': all_phase_by_id[phase_id]['phase_no'],
+                'start_date': str(all_phase_by_id[phase_id]['start_date'])[:10],
+                'end_date': str(all_phase_by_id[phase_id]['end_date'])[:10],
+                'comments': all_phase_by_id[phase_id]['comments'],
+                'supplier_data': shortlisted_spaces_by_phase_dict[phase_id],
+                'overall_inventory_counts': overall_inventory_count_dict,
+                'total_booked_suppliers': len(shortlisted_spaces_by_phase_dict[phase_id]["BK"]),
+                'total_booked_flats': sum(supplier['flat_count'] for supplier in shortlisted_spaces_by_phase_dict[phase_id]["BK"])
+            })
+    return shortlisted_spaces_by_phase_list
+
+
 class getSupplierListByStatus(APIView):
     @staticmethod
     def get(request, campaign_id):
-        shortlisted_spaces_list = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
-        shortlisted_spaces_dict = {'BK':[], 'NB': [], 'PB': [], 'VB': [], 'SR': [], 'SE': [], 'VR': [], 'CR': [],
-                                    'DP': [], 'TB' : []}
-        shortlisted_spaces_by_phase_dict = {}
-        all_phases = SupplierPhase.objects.filter(campaign_id=campaign_id).all()
-        all_phase_by_id = {}
-        current_date = datetime.datetime.now().date()
-        for phase in all_phases:
-            end_date = phase.end_date.date()
-            if end_date is not None and end_date >= current_date:
-                all_phase_by_id[phase.id] = {'start_date': phase.start_date,
-                                             'end_date': phase.end_date,
-                                             'phase_no': phase.phase_no,
-                                             'comments': phase.comments
-                                             }
-        overall_inventory_count_dict = {}
-        for space in shortlisted_spaces_list:
-            if space.phase_no_id:
-                supplier_society = SupplierTypeSociety.objects.filter(supplier_id=space.object_id)
-                supplier_inventories = ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces_id=space.id)
-                inventory_count_dict = {}
-                supplier_tower_count = supplier_society[0].tower_count if supplier_society[0].tower_count else 0
-                supplier_flat_count = supplier_society[0].flat_count if supplier_society[0].flat_count else 0
-                for inventory in supplier_inventories:
-                    if inventory.ad_inventory_type.adinventory_name not in inventory_count_dict:
-                        inventory_count_dict[inventory.ad_inventory_type.adinventory_name]=0
-                    if inventory.ad_inventory_type.adinventory_name not in overall_inventory_count_dict:
-                        overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name]=0
-                    if inventory.ad_inventory_type.adinventory_name == "POSTER":
-                        inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_tower_count
-                        overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_tower_count
-                    elif inventory.ad_inventory_type.adinventory_name == "FLIER":
-                        inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_flat_count
-                        overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_flat_count
-                    else:
-                        inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
-                        overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
-
-                supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society[0]).data
-                if space.phase_no_id not in shortlisted_spaces_by_phase_dict:
-                    shortlisted_spaces_by_phase_dict[space.phase_no_id] = {'BK':[], 'NB': [], 'PB': [], 'VB': [], 'SR': [], 'SE': [], 'VR': [], 'CR': [],
-                                    'DP': [], 'TB':[]}
-                if space.booking_status:
-                    supplier_society_serialized['booking_status'] = space.booking_status
-                    supplier_society_serialized['freebies'] = space.freebies.split(",") if space.freebies else None
-                    supplier_society_serialized['space_id'] = space.id
-                    supplier_society_serialized['inventory_counts'] = inventory_count_dict
-                    shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(supplier_society_serialized)
-        shortlisted_spaces_by_phase_list = []
-        for phase_id in shortlisted_spaces_by_phase_dict:
-            end_date = all_phase_by_id[phase_id]['end_date'] if phase_id in all_phase_by_id else None
-            if end_date is not None and end_date.date() >= current_date:
-                shortlisted_spaces_by_phase_list.append({
-                    'phase_no': all_phase_by_id[phase_id]['phase_no'],
-                    'start_date': all_phase_by_id[phase_id]['start_date'],
-                    'end_date': all_phase_by_id[phase_id]['end_date'],
-                    'comments': all_phase_by_id[phase_id]['comments'],
-                    'supplier_data': shortlisted_spaces_by_phase_dict[phase_id],
-                    'overall_inventory_counts': overall_inventory_count_dict
-                })
+        shortlisted_spaces_by_phase_list = get_supplier_list_by_status_ctrl(campaign_id)
         return ui_utils.handle_response({}, data=shortlisted_spaces_by_phase_list, success=True)
 
 class ImportSheetInExistingCampaign(APIView):
