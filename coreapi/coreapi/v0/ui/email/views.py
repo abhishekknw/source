@@ -6,6 +6,7 @@ import v0.ui.utils as ui_utils
 from smtplib import SMTPException
 from celery import shared_task
 from django.core.mail import EmailMessage
+from models import EmailSettings
 from v0.ui.leads.views import get_leads_excel_sheet
 from v0.ui.leads.models import LeadsForm
 from v0.ui.campaign.models import CampaignAssignment
@@ -121,7 +122,7 @@ def send_weekly_leads_email():
             campaign_assignement_by_campaign_id[campaign_assignement['campaign_id']] = []
         campaign_assignement_by_campaign_id[campaign_assignement['campaign_id']].append(campaign_assignement['assigned_to__email'])
     end_date = datetime.datetime.now().date()
-    start_date = end_date - datetime.timedelta(days=7)
+    start_date = end_date - datetime.timedelta(days=5)
     for leads_form in all_leads_forms:
         (book, total_leads_count) = get_leads_excel_sheet(leads_form['id'], 'All',start_date=start_date, end_date=None)
         if total_leads_count > 0:
@@ -157,3 +158,20 @@ class SendGraphPdf(APIView):
         email.attach(filename, file.read(), 'application/pdf')
         email.send()
         return ui_utils.handle_response('', data={}, success=True)
+
+
+class EmailSettingsView(APIView):
+    @staticmethod
+    def post(request):
+        user_id = request.data['user_id']
+        email_types = request.data['email_types']  # list of dict with name and is_allowed keys
+        list_of_objects = []
+        for email_type in email_types:
+            list_of_objects.append(EmailSettings(**{
+                "user_id": user_id,
+                "email_type": email_type["name"],
+                "is_allowed": email_type["is_allowed"],
+            }))
+        EmailSettings.objects.bulk_create(list_of_objects)
+        return ui_utils.handle_response('', data={"success": True}, success=True)
+
