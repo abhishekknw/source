@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
-from serializers import LeadsFormItemsSerializer, LeadsFormContactsSerializer
+from serializers import LeadsFormItemsSerializer, LeadsFormContactsSerializer, LeadsFormDataSerializer
 from models import LeadsForm, LeadsFormItems, LeadsFormData, LeadsFormContacts, LeadsFormSummary
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
@@ -400,6 +400,54 @@ class MigrateLeadsSummary(APIView):
         class_name = self.__class__.__name__
         recreate_leads_summary.delay()
         return ui_utils.handle_response({}, data='success', success=True)
+
+
+class MigrateLeadsToMongo(APIView):
+
+    def put(self, request):
+        class_name = self.__class__.__name__
+        all_leads_data_object = LeadsFormData.objects.all()
+        all_leads_data = []
+        for data in all_leads_data_object:
+            all_leads_data.append(data.__dict__)
+        all_leads_items = LeadsFormItems.objects.all().values('leads_form_id', 'item_id', 'key_name', 'hot_lead_criteria')
+        leads_form_ids = all_leads_data_object.values_list('leads_form_id',flat = True).distinct()
+        timestamp = datetime.datetime.utcnow()
+
+        lead_dicts = []
+
+        for curr_form_id in leads_form_ids:
+            curr_form_id = curr_form_id
+            curr_form_data = [x for x in all_leads_data if x['leads_form_id'] == curr_form_id]
+            curr_form_items = [x for x in all_leads_items if x['leads_form_id'] == curr_form_id]
+            first_data_element = curr_form_data[0]
+            campaign_id = first_data_element['campaign_id']
+            entry_ids = list(set([x['entry_id'] for x in curr_form_data]))
+            for curr_entry_id in entry_ids:
+                curr_entry_data = [x for x in curr_form_data if x['entry_id'] == curr_entry_id]
+                supplier_id = curr_entry_data[0]['supplier_id']
+                lead_dict = {"data": [], "is_hot": False, "created_at": timestamp, "supplier_id": supplier_id,
+                             "campaign_id": campaign_id, "lead_form_id": curr_form_id, "entry_id": curr_entry_id}
+                for curr_data in curr_entry_data:
+                    item_id = curr_data['item_id']
+                    value = curr_data['item_value']
+                    curr_item = [x for x in curr_form_items if x['item_id'] == item_id][0]
+                    key_name = curr_item['key_name']
+                    item_dict = {
+                        'item_id': item_id,
+                        'key_name': key_name,
+                        'value': value
+                    }
+                    lead_dict['data'].append(item_dict)
+                    if value:
+                        if curr_item['hot_lead_criteria'] and value == curr_item['hot_lead_criteria']:
+                            lead_dict["is_hot"] = True
+                        elif 'counseling' in key_name.lower():
+                            lead_dict["is_hot"] = True
+                lead_dicts.append(lead_dict)
+        mongo_client.leads.insert_many(lead_dicts)
+
+        return ui_utils.handle_response(class_name, data='success', success=True)
 
 
 class GenerateLeadForm(APIView):

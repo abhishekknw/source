@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntries,
                    LeadsFormBulkEntry, GenerateLeadForm, DeleteLeadItems, DeleteLeadForm, DeleteLeadEntry,
                    LeadFormUpdate, MigrateLeadsSummary, SmsContact, EditLeadsData, EditLeadFormItems, EditLeadsForm,
-                   LeadsSummary, GetLeadsEntriesByCampaignId, GenerateLeadDataExcel, CampaignLeadsCacheAll)
+                   LeadsSummary, GetLeadsEntriesByCampaignId, GenerateLeadDataExcel, CampaignLeadsCacheAll, MigrateLeadsToMongo)
 
 urlpatterns = [
     url(r'^(?P<campaign_id>[A-Z_a-z0-9]+)/create$', CreateLeadsForm.as_view()),
@@ -27,6 +27,8 @@ urlpatterns = [
     url(r'^(?P<form_id>[0-9]+)/edit_form_name', EditLeadsForm.as_view()),
     url(r'^summary/', LeadsSummary.as_view()),
     url(r'^cache_campaign_leads/$', CampaignLeadsCacheAll.as_view()),
+    url(r'^migrate_leads_to_mongo/$', MigrateLeadsToMongo.as_view()),
+
 ]
 
 router = DefaultRouter()

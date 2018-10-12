@@ -1043,6 +1043,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
             final_data = cache.get(cache_string)
             return final_data
     format_str = '%d/%m/%Y'
+    phase_start_weekday = 'Tuesday' # this is used to set the phase cycle
     user_start_datetime = datetime.strptime(user_start_date_str,format_str) if user_start_date_str is not None else None
     user_end_datetime = datetime.strptime(user_end_date_str,format_str) if user_start_date_str is not None else None
     # will be used later
@@ -1153,27 +1154,21 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                            'locality': {}, 'weekday': {},
                            'flat': {}, 'phase': {}}
         return final_data_dict
+    weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
+                     '4': 'Friday', '5': 'Saturday', '6': 'Sunday'}
+    weekday_codes = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
+                     'Friday': 4, 'Saturday': 5, 'Sunday': 6}
     start_datetime = campaign_dates[0]
     end_datetime = campaign_dates[len(campaign_dates)-1]
+    start_weekday_int = weekday_codes[phase_start_weekday]
+    start_weekday_diff = (start_datetime.weekday() - start_weekday_int) % 7
     if user_start_datetime is not None:
         start_datetime = max(campaign_dates[0], user_start_datetime)
     if user_end_datetime is not None:
         end_datetime = min(campaign_dates[len(campaign_dates)-1], user_end_datetime)
 
-    start_datetime_phase = start_datetime - timedelta(days=start_datetime.weekday())
-    end_datetime_phase = end_datetime + timedelta(days=6-end_datetime.weekday())
+    start_datetime_phase = start_datetime - timedelta(days=start_weekday_diff)
 
-    prev_phase = 0
-
-    # for curr_date in campaign_dates:
-    #     curr_phase = 1+((curr_date-start_datetime_phase).days)/7
-    #     if curr_phase > prev_phase:
-    #         phase_data['curr_phase'] = {
-    #
-    #         }
-
-    weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
-                     '4': 'Friday', '5': 'Saturday', '6': 'Sunday'}
 
     for curr_data in leads_form_data:
 
@@ -1190,7 +1185,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
         curr_date = str(time.date())
         curr_time = str(time)
         curr_phase_int = 1 + (time - start_datetime_phase).days / 7
-        curr_phase_start = time - timedelta(days=time.weekday())
+        curr_phase_start = time - timedelta(days = (time.weekday() - start_weekday_int)%7)
         curr_phase_end = curr_phase_start + timedelta(days=7)
         curr_phase = str(curr_phase_int)
         if curr_phase not in phase_data:
@@ -1294,6 +1289,7 @@ def get_campaign_leads_custom(campaign_id, query_type, user_start_str, user_end_
             final_data = cache.get(cache_string)
             return final_data
     format_str = '%d/%m/%Y'
+    phase_start_weekday = 'Tuesday' # this is used to set the phase cycle
     user_start_datetime = datetime.strptime(user_start_str, format_str) if user_start_str is not None else None
     user_end_datetime = datetime.strptime(user_end_str, format_str) if user_end_str is not None else None
     date_data = {}
@@ -1481,12 +1477,15 @@ def get_campaign_leads_custom(campaign_id, query_type, user_start_str, user_end_
                                'locality': {}, 'weekday': {},
                                'flat': {}, 'phase': {}}
             return final_data_dict[query_type]
-        start_datetime = campaign_dates[0]
-        end_datetime = campaign_dates[len(campaign_dates) - 1]
-        start_datetime_phase = start_datetime - timedelta(days=start_datetime.weekday())
-
         weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
                          '4': 'Friday', '5': 'Saturday', '6': 'Sunday'}
+        weekday_codes = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
+                         'Friday': 4, 'Saturday': 5, 'Sunday': 6}
+        start_datetime = campaign_dates[0]
+        end_datetime = campaign_dates[len(campaign_dates) - 1]
+        start_weekday_int = weekday_codes[phase_start_weekday]
+        start_weekday_diff= (start_datetime.weekday() - start_weekday_int)%7
+        start_datetime_phase = start_datetime - timedelta(days=start_weekday_diff)
 
         hot_lead_items = {}
 
@@ -1545,7 +1544,7 @@ def get_campaign_leads_custom(campaign_id, query_type, user_start_str, user_end_
 
             if query_type == 'phase':
                 curr_phase_int = 1 + (time - start_datetime_phase).days / 7
-                curr_phase_start = time - timedelta(days=time.weekday())
+                curr_phase_start = time - timedelta(days = (time.weekday() - start_weekday_int)%7)
                 curr_phase_end = curr_phase_start + timedelta(days=7)
                 curr_phase = str(curr_phase_int)
                 if curr_phase not in phase_data:
