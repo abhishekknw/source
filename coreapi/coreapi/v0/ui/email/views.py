@@ -111,6 +111,11 @@ class Mail(APIView):
 
 
 def send_weekly_leads_email():
+    email_settings = EmailSettings.objects.filter(email_type="WEEKLY_LEADS").values("user__email", "is_allowed", "last_sent").all()
+    email_settings_dict = {}
+    for email_setting in email_settings:
+        if email_setting["user__email"]:
+            email_settings_dict[email_setting["user__email"]] = {"is_allowed": email_setting["is_allowed"], "last_sent": email_setting["last_sent"]}
     all_leads_forms = LeadsForm.objects.values('id', 'campaign_id').all()
     all_campaign_id_list = [leads_form['campaign_id'] for leads_form in all_leads_forms]
     all_campaign_assignment = CampaignAssignment.objects.filter(campaign_id__in=all_campaign_id_list).values('campaign_id', 'assigned_to__email').all()
@@ -120,7 +125,10 @@ def send_weekly_leads_email():
     for campaign_assignement in all_campaign_assignment:
         if campaign_assignement['campaign_id'] not in campaign_assignement_by_campaign_id:
             campaign_assignement_by_campaign_id[campaign_assignement['campaign_id']] = []
-        campaign_assignement_by_campaign_id[campaign_assignement['campaign_id']].append(campaign_assignement['assigned_to__email'])
+        if campaign_assignement['assigned_to__email'] not in email_settings_dict:
+            continue
+        if email_settings_dict[campaign_assignement['assigned_to__email']]['is_allowed']:
+            campaign_assignement_by_campaign_id[campaign_assignement['campaign_id']].append(campaign_assignement['assigned_to__email'])
     end_date = datetime.datetime.now().date()
     start_date = end_date - datetime.timedelta(days=5)
     for leads_form in all_leads_forms:
@@ -132,7 +140,8 @@ def send_weekly_leads_email():
             book.save(filepath)
             # to_array = campaign_assignement_by_campaign_id[leads_form['campaign_id']]
             # to_array = ["kshitij.mittal01@gmail.com"]
-            # send_mail_with_attachment(filepath, "Weekly Leads Data", to_array)
+            # if len(to_array) != 0:
+            #     send_mail_with_attachment(filepath, "Weekly Leads Data", to_array)
     return
 
 
