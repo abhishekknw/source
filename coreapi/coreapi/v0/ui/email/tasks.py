@@ -13,15 +13,19 @@ import os
 from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
 
-def send_weekly_leads_email():
-    email_settings = EmailSettings.objects.filter(email_type="WEEKLY_LEADS").values("user__email", "is_allowed", "last_sent").all()
+
+def get_all_campaign_assignment_by_id(email_type):
+    email_settings = EmailSettings.objects.filter(email_type=email_type).values("user__email", "is_allowed",
+                                                                                    "last_sent").all()
     email_settings_dict = {}
     for email_setting in email_settings:
         if email_setting["user__email"]:
-            email_settings_dict[email_setting["user__email"]] = {"is_allowed": email_setting["is_allowed"], "last_sent": email_setting["last_sent"]}
+            email_settings_dict[email_setting["user__email"]] = {"is_allowed": email_setting["is_allowed"],
+                                                                 "last_sent": email_setting["last_sent"]}
     all_leads_forms = LeadsForm.objects.values('id', 'campaign_id').all()
     all_campaign_id_list = [leads_form['campaign_id'] for leads_form in all_leads_forms]
-    all_campaign_assignment = CampaignAssignment.objects.filter(campaign_id__in=all_campaign_id_list).values('campaign_id', 'assigned_to__email').all()
+    all_campaign_assignment = CampaignAssignment.objects.filter(campaign_id__in=all_campaign_id_list).values(
+        'campaign_id', 'assigned_to__email').all()
     campaign_assignement_by_campaign_id = {}
     all_campaign_name = ProposalInfo.objects.filter(proposal_id__in=all_campaign_id_list).values('proposal_id', 'name')
     all_campaign_name_dict = {campaign['proposal_id']: campaign['name'] for campaign in all_campaign_name}
@@ -31,7 +35,13 @@ def send_weekly_leads_email():
         if campaign_assignement['assigned_to__email'] not in email_settings_dict:
             continue
         if email_settings_dict[campaign_assignement['assigned_to__email']]['is_allowed']:
-            campaign_assignement_by_campaign_id[campaign_assignement['campaign_id']].append(campaign_assignement['assigned_to__email'])
+            campaign_assignement_by_campaign_id[campaign_assignement['campaign_id']].append(
+                campaign_assignement['assigned_to__email'])
+    return (campaign_assignement_by_campaign_id, all_leads_forms, all_campaign_name_dict)
+
+
+def send_weekly_leads_email():
+    (campaign_assignement_by_campaign_id, all_leads_forms, all_campaign_name_dict) = get_all_campaign_assignment_by_id("WEEKLY_LEADS")
     end_date = datetime.datetime.now().date()
     start_date = end_date - datetime.timedelta(days=5)
     for leads_form in all_leads_forms:
@@ -63,7 +73,7 @@ class SendGraphPdf(APIView):
             'campaign_id', 'assigned_to__email').all()
         # to_array = [x['assigned_to__email'] for x in campaign_assignment]
         to_array = ["kshitij.mittal01@gmail.com"]
-        email = EmailMessage("test_sub", "test_bod", to=to_array)
+        email = EmailMessage("Leads Graphs", "Please find the leads graphs attached to this email", to=to_array)
         all_campaign_name = ProposalInfo.objects.filter(proposal_id=campaign_id).values('proposal_id','name')
         all_campaign_name_dict = {campaign['proposal_id']: campaign['name'] for campaign in all_campaign_name}
         filename = 'leads_graph_' + str(all_campaign_name_dict[campaign_id]) + '_' + str(datetime.datetime.now().date()) + '.pdf'
@@ -75,12 +85,17 @@ class SendGraphPdf(APIView):
 class SendBookingDetailMails(APIView):
     @staticmethod
     def get(request):
-        supplier_list_details_by_status = get_supplier_list_by_status_ctrl("BYJMACF554")
-        booking_template = get_template('booking_details.html')
-        html = booking_template.render({'campaign_name': "test name", "details_list": supplier_list_details_by_status})
-        to_array = ["kshitij.mittal01@gmail.com"]
-        email = EmailMultiAlternatives('Subject', "some content")
-        email.attach_alternative(html, "text/html")
-        email.to = to_array
-        email.send()
+        (campaign_assignement_by_campaign_id, all_leads_forms, all_campaign_name_dict) = get_all_campaign_assignment_by_id(
+            "BOOKING_DETAILS_ADV")
+        for leads_form in all_leads_forms:
+            supplier_list_details_by_status = get_supplier_list_by_status_ctrl(leads_form['campaign_id'])
+            booking_template = get_template('booking_details.html')
+            html = booking_template.render(
+                {'campaign_name': str(all_campaign_name_dict[leads_form['campaign_id']]), "details_list": supplier_list_details_by_status})
+            # to_array = campaign_assignement_by_campaign_id[leads_form['campaign_id']]
+            # to_array = ["kshitij.mittal01@gmail.com"]
+            # email = EmailMultiAlternatives('Campaign Booking Details', "")
+            # email.attach_alternative(html, "text/html")
+            # email.to = to_array
+            # email.send()
         return ui_utils.handle_response('', data={}, success=True)
