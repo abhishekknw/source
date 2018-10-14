@@ -2,7 +2,9 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from v0.ui.permissions.models import Role
-
+from pymongo import MongoClient
+client = MongoClient()
+mongo_client = client.machadalo
 
 class BaseUser(AbstractUser):
     """
