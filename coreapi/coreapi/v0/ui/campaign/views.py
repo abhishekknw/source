@@ -1282,13 +1282,7 @@ class CampaignLeads(APIView):
 
 
 @shared_task()
-def get_campaign_leads_custom(campaign_id, query_type, user_start_str, user_end_str, cache_again=False):
-
-    cache_string = "single_" + str(query_type) + str(campaign_id)
-    if not cache_again:
-        if cache_string in cache and user_start_str is None and user_end_str is None:
-            final_data = cache.get(cache_string)
-            return final_data
+def get_campaign_leads_custom(campaign_id, query_type, user_start_str, user_end_str):
     format_str = '%d/%m/%Y'
     phase_start_weekday = 'Tuesday' # this is used to set the phase cycle
     user_start_datetime = datetime.strptime(user_start_str, format_str) if user_start_str is not None else None
@@ -1303,9 +1297,8 @@ def get_campaign_leads_custom(campaign_id, query_type, user_start_str, user_end_
     locality_additional_metrics = []
     flat_additional_metrics = []
     if query_type in ['supplier', 'flat', 'locality']:
-        leads_form_summary_query = LeadsFormSummary.objects.filter(campaign_id=campaign_id).all()
-        leads_form_summary_data = LeadsFormSummarySerializer(leads_form_summary_query, many=True).data
-        supplier_ids = list(set(leads_form_summary_query.values_list('supplier_id', flat=True)))
+        leads_form_summary_data = get_leads_summary(campaign_id)
+        supplier_ids = list(set([single_summary['supplier_id'] for single_summary in leads_form_summary_data]))
         supplier_data_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
         supplier_data = SupplierTypeSocietySerializer2(supplier_data_objects, many=True).data
 
@@ -1615,8 +1608,6 @@ def get_campaign_leads_custom(campaign_id, query_type, user_start_str, user_end_
                        'flat': all_flat_data, 'phase': phase_data}
 
     final_data = final_data_dict[query_type] if query_type in final_data_dict.keys() else 'incorrect query type'
-    if user_start_str is None and user_end_str is None:
-        cache.set(cache_string, final_data, timeout=CACHE_TTL)
     return final_data
 
 
