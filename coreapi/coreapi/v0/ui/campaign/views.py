@@ -1635,9 +1635,9 @@ class CityWiseMultipleCampaignLeads(APIView):
         user_id = BaseUser.objects.get(username=username).id
         campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id).values_list('campaign_id', flat=True)\
                              .distinct()
-        campaign_leads = LeadsFormSummary.objects.filter(campaign_id__in=campaign_list).values(
-            'supplier_id', 'campaign_id','total_leads_count','hot_leads_count')
-        supplier_ids = campaign_leads.values_list('supplier_id',flat = True).distinct()
+        campaign_list = [campaign_id for campaign_id in campaign_list]
+        campaign_leads = get_leads_summary(campaign_list)
+        supplier_ids = list(set([single_summary['supplier_id'] for single_summary in campaign_leads]))
         supplier_properties = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)\
             .values('supplier_id', 'society_city', 'flat_count')
         city_list = supplier_properties.values_list('society_city',flat=True).distinct()
