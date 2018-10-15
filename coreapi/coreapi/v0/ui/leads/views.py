@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
 from serializers import LeadsFormItemsSerializer, LeadsFormContactsSerializer, LeadsFormDataSerializer
-from models import LeadsForm, LeadsFormItems, LeadsFormData, LeadsFormContacts, LeadsFormSummary
+from models import (LeadsForm, LeadsFormItems, LeadsFormData, LeadsFormContacts, LeadsFormSummary, get_leads_summary)
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
@@ -704,23 +704,7 @@ class LeadsSummary(APIView):
             all_campaign_dict[shortlisted_supplier['proposal_id']]['start_date'] = shortlisted_supplier['proposal__tentative_start_date']
             all_campaign_dict[shortlisted_supplier['proposal_id']]['end_date'] = shortlisted_supplier['proposal__tentative_end_date']
             all_campaign_dict[shortlisted_supplier['proposal_id']]['campaign_status'] = shortlisted_supplier['proposal__campaign_state']
-        all_campaign_summary = mongo_client.leads.aggregate(
-            [
-                {
-                    "$match": {"campaign_id": {"$in": campaign_list}}
-                },
-                {
-                    "$group":
-                        {
-                            "_id": {"campaign_id": "$campaign_id", "supplier_id": "$supplier_id"},
-                            "campaign_id": { "$first": '$campaign_id' },
-                            "supplier_id": { "$first": '$supplier_id' },
-                            "total_leads_count": {"$sum": 1},
-                            "hot_leads_count": {"$sum": {"$cond": ["$is_hot", 1, 0]}}
-                        }
-                }
-            ]
-        )
+        all_campaign_summary = get_leads_summary(campaign_list)
         all_leads_summary = []
         for campaign_summary in all_campaign_summary:
             all_campaign_dict[campaign_summary['campaign_id']]['hot_leads'] += campaign_summary['hot_leads_count']

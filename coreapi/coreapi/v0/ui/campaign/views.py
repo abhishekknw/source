@@ -24,7 +24,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework import status
 import gpxpy.geo
-from v0.ui.leads.models import LeadsForm, LeadsFormItems, LeadsFormData, LeadsFormSummary
+from v0.ui.leads.models import LeadsForm, LeadsFormItems, LeadsFormData, LeadsFormSummary, get_leads_summary
 from v0.ui.leads.serializers import LeadsFormItemsSerializer, LeadsFormSummarySerializer
 from v0.ui.base.models import DurationType
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
@@ -355,21 +355,21 @@ class DashBoardViewSet(viewsets.ViewSet):
             flat_count = 0
 
             supplier_objects_id_list = {supplier['supplier_id']: supplier for supplier in suppliers}
-            all_leads_count = LeadsFormSummary.objects.filter(campaign_id=campaign_id).all()
+            all_leads_count = get_leads_summary(campaign_id)
             supplier_wise_leads_count = {}
 
             for leads in all_leads_count:
-                if 'flat_count' in supplier_objects_id_list[leads.supplier_id] and supplier_objects_id_list[leads.supplier_id]['flat_count']:
-                    flat_count = supplier_objects_id_list[leads.supplier_id]['flat_count']
+                if 'flat_count' in supplier_objects_id_list[leads['supplier_id']] and supplier_objects_id_list[leads['supplier_id']]['flat_count']:
+                    flat_count = supplier_objects_id_list[leads['supplier_id']]['flat_count']
                 else:
                     flat_count = 0
-                supplier_wise_leads_count[leads.supplier_id] = {
-                    'hot_leads_count': leads.hot_leads_count,
-                    'total_leads_count': leads.total_leads_count,
-                    'hot_leads_percentage': leads.hot_leads_percentage,
-                    'hot_leads_percentage_by_flat_count': calculate_percentage(leads.hot_leads_count, flat_count),
+                supplier_wise_leads_count[leads['supplier_id']] = {
+                    'hot_leads_count': leads['hot_leads_count'],
+                    'total_leads_count': leads['total_leads_count'],
+                    'hot_leads_percentage': leads['hot_leads_percentage'],
+                    'hot_leads_percentage_by_flat_count': calculate_percentage(leads['hot_leads_count'], flat_count),
                     'flat_count': flat_count,
-                    'leads_flat_percentage': calculate_percentage(leads.total_leads_count, flat_count)
+                    'leads_flat_percentage': calculate_percentage(leads['total_leads_count'], flat_count)
                 }
             inv_data_objects_list = website_utils.get_campaign_inv_data(campaign_id)
             # inv_data_objects_list = {inv['object_id']:inv for inv in inv_data}

@@ -1,5 +1,6 @@
 from django.db import models
 from v0.ui.base.models import BaseModel
+from v0.ui.common.models import mongo_client
 
 
 LEAD_KEY_TYPES = (
@@ -84,3 +85,40 @@ class LeadsFormSummary(BaseModel):
 
     class Meta:
         db_table = 'leads_form_summary'
+
+
+def get_leads_summary(campaign_list=None):
+    if campaign_list:
+        if not isinstance(campaign_list, list):
+            campaign_list = [campaign_list]
+        match_dict = {"campaign_id": {"$in": campaign_list}}
+    else:
+        match_dict = {}
+    leads_summary = mongo_client.leads.aggregate(
+            [
+                {
+                    "$match": match_dict
+                },
+                {
+                    "$group":
+                        {
+                            "_id": {"campaign_id": "$campaign_id", "supplier_id": "$supplier_id"},
+                            "campaign_id": {"$first": '$campaign_id'},
+                            "supplier_id": {"$first": '$supplier_id'},
+                            "total_leads_count": {"$sum": 1},
+                            "hot_leads_count": {"$sum": {"$cond": ["$is_hot", 1, 0]}},
+                        }
+                },
+                {
+                    "$project": {
+                        "campaign_id": 1,
+                        "supplier_id": 1,
+                        "total_leads_count": 1,
+                        "hot_leads_count": 1,
+                        "hot_leads_percentage": {
+                            "$multiply": [{"$divide": [100, "$total_leads_count"]}, "$hot_leads_count"]},
+                    }
+                }
+            ]
+        )
+    return leads_summary
