@@ -34,10 +34,16 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
         item_id = lead_item_data["item_id"]
         key_name = all_form_items_dict[item_id]["key_name"]
         value = lead_item_data["value"]
-        item_dict["key_name"] = key_name
-        item_dict["value"] = value
-        item_dict["item_id"] = item_id
+        # item_dict["key_name"] = key_name
+        # item_dict["value"] = value
+        # item_dict["item_id"] = item_id
+        item_dict = {}
+        item_dict[str(item_id)] = {
+            'key_name': key_name,
+            'value': value
+        }
         lead_dict["data"].append(item_dict)
+
         if value:
             if all_form_items_dict[item_id]["hot_lead_criteria"] and value == all_form_items_dict[item_id]["hot_lead_criteria"]:
                 lead_dict["is_hot"] = True
@@ -274,7 +280,7 @@ class LeadsFormBulkEntry(APIView):
                     if 'apartment' in i.value.lower():
                         apartment_index = idx
                         break
-            if index > 0:
+            if index > 0 and index < 100:
                 form_entry_list = []
                 # supplier_id = row[0].value if row[0].value else None
                 # created_at = row[1].value if row[1].value else None
@@ -332,7 +338,7 @@ class LeadsFormBulkEntry(APIView):
 
                 created_at = inventory_activity_list[0].activity_date if inventory_activity_list[0].activity_date else None
                 lead_dict = {"data": [], "is_hot": False, "created_at": created_at, "supplier_id": found_supplier_id,
-                             "campaign_id": campaign_id, "lead_form_id": leads_form_id, "entry_id": entry_id}
+                             "campaign_id": campaign_id, "lead_form_id": int(leads_form_id), "entry_id": entry_id}
                 for item_id in range(0, fields):
                     curr_item_id = item_id + 1
                     curr_form_item_dict = all_form_items_dict[curr_item_id]
@@ -356,13 +362,18 @@ class LeadsFormBulkEntry(APIView):
                         "entry_id": entry_id,
                         "created_at": created_at
                     }))
-                    item_dict = {
-                        'item_id': item_id,
+                    # item_dict = {
+                    #     'item_id': curr_item_id,
+                    #     'key_name': key_name,
+                    #     'value': value
+                    # }
+                    item_dict = {}
+                    item_dict[str(curr_item_id)] = {
                         'key_name': key_name,
                         'value': value
                     }
-                    lead_dict['data'].append(item_dict)
-                    mongo_client.leads.insert_one(lead_dict)
+                    lead_dict["data"].append(item_dict)
+                mongo_client.leads.insert_one(lead_dict)
                 LeadsFormData.objects.bulk_create(form_entry_list)
                 entry_id = entry_id + 1  # will be saved in the end
         cache_all_campaign_leads(campaign_id)
