@@ -61,10 +61,11 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'coreapi.urls'
 
+SETTINGS_PATH = os.path.normpath(os.path.dirname(__file__))
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'BACKEND': 'django.template.backends.jinja2.Jinja2',
+        'DIRS': [os.path.join(SETTINGS_PATH, '../v0/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

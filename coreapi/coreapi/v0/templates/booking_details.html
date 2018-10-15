@@ -1,0 +1,28 @@
+<html>
+    <style>
+table, td, th {
+    border: 1px solid black;
+}
+
+</style>
+    <body>
+        The following are the Booking details for {{campaign_name}} campaign:
+        <br /> <br />
+        <table style="border-collapse: collapse;width: 60%;border: 1px solid black;">
+            <tr style="border: 1px solid black;">
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Phase</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Total Booked Societies (Aggregated Flat Count)</th>
+            </tr>
+            {% for phase_dict in details_list %}
+                <tr style="border: 1px solid black;border: 1px solid black;">
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">
+                        Phase: {{phase_dict.phase_no}}<br />
+                        Start Date: {{phase_dict.start_date}}<br />
+                        End Date: {{phase_dict.end_date}}
+                    </td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{phase_dict.total_booked_suppliers}}({{phase_dict.total_booked_flats}})</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </body>
+</html>

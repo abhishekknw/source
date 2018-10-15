@@ -672,6 +672,7 @@ class LeadsSummary(APIView):
         username = request.user
         user_id = BaseUser.objects.get(username=username).id
         campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id).values_list('campaign_id', flat=True).distinct()
+        campaign_list = [campaign_id for campaign_id in campaign_list]
         all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).values('proposal_id',
                                                                                                           'object_id',
                                                                                                           'phase_no_id',
@@ -703,9 +704,23 @@ class LeadsSummary(APIView):
             all_campaign_dict[shortlisted_supplier['proposal_id']]['start_date'] = shortlisted_supplier['proposal__tentative_start_date']
             all_campaign_dict[shortlisted_supplier['proposal_id']]['end_date'] = shortlisted_supplier['proposal__tentative_end_date']
             all_campaign_dict[shortlisted_supplier['proposal_id']]['campaign_status'] = shortlisted_supplier['proposal__campaign_state']
-
-        all_campaign_summary = LeadsFormSummary.objects.filter(campaign_id__in=campaign_list).values(
-            'supplier_id', 'campaign_id', 'total_leads_count', 'hot_leads_count', 'campaign_id')
+        all_campaign_summary = mongo_client.leads.aggregate(
+            [
+                {
+                    "$match": {"campaign_id": {"$in": campaign_list}}
+                },
+                {
+                    "$group":
+                        {
+                            "_id": {"campaign_id": "$campaign_id", "supplier_id": "$supplier_id"},
+                            "campaign_id": { "$first": '$campaign_id' },
+                            "supplier_id": { "$first": '$supplier_id' },
+                            "total_leads_count": {"$sum": 1},
+                            "hot_leads_count": {"$sum": {"$cond": ["$is_hot", 1, 0]}}
+                        }
+                }
+            ]
+        )
         all_leads_summary = []
         for campaign_summary in all_campaign_summary:
             all_campaign_dict[campaign_summary['campaign_id']]['hot_leads'] += campaign_summary['hot_leads_count']

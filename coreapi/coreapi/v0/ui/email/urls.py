@@ -1,12 +1,14 @@
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
-from views import (SendMail, Mail, SendWeeklyLeadsMail, SendGraphPdf)
-
+from views import (SendMail, Mail, EmailSettingsView)
+from tasks import SendWeeklyLeadsMail, SendGraphPdf, SendBookingDetailMails
 urlpatterns = [
     url(r'^send-mail/$', SendMail.as_view()),
     url(r'^mail/$', Mail.as_view()),
     url(r'^send-weekly-leads-mail/$', SendWeeklyLeadsMail.as_view()),
-    url(r'^send-graph-pdf/$', SendGraphPdf.as_view())
+    url(r'^email-settings/$', EmailSettingsView.as_view()),
+    url(r'^send-graph-pdf/$', SendGraphPdf.as_view()),
+    url(r'^send-booking-details/$', SendBookingDetailMails.as_view()),
 ]
 
 router = DefaultRouter()

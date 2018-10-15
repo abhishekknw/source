@@ -133,7 +133,7 @@ class ContactDetails(BaseModel):
     specify_others = models.CharField(max_length=50, blank=True, null=True)
     name = models.CharField(max_length=255, blank=True, null=True)
     salutation = models.CharField(max_length=50, blank=True, null=True)
-    landline = models.BigIntegerField(blank=True, null=True)
+    landline = models.CharField(blank=True, null=True, max_length=30)
     std_code = models.CharField(max_length=6, blank=True, null=True)
     mobile = models.BigIntegerField(blank=True, null=True)
     country_code = models.CharField(max_length=10, blank=True, null=True)
