@@ -75,18 +75,6 @@ class LeadsFormContacts(BaseModel):
         db_table = 'leads_form_contacts'
 
 
-class LeadsFormSummary(BaseModel):
-    leads_form = models.ForeignKey('LeadsForm', null=False, blank=False)
-    supplier_id = models.CharField(max_length=70, null=True, blank=True)
-    campaign_id = models.CharField(max_length=70, null=True, blank=True)
-    total_leads_count = models.IntegerField(blank=False, null=True)
-    hot_leads_count = models.IntegerField(blank=False, null=True)
-    hot_leads_percentage = models.FloatField(blank=False, null=True)
-
-    class Meta:
-        db_table = 'leads_form_summary'
-
-
 def get_leads_summary(campaign_list=None):
     if campaign_list:
         if not isinstance(campaign_list, list):
