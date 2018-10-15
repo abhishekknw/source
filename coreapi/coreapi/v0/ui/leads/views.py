@@ -203,11 +203,24 @@ class CreateLeadsForm(APIView):
         new_dynamic_form.save()
         form_items_list = []
         item_id = 0
+        form_id = (mongo_client.leads_forms.find().count() + 1)
+        max_id_data = mongo_client.leads_forms.find_one(sort=[('leads_form_id', -1)])
+        max_id = max_id_data['leads_form_id'] if max_id_data is not None else 0
+        mongo_dict = {
+            'leads_form_id': max_id+1,
+            'campaign_id': campaign_id,
+            'leads_form_name': leads_form_name,
+            'data': {}
+        }
         for item in leads_form_items:
             item_id = item_id + 1
             key_options = item["key_options"] if 'key_options' in item else None
             if key_options and isinstance(key_options, list):
                 key_options = ','.join(key_options)
+            # key_name = item["key_name"]
+            # key_type = item["key_type"]
+            # order_id = item["order_id"]
+            item["item_id"] = item_id
             item_object = LeadsFormItems(**{
                 "campaign_id": campaign_id,
                 "leads_form": new_dynamic_form,
@@ -220,6 +233,9 @@ class CreateLeadsForm(APIView):
             })
             form_items_list.append(item_object)
             item_object.save()
+
+            mongo_dict['data'][str(item_id)] = item
+        mongo_client.leads_forms.insert_one(mongo_dict)
         # LeadsFormItems.objects.bulk_create(form_items_list)
         new_dynamic_form.fields_count = item_id
         new_dynamic_form.save()
