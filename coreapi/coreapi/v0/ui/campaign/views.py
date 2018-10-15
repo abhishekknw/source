@@ -655,9 +655,8 @@ class DashBoardViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         #try:
         campaign_id = request.query_params.get('campaign_id', None)
-        leads_form_summary_data = LeadsFormSummary.objects.filter(campaign_id=campaign_id)\
-            .values('supplier_id','total_leads_count','hot_leads_count','hot_leads_percentage')
-        supplier_ids = list(set(leads_form_summary_data.values_list('supplier_id', flat=True)))
+        leads_form_summary_data = get_leads_summary(campaign_id)
+        supplier_ids = list(set([single_summary['supplier_id'] for single_summary in leads_form_summary_data]))
         supplier_info_1 = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
         supplier_info = SupplierTypeSocietySerializer2(supplier_info_1, many=True).data
         all_suppliers_data = {}
@@ -680,12 +679,14 @@ class DashBoardViewSet(viewsets.ViewSet):
 
             curr_supplier_info = [x for x in supplier_info if x['supplier_id'] == supplier_id]
             supplier_locality = curr_supplier_info[0]['society_locality']
+
             if supplier_locality in all_localities_data:
                 all_localities_data[supplier_locality]["interested"] = all_localities_data[supplier_locality][
                                                                            "interested"] + hot_leads
                 all_localities_data[supplier_locality]["total"] = all_localities_data[supplier_locality][
                                                                       "total"] + total_leads
             else:
+
                 curr_locality_data = {
                     "is_interested": True,
                     "campaign": campaign_id,

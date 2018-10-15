@@ -121,4 +121,4 @@ def get_leads_summary(campaign_list=None):
                 }
             ]
         )
-    return leads_summary
+    return list(leads_summary)
