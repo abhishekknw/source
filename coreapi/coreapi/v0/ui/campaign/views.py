@@ -36,6 +36,7 @@ from operator import itemgetter
 import requests
 from celery import shared_task
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
+from v0.ui.common.models import mongo_client
 
 
 class CampaignAPIView(APIView):
@@ -183,55 +184,21 @@ def hot_lead_ratio_calculator(data_array):
     return data_array
 
 
-def lead_counter(campaign_id, supplier_id,lead_form_items_list):
-    hot_lead_criteria_dict = {}
-    for lead in lead_form_items_list:
-        if lead.leads_form_id not in hot_lead_criteria_dict:
-            hot_lead_criteria_dict[lead.leads_form_id] = {}
-        if lead.item_id not in hot_lead_criteria_dict[lead.leads_form_id]:
-            hot_lead_criteria_dict[lead.leads_form_id][lead.item_id] = {}
-        hot_lead_criteria_dict[lead.leads_form_id][lead.item_id]['hot_lead_criteria'] = lead.hot_lead_criteria
-    lead_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id, supplier_id=supplier_id). \
-        exclude(status='inactive')
-    lead_form_data_array = []
-    for curr_object in lead_form_data:
-        curr_data = curr_object.__dict__
-        lead_form_data_array.append(curr_data)
-
-    total_leads = 0
-    hot_leads = 0
-    hot_lead_details = []
-    leads_form_items_dict = {item.item_id:item.key_name for item in lead_form_items_list}
-    # print leads_form_items_dict
-    form_id_data = get_distinct_from_dict_array(lead_form_data_array,'leads_form_id')
-    for form_id in form_id_data:
-        current_leads_data = [x for x in lead_form_data_array if x['leads_form_id'] == form_id]
-        current_lead_entries = get_distinct_from_dict_array(current_leads_data,'entry_id')
-        current_leads = len(current_lead_entries)
-        total_leads = total_leads + current_leads
-        for entry_id in current_lead_entries:
-            current_entry = [x for x in lead_form_data_array if x['entry_id'] == entry_id]
-            hot_lead = False
-            for item_data in current_entry:
-                item_value = item_data['item_value']
-                item_id = item_data['item_id']
-                leads_form_id = item_data['leads_form_id']
-                hot_lead_criteria = hot_lead_criteria_dict[leads_form_id][item_id]['hot_lead_criteria']
-                if item_value:
-                    if (hot_lead_criteria and str(item_value) == str(hot_lead_criteria)) or 'counseling' in leads_form_items_dict[item_id].lower():
-                        if hot_lead is False:
-                            hot_leads = hot_leads + 1
-                            hot_lead_details.append({
-                                'leads_form_id': leads_form_id,
-                                'entry_id': entry_id
-                            })
-                        hot_lead = True
-                        continue
-    result = {'total_leads': total_leads, 'hot_leads': hot_leads, 'hot_lead_details':hot_lead_details}
+def lead_counter(campaign_id):
+    result = {}
+    all_leads_summary = get_leads_summary(campaign_id)
+    all_campaign_leads = mongo_client.leads.find({"campaign_id":campaign_id})
+    for summary in all_leads_summary:
+        result[summary['supplier_id']] = {"hot_leads": summary['hot_leads_count'],
+                                          "total_leads": summary['total_leads_count'],
+                                          "hot_lead_details": []}
+    for lead in all_campaign_leads:
+        result[lead['supplier_id']]["hot_lead_details"].append({
+            "entry_id": lead["entry_id"],
+            "leads_form_id": lead["lead_form_id"]
+        })
     return result
 
-# def hot_lead(hot_lead_criteria_query):
-#
 
 class DashBoardViewSet(viewsets.ViewSet):
     """
@@ -1038,11 +1005,6 @@ class CampaignLeadsMultiple(APIView):
 
 @shared_task()
 def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_date_str=None, cache_again=False):
-    cache_string = "single_" + str(campaign_id) + str(user_start_date_str) + str(user_end_date_str)
-    if not cache_again:
-        if cache_string in cache and user_start_date_str is None and user_end_date_str is None:
-            final_data = cache.get(cache_string)
-            return final_data
     format_str = '%d/%m/%Y'
     phase_start_weekday = 'Tuesday' # this is used to set the phase cycle
     user_start_datetime = datetime.strptime(user_start_date_str,format_str) if user_start_date_str is not None else None
@@ -1072,12 +1034,12 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
             "suppliers": 0,
             "flat_count": 0
         }
-
+    campaign_hot_leads_dict = lead_counter(campaign_id)
     for curr_supplier_data in supplier_data:
         supplier_id = curr_supplier_data['supplier_id']
         supplier_locality = curr_supplier_data['society_locality']
         supplier_flat_count = curr_supplier_data['flat_count'] if curr_supplier_data['flat_count'] else 0
-        lead_count = lead_counter(campaign_id, supplier_id, lead_form_items_list)
+        lead_count = campaign_hot_leads_dict[supplier_id]
         supplier_wise_lead_count[supplier_id] = lead_count
         hot_leads = lead_count['hot_leads']
         total_leads = lead_count['total_leads']
@@ -1264,8 +1226,6 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
     final_data = {'supplier_data': all_suppliers_list, 'date_data': all_dates_data,
                   'locality_data': all_localities_data, 'weekday_data': all_weekdays_data,
                   'flat_data': all_flat_data, 'phase_data': phase_data}
-    if user_start_date_str is None and user_end_date_str is None:
-        cache.set(cache_string, final_data, timeout=CACHE_TTL)
     return final_data
 
 
