@@ -22,7 +22,8 @@ from django.http import HttpResponse
 from celery import shared_task
 from django.conf import settings
 from v0.ui.common.models import mongo_client
-
+import pprint
+pp = pprint.PrettyPrinter(depth=6)
 
 def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id):
     all_form_items = LeadsFormItems.objects.filter(leads_form_id=lead_form.id).values('item_id', 'key_name', 'hot_lead_criteria')
@@ -477,6 +478,98 @@ class MigrateLeadsToMongo(APIView):
                 lead_dicts.append(lead_dict)
         mongo_client.leads.insert_many(lead_dicts)
 
+        return ui_utils.handle_response(class_name, data='success', success=True)
+
+
+class SanitizeLeadsData(APIView):
+    def put(self, request):
+        class_name = self.__class__.__name__
+        campaign_list = list(set(LeadsFormData.objects.values_list('campaign_id',flat=True)))
+        for campaign_id in campaign_list:
+            print campaign_id
+            all_leads_data = LeadsFormData.objects.filter(campaign_id=campaign_id).all()
+            lead_form = LeadsForm.objects.get(campaign_id=campaign_id)
+            new_entry_id = lead_form.last_entry_id + 1 if lead_form.last_entry_id else 1
+            all_leads_items = LeadsFormItems.objects.filter(campaign_id=campaign_id).all()
+            scholarship_item_id = None
+            other_child_item_id = None
+            counseling_item_id = None
+            other_child_class_item_id = None
+            first_child_name_item_id = None
+            first_child_class_item_id = None
+            for item in all_leads_items:
+                if "scholarship" in item.key_name.lower():
+                    scholarship_item_id = item.item_id
+                if "name of other child" in item.key_name.lower():
+                    other_child_item_id = item.item_id
+                if "counseling" in item.key_name.lower() or "counselling" in item.key_name.lower() or "counceling" in item.key_name.lower():
+                    counseling_item_id = item.item_id
+                if "class of other child" in item.key_name.lower() or "class of second child" in item.key_name.lower():
+                    other_child_class_item_id = item.item_id
+                if "name of first child" in item.key_name.lower() or "name of child" in item.key_name.lower():
+                    first_child_name_item_id = item.item_id
+                if "class of first child" in item.key_name.lower():
+                    first_child_class_item_id = item.item_id
+            all_leads_data_dict = {}
+
+            for lead_data in all_leads_data:
+                if lead_data.entry_id not in all_leads_data_dict:
+                    all_leads_data_dict[lead_data.entry_id] = []
+                all_leads_data_dict[lead_data.entry_id].append({
+                    "created_at": lead_data.created_at,
+                    "updated_at": lead_data.updated_at,
+                    "supplier_id": lead_data.supplier_id,
+                    "item_id": lead_data.item_id,
+                    "item_value": lead_data.item_value,
+                    "leads_form_id": lead_data.leads_form_id,
+                    "entry_id": lead_data.entry_id,
+                    "status": lead_data.status,
+                    "campaign_id": lead_data.campaign_id
+                })
+            for entry_id in all_leads_data_dict:
+                entry_data = all_leads_data_dict[entry_id]
+                convert_counseling = False
+                create_other_child_lead = False
+                other_child_name = None
+                other_child_class = None
+                for item in entry_data:
+                    if item['item_id'] == scholarship_item_id:
+                        if item['item_value'] == "NA":
+                            convert_counseling = True
+                    if item['item_id'] == other_child_item_id:
+                        if item['item_value'] and len(item['item_value']) > 2:
+                            create_other_child_lead = True
+                            other_child_name = item['item_value']
+                            item_object = LeadsFormData.objects.filter(entry_id=item['entry_id'], item_id=item['item_id'])
+                            item_object.update(item_value=None)
+                    if item['item_id'] == other_child_class_item_id:
+                        if create_other_child_lead:
+                            item_object = LeadsFormData.objects.filter(entry_id=item['entry_id'], item_id=item['item_id'])
+                            item_object.update(item_value=None)
+                    if item['item_id'] == other_child_class_item_id:
+                        other_child_class = item['item_value']
+                if convert_counseling:
+                    for item in entry_data:
+                        if item['item_id'] == counseling_item_id:
+                            if not item['item_value']:
+                                item_object = LeadsFormData.objects.filter(entry_id=item['entry_id'], item_id=item['item_id'])
+                                item_object.update(item_value="CounselingScheduled")
+                if create_other_child_lead:
+                    item_list = []
+                    for item in entry_data:
+                        item['entry_id'] = new_entry_id
+                        if item['item_id'] == other_child_item_id:
+                            item['item_value'] = None
+                        if item['item_id'] == other_child_class_item_id:
+                            item['item_value'] = None
+                        if item['item_id'] == first_child_name_item_id:
+                            item['item_value'] = other_child_name
+                        if item['item_id'] == first_child_class_item_id:
+                            item['item_value'] = other_child_class
+                        item_list.append(LeadsFormData(**item))
+                    LeadsFormData.objects.bulk_create(item_list)
+                    new_entry_id += 1
+            LeadsForm.objects.filter(campaign_id=campaign_id).update(last_entry_id=new_entry_id - 1)
         return ui_utils.handle_response(class_name, data='success', success=True)
 
 
