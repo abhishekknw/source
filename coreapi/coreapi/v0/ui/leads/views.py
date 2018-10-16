@@ -8,6 +8,8 @@ from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.inventory.models import (InventoryActivityAssignment, InventoryActivity)
 from v0.ui.campaign.views import (lead_counter, get_leads_data_for_campaign,
                                   get_leads_data_for_multiple_campaigns, get_campaign_leads_custom)
+from bson import json_util
+import json
 import v0.ui.utils as ui_utils
 from v0.ui.utils import calculate_percentage
 import boto3
@@ -28,7 +30,8 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
     all_form_items = LeadsFormItems.objects.filter(leads_form_id=lead_form.id).values('item_id', 'key_name', 'hot_lead_criteria')
     all_form_items_dict = {item['item_id']: {"key_name": item['key_name'], "hot_lead_criteria": item['hot_lead_criteria']} for item in all_form_items}
     timestamp = datetime.datetime.utcnow()
-    lead_dict = {"data":[], "is_hot": False, "created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id, "lead_form_id": lead_form.id, "entry_id": entry_id}
+    lead_dict = {"data":[], "is_hot": False, "created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id,
+                 "lead_form_id": lead_form.id, "entry_id": entry_id, "status": "active"}
     for lead_item_data in lead_data:
         item_dict = {}
         item_id = lead_item_data["item_id"]
@@ -71,7 +74,7 @@ def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
     enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id)
 
 
-def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0, **kwargs):
+def get_supplier_all_leads_entries_old(leads_form_id, supplier_id, page_number=0, **kwargs):
     leads_per_page=25
     lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
     if supplier_id == 'All':
@@ -170,11 +173,40 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number=0, **k
              "value": supplier_name})
     return supplier_all_lead_entries
 
+def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **kwargs):
+    leads_per_page = 25
+    print supplier_id
+    if supplier_id == 'All':
+        leads_data = mongo_client.leads.find({"lead_form_id": int(leads_form_id)},{"_id":0})
+        leads_data_list = list(leads_data)
+        suppliers_list = []
+        for lead_data in leads_data_list:
+            suppliers_list.append(lead_data['supplier_id'])
+        suppliers_list = list(set(suppliers_list))
+        suppliers_names = SupplierTypeSociety.objects.filter(supplier_id__in=suppliers_list).values_list(
+            'supplier_id','society_name')
+        supplier_id_names = dict((x, y) for x, y in suppliers_names)
+        print supplier_id_names
+    else:
+        leads_data = mongo_client.leads.find({"$and": [{"lead_form_id": int(leads_form_id)}, {"supplier_id": supplier_id}]},
+                                             {"_id":0})
+        leads_data_list = list(leads_data)
+        supplier_data = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
+        supplier_name = supplier_data.society_name
+    if 'start_date' in kwargs and kwargs['start_date']:
+        leads_data_start = [x for x in leads_data_list if x['created_at'] >= kwargs['start_date']]
+    if 'end_date' in kwargs and kwargs['end_date']:
+        leads_data_start_end = [x for x in leads_data_start if x['created_at'] <= kwargs['end_date']]
+        leads_data_list = leads_data_start_end
+
+    return leads_data_list
+
 
 class GetLeadsEntries(APIView):
     @staticmethod
     def get(request, leads_form_id):
-        supplier_id = request.query_params.get('supplier_id','All')
+        supplier_id = str(request.query_params.get('supplier_id')) if request.query_params.get('supplier_id'
+                                                                                              ) is not None else 'All'
 
         page_number = int(request.query_params.get('page_number',0))
         supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number)
@@ -377,7 +409,8 @@ class LeadsFormBulkEntry(APIView):
                         "item_value": value,
                         "leads_form": lead_form,
                         "entry_id": entry_id,
-                        "created_at": created_at
+                        "created_at": created_at,
+                        "status": "active"
                     }))
                     # item_dict = {
                     #     'item_id': curr_item_id,
@@ -440,11 +473,14 @@ class MigrateLeadsToMongo(APIView):
             first_data_element = curr_form_data[0]
             campaign_id = first_data_element['campaign_id']
             entry_ids = list(set([x['entry_id'] for x in curr_form_data]))
+            entry_count=0
             for curr_entry_id in entry_ids:
+                entry_count = entry_count+1
                 curr_entry_data = [x for x in curr_form_data if x['entry_id'] == curr_entry_id]
                 supplier_id = curr_entry_data[0]['supplier_id']
                 lead_dict = {"data": [], "is_hot": False, "created_at": timestamp, "supplier_id": supplier_id,
-                             "campaign_id": campaign_id, "lead_form_id": curr_form_id, "entry_id": curr_entry_id}
+                             "campaign_id": campaign_id, "lead_form_id": curr_form_id, "entry_id": curr_entry_id,
+                             "status": "active"}
                 for curr_data in curr_entry_data:
                     item_id = curr_data['item_id']
                     value = curr_data['item_value']
@@ -562,11 +598,9 @@ class DeleteLeadForm(APIView):
 class DeleteLeadEntry(APIView):
     @staticmethod
     def put(request, form_id, entry_id):
-        entry_list = LeadsFormData.objects.filter(leads_form_id=form_id, entry_id=entry_id)
-        for items in entry_list:
-            items.status = 'inactive'
-            items.save()
-        return ui_utils.handle_response({}, data='success', success=True)
+        result = mongo_client.leads.update_one({"lead_form_id": int(form_id), "entry_id": int(entry_id)},
+                                     {"$set": {"status": "inactive"}})
+        return ui_utils.handle_response(result, data='success', success=True)
 
 
 class LeadFormUpdate(APIView):
