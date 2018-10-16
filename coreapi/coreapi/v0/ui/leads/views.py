@@ -6,7 +6,7 @@ from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.inventory.models import (InventoryActivityAssignment, InventoryActivity)
-from v0.ui.campaign.views import (lead_counter, get_leads_data_for_campaign,
+from v0.ui.campaign.views import (get_leads_data_for_campaign,
                                   get_leads_data_for_multiple_campaigns, get_campaign_leads_custom)
 import v0.ui.utils as ui_utils
 from v0.ui.utils import calculate_percentage
@@ -427,10 +427,46 @@ class MigrateLeadsToMongo(APIView):
         all_leads_data = []
         for data in all_leads_data_object:
             all_leads_data.append(data.__dict__)
-        all_leads_items = LeadsFormItems.objects.all().values('leads_form_id', 'item_id', 'key_name', 'hot_lead_criteria')
+        all_leads_forms = LeadsForm.objects.all().values('id','campaign_id', 'leads_form_name', 'last_entry_id',
+                                                              'status', "fields_count", "last_contact_id")
+        all_leads_items = LeadsFormItems.objects.all().values('leads_form_id', 'item_id', 'key_name', 'hot_lead_criteria',
+                                                              'key_options', 'order_id', 'status', 'is_required', 'key_type',
+                                                              'campaign_id', 'supplier_id')
+        all_leads_items_dict = {}
+        for lead_item in all_leads_items:
+            if lead_item['leads_form_id'] not in all_leads_items_dict:
+                all_leads_items_dict[lead_item['leads_form_id']] = []
+            all_leads_items_dict[lead_item['leads_form_id']].append(lead_item)
+        for leads_form in all_leads_forms:
+            mongo_dict = {
+                'leads_form_id': leads_form['id'],
+                'campaign_id': leads_form['campaign_id'],
+                'leads_form_name': leads_form['leads_form_name'],
+                'last_entry_id': leads_form['last_entry_id'],
+                'status': leads_form['status'],
+                'last_contact_id': leads_form['last_contact_id'],
+                'data': {}
+            }
+            if leads_form['id'] in all_leads_items_dict:
+                for item in all_leads_items_dict[leads_form['id']]:
+                    key_options = item["key_options"] if 'key_options' in item else None
+                    mongo_dict['data'][str(item['item_id'])] = {
+                        'item_id':  item['item_id'],
+                        'key_type': item['key_type'],
+                        'key_name': item['key_name'],
+                        'key_options': key_options,
+                        'order_id': item['order_id'],
+                        'status': item['status'],
+                        'leads_form_id': item['leads_form_id'],
+                        'is_required': item['is_required'],
+                        'hot_lead_criteria': item['hot_lead_criteria'],
+                        'campaign_id': item['campaign_id'],
+                        'supplier_id': item['supplier_id']
+
+                    }
+            mongo_client.leads_forms.insert_one(mongo_dict)
         leads_form_ids = all_leads_data_object.values_list('leads_form_id',flat = True).distinct()
         timestamp = datetime.datetime.utcnow()
-
         lead_dicts = []
 
         for curr_form_id in leads_form_ids:
