@@ -339,193 +339,190 @@ class DashBoardViewSet(viewsets.ViewSet):
         :return:
         """
         class_name = self.__class__.__name__
-        try:
-            campaign_id = request.query_params.get('campaign_id', None)
-            current_date = timezone.now()
-            object_id_alias = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id'
+        campaign_id = request.query_params.get('campaign_id', None)
+        current_date = timezone.now()
+        object_id_alias = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id'
 
-            shortlisted_suppliers = ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id)
-            shortlisted_suppliers_id_list = [supplier.object_id for supplier in shortlisted_suppliers]
-            shortlisted_spaces_id_list = [supplier.id for supplier in shortlisted_suppliers]
-            shortlisted_spaces_id_dict = {supplier.id: supplier.object_id for supplier in shortlisted_suppliers}
+        shortlisted_suppliers = ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id)
+        shortlisted_suppliers_id_list = [supplier.object_id for supplier in shortlisted_suppliers]
+        shortlisted_spaces_id_list = [supplier.id for supplier in shortlisted_suppliers]
+        shortlisted_spaces_id_dict = {supplier.id: supplier.object_id for supplier in shortlisted_suppliers}
 
-            suppliers_instances = SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_suppliers_id_list)
-            supplier_serializer = SupplierTypeSocietySerializer(suppliers_instances, many=True)
-            suppliers = supplier_serializer.data
-            flat_count = 0
+        suppliers_instances = SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_suppliers_id_list)
+        supplier_serializer = SupplierTypeSocietySerializer(suppliers_instances, many=True)
+        suppliers = supplier_serializer.data
+        flat_count = 0
 
-            supplier_objects_id_list = {supplier['supplier_id']: supplier for supplier in suppliers}
-            all_leads_count = LeadsFormSummary.objects.filter(campaign_id=campaign_id).all()
-            supplier_wise_leads_count = {}
+        supplier_objects_id_list = {supplier['supplier_id']: supplier for supplier in suppliers}
+        all_leads_count = LeadsFormSummary.objects.filter(campaign_id=campaign_id).all()
+        supplier_wise_leads_count = {}
 
-            for leads in all_leads_count:
-                if 'flat_count' in supplier_objects_id_list[leads.supplier_id] and supplier_objects_id_list[leads.supplier_id]['flat_count']:
-                    flat_count = supplier_objects_id_list[leads.supplier_id]['flat_count']
-                else:
-                    flat_count = 0
-                supplier_wise_leads_count[leads.supplier_id] = {
-                    'hot_leads_count': leads.hot_leads_count,
-                    'total_leads_count': leads.total_leads_count,
-                    'hot_leads_percentage': leads.hot_leads_percentage,
-                    'hot_leads_percentage_by_flat_count': calculate_percentage(leads.hot_leads_count, flat_count),
-                    'flat_count': flat_count,
-                    'leads_flat_percentage': calculate_percentage(leads.total_leads_count, flat_count)
-                }
-            inv_data_objects_list = website_utils.get_campaign_inv_data(campaign_id)
-            # inv_data_objects_list = {inv['object_id']:inv for inv in inv_data}
-            ongoing_suppliers = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
-                                                                              'inventory_activity_assignment__inventory_activity',
-                                                                              'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
-                                                                              'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
-                filter(
-                inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id,
-                inventory_activity_assignment__inventory_activity__activity_type='RELEASE',
-                inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__is_completed=False). \
-                values(object_id_alias). \
-                distinct()
-            all_inventory_activity_images = InventoryActivityImage.objects.filter(
-                inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces_id__in=shortlisted_spaces_id_list).all()
-            all_images_by_supplier = {}
-            for inventory_image in all_inventory_activity_images:
-                supplier_id = shortlisted_spaces_id_dict[
-                    inventory_image.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details.shortlisted_spaces_id]
-                inventory_name = inventory_image.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details.ad_inventory_type.adinventory_name
-                if supplier_id not in all_images_by_supplier:
-                    all_images_by_supplier[supplier_id] = {}
-                if inventory_name not in all_images_by_supplier[supplier_id]:
-                    all_images_by_supplier[supplier_id][inventory_name] = {"images": [], "total_count":0}
-                all_images_by_supplier[supplier_id][inventory_name]["images"].append({
-                    'image_path': inventory_image.image_path,
-                    'actual_activity_date': str(inventory_image.actual_activity_date),
-                    'latitude': str(inventory_image.latitude),
-                    'longitude': str(inventory_image.longitude),
-                    'comment': str(inventory_image.comment),
-                    'inventory_name': inventory_name
-                })
+        for leads in all_leads_count:
+            if leads.supplier_id not in supplier_objects_id_list:
+                continue
+            if 'flat_count' in supplier_objects_id_list[leads.supplier_id] and supplier_objects_id_list[leads.supplier_id]['flat_count']:
+                flat_count = supplier_objects_id_list[leads.supplier_id]['flat_count']
+            else:
+                flat_count = 0
+            supplier_wise_leads_count[leads.supplier_id] = {
+                'hot_leads_count': leads.hot_leads_count,
+                'total_leads_count': leads.total_leads_count,
+                'hot_leads_percentage': leads.hot_leads_percentage,
+                'hot_leads_percentage_by_flat_count': calculate_percentage(leads.hot_leads_count, flat_count),
+                'flat_count': flat_count,
+                'leads_flat_percentage': calculate_percentage(leads.total_leads_count, flat_count)
+            }
+        inv_data_objects_list = website_utils.get_campaign_inv_data(campaign_id)
+        # inv_data_objects_list = {inv['object_id']:inv for inv in inv_data}
+        ongoing_suppliers = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
+                                                                          'inventory_activity_assignment__inventory_activity',
+                                                                          'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
+                                                                          'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
+            filter(
+            inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id,
+            inventory_activity_assignment__inventory_activity__activity_type='RELEASE',
+            inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__is_completed=False). \
+            values(object_id_alias). \
+            distinct()
+        all_inventory_activity_images = InventoryActivityImage.objects.filter(
+            inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces_id__in=shortlisted_spaces_id_list).all()
+        all_images_by_supplier = {}
+        for inventory_image in all_inventory_activity_images:
+            supplier_id = shortlisted_spaces_id_dict[
+                inventory_image.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details.shortlisted_spaces_id]
+            inventory_name = inventory_image.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details.ad_inventory_type.adinventory_name
+            if supplier_id not in all_images_by_supplier:
+                all_images_by_supplier[supplier_id] = {}
+            if inventory_name not in all_images_by_supplier[supplier_id]:
+                all_images_by_supplier[supplier_id][inventory_name] = {"images": [], "total_count":0}
+            all_images_by_supplier[supplier_id][inventory_name]["images"].append({
+                'image_path': inventory_image.image_path,
+                'actual_activity_date': str(inventory_image.actual_activity_date),
+                'latitude': str(inventory_image.latitude),
+                'longitude': str(inventory_image.longitude),
+                'comment': str(inventory_image.comment),
+                'inventory_name': inventory_name
+            })
 
-                all_images_by_supplier[supplier_id][inventory_name]["total_count"] += 1
+            all_images_by_supplier[supplier_id][inventory_name]["total_count"] += 1
 
-            all_hashtag_images = HashTagImages.objects.filter(campaign_id=campaign_id).all()
-            for hashtag_image in all_hashtag_images:
-                supplier_id = hashtag_image.object_id
-                if supplier_id not in all_images_by_supplier:
-                    all_images_by_supplier[supplier_id] = {}
-                if hashtag_image.hashtag not in all_images_by_supplier[supplier_id]:
-                    all_images_by_supplier[supplier_id][hashtag_image.hashtag] = {"images": [], "total_count":0}
-                all_images_by_supplier[supplier_id][hashtag_image.hashtag]["images"].append({
-                    'image_path': hashtag_image.image_path,
-                    'actual_activity_date': str(hashtag_image.created_at),
-                    'latitude': str(hashtag_image.latitude),
-                    'longitude': str(hashtag_image.longitude),
-                    'comment': str(hashtag_image.comment),
-                    'inventory_name': hashtag_image.hashtag
-                })
-                all_images_by_supplier[supplier_id][hashtag_image.hashtag]["total_count"] += 1
+        all_hashtag_images = HashTagImages.objects.filter(campaign_id=campaign_id).all()
+        for hashtag_image in all_hashtag_images:
+            supplier_id = hashtag_image.object_id
+            if supplier_id not in all_images_by_supplier:
+                all_images_by_supplier[supplier_id] = {}
+            if hashtag_image.hashtag not in all_images_by_supplier[supplier_id]:
+                all_images_by_supplier[supplier_id][hashtag_image.hashtag] = {"images": [], "total_count":0}
+            all_images_by_supplier[supplier_id][hashtag_image.hashtag]["images"].append({
+                'image_path': hashtag_image.image_path,
+                'actual_activity_date': str(hashtag_image.created_at),
+                'latitude': str(hashtag_image.latitude),
+                'longitude': str(hashtag_image.longitude),
+                'comment': str(hashtag_image.comment),
+                'inventory_name': hashtag_image.hashtag
+            })
+            all_images_by_supplier[supplier_id][hashtag_image.hashtag]["total_count"] += 1
 
-            ongoing_supplier_id_list = [supplier[object_id_alias] for supplier in ongoing_suppliers]
+        ongoing_supplier_id_list = [supplier[object_id_alias] for supplier in ongoing_suppliers]
 
-            completed_suppliers = ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id,
-                                                                   is_completed=True).values('object_id')
+        completed_suppliers = ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id,
+                                                               is_completed=True).values('object_id')
 
-            completed_supplier_id_list = [supplier['object_id'] for supplier in completed_suppliers]
+        completed_supplier_id_list = [supplier['object_id'] for supplier in completed_suppliers]
 
-            upcoming_supplier_id_list = set(shortlisted_suppliers_id_list) - set(
-                ongoing_supplier_id_list + completed_supplier_id_list)
+        upcoming_supplier_id_list = set(shortlisted_suppliers_id_list) - set(
+            ongoing_supplier_id_list + completed_supplier_id_list)
 
-            ongoing_suppliers_list = []
-            total_ongoing_leads_count = 0
-            total_ongoing_hot_leads_count = 0
-            total_ongoing_flat_count = 0
-            for id in ongoing_supplier_id_list:
-                data = {
-                    'supplier': supplier_objects_id_list[id],
-                    'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
-                    'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {}
-                }
-                if id in inv_data_objects_list:
-                    data['supplier']['inv_data'] = inv_data_objects_list[id]
-                ongoing_suppliers_list.append(data)
-                if 'total_leads_count' in data['leads_data']:
-                    total_ongoing_leads_count = total_ongoing_leads_count + data['leads_data']['total_leads_count']
-                    total_ongoing_hot_leads_count = total_ongoing_hot_leads_count + data['leads_data']['hot_leads_count']
-                if supplier_objects_id_list[id]['flat_count']:
-                    total_ongoing_flat_count = total_ongoing_flat_count + supplier_objects_id_list[id]['flat_count']
-
-            completed_suppliers_list = []
-            total_completed_leads_count = 0
-            total_completed_hot_leads_count = 0
-            total_completed_flat_count = 0
-            for id in completed_supplier_id_list:
-                data = {
-                    'supplier': supplier_objects_id_list[id],
-                    'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
-                    'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {}
-                }
-                if id in inv_data_objects_list:
-                    data['supplier']['inv_data'] = inv_data_objects_list[id]
-                completed_suppliers_list.append(data)
-                if 'total_leads_count' in data['leads_data']:
-                    total_completed_leads_count = total_completed_leads_count + data['leads_data']['total_leads_count']
-                    total_completed_hot_leads_count = total_completed_hot_leads_count + data['leads_data']['hot_leads_count']
-                if supplier_objects_id_list[id]['flat_count']:
-                    total_completed_flat_count = total_completed_flat_count + supplier_objects_id_list[id]['flat_count']
-            upcoming_suppliers_list = []
-            total_upcoming_leads_count = 0
-            total_upcoming_hot_leads_count = 0
-            total_upcoming_flat_count = 0
-            for id in upcoming_supplier_id_list:
-                data = {
-                    'supplier': supplier_objects_id_list[id],
-                    'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
-                    'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {}
-                }
-                if id in inv_data_objects_list:
-                    data['supplier']['inv_data'] = inv_data_objects_list[id]
-                upcoming_suppliers_list.append(data)
-                if 'total_leads_count' in data['leads_data']:
-                    total_upcoming_leads_count = total_upcoming_leads_count + data['leads_data']['total_leads_count']
-                    total_upcoming_hot_leads_count = total_upcoming_hot_leads_count + data['leads_data']['hot_leads_count']
-                if supplier_objects_id_list[id]['flat_count']:
-                    total_upcoming_flat_count = total_upcoming_flat_count + supplier_objects_id_list[id]['flat_count']
+        ongoing_suppliers_list = []
+        total_ongoing_leads_count = 0
+        total_ongoing_hot_leads_count = 0
+        total_ongoing_flat_count = 0
+        for id in ongoing_supplier_id_list:
             data = {
-                'ongoing': ongoing_suppliers_list,
-                'completed': completed_suppliers_list,
-                'upcoming': upcoming_suppliers_list,
-                'overall_metrics': {
-                    'ongoing': {
-                        'total_leads_count': total_ongoing_leads_count,
-                        'total_hot_leads_count': total_ongoing_hot_leads_count,
-                        'hot_leads_percentage': calculate_percentage(total_ongoing_hot_leads_count, total_ongoing_leads_count),
-                        'flat_count': total_ongoing_flat_count,
-                        'leads_flat_percentage': calculate_percentage(total_ongoing_leads_count, total_ongoing_flat_count),
-                        'hot_leads_percentage_by_flat_count': calculate_percentage(total_ongoing_hot_leads_count, total_ongoing_flat_count),
-                        'total_suppliers_count': len(ongoing_supplier_id_list)
-                    },
-                    'completed': {
-                        'total_leads_count': total_completed_leads_count,
-                        'total_hot_leads_count': total_completed_hot_leads_count,
-                        'hot_leads_percentage': calculate_percentage(total_completed_hot_leads_count, total_completed_leads_count),
-                        'flat_count': total_completed_flat_count,
-                        'leads_flat_percentage': calculate_percentage(total_completed_leads_count, total_completed_flat_count),
-                        'hot_leads_percentage_by_flat_count': calculate_percentage(total_completed_hot_leads_count, total_completed_flat_count),
-                        'total_suppliers_count': len(completed_suppliers_list)
-                    },
-                    'upcoming': {
-                        'total_leads_count': total_upcoming_leads_count,
-                        'total_hot_leads_count': total_upcoming_hot_leads_count,
-                        'hot_leads_percentage': calculate_percentage(total_upcoming_hot_leads_count, total_upcoming_leads_count),
-                        'flat_count': total_upcoming_flat_count,
-                        'leads_flat_percentage': calculate_percentage(total_upcoming_leads_count, total_upcoming_flat_count),
-                        'hot_leads_percentage_by_flat_count': calculate_percentage(total_upcoming_hot_leads_count, total_upcoming_flat_count),
-                        'total_suppliers_count': len(upcoming_suppliers_list)
-                    }
+                'supplier': supplier_objects_id_list[id],
+                'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
+                'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {}
+            }
+            if id in inv_data_objects_list:
+                data['supplier']['inv_data'] = inv_data_objects_list[id]
+            ongoing_suppliers_list.append(data)
+            if 'total_leads_count' in data['leads_data']:
+                total_ongoing_leads_count = total_ongoing_leads_count + data['leads_data']['total_leads_count']
+                total_ongoing_hot_leads_count = total_ongoing_hot_leads_count + data['leads_data']['hot_leads_count']
+            if supplier_objects_id_list[id]['flat_count']:
+                total_ongoing_flat_count = total_ongoing_flat_count + supplier_objects_id_list[id]['flat_count']
+
+        completed_suppliers_list = []
+        total_completed_leads_count = 0
+        total_completed_hot_leads_count = 0
+        total_completed_flat_count = 0
+        for id in completed_supplier_id_list:
+            data = {
+                'supplier': supplier_objects_id_list[id],
+                'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
+                'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {}
+            }
+            if id in inv_data_objects_list:
+                data['supplier']['inv_data'] = inv_data_objects_list[id]
+            completed_suppliers_list.append(data)
+            if 'total_leads_count' in data['leads_data']:
+                total_completed_leads_count = total_completed_leads_count + data['leads_data']['total_leads_count']
+                total_completed_hot_leads_count = total_completed_hot_leads_count + data['leads_data']['hot_leads_count']
+            if supplier_objects_id_list[id]['flat_count']:
+                total_completed_flat_count = total_completed_flat_count + supplier_objects_id_list[id]['flat_count']
+        upcoming_suppliers_list = []
+        total_upcoming_leads_count = 0
+        total_upcoming_hot_leads_count = 0
+        total_upcoming_flat_count = 0
+        for id in upcoming_supplier_id_list:
+            data = {
+                'supplier': supplier_objects_id_list[id],
+                'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
+                'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {}
+            }
+            if id in inv_data_objects_list:
+                data['supplier']['inv_data'] = inv_data_objects_list[id]
+            upcoming_suppliers_list.append(data)
+            if 'total_leads_count' in data['leads_data']:
+                total_upcoming_leads_count = total_upcoming_leads_count + data['leads_data']['total_leads_count']
+                total_upcoming_hot_leads_count = total_upcoming_hot_leads_count + data['leads_data']['hot_leads_count']
+            if supplier_objects_id_list[id]['flat_count']:
+                total_upcoming_flat_count = total_upcoming_flat_count + supplier_objects_id_list[id]['flat_count']
+        data = {
+            'ongoing': ongoing_suppliers_list,
+            'completed': completed_suppliers_list,
+            'upcoming': upcoming_suppliers_list,
+            'overall_metrics': {
+                'ongoing': {
+                    'total_leads_count': total_ongoing_leads_count,
+                    'total_hot_leads_count': total_ongoing_hot_leads_count,
+                    'hot_leads_percentage': calculate_percentage(total_ongoing_hot_leads_count, total_ongoing_leads_count),
+                    'flat_count': total_ongoing_flat_count,
+                    'leads_flat_percentage': calculate_percentage(total_ongoing_leads_count, total_ongoing_flat_count),
+                    'hot_leads_percentage_by_flat_count': calculate_percentage(total_ongoing_hot_leads_count, total_ongoing_flat_count),
+                    'total_suppliers_count': len(ongoing_supplier_id_list)
+                },
+                'completed': {
+                    'total_leads_count': total_completed_leads_count,
+                    'total_hot_leads_count': total_completed_hot_leads_count,
+                    'hot_leads_percentage': calculate_percentage(total_completed_hot_leads_count, total_completed_leads_count),
+                    'flat_count': total_completed_flat_count,
+                    'leads_flat_percentage': calculate_percentage(total_completed_leads_count, total_completed_flat_count),
+                    'hot_leads_percentage_by_flat_count': calculate_percentage(total_completed_hot_leads_count, total_completed_flat_count),
+                    'total_suppliers_count': len(completed_suppliers_list)
+                },
+                'upcoming': {
+                    'total_leads_count': total_upcoming_leads_count,
+                    'total_hot_leads_count': total_upcoming_hot_leads_count,
+                    'hot_leads_percentage': calculate_percentage(total_upcoming_hot_leads_count, total_upcoming_leads_count),
+                    'flat_count': total_upcoming_flat_count,
+                    'leads_flat_percentage': calculate_percentage(total_upcoming_leads_count, total_upcoming_flat_count),
+                    'hot_leads_percentage_by_flat_count': calculate_percentage(total_upcoming_hot_leads_count, total_upcoming_flat_count),
+                    'total_suppliers_count': len(upcoming_suppliers_list)
                 }
             }
-            return ui_utils.handle_response(class_name, data=data, success=True)
-
-        except Exception as e:
-            print e
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+        }
+        return ui_utils.handle_response(class_name, data=data, success=True)
 
     @list_route()
     def get_campaign_filters(self, request):
