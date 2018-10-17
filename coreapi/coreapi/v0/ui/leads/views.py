@@ -441,7 +441,6 @@ def migrate_to_mongo():
         all_leads_data.append(data.__dict__)
     all_leads_items = LeadsFormItems.objects.all().values('leads_form_id', 'item_id', 'key_name', 'hot_lead_criteria')
     leads_form_ids = all_leads_data_object.values_list('leads_form_id', flat=True).distinct()
-    timestamp = datetime.datetime.utcnow()
 
     for curr_form_id in leads_form_ids:
         curr_form_id = curr_form_id
@@ -453,7 +452,8 @@ def migrate_to_mongo():
         for curr_entry_id in entry_ids:
             curr_entry_data = [x for x in curr_form_data if x['entry_id'] == curr_entry_id]
             supplier_id = curr_entry_data[0]['supplier_id']
-            lead_dict = {"data": [], "is_hot": False, "created_at": timestamp, "supplier_id": supplier_id,
+            created_at = curr_entry_data[0]['created_at']
+            lead_dict = {"data": [], "is_hot": False, "created_at": created_at, "supplier_id": supplier_id,
                          "campaign_id": campaign_id, "lead_form_id": curr_form_id, "entry_id": curr_entry_id}
             for curr_data in curr_entry_data:
                 item_id = curr_data['item_id']
@@ -463,7 +463,7 @@ def migrate_to_mongo():
                 item_dict = {
                     'item_id': item_id,
                     'key_name': key_name,
-                    'value': value
+                    'value': value,
                 }
                 lead_dict['data'].append(item_dict)
                 if value:
