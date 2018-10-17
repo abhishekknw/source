@@ -174,6 +174,7 @@ def get_supplier_all_leads_entries_old(leads_form_id, supplier_id, page_number=0
              "value": supplier_name})
     return supplier_all_lead_entries
 
+
 def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **kwargs):
     leads_per_page = 25
     print supplier_id
@@ -229,14 +230,7 @@ class CreateLeadsForm(APIView):
     def post(request, campaign_id):
         leads_form_name = request.data['leads_form_name']
         leads_form_items = request.data['leads_form_items']
-        new_dynamic_form = LeadsForm(**{
-            'campaign_id': campaign_id,
-            'leads_form_name': leads_form_name,
-        })
-        new_dynamic_form.save()
-        form_items_list = []
         item_id = 0
-        form_id = (mongo_client.leads_forms.find().count() + 1)
         max_id_data = mongo_client.leads_forms.find_one(sort=[('leads_form_id', -1)])
         max_id = max_id_data['leads_form_id'] if max_id_data is not None else 0
         mongo_dict = {
@@ -248,30 +242,11 @@ class CreateLeadsForm(APIView):
         for item in leads_form_items:
             item_id = item_id + 1
             key_options = item["key_options"] if 'key_options' in item else None
-            if key_options and isinstance(key_options, list):
-                key_options = ','.join(key_options)
-            # key_name = item["key_name"]
-            # key_type = item["key_type"]
-            # order_id = item["order_id"]
+            if key_options and not isinstance(key_options, list):
+                key_options = key_options.split(',')
             item["item_id"] = item_id
-            item_object = LeadsFormItems(**{
-                "campaign_id": campaign_id,
-                "leads_form": new_dynamic_form,
-                "key_name": item["key_name"],
-                "key_type": item["key_type"],
-                "key_options": key_options,
-                "order_id": item["order_id"],
-                "item_id": item_id,
-                "hot_lead_criteria": item["hot_lead_criteria"] if "hot_lead_criteria" in item else None
-            })
-            form_items_list.append(item_object)
-            item_object.save()
-
             mongo_dict['data'][str(item_id)] = item
         mongo_client.leads_forms.insert_one(mongo_dict)
-        # LeadsFormItems.objects.bulk_create(form_items_list)
-        new_dynamic_form.fields_count = item_id
-        new_dynamic_form.save()
         return ui_utils.handle_response({}, data='success', success=True)
 
 
