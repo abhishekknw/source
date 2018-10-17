@@ -3,7 +3,8 @@ from rest_framework.routers import DefaultRouter
 from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntries,
                    LeadsFormBulkEntry, GenerateLeadForm, DeleteLeadItems, DeleteLeadForm, DeleteLeadEntry,
                    LeadFormUpdate, SmsContact, EditLeadsData, EditLeadFormItems, EditLeadsForm,
-                   LeadsSummary, GetLeadsEntriesByCampaignId, GenerateLeadDataExcel, CampaignLeadsCacheAll, MigrateLeadsToMongo)
+                   LeadsSummary, GetLeadsEntriesByCampaignId, GenerateLeadDataExcel, CampaignLeadsCacheAll, MigrateLeadsToMongo,
+                   SanitizeLeadsData)
 
 urlpatterns = [
     url(r'^(?P<campaign_id>[A-Z_a-z0-9]+)/create$', CreateLeadsForm.as_view()),
@@ -19,6 +20,7 @@ urlpatterns = [
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_form$', DeleteLeadForm.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_entry/(?P<entry_id>[A-Z_a-z0-9]+)$', DeleteLeadEntry.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/add_fields$', LeadFormUpdate.as_view()),
+    url(r'^sanitize_leads_data/$', SanitizeLeadsData.as_view()),
     url(r'^(?P<form_id>[0-9]+)/add_sms_contact$', SmsContact.as_view()),
     url(r'^(?P<form_id>[0-9]+)/get_sms_contacts$', SmsContact.as_view()),
     url(r'^(?P<form_id>[0-9]+)/edit_leads_data', EditLeadsData.as_view()),

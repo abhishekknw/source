@@ -24,7 +24,8 @@ from django.http import HttpResponse
 from celery import shared_task
 from django.conf import settings
 from v0.ui.common.models import mongo_client
-
+import pprint
+pp = pprint.PrettyPrinter(depth=6)
 
 def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id):
     all_form_items = LeadsFormItems.objects.filter(leads_form_id=lead_form.id).values('item_id', 'key_name', 'hot_lead_criteria')
@@ -452,90 +453,192 @@ class LeadsFormEntry(APIView):
         return ui_utils.handle_response({}, data='success', success=True)
 
 
-class MigrateLeadsToMongo(APIView):
+@shared_task()
+def migrate_to_mongo():
+    all_leads_data_object = LeadsFormData.objects.all()
+    all_leads_data = []
+    for data in all_leads_data_object:
+        all_leads_data.append(data.__dict__)
+    all_leads_forms = LeadsForm.objects.all().values('id', 'campaign_id', 'leads_form_name', 'last_entry_id',
+                                                     'status', "fields_count", "last_contact_id")
+    all_leads_items = LeadsFormItems.objects.all().values('leads_form_id', 'item_id', 'key_name', 'hot_lead_criteria',
+                                                          'key_options', 'order_id', 'status', 'is_required',
+                                                          'key_type',
+                                                          'campaign_id', 'supplier_id')
+    all_leads_items_dict = {}
+    for lead_item in all_leads_items:
+        if lead_item['leads_form_id'] not in all_leads_items_dict:
+            all_leads_items_dict[lead_item['leads_form_id']] = []
+        all_leads_items_dict[lead_item['leads_form_id']].append(lead_item)
+    for leads_form in all_leads_forms:
+        mongo_dict = {
+            'leads_form_id': leads_form['id'],
+            'campaign_id': leads_form['campaign_id'],
+            'leads_form_name': leads_form['leads_form_name'],
+            'last_entry_id': leads_form['last_entry_id'],
+            'status': leads_form['status'],
+            'last_contact_id': leads_form['last_contact_id'],
+            'data': {}
+        }
+        if leads_form['id'] in all_leads_items_dict:
+            for item in all_leads_items_dict[leads_form['id']]:
+                key_options = item["key_options"] if 'key_options' in item else None
+                mongo_dict['data'][str(item['item_id'])] = {
+                    'item_id': item['item_id'],
+                    'key_type': item['key_type'],
+                    'key_name': item['key_name'],
+                    'key_options': key_options,
+                    'order_id': item['order_id'],
+                    'status': item['status'],
+                    'leads_form_id': item['leads_form_id'],
+                    'is_required': item['is_required'],
+                    'hot_lead_criteria': item['hot_lead_criteria'],
+                    'campaign_id': item['campaign_id'],
+                    'supplier_id': item['supplier_id']
 
+                }
+        mongo_client.leads_forms.insert_one(mongo_dict)
+    leads_form_ids = all_leads_data_object.values_list('leads_form_id', flat=True).distinct()
+    timestamp = datetime.datetime.utcnow()
+    for curr_form_id in leads_form_ids:
+        curr_form_id = curr_form_id
+        curr_form_data = [x for x in all_leads_data if x['leads_form_id'] == curr_form_id]
+        curr_form_items = [x for x in all_leads_items if x['leads_form_id'] == curr_form_id]
+        first_data_element = curr_form_data[0]
+        campaign_id = first_data_element['campaign_id']
+        entry_ids = list(set([x['entry_id'] for x in curr_form_data]))
+        entry_count = 0
+        for curr_entry_id in entry_ids:
+            entry_count = entry_count + 1
+            curr_entry_data = [x for x in curr_form_data if x['entry_id'] == curr_entry_id]
+            supplier_id = curr_entry_data[0]['supplier_id']
+            lead_dict = {"data": [], "is_hot": False, "created_at": timestamp, "supplier_id": supplier_id,
+                         "campaign_id": campaign_id, "lead_form_id": curr_form_id, "entry_id": curr_entry_id,
+                         "status": "active"}
+            for curr_data in curr_entry_data:
+                item_id = curr_data['item_id']
+                value = curr_data['item_value']
+                curr_item = [x for x in curr_form_items if x['item_id'] == item_id][0]
+                key_name = curr_item['key_name']
+                item_dict = {
+                    'item_id': item_id,
+                    'key_name': key_name,
+                    'value': value
+                }
+                lead_dict['data'].append(item_dict)
+                if value:
+                    if curr_item['hot_lead_criteria'] and value == curr_item['hot_lead_criteria']:
+                        lead_dict["is_hot"] = True
+                    elif 'counseling' in key_name.lower():
+                        lead_dict["is_hot"] = True
+            mongo_client.leads.insert_one(lead_dict)
+    return
+
+
+class MigrateLeadsToMongo(APIView):
     def put(self, request):
         class_name = self.__class__.__name__
-        all_leads_data_object = LeadsFormData.objects.all()
-        all_leads_data = []
-        for data in all_leads_data_object:
-            all_leads_data.append(data.__dict__)
-        all_leads_forms = LeadsForm.objects.all().values('id','campaign_id', 'leads_form_name', 'last_entry_id',
-                                                              'status', "fields_count", "last_contact_id")
-        all_leads_items = LeadsFormItems.objects.all().values('leads_form_id', 'item_id', 'key_name', 'hot_lead_criteria',
-                                                              'key_options', 'order_id', 'status', 'is_required', 'key_type',
-                                                              'campaign_id', 'supplier_id')
-        all_leads_items_dict = {}
-        for lead_item in all_leads_items:
-            if lead_item['leads_form_id'] not in all_leads_items_dict:
-                all_leads_items_dict[lead_item['leads_form_id']] = []
-            all_leads_items_dict[lead_item['leads_form_id']].append(lead_item)
-        for leads_form in all_leads_forms:
-            mongo_dict = {
-                'leads_form_id': leads_form['id'],
-                'campaign_id': leads_form['campaign_id'],
-                'leads_form_name': leads_form['leads_form_name'],
-                'last_entry_id': leads_form['last_entry_id'],
-                'status': leads_form['status'],
-                'last_contact_id': leads_form['last_contact_id'],
-                'data': {}
-            }
-            if leads_form['id'] in all_leads_items_dict:
-                for item in all_leads_items_dict[leads_form['id']]:
-                    key_options = item["key_options"] if 'key_options' in item else None
-                    mongo_dict['data'][str(item['item_id'])] = {
-                        'item_id':  item['item_id'],
-                        'key_type': item['key_type'],
-                        'key_name': item['key_name'],
-                        'key_options': key_options,
-                        'order_id': item['order_id'],
-                        'status': item['status'],
-                        'leads_form_id': item['leads_form_id'],
-                        'is_required': item['is_required'],
-                        'hot_lead_criteria': item['hot_lead_criteria'],
-                        'campaign_id': item['campaign_id'],
-                        'supplier_id': item['supplier_id']
+        migrate_to_mongo.delay()
+        return ui_utils.handle_response(class_name, data='success', success=True)
 
-                    }
-            mongo_client.leads_forms.insert_one(mongo_dict)
-        leads_form_ids = all_leads_data_object.values_list('leads_form_id',flat = True).distinct()
-        timestamp = datetime.datetime.utcnow()
-        lead_dicts = []
 
-        for curr_form_id in leads_form_ids:
-            curr_form_id = curr_form_id
-            curr_form_data = [x for x in all_leads_data if x['leads_form_id'] == curr_form_id]
-            curr_form_items = [x for x in all_leads_items if x['leads_form_id'] == curr_form_id]
-            first_data_element = curr_form_data[0]
-            campaign_id = first_data_element['campaign_id']
-            entry_ids = list(set([x['entry_id'] for x in curr_form_data]))
-            entry_count=0
-            for curr_entry_id in entry_ids:
-                entry_count = entry_count+1
-                curr_entry_data = [x for x in curr_form_data if x['entry_id'] == curr_entry_id]
-                supplier_id = curr_entry_data[0]['supplier_id']
-                lead_dict = {"data": [], "is_hot": False, "created_at": timestamp, "supplier_id": supplier_id,
-                             "campaign_id": campaign_id, "lead_form_id": curr_form_id, "entry_id": curr_entry_id,
-                             "status": "active"}
-                for curr_data in curr_entry_data:
-                    item_id = curr_data['item_id']
-                    value = curr_data['item_value']
-                    curr_item = [x for x in curr_form_items if x['item_id'] == item_id][0]
-                    key_name = curr_item['key_name']
-                    item_dict = {
-                        'item_id': item_id,
-                        'key_name': key_name,
-                        'value': value
-                    }
-                    lead_dict['data'].append(item_dict)
-                    if value:
-                        if curr_item['hot_lead_criteria'] and value == curr_item['hot_lead_criteria']:
-                            lead_dict["is_hot"] = True
-                        elif 'counseling' in key_name.lower():
-                            lead_dict["is_hot"] = True
-                lead_dicts.append(lead_dict)
-        mongo_client.leads.insert_many(lead_dicts)
+@shared_task()
+def sanitize_leads_data():
+    campaign_list = list(set(LeadsFormData.objects.values_list('campaign_id', flat=True)))
+    for campaign_id in campaign_list:
+        all_leads_data = LeadsFormData.objects.filter(campaign_id=campaign_id).all().order_by("-entry_id")
+        last_entry_id = all_leads_data[0].entry_id if len(all_leads_data) > 0 else None
+        lead_form = LeadsForm.objects.get(campaign_id=campaign_id)
+        LeadsFormData.objects.filter(campaign_id=campaign_id).all()
+        new_entry_id = last_entry_id + 1 if last_entry_id else 1
+        all_leads_items = LeadsFormItems.objects.filter(campaign_id=campaign_id).all()
+        scholarship_item_id = None
+        other_child_item_id = None
+        counseling_item_id = None
+        other_child_class_item_id = None
+        first_child_name_item_id = None
+        first_child_class_item_id = None
+        for item in all_leads_items:
+            if "scholarship" in item.key_name.lower():
+                scholarship_item_id = item.item_id
+            if "name of other child" in item.key_name.lower():
+                other_child_item_id = item.item_id
+            if "counseling" in item.key_name.lower() or "counselling" in item.key_name.lower() or "counceling" in item.key_name.lower():
+                counseling_item_id = item.item_id
+            if "class of other child" in item.key_name.lower() or "class of second child" in item.key_name.lower():
+                other_child_class_item_id = item.item_id
+            if "name of first child" in item.key_name.lower() or "name of child" in item.key_name.lower():
+                first_child_name_item_id = item.item_id
+            if "class of first child" in item.key_name.lower():
+                first_child_class_item_id = item.item_id
+        all_leads_data_dict = {}
 
+        for lead_data in all_leads_data:
+            if lead_data.entry_id not in all_leads_data_dict:
+                all_leads_data_dict[lead_data.entry_id] = []
+            all_leads_data_dict[lead_data.entry_id].append({
+                "created_at": lead_data.created_at,
+                "updated_at": lead_data.updated_at,
+                "supplier_id": lead_data.supplier_id,
+                "item_id": lead_data.item_id,
+                "item_value": lead_data.item_value,
+                "leads_form_id": lead_data.leads_form_id,
+                "entry_id": lead_data.entry_id,
+                "status": lead_data.status,
+                "campaign_id": lead_data.campaign_id
+            })
+        for entry_id in all_leads_data_dict:
+            entry_data = all_leads_data_dict[entry_id]
+            convert_counseling = False
+            create_other_child_lead = False
+            other_child_name = None
+            other_child_class = None
+            for item in entry_data:
+                if item['item_id'] == scholarship_item_id:
+                    if item['item_value'] == "NA":
+                        convert_counseling = True
+                if item['item_id'] == other_child_item_id:
+                    if item['item_value'] and len(item['item_value']) > 2:
+                        create_other_child_lead = True
+                        other_child_name = item['item_value']
+                        item_object = LeadsFormData.objects.filter(entry_id=item['entry_id'], item_id=item['item_id'])
+                        item_object.update(item_value=None)
+                if item['item_id'] == other_child_class_item_id:
+                    if create_other_child_lead:
+                        item_object = LeadsFormData.objects.filter(entry_id=item['entry_id'], item_id=item['item_id'])
+                        item_object.update(item_value=None)
+                if item['item_id'] == other_child_class_item_id:
+                    other_child_class = item['item_value']
+            if convert_counseling:
+                for item in entry_data:
+                    if item['item_id'] == counseling_item_id:
+                        if not item['item_value']:
+                            item_object = LeadsFormData.objects.filter(entry_id=item['entry_id'],
+                                                                       item_id=item['item_id'])
+                            item_object.update(item_value="CounselingScheduled")
+            if create_other_child_lead:
+                item_list = []
+                for item in entry_data:
+                    item['entry_id'] = new_entry_id
+                    if item['item_id'] == other_child_item_id:
+                        item['item_value'] = None
+                    if item['item_id'] == other_child_class_item_id:
+                        item['item_value'] = None
+                    if item['item_id'] == first_child_name_item_id:
+                        item['item_value'] = other_child_name
+                    if item['item_id'] == first_child_class_item_id:
+                        item['item_value'] = other_child_class
+                    item_list.append(LeadsFormData(**item))
+                LeadsFormData.objects.bulk_create(item_list)
+                new_entry_id += 1
+        LeadsForm.objects.filter(campaign_id=campaign_id).update(last_entry_id=new_entry_id - 1)
+        return
+
+
+class SanitizeLeadsData(APIView):
+    def put(self, request):
+        class_name = self.__class__.__name__
+        sanitize_leads_data.delay()
         return ui_utils.handle_response(class_name, data='success', success=True)
 
 
