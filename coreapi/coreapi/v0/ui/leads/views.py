@@ -32,7 +32,7 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
     all_form_items_dict = {item['item_id']: {"key_name": item['key_name'], "hot_lead_criteria": item['hot_lead_criteria']} for item in all_form_items}
     timestamp = datetime.datetime.utcnow()
     lead_dict = {"data":[], "is_hot": False, "created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id,
-                 "lead_form_id": lead_form.id, "entry_id": entry_id, "status": "active"}
+                 "leads_form_id": lead_form.id, "entry_id": entry_id, "status": "active"}
     for lead_item_data in lead_data:
         item_dict = {}
         item_id = lead_item_data["item_id"]
@@ -177,7 +177,7 @@ def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
 def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **kwargs):
     leads_per_page = 25
     if supplier_id == 'All':
-        leads_data = mongo_client.leads.find({"lead_form_id": int(leads_form_id)},{"_id":0})
+        leads_data = mongo_client.leads.find({"leads_form_id": int(leads_form_id)},{"_id":0})
         leads_data_list = list(leads_data)
         suppliers_list = []
         for lead_data in leads_data_list:
@@ -187,7 +187,7 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
             'supplier_id','society_name')
         supplier_id_names = dict((x, y) for x, y in suppliers_names)
     else:
-        leads_data = mongo_client.leads.find({"$and": [{"lead_form_id": int(leads_form_id)}, {"supplier_id": supplier_id},
+        leads_data = mongo_client.leads.find({"$and": [{"leads_form_id": int(leads_form_id)}, {"supplier_id": supplier_id},
                                                        {"status": {"$ne": "inactive"}}]},
                                              {"_id":0})
         leads_data_list = list(leads_data)
@@ -238,7 +238,7 @@ class CreateLeadsForm(APIView):
         max_id_data = mongo_client.leads_forms.find_one(sort=[('leads_form_id', -1)])
         max_id = max_id_data['leads_form_id'] if max_id_data is not None else 0
         mongo_dict = {
-            'lead_form_id': max_id+1,
+            'leads_form_id': max_id+1,
             'campaign_id': campaign_id,
             'leads_form_name': leads_form_name,
             'data': {},
@@ -387,7 +387,7 @@ class LeadsFormBulkEntry(APIView):
 
                 created_at = inventory_activity_list[0].activity_date if inventory_activity_list[0].activity_date else None
                 lead_dict = {"data": [], "is_hot": False, "created_at": created_at, "supplier_id": found_supplier_id,
-                             "campaign_id": campaign_id, "lead_form_id": int(leads_form_id), "entry_id": entry_id}
+                             "campaign_id": campaign_id, "leads_form_id": int(leads_form_id), "entry_id": entry_id}
                 for item_id in range(0, fields):
                     curr_item_id = item_id + 1
                     curr_form_item_dict = all_form_items_dict[curr_item_id]
@@ -512,7 +512,7 @@ def migrate_to_mongo():
             curr_entry_data = [x for x in curr_form_data if x['entry_id'] == curr_entry_id]
             supplier_id = curr_entry_data[0]['supplier_id']
             lead_dict = {"data": [], "is_hot": False, "created_at": timestamp, "supplier_id": supplier_id,
-                         "campaign_id": campaign_id, "lead_form_id": curr_form_id, "entry_id": curr_entry_id,
+                         "campaign_id": campaign_id, "leads_form_id": curr_form_id, "entry_id": curr_entry_id,
                          "status": "active"}
             for curr_data in curr_entry_data:
                 item_id = curr_data['item_id']
@@ -642,7 +642,7 @@ class SanitizeLeadsData(APIView):
         return ui_utils.handle_response(class_name, data='success', success=True)
 
 
-class GenerateLeadForm(APIView):
+class GenerateLeadFormOld(APIView):
     @staticmethod
     def get(request, leads_form_id):
         lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
@@ -673,6 +673,43 @@ class GenerateLeadForm(APIView):
                 os.unlink(filepath)
             except Exception as ex:
                 print ex
+        return ui_utils.handle_response({}, data={
+            'filepath': 'https://s3.ap-south-1.amazonaws.com/leads-forms-templates/' + filename}, success=True)
+
+
+def write_keys_to_file(keys_list):
+    book = Workbook()
+    sheet = book.active
+    sheet.append(keys_list)
+    now = datetime.datetime.now()
+    current_date = now.strftime("%d%m%Y_%H%M")
+    cwd = os.path.dirname(os.path.realpath(__file__))
+    filename = 'leads_form_' + current_date + '.xlsx'
+    filepath = cwd + '/' + filename
+    book.save(filepath)
+
+    s3 = boto3.client(
+        's3',
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
+    )
+    with open(filepath) as f:
+        try:
+            s3.put_object(Body=f, Bucket='leads-forms-templates', Key=filename)
+            os.unlink(filepath)
+        except Exception as ex:
+            print ex
+    return filename
+
+class GenerateLeadForm(APIView):
+    @staticmethod
+    def get(request, leads_form_id):
+        leads_form_data_mongo = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)},{"data":1, "_id":0})
+        leads_form_data = leads_form_data_mongo["data"]
+        keys_list = ['supplier_id', 'lead_entry_date (format: dd/mm/yyyy)']
+        for lead in leads_form_data:
+            keys_list.append(leads_form_data[lead]["key_name"])
+        filename = write_keys_to_file(keys_list)
         return ui_utils.handle_response({}, data={
             'filepath': 'https://s3.ap-south-1.amazonaws.com/leads-forms-templates/' + filename}, success=True)
 
@@ -728,7 +765,7 @@ class DeleteLeadForm(APIView):
     # Entire form is deactivated
     @staticmethod
     def put(request, form_id):
-        result = mongo_client.leads_forms.update_one({"lead_form_id": int(form_id)},
+        result = mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)},
                                      {"$set": {"status": "inactive"}})
         print result
         return ui_utils.handle_response({}, data='success', success=True)
@@ -737,7 +774,7 @@ class DeleteLeadForm(APIView):
 class DeleteLeadEntry(APIView):
     @staticmethod
     def put(request, form_id, entry_id):
-        result = mongo_client.leads.update_one({"lead_form_id": int(form_id), "entry_id": int(entry_id)},
+        result = mongo_client.leads.update_one({"leads_form_id": int(form_id), "entry_id": int(entry_id)},
                                      {"$set": {"status": "inactive"}})
         return ui_utils.handle_response(result, data='success', success=True)
 
