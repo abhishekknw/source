@@ -443,8 +443,6 @@ def migrate_to_mongo():
     leads_form_ids = all_leads_data_object.values_list('leads_form_id', flat=True).distinct()
     timestamp = datetime.datetime.utcnow()
 
-    lead_dicts = []
-
     for curr_form_id in leads_form_ids:
         curr_form_id = curr_form_id
         curr_form_data = [x for x in all_leads_data if x['leads_form_id'] == curr_form_id]
@@ -473,8 +471,7 @@ def migrate_to_mongo():
                         lead_dict["is_hot"] = True
                     elif 'counseling' in key_name.lower():
                         lead_dict["is_hot"] = True
-            lead_dicts.append(lead_dict)
-    mongo_client.leads.insert_many(lead_dicts)
+            mongo_client.leads.insert_one(lead_dict)
     return
 
 
