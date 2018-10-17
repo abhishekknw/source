@@ -75,108 +75,107 @@ def enter_lead(lead_data, supplier_id, campaign_id, lead_form, entry_id):
     enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id)
 
 
-def get_supplier_all_leads_entries_old(leads_form_id, supplier_id, page_number=0, **kwargs):
-    leads_per_page=25
-    lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
-    if supplier_id == 'All':
-        lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id).exclude(
-            status='inactive')
-        suppliers_list = lead_form_entries_list.values_list('supplier_id',flat=True)
-        suppliers_names = SupplierTypeSociety.objects.filter(supplier_id__in=suppliers_list).values_list(
-            'supplier_id','society_name')
-        supplier_id_names = dict((x, y) for x, y in suppliers_names)
-    else:
-        lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id) \
-            .filter(supplier_id=supplier_id).exclude(status='inactive')
-        supplier_data = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
-        supplier_name = supplier_data.society_name
-    if 'start_date' in kwargs and kwargs['start_date']:
-        lead_form_entries_list = lead_form_entries_list.filter(created_at__gte=kwargs['start_date'])
-
-    if 'end_date' in kwargs and kwargs['end_date']:
-        lead_form_entries_list = lead_form_entries_list.filter(created_at__lte=kwargs['end_date'])
-    values = []
-    lead_form_items_dict = {}
-    lead_form_items_dict_part = []
-    for item in lead_form_items_list:
-        curr_item = LeadsFormItemsSerializer(item).data
-        lead_form_items_dict[item.item_id] = curr_item
-        curr_item_part = {key: curr_item[key] for key in ['order_id', 'key_name', 'hot_lead_criteria']}
-        lead_form_items_dict_part.append(curr_item_part)
-    lead_form_items_dict_part.insert(0, {
-        'order_id': 0,
-        'key_name': 'Lead Date'
-    })
-    lead_form_items_dict_part.insert(0,{
-        'order_id': 0,
-        'key_name': 'Supplier Name'
-    })
-
-
-    previous_entry_id = -1
-    current_list = []
-    hot_leads = []
-    counter = 1
-    if page_number>0:
-        min_counter = leads_per_page*(page_number-1)+1
-        max_counter = leads_per_page*page_number
-        lead_form_entries_list = lead_form_entries_list.filter(entry_id__gte=min_counter).filter(entry_id__lte=max_counter)
-
-    entry_id = None
-    for entry in lead_form_entries_list:
-        curr_item_id = entry.item_id
-        if curr_item_id not in lead_form_items_dict:
-            continue
-        curr_item = lead_form_items_dict[curr_item_id]
-        hot_lead_criteria = curr_item["hot_lead_criteria"]
-        value = entry.item_value
-        entry_id = entry.entry_id
-        if value and (value == hot_lead_criteria or 'counseling' in curr_item['key_name'].lower()):
-            if entry_id not in hot_leads:
-                hot_leads.append(entry_id)
-        new_entry = ({
-            "order_id": curr_item["order_id"],
-            "value": value,
-        })
-        if entry_id != previous_entry_id and current_list != []:
-            if supplier_id == 'All':
-                curr_supplier_id = entry.supplier_id
-                curr_supplier_name = supplier_id_names[curr_supplier_id]
-            else:
-                curr_supplier_name = supplier_name
-            current_list.insert(0, {
-                "order_id": 0,
-                "value": entry.created_at,
-            })
-            current_list.insert(0, {
-                "order_id": 0,
-                "value": curr_supplier_name,
-            })
-            values.append(current_list)
-            current_list = []
-            counter = counter + 1
-
-        current_list.append(new_entry)
-        previous_entry_id = entry_id
-    values.append(current_list)
-
-    supplier_all_lead_entries = {
-        'headers': lead_form_items_dict_part,
-        'values': values,
-        'hot_leads': hot_leads
-    }
-    if not supplier_id == 'All':
-        supplier_all_lead_entries.append(
-            {"order_id": 0,
-             "value": supplier_id})
-        supplier_all_lead_entries.append(
-            {"order_id": 0,
-             "value": supplier_name})
-    return supplier_all_lead_entries
+# def get_supplier_all_leads_entries_old(leads_form_id, supplier_id, page_number=0, **kwargs):
+#     leads_per_page=25
+#     lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
+#     if supplier_id == 'All':
+#         lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id).exclude(
+#             status='inactive')
+#         suppliers_list = lead_form_entries_list.values_list('supplier_id',flat=True)
+#         suppliers_names = SupplierTypeSociety.objects.filter(supplier_id__in=suppliers_list).values_list(
+#             'supplier_id','society_name')
+#         supplier_id_names = dict((x, y) for x, y in suppliers_names)
+#     else:
+#         lead_form_entries_list = LeadsFormData.objects.filter(leads_form_id=leads_form_id) \
+#             .filter(supplier_id=supplier_id).exclude(status='inactive')
+#         supplier_data = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
+#         supplier_name = supplier_data.society_name
+#     if 'start_date' in kwargs and kwargs['start_date']:
+#         lead_form_entries_list = lead_form_entries_list.filter(created_at__gte=kwargs['start_date'])
+#
+#     if 'end_date' in kwargs and kwargs['end_date']:
+#         lead_form_entries_list = lead_form_entries_list.filter(created_at__lte=kwargs['end_date'])
+#     values = []
+#     lead_form_items_dict = {}
+#     lead_form_items_dict_part = []
+#     for item in lead_form_items_list:
+#         curr_item = LeadsFormItemsSerializer(item).data
+#         lead_form_items_dict[item.item_id] = curr_item
+#         curr_item_part = {key: curr_item[key] for key in ['order_id', 'key_name', 'hot_lead_criteria']}
+#         lead_form_items_dict_part.append(curr_item_part)
+#     lead_form_items_dict_part.insert(0, {
+#         'order_id': 0,
+#         'key_name': 'Lead Date'
+#     })
+#     lead_form_items_dict_part.insert(0,{
+#         'order_id': 0,
+#         'key_name': 'Supplier Name'
+#     })
+#
+#
+#     previous_entry_id = -1
+#     current_list = []
+#     hot_leads = []
+#     counter = 1
+#     if page_number>0:
+#         min_counter = leads_per_page*(page_number-1)+1
+#         max_counter = leads_per_page*page_number
+#         lead_form_entries_list = lead_form_entries_list.filter(entry_id__gte=min_counter).filter(entry_id__lte=max_counter)
+#
+#     entry_id = None
+#     for entry in lead_form_entries_list:
+#         curr_item_id = entry.item_id
+#         if curr_item_id not in lead_form_items_dict:
+#             continue
+#         curr_item = lead_form_items_dict[curr_item_id]
+#         hot_lead_criteria = curr_item["hot_lead_criteria"]
+#         value = entry.item_value
+#         entry_id = entry.entry_id
+#         if value and (value == hot_lead_criteria or 'counseling' in curr_item['key_name'].lower()):
+#             if entry_id not in hot_leads:
+#                 hot_leads.append(entry_id)
+#         new_entry = ({
+#             "order_id": curr_item["order_id"],
+#             "value": value,
+#         })
+#         if entry_id != previous_entry_id and current_list != []:
+#             if supplier_id == 'All':
+#                 curr_supplier_id = entry.supplier_id
+#                 curr_supplier_name = supplier_id_names[curr_supplier_id]
+#             else:
+#                 curr_supplier_name = supplier_name
+#             current_list.insert(0, {
+#                 "order_id": 0,
+#                 "value": entry.created_at,
+#             })
+#             current_list.insert(0, {
+#                 "order_id": 0,
+#                 "value": curr_supplier_name,
+#             })
+#             values.append(current_list)
+#             current_list = []
+#             counter = counter + 1
+#
+#         current_list.append(new_entry)
+#         previous_entry_id = entry_id
+#     values.append(current_list)
+#
+#     supplier_all_lead_entries = {
+#         'headers': lead_form_items_dict_part,
+#         'values': values,
+#         'hot_leads': hot_leads
+#     }
+#     if not supplier_id == 'All':
+#         supplier_all_lead_entries.append(
+#             {"order_id": 0,
+#              "value": supplier_id})
+#         supplier_all_lead_entries.append(
+#             {"order_id": 0,
+#              "value": supplier_name})
+#     return supplier_all_lead_entries
 
 def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **kwargs):
     leads_per_page = 25
-    print supplier_id
     if supplier_id == 'All':
         leads_data = mongo_client.leads.find({"lead_form_id": int(leads_form_id)},{"_id":0})
         leads_data_list = list(leads_data)
@@ -187,9 +186,9 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
         suppliers_names = SupplierTypeSociety.objects.filter(supplier_id__in=suppliers_list).values_list(
             'supplier_id','society_name')
         supplier_id_names = dict((x, y) for x, y in suppliers_names)
-        print supplier_id_names
     else:
-        leads_data = mongo_client.leads.find({"$and": [{"lead_form_id": int(leads_form_id)}, {"supplier_id": supplier_id}]},
+        leads_data = mongo_client.leads.find({"$and": [{"lead_form_id": int(leads_form_id)}, {"supplier_id": supplier_id},
+                                                       {"status": {"$ne": "inactive"}}]},
                                              {"_id":0})
         leads_data_list = list(leads_data)
         supplier_data = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
@@ -199,7 +198,6 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
     if 'end_date' in kwargs and kwargs['end_date']:
         leads_data_start_end = [x for x in leads_data_start if x['created_at'] <= kwargs['end_date']]
         leads_data_list = leads_data_start_end
-
     return leads_data_list
 
 
@@ -240,10 +238,11 @@ class CreateLeadsForm(APIView):
         max_id_data = mongo_client.leads_forms.find_one(sort=[('leads_form_id', -1)])
         max_id = max_id_data['leads_form_id'] if max_id_data is not None else 0
         mongo_dict = {
-            'leads_form_id': max_id+1,
+            'lead_form_id': max_id+1,
             'campaign_id': campaign_id,
             'leads_form_name': leads_form_name,
-            'data': {}
+            'data': {},
+            'status': 'active'
         }
         for item in leads_form_items:
             item_id = item_id + 1
@@ -538,7 +537,8 @@ def migrate_to_mongo():
 class MigrateLeadsToMongo(APIView):
     def put(self, request):
         class_name = self.__class__.__name__
-        migrate_to_mongo.delay()
+        #migrate_to_mongo.delay()
+        migrate_to_mongo()
         return ui_utils.handle_response(class_name, data='success', success=True)
 
 
@@ -728,9 +728,9 @@ class DeleteLeadForm(APIView):
     # Entire form is deactivated
     @staticmethod
     def put(request, form_id):
-        form_details = LeadsForm.objects.get(id=form_id)
-        form_details.status = 'inactive'
-        form_details.save()
+        result = mongo_client.leads_forms.update_one({"lead_form_id": int(form_id)},
+                                     {"$set": {"status": "inactive"}})
+        print result
         return ui_utils.handle_response({}, data='success', success=True)
 
 
