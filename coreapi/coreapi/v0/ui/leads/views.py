@@ -125,25 +125,15 @@ class CreateLeadsForm(APIView):
 class GetLeadsForm(APIView):
     @staticmethod
     def get(request, campaign_id):
-        campaign_lead_form = LeadsForm.objects.filter(campaign_id=campaign_id).exclude(status='inactive')
+        campaign_lead_form = mongo_client.leads_forms.find(
+            {"$and": [{"campaign_id": campaign_id}, {"status": {"$ne": "inactive"}}]}, {"_id": 0})
         lead_form_dict = {}
         for lead_from in campaign_lead_form:
-            all_items = LeadsFormItems.objects.filter(leads_form_id=lead_from.id).exclude(status='inactive')
-            lead_form_dict[lead_from.id] = {
-                "leads_form_name": lead_from.leads_form_name,
-                "leads_form_id": lead_from.id,
-                "leads_form_items": []
+            lead_form_dict[lead_from["leads_form_id"]] = {
+                "leads_form_name": lead_from['leads_form_name'],
+                "leads_form_id": lead_from['leads_form_id'],
+                "leads_form_items": lead_from['data']
             }
-
-            for item in all_items:
-                lead_form_dict[lead_from.id]["leads_form_items"].append({
-                    "key_name": item.key_name,
-                    "key_type": item.key_type,
-                    "key_options": item.key_options.split(",") if item.key_options else None,
-                    "item_id": item.item_id,
-                    "order_id": item.order_id,
-                    "hot_lead_criteria": item.hot_lead_criteria if item.hot_lead_criteria else None
-                })
         return ui_utils.handle_response({}, data=lead_form_dict, success=True)
 
 
