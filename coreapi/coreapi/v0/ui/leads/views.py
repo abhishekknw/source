@@ -1,6 +1,5 @@
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
-from serializers import LeadsFormItemsSerializer, LeadsFormContactsSerializer, LeadsFormDataSerializer
 from models import (LeadsForm, LeadsFormItems, LeadsFormData, LeadsFormContacts, get_leads_summary)
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
@@ -8,14 +7,10 @@ from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.inventory.models import (InventoryActivityAssignment, InventoryActivity)
 from v0.ui.campaign.views import (get_leads_data_for_campaign,
                                   get_leads_data_for_multiple_campaigns, get_campaign_leads_custom)
-from bson import json_util
-import json
 import v0.ui.utils as ui_utils
-from v0.ui.utils import calculate_percentage
 import boto3
 import os
 import datetime
-from django.conf import settings
 from bulk_update.helper import bulk_update
 from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignAssignment
@@ -96,7 +91,7 @@ class GetLeadsEntriesByCampaignId(APIView):
     @staticmethod
     def get(request, campaign_id, supplier_id='All'):
         page_number = int(request.query_params.get('page_number', 0))
-        first_leads_form_id = LeadsForm.objects.filter(campaign_id=campaign_id).all()[0].id
+        first_leads_form_id = mongo_client.leads_forms.find_one({"campaign_id":campaign_id})['leads_form_id']
         supplier_all_lead_entries = get_supplier_all_leads_entries(first_leads_form_id, supplier_id, page_number)
         return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
 
@@ -389,8 +384,7 @@ def migrate_to_mongo():
 class MigrateLeadsToMongo(APIView):
     def put(self, request):
         class_name = self.__class__.__name__
-        #migrate_to_mongo.delay()
-        migrate_to_mongo()
+        migrate_to_mongo.delay()
         return ui_utils.handle_response(class_name, data='success', success=True)
 
 
@@ -492,41 +486,6 @@ class SanitizeLeadsData(APIView):
         class_name = self.__class__.__name__
         sanitize_leads_data.delay()
         return ui_utils.handle_response(class_name, data='success', success=True)
-
-
-class GenerateLeadFormOld(APIView):
-    @staticmethod
-    def get(request, leads_form_id):
-        lead_form_items_list = LeadsFormItems.objects.filter(leads_form_id=leads_form_id).exclude(status='inactive')
-        lead_form_items_dict = {}
-        keys_list = ['supplier_id', 'lead_entry_date (format: dd/mm/yyyy)']
-        for item in lead_form_items_list:
-            curr_row = LeadsFormItemsSerializer(item).data
-            lead_form_items_dict[item.item_id] = curr_row
-            keys_list.append(curr_row['key_name'])
-        book = Workbook()
-        sheet = book.active
-        sheet.append(keys_list)
-        now = datetime.datetime.now()
-        current_date = now.strftime("%d%m%Y_%H%M")
-        cwd = os.path.dirname(os.path.realpath(__file__))
-        filename = 'leads_form_' + current_date + '.xlsx'
-        filepath = cwd + '/' + filename
-        book.save(filepath)
-
-        s3 = boto3.client(
-            's3',
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
-        )
-        with open(filepath) as f:
-            try:
-                s3.put_object(Body=f, Bucket='leads-forms-templates', Key=filename)
-                os.unlink(filepath)
-            except Exception as ex:
-                print ex
-        return ui_utils.handle_response({}, data={
-            'filepath': 'https://s3.ap-south-1.amazonaws.com/leads-forms-templates/' + filename}, success=True)
 
 
 def write_keys_to_file(keys_list):
