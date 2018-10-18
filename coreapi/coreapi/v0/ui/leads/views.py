@@ -894,7 +894,7 @@ class EditLeadFormItems(APIView):
         return ui_utils.handle_response(class_name, data='success', success=True)
 
 
-class EditLeadsForm(APIView):
+class EditLeadsFormOld(APIView):
     # For now, only name can be edited
     def put(self, request, form_id):
         class_name = self.__class__.__name__
@@ -903,6 +903,18 @@ class EditLeadsForm(APIView):
         form_query.leads_form_name = name
         form_query.save()
         return ui_utils.handle_response(class_name, data='success', success=True)
+
+
+class EditLeadsForm(APIView):
+    @staticmethod
+    def put(request, form_id):
+        data = request.data['data'] if 'data' in request.data.keys() else None
+        name = request.data['name'] if 'name' in request.data.keys() else None
+        if data is not None:
+            mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"data": data}})
+        if name is not None:
+            mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"leads_form_name": name}})
+        return ui_utils.handle_response({}, data='success', success=True)
 
 
 class LeadsSummary(APIView):
