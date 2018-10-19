@@ -351,7 +351,7 @@ def migrate_to_mongo():
     for data in all_leads_data_object:
         all_leads_data.append(data.__dict__)
     all_leads_forms = LeadsForm.objects.all().values('id', 'campaign_id', 'leads_form_name', 'last_entry_id',
-                                                     'status', "fields_count", "last_contact_id")
+                                                     'status', "fields_count", "last_contact_id", "created_at")
     all_leads_items = LeadsFormItems.objects.all().values('leads_form_id', 'item_id', 'key_name', 'hot_lead_criteria',
                                                           'key_options', 'order_id', 'status', 'is_required',
                                                           'key_type',
@@ -369,6 +369,7 @@ def migrate_to_mongo():
             'last_entry_id': leads_form['last_entry_id'],
             'status': leads_form['status'],
             'last_contact_id': leads_form['last_contact_id'],
+            'created_at': leads_form['created_at'],
             'data': {}
         }
         if leads_form['id'] in all_leads_items_dict:
@@ -385,12 +386,11 @@ def migrate_to_mongo():
                     'is_required': item['is_required'],
                     'hot_lead_criteria': item['hot_lead_criteria'],
                     'campaign_id': item['campaign_id'],
-                    'supplier_id': item['supplier_id']
+                    'supplier_id': item['supplier_id'],
 
                 }
         mongo_client.leads_forms.insert_one(mongo_dict)
     leads_form_ids = all_leads_data_object.values_list('leads_form_id', flat=True).distinct()
-    timestamp = datetime.datetime.utcnow()
     for curr_form_id in leads_form_ids:
         curr_form_id = curr_form_id
         curr_form_data = [x for x in all_leads_data if x['leads_form_id'] == curr_form_id]
@@ -403,7 +403,8 @@ def migrate_to_mongo():
             entry_count = entry_count + 1
             curr_entry_data = [x for x in curr_form_data if x['entry_id'] == curr_entry_id]
             supplier_id = curr_entry_data[0]['supplier_id']
-            lead_dict = {"data": [], "is_hot": False, "created_at": timestamp, "supplier_id": supplier_id,
+            created_at = curr_entry_data[0]['created_at']
+            lead_dict = {"data": [], "is_hot": False, "created_at": created_at, "supplier_id": supplier_id,
                          "campaign_id": campaign_id, "leads_form_id": curr_form_id, "entry_id": curr_entry_id,
                          "status": "active"}
             for curr_data in curr_entry_data:
@@ -623,7 +624,6 @@ class DeleteLeadForm(APIView):
     def put(request, form_id):
         result = mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)},
                                      {"$set": {"status": "inactive"}})
-        print result
         return ui_utils.handle_response({}, data='success', success=True)
 
 

@@ -195,7 +195,7 @@ def lead_counter(campaign_id):
     for lead in all_campaign_leads:
         result[lead['supplier_id']]["hot_lead_details"].append({
             "entry_id": lead["entry_id"],
-            "leads_form_id": lead["lead_form_id"]
+            "leads_form_id": lead["leads_form_id"]
         })
     return result
 
@@ -1051,19 +1051,19 @@ class CampaignLeadsMultiple(APIView):
 
 
 @shared_task()
-def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_date_str=None, cache_again=False):
+def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_date_str=None):
     format_str = '%d/%m/%Y'
     phase_start_weekday = 'Tuesday' # this is used to set the phase cycle
     user_start_datetime = datetime.strptime(user_start_date_str,format_str) if user_start_date_str is not None else None
     user_end_datetime = datetime.strptime(user_end_date_str,format_str) if user_start_date_str is not None else None
-    # will be used later
+    leads_form_data = list(mongo_client.leads.find(
+        {"$and": [{"campaign_id": campaign_id}, {"status": {"$ne": "inactive"}}]},
+        {"_id": 0}))
 
-    leads_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
-    supplier_ids = list(set(leads_form_data.values_list('supplier_id', flat=True)))
+    supplier_ids = list(set([x['supplier_id'] for x in leads_form_data]))
 
     all_suppliers_list_non_analytics = {}
     all_localities_data_non_analytics = {}
-    lead_form_items_list = LeadsFormItems.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
     supplier_wise_lead_count = {}
     supplier_data_1 = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
     supplier_data = SupplierTypeSocietySerializer2(supplier_data_1, many=True).data
@@ -1158,7 +1158,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
     weekday_data = {}
     phase_data = {}
     all_entries_checked = []
-    campaign_dates = leads_form_data.order_by('created_at').values_list('created_at',flat=True).distinct()
+    campaign_dates = sorted([x['created_at'] for x in leads_form_data])
     if len(campaign_dates) == 0:
         final_data_dict = {'supplier': {}, 'date': {},
                            'locality': {}, 'weekday': {},
@@ -1179,19 +1179,16 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
 
     start_datetime_phase = start_datetime - timedelta(days=start_weekday_diff)
 
-
     for curr_data in leads_form_data:
-
         curr_entry_details = {
-            'leads_form_id': curr_data.leads_form_id,
-            'entry_id': curr_data.entry_id
+            'leads_form_id': curr_data['leads_form_id'],
+            'entry_id': curr_data['entry_id']
         }
         if curr_entry_details in all_entries_checked:
             continue
         else:
             all_entries_checked.append(curr_entry_details)
-
-        time = curr_data.created_at
+        time = curr_data['created_at']
         curr_date = str(time.date())
         curr_time = str(time)
         curr_phase_int = 1 + (time - start_datetime_phase).days / 7
@@ -1212,12 +1209,11 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
 
         curr_weekday = weekday_names[str(time.weekday())]
 
-        supplier_id = curr_data.supplier_id
+        supplier_id = curr_data['supplier_id']
         curr_supplier_data = [x for x in supplier_data if x['supplier_id']==supplier_id][0]
         flat_count = curr_supplier_data['flat_count'] if curr_supplier_data['flat_count'] else 0
         lead_count = supplier_wise_lead_count[supplier_id]
         hot_lead_details = lead_count['hot_lead_details']
-
         if curr_date not in date_data:
             date_data[curr_date] = {
                 'total': 0,
