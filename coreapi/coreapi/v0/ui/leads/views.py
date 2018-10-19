@@ -819,13 +819,9 @@ def cache_all_campaign_leads(campaign_id='ALL'):
         all_leads_forms = LeadsForm.objects.all()
         for leads_form in all_leads_forms:
             campaign_id = leads_form.campaign_id
-            get_leads_data_for_campaign.delay(campaign_id, None, None, True)
-            get_leads_data_for_multiple_campaigns.delay([campaign_id], True)
             for query_type in query_types:
                 get_campaign_leads_custom.delay(campaign_id, query_type, None, None, True)
     else:
-        get_leads_data_for_campaign.delay(campaign_id, None, None, True)
-        get_leads_data_for_multiple_campaigns.delay([campaign_id], True)
         for query_type in query_types:
             get_campaign_leads_custom.delay(campaign_id, query_type, None, None, True)
     return
