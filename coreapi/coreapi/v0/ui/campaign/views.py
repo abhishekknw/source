@@ -1392,23 +1392,20 @@ def get_campaign_leads_custom(campaign_id, query_type, user_start_str, user_end_
 
     if query_type in ['date','weekday','phase']:
         leads_form_items = []
-        leads_form_data = []
         all_entries_checked = []
-        leads_form_data_objects = LeadsFormData.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
-        leads_form_items_objects = LeadsFormItems.objects.filter(campaign_id=campaign_id).exclude(
-            status='inactive').all()
-        for item in leads_form_items_objects:
-            leads_form_items.append(item.__dict__)
-        supplier_ids = list(set(leads_form_data_objects.values_list('supplier_id', flat=True)))
+        constraints_list = [{"campaign_id": campaign_id}, {"status": {"$ne": "inactive"}}]
+        if user_start_datetime is not None:
+            constraints_list.append({"created_at": {"gte": user_start_datetime}})
+        if user_end_datetime is not None:
+            constraints_list.append({"created_at": {"lte": user_end_datetime}})
+        leads_form_data = list(mongo_client.leads.find(
+            {"$and": constraints_list},
+            {"_id": 0}))
+
+        supplier_ids = list(set([x['supplier_id'] for x in leads_form_data]))
         supplier_data_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
         supplier_data = SupplierTypeSocietySerializer2(supplier_data_objects, many=True).data
-        leads_form_data_objects_dates = leads_form_data_objects
-        if user_start_datetime is not None:
-            leads_form_data_objects_dates = leads_form_data_objects.filter(created_at__gte=user_start_datetime)
-        if user_end_datetime is not None:
-            leads_form_data_objects_dates = leads_form_data_objects_dates.filter(created_at__lte=user_end_datetime)
-        campaign_dates = leads_form_data_objects_dates.order_by('created_at').\
-            values_list('created_at', flat=True).distinct()
+        campaign_dates = sorted([x['created_at'] for x in leads_form_data])
         if len(campaign_dates) == 0:
             final_data_dict = {'supplier': {}, 'date': {},
                                'locality': {}, 'weekday': {},
@@ -1425,9 +1422,6 @@ def get_campaign_leads_custom(campaign_id, query_type, user_start_str, user_end_
         start_datetime_phase = start_datetime - timedelta(days=start_weekday_diff)
 
         hot_lead_items = {}
-
-        for data in leads_form_data_objects:
-            leads_form_data.append(data.__dict__)
 
         for curr_data in leads_form_data:
 
