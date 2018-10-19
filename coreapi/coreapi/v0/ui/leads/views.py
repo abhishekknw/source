@@ -7,6 +7,7 @@ from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.inventory.models import (InventoryActivityAssignment, InventoryActivity)
 from v0.ui.campaign.views import (get_leads_data_for_campaign,
                                   get_leads_data_for_multiple_campaigns, get_campaign_leads_custom)
+import operator
 import v0.ui.utils as ui_utils
 import boto3
 import os
@@ -50,8 +51,11 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
 
 def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **kwargs):
     leads_per_page = 25
+    leads_forms = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)}, {"_id":0, "data":1})
+    leads_forms_items = leads_forms["data"]
     if supplier_id == 'All':
-        leads_data = mongo_client.leads.find({"leads_form_id": int(leads_form_id)},{"_id":0})
+        leads_data = mongo_client.leads.find({"$and": [{"leads_form_id": int(leads_form_id)}, {"status": {"$ne": "inactive"}}]},
+                                              {"_id": 0})
         leads_data_list = list(leads_data)
         suppliers_list = []
         for lead_data in leads_data_list:
@@ -62,17 +66,68 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
         supplier_id_names = dict((x, y) for x, y in suppliers_names)
     else:
         leads_data = mongo_client.leads.find({"$and": [{"leads_form_id": int(leads_form_id)}, {"supplier_id": supplier_id},
-                                                       {"status": {"$ne": "inactive"}}]},
-                                             {"_id":0})
+                                                       {"status": {"$ne": "inactive"}}]}, {"_id": 0})
         leads_data_list = list(leads_data)
         supplier_data = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
         supplier_name = supplier_data.society_name
+
+    hot_leads = [x['entry_id'] for x in leads_data_list if x['is_hot'] == True]
+    headers = []
+    for form_item in leads_forms_items:
+        curr_item = leads_forms_items[form_item]
+        headers.append({
+            "order_id": curr_item["order_id"],
+            "key_name": curr_item["key_name"],
+            "hot_lead_criteria": curr_item["hot_lead_criteria"]
+        })
+    headers.extend(({
+        "order_id": 0,
+        "key_name": "Supplier Name"
+    },
+        {
+            "order_id": 0,
+            "key_name": "Lead Date"
+        }))
+    headers = sorted(headers,key=operator.itemgetter('order_id'))
+
+    values = []
+
     if 'start_date' in kwargs and kwargs['start_date']:
         leads_data_start = [x for x in leads_data_list if x['created_at'] >= kwargs['start_date']]
+        leads_data_list = leads_data_start
     if 'end_date' in kwargs and kwargs['end_date']:
         leads_data_start_end = [x for x in leads_data_start if x['created_at'] <= kwargs['end_date']]
         leads_data_list = leads_data_start_end
-    return leads_data_list
+
+    #leads_data_values_itemid = [x["data"] for x in leads_data_list]
+    leads_data_values = []
+    for entry in leads_data_list:
+        curr_entry = entry['data']
+        entry_date = entry['created_at']
+        if supplier_id == 'All':
+            curr_supplier_id = entry['supplier_id']
+            curr_supplier_name = supplier_id_names[curr_supplier_id]
+        else:
+            curr_supplier_name = supplier_name
+        new_entry = [
+            {
+                "order_id": 0,
+                "value": curr_supplier_name
+            },
+            {
+                "order_id": 0,
+                "value": entry_date
+            }
+        ]
+        for item in curr_entry:
+            item["order_id"] = item.pop("item_id")
+            item.pop("key_name")
+            new_entry.append(item)
+        leads_data_values.append(new_entry)
+
+    final_data = {"hot_leads": hot_leads, "headers": headers, "values": leads_data_values}
+
+    return final_data
 
 
 class GetLeadsEntries(APIView):
@@ -641,7 +696,7 @@ class EditLeadFormItems(APIView):
         return ui_utils.handle_response(class_name, data='success', success=True)
 
 
-class EditLeadsForm(APIView):
+class EditLeadsFormOld(APIView):
     # For now, only name can be edited
     def put(self, request, form_id):
         class_name = self.__class__.__name__
@@ -650,6 +705,18 @@ class EditLeadsForm(APIView):
         form_query.leads_form_name = name
         form_query.save()
         return ui_utils.handle_response(class_name, data='success', success=True)
+
+
+class EditLeadsForm(APIView):
+    @staticmethod
+    def put(request, form_id):
+        data = request.data['data'] if 'data' in request.data.keys() else None
+        name = request.data['name'] if 'name' in request.data.keys() else None
+        if data is not None:
+            mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"data": data}})
+        if name is not None:
+            mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"leads_form_name": name}})
+        return ui_utils.handle_response({}, data='success', success=True)
 
 
 class LeadsSummary(APIView):
