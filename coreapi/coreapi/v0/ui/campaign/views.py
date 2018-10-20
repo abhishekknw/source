@@ -1105,8 +1105,6 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
         supplier_id = curr_data['supplier_id']
         curr_supplier_data = [x for x in supplier_data if x['supplier_id']==supplier_id][0]
         flat_count = curr_supplier_data['flat_count'] if curr_supplier_data['flat_count'] else 0
-        lead_count = supplier_wise_lead_count[supplier_id]
-        hot_lead_details = lead_count['hot_lead_details']
         if curr_date not in date_data:
             date_data[curr_date] = {
                 'total': 0,
@@ -1130,11 +1128,12 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
         date_data[curr_date]['total'] = date_data[curr_date]['total'] + 1
         weekday_data[curr_weekday]['total'] = weekday_data[curr_weekday]['total'] + 1
         phase_data[curr_phase]['total']=phase_data[curr_phase]['total']+1
-
-        if curr_entry_details in hot_lead_details:
-            date_data[curr_date]['interested'] = date_data[curr_date]['interested'] + 1
-            weekday_data[curr_weekday]['interested'] = weekday_data[curr_weekday]['interested'] + 1
-            phase_data[curr_phase]['interested'] = phase_data[curr_phase]['interested'] + 1
+        add_is_interested = 0
+        if curr_data['is_hot']:
+            add_is_interested = 1
+        date_data[curr_date]['interested'] = date_data[curr_date]['interested'] + add_is_interested
+        weekday_data[curr_weekday]['interested'] = weekday_data[curr_weekday]['interested'] + add_is_interested
+        phase_data[curr_phase]['interested'] = phase_data[curr_phase]['interested'] + add_is_interested
 
         if supplier_id not in date_data[curr_date]['suppliers']:
             date_data[curr_date]['supplier_count'] = date_data[curr_date]['supplier_count'] + 1
