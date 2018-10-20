@@ -35,13 +35,14 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
         item_dict = {}
         item_id = lead_item_data["item_id"]
         key_name = all_form_items_dict[str(item_id)]["key_name"]
+        key_type = all_form_items_dict[str(item_id)]["key_type"]
         value = lead_item_data["value"]
-        item_dict[str(item_id)] = {
+        lead_dict["data"].append({
             'key_name': key_name,
             'value': value,
-            'item_id': item_id
-        }
-        lead_dict["data"].append(item_dict)
+            'item_id': item_id,
+            'key_type': key_type
+        })
 
         if value:
             if "hot_lead_criteria" in all_form_items_dict[str(item_id)]:
@@ -51,6 +52,13 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
                 lead_dict["is_hot"] = True
     mongo_client.leads.insert_one(lead_dict).inserted_id
     return
+
+
+def convertToNumber(str):
+    try:
+        return int(str)
+    except ValueError:
+        return str
 
 
 def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **kwargs):
@@ -95,13 +103,12 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
     headers = sorted(headers,key=operator.itemgetter('order_id'))
 
     values = []
-    values = []
 
     if 'start_date' in kwargs and kwargs['start_date']:
-        leads_data_start = [x for x in leads_data_list if x['created_at'] >= kwargs['start_date']]
+        leads_data_start = [x for x in leads_data_list if x['created_at'].date() >= kwargs['start_date']]
         leads_data_list = leads_data_start
     if 'end_date' in kwargs and kwargs['end_date']:
-        leads_data_start_end = [x for x in leads_data_start if x['created_at'] <= kwargs['end_date']]
+        leads_data_start_end = [x for x in leads_data_start if x['created_at'].date() <= kwargs['end_date']]
         leads_data_list = leads_data_start_end
 
     #leads_data_values_itemid = [x["data"] for x in leads_data_list]
@@ -125,7 +132,12 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
             }
         ]
         for item in curr_entry:
-            new_entry.append({"order_id": item.keys()[0], "value": item.values()[0]['value']})
+            value = None
+            if item["value"]:
+                value = item["value"].encode('utf8').strip()
+                value = convertToNumber(item["value"])  # if possible
+
+            new_entry.append({"order_id": item["item_id"], "value": value})
         leads_data_values.append(new_entry)
 
     final_data = {"hot_leads": hot_leads, "headers": headers, "values": leads_data_values}
@@ -422,10 +434,12 @@ def migrate_to_mongo():
                 value = curr_data['item_value']
                 curr_item = [x for x in curr_form_items if x['item_id'] == item_id][0]
                 key_name = curr_item['key_name']
+                key_type = curr_item['key_type']
                 item_dict = {
                     'item_id': item_id,
                     'key_name': key_name,
-                    'value': value
+                    'value': value,
+                    'key_type': key_type
                 }
                 lead_dict['data'].append(item_dict)
                 if value:
@@ -596,9 +610,7 @@ def get_leads_excel_sheet(leads_form_id, supplier_id,**kwargs):
     for lead in all_leads["values"]:
         value_list = []
         for item_dict in lead:
-            if isinstance(item_dict["value"], basestring):
-                item_dict["value"] = item_dict["value"].encode("utf8")
-            value_list.append(str(item_dict["value"]))
+            value_list.append(item_dict["value"])
         sheet.append(value_list)
         if value_list != []:
             total_leads_count += 1
