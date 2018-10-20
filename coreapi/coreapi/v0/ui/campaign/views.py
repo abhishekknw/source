@@ -710,7 +710,6 @@ class DashBoardViewSet(viewsets.ViewSet):
                 }
                 all_localities_data[supplier_locality] = curr_locality_data
 
-        leads_form_data = LeadsFormData.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
         date_data = {}
         weekday_data = {}
         all_entries_checked = []
@@ -1098,7 +1097,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
     weekday_data = {}
     phase_data = {}
     all_entries_checked = []
-    campaign_dates = sorted([x['created_at'] for x in leads_form_data])
+    campaign_dates = sorted(list(set([x['created_at'] for x in leads_form_data])))
     if len(campaign_dates) == 0:
         final_data_dict = {'supplier': {}, 'date': {},
                            'locality': {}, 'weekday': {},
@@ -1405,7 +1404,7 @@ def get_campaign_leads_custom(campaign_id, query_type, user_start_str, user_end_
         supplier_ids = list(set([x['supplier_id'] for x in leads_form_data]))
         supplier_data_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
         supplier_data = SupplierTypeSocietySerializer2(supplier_data_objects, many=True).data
-        campaign_dates = sorted([x['created_at'] for x in leads_form_data])
+        campaign_dates = sorted(list(set([x['created_at'] for x in leads_form_data])))
         if len(campaign_dates) == 0:
             final_data_dict = {'supplier': {}, 'date': {},
                                'locality': {}, 'weekday': {},
@@ -1626,64 +1625,18 @@ class PhaseWiseMultipleCampaignLeads(APIView):
         phase_data_all = {}
         all_entries_checked = []
         for campaign_id in campaign_list:
-            hot_lead_details = []
-            leads_form_data_objects = LeadsFormData.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
-            leads_form_items_objects = LeadsFormItems.objects.filter(campaign_id=campaign_id).exclude(status='inactive').all()
-            #leads_form_items = LeadsFormItemsSerializer(leads_form_items_objects).data
-            leads_form_items = []
-            leads_form_data = []
             phase_data = {}
-            for item in leads_form_items_objects:
-                leads_form_items.append(item.__dict__)
-            for data in leads_form_data_objects:
-                leads_form_data.append(data.__dict__)
-            #campaign_dates = leads_form_data_objects.order_by('created_at').values_list('created_at', flat=True).distinct()
-            campaign_dates = leads_form_data_objects.order_by('created_at').values_list('created_at', flat=True).distinct()
+            leads_form_data = list(mongo_client.leads.find(
+                {"$and":[{"campaign_id": campaign_id}, {"status": {"$ne": "inactive"}}]},
+                {"_id": 0}))
+            campaign_dates = sorted(list(set([x['created_at'] for x in leads_form_data])))
+
             start_datetime = campaign_dates[0]
             start_datetime_phase = start_datetime - timedelta(days=start_datetime.weekday())
 
-            hot_lead_items = {}
             for curr_data in leads_form_data:
-
-                leads_form_id = curr_data['leads_form_id']
-                entry_id = curr_data['entry_id']
-
-                curr_entry_details = {
-                    'leads_form_id': leads_form_id,
-                    'entry_id': entry_id
-                }
-
-                if curr_entry_details in all_entries_checked:
-                    continue
-                else:
-                    all_entries_checked.append(curr_entry_details)
-
-                # supplier_id = curr_data['supplier_id']
-                # curr_supplier_data = [x for x in supplier_data if x['supplier_id'] == supplier_id][0]
-                # flat_count = curr_supplier_data['flat_count']
-
-                curr_data_all_fields = [x for x in leads_form_data if x['leads_form_id']==leads_form_id
-                                        and x['entry_id']==entry_id]
-                current_form_items = [x for x in leads_form_items if x['leads_form_id']==leads_form_id]
-
-                if str(leads_form_id) in hot_lead_items:
-                    hot_lead_items_current = hot_lead_items[str(leads_form_id)]
-                else:
-                    hot_lead_items_current = [x['item_id'] for x in current_form_items if x['hot_lead_criteria'] is not None]
-                    hot_lead_items[str(leads_form_id)] = hot_lead_items_current
-
-                is_hot_lead = 0
-                for item_id in hot_lead_items_current:
-                    curr_data_value = [x['item_value'] for x in curr_data_all_fields if x['item_id']==item_id]
-                    hot_lead_criterion = [x['hot_lead_criteria'] for x in current_form_items if x['item_id']==item_id]
-
-                    if curr_data_value == hot_lead_criterion:
-                        is_hot_lead = 1
-                        continue
-
+                is_hot_lead = 1 if curr_data['is_hot'] else 0
                 time = curr_data['created_at']
-                curr_date = str(time.date())
-                curr_time = str(time)
                 curr_phase_int = 1 + (time - start_datetime_phase).days / 7
                 curr_phase_start = time - timedelta(days=time.weekday())
                 curr_phase_end = curr_phase_start + timedelta(days=7)
@@ -1699,11 +1652,6 @@ class PhaseWiseMultipleCampaignLeads(APIView):
 
                 phase_data[curr_phase]['total'] = phase_data[curr_phase]['total'] + 1
                 phase_data[curr_phase]['interested'] = phase_data[curr_phase]['interested'] + is_hot_lead
-                # if supplier_id not in phase_data[curr_phase]['suppliers']:
-                #     phase_data[curr_phase]['supplier_count'] = phase_data[curr_phase]['supplier_count'] + 1
-                #     phase_data[curr_phase]['flat_count'] = phase_data[curr_phase]['flat_count'] + flat_count
-                #     phase_data[curr_phase]['suppliers'].append(supplier_id)
-
             phase_data_hot_ratio = hot_lead_ratio_calculator(phase_data)
             phase_data_campaign = z_calculator_dict(phase_data_hot_ratio, "hot_leads_percentage")
             phase_data_all[campaign_id] = phase_data_campaign
