@@ -606,18 +606,6 @@ class GenerateLeadDataExcel(APIView):
         excel_book.save(response)
         return response
 
-
-
-class DeleteLeadItems(APIView):
-    # Items are marked inactive, while still present in DB
-    @staticmethod
-    def put(request, form_id, item_id):
-        lead_form_item = LeadsFormItems.objects.get(leads_form_id=form_id, item_id=item_id)
-        lead_form_item.status = 'inactive'
-        lead_form_item.save()
-        return ui_utils.handle_response({}, data='success', success=True)
-
-
 class DeleteLeadForm(APIView):
     # Entire form is deactivated
     @staticmethod
@@ -633,28 +621,6 @@ class DeleteLeadEntry(APIView):
         result = mongo_client.leads.update_one({"leads_form_id": int(form_id), "entry_id": int(entry_id)},
                                      {"$set": {"status": "inactive"}})
         return ui_utils.handle_response(result, data='success', success=True)
-
-
-# class LeadFormUpdate(APIView):
-#     # this function is used to add fields to an existing form using form id
-#     @staticmethod
-#     def put(request, form_id):
-#         new_field_list = request.data
-#         lead_form = LeadsForm.objects.get(id=form_id)
-#         for new_field in new_field_list:
-#             if 'key_options' in new_field:
-#                 if new_field['key_options'] and isinstance(new_field['key_options'], list):
-#                     new_field['key_options'] = ','.join(new_field['key_options'])
-#             new_field_object = LeadsFormItems(**new_field)
-#             new_field_object.leads_form_id = form_id
-#             last_item_id = LeadsForm.objects.get(id=form_id).fields_count
-#             new_field_object.item_id = last_item_id + 1
-#             new_field_object.campaign_id = lead_form.campaign_id
-#             new_field_object.save()
-#         leads_form_items_count = LeadsFormItems.objects.filter(leads_form_id=form_id).count()
-#         lead_form.fields_count = leads_form_items_count
-#         lead_form.save()
-#         return ui_utils.handle_response({}, data='success', success=True)
 
 
 class EditLeadsData(APIView):
