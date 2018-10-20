@@ -1886,7 +1886,7 @@ class SupplierPhaseUpdate(APIView):
                         'updated_at': now_time,
                         'comments': 'migrated from historic data'
                     }
-                    supplier_phase_data.append(SupplierPhase(**curr_campaign_phase_data))
+                    SupplierPhase(**curr_campaign_phase_data).save()
                     for supplier in suppliers_list:
                         suppliers_list_campaigns.append({
                             'object_id': supplier,
@@ -1894,7 +1894,6 @@ class SupplierPhaseUpdate(APIView):
                             'phase_no': actual_phase
                         })
                     actual_phase = actual_phase+1
-        SupplierPhase.objects.bulk_create(supplier_phase_data)
 
         # updating shortlisted spaces table
         for curr_element in suppliers_list_campaigns:
