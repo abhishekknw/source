@@ -403,6 +403,8 @@ class DashBoardViewSet(viewsets.ViewSet):
         total_ongoing_hot_leads_count = 0
         total_ongoing_flat_count = 0
         for id in ongoing_supplier_id_list:
+            if id not in supplier_objects_id_list:
+                continue
             data = {
                 'supplier': supplier_objects_id_list[id],
                 'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
@@ -422,6 +424,8 @@ class DashBoardViewSet(viewsets.ViewSet):
         total_completed_hot_leads_count = 0
         total_completed_flat_count = 0
         for id in completed_supplier_id_list:
+            if id not in supplier_objects_id_list:
+                continue
             data = {
                 'supplier': supplier_objects_id_list[id],
                 'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
@@ -440,57 +444,8 @@ class DashBoardViewSet(viewsets.ViewSet):
         total_upcoming_hot_leads_count = 0
         total_upcoming_flat_count = 0
         for id in upcoming_supplier_id_list:
-            data = {
-                'supplier': supplier_objects_id_list[id],
-                'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
-                'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {}
-            }
-            if id in inv_data_objects_list:
-                data['supplier']['inv_data'] = inv_data_objects_list[id]
-            upcoming_suppliers_list.append(data)
-            if 'total_leads_count' in data['leads_data']:
-                total_upcoming_leads_count = total_upcoming_leads_count + data['leads_data']['total_leads_count']
-                total_upcoming_hot_leads_count = total_upcoming_hot_leads_count + data['leads_data']['hot_leads_count']
-            if supplier_objects_id_list[id]['flat_count']:
-                total_upcoming_flat_count = total_upcoming_flat_count + supplier_objects_id_list[id]['flat_count']
-
-            data = {
-                'supplier': supplier_objects_id_list[id],
-                'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
-                'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {}
-            }
-            if id in inv_data_objects_list:
-                data['supplier']['inv_data'] = inv_data_objects_list[id]
-            ongoing_suppliers_list.append(data)
-            if 'total_leads_count' in data['leads_data']:
-                total_ongoing_leads_count = total_ongoing_leads_count + data['leads_data']['total_leads_count']
-                total_ongoing_hot_leads_count = total_ongoing_hot_leads_count + data['leads_data']['hot_leads_count']
-            if supplier_objects_id_list[id]['flat_count']:
-                total_ongoing_flat_count = total_ongoing_flat_count + supplier_objects_id_list[id]['flat_count']
-
-        completed_suppliers_list = []
-        total_completed_leads_count = 0
-        total_completed_hot_leads_count = 0
-        total_completed_flat_count = 0
-        for id in completed_supplier_id_list:
-            data = {
-                'supplier': supplier_objects_id_list[id],
-                'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
-                'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {}
-            }
-            if id in inv_data_objects_list:
-                data['supplier']['inv_data'] = inv_data_objects_list[id]
-            completed_suppliers_list.append(data)
-            if 'total_leads_count' in data['leads_data']:
-                total_completed_leads_count = total_completed_leads_count + data['leads_data']['total_leads_count']
-                total_completed_hot_leads_count = total_completed_hot_leads_count + data['leads_data']['hot_leads_count']
-            if supplier_objects_id_list[id]['flat_count']:
-                total_completed_flat_count = total_completed_flat_count + supplier_objects_id_list[id]['flat_count']
-        upcoming_suppliers_list = []
-        total_upcoming_leads_count = 0
-        total_upcoming_hot_leads_count = 0
-        total_upcoming_flat_count = 0
-        for id in upcoming_supplier_id_list:
+            if id not in supplier_objects_id_list:
+                continue
             data = {
                 'supplier': supplier_objects_id_list[id],
                 'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
@@ -1218,7 +1173,7 @@ class CampaignLeads(APIView):
         user_start_date_str = request.query_params.get('start_date', None)
         user_end_date_str = request.query_params.get('end_date', None)
         campaign_id = request.query_params.get('campaign_id', None)
-        final_data = get_leads_data_for_campaign(campaign_id, user_start_date_str, user_end_date_str, cache_again=False)
+        final_data = get_leads_data_for_campaign(campaign_id, user_start_date_str, user_end_date_str)
         return ui_utils.handle_response(class_name, data=final_data, success=True)
 
 

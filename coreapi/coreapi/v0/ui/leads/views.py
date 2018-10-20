@@ -30,19 +30,23 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
     lead_dict = {"data": [], "is_hot": False, "created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id,
                  "leads_form_id": lead_form['leads_form_id'], "entry_id": entry_id, "status": "active"}
     for lead_item_data in lead_data:
+        if "value" not in lead_item_data:
+            continue
         item_dict = {}
         item_id = lead_item_data["item_id"]
         key_name = all_form_items_dict[str(item_id)]["key_name"]
         value = lead_item_data["value"]
         item_dict[str(item_id)] = {
             'key_name': key_name,
-            'value': value
+            'value': value,
+            'item_id': item_id
         }
         lead_dict["data"].append(item_dict)
 
         if value:
-            if all_form_items_dict[str(item_id)]["hot_lead_criteria"] and value == all_form_items_dict[str(item_id)]["hot_lead_criteria"]:
-                lead_dict["is_hot"] = True
+            if "hot_lead_criteria" in all_form_items_dict[str(item_id)]:
+                if all_form_items_dict[str(item_id)]["hot_lead_criteria"] and value == all_form_items_dict[str(item_id)]["hot_lead_criteria"]:
+                    lead_dict["is_hot"] = True
             elif 'counseling' in key_name.lower():
                 lead_dict["is_hot"] = True
     mongo_client.leads.insert_one(lead_dict).inserted_id
@@ -76,9 +80,9 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
     for form_item in leads_forms_items:
         curr_item = leads_forms_items[form_item]
         headers.append({
-            "order_id": curr_item["order_id"],
+            "order_id": curr_item["order_id"] if "order_id" in curr_item else None,
             "key_name": curr_item["key_name"],
-            "hot_lead_criteria": curr_item["hot_lead_criteria"]
+            "hot_lead_criteria": curr_item["hot_lead_criteria"] if "hot_lead_criteria" in curr_item else None
         })
     headers.extend(({
         "order_id": 0,
@@ -90,6 +94,7 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
         }))
     headers = sorted(headers,key=operator.itemgetter('order_id'))
 
+    values = []
     values = []
 
     if 'start_date' in kwargs and kwargs['start_date']:
@@ -120,9 +125,7 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
             }
         ]
         for item in curr_entry:
-            item["order_id"] = item.pop("item_id")
-            item.pop("key_name")
-            new_entry.append(item)
+            new_entry.append({"order_id": item.keys()[0], "value": item.values()[0]['value']})
         leads_data_values.append(new_entry)
 
     final_data = {"hot_leads": hot_leads, "headers": headers, "values": leads_data_values}
@@ -137,6 +140,13 @@ class GetLeadsEntries(APIView):
                                                                                               ) is not None else 'All'
 
         page_number = int(request.query_params.get('page_number',0))
+        supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number)
+        return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
+
+class GetLeadsEntriesBySupplier(APIView):
+    @staticmethod
+    def get(request, leads_form_id, supplier_id):
+        page_number = int(request.query_params.get('page_number', 0))
         supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number)
         return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
 
@@ -337,7 +347,7 @@ class LeadsFormEntry(APIView):
     def post(request, leads_form_id):
         supplier_id = request.data['supplier_id']
         lead_form = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)})
-        entry_id = lead_form['last_entry_id'] + 1 if lead_form['last_entry_id'] else 1
+        entry_id = lead_form['last_entry_id'] + 1 if 'last_entry_id' in lead_form else 1
         campaign_id = lead_form['campaign_id']
         lead_data = request.data["leads_form_entries"]
         enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id)
@@ -646,28 +656,32 @@ class AddLeadFormItems(APIView):
     # this function is used to add
     def put(self, request, form_id):
         class_name = self.__class__.__name__
-        items_dict = request.data
-        old_form = mongo_client.leads_forms.find_one({"leads_form_id": int(form_id)})
-        if not old_form:
-            return ui_utils.handle_response(class_name, data={"status": "No for Found with this id"}, success=True)
-        old_form_items = old_form['data']
-        max_item_id = 0
-        for item in old_form_items:
-            if int(item) > max_item_id:
-                max_item_id = int(item)
-        new_form_item = {
-            "key_name": items_dict['key_name'],
-            "campaign_id": old_form['campaign_id'],
-            "hot_lead_criteria": items_dict["hot_lead_criteria"] if "hot_lead_criteria"  in items_dict else None,
-            "key_type": items_dict["key_type"],
-            "key_options": items_dict["key_options"] if "key_options" in items_dict else None,
-            "leads_form_id": form_id,
-            "is_required": items_dict["is_required"] if "is_required" in items_dict else None,
-            "item_id": max_item_id + 1
-
-        }
-        old_form_items[str(max_item_id + 1)] = new_form_item
-        mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"data": old_form_items}})
+        items_dict_list = request.data
+        for items_dict in items_dict_list:
+            old_form = mongo_client.leads_forms.find_one({"leads_form_id": int(form_id)})
+            if not old_form:
+                return ui_utils.handle_response(class_name, data={"status": "No for Found with this id"}, success=True)
+            old_form_items = old_form['data']
+            max_item_id = 0
+            max_order_id = 0
+            for item in old_form_items:
+                if int(item) > max_item_id:
+                    max_item_id = int(item)
+                if 'order_id' in old_form_items[item] and old_form_items[item]['order_id'] > max_order_id:
+                   max_order_id = int(old_form_items[item]['order_id'])
+            new_form_item = {
+                "key_name": items_dict['key_name'],
+                "campaign_id": old_form['campaign_id'],
+                "hot_lead_criteria": items_dict["hot_lead_criteria"] if "hot_lead_criteria"  in items_dict else None,
+                "key_type": items_dict["key_type"],
+                "key_options": items_dict["key_options"] if "key_options" in items_dict else None,
+                "leads_form_id": form_id,
+                "is_required": items_dict["is_required"] if "is_required" in items_dict else None,
+                "item_id": max_item_id + 1,
+                "order_id": max_order_id + 1,
+            }
+            old_form_items[str(max_item_id + 1)] = new_form_item
+            mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"data": old_form_items}})
         return ui_utils.handle_response(class_name, data='success', success=True)
 
 
