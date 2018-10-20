@@ -798,25 +798,3 @@ class SmsContact(APIView):
         for data in contacts_data_object:
             contacts_data.append(data)
         return ui_utils.handle_response(class_name, data=contacts_data, success=True)
-
-
-def cache_all_campaign_leads(campaign_id='ALL'):
-    query_types = ['supplier', 'flat', 'locality', 'date', 'phase', 'weekday']
-    if campaign_id == 'ALL':
-        all_leads_forms = LeadsForm.objects.all()
-        for leads_form in all_leads_forms:
-            campaign_id = leads_form.campaign_id
-            for query_type in query_types:
-                get_campaign_leads_custom.delay(campaign_id, query_type, None, None, True)
-    else:
-        for query_type in query_types:
-            get_campaign_leads_custom.delay(campaign_id, query_type, None, None, True)
-    return
-
-
-class CampaignLeadsCacheAll(APIView):
-    def get(self, request):
-        class_name = self.__class__.__name__
-        campaign_id = request.query_params.get('campaign_id', 'ALL')
-        cache_all_campaign_leads(campaign_id)
-        return ui_utils.handle_response(class_name, data={"status": "success"}, success=True)
