@@ -635,26 +635,26 @@ class DeleteLeadEntry(APIView):
         return ui_utils.handle_response(result, data='success', success=True)
 
 
-class LeadFormUpdate(APIView):
-    # this function is used to add fields to an existing form using form id
-    @staticmethod
-    def put(request, form_id):
-        new_field_list = request.data
-        lead_form = LeadsForm.objects.get(id=form_id)
-        for new_field in new_field_list:
-            if 'key_options' in new_field:
-                if new_field['key_options'] and isinstance(new_field['key_options'], list):
-                    new_field['key_options'] = ','.join(new_field['key_options'])
-            new_field_object = LeadsFormItems(**new_field)
-            new_field_object.leads_form_id = form_id
-            last_item_id = LeadsForm.objects.get(id=form_id).fields_count
-            new_field_object.item_id = last_item_id + 1
-            new_field_object.campaign_id = lead_form.campaign_id
-            new_field_object.save()
-        leads_form_items_count = LeadsFormItems.objects.filter(leads_form_id=form_id).count()
-        lead_form.fields_count = leads_form_items_count
-        lead_form.save()
-        return ui_utils.handle_response({}, data='success', success=True)
+# class LeadFormUpdate(APIView):
+#     # this function is used to add fields to an existing form using form id
+#     @staticmethod
+#     def put(request, form_id):
+#         new_field_list = request.data
+#         lead_form = LeadsForm.objects.get(id=form_id)
+#         for new_field in new_field_list:
+#             if 'key_options' in new_field:
+#                 if new_field['key_options'] and isinstance(new_field['key_options'], list):
+#                     new_field['key_options'] = ','.join(new_field['key_options'])
+#             new_field_object = LeadsFormItems(**new_field)
+#             new_field_object.leads_form_id = form_id
+#             last_item_id = LeadsForm.objects.get(id=form_id).fields_count
+#             new_field_object.item_id = last_item_id + 1
+#             new_field_object.campaign_id = lead_form.campaign_id
+#             new_field_object.save()
+#         leads_form_items_count = LeadsFormItems.objects.filter(leads_form_id=form_id).count()
+#         lead_form.fields_count = leads_form_items_count
+#         lead_form.save()
+#         return ui_utils.handle_response({}, data='success', success=True)
 
 
 class EditLeadsData(APIView):
@@ -676,44 +676,39 @@ class EditLeadsData(APIView):
         return ui_utils.handle_response(class_name, data='success', success=True)
 
 
-class EditLeadFormItems(APIView):
-    # this function is used to add or edit lead form items
-    # if edited, lead form items are removed from the table forever
+class AddLeadFormItems(APIView):
+    # this function is used to add
     def put(self, request, form_id):
         class_name = self.__class__.__name__
         items_dict = request.data
-        full_query = LeadsFormItems.objects.filter(leads_form_id=form_id).all()
-        items_array = []
-        item_ids = items_dict.keys()
-        for item_id in item_ids:
-            key_name = items_dict[item_id]["Name"]
-            key_type = items_dict[item_id]["Type"]
-            form_query = full_query.get(item_id=item_id)
-            form_query.key_name = key_name
-            form_query.key_type = key_type
-            items_array.append(form_query)
-        bulk_update(items_array)
-        return ui_utils.handle_response(class_name, data='success', success=True)
+        old_form = mongo_client.leads_forms.find_one({"leads_form_id": int(form_id)})
+        if not old_form:
+            return ui_utils.handle_response(class_name, data={"status": "No for Found with this id"}, success=True)
+        old_form_items = old_form['data']
+        max_item_id = 0
+        for item in old_form_items:
+            if int(item) > max_item_id:
+                max_item_id = int(item)
+        new_form_item = {
+            "key_name": items_dict['key_name'],
+            "campaign_id": old_form['campaign_id'],
+            "hot_lead_criteria": items_dict["hot_lead_criteria"] if "hot_lead_criteria"  in items_dict else None,
+            "key_type": items_dict["key_type"],
+            "key_options": items_dict["key_options"] if "key_options" in items_dict else None,
+            "leads_form_id": form_id,
+            "is_required": items_dict["is_required"] if "is_required" in items_dict else None,
+            "item_id": max_item_id + 1
 
-
-class EditLeadsFormOld(APIView):
-    # For now, only name can be edited
-    def put(self, request, form_id):
-        class_name = self.__class__.__name__
-        name = request.data
-        form_query = LeadsForm.objects.get(id=form_id)
-        form_query.leads_form_name = name
-        form_query.save()
+        }
+        old_form_items[str(max_item_id + 1)] = new_form_item
+        mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"data": old_form_items}})
         return ui_utils.handle_response(class_name, data='success', success=True)
 
 
 class EditLeadsForm(APIView):
     @staticmethod
     def put(request, form_id):
-        data = request.data['data'] if 'data' in request.data.keys() else None
         name = request.data['name'] if 'name' in request.data.keys() else None
-        if data is not None:
-            mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"data": data}})
         if name is not None:
             mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"leads_form_name": name}})
         return ui_utils.handle_response({}, data='success', success=True)

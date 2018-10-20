@@ -24,8 +24,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework import status
 import gpxpy.geo
-from v0.ui.leads.models import LeadsForm, LeadsFormItems, LeadsFormData, get_leads_summary, get_leads_summary_by_campaign
-from v0.ui.leads.serializers import LeadsFormItemsSerializer
+from v0.ui.leads.models import LeadsFormData, get_leads_summary, get_leads_summary_by_campaign
 from v0.ui.base.models import DurationType
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from django.core.cache import cache
