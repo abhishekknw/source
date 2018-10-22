@@ -5,8 +5,6 @@ from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.inventory.models import (InventoryActivityAssignment, InventoryActivity)
-from v0.ui.campaign.views import (get_leads_data_for_campaign,
-                                  get_leads_data_for_multiple_campaigns, get_campaign_leads_custom)
 import operator
 import v0.ui.utils as ui_utils
 import boto3
@@ -134,7 +132,8 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
         for item in curr_entry:
             value = None
             if item["value"]:
-                value = item["value"].encode('utf8').strip()
+                if isinstance(item["value"], basestring):
+                    value = item["value"].encode('utf8').strip()
                 value = convertToNumber(item["value"])  # if possible
 
             new_entry.append({"order_id": item["item_id"], "value": value})
@@ -220,14 +219,11 @@ class LeadsFormBulkEntry(APIView):
         source_file = request.data['file']
         wb = load_workbook(source_file)
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
-        lead_form = LeadsForm.objects.get(id=leads_form_id)
-        fields = lead_form.fields_count
-        campaign_id = lead_form.campaign_id
-        all_form_items = LeadsFormItems.objects.filter(leads_form_id=lead_form.id).values('item_id', 'key_name',
-                                                                                          'hot_lead_criteria')
-        all_form_items_dict = {item['item_id']: {"key_name": item['key_name'], "hot_lead_criteria": item['hot_lead_criteria']}
-                               for item in all_form_items}
-        entry_id = lead_form.last_entry_id + 1 if lead_form.last_entry_id else 1
+        lead_form = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)})
+        fields = len(lead_form['data'])
+        campaign_id = lead_form['campaign_id']
+        entry_id = lead_form['last_entry_id'] + 1 if 'last_entry_id' in lead_form else 1
+
         missing_societies = []
         inv_activity_assignment_missing_societies = []
         inv_activity_missing_societies = []
@@ -244,10 +240,7 @@ class LeadsFormBulkEntry(APIView):
                     if 'apartment' in i.value.lower():
                         apartment_index = idx
                         break
-            if index > 0 and index < 100:
-                form_entry_list = []
-                # supplier_id = row[0].value if row[0].value else None
-                # created_at = row[1].value if row[1].value else None
+            if index > 0:
                 society_name = row[apartment_index].value
                 suppliers = SupplierTypeSociety.objects.filter(society_name=society_name).values('supplier_id',
                                                                                                  'society_name').all()
@@ -305,10 +298,12 @@ class LeadsFormBulkEntry(APIView):
                              "campaign_id": campaign_id, "leads_form_id": int(leads_form_id), "entry_id": entry_id}
                 for item_id in range(0, fields):
                     curr_item_id = item_id + 1
-                    curr_form_item_dict = all_form_items_dict[curr_item_id]
+                    curr_form_item_dict = lead_form['data'][str(curr_item_id)]
                     key_name = curr_form_item_dict['key_name']
-                    hot_lead_criteria = curr_form_item_dict['hot_lead_criteria'] if curr_form_item_dict[
-                        'hot_lead_criteria'] else None
+                    hot_lead_criteria = None
+                    if 'hot_lead_criteria' in curr_form_item_dict:
+                        hot_lead_criteria = curr_form_item_dict['hot_lead_criteria'] if curr_form_item_dict[
+                            'hot_lead_criteria'] else None
                     value = row[item_id].value if row[item_id].value else None
                     if isinstance(value, datetime.datetime) or isinstance(value, datetime.time):
                         value = str(value)
@@ -317,32 +312,14 @@ class LeadsFormBulkEntry(APIView):
                             lead_dict["is_hot"] = True
                         elif 'counseling' in key_name.lower():
                             lead_dict["is_hot"] = True
-                    form_entry_list.append(LeadsFormData(**{
-                        "campaign_id": campaign_id,
-                        "supplier_id": found_supplier_id,
-                        "item_id": item_id + 1,
-                        "item_value": value,
-                        "leads_form": lead_form,
-                        "entry_id": entry_id,
-                        "created_at": created_at,
-                        "status": "active"
-                    }))
-                    # item_dict = {
-                    #     'item_id': curr_item_id,
-                    #     'key_name': key_name,
-                    #     'value': value
-                    # }
-                    item_dict = {}
-                    item_dict[str(curr_item_id)] = {
+                    item_dict = {
                         'key_name': key_name,
-                        'value': value
+                        'value': value,
+                        'item_id': curr_item_id
                     }
                     lead_dict["data"].append(item_dict)
                 mongo_client.leads.insert_one(lead_dict)
-                LeadsFormData.objects.bulk_create(form_entry_list)
                 entry_id = entry_id + 1  # will be saved in the end
-        lead_form.last_entry_id = entry_id - 1
-        lead_form.save()
         missing_societies.sort()
         print "missing societies", missing_societies
         print "unresolved_societies", list(set(unresolved_societies))
