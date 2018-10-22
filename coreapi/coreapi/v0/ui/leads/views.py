@@ -341,7 +341,6 @@ class LeadsFormBulkEntry(APIView):
                 mongo_client.leads.insert_one(lead_dict)
                 LeadsFormData.objects.bulk_create(form_entry_list)
                 entry_id = entry_id + 1  # will be saved in the end
-        cache_all_campaign_leads(campaign_id)
         lead_form.last_entry_id = entry_id - 1
         lead_form.save()
         missing_societies.sort()
