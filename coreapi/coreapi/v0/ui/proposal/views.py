@@ -2319,8 +2319,6 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
 
 def get_supplier_list_by_status_ctrl(campaign_id):
     shortlisted_spaces_list = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
-    shortlisted_spaces_dict = {'BK': [], 'NB': [], 'PB': [], 'VB': [], 'SR': [], 'SE': [], 'VR': [], 'CR': [],
-                               'DP': [], 'TB': []}
     shortlisted_spaces_by_phase_dict = {}
     all_phases = SupplierPhase.objects.filter(campaign_id=campaign_id).all()
     all_phase_by_id = {}
@@ -2369,8 +2367,37 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(
                     supplier_society_serialized)
     shortlisted_spaces_by_phase_list = []
+    confirmed_booked_status = ['BK']
+    verbally_booked_status = ['VB', 'TB', 'PB']
+    followup_req_status = ['SE', 'VR', 'CR']
     for phase_id in shortlisted_spaces_by_phase_dict:
         end_date = all_phase_by_id[phase_id]['end_date'] if phase_id in all_phase_by_id else None
+        total_booked_suppliers = 0
+        total_booked_flats = 0
+        verbally_booked_suppliers = 0
+        verbally_booked_flats = 0
+        followup_req_booked_suppliers = 0
+        followup_req_booked_flats = 0
+        confirmed_booked_supplier = 0
+        confirmed_booked_flats = 0
+        for status in shortlisted_spaces_by_phase_dict[phase_id]:
+            phase_booked_suppliers = len(shortlisted_spaces_by_phase_dict[phase_id][status])
+            phase_booked_flats = sum(supplier['flat_count'] for supplier in shortlisted_spaces_by_phase_dict[phase_id][status])
+            if status in verbally_booked_status:
+                total_booked_suppliers += phase_booked_suppliers
+                total_booked_flats += phase_booked_flats
+                verbally_booked_suppliers += phase_booked_suppliers
+                verbally_booked_flats += phase_booked_flats
+            if status in followup_req_status:
+                total_booked_suppliers += phase_booked_suppliers
+                total_booked_flats += phase_booked_flats
+                followup_req_booked_suppliers += phase_booked_suppliers
+                followup_req_booked_flats += phase_booked_flats
+            if status in confirmed_booked_status:
+                total_booked_suppliers += phase_booked_suppliers
+                total_booked_flats += phase_booked_flats
+                confirmed_booked_supplier += phase_booked_suppliers
+                confirmed_booked_flats += phase_booked_flats
         if end_date is not None and end_date.date() >= current_date:
             shortlisted_spaces_by_phase_list.append({
                 'phase_no': all_phase_by_id[phase_id]['phase_no'],
@@ -2379,8 +2406,14 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 'comments': all_phase_by_id[phase_id]['comments'],
                 'supplier_data': shortlisted_spaces_by_phase_dict[phase_id],
                 'overall_inventory_counts': overall_inventory_count_dict,
-                'total_booked_suppliers': len(shortlisted_spaces_by_phase_dict[phase_id]["BK"]),
-                'total_booked_flats': sum(supplier['flat_count'] for supplier in shortlisted_spaces_by_phase_dict[phase_id]["BK"])
+                'total_booked_suppliers': total_booked_suppliers,
+                'total_booked_flats': total_booked_flats,
+                'confirmed_booked_suppliers': confirmed_booked_supplier,
+                'confirmed_booked_flats': confirmed_booked_flats,
+                'verbally_booked_suppliers': verbally_booked_suppliers,
+                'verbally_booked_flats': verbally_booked_flats,
+                'followup_req_booked_suppliers': followup_req_booked_suppliers,
+                'followup_req_booked_flats': followup_req_booked_flats,
             })
     return shortlisted_spaces_by_phase_list
 
