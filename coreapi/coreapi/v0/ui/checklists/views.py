@@ -62,6 +62,7 @@ class CreateChecklistTemplate(APIView):
         return ui_utils.handle_response({}, data='success', success=True)
 
 
+
 class ChecklistEntry(APIView):
     # used to create and update checklist elements
     def put(self, request, checklist_id):
@@ -88,13 +89,16 @@ class ChecklistEntry(APIView):
             for row_id_str in rows:
                 row_data = rows_data[row_id_str]
                 row_id = int(row_id_str)
-                for item in row_data:
+                columns = dict.keys(row_data)
+                for column_id_str in columns:
+                    item = row_data[column_id_str]
+                    column_id = int(column_id_str)
                     if item['column_id'] == 1:
                         print "Cannot edit static column"
                         continue
                     row = (ChecklistData(**{
                         "checklist_id": checklist_info.id,
-                        "column_id": item["column_id"],
+                        "column_id": column_id,
                         "cell_value": item["cell_value"],
                         "status": "active",
                         "supplier_id": supplier_id,
@@ -108,6 +112,7 @@ class ChecklistEntry(APIView):
             data = 'success'
             success = True
         return ui_utils.handle_response({}, data=data, success=success)
+
 
 class ChecklistEdit(APIView):
     def post(self, request, checklist_id):
