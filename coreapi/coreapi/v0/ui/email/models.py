@@ -9,13 +9,17 @@ EMAIL_TYPES = (
     ('BOOKING_DETAILS_ADV', 'BOOKING_DETAILS_ADV')
 )
 
+USER_TYPES = (
+    ('NORMAL', 'NORMAL'),
+    ('ADMIN', 'ADMIN'),
+)
 
 class EmailSettings(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, blank=False)
     email_type = models.CharField(max_length=70, null=True, choices=EMAIL_TYPES)
     is_allowed = models.BooleanField(default=False)
     last_sent = models.DateTimeField(null=True)
-
+    user_type = models.CharField(max_length=70, null=True, choices=USER_TYPES, default="NORMAL")
     class Meta:
         db_table = 'email_settings'
         unique_together = ('user', 'email_type',)

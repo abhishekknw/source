@@ -116,6 +116,7 @@ class EmailSettingsView(APIView):
                 "user_id": user_id,
                 "email_type": email_type["name"],
                 "is_allowed": email_type["is_allowed"],
+                "user_type": email_type["user_type"] if "user_type" in email_type else "NORMAL",
             }))
         EmailSettings.objects.bulk_create(list_of_objects)
         return ui_utils.handle_response('', data={"success": True}, success=True)
