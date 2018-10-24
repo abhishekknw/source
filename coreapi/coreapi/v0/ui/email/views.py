@@ -9,6 +9,8 @@ from django.core.mail import EmailMessage
 from models import EmailSettings
 import os
 import magic
+from v0.ui.common.models import BaseUser
+from v0.ui.account.models import Profile
 
 @shared_task()
 def send_email(email_data, attachment=None):
@@ -121,3 +123,29 @@ class EmailSettingsView(APIView):
         EmailSettings.objects.bulk_create(list_of_objects)
         return ui_utils.handle_response('', data={"success": True}, success=True)
 
+
+    @staticmethod
+    def get(request):
+        organisation_id = BaseUser.objects.filter(id=request.user.id).values('profile__organisation_id').all()
+        organisation_id = organisation_id[0]['profile__organisation_id']
+        all_profiles = Profile.objects.filter(organisation_id=organisation_id).values('id').all()
+        all_profiles = [profile['id'] for profile in all_profiles]
+        all_org_users = BaseUser.objects.filter(profile_id__in=all_profiles).values('id').all()
+        all_org_user_ids = [user['id'] for user in all_org_users]
+        all_email_settings = EmailSettings.objects.filter(user_id__in=all_org_user_ids).values('id', 'email_type',
+                                                                                               'is_allowed',
+                                                                                               'last_sent', 'user_type',
+                                                                                               'user__id', 'user__username',
+                                                                                               'user__email').all()
+        serialized_all_email_settings = []
+        for setting in all_email_settings:
+            serialized_all_email_settings.append({
+                'id': setting['id'],
+                'email_type': setting['email_type'],
+                'last_send': setting['last_sent'],
+                'user_type': setting['user_type'],
+                'user_id': setting['user__id'],
+                'user_username': setting['user__username'],
+                'user_email': setting['user__email'],
+            })
+        return ui_utils.handle_response('', data=serialized_all_email_settings, success=True)
