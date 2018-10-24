@@ -17,8 +17,11 @@ from v0.constants import campaign_status, proposal_on_hold
 from django.http import HttpResponse
 from celery import shared_task
 from django.conf import settings
-from v0.ui.common.models import mongo_client
+from v0.ui.common.models import mongo_client, mongo_test
 import pprint
+from random import randint
+import random
+import string
 pp = pprint.PrettyPrinter(depth=6)
 
 
@@ -679,6 +682,62 @@ class EditLeadsForm(APIView):
         name = request.data['name'] if 'name' in request.data.keys() else None
         if name is not None:
             mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"leads_form_name": name}})
+        return ui_utils.handle_response({}, data='success', success=True)
+
+
+class GenerateDemoData(APIView):
+    def put(self, request):
+        #leads_form_test_data = mongo_test.leads_forms.find_one({"leads_form_id": 13})
+        leads_data_all = mongo_client.leads.find({})
+        leads_form_all = list(mongo_test.leads_forms.find({}))
+        leads_data_new = []
+        #name_forms = []
+        email_forms = []
+        phone_forms = []
+        for curr_lead in leads_data_all:
+            leads_form_id = curr_lead['leads_form_id']
+            curr_leads_form = [x for x in leads_form_all if x['leads_form_id'] == leads_form_id]
+            curr_data = curr_lead['data']
+            new_data = []
+            for curr_data_item in curr_data:
+                item_id = curr_data_item['item_id']
+                curr_leads_form_items = curr_leads_form[0]['data']
+                curr_leads_form_item = curr_leads_form_items[str(item_id)]
+                key_name = curr_data_item['key_name']
+                key_type = curr_leads_form_item['key_type']
+                if str(key_type).lower() == 'phone':
+                    curr_data_item['value'] = randint(1000000000,9999999999)
+                allchar = string.ascii_letters + string.punctuation + string.digits
+                if key_type.lower() == 'email':
+                    r1 = "".join(random.choice(allchar) for x in range(randint(4, 6)))
+                    r2 = "".join(random.choice(allchar) for x in range(randint(4, 6)))
+                    curr_data_item['value'] = r1+'@'+r2
+                if 'name' in key_name.lower():
+                    curr_data_item['value'] = "".join(random.choice(allchar) for x in range(randint(6, 10)))
+                curr_data_item['key_type'] = key_type
+                new_data.append(curr_data_item)
+            curr_lead['data'] = new_data
+            mongo_test.leads.insert_one(curr_lead)
+
+
+            #name_data = [x for x in curr_lead if 'name' in x['key_name'].to_lower()]
+
+
+        # for form in leads_form_all:
+        #     curr_form_id = form['leads_form_id']
+        #     print curr_form_id
+        #     curr_form_data = form['data']
+        #     form_keys = curr_form_data.keys()
+        #     form_values = curr_form_data.values()
+        #     # for item_id in form_keys:
+        #     #     curr_item_data = curr_form_data[item_id]
+        #     #     email_fields = [x for x in curr_item_data]
+        #     email_form = False
+        #     phone_form = False
+        #     email_fields = [x for x in form_values if x['key_type'].tolower() == 'email']
+        #     phone_fields = [x for x in form_values if x['key_type'].tolower() == 'phone']
+
+
         return ui_utils.handle_response({}, data='success', success=True)
 
 

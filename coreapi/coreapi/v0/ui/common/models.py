@@ -5,6 +5,7 @@ from v0.ui.permissions.models import Role
 from pymongo import MongoClient
 client = MongoClient('localhost', 27017, maxPoolSize=25, waitQueueMultiple=10)
 mongo_client = client.machadalo
+mongo_test = client.mdtest
 
 class BaseUser(AbstractUser):
     """

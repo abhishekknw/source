@@ -4,7 +4,7 @@ from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntrie
                    LeadsFormBulkEntry, GenerateLeadForm, DeleteLeadForm, DeleteLeadEntry,
                    SmsContact, EditLeadsData, AddLeadFormItems, EditLeadsForm,
                    LeadsSummary, GetLeadsEntriesByCampaignId, GenerateLeadDataExcel, MigrateLeadsToMongo,
-                   SanitizeLeadsData)
+                   SanitizeLeadsData, GenerateDemoData)
 
 urlpatterns = [
     url(r'^(?P<campaign_id>[A-Z_a-z0-9]+)/create$', CreateLeadsForm.as_view()),
@@ -26,6 +26,7 @@ urlpatterns = [
     url(r'^(?P<form_id>[0-9]+)/edit_form_name', EditLeadsForm.as_view()),
     url(r'^summary/', LeadsSummary.as_view()),
     url(r'^migrate_leads_to_mongo/$', MigrateLeadsToMongo.as_view()),
+    url(r'^generate_demo_data/$', GenerateDemoData.as_view()),
 
 ]
 
