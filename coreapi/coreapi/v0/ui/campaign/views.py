@@ -313,6 +313,7 @@ class DashBoardViewSet(viewsets.ViewSet):
         shortlisted_suppliers_id_list = [supplier.object_id for supplier in shortlisted_suppliers]
         shortlisted_spaces_id_list = [supplier.id for supplier in shortlisted_suppliers]
         shortlisted_spaces_id_dict = {supplier.id: supplier.object_id for supplier in shortlisted_suppliers}
+        ss_id_dict_by_supplier_id = {supplier.object_id: supplier.id for supplier in shortlisted_suppliers}
 
         suppliers_instances = SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_suppliers_id_list)
         supplier_serializer = SupplierTypeSocietySerializer(suppliers_instances, many=True)
@@ -408,7 +409,8 @@ class DashBoardViewSet(viewsets.ViewSet):
             data = {
                 'supplier': supplier_objects_id_list[id],
                 'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
-                'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {}
+                'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {},
+                'shortlisted_space_id': ss_id_dict_by_supplier_id[id]
             }
             if id in inv_data_objects_list:
                 data['supplier']['inv_data'] = inv_data_objects_list[id]
@@ -429,7 +431,8 @@ class DashBoardViewSet(viewsets.ViewSet):
             data = {
                 'supplier': supplier_objects_id_list[id],
                 'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
-                'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {}
+                'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {},
+                'shortlisted_space_id': ss_id_dict_by_supplier_id[id]
             }
             if id in inv_data_objects_list:
                 data['supplier']['inv_data'] = inv_data_objects_list[id]
@@ -449,7 +452,8 @@ class DashBoardViewSet(viewsets.ViewSet):
             data = {
                 'supplier': supplier_objects_id_list[id],
                 'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
-                'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {}
+                'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {},
+                'shortlisted_space_id': ss_id_dict_by_supplier_id[id]
             }
             if id in inv_data_objects_list:
                 data['supplier']['inv_data'] = inv_data_objects_list[id]
