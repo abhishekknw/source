@@ -7,6 +7,7 @@ urlpatterns = [
     url(r'^mail/$', Mail.as_view()),
     url(r'^send-weekly-leads-mail/$', SendWeeklyLeadsMail.as_view()),
     url(r'^email-settings/$', EmailSettingsView.as_view()),
+    url(r'^email-settings/(?P<email_setting_id>[A-Z_a-z0-9]+)/$', EmailSettingsView.as_view()),
     url(r'^send-graph-pdf/$', SendGraphPdf.as_view()),
     url(r'^send-booking-details/$', SendBookingDetailMails.as_view()),
     url(r'^send-leads-to-self/$', SendLeadsToSelf.as_view()),

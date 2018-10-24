@@ -149,3 +149,15 @@ class EmailSettingsView(APIView):
                 'user_email': setting['user__email'],
             })
         return ui_utils.handle_response('', data=serialized_all_email_settings, success=True)
+
+
+    @staticmethod
+    def put(request, email_setting_id):
+        data = request.data
+        email_setting_object = EmailSettings.objects.get(id=email_setting_id)
+        if 'is_allowed' in data:
+            email_setting_object.is_allowed = data['is_allowed']
+        if 'user_type' in data:
+            email_setting_object.user_type = data['user_type']
+        email_setting_object.save()
+        return ui_utils.handle_response('', data={"success": True}, success=True)
