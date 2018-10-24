@@ -161,3 +161,10 @@ class EmailSettingsView(APIView):
             email_setting_object.user_type = data['user_type']
         email_setting_object.save()
         return ui_utils.handle_response('', data={"success": True}, success=True)
+
+
+    @staticmethod
+    def delete(request, email_setting_id):
+        email_setting_object = EmailSettings.objects.get(id=email_setting_id)
+        email_setting_object.delete()
+        return ui_utils.handle_response('', data={"success": True}, success=True)
