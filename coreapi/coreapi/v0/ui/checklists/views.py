@@ -214,9 +214,9 @@ class GetChecklistData(APIView):
                 if i != previous_entry_id and current_list != []:
                     values.append(current_list)
                     current_list = []
-                current_list.append(current_row)
+                # current_list.append(current_row)
                 previous_entry_id = i
-        values.append(current_list)
+                values.append(current_row)
 
         all_data = {
             'column_headers': checklist_items_dict_part,
