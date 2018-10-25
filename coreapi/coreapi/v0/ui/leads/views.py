@@ -689,11 +689,12 @@ class GenerateDemoData(APIView):
     def put(self, request):
         #leads_form_test_data = mongo_test.leads_forms.find_one({"leads_form_id": 13})
         leads_data_all = mongo_client.leads.find({})
-        leads_form_all = list(mongo_test.leads_forms.find({}))
-        leads_data_new = []
-        #name_forms = []
-        email_forms = []
-        phone_forms = []
+        # copy leads form data
+        leads_form_object = mongo_client.leads_forms.find({})
+        leads_form_all = list(leads_form_object)
+        for curr_form in leads_form_all:
+            print curr_form
+            mongo_test.leads_forms.insert_one(curr_form)
         for curr_lead in leads_data_all:
             leads_form_id = curr_lead['leads_form_id']
             curr_leads_form = [x for x in leads_form_all if x['leads_form_id'] == leads_form_id]
