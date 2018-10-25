@@ -14,6 +14,7 @@ from django.core.mail import EmailMultiAlternatives
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.views import convert_date_format
 from views import send_email
+from v0.ui.common.models import BaseUser
 
 
 def get_all_campaign_assignment_by_id(email_type):
@@ -52,7 +53,7 @@ def send_weekly_leads_email():
     (campaign_assignement_by_campaign_id, campaign_assignement_by_campaign_id_admins, all_leads_forms,
      all_campaign_name_dict) = get_all_campaign_assignment_by_id("WEEKLY_LEADS")
     end_date = datetime.datetime.now().date()
-    start_date = end_date - datetime.timedelta(days=5)
+    start_date = end_date - datetime.timedelta(days=7)
     for leads_form in all_leads_forms:
         (book, total_leads_count) = get_leads_excel_sheet(leads_form['leads_form_id'], 'All',start_date=start_date, end_date=None)
         if total_leads_count > 0:
@@ -119,6 +120,8 @@ class SendLeadsToSelf(APIView):
         campaign_id = data['campaign_id']
         (campaign_assignement_by_campaign_id, campaign_assignement_by_campaign_id_admins, all_leads_forms,
          all_campaign_name_dict) = get_all_campaign_assignment_by_id("WEEKLY_LEADS")
+        all_super_users = BaseUser.objects.filter(is_superuser=1).all()
+        all_super_user_emailids = [user.email for user in all_super_users]
         user_email = request.user.email
         username = request.user.username
         campaign_name = str(all_campaign_name_dict[campaign_id])
@@ -132,12 +135,12 @@ class SendLeadsToSelf(APIView):
         if len(to_array) != 0:
             send_mail_with_attachment(filepath, "Custom Leads Data", to_array)
             to_array_admins = campaign_assignement_by_campaign_id_admins[campaign_id]
-            # if user_email in to_array_admins:
-            #     to_array_admins.remove(user_email)
-            print to_array_admins
-            if len(to_array_admins) > 0:
-                subject = 'Leads Custom Email Generation Alert!'
-                body = 'User with username {0} and email {1} has generated a leads mail for campaign - {2} from date: {3} to date: {4}.'.format(username, user_email, campaign_name, str(start_date), str(end_date))
-                email_data = {'subject': subject, 'body': body, 'to': to_array_admins}
-                send_email.delay(email_data)
+            to_array_admins = list(set(to_array_admins + all_super_user_emailids))
+            if user_email in to_array_admins:
+                to_array_admins.remove(user_email)
+            # if len(to_array_admins) > 0:
+            #     subject = 'Leads Custom Email Generation Alert!'
+            #     body = 'User with username {0} and email {1} has generated a leads mail for campaign - {2} from date: {3} to date: {4}.'.format(username, user_email, campaign_name, str(start_date), str(end_date))
+            #     email_data = {'subject': subject, 'body': body, 'to': to_array_admins}
+            #     send_email.delay(email_data)
         return ui_utils.handle_response('', data={}, success=True)
