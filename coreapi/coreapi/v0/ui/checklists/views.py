@@ -185,7 +185,7 @@ class GetChecklistData(APIView):
         for item in checklist_columns:
             curr_item = ChecklistColumnsSerializer(item).data
             checklist_items_dict[item.column_id] = curr_item
-            curr_item_part = {key:curr_item[key] for key in ['column_id', 'column_name']}
+            curr_item_part = {key:curr_item[key] for key in ['column_id', 'column_name', 'column_type']}
             checklist_items_dict_part.append(curr_item_part)
 
         rows = []
