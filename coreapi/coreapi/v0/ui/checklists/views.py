@@ -2,6 +2,67 @@ from rest_framework.views import APIView
 from models import Checklist, ChecklistColumns, ChecklistData
 from serializers import ChecklistSerializer, ChecklistColumnsSerializer, ChecklistDataSerializer
 import v0.ui.utils as ui_utils
+from celery import shared_task
+from v0.ui.common.models import mongo_client, mongo_test
+
+# class CreateChecklistTemplate(APIView):
+#     def post(self, request, campaign_id):
+#         """
+#         :param request:
+#         :return:
+#         """
+#         class_name = self.__class__.__name__
+#         checklist_name = request.data['checklist_name']
+#         checklist_columns = request.data['checklist_columns']
+#         checklist_type = request.data['checklist_type']
+#         static_column_values = request.data['static_column_values']
+#         supplier_id = request.data['supplier_id'] if checklist_type == 'supplier'else None
+#         is_template = True if "is_template" in request.data and request.data['is_template'] == 1 else False
+#         rows = len(static_column_values)
+#         new_form = Checklist(**{
+#             'campaign_id': campaign_id,
+#             'checklist_name': checklist_name,
+#             'status': 'active',
+#             'supplier_id': supplier_id,
+#             'checklist_type': checklist_type,
+#             'rows': rows,
+#             'is_template': is_template
+#         })
+#         new_form.save()
+#         form_columns_list = []
+#         item_id = 1
+#         checklist_id = new_form.__dict__['id']
+#         created_at = new_form.__dict__['created_at']
+#         updated_at = new_form.__dict__['updated_at']
+#         for column in checklist_columns:
+#             form_columns_list.append(ChecklistColumns(**{
+#                 "checklist_id": checklist_id,
+#                 "created_at": created_at,
+#                 "updated_at": updated_at,
+#                 "column_name": column["column_name"],
+#                 "column_type": column["column_type"],
+#                 "column_options": column["column_options"] if "column_options" in column else None,
+#                 "order_id": column["order_id"],
+#                 "column_id": item_id,
+#                 "status": 'active'
+#             }))
+#             item_id = item_id + 1
+#         ChecklistColumns.objects.bulk_create(form_columns_list)
+#         static_rows_list = []
+#         for row in static_column_values:
+#             static_rows_list.append(ChecklistData(**{
+#                 "checklist_id": checklist_id,
+#                 "created_at": created_at,
+#                 "updated_at": updated_at,
+#                 "supplier_id": supplier_id,
+#                 "cell_value": row["cell_value"],
+#                 "row_id": row["row_id"],
+#                 "column_id": 1, # first column is static by default
+#                 "status": 'active'
+#             }))
+#         ChecklistData.objects.bulk_create(static_rows_list)
+#         return ui_utils.handle_response({}, data='success', success=True)
+
 
 class CreateChecklistTemplate(APIView):
     def post(self, request, campaign_id):
@@ -14,53 +75,34 @@ class CreateChecklistTemplate(APIView):
         checklist_columns = request.data['checklist_columns']
         checklist_type = request.data['checklist_type']
         static_column_values = request.data['static_column_values']
+        last_id_data = mongo_client.checklists.find_one(sort=[('leads_form_id', -1)])
+        last_id = last_id_data['checklist_id']
         supplier_id = request.data['supplier_id'] if checklist_type == 'supplier'else None
         is_template = True if "is_template" in request.data and request.data['is_template'] == 1 else False
         rows = len(static_column_values)
-        new_form = Checklist(**{
+        mongo_form = {
+            'checklist_id': last_id + 1,
             'campaign_id': campaign_id,
             'checklist_name': checklist_name,
             'status': 'active',
             'supplier_id': supplier_id,
             'checklist_type': checklist_type,
             'rows': rows,
-            'is_template': is_template
-        })
-        new_form.save()
-        form_columns_list = []
-        item_id = 1
-        checklist_id = new_form.__dict__['id']
-        created_at = new_form.__dict__['created_at']
-        updated_at = new_form.__dict__['updated_at']
+            'is_template': is_template,
+            'data': {}
+        }
+        #mongo_client.checklist.insert_one(mongo_form)
+        column_id = 0
         for column in checklist_columns:
-            form_columns_list.append(ChecklistColumns(**{
-                "checklist_id": checklist_id,
-                "created_at": created_at,
-                "updated_at": updated_at,
-                "column_name": column["column_name"],
-                "column_type": column["column_type"],
-                "column_options": column["column_options"] if "column_options" in column else None,
-                "order_id": column["order_id"],
-                "column_id": item_id,
-                "status": 'active'
-            }))
-            item_id = item_id + 1
-        ChecklistColumns.objects.bulk_create(form_columns_list)
-        static_rows_list = []
-        for row in static_column_values:
-            static_rows_list.append(ChecklistData(**{
-                "checklist_id": checklist_id,
-                "created_at": created_at,
-                "updated_at": updated_at,
-                "supplier_id": supplier_id,
-                "cell_value": row["cell_value"],
-                "row_id": row["row_id"],
-                "column_id": 1, # first column is static by default
-                "status": 'active'
-            }))
-        ChecklistData.objects.bulk_create(static_rows_list)
+            column_id = column_id + 1
+            column_options = column['column_options'] if 'column_options' in column else None
+            if column_options and not isinstance(column_options, list):
+                column_options = column_options.split(',')
+                column['column_options'] = column_options
+            column['column_id'] = column_id
+            mongo_form['data'][str(column_id)] = column
+        mongo_client.checklists.insert_one(mongo_form)
         return ui_utils.handle_response({}, data='success', success=True)
-
 
 
 class ChecklistEntry(APIView):
@@ -250,3 +292,87 @@ class DeleteChecklistRow(APIView):
             item.status = 'inactive'
             item.save()
         return ui_utils.handle_response({}, data='success', success=True)
+
+
+
+@shared_task()
+def migrate_to_mongo():
+    all_checklists_data_object = ChecklistData.objects.all()
+    all_checklists_data = []
+    for data in all_checklists_data_object:
+        all_checklists_data.append(data.__dict__)
+    all_checklists_forms = Checklist.objects.all().values('id', 'campaign_id', 'rows',
+                                                     'status', 'created_at')
+    all_checklists_columns = ChecklistColumns.objects.all().values('checklist_id', 'column_id', 'column_name',
+                                                                   'column_options', 'order_id', 'status',
+                                                                   'column_type')
+    all_checklists_columns_dict = {}
+    for column in all_checklists_columns:
+        if column['checklist_id'] not in all_checklists_columns_dict:
+            all_checklists_columns_dict[column['checklist_id']] = []
+        all_checklists_columns_dict[column['checklist_id']].append(column)
+    for checklist in all_checklists_forms:
+        campaign_id = checklist['campaign_id']
+        mongo_dict = {
+            'checklist_id': checklist['id'],
+            'campaign_id': campaign_id,
+            'no_of_rows': checklist['rows'],
+            'status': checklist['status'],
+            'created_at': checklist['created_at'],
+            'data': {}
+        }
+        if checklist['id'] in all_checklists_columns_dict:
+            curr_checklist_columns = all_checklists_columns_dict[checklist['id']]
+            for item in curr_checklist_columns:
+                key_options = item['column_options'] if 'key_options' in item else None
+                mongo_dict['data'][str(item['column_id'])] = {
+                    'column_id': item['column_id'],
+                    'column_type': item['column_type'],
+                    'column_name': item['column_name'],
+                    'column_options': key_options,
+                    'order_id': item['order_id'],
+                    'status': item['status'],
+                    'checklist_id': item['checklist_id'],
+                    'campaign_id': campaign_id,
+                }
+        mongo_client.checklists.insert_one(mongo_dict)
+    checklist_ids = all_checklists_data_object.values_list('checklist_id', flat=True).distinct()
+    for curr_checklist_id in checklist_ids:
+        curr_checklist_data = [x for x in all_checklists_data if x['checklist_id'] == curr_checklist_id]
+        #curr_checklist_columns = [x for x in all_checklists_columns_dict.values() if x['checklist_id'] == curr_checklist_id]
+        curr_checklist_columns = all_checklists_columns_dict[curr_checklist_id]
+        curr_checklists = [x for x in all_checklists_forms if x['id'] == curr_checklist_id]
+        first_data_element = curr_checklist_data[0]
+        campaign_id = curr_checklists[0]['campaign_id']
+        row_ids = list(set([x['row_id'] for x in curr_checklist_data]))
+        entry_count = 0
+        for curr_row_id in row_ids:
+            entry_count = entry_count + 1
+            curr_row_data = [x for x in curr_checklist_data if x['row_id'] == curr_row_id]
+            supplier_id = curr_row_data[0]['supplier_id']
+            created_at = curr_row_data[0]['created_at']
+            row_dict = {"data": [], "created_at": created_at, "supplier_id": supplier_id,
+                        "campaign_id": campaign_id, "checklist_id": curr_checklist_id, "rowid": curr_row_id,
+                        "status": "active"}
+            for curr_data in curr_row_data:
+                curr_column_id = curr_data['column_id']
+                value = curr_data['cell_value']
+                curr_item = [x for x in curr_checklist_columns if x['column_id'] == curr_column_id][0]
+                column_name = curr_item['column_name']
+                column_type = curr_item['column_type']
+                item_dict = {
+                    'column_id': curr_column_id,
+                    'column_name': column_name,
+                    'value': value,
+                    'column_type': column_type
+                }
+                row_dict['data'].append(item_dict)
+            mongo_client.checklist_data.insert_one(row_dict)
+    return
+
+
+class MigrateChecklistToMongo(APIView):
+    def put(self, request):
+        class_name = self.__class__.__name__
+        migrate_to_mongo()
+        return ui_utils.handle_response(class_name, data='success', success=True)

@@ -693,7 +693,6 @@ class GenerateDemoData(APIView):
         leads_form_object = mongo_client.leads_forms.find({})
         leads_form_all = list(leads_form_object)
         for curr_form in leads_form_all:
-            print curr_form
             mongo_test.leads_forms.insert_one(curr_form)
         for curr_lead in leads_data_all:
             leads_form_id = curr_lead['leads_form_id']
