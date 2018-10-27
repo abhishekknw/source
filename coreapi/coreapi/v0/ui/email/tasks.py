@@ -55,7 +55,7 @@ def send_weekly_leads_email():
     end_date = datetime.datetime.now().date()
     start_date = end_date - datetime.timedelta(days=7)
     for leads_form in all_leads_forms:
-        (book, total_leads_count) = get_leads_excel_sheet(leads_form['leads_form_id'], 'All',start_date=start_date, end_date=None)
+        (book, total_leads_count) = get_leads_excel_sheet(leads_form['leads_form_id'], 'All',start_date=start_date, end_date=end_date)
         if total_leads_count > 0:
             cwd = os.path.dirname(os.path.realpath(__file__))
             filename = 'leads_sheet_' + str(all_campaign_name_dict[leads_form['campaign_id']]) + '_' + str(start_date) + '_' + str(end_date) + '.xlsx'
