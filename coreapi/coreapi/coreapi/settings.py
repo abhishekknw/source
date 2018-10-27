@@ -175,6 +175,8 @@ JWT_AUTH = {
 
 BASE_URL = Config.BASE_URL
 
+MONGO_DB = Config.MONGO_DB if hasattr(Config, 'MONGO_DB') else 'machadalo'
+MONGO_DB_TEST = Config.MONGO_DB_TEST if hasattr(Config,'MONGO_DB_TEST') else 'mdtest'
 
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

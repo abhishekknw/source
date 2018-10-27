@@ -6,6 +6,8 @@ class Config():
         'USER': 'root',
         'PASSWORD': 'wikasta123',
     }
+    MONGO_DB = 'machadalo'
+    MONGO_DB_TEST = 'mdtest'
     BASE_URL = 'http://localhost:8000/'
 
 class ConfigProd():
@@ -16,4 +18,7 @@ class ConfigProd():
         'USER': 'md1',
         'PASSWORD': 'pwd4mdprod',
     }
+    MONGO_DB = 'machadalo'
+    MONGO_DB_TEST = 'mdtest'
     BASE_URL = 'http://coreapi-test.3j6wudg4pu.ap-southeast-1.elasticbeanstalk.com/'
+

@@ -706,15 +706,16 @@ class GenerateDemoData(APIView):
                 curr_leads_form_item = curr_leads_form_items[str(item_id)]
                 key_name = curr_data_item['key_name']
                 key_type = curr_leads_form_item['key_type']
-                if str(key_type).lower() == 'phone':
-                    curr_data_item['value'] = randint(1000000000,9999999999)
-                allchar = string.ascii_letters + string.punctuation + string.digits
-                if key_type.lower() == 'email':
+                if 'number' in key_name.lower() or 'phone' in key_name.lower():
+                    curr_data_item['value'] = randint(9000000000,9999999999)
+                allchar = string.ascii_letters.lower()
+                if 'email' in key_type.lower():
                     r1 = "".join(random.choice(allchar) for x in range(randint(4, 6)))
                     r2 = "".join(random.choice(allchar) for x in range(randint(4, 6)))
-                    curr_data_item['value'] = r1+'@'+r2
+                    curr_data_item['value'] = r1+'@'+r2 + '.com'
                 if 'name' in key_name.lower():
-                    curr_data_item['value'] = "".join(random.choice(allchar) for x in range(randint(6, 10)))
+                    if 'apartment' not in key_name.lower():
+                        curr_data_item['value'] = "".join(random.choice(allchar) for x in range(randint(6, 10)))
                 curr_data_item['key_type'] = key_type
                 new_data.append(curr_data_item)
             curr_lead['data'] = new_data
