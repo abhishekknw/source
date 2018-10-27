@@ -22,7 +22,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'ewis(omy!u-rgpf%9hp1^3@8ivz!upuwc&tp!0trx%#vjqs!&2'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = 'true'
+DEBUG = Config.DEBUG if hasattr(Config, 'DEBUG') else True
 
 ALLOWED_HOSTS = ['13.232.210.224', 'localhost','13.127.154.33', 'api.machadalo.com', 'platform.machadalo.com',
                  '127.0.0.1']
@@ -175,6 +175,8 @@ JWT_AUTH = {
 
 BASE_URL = Config.BASE_URL
 
+MONGO_DB = Config.MONGO_DB if hasattr(Config, 'MONGO_DB') else 'machadalo'
+MONGO_DB_TEST = Config.MONGO_DB_TEST if hasattr(Config,'MONGO_DB_TEST') else 'mdtest'
 
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

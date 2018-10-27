@@ -15,6 +15,7 @@ from v0.ui.common.models import mongo_client
 from v0.ui.proposal.views import convert_date_format
 from views import send_email
 from v0.ui.common.models import BaseUser
+from celery import shared_task
 
 
 def get_all_campaign_assignment_by_id(email_type):
@@ -55,7 +56,7 @@ def send_weekly_leads_email():
     end_date = datetime.datetime.now().date()
     start_date = end_date - datetime.timedelta(days=7)
     for leads_form in all_leads_forms:
-        (book, total_leads_count) = get_leads_excel_sheet(leads_form['leads_form_id'], 'All',start_date=start_date, end_date=None)
+        (book, total_leads_count) = get_leads_excel_sheet(leads_form['leads_form_id'], 'All',start_date=start_date, end_date=end_date)
         if total_leads_count > 0:
             cwd = os.path.dirname(os.path.realpath(__file__))
             filename = 'leads_sheet_' + str(all_campaign_name_dict[leads_form['campaign_id']]) + '_' + str(start_date) + '_' + str(end_date) + '.xlsx'
@@ -90,23 +91,29 @@ class SendGraphPdf(APIView):
         email.send()
         return ui_utils.handle_response('', data={}, success=True)
 
+@shared_task()
+def send_bookling_mails_ctrl():
+    (campaign_assignement_by_campaign_id, campaign_assignement_by_campaign_id_admins, all_leads_forms,
+     all_campaign_name_dict) = get_all_campaign_assignment_by_id("BOOKING_DETAILS_ADV")
+    for leads_form in all_leads_forms:
+        supplier_list_details_by_status = get_supplier_list_by_status_ctrl(leads_form['campaign_id'])
+        supplier_list_details_by_status = supplier_list_details_by_status['all_phases']
+        booking_template = get_template('booking_details.html')
+        html = booking_template.render(
+            {'campaign_name': str(all_campaign_name_dict[leads_form['campaign_id']]),
+             "details_list": supplier_list_details_by_status})
+        to_array = campaign_assignement_by_campaign_id[leads_form['campaign_id']]
+        email = EmailMultiAlternatives('Campaign Booking Details', "")
+        email.attach_alternative(html, "text/html")
+        email.to = to_array
+        email.send()
+    return
+
 
 class SendBookingDetailMails(APIView):
     @staticmethod
     def get(request):
-        (campaign_assignement_by_campaign_id, campaign_assignement_by_campaign_id_admins, all_leads_forms,
-         all_campaign_name_dict) = get_all_campaign_assignment_by_id("BOOKING_DETAILS_ADV")
-        for leads_form in all_leads_forms:
-            supplier_list_details_by_status = get_supplier_list_by_status_ctrl(leads_form['campaign_id'])['all_phases']
-            booking_template = get_template('booking_details.html')
-            html = booking_template.render(
-                {'campaign_name': str(all_campaign_name_dict[leads_form['campaign_id']]), "details_list": supplier_list_details_by_status})
-            to_array = campaign_assignement_by_campaign_id[leads_form['campaign_id']]
-            to_array = ["kshitij.mittal01@gmail.com"]
-            email = EmailMultiAlternatives('Campaign Booking Details', "")
-            email.attach_alternative(html, "text/html")
-            email.to = to_array
-            email.send()
+        send_bookling_mails_ctrl.delay()
         return ui_utils.handle_response('', data={}, success=True)
 
 
