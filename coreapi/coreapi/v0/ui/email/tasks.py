@@ -121,8 +121,14 @@ class SendLeadsToSelf(APIView):
     @staticmethod
     def post(request):
         data = request.data
-        start_date = convert_date_format(data['start_date']).date() if 'start_date' in data else None
-        end_date = convert_date_format(data['end_date']).date() if 'end_date' in data else None
+        start_date = None
+        end_date = None
+        if 'start_date' in data:
+            start_date = data['start_date'][:10]
+            start_date = datetime.datetime.strptime(str(start_date), '%Y-%m-%d').date()
+        if 'end_date' in data:
+            end_date = data['end_date'][:10]
+            end_date = datetime.datetime.strptime(str(end_date), '%Y-%m-%d').date()
         leads_form_id = data['leads_form_id']
         campaign_id = data['campaign_id']
         (campaign_assignement_by_campaign_id, campaign_assignement_by_campaign_id_admins, all_leads_forms,

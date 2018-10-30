@@ -1742,6 +1742,14 @@ class SupplierPhaseUpdate(APIView):
 
         return ui_utils.handle_response(class_name, data={}, success=True)
 
+class GetPermissionBoxImages(APIView):
+    @staticmethod
+    def get(request, campaign_id, supplier_id):
+        try:
+            data = HashTagImages.objects.filter(object_id=supplier_id,campaign_id=campaign_id,hashtag='Permission Box')
+            return ui_utils.handle_response({}, data=data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response({}, exception_object=e, request=request)
 
 # class FixInvalidDates(APIView):
 #
@@ -1754,3 +1762,4 @@ class SupplierPhaseUpdate(APIView):
 #                 'supplier_id': supplier_id
 #             })
 #         return ui_utils.handle_response(class_name, data={}, success=True)
+
