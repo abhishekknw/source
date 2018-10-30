@@ -2316,6 +2316,8 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+def flatten_list(list_of_lists):
+    return [y for x in list_of_lists for y in x]
 
 def get_supplier_list_by_status_ctrl(campaign_id):
     shortlisted_spaces_list = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
@@ -2330,38 +2332,48 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                                      'comments': phase.comments
                                      }
     overall_inventory_count_dict = {}
+    no_phase_suppliers = {'BK': [], 'NB': [], 'PB': [], 'VB': [], 'SR': [],
+                                                                       'SE': [], 'VR': [], 'CR': [],
+                                                                       'DP': [], 'TB': []}
+    no_status_suppliers = []
     for space in shortlisted_spaces_list:
-        if space.phase_no_id:
-            supplier_society = SupplierTypeSociety.objects.filter(supplier_id=space.object_id)
-            supplier_inventories = ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces_id=space.id)
-            inventory_count_dict = {}
-            supplier_tower_count = supplier_society[0].tower_count if supplier_society[0].tower_count else 0
-            supplier_flat_count = supplier_society[0].flat_count if supplier_society[0].flat_count else 0
-            for inventory in supplier_inventories:
-                if inventory.ad_inventory_type.adinventory_name not in inventory_count_dict:
-                    inventory_count_dict[inventory.ad_inventory_type.adinventory_name] = 0
-                if inventory.ad_inventory_type.adinventory_name not in overall_inventory_count_dict:
-                    overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] = 0
-                if inventory.ad_inventory_type.adinventory_name == "POSTER":
-                    inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_tower_count
-                    overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_tower_count
-                elif inventory.ad_inventory_type.adinventory_name == "FLIER":
-                    inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_flat_count
-                    overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_flat_count
-                else:
-                    inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
-                    overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
+        supplier_society = SupplierTypeSociety.objects.filter(supplier_id=space.object_id)
+        supplier_inventories = ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces_id=space.id)
+        inventory_count_dict = {}
+        supplier_tower_count = supplier_society[0].tower_count if supplier_society[0].tower_count else 0
+        supplier_flat_count = supplier_society[0].flat_count if supplier_society[0].flat_count else 0
+        for inventory in supplier_inventories:
+            if inventory.ad_inventory_type.adinventory_name not in inventory_count_dict:
+                inventory_count_dict[inventory.ad_inventory_type.adinventory_name] = 0
+            if inventory.ad_inventory_type.adinventory_name not in overall_inventory_count_dict:
+                overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] = 0
+            if inventory.ad_inventory_type.adinventory_name == "POSTER":
+                inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_tower_count
+                overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_tower_count
+            elif inventory.ad_inventory_type.adinventory_name == "FLIER":
+                inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_flat_count
+                overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_flat_count
+            else:
+                inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
+                overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
 
-            supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society[0]).data
+        supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society[0]).data
+        supplier_society_serialized['booking_status'] = space.booking_status
+        supplier_society_serialized['freebies'] = space.freebies.split(",") if space.freebies else None
+        supplier_society_serialized['space_id'] = space.id
+        supplier_society_serialized['inventory_counts'] = inventory_count_dict
+        if not space.phase_no_id:
+            if space.booking_status:
+                no_phase_suppliers[space.booking_status].append(
+                    supplier_society_serialized)
+            else:
+                no_status_suppliers.append(supplier_society_serialized)
+        elif space.phase_no_id:
             if space.phase_no_id not in shortlisted_spaces_by_phase_dict:
                 shortlisted_spaces_by_phase_dict[space.phase_no_id] = {'BK': [], 'NB': [], 'PB': [], 'VB': [], 'SR': [],
                                                                        'SE': [], 'VR': [], 'CR': [],
                                                                        'DP': [], 'TB': []}
             if space.booking_status:
-                supplier_society_serialized['booking_status'] = space.booking_status
-                supplier_society_serialized['freebies'] = space.freebies.split(",") if space.freebies else None
-                supplier_society_serialized['space_id'] = space.id
-                supplier_society_serialized['inventory_counts'] = inventory_count_dict
                 shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(
                     supplier_society_serialized)
     shortlisted_spaces_by_phase_list = []
@@ -2388,9 +2400,9 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         followup_req_booked_flats = 0
         confirmed_booked_supplier = 0
         confirmed_booked_flats = 0
-        not_initiated_supplier = 0
+        not_initiated_supplier_count = 0
         not_initiated_flats = 0
-        rejected_supplier = 0
+        rejected_supplier_count = 0
         rejected_flats = 0
         for status in shortlisted_spaces_by_phase_dict[phase_id]:
             phase_booked_suppliers = len(shortlisted_spaces_by_phase_dict[phase_id][status])
@@ -2411,15 +2423,32 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 confirmed_booked_supplier += phase_booked_suppliers
                 confirmed_booked_flats += phase_booked_flats
             if status in not_initiated_status:
-                not_initiated_supplier += phase_booked_suppliers
+                not_initiated_supplier_count += phase_booked_suppliers
                 not_initiated_flats += phase_booked_flats
                 total_not_initiated_flats += phase_booked_flats
                 all_not_initiated_supplier = all_not_initiated_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
             if status in rejected_status:
-                rejected_supplier += phase_booked_suppliers
+                rejected_supplier_count += phase_booked_suppliers
                 rejected_flats += phase_booked_flats
                 total_rejected_flats += phase_booked_flats
                 all_rejected_supplier = all_rejected_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+        total_booked_suppliers = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].iteritems()])
+        confirmed_booked_suppliers = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].iteritems() if
+             status in confirmed_booked_status])
+        verbally_booked_suppliers = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].iteritems() if
+             status in verbally_booked_status])
+        followup_required_suppliers = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].iteritems() if
+             status in followup_req_status])
+        rejected_suppliers = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].iteritems() if
+             status in rejected_status])
+        not_initiated_suppliers = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].iteritems() if
+             status in not_initiated_status])
 
         phase_dict = {
             'phase_no': all_phase_by_id[phase_id]['phase_no'],
@@ -2428,18 +2457,36 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             'comments': all_phase_by_id[phase_id]['comments'],
             'supplier_data': shortlisted_spaces_by_phase_dict[phase_id],
             'overall_inventory_counts': overall_inventory_count_dict,
-            'total_booked_suppliers': total_booked_suppliers,
-            'total_booked_flats': total_booked_flats,
-            'confirmed_booked_suppliers': confirmed_booked_supplier,
-            'confirmed_booked_flats': confirmed_booked_flats,
-            'verbally_booked_suppliers': verbally_booked_suppliers,
-            'verbally_booked_flats': verbally_booked_flats,
-            'followup_req_booked_suppliers': followup_req_booked_suppliers,
-            'followup_req_booked_flats': followup_req_booked_flats,
-            'rejected_suppliers': rejected_supplier,
-            'rejected_flats': rejected_flats,
-            'not_initiated_suppliers': not_initiated_supplier,
-            'not_initiated_flats': not_initiated_flats
+            'total_booked': {
+                'supplier_count': total_booked_suppliers,
+                'flat_count': total_booked_flats,
+                'supplier_data': total_booked_suppliers
+            },
+            'confirmed_booked': {
+                'supplier_count': confirmed_booked_supplier,
+                'flat_count': confirmed_booked_flats,
+                'supplier_data': confirmed_booked_suppliers
+            },
+            'verbally_booked': {
+                'supplier_count': verbally_booked_suppliers,
+                'flat_count': verbally_booked_flats,
+                'supplier_data': verbally_booked_suppliers
+            },
+            'followup_required': {
+                'supplier_count': followup_req_booked_suppliers,
+                'flat_count': followup_req_booked_flats,
+                'supplier_data': followup_required_suppliers
+            },
+            'rejected': {
+                'supplier_count': rejected_supplier_count,
+                'flat_count': rejected_flats,
+                'supplier_data': rejected_suppliers
+            },
+            'not_initiated': {
+                'supplier_count': not_initiated_supplier_count,
+                'flat_count': not_initiated_flats,
+                'supplier_data': not_initiated_suppliers
+            },
         }
         if end_date is not None and end_date.date() >= current_date:
             shortlisted_spaces_by_phase_list.append(phase_dict)
@@ -2456,23 +2503,38 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             phase_dict['status'] = status
             completed_phases.append(phase_dict)
     last_completed_phase = None
+    sorted_upcoing_phases = sorted(upcoming_phases, key=lambda k: k['phase_no'])
+    upcoming_beyond_three = sorted_upcoing_phases[3:]
+    pipeline = {'followup_required': {'supplier_count':0, 'flat_count': 0, 'supplier_data':[]},
+                'confirmed_booked': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'verbally_booked': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'rejected': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'not_initiated': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'total_booked': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                }
+    for phase in upcoming_beyond_three:
+        for status_type in ['followup_required', 'confirmed_booked', 'verbally_booked', 'rejected', 'not_initiated', 'total_booked']:
+            pipeline[status_type]['supplier_count'] += phase[status_type]['supplier_count']
+            pipeline[status_type]['flat_count'] += phase[status_type]['flat_count']
+            pipeline[status_type]['supplier_data'] += phase[status_type]['supplier_data']
+            pipeline[status_type]['supplier_data'] += phase[status_type]['supplier_data']
+            if status == 'not_initiated':
+                pipeline[status_type]['supplier_data'] += no_status_suppliers
+                pipeline[status_type]['flat_count'] += sum(supplier['flat_count'] for supplier in no_status_suppliers)
+                pipeline[status_type]['supplier_count'] += len(no_status_suppliers)
+            else:
+                pipeline[status_type]['supplier_data'] += no_phase_suppliers[status_type]
+                pipeline[status_type]['flat_count'] += sum(supplier['flat_count'] for supplier in no_phase_suppliers[status_type])
+                pipeline[status_type]['supplier_count'] += len(no_phase_suppliers[status_type])
+
     if len(completed_phases) > 0:
         last_completed_phase = sorted(completed_phases, key=lambda k: k['end_date'])[-1]
     shortlisted_spaces_by_phase_dict = {
         'all_phases': shortlisted_spaces_by_phase_list,
         'last_completed_phase': last_completed_phase,
-        'upcoming_phases': sorted(upcoming_phases, key=lambda k: k['start_date'])[:3],
+        'upcoming_phases': sorted_upcoing_phases[:3],
         'ongoing_phase': ongoing_phase,
-        'not_initated_bookings': {
-            'supplier_data': all_not_initiated_supplier,
-            'total_not_initiated_suppliers': total_not_initiated_flats,
-            'total_not_initiated_flats': total_not_initiated_flats,
-        },
-        'rejected_bookings': {
-            'supplier_data': all_rejected_supplier,
-            'total_rejected_suppliers': total_rejected_flats,
-            'total_rejected_flats': total_rejected_flats,
-        }
+        'pipeline_suppliers': pipeline
     }
     return shortlisted_spaces_by_phase_dict
 
