@@ -6572,7 +6572,7 @@ def create_inventory_ids(supplier_object, filter_code, is_import_sheet=False, su
     function_name = create_inventory_ids.__name__
     try:
         print supplier_object.society_name
-        tower_count = int(supplier_object.tower_count)
+        tower_count = int(supplier_object.tower_count) if supplier_object.tower_count else 1
         inventory_ids = []
         Struct = namedtuple('Struct', 'adinventory_id')
         data = {}
