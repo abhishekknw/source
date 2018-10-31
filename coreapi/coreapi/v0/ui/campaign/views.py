@@ -952,10 +952,14 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
     format_str = '%d/%m/%Y'
     phase_start_weekday = 'Tuesday' # this is used to set the phase cycle
     user_start_datetime = datetime.strptime(user_start_date_str,format_str) if user_start_date_str is not None else None
-    user_end_datetime = datetime.strptime(user_end_date_str,format_str) if user_start_date_str is not None else None
+    user_end_datetime = datetime.strptime(user_end_date_str,format_str) if user_end_date_str is not None else None
+    and_constraint = [{"campaign_id": campaign_id}, {"status": {"$ne": "inactive"}}]
+    if user_start_datetime:
+        and_constraint.append({"created_at": {"$gte": user_start_datetime}})
+    if user_end_datetime:
+        and_constraint.append({"created_at": {"$lte": user_end_datetime}})
     leads_form_data = list(mongo_client.leads.find(
-        {"$and": [{"campaign_id": campaign_id}, {"status": {"$ne": "inactive"}}]},
-        {"_id": 0}))
+        {"$and": and_constraint}, {"_id": 0}))
 
     supplier_ids = list(set([x['supplier_id'] for x in leads_form_data]))
 
