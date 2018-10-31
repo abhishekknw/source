@@ -132,9 +132,13 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
     checklist_id = checklist['checklist_id']
     timestamp = datetime.datetime.utcnow()
     rows = checklist_data.keys()
-    exist_rows = mongo_client.checklist_data.find({"checklist_id": 13}).distinct("rowid")
+    exist_rows_query = mongo_client.checklist_data.find({"checklist_id": checklist_id})
+    exist_rows_list =  list(exist_rows_query)
+    exist_rows = exist_rows_query.distinct("rowid")
     for curr_row in rows:
         rowid = int(curr_row)
+        exist_static_column = [x['data'] for x in exist_rows_list if x['rowid'] == rowid][0]
+        print exist_static_column
         if rowid in exist_rows:
             mongo_client.checklist_data.delete_one({'checklist_id': int(checklist_id), 'rowid': rowid})
         row_data = checklist_data[curr_row]
@@ -147,13 +151,14 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
                 continue
             column_id = column_data["column_id"]
             if column_id == 1:
-                print 'cannot edit static column'
+                print 'cannot edit static column', column_id
+                row_dict['data'][str(column_id)] = exist_static_column[str(column_id)]
                 continue
             column_name = all_checklist_columns_dict[str(column_id)]["column_name"]
             column_type = all_checklist_columns_dict[str(column_id)]["column_type"]
             value = column_data["cell_value"]
 
-            row_dict['data'][column_id] = {
+            row_dict['data'][str(column_id)] = {
                 'column_name': column_name,
                 'cell_value': value,
                 'column_id': column_id,
@@ -168,7 +173,10 @@ class ChecklistEntry(APIView):
     def post(self, request, checklist_id):
         checklist = mongo_client.checklists.find_one({"checklist_id": int(checklist_id)})
 
-        if checklist['status']=='inactive':
+        if checklist == None:
+            data = 'Checklist id does not exist'
+            success = False
+        elif checklist['status']=='inactive':
             data = 'deleted checklist'
             success = False
         elif checklist['is_template'] == True:
