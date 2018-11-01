@@ -138,7 +138,6 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
     for curr_row in rows:
         rowid = int(curr_row)
         exist_static_column = [x['data'] for x in exist_rows_list if x['rowid'] == rowid][0]
-        print exist_static_column
         if rowid in exist_rows:
             mongo_client.checklist_data.delete_one({'checklist_id': int(checklist_id), 'rowid': rowid})
         row_data = checklist_data[curr_row]
@@ -196,23 +195,29 @@ class ChecklistEntry(APIView):
 
 class ChecklistEdit(APIView):
     def post(self, request, checklist_id):
+        checklist_id = int(checklist_id)
         class_name = self.__class__.__name__
         columns = request.data['columns']
         static_column = request.data['static_column']
         n_rows = len(static_column)
         n_cols = len(columns)
         column_ids = [x["column_id"] for x in columns]
-        checklist_column_data_all = mongo_client.checklists.find({"checklist_id": checklist_id})['data']
+        checklist_column_data_all = list(mongo_client.checklists.find({"checklist_id": checklist_id}))[0]['data']
+        checklist_data_all = list(mongo_client.checklist_data.find({"checklist_id": checklist_id}))
         for column in columns:
             column_id = column['column_id']
             #column_data = column_data_all[column_id]
             new_column_data = column
-            checklist_column_data_all[column_id] = new_column_data
+            new_column_data['order_id'] = checklist_column_data_all[str(column_id)]['order_id']
+            checklist_column_data_all[str(column_id)] = new_column_data
+            mongo_client.checklists.update_one({'checklist_id': checklist_id}, {
+                "$set": {'data': checklist_column_data_all}})
         for row in static_column:
             row_id = row['row_id']
-            row_data = ChecklistData.objects.get(row_id=row_id, column_id = 1, checklist_id = checklist_id)
-            row_data.cell_value = row['cell_value']
-            row_data.save()
+            row_data = [x['data']['1'] for x in checklist_data_all if x['rowid']==row_id][0]
+            row_data['cell_value'] = row['cell_value']
+            mongo_client.checklist_data.update_one({'rowid':int(row_id), 'checklist_id': checklist_id}, {
+                "$set": {'data.1': row_data}})
         return ui_utils.handle_response({}, data='success', success=True)
 
 
