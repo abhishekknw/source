@@ -6469,8 +6469,8 @@ def save_shortlisted_suppliers_data(center, supplier_code, proposal_data, propos
                     'proposal': proposal,
                     'supplier_code': supplier_code,
                     'status': supplier['status'],
-                    'booking_status' : 'BK',
-                    'phase' : 1,
+                    # 'booking_status' : 'BK',
+                    # 'phase' : 1,
                     'total_negotiated_price': supplier[
                         'total_negotiated_price'] if 'total_negotiated_price' in supplier else None
                 }
