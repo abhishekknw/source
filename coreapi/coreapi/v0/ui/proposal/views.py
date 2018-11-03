@@ -2374,7 +2374,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             if space.phase_no_id not in shortlisted_spaces_by_phase_dict:
                 shortlisted_spaces_by_phase_dict[space.phase_no_id] = {'BK': [], 'NB': [], 'PB': [], 'VB': [], 'SR': [],
                                                                        'SE': [], 'VR': [], 'CR': [],
-                                                                       'DP': [], 'TB': [], 'NOSTATUS': []}
+                                                                       'DP': [], 'TB': []}
             if space.booking_status:
                 shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(
                     supplier_society_serialized)
@@ -2388,7 +2388,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     confirmed_booked_status = ['BK']
     verbally_booked_status = ['VB', 'TB', 'PB']
     followup_req_status = ['SE', 'VR', 'CR']
-    not_initiated_status = ['NB','NOSTATUS']
+    not_initiated_status = ['NB']
     rejected_status = ['SR']
     all_not_initiated_supplier = []
     all_rejected_supplier = []
@@ -2518,19 +2518,13 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 'total_booked': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 }
     for phase in upcoming_beyond_three:
-        for status_type in ['followup_required', 'confirmed_booked', 'verbally_booked', 'rejected', 'not_initiated', 'total_booked']:
+        for status_type in ['followup_required', 'confirmed_booked', 'verbally_booked', 'rejected', 'total_booked']:
             pipeline[status_type]['supplier_count'] += phase[status_type]['supplier_count']
             pipeline[status_type]['flat_count'] += phase[status_type]['flat_count']
             pipeline[status_type]['supplier_data'] += phase[status_type]['supplier_data']
-            pipeline[status_type]['supplier_data'] += phase[status_type]['supplier_data']
-            if status == 'not_initiated':
-                pipeline[status_type]['supplier_data'] += no_status_suppliers
-                pipeline[status_type]['flat_count'] += sum(supplier['flat_count'] for supplier in no_status_suppliers)
-                pipeline[status_type]['supplier_count'] += len(no_status_suppliers)
-            else:
-                pipeline[status_type]['supplier_data'] += no_phase_suppliers[status_type]
-                pipeline[status_type]['flat_count'] += sum(supplier['flat_count'] for supplier in no_phase_suppliers[status_type])
-                pipeline[status_type]['supplier_count'] += len(no_phase_suppliers[status_type])
+    pipeline['not_initiated']['supplier_data'] += no_status_suppliers
+    pipeline['not_initiated']['flat_count'] += sum(supplier['flat_count'] for supplier in no_status_suppliers)
+    pipeline['not_initiated']['supplier_count'] += len(no_status_suppliers)
 
     if len(completed_phases) > 0:
         last_completed_phase = sorted(completed_phases, key=lambda k: k['end_date'])[-1]
