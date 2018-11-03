@@ -132,9 +132,12 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
     checklist_id = checklist['checklist_id']
     timestamp = datetime.datetime.utcnow()
     rows = checklist_data.keys()
-    exist_rows = mongo_client.checklist_data.find({"checklist_id": 13}).distinct("rowid")
+    exist_rows_query = mongo_client.checklist_data.find({"checklist_id": checklist_id})
+    exist_rows_list =  list(exist_rows_query)
+    exist_rows = exist_rows_query.distinct("rowid")
     for curr_row in rows:
         rowid = int(curr_row)
+        exist_static_column = [x['data'] for x in exist_rows_list if x['rowid'] == rowid][0]
         if rowid in exist_rows:
             mongo_client.checklist_data.delete_one({'checklist_id': int(checklist_id), 'rowid': rowid})
         row_data = checklist_data[curr_row]
@@ -147,13 +150,14 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
                 continue
             column_id = column_data["column_id"]
             if column_id == 1:
-                print 'cannot edit static column'
+                print 'cannot edit static column', column_id
+                row_dict['data'][str(column_id)] = exist_static_column[str(column_id)]
                 continue
             column_name = all_checklist_columns_dict[str(column_id)]["column_name"]
             column_type = all_checklist_columns_dict[str(column_id)]["column_type"]
             value = column_data["cell_value"]
 
-            row_dict['data'][column_id] = {
+            row_dict['data'][str(column_id)] = {
                 'column_name': column_name,
                 'cell_value': value,
                 'column_id': column_id,
@@ -168,7 +172,10 @@ class ChecklistEntry(APIView):
     def post(self, request, checklist_id):
         checklist = mongo_client.checklists.find_one({"checklist_id": int(checklist_id)})
 
-        if checklist['status']=='inactive':
+        if checklist == None:
+            data = 'Checklist id does not exist'
+            success = False
+        elif checklist['status']=='inactive':
             data = 'deleted checklist'
             success = False
         elif checklist['is_template'] == True:
@@ -188,126 +195,195 @@ class ChecklistEntry(APIView):
 
 class ChecklistEdit(APIView):
     def post(self, request, checklist_id):
+        checklist_id = int(checklist_id)
         class_name = self.__class__.__name__
         columns = request.data['columns']
         static_column = request.data['static_column']
         n_rows = len(static_column)
         n_cols = len(columns)
         column_ids = [x["column_id"] for x in columns]
-        checklist_column_data_all = mongo_client.checklists.find({"checklist_id": checklist_id})['data']
+        checklist_column_data_all = list(mongo_client.checklists.find({"checklist_id": checklist_id}))[0]['data']
+        checklist_data_all = list(mongo_client.checklist_data.find({"checklist_id": checklist_id}))
         for column in columns:
             column_id = column['column_id']
             #column_data = column_data_all[column_id]
             new_column_data = column
-            checklist_column_data_all[column_id] = new_column_data
+            new_column_data['order_id'] = checklist_column_data_all[str(column_id)]['order_id']
+            checklist_column_data_all[str(column_id)] = new_column_data
+            mongo_client.checklists.update_one({'checklist_id': checklist_id}, {
+                "$set": {'data': checklist_column_data_all}})
         for row in static_column:
             row_id = row['row_id']
-            row_data = ChecklistData.objects.get(row_id=row_id, column_id = 1, checklist_id = checklist_id)
-            row_data.cell_value = row['cell_value']
-            row_data.save()
+            row_data = [x['data']['1'] for x in checklist_data_all if x['rowid']==row_id][0]
+            row_data['cell_value'] = row['cell_value']
+            mongo_client.checklist_data.update_one({'rowid':int(row_id), 'checklist_id': checklist_id}, {
+                "$set": {'data.1': row_data}})
         return ui_utils.handle_response({}, data='success', success=True)
 
 
 class GetCampaignChecklists(APIView):
     # used for getting a list of all checklists of a campaign
     def get(self, request, campaign_id):
-        checklist_type = request.query_params.get('query_type')
-        checklists = Checklist.objects.filter(campaign_id = campaign_id).exclude(status='inactive')
-        if checklist_type == 'list':
-            checklists = checklists.exclude(is_template=1)
-        if checklist_type == 'template':
-            checklists = checklists.filter(is_template=1)
-
-        checklist_dict = []
-        for item in checklists:
-            list_item = ChecklistSerializer(item).data
-            checklist_dict.append(list_item)
-        return ui_utils.handle_response({}, data=checklist_dict, success=True)
+        class_name = self.__class__.__name__
+        checklist_object = mongo_client.checklists.find({"campaign_id": campaign_id, "status": "active"})
+        checklist_data = list(checklist_object)
+        checklist_type = str(request.query_params.get('query_type')) if request.query_params.get('query_type') \
+            else 'list'
+        checklists = []
+        is_template = True if checklist_type == 'template' else False
+        for curr_checklist in checklist_data:
+            if curr_checklist['is_template'] == is_template:
+                del curr_checklist['_id']
+                checklists.append(curr_checklist)
+        # checklist_dict = []
+        # for item in checklists:
+        #     list_item = ChecklistSerializer(item).data
+        #     checklist_dict.append(list_item)
+        return ui_utils.handle_response(class_name, data=checklists, success=True)
 
 
 class GetSupplierChecklists(APIView):
-    # used for getting a list of all checklists of a particular supplier within a campaign
+    # used for getting a list of all checklists of a campaign
     def get(self, request, campaign_id, supplier_id):
-        checklists = Checklist.objects.filter(campaign_id=campaign_id, supplier_id = supplier_id).exclude(status='inactive')
-        checklist_type = request.query_params.get('query_type')
-        if checklist_type == 'list':
-            checklists = checklists.exclude(is_template=1)
-        if checklist_type == 'template':
-            checklists = checklists.filter(is_template=1)
+        class_name = self.__class__.__name__
+        checklist_object = mongo_client.checklists.find({'campaign_id': campaign_id, 'supplier_id': supplier_id,
+                                                         'status': 'active'})
+        checklist_data = list(checklist_object)
+        checklist_type = str(request.query_params.get('query_type')) if request.query_params.get('query_type') \
+            else 'list'
+        checklists = []
+        is_template = True if checklist_type == 'template' else False
+        for curr_checklist in checklist_data:
+            if curr_checklist['is_template'] == is_template:
+                del curr_checklist['_id']
+                checklists.append(curr_checklist)
+        # checklist_dict = []
+        # for item in checklists:
+        #     list_item = ChecklistSerializer(item).data
+        #     checklist_dict.append(list_item)
+        return ui_utils.handle_response(class_name, data=checklists, success=True)
 
-        checklist_dict = []
-        for item in checklists:
-            list_item = ChecklistSerializer(item).data
-            checklist_dict.append(list_item)
-        return ui_utils.handle_response({}, data=checklist_dict, success=True)
 
+# class GetSupplierChecklists(APIView):
+#     # used for getting a list of all checklists of a particular supplier within a campaign
+#     def get(self, request, campaign_id, supplier_id):
+#         checklists = Checklist.objects.filter(campaign_id=campaign_id, supplier_id = supplier_id).exclude(status='inactive')
+#         checklist_type = request.query_params.get('query_type')
+#         if checklist_type == 'list':
+#             checklists = checklists.exclude(is_template=1)
+#         if checklist_type == 'template':
+#             checklists = checklists.filter(is_template=1)
+#
+#         checklist_dict = []
+#         for item in checklists:
+#             list_item = ChecklistSerializer(item).data
+#             checklist_dict.append(list_item)
+#         return ui_utils.handle_response({}, data=checklist_dict, success=True)
+
+# class GetChecklistData(APIView):
+#     # viewing a particular checklist
+#     @staticmethod
+#     def get(request,checklist_id):
+#         checklist_info = Checklist.objects.get(id=checklist_id)
+#         last_entry_id = checklist_info.rows
+#         checklist_columns = ChecklistColumns.objects.filter(checklist_id=checklist_id).exclude(status='inactive')
+#         checklist_data = ChecklistData.objects.filter(checklist_id=checklist_id).exclude(status='inactive')
+#         checklist_rows = []
+#
+#         values = []
+#         checklist_items_dict = {}
+#         checklist_items_dict_part = []
+#         for item in checklist_columns:
+#             curr_item = ChecklistColumnsSerializer(item).data
+#             checklist_items_dict[item.column_id] = curr_item
+#             curr_item_part = {key:curr_item[key] for key in ['column_id', 'column_name', 'column_type']}
+#             checklist_items_dict_part.append(curr_item_part)
+#
+#         rows = []
+#         row_labels = checklist_data.filter(column_id = 1).values('row_id','cell_value')
+#         for row in row_labels:
+#             rows.append(row)
+#
+#         previous_entry_id = -1
+#         current_list = []
+#         for i in range(1, last_entry_id+1):
+#             entry_data = checklist_data.filter(row_id = i).exclude(column_id=1)
+#            # if entry_data is not None:
+#             for keys in checklist_columns:
+#                 key_name = keys.column_name
+#                 item_id = keys.column_id
+#                 key_query = entry_data.filter(column_id=item_id).first()
+#                 if (not key_query):
+#                     continue
+#                 key_value = key_query.cell_value
+#                 #current_row[key_name] = key_value
+#                 current_row = ({
+#                     "row_id": i,
+#                     "column_id": item_id,
+#                     "value": key_value
+#                 })
+#                 if i != previous_entry_id and current_list != []:
+#                     values.append(current_list)
+#                     current_list = []
+#                 # current_list.append(current_row)
+#                 previous_entry_id = i
+#                 values.append(current_row)
+#
+#         all_data = {
+#             'column_headers': checklist_items_dict_part,
+#             'row_headers': rows,
+#             'values': values,
+#         }
+#
+#         return ui_utils.handle_response({}, data=all_data, success=True)
 class GetChecklistData(APIView):
-    # viewing a particular checklist
     @staticmethod
-    def get(request,checklist_id):
-        checklist_info = Checklist.objects.get(id=checklist_id)
-        last_entry_id = checklist_info.rows
-        checklist_columns = ChecklistColumns.objects.filter(checklist_id=checklist_id).exclude(status='inactive')
-        checklist_data = ChecklistData.objects.filter(checklist_id=checklist_id).exclude(status='inactive')
-        checklist_rows = []
-
+    def get(request, checklist_id):
+        checklist_id = int(checklist_id)
+        checklist_info = mongo_client.checklists.find_one({"checklist_id": checklist_id})
+        if checklist_info is None:
+            return ui_utils.handle_response({}, data="incorrect checklist id", success=False)
+        elif checklist_info['status']=='inactive':
+            return ui_utils.handle_response({}, data="deleted checklist", success=False)
+        checklist_data = list(mongo_client.checklist_data.find({"checklist_id": checklist_id}))
         values = []
-        checklist_items_dict = {}
-        checklist_items_dict_part = []
-        for item in checklist_columns:
-            curr_item = ChecklistColumnsSerializer(item).data
-            checklist_items_dict[item.column_id] = curr_item
-            curr_item_part = {key:curr_item[key] for key in ['column_id', 'column_name', 'column_type']}
-            checklist_items_dict_part.append(curr_item_part)
-
-        rows = []
-        row_labels = checklist_data.filter(column_id = 1).values('row_id','cell_value')
-        for row in row_labels:
-            rows.append(row)
-
-        previous_entry_id = -1
-        current_list = []
-        for i in range(1, last_entry_id+1):
-            entry_data = checklist_data.filter(row_id = i).exclude(column_id=1)
-           # if entry_data is not None:
-            for keys in checklist_columns:
-                key_name = keys.column_name
-                item_id = keys.column_id
-                key_query = entry_data.filter(column_id=item_id).first()
-                if (not key_query):
-                    continue
-                key_value = key_query.cell_value
-                #current_row[key_name] = key_value
-                current_row = ({
-                    "row_id": i,
-                    "column_id": item_id,
-                    "value": key_value
-                })
-                if i != previous_entry_id and current_list != []:
-                    values.append(current_list)
-                    current_list = []
-                # current_list.append(current_row)
-                previous_entry_id = i
-                values.append(current_row)
-
-        all_data = {
-            'column_headers': checklist_items_dict_part,
-            'row_headers': rows,
-            'values': values,
-        }
-
-        return ui_utils.handle_response({}, data=all_data, success=True)
+        column_headers = []
+        row_headers = []
+        checklist_info_columns = checklist_info['data']
+        columns_list = checklist_info_columns.keys()
+        for column in columns_list:
+            column_headers.append(checklist_info_columns[column])
+        for checklist in checklist_data:
+            row_id = checklist['rowid']
+            curr_row_data = checklist['data']
+            curr_row_columns = curr_row_data.keys()
+            for column in curr_row_columns:
+                value = curr_row_data[column]["cell_value"]
+                column_id = column
+                if column == '1':
+                    row_headers.append({
+                        "cell_value": value,
+                        "row_id": row_id
+                    })
+                else:
+                    values.append({
+                        "row_id": row_id,
+                        "value": value,
+                        "column_id": column_id
+                    })
+        final_data = {'values': values, 'column_headers': column_headers, 'row_headers': row_headers}
+        return ui_utils.handle_response({}, data=final_data, success=True)
 
 class DeleteChecklist(APIView):
     # deactivating a full checklist
     @staticmethod
     def put(request,checklist_id):
-        checklist_details = Checklist.objects.get(id=checklist_id)
-        checklist_details.status = 'inactive'
-        checklist_details.save()
+        mongo_client.checklists.update_one({"checklist_id": int(checklist_id)},  {"$set": {'status': 'inactive'}})
         return ui_utils.handle_response({}, data='success', success=True)
 
+
 class DeleteChecklistColumns(APIView):
+    # this function is being currently skipped because it is too complex
     def put (self, request, checklist_id, column_id):
         checklist_item = ChecklistColumns.objects.get(checklist_id=checklist_id, column_id=column_id)
         checklist_item.status = 'inactive'
@@ -315,6 +391,7 @@ class DeleteChecklistColumns(APIView):
         return ui_utils.handle_response({}, data='success', success=True)
 
 class DeleteChecklistRow(APIView):
+
     @staticmethod
     def put(request, checklist_id, row_id):
         entry_list = ChecklistData.objects.filter(checklist_id=checklist_id, row_id=row_id)
