@@ -158,3 +158,9 @@ class SendLeadsToSelf(APIView):
             #     email_data = {'subject': subject, 'body': body, 'to': to_array_admins}
             #     send_email.delay(email_data)
         return ui_utils.handle_response('', data={}, success=True)
+
+class SendPipelineDetailMails(APIView):
+    @staticmethod
+    def get(request):
+        send_bookling_mails_ctrl.delay()
+        return ui_utils.handle_response('', data={}, success=True)
