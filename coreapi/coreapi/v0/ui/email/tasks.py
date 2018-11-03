@@ -96,12 +96,14 @@ def send_bookling_mails_ctrl():
     (campaign_assignement_by_campaign_id, campaign_assignement_by_campaign_id_admins, all_leads_forms,
      all_campaign_name_dict) = get_all_campaign_assignment_by_id("BOOKING_DETAILS_ADV")
     for leads_form in all_leads_forms:
+        if leads_form['campaign_id'] != 'BYJMACF554':
+            continue
         supplier_list_details_by_status = get_supplier_list_by_status_ctrl(leads_form['campaign_id'])
-        supplier_list_details_by_status = supplier_list_details_by_status['all_phases']
+        supplier_list_details_by_status = supplier_list_details_by_status
         booking_template = get_template('booking_details.html')
         html = booking_template.render(
             {'campaign_name': str(all_campaign_name_dict[leads_form['campaign_id']]),
-             "details_list": supplier_list_details_by_status})
+             "details_dict": supplier_list_details_by_status})
         to_array = campaign_assignement_by_campaign_id[leads_form['campaign_id']]
         email = EmailMultiAlternatives('Campaign Booking Details', "")
         email.attach_alternative(html, "text/html")
