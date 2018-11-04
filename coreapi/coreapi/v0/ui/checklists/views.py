@@ -344,7 +344,7 @@ class GetChecklistData(APIView):
         if checklist_info is None:
             return ui_utils.handle_response({}, data="incorrect checklist id", success=False)
         elif checklist_info['status']=='inactive':
-            return ui_utils.handle_response({}, data="deleted checklist", success=False)
+            return ui_utils.handle_response({}, data="checklist already deleted", success=False)
         checklist_data = list(mongo_client.checklist_data.find({"checklist_id": checklist_id}))
         values = []
         column_headers = []
@@ -355,6 +355,9 @@ class GetChecklistData(APIView):
             column_headers.append(checklist_info_columns[column])
         for checklist in checklist_data:
             row_id = checklist['rowid']
+            if checklist['status']=='inactive':
+                print("# row already deleted: ", row_id)
+                continue
             curr_row_data = checklist['data']
             curr_row_columns = curr_row_data.keys()
             for column in curr_row_columns:
@@ -394,12 +397,9 @@ class DeleteChecklistRow(APIView):
 
     @staticmethod
     def put(request, checklist_id, row_id):
-        entry_list = ChecklistData.objects.filter(checklist_id=checklist_id, row_id=row_id)
-        for item in entry_list:
-            item.status = 'inactive'
-            item.save()
+        mongo_client.checklist_data.update_one({"checklist_id": int(checklist_id), "rowid": int(row_id)},
+                                               {"$set": {'status': 'inactive'}})
         return ui_utils.handle_response({}, data='success', success=True)
-
 
 
 @shared_task()

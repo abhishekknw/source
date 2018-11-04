@@ -62,7 +62,7 @@ def convertToNumber(str):
         return str
 
 
-def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **kwargs):
+def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=1, **kwargs):
     leads_per_page = 25
     leads_forms = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)}, {"_id":0, "data":1})
     leads_forms_items = leads_forms["data"]
@@ -112,9 +112,17 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
         leads_data_start_end = [x for x in leads_data_start if x['created_at'].date() <= kwargs['end_date']]
         leads_data_list = leads_data_start_end
 
+    first_entry = (page_number-1)*leads_per_page+1
+    if first_entry>len(leads_data_list):
+        leads_data_list_paginated = []
+    else:
+        last_entry = min(page_number*leads_per_page, len(leads_data_list))
+        leads_data_list_sorted = list(set(leads_data_list))
+        leads_data_list_paginated = leads_data_list_sorted[first_entry:(last_entry-1)]
+
     #leads_data_values_itemid = [x["data"] for x in leads_data_list]
     leads_data_values = []
-    for entry in leads_data_list:
+    for entry in leads_data_list_paginated:
         curr_entry = entry['data']
         entry_date = entry['created_at']
         if supplier_id == 'All':
