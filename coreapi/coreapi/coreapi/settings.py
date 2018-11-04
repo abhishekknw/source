@@ -25,7 +25,7 @@ SECRET_KEY = 'ewis(omy!u-rgpf%9hp1^3@8ivz!upuwc&tp!0trx%#vjqs!&2'
 DEBUG = Config.DEBUG if hasattr(Config, 'DEBUG') else True
 
 ALLOWED_HOSTS = ['13.232.210.224', 'localhost','13.127.154.33', 'api.machadalo.com', 'platform.machadalo.com',
-                 '127.0.0.1']
+                 '127.0.0.1', 'devapi.machadalo.com']
 
 
 # Application definition

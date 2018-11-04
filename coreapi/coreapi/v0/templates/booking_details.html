@@ -10,19 +10,73 @@ table, td, th {
         <br /> <br />
         <table style="border-collapse: collapse;width: 60%;border: 1px solid black;">
             <tr style="border: 1px solid black;">
-                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Phase</th>
-                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Total Booked Societies (Aggregated Flat Count)</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Phase Details</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Confirmed Booked (Total Flat Count)</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Verbally Booked (Total Flat Count)</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">FollowUp Required (Total Flat Count)</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Total (Total Flat Count)</th>
             </tr>
-            {% for phase_dict in details_list %}
+            {% if details_dict.last_completed_phase %}
                 <tr style="border: 1px solid black;border: 1px solid black;">
                     <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">
-                        Phase: {{phase_dict.phase_no}}<br />
-                        Start Date: {{phase_dict.start_date}}<br />
-                        End Date: {{phase_dict.end_date}}
+                        Completed Phase No: {{details_dict.last_completed_phase.phase_no}}<br />
+                        Start Date: {{details_dict.last_completed_phase.start_date}}<br />
+                        End Date: {{details_dict.last_completed_phase.end_date}}
                     </td>
-                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{phase_dict.total_booked_suppliers}}({{phase_dict.total_booked_flats}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.last_completed_phase.confirmed_booked.supplier_count}}({{details_dict.last_completed_phase.confirmed_booked.flat_count}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.last_completed_phase.verbally_booked.supplier_count}}({{details_dict.last_completed_phase.verbally_booked.flat_count}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.last_completed_phase.followup_required.supplier_count}}({{details_dict.last_completed_phase.followup_required.flat_count}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.last_completed_phase.total_booked.supplier_count}}({{details_dict.last_completed_phase.total_booked.flat_count}})</td>
+                </tr>
+            {% endif %}
+            {% if details_dict.ongoing_phase %}
+                <tr style="border: 1px solid black;border: 1px solid black;">
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">
+                        Completed Phase No: {{details_dict.ongoing_phase.phase_no}}<br />
+                        Start Date: {{details_dict.ongoing_phase.start_date}}<br />
+                        End Date: {{details_dict.ongoing_phase.end_date}}
+                    </td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.ongoing_phase.confirmed_booked.supplier_count}}({{details_dict.ongoing_phase.confirmed_booked.flat_count}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.ongoing_phase.verbally_booked.supplier_count}}({{details_dict.ongoing_phase.verbally_booked.flat_count}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.ongoing_phase.followup_required.supplier_count}}({{details_dict.ongoing_phase.followup_required.flat_count}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.ongoing_phase.total_booked.supplier_count}}({{details_dict.ongoing_phase.total_booked.flat_count}})</td>
+                </tr>
+            {% endif %}
+            {% for single_upcoming_phase in details_dict.upcoming_phases %}
+                <tr style="border: 1px solid black;border: 1px solid black;">
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">
+                        Upcoming Phase No: {{single_upcoming_phase.phase_no}}<br />
+                        Start Date: {{single_upcoming_phase.start_date}}<br />
+                        End Date: {{single_upcoming_phase.end_date}}
+                    </td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{single_upcoming_phase.confirmed_booked.supplier_count}}({{single_upcoming_phase.confirmed_booked.flat_count}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{single_upcoming_phase.verbally_booked.supplier_count}}({{single_upcoming_phase.verbally_booked.flat_count}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{single_upcoming_phase.followup_required.supplier_count}}({{single_upcoming_phase.followup_required.flat_count}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{single_upcoming_phase.total_booked.supplier_count}}({{single_upcoming_phase.total_booked.flat_count}})</td>
                 </tr>
             {% endfor %}
+        </table>
+
+    And the Suppliers in Pipeline are as follows:
+        <table style="border-collapse: collapse;width: 60%;border: 1px solid black;">
+            <tr style="border: 1px solid black;">
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Confirmed Bookings</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Not Initiated</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Followup Required</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Verbally Booked </th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Rejected</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Total </th>
+            </tr>
+            {% if details_dict.last_completed_phase %}
+                <tr style="border: 1px solid black;border: 1px solid black;">
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.pipeline_suppliers.confirmed_booked.supplier_count}}({{details_dict.pipeline_suppliers.confirmed_booked.flat_count}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.pipeline_suppliers.not_initiated.supplier_count}}({{details_dict.pipeline_suppliers.not_initiated.flat_count}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.pipeline_suppliers.followup_required.supplier_count}}({{details_dict.pipeline_suppliers.followup_required.flat_count}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.pipeline_suppliers.verbally_booked.supplier_count}}({{details_dict.pipeline_suppliers.verbally_booked.flat_count}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.pipeline_suppliers.rejected.supplier_count}}({{details_dict.pipeline_suppliers.rejected.flat_count}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.pipeline_suppliers.total_booked.supplier_count}}({{details_dict.pipeline_suppliers.total_booked.flat_count}})</td>
+                </tr>
+            {% endif %}
         </table>
     </body>
 </html>

@@ -92,17 +92,18 @@ class SendGraphPdf(APIView):
         return ui_utils.handle_response('', data={}, success=True)
 
 @shared_task()
-def send_bookling_mails_ctrl():
+def send_booking_mails_ctrl():
     (campaign_assignement_by_campaign_id, campaign_assignement_by_campaign_id_admins, all_leads_forms,
      all_campaign_name_dict) = get_all_campaign_assignment_by_id("BOOKING_DETAILS_ADV")
-    for leads_form in all_leads_forms:
-        supplier_list_details_by_status = get_supplier_list_by_status_ctrl(leads_form['campaign_id'])
-        supplier_list_details_by_status = supplier_list_details_by_status['all_phases']
+    all_campaign_ids = list(set([lead_form['campaign_id'] for lead_form in all_leads_forms]))
+    for campaign_id in all_campaign_ids:
+        supplier_list_details_by_status = get_supplier_list_by_status_ctrl(campaign_id)
+        supplier_list_details_by_status = supplier_list_details_by_status
         booking_template = get_template('booking_details.html')
         html = booking_template.render(
-            {'campaign_name': str(all_campaign_name_dict[leads_form['campaign_id']]),
-             "details_list": supplier_list_details_by_status})
-        to_array = campaign_assignement_by_campaign_id[leads_form['campaign_id']]
+            {'campaign_name': str(all_campaign_name_dict[campaign_id]),
+             "details_dict": supplier_list_details_by_status})
+        to_array = campaign_assignement_by_campaign_id[campaign_id]
         email = EmailMultiAlternatives('Campaign Booking Details', "")
         email.attach_alternative(html, "text/html")
         email.to = to_array
@@ -113,7 +114,7 @@ def send_bookling_mails_ctrl():
 class SendBookingDetailMails(APIView):
     @staticmethod
     def get(request):
-        send_bookling_mails_ctrl.delay()
+        send_booking_mails_ctrl()
         return ui_utils.handle_response('', data={}, success=True)
 
 
@@ -156,4 +157,10 @@ class SendLeadsToSelf(APIView):
             #     body = 'User with username {0} and email {1} has generated a leads mail for campaign - {2} from date: {3} to date: {4}.'.format(username, user_email, campaign_name, str(start_date), str(end_date))
             #     email_data = {'subject': subject, 'body': body, 'to': to_array_admins}
             #     send_email.delay(email_data)
+        return ui_utils.handle_response('', data={}, success=True)
+
+class SendPipelineDetailMails(APIView):
+    @staticmethod
+    def get(request):
+        send_bookling_mails_ctrl.delay()
         return ui_utils.handle_response('', data={}, success=True)

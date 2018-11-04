@@ -155,7 +155,7 @@ class EmailSettingsView(APIView):
     @staticmethod
     def put(request, email_setting_id):
         data = request.data
-        email_setting_object = EmailSettings.objects.get(id=email_setting_id)
+        email_setting_object = EmailSettings.objects.fil(id=email_setting_id)
         if 'is_allowed' in data:
             email_setting_object.is_allowed = data['is_allowed']
         if 'user_type' in data:
