@@ -27,7 +27,7 @@ class CreateChecklistTemplate(APIView):
             static_column_values = {"1":static_column_values}
 
         last_id_data = mongo_client.checklists.find_one(sort=[('checklist_id', -1)])
-        last_id = last_id_data['checklist_id']
+        last_id = last_id_data['checklist_id'] if last_id_data is not None else 0
         supplier_id = request.data['supplier_id'] if checklist_type == 'supplier'else None
         is_template = True if "is_template" in request.data and request.data['is_template'] == 1 else False
         rows = len(static_column_values)
@@ -79,7 +79,6 @@ class CreateChecklistTemplate(APIView):
                     "column_type": static_column_types[static_column_str],
                     "column_name": static_column_names[static_column_str]
                 }
-                print static_data
                 row_dict["data"] = static_data
                 mongo_client.checklist_data.insert_one(row_dict)
 
