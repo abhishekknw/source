@@ -113,6 +113,7 @@ class EmailSettingsView(APIView):
         user_id = request.data['user_id']
         email_types = request.data['email_types']  # list of dict with name and is_allowed keys
         list_of_objects = []
+        EmailSettings.objects.filter(user_id=user_id).delete()
         for email_type in email_types:
             list_of_objects.append(EmailSettings(**{
                 "user_id": user_id,
