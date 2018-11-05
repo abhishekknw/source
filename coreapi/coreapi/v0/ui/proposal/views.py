@@ -2522,9 +2522,15 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             pipeline[status_type]['supplier_count'] += phase[status_type]['supplier_count']
             pipeline[status_type]['flat_count'] += phase[status_type]['flat_count']
             pipeline[status_type]['supplier_data'] += phase[status_type]['supplier_data']
+            pipeline['total_booked']['supplier_count'] += phase[status_type]['supplier_count']
+            pipeline['total_booked']['flat_count'] += phase[status_type]['flat_count']
+            pipeline['total_booked']['supplier_data'] += phase[status_type]['supplier_data']
     pipeline['not_initiated']['supplier_data'] += no_status_suppliers
     pipeline['not_initiated']['flat_count'] += sum(supplier['flat_count'] for supplier in no_status_suppliers)
     pipeline['not_initiated']['supplier_count'] += len(no_status_suppliers)
+    pipeline['total_booked']['supplier_data'] += no_status_suppliers
+    pipeline['total_booked']['flat_count'] += sum(supplier['flat_count'] for supplier in no_status_suppliers)
+    pipeline['total_booked']['supplier_count'] += len(no_status_suppliers)
 
     if len(completed_phases) > 0:
         last_completed_phase = sorted(completed_phases, key=lambda k: k['end_date'])[-1]
