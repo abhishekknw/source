@@ -45,13 +45,7 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
             'item_id': item_id,
             'key_type': key_type
         })
-
-        if value:
-            if "hot_lead_criteria" in all_form_items_dict[str(item_id)]:
-                if all_form_items_dict[str(item_id)]["hot_lead_criteria"] and value == all_form_items_dict[str(item_id)]["hot_lead_criteria"]:
-                    lead_dict["is_hot"] = True
-            elif 'counseling' in key_name.lower():
-                lead_dict["is_hot"] = True
+        lead_dict["is_hot"] = calculate_is_hot(lead_dict, lead_form['global_hot_lead_criteria'])
     lead_sha_256 = create_lead_hash(lead_dict)
     lead_dict["lead_sha_256"] = lead_sha_256
     lead_already_exist = True if len(list(mongo_client.leads.find({"lead_sha_256": lead_sha_256}))) > 0 else False
@@ -96,7 +90,6 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
         headers.append({
             "order_id": curr_item["order_id"] if "order_id" in curr_item else None,
             "key_name": curr_item["key_name"],
-            "hot_lead_criteria": curr_item["hot_lead_criteria"] if "hot_lead_criteria" in curr_item else None
         })
     headers.extend(({
         "order_id": 0,
@@ -237,6 +230,7 @@ class LeadsFormBulkEntry(APIView):
         lead_form = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)})
         fields = len(lead_form['data'])
         campaign_id = lead_form['campaign_id']
+        global_hot_lead_criteria = lead_form['global_hot_lead_criteria']
         entry_id = lead_form['last_entry_id'] + 1 if 'last_entry_id' in lead_form else 1
 
         missing_societies = []
@@ -316,18 +310,9 @@ class LeadsFormBulkEntry(APIView):
                     curr_item_id = item_id + 1
                     curr_form_item_dict = lead_form['data'][str(curr_item_id)]
                     key_name = curr_form_item_dict['key_name']
-                    hot_lead_criteria = None
-                    if 'hot_lead_criteria' in curr_form_item_dict:
-                        hot_lead_criteria = curr_form_item_dict['hot_lead_criteria'] if curr_form_item_dict[
-                            'hot_lead_criteria'] else None
                     value = row[item_id].value if row[item_id].value else None
                     if isinstance(value, datetime.datetime) or isinstance(value, datetime.time):
                         value = str(value)
-                    if value:
-                        if hot_lead_criteria is not None and value == hot_lead_criteria:
-                            lead_dict["is_hot"] = True
-                        elif 'counseling' in key_name.lower():
-                            lead_dict["is_hot"] = True
                     item_dict = {
                         'key_name': key_name,
                         'value': value,
@@ -336,6 +321,7 @@ class LeadsFormBulkEntry(APIView):
                     lead_dict["data"].append(item_dict)
                 lead_sha_256 = create_lead_hash(lead_dict)
                 lead_dict["lead_sha_256"] = lead_sha_256
+                lead_dict["is_hot"] = calculate_is_hot(lead_dict, global_hot_lead_criteria)
                 lead_already_exist = True if lead_sha_256 in all_sha256_list else False
                 if not lead_already_exist:
                     mongo_client.leads.insert_one(lead_dict)
@@ -682,7 +668,7 @@ class AddLeadFormItems(APIView):
             new_form_item = {
                 "key_name": items_dict['key_name'],
                 "campaign_id": old_form['campaign_id'],
-                "hot_lead_criteria": items_dict["hot_lead_criteria"] if "hot_lead_criteria"  in items_dict else None,
+                "hot_lead_criteria": items_dict["hot_lead_criteria"] if "hot_lead_criteria" in items_dict else None,
                 "key_type": items_dict["key_type"],
                 "key_options": items_dict["key_options"] if "key_options" in items_dict else None,
                 "leads_form_id": form_id,
@@ -927,6 +913,7 @@ class UpdateGlobalHotLeadCriteria(APIView):
             bulk.execute()
         return ui_utils.handle_response({}, data='success', success=True)
 
+
 def calculate_is_hot(curr_lead, global_hot_lead_criteria):
     # checking 'or' global_hot_lead_criteria
     curr_lead_data_dict = {str(item['item_id']):item for item in curr_lead['data']}
@@ -936,10 +923,11 @@ def calculate_is_hot(curr_lead, global_hot_lead_criteria):
             if str(curr_lead_data_dict[item_id]['value']).lower() in global_hot_lead_criteria['or'][item_id]:
                 print "in correct criteria"
                 return True
-            if "AnyValue" in global_hot_lead_criteria['or'][item_id]:
+            if "AnyValue" in global_hot_lead_criteria['or'][item_id] and str(curr_lead_data_dict[item_id]['value']).lower() != 'na':
                 print " in any value "
                 return True
     return False
+
 
 class UpdateLeadsDataIsHot(APIView):
     def put(self, request):
