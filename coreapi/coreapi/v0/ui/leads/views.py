@@ -861,7 +861,11 @@ def create_lead_hash(lead_dict):
 
 class UpdateLeadsDataSHA256(APIView):
     def put(self, request):
-        leads_data_all = mongo_client.leads.find({})
+        refresh_all = request.data['refresh_all'] if 'refresh_all' in request.data else False
+        find_param = {"lead_sha_256": {"$exists": False}}
+        if refresh_all:
+            find_param = {}
+        leads_data_all = mongo_client.leads.find(find_param, no_cursor_timeout=True)
         bulk = mongo_client.leads.initialize_unordered_bulk_op()
         counter = 0
         for curr_lead in leads_data_all:
@@ -872,5 +876,6 @@ class UpdateLeadsDataSHA256(APIView):
             if counter % 500 == 0:
                 bulk.execute()
                 bulk = mongo_client.leads.initialize_unordered_bulk_op()
-        bulk.execute()
+        if counter > 0:
+            bulk.execute()
         return ui_utils.handle_response({}, data='success', success=True)
