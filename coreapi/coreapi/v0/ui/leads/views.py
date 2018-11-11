@@ -861,7 +861,7 @@ def create_lead_hash(lead_dict):
     return hashlib.sha256(lead_hash_string).hexdigest()
 
 
-class UpdateLeadsDataScript(APIView):
+class UpdateLeadsDataSHA256(APIView):
     def put(self, request):
         leads_data_all = mongo_client.leads.find({})
         bulk = mongo_client.leads.initialize_unordered_bulk_op()
