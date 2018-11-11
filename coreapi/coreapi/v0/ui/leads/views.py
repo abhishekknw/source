@@ -243,7 +243,8 @@ class LeadsFormBulkEntry(APIView):
         unresolved_societies = []
 
         leads_dict = []
-
+        all_sha256 = list(mongo_client.leads.find({"leads_form_id": int(leads_form_id)},{"lead_sha_256": 1, "_id": 0}))
+        all_sha256_list = [str(element['lead_sha_256']) for element in all_sha256]
         for index, row in enumerate(ws.iter_rows()):
 
             if index == 0:
@@ -329,8 +330,12 @@ class LeadsFormBulkEntry(APIView):
                         'item_id': curr_item_id
                     }
                     lead_dict["data"].append(item_dict)
-                mongo_client.leads.insert_one(lead_dict)
-                entry_id = entry_id + 1  # will be saved in the end
+                lead_sha_256 = create_lead_hash(lead_dict)
+                lead_dict["lead_sha_256"] = lead_sha_256
+                lead_already_exist = True if lead_sha_256 in all_sha256_list else False
+                if not lead_already_exist:
+                    mongo_client.leads.insert_one(lead_dict)
+                    entry_id = entry_id + 1  # will be saved in the end
         missing_societies.sort()
         print "missing societies", missing_societies
         print "unresolved_societies", list(set(unresolved_societies))
@@ -857,7 +862,6 @@ def create_lead_hash(lead_dict):
             else:
                 lead_hash_string += str(item['value'])
     return hashlib.sha256(lead_hash_string).hexdigest()
-
 
 class UpdateLeadsDataSHA256(APIView):
     def put(self, request):
