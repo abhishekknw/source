@@ -867,6 +867,7 @@ def create_lead_hash(lead_dict):
                 lead_hash_string += str(item['value'])
     return hashlib.sha256(lead_hash_string).hexdigest()
 
+
 class UpdateLeadsDataSHA256(APIView):
     def put(self, request):
         refresh_all = request.data['refresh_all'] if 'refresh_all' in request.data else False
@@ -880,6 +881,44 @@ class UpdateLeadsDataSHA256(APIView):
             entry_id = curr_lead['entry_id']
             lead_sha_256 = create_lead_hash(curr_lead)
             bulk.find({"entry_id": int(entry_id)}).update({"$set": {"lead_sha_256": lead_sha_256}})
+            counter += 1
+            if counter % 500 == 0:
+                bulk.execute()
+                bulk = mongo_client.leads.initialize_unordered_bulk_op()
+        if counter > 0:
+            bulk.execute()
+        return ui_utils.handle_response({}, data='success', success=True)
+
+
+def create_global_hot_lead_criteria(curr_lead_form):
+    global_hot_lead_criteria = {
+        'or':{},
+    }
+    items_dict = curr_lead_form['data']
+    for item in items_dict:
+        key_name = items_dict[item]['key_name'].lower()
+        if 'hot_lead_criteria' in items_dict[item] and items_dict[item]['hot_lead_criteria']:
+            global_hot_lead_criteria['or'][item] = [items_dict[item]['hot_lead_criteria']]
+            if items_dict[item]['hot_lead_criteria'] == 'Y':
+                global_hot_lead_criteria['or'][item] += ['y','Yes', 'yes', 'YES']
+        if "counseling" in key_name or "counselling" in key_name or "counceling" in key_name:
+            global_hot_lead_criteria['or'][item] = ['AnyValue']
+    return global_hot_lead_criteria
+
+
+class UpdateGlobalHotLeadCriteria(APIView):
+    def put(self, request):
+        refresh_all = request.data['refresh_all'] if 'refresh_all' in request.data else False
+        find_param = {"global_hot_lead_criteria": {"$exists": False}}
+        if refresh_all:
+            find_param = {}
+        leads_form_all = mongo_client.leads_forms.find(find_param, no_cursor_timeout=True)
+        bulk = mongo_client.leads_forms.initialize_unordered_bulk_op()
+        counter = 0
+        for curr_lead_form in leads_form_all:
+            leads_form_id = curr_lead_form['leads_form_id']
+            global_hot_lead_criteria = create_global_hot_lead_criteria(curr_lead_form)
+            bulk.find({"leads_form_id": int(leads_form_id)}).update({"$set": {"global_hot_lead_criteria": global_hot_lead_criteria}})
             counter += 1
             if counter % 500 == 0:
                 bulk.execute()
