@@ -23,6 +23,7 @@ from random import randint
 import random
 import string
 pp = pprint.PrettyPrinter(depth=6)
+import hashlib
 
 
 def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id):
@@ -119,7 +120,6 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
     #     last_entry = min(page_number*leads_per_page, len(leads_data_list))
     #     leads_data_list_sorted = list(set(leads_data_list))
     #     leads_data_list_paginated = leads_data_list_sorted[first_entry:(last_entry-1)]
-
     #leads_data_values_itemid = [x["data"] for x in leads_data_list]
     leads_data_values = []
     for entry in leads_data_list:
@@ -844,3 +844,33 @@ class SmsContact(APIView):
         for data in contacts_data_object:
             contacts_data.append(data)
         return ui_utils.handle_response(class_name, data=contacts_data, success=True)
+
+
+def create_lead_hash(lead_dict):
+    lead_hash_string = ''
+    lead_hash_string += str(lead_dict['leads_form_id'])
+
+    for item in lead_dict['data']:
+        if item['value']:
+            if isinstance(item["value"], basestring):
+                lead_hash_string += str(item['value'].encode('utf-8').strip())
+            else:
+                lead_hash_string += str(item['value'])
+    return hashlib.sha256(lead_hash_string).hexdigest()
+
+
+class UpdateLeadsDataSHA256(APIView):
+    def put(self, request):
+        leads_data_all = mongo_client.leads.find({})
+        bulk = mongo_client.leads.initialize_unordered_bulk_op()
+        counter = 0
+        for curr_lead in leads_data_all:
+            entry_id = curr_lead['entry_id']
+            lead_sha_256 = create_lead_hash(curr_lead)
+            bulk.find({"entry_id": int(entry_id)}).update({"$set": {"lead_sha_256": lead_sha_256}})
+            counter += 1
+            if counter % 500 == 0:
+                bulk.execute()
+                bulk = mongo_client.leads.initialize_unordered_bulk_op()
+        bulk.execute()
+        return ui_utils.handle_response({}, data='success', success=True)
