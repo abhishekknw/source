@@ -926,3 +926,38 @@ class UpdateGlobalHotLeadCriteria(APIView):
         if counter > 0:
             bulk.execute()
         return ui_utils.handle_response({}, data='success', success=True)
+
+def calculate_is_hot(curr_lead, global_hot_lead_criteria):
+    # checking 'or' global_hot_lead_criteria
+    curr_lead_data_dict = {str(item['item_id']):item for item in curr_lead['data']}
+    for item_id in global_hot_lead_criteria['or']:
+        if item_id in curr_lead_data_dict and curr_lead_data_dict[item_id]['value'] is not None:
+            print "here", curr_lead['leads_form_id'], curr_lead['entry_id'], item_id, str(curr_lead_data_dict[item_id]['value']).lower(), global_hot_lead_criteria['or'][item_id]
+            if str(curr_lead_data_dict[item_id]['value']).lower() in global_hot_lead_criteria['or'][item_id]:
+                print "in correct criteria"
+                return True
+            if "AnyValue" in global_hot_lead_criteria['or'][item_id]:
+                print " in any value "
+                return True
+    return False
+
+class UpdateLeadsDataIsHot(APIView):
+    def put(self, request):
+        leads_form_all = mongo_client.leads_forms.find({}, no_cursor_timeout=True)
+        for leads_form_curr in leads_form_all:
+            leads_form_id = leads_form_curr['leads_form_id']
+            global_hot_lead_criteria = leads_form_curr['global_hot_lead_criteria']
+            leads_data_all = mongo_client.leads.find({"leads_form_id": leads_form_id}, no_cursor_timeout=True)
+            bulk = mongo_client.leads.initialize_unordered_bulk_op()
+            counter = 0
+            for curr_lead in leads_data_all:
+                entry_id = curr_lead['entry_id']
+                is_hot = calculate_is_hot(curr_lead, global_hot_lead_criteria)
+                bulk.find({"entry_id": int(entry_id)}).update({"$set": {"is_hot": is_hot}})
+                counter += 1
+                if counter % 500 == 0:
+                    bulk.execute()
+                    bulk = mongo_client.leads.initialize_unordered_bulk_op()
+            if counter > 0:
+                bulk.execute()
+        return ui_utils.handle_response({}, data='success', success=True)
