@@ -52,7 +52,11 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
                     lead_dict["is_hot"] = True
             elif 'counseling' in key_name.lower():
                 lead_dict["is_hot"] = True
-    mongo_client.leads.insert_one(lead_dict).inserted_id
+    lead_sha_256 = create_lead_hash(lead_dict)
+    lead_dict["lead_sha_256"] = lead_sha_256
+    lead_already_exist = True if len(list(mongo_client.leads.find({"lead_sha_256": lead_sha_256}))) > 0 else False
+    if not lead_already_exist:
+        mongo_client.leads.insert_one(lead_dict).inserted_id
     return
 
 
