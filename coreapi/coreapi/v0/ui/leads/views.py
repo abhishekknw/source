@@ -23,6 +23,7 @@ from random import randint
 import random
 import string
 pp = pprint.PrettyPrinter(depth=6)
+import hashlib
 
 
 def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id):
@@ -44,14 +45,12 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
             'item_id': item_id,
             'key_type': key_type
         })
-
-        if value:
-            if "hot_lead_criteria" in all_form_items_dict[str(item_id)]:
-                if all_form_items_dict[str(item_id)]["hot_lead_criteria"] and value == all_form_items_dict[str(item_id)]["hot_lead_criteria"]:
-                    lead_dict["is_hot"] = True
-            elif 'counseling' in key_name.lower():
-                lead_dict["is_hot"] = True
-    mongo_client.leads.insert_one(lead_dict).inserted_id
+        lead_dict["is_hot"] = calculate_is_hot(lead_dict, lead_form['global_hot_lead_criteria'])
+    lead_sha_256 = create_lead_hash(lead_dict)
+    lead_dict["lead_sha_256"] = lead_sha_256
+    lead_already_exist = True if len(list(mongo_client.leads.find({"lead_sha_256": lead_sha_256}))) > 0 else False
+    if not lead_already_exist:
+        mongo_client.leads.insert_one(lead_dict).inserted_id
     return
 
 
@@ -62,7 +61,7 @@ def convertToNumber(str):
         return str
 
 
-def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=1, **kwargs):
+def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **kwargs):
     leads_per_page = 25
     leads_forms = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)}, {"_id":0, "data":1})
     leads_forms_items = leads_forms["data"]
@@ -91,7 +90,6 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=1, **
         headers.append({
             "order_id": curr_item["order_id"] if "order_id" in curr_item else None,
             "key_name": curr_item["key_name"],
-            "hot_lead_criteria": curr_item["hot_lead_criteria"] if "hot_lead_criteria" in curr_item else None
         })
     headers.extend(({
         "order_id": 0,
@@ -112,17 +110,16 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=1, **
         leads_data_start_end = [x for x in leads_data_start if x['created_at'].date() <= kwargs['end_date']]
         leads_data_list = leads_data_start_end
 
-    first_entry = (page_number-1)*leads_per_page+1
-    if first_entry>len(leads_data_list):
-        leads_data_list_paginated = []
-    else:
-        last_entry = min(page_number*leads_per_page, len(leads_data_list))
-        leads_data_list_sorted = list(set(leads_data_list))
-        leads_data_list_paginated = leads_data_list_sorted[first_entry:(last_entry-1)]
-
+    # first_entry = (page_number-1)*leads_per_page+1
+    # if first_entry>len(leads_data_list):
+    #     leads_data_list_paginated = []
+    # else:
+    #     last_entry = min(page_number*leads_per_page, len(leads_data_list))
+    #     leads_data_list_sorted = list(set(leads_data_list))
+    #     leads_data_list_paginated = leads_data_list_sorted[first_entry:(last_entry-1)]
     #leads_data_values_itemid = [x["data"] for x in leads_data_list]
     leads_data_values = []
-    for entry in leads_data_list_paginated:
+    for entry in leads_data_list:
         curr_entry = entry['data']
         entry_date = entry['created_at']
         if supplier_id == 'All':
@@ -188,6 +185,7 @@ class CreateLeadsForm(APIView):
     def post(request, campaign_id):
         leads_form_name = request.data['leads_form_name']
         leads_form_items = request.data['leads_form_items']
+        global_hot_lead_criteria = request.data['global_hot_lead_criteria'] if global_hot_lead_criteria in request.data else None
         item_id = 0
         max_id_data = mongo_client.leads_forms.find_one(sort=[('leads_form_id', -1)])
         max_id = max_id_data['leads_form_id'] if max_id_data is not None else 0
@@ -205,6 +203,10 @@ class CreateLeadsForm(APIView):
                 key_options = key_options.split(',')
             item["item_id"] = item_id
             mongo_dict['data'][str(item_id)] = item
+        if global_hot_lead_criteria:
+            mongo_dict['global_hot_lead_criteria'] = global_hot_lead_criteria
+        else:
+            mongo_dict['global_hot_lead_criteria'] = create_global_hot_lead_criteria(mongo_dict)
         mongo_client.leads_forms.insert_one(mongo_dict)
         return ui_utils.handle_response({}, data='success', success=True)
 
@@ -233,6 +235,7 @@ class LeadsFormBulkEntry(APIView):
         lead_form = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)})
         fields = len(lead_form['data'])
         campaign_id = lead_form['campaign_id']
+        global_hot_lead_criteria = lead_form['global_hot_lead_criteria']
         entry_id = lead_form['last_entry_id'] + 1 if 'last_entry_id' in lead_form else 1
 
         missing_societies = []
@@ -243,7 +246,8 @@ class LeadsFormBulkEntry(APIView):
         unresolved_societies = []
 
         leads_dict = []
-
+        all_sha256 = list(mongo_client.leads.find({"leads_form_id": int(leads_form_id)},{"lead_sha_256": 1, "_id": 0}))
+        all_sha256_list = [str(element['lead_sha_256']) for element in all_sha256]
         for index, row in enumerate(ws.iter_rows()):
 
             if index == 0:
@@ -311,26 +315,22 @@ class LeadsFormBulkEntry(APIView):
                     curr_item_id = item_id + 1
                     curr_form_item_dict = lead_form['data'][str(curr_item_id)]
                     key_name = curr_form_item_dict['key_name']
-                    hot_lead_criteria = None
-                    if 'hot_lead_criteria' in curr_form_item_dict:
-                        hot_lead_criteria = curr_form_item_dict['hot_lead_criteria'] if curr_form_item_dict[
-                            'hot_lead_criteria'] else None
                     value = row[item_id].value if row[item_id].value else None
                     if isinstance(value, datetime.datetime) or isinstance(value, datetime.time):
                         value = str(value)
-                    if value:
-                        if hot_lead_criteria is not None and value == hot_lead_criteria:
-                            lead_dict["is_hot"] = True
-                        elif 'counseling' in key_name.lower():
-                            lead_dict["is_hot"] = True
                     item_dict = {
                         'key_name': key_name,
                         'value': value,
                         'item_id': curr_item_id
                     }
                     lead_dict["data"].append(item_dict)
-                mongo_client.leads.insert_one(lead_dict)
-                entry_id = entry_id + 1  # will be saved in the end
+                lead_sha_256 = create_lead_hash(lead_dict)
+                lead_dict["lead_sha_256"] = lead_sha_256
+                lead_dict["is_hot"] = calculate_is_hot(lead_dict, global_hot_lead_criteria)
+                lead_already_exist = True if lead_sha_256 in all_sha256_list else False
+                if not lead_already_exist:
+                    mongo_client.leads.insert_one(lead_dict)
+                    entry_id = entry_id + 1  # will be saved in the end
         missing_societies.sort()
         print "missing societies", missing_societies
         print "unresolved_societies", list(set(unresolved_societies))
@@ -352,99 +352,6 @@ class LeadsFormEntry(APIView):
         enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id)
         return ui_utils.handle_response({}, data='success', success=True)
 
-
-@shared_task()
-def migrate_to_mongo():
-    campaign_list = list(set(LeadsFormData.objects.values_list('campaign_id', flat=True)))
-    for campaign_id in campaign_list:
-        all_leads_data_object = LeadsFormData.objects.filter(campaign_id=campaign_id).all()
-        all_leads_data = []
-        for data in all_leads_data_object:
-            all_leads_data.append(data.__dict__)
-        all_leads_forms = LeadsForm.objects.all().values('id', 'campaign_id', 'leads_form_name', 'last_entry_id',
-                                                         'status', "fields_count", "last_contact_id", "created_at")
-        all_leads_items = LeadsFormItems.objects.all().values('leads_form_id', 'item_id', 'key_name', 'hot_lead_criteria',
-                                                              'key_options', 'order_id', 'status', 'is_required',
-                                                              'key_type',
-                                                              'campaign_id', 'supplier_id')
-        all_leads_items_dict = {}
-        for lead_item in all_leads_items:
-            if lead_item['leads_form_id'] not in all_leads_items_dict:
-                all_leads_items_dict[lead_item['leads_form_id']] = []
-            all_leads_items_dict[lead_item['leads_form_id']].append(lead_item)
-        for leads_form in all_leads_forms:
-            mongo_dict = {
-                'leads_form_id': leads_form['id'],
-                'campaign_id': leads_form['campaign_id'],
-                'leads_form_name': leads_form['leads_form_name'],
-                'last_entry_id': leads_form['last_entry_id'],
-                'status': leads_form['status'],
-                'last_contact_id': leads_form['last_contact_id'],
-                'created_at': leads_form['created_at'],
-                'data': {}
-            }
-            if leads_form['id'] in all_leads_items_dict:
-                for item in all_leads_items_dict[leads_form['id']]:
-                    key_options = item["key_options"] if 'key_options' in item else None
-                    mongo_dict['data'][str(item['item_id'])] = {
-                        'item_id': item['item_id'],
-                        'key_type': item['key_type'],
-                        'key_name': item['key_name'],
-                        'key_options': key_options,
-                        'order_id': item['order_id'],
-                        'status': item['status'],
-                        'leads_form_id': item['leads_form_id'],
-                        'is_required': item['is_required'],
-                        'hot_lead_criteria': item['hot_lead_criteria'],
-                        'campaign_id': item['campaign_id'],
-                        'supplier_id': item['supplier_id'],
-
-                    }
-            mongo_client.leads_forms.insert_one(mongo_dict)
-        leads_form_ids = all_leads_data_object.values_list('leads_form_id', flat=True).distinct()
-        for curr_form_id in leads_form_ids:
-            curr_form_id = curr_form_id
-            curr_form_data = [x for x in all_leads_data if x['leads_form_id'] == curr_form_id]
-            curr_form_items = [x for x in all_leads_items if x['leads_form_id'] == curr_form_id]
-            first_data_element = curr_form_data[0]
-            campaign_id = first_data_element['campaign_id']
-            entry_ids = list(set([x['entry_id'] for x in curr_form_data]))
-            entry_count = 0
-            for curr_entry_id in entry_ids:
-                entry_count = entry_count + 1
-                curr_entry_data = [x for x in curr_form_data if x['entry_id'] == curr_entry_id]
-                supplier_id = curr_entry_data[0]['supplier_id']
-                created_at = curr_entry_data[0]['created_at']
-                lead_dict = {"data": [], "is_hot": False, "created_at": created_at, "supplier_id": supplier_id,
-                             "campaign_id": campaign_id, "leads_form_id": curr_form_id, "entry_id": curr_entry_id,
-                             "status": "active"}
-                for curr_data in curr_entry_data:
-                    item_id = curr_data['item_id']
-                    value = curr_data['item_value']
-                    curr_item = [x for x in curr_form_items if x['item_id'] == item_id][0]
-                    key_name = curr_item['key_name']
-                    key_type = curr_item['key_type']
-                    item_dict = {
-                        'item_id': item_id,
-                        'key_name': key_name,
-                        'value': value,
-                        'key_type': key_type
-                    }
-                    lead_dict['data'].append(item_dict)
-                    if value:
-                        if curr_item['hot_lead_criteria'] and value == curr_item['hot_lead_criteria']:
-                            lead_dict["is_hot"] = True
-                        elif 'counseling' in key_name.lower():
-                            lead_dict["is_hot"] = True
-                mongo_client.leads.insert_one(lead_dict)
-    return
-
-
-class MigrateLeadsToMongo(APIView):
-    def put(self, request):
-        class_name = self.__class__.__name__
-        migrate_to_mongo.delay()
-        return ui_utils.handle_response(class_name, data='success', success=True)
 
 
 @shared_task()
@@ -673,7 +580,7 @@ class AddLeadFormItems(APIView):
             new_form_item = {
                 "key_name": items_dict['key_name'],
                 "campaign_id": old_form['campaign_id'],
-                "hot_lead_criteria": items_dict["hot_lead_criteria"] if "hot_lead_criteria"  in items_dict else None,
+                "hot_lead_criteria": items_dict["hot_lead_criteria"] if "hot_lead_criteria" in items_dict else None,
                 "key_type": items_dict["key_type"],
                 "key_options": items_dict["key_options"] if "key_options" in items_dict else None,
                 "leads_form_id": form_id,
@@ -682,7 +589,8 @@ class AddLeadFormItems(APIView):
                 "order_id": max_order_id + 1,
             }
             old_form_items[str(max_item_id + 1)] = new_form_item
-            mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"data": old_form_items}})
+            global_hot_lead_criteria = create_global_hot_lead_criteria({'data':old_form_items})
+            mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"data": old_form_items, 'global_hot_lead_criteria':global_hot_lead_criteria}})
         return ui_utils.handle_response(class_name, data='success', success=True)
 
 
@@ -844,3 +752,114 @@ class SmsContact(APIView):
         for data in contacts_data_object:
             contacts_data.append(data)
         return ui_utils.handle_response(class_name, data=contacts_data, success=True)
+
+
+def create_lead_hash(lead_dict):
+    lead_hash_string = ''
+    lead_hash_string += str(lead_dict['leads_form_id'])
+
+    for item in lead_dict['data']:
+        if item['value']:
+            if isinstance(item["value"], basestring):
+                lead_hash_string += str(item['value'].encode('utf-8').strip())
+            else:
+                lead_hash_string += str(item['value'])
+    return hashlib.sha256(lead_hash_string).hexdigest()
+
+
+class UpdateLeadsDataSHA256(APIView):
+    def put(self, request):
+        refresh_all = request.data['refresh_all'] if 'refresh_all' in request.data else False
+        find_param = {"lead_sha_256": {"$exists": False}}
+        if refresh_all:
+            find_param = {}
+        leads_data_all = mongo_client.leads.find(find_param, no_cursor_timeout=True)
+        bulk = mongo_client.leads.initialize_unordered_bulk_op()
+        counter = 0
+        for curr_lead in leads_data_all:
+            entry_id = curr_lead['entry_id']
+            lead_sha_256 = create_lead_hash(curr_lead)
+            bulk.find({"entry_id": int(entry_id)}).update({"$set": {"lead_sha_256": lead_sha_256}})
+            counter += 1
+            if counter % 500 == 0:
+                bulk.execute()
+                bulk = mongo_client.leads.initialize_unordered_bulk_op()
+        if counter > 0:
+            bulk.execute()
+        return ui_utils.handle_response({}, data='success', success=True)
+
+
+def create_global_hot_lead_criteria(curr_lead_form):
+    global_hot_lead_criteria = {
+        'or':{},
+    }
+    items_dict = curr_lead_form['data']
+    for item in items_dict:
+        key_name = items_dict[item]['key_name'].lower()
+        if 'hot_lead_criteria' in items_dict[item] and items_dict[item]['hot_lead_criteria']:
+            global_hot_lead_criteria['or'][item] = [items_dict[item]['hot_lead_criteria']]
+            if items_dict[item]['hot_lead_criteria'] == 'Y':
+                global_hot_lead_criteria['or'][item] += ['y','Yes', 'yes', 'YES']
+        if "counseling" in key_name or "counselling" in key_name or "counceling" in key_name:
+            global_hot_lead_criteria['or'][item] = ['AnyValue']
+    return global_hot_lead_criteria
+
+
+class UpdateGlobalHotLeadCriteria(APIView):
+    def put(self, request):
+        refresh_all = request.data['refresh_all'] if 'refresh_all' in request.data else False
+        find_param = {"global_hot_lead_criteria": {"$exists": False}}
+        if refresh_all:
+            find_param = {}
+        leads_form_all = mongo_client.leads_forms.find(find_param, no_cursor_timeout=True)
+        bulk = mongo_client.leads_forms.initialize_unordered_bulk_op()
+        counter = 0
+        for curr_lead_form in leads_form_all:
+            leads_form_id = curr_lead_form['leads_form_id']
+            global_hot_lead_criteria = create_global_hot_lead_criteria(curr_lead_form)
+            bulk.find({"leads_form_id": int(leads_form_id)}).update({"$set": {"global_hot_lead_criteria": global_hot_lead_criteria}})
+            counter += 1
+            if counter % 500 == 0:
+                bulk.execute()
+                bulk = mongo_client.leads.initialize_unordered_bulk_op()
+        if counter > 0:
+            bulk.execute()
+        return ui_utils.handle_response({}, data='success', success=True)
+
+
+def calculate_is_hot(curr_lead, global_hot_lead_criteria):
+    # checking 'or' global_hot_lead_criteria
+    curr_lead_data_dict = {str(item['item_id']):item for item in curr_lead['data']}
+    for item_id in global_hot_lead_criteria['or']:
+        if item_id in curr_lead_data_dict and curr_lead_data_dict[item_id]['value'] is not None:
+            if str(curr_lead_data_dict[item_id]['value']).lower() in global_hot_lead_criteria['or'][item_id]:
+                return True
+            if "AnyValue" in global_hot_lead_criteria['or'][item_id] and str(curr_lead_data_dict[item_id]['value']).lower() != 'na':
+                return True
+    return False
+
+@shared_task()
+def update_leads_data_is_hot():
+    leads_form_all = mongo_client.leads_forms.find({}, no_cursor_timeout=True)
+    for leads_form_curr in leads_form_all:
+        leads_form_id = leads_form_curr['leads_form_id']
+        global_hot_lead_criteria = leads_form_curr['global_hot_lead_criteria']
+        leads_data_all = mongo_client.leads.find({"leads_form_id": leads_form_id}, no_cursor_timeout=True)
+        bulk = mongo_client.leads.initialize_unordered_bulk_op()
+        counter = 0
+        for curr_lead in leads_data_all:
+            entry_id = curr_lead['entry_id']
+            is_hot = calculate_is_hot(curr_lead, global_hot_lead_criteria)
+            bulk.find({"entry_id": int(entry_id)}).update({"$set": {"is_hot": is_hot}})
+            counter += 1
+            if counter % 500 == 0:
+                bulk.execute()
+                bulk = mongo_client.leads.initialize_unordered_bulk_op()
+        if counter > 0:
+            bulk.execute()
+
+
+class UpdateLeadsDataIsHot(APIView):
+    def put(self, request):
+        update_leads_data_is_hot.delay()
+        return ui_utils.handle_response({}, data='success', success=True)

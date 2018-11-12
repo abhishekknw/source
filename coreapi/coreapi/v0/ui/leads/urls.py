@@ -3,8 +3,10 @@ from rest_framework.routers import DefaultRouter
 from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntries, GetLeadsEntriesBySupplier,
                    LeadsFormBulkEntry, GenerateLeadForm, DeleteLeadForm, DeleteLeadEntry,
                    SmsContact, EditLeadsData, AddLeadFormItems, EditLeadsForm,
-                   LeadsSummary, GetLeadsEntriesByCampaignId, GenerateLeadDataExcel, MigrateLeadsToMongo,
-                   SanitizeLeadsData, GenerateDemoData)
+                   LeadsSummary, GetLeadsEntriesByCampaignId, GenerateLeadDataExcel,
+                   SanitizeLeadsData, GenerateDemoData, UpdateLeadsDataSHA256, UpdateGlobalHotLeadCriteria,
+                   UpdateLeadsDataIsHot)
+from old_scripts import MigrateLeadsToMongo
 
 urlpatterns = [
     url(r'^(?P<campaign_id>[A-Z_a-z0-9]+)/create$', CreateLeadsForm.as_view()),
@@ -27,6 +29,9 @@ urlpatterns = [
     url(r'^summary/', LeadsSummary.as_view()),
     url(r'^migrate_leads_to_mongo/$', MigrateLeadsToMongo.as_view()),
     url(r'^generate_demo_data/$', GenerateDemoData.as_view()),
+    url(r'^update_leads_data_sha256/$', UpdateLeadsDataSHA256.as_view()),
+    url(r'^update_global_hot_lead_criteria/$', UpdateGlobalHotLeadCriteria.as_view()),
+    url(r'^update_all_is_hot/$', UpdateLeadsDataIsHot.as_view()),
 
 ]
 
