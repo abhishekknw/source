@@ -841,24 +841,28 @@ def calculate_is_hot(curr_lead, global_hot_lead_criteria):
                 return True
     return False
 
+@shared_task()
+def update_leads_data_is_hot():
+    leads_form_all = mongo_client.leads_forms.find({}, no_cursor_timeout=True)
+    for leads_form_curr in leads_form_all:
+        leads_form_id = leads_form_curr['leads_form_id']
+        global_hot_lead_criteria = leads_form_curr['global_hot_lead_criteria']
+        leads_data_all = mongo_client.leads.find({"leads_form_id": leads_form_id}, no_cursor_timeout=True)
+        bulk = mongo_client.leads.initialize_unordered_bulk_op()
+        counter = 0
+        for curr_lead in leads_data_all:
+            entry_id = curr_lead['entry_id']
+            is_hot = calculate_is_hot(curr_lead, global_hot_lead_criteria)
+            bulk.find({"entry_id": int(entry_id)}).update({"$set": {"is_hot": is_hot}})
+            counter += 1
+            if counter % 500 == 0:
+                bulk.execute()
+                bulk = mongo_client.leads.initialize_unordered_bulk_op()
+        if counter > 0:
+            bulk.execute()
+
 
 class UpdateLeadsDataIsHot(APIView):
     def put(self, request):
-        leads_form_all = mongo_client.leads_forms.find({}, no_cursor_timeout=True)
-        for leads_form_curr in leads_form_all:
-            leads_form_id = leads_form_curr['leads_form_id']
-            global_hot_lead_criteria = leads_form_curr['global_hot_lead_criteria']
-            leads_data_all = mongo_client.leads.find({"leads_form_id": leads_form_id}, no_cursor_timeout=True)
-            bulk = mongo_client.leads.initialize_unordered_bulk_op()
-            counter = 0
-            for curr_lead in leads_data_all:
-                entry_id = curr_lead['entry_id']
-                is_hot = calculate_is_hot(curr_lead, global_hot_lead_criteria)
-                bulk.find({"entry_id": int(entry_id)}).update({"$set": {"is_hot": is_hot}})
-                counter += 1
-                if counter % 500 == 0:
-                    bulk.execute()
-                    bulk = mongo_client.leads.initialize_unordered_bulk_op()
-            if counter > 0:
-                bulk.execute()
+        update_leads_data_is_hot.delay()
         return ui_utils.handle_response({}, data='success', success=True)
