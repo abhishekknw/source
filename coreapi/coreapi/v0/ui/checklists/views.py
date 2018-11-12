@@ -6,6 +6,49 @@ from celery import shared_task
 from v0.ui.common.models import mongo_client, mongo_test
 import datetime
 
+def insert_static_cols(row_dict_original,static_column_values, static_column_names, static_column_types, lower_level_checklists):
+    row_dict_array = []
+    #lower_level_rows = list(set([x["parent_row_id"] for x in lower_level_checklists]))
+    if isinstance(static_column_values, dict):
+        static_column_ids = [int(x) for x in static_column_values.keys()]
+    else:
+        static_column_ids = [1]
+        static_column_values = {"1": static_column_values}
+
+    static_data = {}
+    first_column_rows = static_column_values["1"]
+
+    counter = 0
+
+    for curr_row in first_column_rows:
+        rowid = curr_row["row_id"]
+        row_dict = row_dict_original.copy()
+        row_dict["rowid"] = rowid
+        cell_value = curr_row['cell_value']
+
+        #if curr_row in lower_level_rows:
+        lower_level_array = [x['static_column_values'] for x in lower_level_checklists
+                                            if x['parent_row_id']==rowid]
+        lower_level_static_column_values = lower_level_array[0] if len(lower_level_array)>0 else {}
+
+        for static_column in static_column_ids:
+            static_column_str = str(static_column)
+            if static_column > 1:
+                curr_static_column_values = static_column_values[static_column_str]
+                cell_value = [x["cell_value"] for x in curr_static_column_values if x["row_id"] == rowid][0]
+            static_data[static_column_str] = {
+                "cell_value": cell_value,
+                "column_id": static_column,
+                "column_type": static_column_types[static_column_str],
+                "column_name": static_column_names[static_column_str]
+            }
+            if static_column_str in lower_level_static_column_values.keys():
+                lower_level_row_values = lower_level_static_column_values[static_column_str]
+                static_data[static_column_str]["lower_level_row_values"] = lower_level_row_values
+
+        row_dict["data"] = static_data
+        mongo_client.checklist_data.insert_one(row_dict)
+    return
 
 class CreateChecklistTemplate(APIView):
     def post(self, request, campaign_id):
@@ -19,6 +62,9 @@ class CreateChecklistTemplate(APIView):
         checklist_type = request.data['checklist_type']
         univalue_items = request.data['univalue_items'] if 'univalue_items' in request.data else None
         static_column_values = request.data['static_column_values']
+        lower_level_checklists = request.data['lower_level_checklists'] \
+            if 'lower_level_checklists' in request.data else []
+
         if isinstance(static_column_values, dict):
             static_column_ids = [int(x) for x in static_column_values.keys()]
             static_column_number = len(static_column_ids)
@@ -62,25 +108,28 @@ class CreateChecklistTemplate(APIView):
                 static_column_names[str(column_id)] = column['column_name']
                 static_column_types[str(column_id)] = column['column_type']
         mongo_client.checklists.insert_one(mongo_form)
-        static_data = {}
         timestamp = datetime.datetime.utcnow()
 
-        for static_column in static_column_ids:
-            static_column_str = str(static_column)
-            curr_static_column_values = static_column_values[static_column_str]
-            for curr_row in curr_static_column_values:
-                rowid = curr_row["row_id"]
-                cell_value = curr_row["cell_value"]
-                row_dict = {"created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id,
-                            "checklist_id": checklist_id, "rowid": rowid, "status": "active"}
-                static_data[static_column_str] = {
-                    "cell_value": cell_value,
-                    "column_id": static_column,
-                    "column_type": static_column_types[static_column_str],
-                    "column_name": static_column_names[static_column_str]
-                }
-                row_dict["data"] = static_data
-                mongo_client.checklist_data.insert_one(row_dict)
+        row_dict = {"created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id,
+                        "checklist_id": checklist_id, "status": "active"}
+
+        insert_static_cols(row_dict,static_column_values, static_column_names, static_column_types, lower_level_checklists)
+
+        # for static_column in static_column_ids:
+        #     static_column_str = str(static_column)
+        #     curr_static_column_values = static_column_values[static_column_str]
+        #     for curr_row in curr_static_column_values:
+        #         rowid = curr_row["row_id"]
+        #         #rows_data[str(rowid)]
+        #         cell_value = curr_row["cell_value"]
+        #
+        #         static_data[static_column_str] = {
+        #             "cell_value": cell_value,
+        #             "column_id": static_column,
+        #             "column_type": static_column_types[static_column_str],
+        #             "column_name": static_column_names[static_column_str]
+        #         }
+        #         row_dict["data"] = static_data
 
         return ui_utils.handle_response({}, data='success', success=True)
 
@@ -157,14 +206,13 @@ class ChecklistEdit(APIView):
         class_name = self.__class__.__name__
         columns = request.data['columns']
         static_column = request.data['static_column']
-        n_rows = len(static_column)
-        n_cols = len(columns)
-        column_ids = [x["column_id"] for x in columns]
+        # n_rows = len(static_column)
+        # n_cols = len(columns)
+        # column_ids = [x["column_id"] for x in columns]
         checklist_column_data_all = list(mongo_client.checklists.find({"checklist_id": checklist_id}))[0]['data']
         checklist_data_all = list(mongo_client.checklist_data.find({"checklist_id": checklist_id}))
         for column in columns:
             column_id = column['column_id']
-            #column_data = column_data_all[column_id]
             new_column_data = column
             new_column_data['order_id'] = checklist_column_data_all[str(column_id)]['order_id']
             checklist_column_data_all[str(column_id)] = new_column_data
@@ -176,7 +224,7 @@ class ChecklistEdit(APIView):
             row_data['cell_value'] = row['cell_value']
             mongo_client.checklist_data.update_one({'rowid':int(row_id), 'checklist_id': checklist_id}, {
                 "$set": {'data.1': row_data}})
-        return ui_utils.handle_response({}, data='success', success=True)
+        return ui_utils.handle_response(class_name, data='success', success=True)
 
 
 class GetCampaignChecklists(APIView):
