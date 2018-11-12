@@ -3,9 +3,10 @@ from rest_framework.routers import DefaultRouter
 from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntries, GetLeadsEntriesBySupplier,
                    LeadsFormBulkEntry, GenerateLeadForm, DeleteLeadForm, DeleteLeadEntry,
                    SmsContact, EditLeadsData, AddLeadFormItems, EditLeadsForm,
-                   LeadsSummary, GetLeadsEntriesByCampaignId, GenerateLeadDataExcel, MigrateLeadsToMongo,
+                   LeadsSummary, GetLeadsEntriesByCampaignId, GenerateLeadDataExcel,
                    SanitizeLeadsData, GenerateDemoData, UpdateLeadsDataSHA256, UpdateGlobalHotLeadCriteria,
                    UpdateLeadsDataIsHot)
+from old_scripts import MigrateLeadsToMongo
 
 urlpatterns = [
     url(r'^(?P<campaign_id>[A-Z_a-z0-9]+)/create$', CreateLeadsForm.as_view()),
