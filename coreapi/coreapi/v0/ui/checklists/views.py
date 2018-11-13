@@ -62,8 +62,10 @@ class CreateChecklistTemplate(APIView):
         checklist_type = request.data['checklist_type']
         univalue_items = request.data['univalue_items'] if 'univalue_items' in request.data else None
         static_column_values = request.data['static_column_values']
-        lower_level_checklists = request.data['lower_level_checklists'] \
-            if 'lower_level_checklists' in request.data else []
+        static_column_indices = static_column_values.keys()
+        lower_level_checklists = []
+        if 'lower_level_checklists' in request.data:
+            lower_level_checklists = request.data['lower_level_checklists']
 
         if isinstance(static_column_values, dict):
             static_column_ids = [int(x) for x in static_column_values.keys()]
@@ -88,7 +90,8 @@ class CreateChecklistTemplate(APIView):
             'rows': rows,
             'is_template': is_template,
             'data': {},
-            'univalue_items': univalue_items
+            'univalue_items': univalue_items,
+            'static_columns': static_column_indices
         }
         column_id = 0
         static_column_names = {}
@@ -137,28 +140,34 @@ class CreateChecklistTemplate(APIView):
 def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
     all_checklist_columns_dict = checklist['data']
     checklist_id = checklist['checklist_id']
+    static_columns = checklist['static_columns'] if 'static_columns' in checklist else ["1"]
     timestamp = datetime.datetime.utcnow()
     rows = checklist_data.keys()
     exist_rows_query = mongo_client.checklist_data.find({"checklist_id": checklist_id})
-    exist_rows_list =  list(exist_rows_query)
+    exist_rows_list = list(exist_rows_query)
     exist_rows = exist_rows_query.distinct("rowid")
+
     for curr_row in rows:
         rowid = int(curr_row)
-        exist_static_column = [x['data'] for x in exist_rows_list if x['rowid'] == rowid][0]
+        exist_row_data = []
         if rowid in exist_rows:
+            exist_row_data = [x['data'] for x in exist_rows_list if x['rowid'] == rowid][0]
             mongo_client.checklist_data.delete_one({'checklist_id': int(checklist_id), 'rowid': rowid})
-        row_data = checklist_data[curr_row]
+        new_row_data = checklist_data[curr_row]
+
         row_dict = {"data": {}, "created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id,
                     "checklist_id": checklist_id, "rowid": rowid, "status": "active"}
-        columns = row_data.keys()
+
+        for static_column in static_columns:
+            row_dict['data'][static_column] = exist_row_data[static_column]
+        columns = new_row_data.keys()
         for column in columns:
-            column_data = row_data[column]
+            column_data = new_row_data[column]
             if "cell_value" not in column_data:
                 continue
             column_id = column_data["column_id"]
-            if column_id == 1:
+            if str(column_id) in static_columns:
                 print 'cannot edit static column', column_id
-                row_dict['data'][str(column_id)] = exist_static_column[str(column_id)]
                 continue
             column_name = all_checklist_columns_dict[str(column_id)]["column_name"]
             column_type = all_checklist_columns_dict[str(column_id)]["column_type"]
