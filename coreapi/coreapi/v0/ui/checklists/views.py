@@ -260,6 +260,7 @@ class GetSupplierChecklists(APIView):
         checklists = []
         is_template = True if checklist_type == 'template' else False
         for curr_checklist in checklist_data:
+            curr_checklist['id'] = curr_checklist['checklist_id']
             if curr_checklist['is_template'] == is_template:
                 del curr_checklist['_id']
                 checklists.append(curr_checklist)
