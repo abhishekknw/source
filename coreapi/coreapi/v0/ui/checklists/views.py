@@ -176,7 +176,7 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
 
 class ChecklistEntry(APIView):
     # used to create and update checklist elements
-    def post(self, request, checklist_id):
+    def put(self, request, checklist_id):
         checklist = mongo_client.checklists.find_one({"checklist_id": int(checklist_id)})
 
         if checklist == None:
