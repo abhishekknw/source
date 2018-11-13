@@ -2909,7 +2909,7 @@ class deleteSuppliers(APIView):
 class deleteShortlistedSpaces(APIView):
     # delete shortlisted_spaces (with pricing) if there is no assocaited image
     @staticmethod
-    def delete(request):
+    def post(request):
         try:
             shortlisted_spaces_id_array = request.data
             remaining_spaces = get_values(ShortlistedSpaces.objects.filter(id__in=shortlisted_spaces_id_array).\
