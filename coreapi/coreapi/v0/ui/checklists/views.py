@@ -180,11 +180,15 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
 
             row_dict['data'][str(column_id)] = {
                 'column_name': column_name,
-                'cell_value': value,
+                'cell_value': "",
                 'column_id': column_id,
                 'column_type': column_type,
-                'lower_level_row_values': lower_level_row_values
             }
+            if len(lower_level_row_values)>0:
+                row_dict['data'][str(column_id)]['lower_level_row_values']= lower_level_row_values
+            else:
+                # if sub-rows are not empty, higher row cannot be filled
+                row_dict['data'][str(column_id)]['cell_value'] = value
         if rowid in exist_rows:
             x = mongo_client.checklist_data.delete_many({'checklist_id': int(checklist_id), 'rowid': rowid}).deleted_count
         mongo_client.checklist_data.insert_one(row_dict).inserted_id
