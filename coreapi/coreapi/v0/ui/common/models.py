@@ -16,6 +16,6 @@ class BaseUser(AbstractUser):
     mobile = models.CharField(max_length=20, null=True, blank=True)
     profile = models.ForeignKey('Profile', null=True, blank=True)  # remove null=true once every user has been attached one profile
     role = models.ForeignKey(Role, null=True, blank=True)
-
+    terms_accepted = models.BooleanField(default=False)
     class Meta:
         db_table = 'base_user'
