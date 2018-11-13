@@ -92,7 +92,7 @@ class SendGraphPdf(APIView):
         return ui_utils.handle_response('', data={}, success=True)
 
 @shared_task()
-def send_booking_mails_ctrl(template_name,req_campaign_id=None):
+def send_booking_mails_ctrl(template_name,req_campaign_id=None, subject=None):
     (campaign_assignement_by_campaign_id, campaign_assignement_by_campaign_id_admins, all_leads_forms,
      all_campaign_name_dict) = get_all_campaign_assignment_by_id("BOOKING_DETAILS_ADV")
     all_campaign_ids = list(set([lead_form['campaign_id'] for lead_form in all_leads_forms]))
@@ -105,9 +105,10 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None):
         html = booking_template.render(
             {'campaign_name': str(all_campaign_name_dict[campaign_id]),
              "details_dict": supplier_list_details_by_status})
-        # to_array = campaign_assignement_by_campaign_id[campaign_id]
-        to_array = ["yogesh.mhetre@machadalo.com"]
-        email = EmailMultiAlternatives('Campaign Booking Details', "")
+        to_array = campaign_assignement_by_campaign_id[campaign_id]
+        # to_array = ["yogesh.mhetre@machadalo.com"]
+        subject = subject +  str(all_campaign_name_dict[campaign_id]) + " Campaign"
+        email = EmailMultiAlternatives(subject, "")
         email.attach_alternative(html, "text/html")
         email.to = to_array
         email.send()
@@ -117,7 +118,7 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None):
 class SendBookingDetailMails(APIView):
     @staticmethod
     def get(request, campaign_id):
-        send_booking_mails_ctrl('booking_details.html', campaign_id)
+        send_booking_mails_ctrl('booking_details.html', campaign_id, 'List of Socities for this Week For -')
         return ui_utils.handle_response('', data={}, success=True)
 
 
@@ -165,5 +166,5 @@ class SendLeadsToSelf(APIView):
 class SendPipelineDetailMails(APIView):
     @staticmethod
     def get(request, campaign_id):
-        send_booking_mails_ctrl('pipeline_details.html', campaign_id)
+        send_booking_mails_ctrl('pipeline_details.html', campaign_id, 'Socities In Pipeline For ')
         return ui_utils.handle_response('', data={}, success=True)
