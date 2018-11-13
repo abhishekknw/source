@@ -9,9 +9,9 @@ urlpatterns = [
     url(r'^email-settings/$', EmailSettingsView.as_view()),
     url(r'^email-settings/(?P<email_setting_id>[A-Z_a-z0-9]+)/$', EmailSettingsView.as_view()),
     url(r'^send-graph-pdf/$', SendGraphPdf.as_view()),
-    url(r'^send-booking-details/$', SendBookingDetailMails.as_view()),
+    url(r'^send-booking-details/(?P<campaign_id>[A-Z_a-z0-9]+)/$', SendBookingDetailMails.as_view()),
     url(r'^send-leads-to-self/$', SendLeadsToSelf.as_view()),
-    url(r'^send-pipeline-details/$', SendPipelineDetailMails.as_view()),
+    url(r'^send-pipeline-details/(?P<campaign_id>[A-Z_a-z0-9]+)/$', SendPipelineDetailMails.as_view()),
 ]
 
 router = DefaultRouter()
