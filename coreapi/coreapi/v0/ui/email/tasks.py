@@ -102,16 +102,27 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None, subject=None):
         supplier_list_details_by_status = get_supplier_list_by_status_ctrl(campaign_id)
         supplier_list_details_by_status = supplier_list_details_by_status
         booking_template = get_template(template_name)
-        html = booking_template.render(
-            {'campaign_name': str(all_campaign_name_dict[campaign_id]),
-             "details_dict": supplier_list_details_by_status})
-        to_array = campaign_assignement_by_campaign_id[campaign_id]
-        # to_array = ["yogesh.mhetre@machadalo.com"]
-        subject = subject +  str(all_campaign_name_dict[campaign_id]) + " Campaign"
-        email = EmailMultiAlternatives(subject, "")
-        email.attach_alternative(html, "text/html")
-        email.to = to_array
-        email.send()
+        # to_array = campaign_assignement_by_campaign_id[campaign_id]
+        to_array = ["yogesh.mhetre@machadalo.com"]
+        for to_email in to_array:
+            user = BaseUser.objects.filter(email=to_email).all()[0]
+            first_name = user.first_name
+            last_name = user.last_name
+            html = booking_template.render(
+                {'campaign_name': str(all_campaign_name_dict[campaign_id]),
+                 'first_name': first_name,
+                 'last_name': last_name,
+                 "details_dict": supplier_list_details_by_status})
+            start_date = supplier_list_details_by_status['upcoming_phases'][0]['start_date']
+            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d').strftime('%d-%b-%y')
+            end_date = supplier_list_details_by_status['upcoming_phases'][0]['end_date']
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').strftime('%d-%b-%y')
+            subject = "Societies for " + str(all_campaign_name_dict[campaign_id]) + ": " + start_date + " to " + end_date
+
+            email = EmailMultiAlternatives(subject, "")
+            email.attach_alternative(html, "text/html")
+            email.to = [to_email]
+            email.send()
     return
 
 
