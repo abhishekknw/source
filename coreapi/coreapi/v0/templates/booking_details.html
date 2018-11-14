@@ -7,33 +7,10 @@ table, td, th {
 </style>
     <body>
         Dear {{first_name}} {{last_name}},<br><br>
-        The following are the Booking details for {{campaign_name}} campaign:
+        The following are the Supplier details for {{campaign_name}} campaign:
         <br /> <br />
-        <table style="border-collapse: collapse;width: 60%;border: 1px solid black;">
-            <tr style="border: 1px solid black;">
-                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Phase Details</th>
-                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Confirmed Booked (Total Flat Count)</th>
-                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Verbally Booked (Total Flat Count)</th>
-                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">FollowUp Required (Total Flat Count)</th>
-                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Total (Total Flat Count)</th>
-            </tr>
 
-            {% if details_dict.upcoming_phases %}
-                <tr style="border: 1px solid black;border: 1px solid black;">
-                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">
-                        Upcoming Phase No: {{details_dict.upcoming_phases[0].phase_no}}<br />
-                        Start Date: {{details_dict.upcoming_phases[0].start_date}}<br />
-                        End Date: {{details_dict.upcoming_phases[0].end_date}}
-                    </td>
-                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.upcoming_phases[0].confirmed_booked.supplier_count}}({{details_dict.upcoming_phases[0].confirmed_booked.flat_count}})</td>
-                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.upcoming_phases[0].verbally_booked.supplier_count}}({{details_dict.upcoming_phases[0].verbally_booked.flat_count}})</td>
-                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.upcoming_phases[0].followup_required.supplier_count}}({{details_dict.upcoming_phases[0].followup_required.flat_count}})</td>
-                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.upcoming_phases[0].total_booked.supplier_count}}({{details_dict.upcoming_phases[0].total_booked.flat_count}})</td>
-                </tr>
-            {% endif %}
-        </table>
-    <br>
-    And the Booking Details of Suppliers are as follows:
+        List of Suppliers are as follows:
     <br>
         <table style="border-collapse: collapse;width: 60%;border: 1px solid black;">
             <tr style="border: 1px solid black;">
@@ -43,6 +20,7 @@ table, td, th {
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Tower Count</th>
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Type Of Supplier</th>
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Area(Subarea)</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Address</th>
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Map Address</th>
             </tr>
             {% if details_dict.upcoming_phases %}
@@ -54,15 +32,24 @@ table, td, th {
                         <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.tower_count}}</td>
                         <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_type_quality}}</td>
                         <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_locality}}({{supplier.society_subarea}})</td>
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_address1}}</td>
                         <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">
                             <a href="https://www.google.com/maps/?q=+{{supplier.society_latitude}}+{{supplier.society_longitude}}">Details</a>
                             </td>
                     </tr>
                 {% endfor %}
+                    <tr style="background-color:#8C1B24;color:white;border: 1px solid black;">
+                        <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Total     </th>
+                        <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Total Supplier Count : {{details_dict.upcoming_phases[0].total_booked.supplier_count}}</th>
+                        <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Total Flat Count : {{details_dict.upcoming_phases[0].total_booked.flat_count}}</th>
+                    </tr>
             {% endif %}
         </table>
+        <p>
+            For more details, Please Click on : <a href="https://platform.machadalo.com">Machadalo.com</a>
+        </p>
     <br><br>
-    <b>Best Regards,<br> Client Servicing Team <br> Machadalo.com</b>
+    <b>Thanks and Regards,<br> Client Servicing Team <br> Machadalo</b>
     <br> <br>
     <p>© 2018 Machadalo, Brand owned by Vijaikirti Technology Private Limited. All rights reserved.
         Copyright in the whole and any part of this document belongs to  Machadalo, Brand owned by
@@ -70,6 +57,6 @@ table, td, th {
         copied or reproduced in whole or in part, in any manner or form, or in any media, without the prior written
         consent of  Machadalo, Brand owned by Vijaikirti Technology Private Limited.
         This mailer contains CONFIDENTIAL INFORMATION and is intended for the sole use of the addressee(s) only.
-        The mailer is not to be forwarded to contacts who have not been addressed. For further details, visit <a href="https://platform.machadalo.com">Machadalo.com</a></p>
+        The mailer is not to be forwarded to contacts who have not been addressed. For further details, visit website <a href="https://machadalo.com">Machadalo.com</a></p>
     </body>
 </html>
