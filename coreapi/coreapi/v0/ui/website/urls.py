@@ -44,6 +44,6 @@ router.register(r'^organisation', views.OrganisationViewSet, base_name='Organisa
 router.register(r'^organisation-map', views.OrganisationMapViewSet, base_name='organisation-map')
 router.register(r'^proposal-center-mapping', views.proposalCenterMappingViewSet, base_name='proposal-center-mapping')
 router.register(r'^supplier-phase', SupplierPhaseViewSet, base_name='supplier-phase')
-router.register(r'^hashtag_images', HashtagImagesViewSet, base_name='hashtag-images')
+router.register(r'^hashtag-images', HashtagImagesViewSet, base_name='hashtag-images')
 
 urlpatterns += router.urls

@@ -2927,3 +2927,4 @@ class deleteShortlistedSpaces(APIView):
             return ui_utils.handle_response({}, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response({}, exception_object=e, request=request)
+

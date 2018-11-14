@@ -6,9 +6,93 @@ table, td, th {
 
 </style>
     <body>
-        The following are the Pipeline details for {{campaign_name}} campaign:
-        <br /> <br />
+        Dear {{first_name}} {{last_name}},<br><br>
+        The following are the Pipeline details for {{campaign_name}} campaign:<br /><br />
+        Upcoming Phases Summary:
+        <table style="border-collapse: collapse;width: 60%;border: 1px solid black;">
+            <tr style="border: 1px solid black;">
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Phase Details</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Confirmed Booked (Total Flat Count)</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Verbally Booked (Total Flat Count)</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">FollowUp Required (Total Flat Count)</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Total (Total Flat Count)</th>
+            </tr>
 
+            {% if details_dict.upcoming_phases %}
+                {% for phase in details_dict.upcoming_phases%}
+                    <tr style="border: 1px solid black;border: 1px solid black;">
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">
+                            Upcoming Phase No: {{phase.phase_no}}<br />
+                            Start Date: {{phase.start_date}}<br />
+                            End Date: {{phase.end_date}}
+                        </td>
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{phase.confirmed_booked.supplier_count}}({{phase.confirmed_booked.flat_count}})</td>
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{phase.verbally_booked.supplier_count}}({{phase.verbally_booked.flat_count}})</td>
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{phase.followup_required.supplier_count}}({{phase.followup_required.flat_count}})</td>
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{phase.total_booked.supplier_count}}({{phase.total_booked.flat_count}})</td>
+                    </tr>
+                {% endfor %}
+            {% endif %}
+        </table><br />
+
+        Pipelined Suppliers Summary :
+        <table style="border-collapse: collapse;width: 60%;border: 1px solid black;">
+            <tr style="border: 1px solid black;">
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Confirmed Bookings(Flat Count)</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Not Initiated(Flat Count)</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">FollowUp Required (Flat Count)</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Verbally Booked (Flat Count)</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Rejected (Flat Count)</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Total (Total Flat Count)</th>
+            </tr>
+
+            {% if details_dict.pipeline_suppliers %}
+                <tr style="border: 1px solid black;border: 1px solid black;">
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.pipeline_suppliers.confirmed_booked.supplier_count}}({{details_dict.pipeline_suppliers.confirmed_booked.flat_count}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.pipeline_suppliers.not_initiated.supplier_count}}({{details_dict.pipeline_suppliers.not_initiated.flat_count}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.pipeline_suppliers.followup_required.supplier_count}}({{details_dict.pipeline_suppliers.followup_required.flat_count}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.pipeline_suppliers.verbally_booked.supplier_count}}({{details_dict.pipeline_suppliers.verbally_booked.flat_count}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.pipeline_suppliers.rejected.supplier_count}}({{details_dict.pipeline_suppliers.rejected.flat_count}})</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{details_dict.pipeline_suppliers.total_booked.supplier_count}}({{details_dict.pipeline_suppliers.total_booked.flat_count}})</td>
+                </tr>
+            {% endif %}
+        </table>
+        <br /> <br />
+        Suppliers In Upcoming Phases are as Follows :
+        <table style="border-collapse: collapse;width: 60%;border: 1px solid black;">
+            <tr style="border: 1px solid black;">
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Index</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Phase</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Supplier Name</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Flat Count</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Tower Count</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Type Of Supplier</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Area(Subarea)</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Address</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Map Address</th>
+            </tr>
+
+            {% for phase in details_dict.upcoming_phases %}
+                {% for supplier in phase.total_booked.supplier_data  %}
+                    <tr style="border: 1px solid black;border: 1px solid black;">
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{loop.index}}</td>
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{phase.phase_no}}</td>
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_name}}</td>
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.flat_count}}</td>
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.tower_count}}</td>
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_type_quality}}</td>
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_locality}}({{supplier.society_subarea}})</td>
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_address1}}</td>
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">
+                            <a href="https://www.google.com/maps/?q=+{{supplier.society_latitude}}+{{supplier.society_longitude}}">Details</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+
+        </table>
+        <br />
+        Suppliers In Pipeline are as Follows :
         <table style="border-collapse: collapse;width: 60%;border: 1px solid black;">
             <tr style="border: 1px solid black;">
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Index</th>
@@ -17,9 +101,8 @@ table, td, th {
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Tower Count</th>
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Type Of Supplier</th>
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Area(Subarea)</th>
-                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Status</th>
-                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Tentative Inventory Count</th>
-                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Freebies Available</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Address</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Map Address</th>
             </tr>
 
             <!--{% if details_dict.pipeline_suppliers.total_booked.supplier_data %}-->
@@ -31,30 +114,24 @@ table, td, th {
                     <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.tower_count}}</td>
                     <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_type_quality}}</td>
                     <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_locality}}({{supplier.society_subarea}})</td>
-                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.booking_status}}</td>
+                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_address1}}</td>
                     <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">
-                        <div>
-                            Poster : {% if supplier.inventory_counts.POSTER %}{{supplier.inventory_counts.POSTER}}{% else %} 0 {% endif %}<br />
-                            Flyer : {% if supplier.inventory_counts.FLIER %}{{supplier.inventory_counts.FLIER}} {% else %} 0 {% endif %}<br />
-                            Standee : {% if supplier.inventory_counts.STANDEE %}{{supplier.inventory_counts.STANDEE}} {% else %} 0 {% endif %}<br />
-                            Stall : {% if supplier.inventory_counts.STALL %}{{supplier.inventory_counts.STALL}} {% else %} 0 {% endif %}<br />
-
-                        </div>
-                    </td>
-                    <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">
-                        {% if supplier.freebies %}
-                            {% for freebie in supplier.freebies %}
-                                {{freebie}} <br />
-                            {% endfor %}
-                        {% else %}
-                            No Freebies
-                        {% endif %}
-
+                        <a href="https://www.google.com/maps/?q=+{{supplier.society_latitude}}+{{supplier.society_longitude}}">Details</a>
                     </td>
 
                 </tr>
             {% endfor %}
             <!--{% endif %}-->
         </table>
+        <br><br>
+        <b>Best Regards,<br> Client Servicing Team <br> Machadalo.com</b>
+        <br> <br>
+        <p>© 2018 Machadalo, Brand owned by Vijaikirti Technology Private Limited. All rights reserved.
+            Copyright in the whole and any part of this document belongs to  Machadalo, Brand owned by
+            Vijaikirti Technology Private Limited. This work may not be used, sold, transferred, adapted, abridged,
+            copied or reproduced in whole or in part, in any manner or form, or in any media, without the prior written
+            consent of  Machadalo, Brand owned by Vijaikirti Technology Private Limited.
+            This mailer contains CONFIDENTIAL INFORMATION and is intended for the sole use of the addressee(s) only.
+            The mailer is not to be forwarded to contacts who have not been addressed. For further details, visit <a href="https://platform.machadalo.com">Machadalo.com</a></p>
     </body>
 </html>
