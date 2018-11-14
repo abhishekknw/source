@@ -13,6 +13,9 @@ import pytz
 import v0.permissions as v0_permissions
 from django.conf import settings
 import datetime
+import time
+import random
+import string
 from models import ProposalInfo, ProposalCenterMapping
 from serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer, ProposalCenterMappingSpaceSerializer,
                          ProposalCenterMappingVersionSpaceSerializer)
@@ -54,6 +57,7 @@ from models import SupplierPhase, ProposalInfo
 from serializers import SupplierPhaseSerializer
 from v0.ui.utils import handle_response
 from v0.ui.common.models import BaseUser
+
 
 
 def convert_date_format(date):
@@ -1427,6 +1431,7 @@ class HashtagImagesViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
     def list(self, request):
         class_name = self.__class__.__name__
         try:
@@ -1445,7 +1450,47 @@ class HashtagImagesViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+    @detail_route(methods=['POST'])
+    def upload_permission_box_image(self, request, pk):
+        class_name = self.__class__.__name__
+        try:
+            file = request.data['file']
+            campaign_id = pk
+            extension = file.name.split('.')[-1]
+            campaign_name = request.data['campaign_name'].replace(' ', '_')
+            supplier_name = request.data['supplier_name'].replace(' ', '_')
+            response = ui_utils.get_content_type(request.data['supplier_type_code'])
+            if not response:
+                return response
+            content_type = response.data.get('data')
 
+            file_name = campaign_name + '_' + supplier_name + '_' + 'permission_box_' + str(
+                time.time()).replace('.', '_')+ "_" + ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(6)) +  '.' + extension
+            website_utils.upload_to_amazon(file_name, file_content=file, bucket_name=settings.ANDROID_BUCKET_NAME)
+            data = HashTagImages(**{
+                "campaign_id" : campaign_id,
+                "hashtag" : request.data['hashtag'],
+                "object_id" : request.data['object_id'],
+                "comment" : request.data['comment'],
+                "content_type" : content_type,
+                "image_path" : file_name
+            })
+            data.save()
+            return ui_utils.handle_response(class_name, data={}, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    @list_route(methods=['GET'])
+    def get_permission_box_images(self, request):
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get("campaign_id")
+            supplier_id = request.query_params.get("supplier_id")
+            images = HashTagImages.objects.filter(campaign_id=campaign_id,object_id=supplier_id,hashtag='Permission Box')
+            serializer = HashtagImagesSerializer(images, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 class CreateFinalProposal(APIView):
     """
