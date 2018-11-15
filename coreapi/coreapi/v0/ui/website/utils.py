@@ -4127,8 +4127,8 @@ def handle_update_campaign_inventories(user, data):
                     shortlisted_inventory_details[sid_global_id] = {
                         'comment': inv['comment']
                     }
-                    if 'inventory_number_of_days' in inventory_detail:
-                        shortlisted_inventory_details[sid_global_id]['inventory_number_of_days'] = inventory_detail['inventory_number_of_days']
+                    if inv['inventory_number_of_days']:
+                        shortlisted_inventory_details[sid_global_id]['inventory_number_of_days'] = inv['inventory_number_of_days']
         data = {
             'shortlisted_spaces': shortlisted_spaces,
             'shortlisted_inventory_details': shortlisted_inventory_details,
