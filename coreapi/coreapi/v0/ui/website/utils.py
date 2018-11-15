@@ -4021,6 +4021,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
             supplier_content_type_id = supplier['content_type']
             supplier_id = supplier['object_id']
             supplier['freebies'] = supplier['freebies'].split(',') if supplier['freebies'] else None
+            supplier['stall_locations'] = supplier['stall_locations'].split(',') if supplier['stall_locations'] else None
             supplier_tuple = (supplier_content_type_id, supplier_id)
             for key, value in supplier_specific_info[supplier_tuple].iteritems():
                 supplier[key] = value
@@ -4079,6 +4080,9 @@ def handle_update_campaign_inventories(user, data):
             supplier_freebies = supplier['freebies'] if 'freebies' in supplier else None
             if supplier_freebies and isinstance(supplier_freebies,list):
                 supplier_freebies = ','.join(supplier_freebies)
+            supplier_stall_locations = supplier['stall_locations'] if 'stall_locations' in supplier else None
+            if supplier_stall_locations and isinstance(supplier_stall_locations,list):
+                supplier_stall_locations = ','.join(supplier_stall_locations)
             shortlisted_spaces[ss_global_id] = {
                 'phase': supplier['phase'],
                 'phase_no': supplier['phase_no'],
@@ -4088,6 +4092,7 @@ def handle_update_campaign_inventories(user, data):
                 'booking_status': supplier['booking_status'],
                 'transaction_or_check_number': supplier['transaction_or_check_number'],
                 'freebies': supplier_freebies,
+                'stall_locations': supplier_stall_locations,
                 'is_completed' : supplier['is_completed']
             }
 
@@ -4171,6 +4176,7 @@ def update_campaign_inventories(data):
             obj.booking_status = shortlisted_spaces[ss_global_id]['booking_status']
             obj.transaction_or_check_number = shortlisted_spaces[ss_global_id]['transaction_or_check_number']
             obj.freebies = shortlisted_spaces[ss_global_id]['freebies']
+            obj.stall_locations = shortlisted_spaces[ss_global_id]['stall_locations']
             obj.is_completed = shortlisted_spaces[ss_global_id]['is_completed']
 
         sid_ids = shortlisted_inventory_details.keys()

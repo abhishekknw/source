@@ -284,6 +284,7 @@ class ShortlistedSpaces(BaseModel):
     transaction_or_check_number = models.CharField(max_length=50, null=True, blank=True)
     phase_no = models.ForeignKey('SupplierPhase', blank=True, null=True, on_delete=models.PROTECT)
     freebies = models.CharField(max_length=255, null=True, blank=True)
+    stall_locations = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = 'shortlisted_spaces'
