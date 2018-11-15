@@ -16,6 +16,7 @@ from v0.ui.proposal.views import convert_date_format
 from views import send_email
 from v0.ui.common.models import BaseUser
 from celery import shared_task
+from v0.constants import default_email_ids_in_cc
 
 
 def get_all_campaign_assignment_by_id(email_type):
@@ -124,6 +125,7 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None):
             email = EmailMultiAlternatives(subject, "")
             email.attach_alternative(html, "text/html")
             email.to = [to_email]
+            email.cc = default_email_ids_in_cc
             email.send()
     return
 

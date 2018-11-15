@@ -1299,3 +1299,5 @@ perf_metrics_param = {
     'on_location' : 'on_location',
     'inv' : 'inv'
 }
+
+default_email_ids_in_cc = ['anupam@machadalo.com','anmol.prabhu@gmail.com','sathya.sharma@machadalo.com','madhu.atri@machadalo.com']
