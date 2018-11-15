@@ -120,6 +120,7 @@ class ShortlistedInventoryPricingDetails(BaseModel):
     objects = managers.GeneralManager()
     inventory_object = fields.GenericForeignKey('inventory_content_type', 'inventory_id')
     comment = models.CharField(max_length=1000, null=True, blank=True)
+    inventory_number_of_days = models.IntegerField(null=True)
 
     class Meta:
         db_table = 'shortlisted_inventory_pricing_details'
