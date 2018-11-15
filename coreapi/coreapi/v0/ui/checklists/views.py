@@ -408,6 +408,15 @@ class GetChecklistData(APIView):
             return ui_utils.handle_response({}, data="incorrect checklist id", success=False)
         elif checklist_info['status']=='inactive':
             return ui_utils.handle_response({}, data="checklist already deleted", success=False)
+        checklist_dict = {
+            "checklist_type": checklist_info['checklist_type'],
+            "campaign_id": checklist_info['campaign_id'],
+            "rows": checklist_info['rows'],
+            "supplier_id": checklist_info['supplier_id'],
+            "checklist_name": checklist_info['checklist_name'],
+            "is_template": checklist_info['is_template'],
+            "checklist_id": checklist_info['checklist_id'],
+        }
         checklist_data = list(mongo_client.checklist_data.find({"checklist_id": checklist_id}))
         values = []
         column_headers = []
@@ -437,7 +446,7 @@ class GetChecklistData(APIView):
                         "value": value,
                         "column_id": column_id
                     })
-        final_data = {'values': values, 'column_headers': column_headers, 'row_headers': row_headers}
+        final_data = {'values': values, 'column_headers': column_headers, 'row_headers': row_headers, 'checklist_info': checklist_dict}
         return ui_utils.handle_response({}, data=final_data, success=True)
 
 class DeleteChecklist(APIView):
