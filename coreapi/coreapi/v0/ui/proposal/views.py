@@ -57,7 +57,7 @@ from models import SupplierPhase, ProposalInfo
 from serializers import SupplierPhaseSerializer
 from v0.ui.utils import handle_response
 from v0.ui.common.models import BaseUser
-
+from v0.ui.campaign.models import CampaignComments
 
 
 def convert_date_format(date):
@@ -2370,6 +2370,13 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     shortlisted_spaces_list = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
     shortlisted_spaces_by_phase_dict = {}
     all_phases = SupplierPhase.objects.filter(campaign_id=campaign_id).all()
+    all_ss_comments = CampaignComments.objects.filter(campaign_id=campaign_id).all()
+    all_ss_comments_dict = {}
+    for single_ss_comment in all_ss_comments:
+        if single_ss_comment.shortlisted_spaces_id not in all_ss_comments_dict:
+            all_ss_comments_dict[single_ss_comment.shortlisted_spaces_id] = []
+        if not single_ss_comment.inventory_type:
+            all_ss_comments_dict[single_ss_comment.shortlisted_spaces_id].append(single_ss_comment.comment)
     all_phase_by_id = {}
     current_date = datetime.datetime.now().date()
     for phase in all_phases:
@@ -2383,7 +2390,25 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     no_status_suppliers = []
     for space in shortlisted_spaces_list:
         supplier_society = SupplierTypeSociety.objects.filter(supplier_id=space.object_id)
+
         supplier_inventories = ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces_id=space.id)
+        inventory_activity_assignment = InventoryActivityAssignment.objects.filter(
+            inventory_activity__shortlisted_inventory_details__shortlisted_spaces_id=space.id).values('activity_date',
+                                                                                                      'inventory_activity__activity_type',
+                                                                                                      'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',
+                                                                                                      )
+        inventory_dates_dict = {
+                    "POSTER": [],
+                    "STALL": [],
+                    "STANDEE": [],
+                    "FLIER": []
+                }
+        for inventory_activity in inventory_activity_assignment:
+            inventoy_name = inventory_activity['inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name']
+            activity_date = inventory_activity['activity_date']
+            if activity_date:
+                activity_date = activity_date.strftime('%d %b %Y')
+                inventory_dates_dict[inventoy_name].append(activity_date)
         inventory_count_dict = {}
         supplier_tower_count = supplier_society[0].tower_count if supplier_society[0].tower_count else 0
         supplier_flat_count = supplier_society[0].flat_count if supplier_society[0].flat_count else 0
@@ -2405,8 +2430,10 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society[0]).data
         supplier_society_serialized['booking_status'] = space.booking_status
         supplier_society_serialized['freebies'] = space.freebies.split(",") if space.freebies else None
+        supplier_society_serialized['comments'] = all_ss_comments_dict[space.id] if space.id  in all_ss_comments_dict else None
         supplier_society_serialized['space_id'] = space.id
         supplier_society_serialized['inventory_counts'] = inventory_count_dict
+        supplier_society_serialized['inventory_dates'] = inventory_dates_dict
         if not space.phase_no_id:
             if space.booking_status:
                 no_phase_suppliers.append(supplier_society_serialized)
@@ -2496,8 +2523,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
 
         phase_dict = {
             'phase_no': all_phase_by_id[phase_id]['phase_no'],
-            'start_date': str(all_phase_by_id[phase_id]['start_date'])[:10],
-            'end_date': str(all_phase_by_id[phase_id]['end_date'])[:10],
+            'start_date': datetime.datetime.strptime(str(all_phase_by_id[phase_id]['start_date'])[:10], '%Y-%m-%d').strftime('%d %b %Y'),
+            'end_date': datetime.datetime.strptime(str(all_phase_by_id[phase_id]['end_date'])[:10], '%Y-%m-%d').strftime('%d %b %Y'),
             'comments': all_phase_by_id[phase_id]['comments'],
             'supplier_data': shortlisted_spaces_by_phase_dict[phase_id],
             'overall_inventory_counts': overall_inventory_count_dict,

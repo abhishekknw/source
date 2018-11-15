@@ -79,7 +79,7 @@ class CreateChecklistTemplate(APIView):
         last_id = last_id_data['checklist_id'] if last_id_data is not None else 0
         supplier_id = request.data['supplier_id'] if checklist_type == 'supplier'else None
         is_template = True if "is_template" in request.data and request.data['is_template'] == 1 else False
-        rows = len(static_column_values)
+        rows = len(static_column_values["1"])
         checklist_id = last_id + 1
         mongo_form = {
             'checklist_id': checklist_id,
@@ -230,7 +230,13 @@ class ChecklistEdit(APIView):
         # n_rows = len(static_column)
         # n_cols = len(columns)
         # column_ids = [x["column_id"] for x in columns]
-        checklist_column_data_all = list(mongo_client.checklists.find({"checklist_id": checklist_id}))[0]['data']
+        checklist_column_all = list(mongo_client.checklists.find({"checklist_id": checklist_id}))[0]
+        checklist_column_data_all = checklist_column_all['data']
+        exist_static_column_indices = checklist_column_all['static_columns']
+        lower_level_checklists = request.data['lower_level_checklists'] \
+            if 'lower_level_checklists' in request.data else []
+        n_rows = checklist_column_all['rows']
+
         checklist_data_all = list(mongo_client.checklist_data.find({"checklist_id": checklist_id}))
         for column in columns:
             column_id = column['column_id']
@@ -239,12 +245,41 @@ class ChecklistEdit(APIView):
             checklist_column_data_all[str(column_id)] = new_column_data
             mongo_client.checklists.update_one({'checklist_id': checklist_id}, {
                 "$set": {'data': checklist_column_data_all}})
-        for row in static_column:
-            row_id = row['row_id']
-            row_data = [x['data']['1'] for x in checklist_data_all if x['rowid']==row_id][0]
-            row_data['cell_value'] = row['cell_value']
-            mongo_client.checklist_data.update_one({'rowid':int(row_id), 'checklist_id': checklist_id}, {
-                "$set": {'data.1': row_data}})
+
+        if isinstance(static_column, dict):
+            static_column_indices = static_column.keys()
+            static_column_ids = [int(x) for x in static_column.keys()]
+        else:
+            static_column_indices = ["1"]
+            static_column_ids = [1]
+            static_column = {"1": static_column}
+
+
+        for column in exist_static_column_indices:
+            column_id = int(column)
+            curr_column_data = static_column[column]
+            column_options = curr_column_data['column_options'] if 'column_options' in curr_column_data else None
+            if column_options and not isinstance(column_options, list):
+                column_options = column_options.split(',')
+                curr_column_data['column_options'] = column_options
+
+            for row_id in range(1, n_rows+1):
+                row_data = [x for x in curr_column_data if x["row_id"] == row_id]
+                if len(lower_level_checklists) > 0:
+                    lower_level_array = [x['static_column_values'] for x in lower_level_checklists
+                                         if x['parent_row_id'] == row_id]
+                    lower_level_static_column_values = lower_level_array[0] if len(lower_level_array) > 0 else {}
+                    lower_level_rows = lower_level_static_column_values[column]\
+                        if column in lower_level_static_column_values else None
+                    mongo_client.checklist_data.update_one({'rowid': int(row_id), 'checklist_id': checklist_id}, {
+                        "$set": {'data.'+column+'.lower_level_row_values': lower_level_rows}})
+                    print lower_level_rows
+                if len(row_data)>0:
+                    exist_row_data = [x['data'][column] for x in checklist_data_all if x['rowid'] == row_id][0]
+                    exist_row_data['cell_value'] = row_data[0]['cell_value']
+                    mongo_client.checklist_data.update_one({'rowid': int(row_id), 'checklist_id': checklist_id}, {
+                        "$set": {'data.'+column: row_data}})
+
         return ui_utils.handle_response(class_name, data='success', success=True)
 
 
@@ -373,6 +408,15 @@ class GetChecklistData(APIView):
             return ui_utils.handle_response({}, data="incorrect checklist id", success=False)
         elif checklist_info['status']=='inactive':
             return ui_utils.handle_response({}, data="checklist already deleted", success=False)
+        checklist_dict = {
+            "checklist_type": checklist_info['checklist_type'],
+            "campaign_id": checklist_info['campaign_id'],
+            "rows": checklist_info['rows'],
+            "supplier_id": checklist_info['supplier_id'],
+            "checklist_name": checklist_info['checklist_name'],
+            "is_template": checklist_info['is_template'],
+            "checklist_id": checklist_info['checklist_id'],
+        }
         checklist_data = list(mongo_client.checklist_data.find({"checklist_id": checklist_id}))
         values = []
         column_headers = []
@@ -402,7 +446,7 @@ class GetChecklistData(APIView):
                         "value": value,
                         "column_id": column_id
                     })
-        final_data = {'values': values, 'column_headers': column_headers, 'row_headers': row_headers}
+        final_data = {'values': values, 'column_headers': column_headers, 'row_headers': row_headers, 'checklist_info': checklist_dict}
         return ui_utils.handle_response({}, data=final_data, success=True)
 
 class DeleteChecklist(APIView):
