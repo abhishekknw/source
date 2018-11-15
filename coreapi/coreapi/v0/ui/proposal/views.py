@@ -2386,6 +2386,12 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                                      'comments': phase.comments
                                      }
     overall_inventory_count_dict = {}
+    inventory_days_dict = {
+                    "POSTER": None,
+                    "STALL": None,
+                    "STANDEE": None,
+                    "FLIER": None
+                }
     no_phase_suppliers = []
     no_status_suppliers = []
     for space in shortlisted_spaces_list:
@@ -2427,6 +2433,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             else:
                 inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
                 overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
+            if inventory.inventory_number_of_days:
+                inventory_days_dict[inventory.ad_inventory_type.adinventory_name] = inventory.inventory_number_of_days
 
         supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society[0]).data
         supplier_society_serialized['booking_status'] = space.booking_status
@@ -2435,6 +2443,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         supplier_society_serialized['space_id'] = space.id
         supplier_society_serialized['inventory_counts'] = inventory_count_dict
         supplier_society_serialized['inventory_dates'] = inventory_dates_dict
+        supplier_society_serialized['inventory_days'] = inventory_days_dict
         if not space.phase_no_id:
             if space.booking_status:
                 no_phase_suppliers.append(supplier_society_serialized)
