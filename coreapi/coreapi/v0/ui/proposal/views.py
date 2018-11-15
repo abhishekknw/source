@@ -57,7 +57,7 @@ from models import SupplierPhase, ProposalInfo
 from serializers import SupplierPhaseSerializer
 from v0.ui.utils import handle_response
 from v0.ui.common.models import BaseUser
-
+from v0.ui.campaign.models import CampaignComments
 
 
 def convert_date_format(date):
@@ -2370,6 +2370,13 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     shortlisted_spaces_list = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
     shortlisted_spaces_by_phase_dict = {}
     all_phases = SupplierPhase.objects.filter(campaign_id=campaign_id).all()
+    all_ss_comments = CampaignComments.objects.filter(campaign_id=campaign_id).all()
+    all_ss_comments_dict = {}
+    for single_ss_comment in all_ss_comments:
+        if single_ss_comment.shortlisted_spaces_id not in all_ss_comments_dict:
+            all_ss_comments_dict[single_ss_comment.shortlisted_spaces_id] = []
+        if not single_ss_comment.inventory_type:
+            all_ss_comments_dict[single_ss_comment.shortlisted_spaces_id].append(single_ss_comment.comment)
     all_phase_by_id = {}
     current_date = datetime.datetime.now().date()
     for phase in all_phases:
@@ -2383,6 +2390,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     no_status_suppliers = []
     for space in shortlisted_spaces_list:
         supplier_society = SupplierTypeSociety.objects.filter(supplier_id=space.object_id)
+
         supplier_inventories = ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces_id=space.id)
         inventory_count_dict = {}
         supplier_tower_count = supplier_society[0].tower_count if supplier_society[0].tower_count else 0
@@ -2405,6 +2413,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society[0]).data
         supplier_society_serialized['booking_status'] = space.booking_status
         supplier_society_serialized['freebies'] = space.freebies.split(",") if space.freebies else None
+        supplier_society_serialized['comments'] = all_ss_comments_dict[space.id] if space.id  in all_ss_comments_dict else None
         supplier_society_serialized['space_id'] = space.id
         supplier_society_serialized['inventory_counts'] = inventory_count_dict
         if not space.phase_no_id:
