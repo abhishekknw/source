@@ -4127,8 +4127,8 @@ def handle_update_campaign_inventories(user, data):
                     shortlisted_inventory_details[sid_global_id] = {
                         'comment': inv['comment']
                     }
-                    if 'no_of_days' in inventory_detail:
-                        shortlisted_inventory_details[sid_global_id]['no_of_days'] = inventory_detail['no_of_days']
+                    if 'inventory_number_of_days' in inventory_detail:
+                        shortlisted_inventory_details[sid_global_id]['inventory_number_of_days'] = inventory_detail['inventory_number_of_days']
         data = {
             'shortlisted_spaces': shortlisted_spaces,
             'shortlisted_inventory_details': shortlisted_inventory_details,
@@ -4185,8 +4185,8 @@ def update_campaign_inventories(data):
         for obj in sid_objects:
             sid_global_id = obj.id
             obj.comment = shortlisted_inventory_details[sid_global_id]['comment']
-            if 'no_of_days' in shortlisted_inventory_details[sid_global_id]:
-                obj.inventory_number_of_days = shortlisted_inventory_details[sid_global_id]['no_of_days']
+            if 'inventory_number_of_days' in shortlisted_inventory_details[sid_global_id]:
+                obj.inventory_number_of_days = shortlisted_inventory_details[sid_global_id]['inventory_number_of_days']
 
         new_inventory_activity_assignment_objects = []
         for obj_dict in new_inventory_activity_assignments:
