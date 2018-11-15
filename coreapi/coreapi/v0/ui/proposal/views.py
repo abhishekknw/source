@@ -2392,6 +2392,23 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         supplier_society = SupplierTypeSociety.objects.filter(supplier_id=space.object_id)
 
         supplier_inventories = ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces_id=space.id)
+        inventory_activity_assignment = InventoryActivityAssignment.objects.filter(
+            inventory_activity__shortlisted_inventory_details__shortlisted_spaces_id=space.id).values('activity_date',
+                                                                                                      'inventory_activity__activity_type',
+                                                                                                      'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',
+                                                                                                      )
+        inventory_dates_dict = {
+                    "POSTER": [],
+                    "STALL": [],
+                    "STANDEE": [],
+                    "FLIER": []
+                }
+        for inventory_activity in inventory_activity_assignment:
+            inventoy_name = inventory_activity['inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name']
+            activity_date = inventory_activity['activity_date']
+            if activity_date:
+                activity_date = activity_date.strftime('%d %b %y')
+                inventory_dates_dict[inventoy_name].append(activity_date)
         inventory_count_dict = {}
         supplier_tower_count = supplier_society[0].tower_count if supplier_society[0].tower_count else 0
         supplier_flat_count = supplier_society[0].flat_count if supplier_society[0].flat_count else 0
@@ -2416,6 +2433,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         supplier_society_serialized['comments'] = all_ss_comments_dict[space.id] if space.id  in all_ss_comments_dict else None
         supplier_society_serialized['space_id'] = space.id
         supplier_society_serialized['inventory_counts'] = inventory_count_dict
+        supplier_society_serialized['inventory_dates'] = inventory_dates_dict
         if not space.phase_no_id:
             if space.booking_status:
                 no_phase_suppliers.append(supplier_society_serialized)
