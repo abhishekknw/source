@@ -114,9 +114,9 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None):
                  'last_name': last_name,
                  "details_dict": supplier_list_details_by_status})
             start_date = supplier_list_details_by_status['upcoming_phases'][0]['start_date']
-            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d').strftime('%d-%b-%y')
+            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d').strftime('%d %b %Y')
             end_date = supplier_list_details_by_status['upcoming_phases'][0]['end_date']
-            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').strftime('%d-%b-%y')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d').strftime('%d %b %Y')
             if template_name == 'pipeline_details.html':
                 subject = "Socities In Pipeline For " + str(all_campaign_name_dict[campaign_id])
             else:

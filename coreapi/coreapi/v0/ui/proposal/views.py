@@ -2407,7 +2407,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             inventoy_name = inventory_activity['inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name']
             activity_date = inventory_activity['activity_date']
             if activity_date:
-                activity_date = activity_date.strftime('%d %b %y')
+                activity_date = activity_date.strftime('%d %b %Y')
                 inventory_dates_dict[inventoy_name].append(activity_date)
         inventory_count_dict = {}
         supplier_tower_count = supplier_society[0].tower_count if supplier_society[0].tower_count else 0
@@ -2523,8 +2523,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
 
         phase_dict = {
             'phase_no': all_phase_by_id[phase_id]['phase_no'],
-            'start_date': str(all_phase_by_id[phase_id]['start_date'])[:10],
-            'end_date': str(all_phase_by_id[phase_id]['end_date'])[:10],
+            'start_date': datetime.datetime.strptime(str(all_phase_by_id[phase_id]['start_date'])[:10], '%Y-%m-%d').strftime('%d %b %Y'),
+            'end_date': datetime.datetime.strptime(str(all_phase_by_id[phase_id]['end_date'])[:10], '%Y-%m-%d').strftime('%d %b %Y'),
             'comments': all_phase_by_id[phase_id]['comments'],
             'supplier_data': shortlisted_spaces_by_phase_dict[phase_id],
             'overall_inventory_counts': overall_inventory_count_dict,
