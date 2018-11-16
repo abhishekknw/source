@@ -116,8 +116,8 @@ table, td, th {
                 {% endfor %}
                     <tr style="background-color:#8C1B24;color:white;border: 1px solid black;">
                         <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Total     </th>
-                        <th style="background-color:#8C1B24;color:white;border: 1px solid black;min-width:100px">Total Supplier Count : {{details_dict.upcoming_phases[0].total_booked.supplier_count}}</th>
-                        <th style="background-color:#8C1B24;color:white;border: 1px solid black;min-width:100px">Total Flat Count : {{details_dict.upcoming_phases[0].total_booked.flat_count}}</th>
+                        <th style="background-color:#8C1B24;color:white;border: 1px solid black;min-width:100px">Total Supplier Count : {{details_dict.ongoing_phase.total_booked.supplier_count}}</th>
+                        <th style="background-color:#8C1B24;color:white;border: 1px solid black;min-width:100px">Total Flat Count : {{details_dict.ongoing_phase.total_booked.flat_count}}</th>
                     </tr>
             {% endif %}
         </table>
