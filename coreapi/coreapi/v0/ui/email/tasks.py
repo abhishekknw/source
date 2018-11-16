@@ -110,22 +110,28 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None):
         html = booking_template.render(
             {'campaign_name': str(all_campaign_name_dict[campaign_id]),
              "details_dict": supplier_list_details_by_status})
-        if len(supplier_list_details_by_status['upcoming_phases']) > 0:
-            start_date = supplier_list_details_by_status['upcoming_phases'][0]['start_date']
-            end_date = supplier_list_details_by_status['upcoming_phases'][0]['end_date']
-        else:
-            start_date = (datetime.datetime.now() + timedelta(days=1)).strftime('%d %b %Y')
-            end_date = (datetime.datetime.now() + timedelta(days=7)).strftime('%d %b %Y')
         if template_name == 'pipeline_details.html':
             subject = "Socities In Pipeline For " + str(all_campaign_name_dict[campaign_id])
         elif template_name == 'booking_details.html':
+            if len(supplier_list_details_by_status['upcoming_phases']) > 0:
+                start_date = supplier_list_details_by_status['upcoming_phases'][0]['start_date']
+                end_date = supplier_list_details_by_status['upcoming_phases'][0]['end_date']
+            else:
+                start_date = (datetime.datetime.now() + timedelta(days=1)).strftime('%d %b %Y')
+                end_date = (datetime.datetime.now() + timedelta(days=4)).strftime('%d %b %Y')
             subject = "Societies for " + str(all_campaign_name_dict[campaign_id]) + ": " + start_date + " to " + end_date
         elif template_name == 'advanced_booking_details.html':
+            if len(supplier_list_details_by_status['upcoming_phases']) > 0:
+                start_date = supplier_list_details_by_status['ongoing_phase']['start_date']
+                end_date = supplier_list_details_by_status['ongoing_phase']['end_date']
+            else:
+                start_date = (datetime.datetime.now() + timedelta(days=1)).strftime('%d %b %Y')
+                end_date = (datetime.datetime.now() + timedelta(days=4)).strftime('%d %b %Y')
             subject = str(all_campaign_name_dict[campaign_id]) + " Societies Activation Status for this Weekend (" + start_date + " to " + end_date + ")"
         email = EmailMultiAlternatives(subject, "")
         email.attach_alternative(html, "text/html")
         email.to = to_array
-        email.cc = DEFAULT_CC_EMAILS
+        # email.cc = DEFAULT_CC_EMAILS
         email.send()
     return
 
