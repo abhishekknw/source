@@ -61,8 +61,8 @@ table, td, th {
         Suppliers In Upcoming Phases are as Follows :
         <table style="border-collapse: collapse;width: 60%;border: 1px solid black;">
             <tr style="border: 1px solid black;">
-                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Index</th>
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Phase</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Index</th>
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Supplier Name</th>
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Flat Count</th>
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Tower Count</th>
@@ -75,8 +75,8 @@ table, td, th {
             {% for phase in details_dict.upcoming_phases %}
                 {% for supplier in phase.total_booked.supplier_data  %}
                     <tr style="border: 1px solid black;border: 1px solid black;">
-                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{loop.index}}</td>
                         <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{phase.phase_no}}</td>
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{loop.index}}</td>
                         <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_name}}</td>
                         <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.flat_count}}</td>
                         <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.tower_count}}</td>

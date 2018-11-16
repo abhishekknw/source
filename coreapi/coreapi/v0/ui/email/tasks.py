@@ -104,8 +104,8 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None):
         supplier_list_details_by_status = get_supplier_list_by_status_ctrl(campaign_id)
         supplier_list_details_by_status = supplier_list_details_by_status
         booking_template = get_template(template_name)
-        # to_array = campaign_assignement_by_campaign_id[campaign_id]
-        to_array = ["yogesh.mhetre@machadalo.com"]
+        to_array = campaign_assignement_by_campaign_id[campaign_id]
+        # to_array = ["yogesh.mhetre@machadalo.com"]
         for to_email in to_array:
             user = BaseUser.objects.filter(email=to_email).all()[0]
             first_name = user.first_name
@@ -119,8 +119,10 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None):
             end_date = supplier_list_details_by_status['upcoming_phases'][0]['end_date']
             if template_name == 'pipeline_details.html':
                 subject = "Socities In Pipeline For " + str(all_campaign_name_dict[campaign_id])
-            else:
+            elif template_name == 'booking_details.html':
                 subject = "Societies for " + str(all_campaign_name_dict[campaign_id]) + ": " + start_date + " to " + end_date
+            elif template_name == 'advanced_booking_details.html':
+                subject = str(all_campaign_name_dict[campaign_id]) + " Societies Activation Status for this Weekend (" + start_date + " to " + end_date + ")"
             email = EmailMultiAlternatives(subject, "")
             email.attach_alternative(html, "text/html")
             email.to = [to_email]

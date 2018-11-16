@@ -2424,21 +2424,18 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 inventory_count_dict[inventory.ad_inventory_type.adinventory_name] = 0
             if inventory.ad_inventory_type.adinventory_name not in overall_inventory_count_dict:
                 overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] = 0
-            if inventory.ad_inventory_type.adinventory_name == "POSTER":
-                inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_tower_count
-                overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_tower_count
-            elif inventory.ad_inventory_type.adinventory_name == "FLIER":
-                inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_flat_count
-                overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += supplier_flat_count
-            else:
-                inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
-                overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
+
+            inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
+            overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
             if inventory.inventory_number_of_days:
                 inventory_days_dict[inventory.ad_inventory_type.adinventory_name] = inventory.inventory_number_of_days
+            inventory_count_dict['FLIER'] = supplier_society[0].flat_count if supplier_society[0].flat_count else 0
+            overall_inventory_count_dict['FLIER'] = supplier_society[0].flat_count if supplier_society[0].flat_count else 0
 
         supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society[0]).data
         supplier_society_serialized['booking_status'] = space.booking_status
         supplier_society_serialized['freebies'] = space.freebies.split(",") if space.freebies else None
+        supplier_society_serialized['stall_locations'] = space.stall_locations.split(",") if space.stall_locations else None
         supplier_society_serialized['comments'] = all_ss_comments_dict[space.id] if space.id  in all_ss_comments_dict else None
         supplier_society_serialized['space_id'] = space.id
         supplier_society_serialized['inventory_counts'] = inventory_count_dict
