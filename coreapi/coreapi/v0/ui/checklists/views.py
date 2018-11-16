@@ -444,7 +444,7 @@ class GetChecklistData(APIView):
                     values.append({
                         "row_id": row_id,
                         "value": value,
-                        "column_id": column_id
+                        "column_id": int(column_id)
                     })
         final_data = {'values': values, 'column_headers': column_headers, 'row_headers': row_headers, 'checklist_info': checklist_dict}
         return ui_utils.handle_response({}, data=final_data, success=True)
