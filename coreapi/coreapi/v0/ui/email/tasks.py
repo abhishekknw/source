@@ -131,7 +131,7 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None):
         email = EmailMultiAlternatives(subject, "")
         email.attach_alternative(html, "text/html")
         email.to = to_array
-        email.cc = DEFAULT_CC_EMAILS
+        # email.cc = DEFAULT_CC_EMAILS
         email.send()
     return
 
