@@ -2417,6 +2417,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 if activity_date not in inventory_dates_dict[inventoy_name]:
                     inventory_dates_dict[inventoy_name].append(activity_date)
         inventory_count_dict = {}
+        print "supplier_society", supplier_society
         supplier_tower_count = supplier_society[0].tower_count if supplier_society[0].tower_count else 0
         supplier_flat_count = supplier_society[0].flat_count if supplier_society[0].flat_count else 0
         for inventory in supplier_inventories:

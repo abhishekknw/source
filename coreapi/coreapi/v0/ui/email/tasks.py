@@ -8,6 +8,7 @@ from v0.ui.proposal.models import ProposalInfo
 from views import send_mail_with_attachment
 from v0.ui.proposal.views import get_supplier_list_by_status_ctrl
 import datetime
+from datetime import timedelta
 import os
 from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
@@ -106,28 +107,26 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None):
         booking_template = get_template(template_name)
         to_array = campaign_assignement_by_campaign_id[campaign_id]
         # to_array = ["yogesh.mhetre@machadalo.com"]
-        for to_email in to_array:
-            user = BaseUser.objects.filter(email=to_email).all()[0]
-            first_name = user.first_name
-            last_name = user.last_name
-            html = booking_template.render(
-                {'campaign_name': str(all_campaign_name_dict[campaign_id]),
-                 'first_name': first_name,
-                 'last_name': last_name,
-                 "details_dict": supplier_list_details_by_status})
+        html = booking_template.render(
+            {'campaign_name': str(all_campaign_name_dict[campaign_id]),
+             "details_dict": supplier_list_details_by_status})
+        if len(supplier_list_details_by_status['upcoming_phases']) > 0:
             start_date = supplier_list_details_by_status['upcoming_phases'][0]['start_date']
             end_date = supplier_list_details_by_status['upcoming_phases'][0]['end_date']
-            if template_name == 'pipeline_details.html':
-                subject = "Socities In Pipeline For " + str(all_campaign_name_dict[campaign_id])
-            elif template_name == 'booking_details.html':
-                subject = "Societies for " + str(all_campaign_name_dict[campaign_id]) + ": " + start_date + " to " + end_date
-            elif template_name == 'advanced_booking_details.html':
-                subject = str(all_campaign_name_dict[campaign_id]) + " Societies Activation Status for this Weekend (" + start_date + " to " + end_date + ")"
-            email = EmailMultiAlternatives(subject, "")
-            email.attach_alternative(html, "text/html")
-            email.to = [to_email]
-            email.cc = DEFAULT_CC_EMAILS
-            email.send()
+        else:
+            start_date = (datetime.datetime.now() + timedelta(days=1)).strftime('%d %b %Y')
+            end_date = (datetime.datetime.now() + timedelta(days=7)).strftime('%d %b %Y')
+        if template_name == 'pipeline_details.html':
+            subject = "Socities In Pipeline For " + str(all_campaign_name_dict[campaign_id])
+        elif template_name == 'booking_details.html':
+            subject = "Societies for " + str(all_campaign_name_dict[campaign_id]) + ": " + start_date + " to " + end_date
+        elif template_name == 'advanced_booking_details.html':
+            subject = str(all_campaign_name_dict[campaign_id]) + " Societies Activation Status for this Weekend (" + start_date + " to " + end_date + ")"
+        email = EmailMultiAlternatives(subject, "")
+        email.attach_alternative(html, "text/html")
+        email.to = to_array
+        email.cc = DEFAULT_CC_EMAILS
+        email.send()
     return
 
 
@@ -135,6 +134,20 @@ class SendBookingDetailMails(APIView):
     @staticmethod
     def get(request, campaign_id):
         send_booking_mails_ctrl('booking_details.html', campaign_id)
+        return ui_utils.handle_response('', data={}, success=True)
+
+
+class SendPipelineDetailMails(APIView):
+    @staticmethod
+    def get(request, campaign_id):
+        send_booking_mails_ctrl('pipeline_details.html', campaign_id)
+        return ui_utils.handle_response('', data={}, success=True)
+
+
+class SendAdvancedBookingDetailMails(APIView):
+    @staticmethod
+    def get(request, campaign_id):
+        send_booking_mails_ctrl('advanced_booking_details.html', campaign_id)
         return ui_utils.handle_response('', data={}, success=True)
 
 
@@ -177,16 +190,4 @@ class SendLeadsToSelf(APIView):
             #     body = 'User with username {0} and email {1} has generated a leads mail for campaign - {2} from date: {3} to date: {4}.'.format(username, user_email, campaign_name, str(start_date), str(end_date))
             #     email_data = {'subject': subject, 'body': body, 'to': to_array_admins}
             #     send_email.delay(email_data)
-        return ui_utils.handle_response('', data={}, success=True)
-
-class SendPipelineDetailMails(APIView):
-    @staticmethod
-    def get(request, campaign_id):
-        send_booking_mails_ctrl('pipeline_details.html', campaign_id)
-        return ui_utils.handle_response('', data={}, success=True)
-
-class SendAdvancedBookingDetailMails(APIView):
-    @staticmethod
-    def get(request, campaign_id):
-        send_booking_mails_ctrl('advanced_booking_details.html', campaign_id)
         return ui_utils.handle_response('', data={}, success=True)
