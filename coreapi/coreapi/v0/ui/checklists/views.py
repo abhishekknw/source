@@ -230,7 +230,12 @@ class ChecklistEdit(APIView):
         # n_rows = len(static_column)
         # n_cols = len(columns)
         # column_ids = [x["column_id"] for x in columns]
-        checklist_column_all = list(mongo_client.checklists.find({"checklist_id": checklist_id}))[0]
+        checklist_column_all_query = list(mongo_client.checklists.find({"checklist_id": checklist_id}))
+        if len(checklist_column_all_query)==0:
+            result = "checklist does not exist"
+            return ui_utils.handle_response(class_name, data=result, success=False)
+        else:
+            checklist_column_all = checklist_column_all_query[0]
         checklist_column_data_all = checklist_column_all['data']
         exist_static_column_indices = checklist_column_all['static_columns']
         lower_level_checklists = request.data['lower_level_checklists'] \
@@ -277,7 +282,7 @@ class ChecklistEdit(APIView):
                     exist_row_data = [x['data'][column] for x in checklist_data_all if x['rowid'] == row_id][0]
                     exist_row_data['cell_value'] = row_data[0]['cell_value']
                     mongo_client.checklist_data.update_one({'rowid': int(row_id), 'checklist_id': checklist_id}, {
-                        "$set": {'data.'+column: row_data}})
+                        "$set": {'data.'+column: row_data[0]}})
 
         return ui_utils.handle_response(class_name, data='success', success=True)
 
