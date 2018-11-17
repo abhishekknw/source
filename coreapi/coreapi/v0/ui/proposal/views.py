@@ -2386,12 +2386,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                                      'comments': phase.comments
                                      }
     overall_inventory_count_dict = {}
-    inventory_days_dict = {
-                    "POSTER": None,
-                    "STALL": None,
-                    "STANDEE": None,
-                    "FLIER": None
-                }
+
     no_phase_suppliers = []
     no_status_suppliers = []
     for space in shortlisted_spaces_list:
@@ -2402,13 +2397,19 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             inventory_activity__shortlisted_inventory_details__shortlisted_spaces_id=space.id).values('activity_date',
                                                                                                       'inventory_activity__activity_type',
                                                                                                       'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',
-                                                                                                      )
+                                                                                                          )
         inventory_dates_dict = {
                     "POSTER": [],
                     "STALL": [],
                     "STANDEE": [],
                     "FLIER": []
                 }
+        inventory_days_dict = {
+            "POSTER": None,
+            "STALL": None,
+            "STANDEE": None,
+            "FLIER": None
+        }
         for inventory_activity in inventory_activity_assignment:
             inventoy_name = inventory_activity['inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name']
             activity_date = inventory_activity['activity_date']
@@ -2417,7 +2418,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 if activity_date not in inventory_dates_dict[inventoy_name]:
                     inventory_dates_dict[inventoy_name].append(activity_date)
         inventory_count_dict = {}
-        print "supplier_society", supplier_society
+        
         supplier_tower_count = supplier_society[0].tower_count if supplier_society[0].tower_count else 0
         supplier_flat_count = supplier_society[0].flat_count if supplier_society[0].flat_count else 0
         for inventory in supplier_inventories:
