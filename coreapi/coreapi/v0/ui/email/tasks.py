@@ -105,8 +105,8 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None):
         supplier_list_details_by_status = get_supplier_list_by_status_ctrl(campaign_id)
         supplier_list_details_by_status = supplier_list_details_by_status
         booking_template = get_template(template_name)
-        to_array = campaign_assignement_by_campaign_id[campaign_id]
-        # to_array = ["yogesh.mhetre@machadalo.com"]
+        # to_array = campaign_assignement_by_campaign_id[campaign_id]
+        to_array = ["yogesh.mhetre@machadalo.com"]
         html = booking_template.render(
             {'campaign_name': str(all_campaign_name_dict[campaign_id]),
              "details_dict": supplier_list_details_by_status})
@@ -121,7 +121,7 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None):
                 end_date = (datetime.datetime.now() + timedelta(days=4)).strftime('%d %b %Y')
             subject = "Societies for " + str(all_campaign_name_dict[campaign_id]) + ": " + start_date + " to " + end_date
         elif template_name == 'advanced_booking_details.html':
-            if len(supplier_list_details_by_status['upcoming_phases']) > 0:
+            if (supplier_list_details_by_status['ongoing_phase']):
                 start_date = supplier_list_details_by_status['ongoing_phase']['start_date']
                 end_date = supplier_list_details_by_status['ongoing_phase']['end_date']
             else:
