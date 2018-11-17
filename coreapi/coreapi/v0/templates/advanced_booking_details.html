@@ -43,7 +43,7 @@ table, td, th {
                         <td style="height: 50px;min-width:120px;vertical-align: bottom;border: 1px solid black;">
                             <div>
                                 Poster : {% if supplier.inventory_counts.POSTER %}{{supplier.inventory_counts.POSTER}}{% else %} 0 {% endif %}<br/>
-                                    Dates : {% if supplier.inventory_dates.POSTER %}
+                                    Release Date : {% if supplier.inventory_dates.POSTER %}
                                                 {% for date in supplier.inventory_dates.POSTER %}
                                                     {{date}}<br/>
                                                 {% endfor %}
@@ -53,7 +53,7 @@ table, td, th {
                                             {% endif %}
                                 <br /><br />
                                 Flyer : {% if supplier.inventory_counts.FLIER %}{{supplier.inventory_counts.FLIER}} {% else %} 0 {% endif %}<br/>
-                                    Dates : {% if supplier.inventory_dates.FLIER %}
+                                    Release Date : {% if supplier.inventory_dates.FLIER %}
                                                 {% for date in supplier.inventory_dates.FLIER %}
                                                     {{date}}<br/>
                                                 {% endfor %}
@@ -61,7 +61,7 @@ table, td, th {
 
                                 <br />
                                 Standee : {% if supplier.inventory_counts.STANDEE %}{{supplier.inventory_counts.STANDEE}} {% else %} 0 {% endif %}<br />
-                                    Dates : {% if supplier.inventory_dates.STANDEE %}
+                                    Release Date : {% if supplier.inventory_dates.STANDEE %}
                                                 {% for date in supplier.inventory_dates.STANDEE %}
                                                     {{date}}<br/>
                                                 {% endfor %}
@@ -71,7 +71,7 @@ table, td, th {
                                             {% endif %}
                                 <br /><br />
                                 Stall : {% if supplier.inventory_counts.STALL %}{{supplier.inventory_counts.STALL}} {% else %} 0 {% endif %}<br />
-                                    Dates : {% if supplier.inventory_dates.STALL %}
+                                    Release Date : {% if supplier.inventory_dates.STALL %}
                                                 {% for date in supplier.inventory_dates.STALL %}
                                                     {{date}}<br/>
                                                 {% endfor %}
