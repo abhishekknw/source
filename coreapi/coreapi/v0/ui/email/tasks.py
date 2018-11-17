@@ -5,7 +5,6 @@ from models import EmailSettings
 from v0.ui.leads.views import get_leads_excel_sheet
 from v0.ui.campaign.models import CampaignAssignment
 from v0.ui.proposal.models import ProposalInfo
-from views import send_mail_with_attachment
 from v0.ui.proposal.views import get_supplier_list_by_status_ctrl
 import datetime
 from datetime import timedelta
@@ -14,7 +13,7 @@ from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.views import convert_date_format
-from views import send_email
+from views import send_email, send_mail_generic
 from v0.ui.common.models import BaseUser
 from celery import shared_task
 from django.conf import settings
@@ -65,9 +64,11 @@ def send_weekly_leads_email():
             filename = 'leads_sheet_' + str(all_campaign_name_dict[leads_form['campaign_id']]) + '_' + str(start_date) + '_' + str(end_date) + '.xlsx'
             filepath = cwd + '/' + filename
             book.save(filepath)
+            leads_template = get_template('weekly_leads.html')
+            html_body = leads_template.render({'campaign_name': str(all_campaign_name_dict[leads_form['campaign_id']])})
             to_array = campaign_assignement_by_campaign_id[leads_form['campaign_id']]
             if len(to_array) != 0:
-                send_mail_with_attachment(filepath, "Weekly Leads Data", to_array)
+                send_mail_generic.delay("Weekly Leads Data", to_array,html_body, None, filepath)
     return
 
 
@@ -128,11 +129,7 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None):
                 start_date = (datetime.datetime.now() + timedelta(days=1)).strftime('%d %b %Y')
                 end_date = (datetime.datetime.now() + timedelta(days=4)).strftime('%d %b %Y')
             subject = str(all_campaign_name_dict[campaign_id]) + " Societies Activation Status for this Weekend (" + start_date + " to " + end_date + ")"
-        email = EmailMultiAlternatives(subject, "")
-        email.attach_alternative(html, "text/html")
-        email.to = to_array
-        # email.cc = DEFAULT_CC_EMAILS
-        email.send()
+        send_mail_generic.delay(subject, to_array, html, None,None)
     return
 
 
@@ -165,10 +162,10 @@ class SendLeadsToSelf(APIView):
         end_date = None
         if 'start_date' in data:
             start_date = data['start_date'][:10]
-            start_date = datetime.datetime.strptime(str(start_date), '%Y-%m-%d').date()
+            start_date = datetime.datetime.strptime(str(start_date), '%d-%m-%Y').date()
         if 'end_date' in data:
             end_date = data['end_date'][:10]
-            end_date = datetime.datetime.strptime(str(end_date), '%Y-%m-%d').date()
+            end_date = datetime.datetime.strptime(str(end_date), '%d-%m-%Y').date()
         leads_form_id = data['leads_form_id']
         campaign_id = data['campaign_id']
         (campaign_assignement_by_campaign_id, campaign_assignement_by_campaign_id_admins, all_leads_forms,
@@ -177,6 +174,8 @@ class SendLeadsToSelf(APIView):
         all_super_user_emailids = [user.email for user in all_super_users]
         user_email = request.user.email
         username = request.user.username
+        first_name = request.user.first_name
+        last_name = request.user.last_name
         campaign_name = str(all_campaign_name_dict[campaign_id])
         (book, total_leads_count) = get_leads_excel_sheet(leads_form_id, 'All', start_date=start_date, end_date=end_date)
         cwd = os.path.dirname(os.path.realpath(__file__))
@@ -184,9 +183,13 @@ class SendLeadsToSelf(APIView):
             start_date) + '_' + str(end_date) + '.xlsx'
         filepath = cwd + '/' + filename
         book.save(filepath)
-        to_array = [user_email] if campaign_assignement_by_campaign_id[campaign_id] else []
+        to_array = [user_email] if user_email in campaign_assignement_by_campaign_id[campaign_id] else []
+        # to_array = ['kshitij.mittal01@gmail.com']
         if len(to_array) != 0:
-            send_mail_with_attachment(filepath, "Custom Leads Data", to_array)
+            self_leads_template = get_template('self_leads_email.html')
+            html_body = self_leads_template.render({'campaign_name': campaign_name, 'first_name':first_name,
+                                               'last_name':last_name})
+            send_mail_generic.delay("Custom Leads Data", to_array,html_body,None, filepath)
             to_array_admins = campaign_assignement_by_campaign_id_admins[campaign_id]
             to_array_admins = list(set(to_array_admins + all_super_user_emailids))
             if user_email in to_array_admins:
@@ -194,6 +197,5 @@ class SendLeadsToSelf(APIView):
             # if len(to_array_admins) > 0:
             #     subject = 'Leads Custom Email Generation Alert!'
             #     body = 'User with username {0} and email {1} has generated a leads mail for campaign - {2} from date: {3} to date: {4}.'.format(username, user_email, campaign_name, str(start_date), str(end_date))
-            #     email_data = {'subject': subject, 'body': body, 'to': to_array_admins}
-            #     send_email.delay(email_data)
+            #     send_mail_generic.delay(subject, to_array_admins, body, None, None)
         return ui_utils.handle_response('', data={}, success=True)

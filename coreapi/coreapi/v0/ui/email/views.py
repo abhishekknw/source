@@ -11,6 +11,8 @@ import os
 import magic
 from v0.ui.common.models import BaseUser
 from v0.ui.account.models import Profile
+from django.core.mail import EmailMultiAlternatives
+
 
 @shared_task()
 def send_email(email_data, attachment=None):
@@ -64,6 +66,30 @@ def send_mail_with_attachment(filepath, subject, to):
         }
     task_id = send_email.delay(email_data, attachment).id
     return task_id
+
+@shared_task()
+def send_mail_generic(subject, to, html_body, cc=None, attachment_filepath=None):
+    email_data = {
+        'subject': subject,
+        'to': to,
+        'body': html_body
+    }
+    attachment = None
+    email = EmailMultiAlternatives(subject, body=html_body,to=to)
+    if cc:
+        email.cc = cc
+    mime = magic.Magic(mime=True)
+
+    if attachment_filepath:
+        filepath = attachment_filepath
+        file_to_send = open(filepath, 'r')
+        filename = filepath[filepath.rfind('/') + 1:]
+        email.attach(filename, file_to_send.read(), mime.from_file(filepath))
+        file_to_send.close()
+    email.content_subtype = 'html'
+    email.send()
+    os.unlink(filepath)
+    return
 
 
 class SendMail(APIView):
