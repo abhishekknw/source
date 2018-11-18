@@ -240,6 +240,7 @@ class LeadsFormBulkEntry(APIView):
 
         missing_societies = []
         inv_activity_assignment_missing_societies = []
+        inv_activity_assignment_activity_date_missing_societies = []
         inv_activity_missing_societies = []
         not_present_in_shortlisted_societies = []
         more_than_ones_same_shortlisted_society = []
@@ -309,6 +310,9 @@ class LeadsFormBulkEntry(APIView):
                     continue
 
                 created_at = inventory_activity_list[0].activity_date if inventory_activity_list[0].activity_date else None
+                if not created_at:
+                    inv_activity_assignment_activity_date_missing_societies.append(society_name)
+                    continue
                 lead_dict = {"data": [], "is_hot": False, "created_at": created_at, "supplier_id": found_supplier_id,
                              "campaign_id": campaign_id, "leads_form_id": int(leads_form_id), "entry_id": entry_id}
                 for item_id in range(0, fields):
@@ -336,6 +340,7 @@ class LeadsFormBulkEntry(APIView):
         print "unresolved_societies", list(set(unresolved_societies))
         print "more_than_ones_same_shortlisted_society", list(set(more_than_ones_same_shortlisted_society))
         print "inv_activity_assignment_missing_societies", list(set(inv_activity_assignment_missing_societies))
+        print "inv_activity_assignment_activity_date_missing_societies", list(set(inv_activity_assignment_activity_date_missing_societies))
         print "inv_activit_missing_societies", list(set(inv_activity_missing_societies))
         print "not_present_in_shortlisted_societies", list(set(not_present_in_shortlisted_societies))
         return ui_utils.handle_response({}, data='success', success=True)
