@@ -225,8 +225,8 @@ class ChecklistEdit(APIView):
     def post(self, request, checklist_id):
         checklist_id = int(checklist_id)
         class_name = self.__class__.__name__
-        columns = request.data['columns']
-        static_column = request.data['static_columns']
+        columns = request.data['checklist_columns']
+        static_column = request.data['static_column_values']
         # n_rows = len(static_column)
         # n_cols = len(columns)
         # column_ids = [x["column_id"] for x in columns]
