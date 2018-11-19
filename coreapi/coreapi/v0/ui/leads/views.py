@@ -240,6 +240,7 @@ class LeadsFormBulkEntry(APIView):
 
         missing_societies = []
         inv_activity_assignment_missing_societies = []
+        inv_activity_assignment_activity_date_missing_societies = []
         inv_activity_missing_societies = []
         not_present_in_shortlisted_societies = []
         more_than_ones_same_shortlisted_society = []
@@ -309,6 +310,9 @@ class LeadsFormBulkEntry(APIView):
                     continue
 
                 created_at = inventory_activity_list[0].activity_date if inventory_activity_list[0].activity_date else None
+                if not created_at:
+                    inv_activity_assignment_activity_date_missing_societies.append(society_name)
+                    continue
                 lead_dict = {"data": [], "is_hot": False, "created_at": created_at, "supplier_id": found_supplier_id,
                              "campaign_id": campaign_id, "leads_form_id": int(leads_form_id), "entry_id": entry_id}
                 for item_id in range(0, fields):
@@ -336,6 +340,7 @@ class LeadsFormBulkEntry(APIView):
         print "unresolved_societies", list(set(unresolved_societies))
         print "more_than_ones_same_shortlisted_society", list(set(more_than_ones_same_shortlisted_society))
         print "inv_activity_assignment_missing_societies", list(set(inv_activity_assignment_missing_societies))
+        print "inv_activity_assignment_activity_date_missing_societies", list(set(inv_activity_assignment_activity_date_missing_societies))
         print "inv_activit_missing_societies", list(set(inv_activity_missing_societies))
         print "not_present_in_shortlisted_societies", list(set(not_present_in_shortlisted_societies))
         return ui_utils.handle_response({}, data='success', success=True)
@@ -600,6 +605,30 @@ class EditLeadsForm(APIView):
         name = request.data['name'] if 'name' in request.data.keys() else None
         if name is not None:
             mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"leads_form_name": name}})
+        return ui_utils.handle_response({}, data='success', success=True)
+
+
+class EditLeadsForm(APIView):
+    @staticmethod
+    def put(request, form_id):
+        name = request.data['name'] if 'name' in request.data.keys() else None
+        if name is not None:
+            mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"leads_form_name": name}})
+        return ui_utils.handle_response({}, data='success', success=True)
+
+
+class UpdateExtraLeads(APIView):
+    @staticmethod
+    def put(request, form_id):
+        extra_leads = request.data['extra_leads'] if 'extra_leads' in request.data.keys() else None
+        extra_hot_leads = request.data['extra_hot_leads'] if 'extra_hot_leads' in request.data.keys() else None
+        set_dict = {}
+        if extra_leads:
+            set_dict["extra_leads"] = extra_leads
+        if extra_hot_leads:
+            set_dict["extra_hot_leads"] = extra_hot_leads
+        if set_dict != {}:
+            mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": set_dict})
         return ui_utils.handle_response({}, data='success', success=True)
 
 

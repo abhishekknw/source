@@ -5,7 +5,7 @@ from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntrie
                    SmsContact, EditLeadsData, AddLeadFormItems, EditLeadsForm,
                    LeadsSummary, GetLeadsEntriesByCampaignId, GenerateLeadDataExcel,
                    SanitizeLeadsData, GenerateDemoData, UpdateLeadsDataSHA256, UpdateGlobalHotLeadCriteria,
-                   UpdateLeadsDataIsHot)
+                   UpdateLeadsDataIsHot, UpdateExtraLeads)
 from old_scripts import MigrateLeadsToMongo
 
 urlpatterns = [
@@ -32,6 +32,7 @@ urlpatterns = [
     url(r'^update_leads_data_sha256/$', UpdateLeadsDataSHA256.as_view()),
     url(r'^update_global_hot_lead_criteria/$', UpdateGlobalHotLeadCriteria.as_view()),
     url(r'^update_all_is_hot/$', UpdateLeadsDataIsHot.as_view()),
+    url(r'^(?P<form_id>[0-9]+)/update_extra_leads/$', UpdateExtraLeads.as_view()),
 
 ]
 
