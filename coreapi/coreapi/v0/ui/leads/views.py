@@ -620,6 +620,13 @@ class EditLeadsForm(APIView):
 class UpdateExtraLeads(APIView):
     @staticmethod
     def put(request, form_id):
+        supplier_id = request.data['supplier_id'] if 'supplier_id' in request.data.keys() else None
+        campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data.keys() else None
+        if not supplier_id:
+            return ui_utils.handle_response({}, data='failed', success=False)
+        if not campaign_id:
+            return ui_utils.handle_response({}, data='failed', success=False)
+
         extra_leads = request.data['extra_leads'] if 'extra_leads' in request.data.keys() else None
         extra_hot_leads = request.data['extra_hot_leads'] if 'extra_hot_leads' in request.data.keys() else None
         set_dict = {}
@@ -628,7 +635,9 @@ class UpdateExtraLeads(APIView):
         if extra_hot_leads:
             set_dict["extra_hot_leads"] = extra_hot_leads
         if set_dict != {}:
-            mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": set_dict})
+            set_dict["supplier_id"] = supplier_id
+            set_dict["campaign_id"] = campaign_id
+            mongo_client.leads_extras.update_one({"leads_form_id": int(form_id)}, {"$set": set_dict}, upsert=True)
         return ui_utils.handle_response({}, data='success', success=True)
 
 

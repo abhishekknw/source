@@ -75,6 +75,25 @@ class LeadsFormContacts(BaseModel):
         db_table = 'leads_form_contacts'
 
 
+def add_extra_leads(leads_summary,campaign_list=None):
+    leads_extras_all = list(mongo_client.leads_extras.find())
+    leads_extras_dict = {}
+
+    for single_leads_extras in leads_extras_all:
+        if single_leads_extras['campaign_id'] not in leads_extras_dict:
+            leads_extras_dict[single_leads_extras['campaign_id']] = {}
+        if single_leads_extras['supplier_id'] not in leads_extras_dict[single_leads_extras['campaign_id']]:
+            leads_extras_dict[single_leads_extras['campaign_id']][single_leads_extras['supplier_id']] = single_leads_extras
+    for single_summary in leads_summary:
+        if single_summary['campaign_id'] in leads_extras_dict:
+            if single_summary['supplier_id'] in leads_extras_dict[single_summary['campaign_id']]:
+                if single_summary['total_leads_count'] == 0:
+                    single_summary['total_leads_count'] = leads_extras_dict[single_summary['campaign_id']][single_summary['supplier_id']]["extra_leads"]
+                    single_summary['hot_leads_count'] = leads_extras_dict[single_summary['campaign_id']][single_summary['supplier_id']]["extra_hot_leads"]
+                    single_summary['hot_leads_percentage'] = (float(single_summary['hot_leads_count'])/float(single_summary['total_leads_count']) * 100)
+    return leads_summary
+
+
 def get_leads_summary(campaign_list=None):
     if campaign_list:
         if not isinstance(campaign_list, list):
@@ -109,7 +128,9 @@ def get_leads_summary(campaign_list=None):
                 }
             ]
         )
-    return list(leads_summary)
+    leads_summary = list(leads_summary)
+    updated_leads_summary = add_extra_leads(leads_summary, campaign_list)
+    return updated_leads_summary
 
 
 def get_leads_summary_by_campaign(campaign_list=None):
