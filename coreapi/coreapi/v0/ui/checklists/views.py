@@ -237,6 +237,9 @@ class ChecklistEdit(APIView):
             mongo_client.checklist_data.update_one({"checklist_id": int(checklist_id), "rowid": int(row)},
                                                    {"$set": {'status': 'inactive'}})
 
+        if not isinstance(new_static_column_values, dict):
+            new_static_column_values = {"1": new_static_column_values}
+
         checklist_column_all_query = list(mongo_client.checklists.find({"checklist_id": checklist_id}))
         if len(checklist_column_all_query)==0:
             result = "checklist does not exist"
@@ -268,8 +271,6 @@ class ChecklistEdit(APIView):
             column['column_id'] = column_id
             new_checklist_col_data[str(int(column_id))] = column
         checklist_column_data_all.update(new_checklist_col_data)
-        mongo_client.checklists.update_one({'checklist_id': checklist_id}, {
-            "$set": {'data': checklist_column_data_all, 'columns':column_id, 'rows': n_rows+new_rows}})
 
         checklist_data_all = list(mongo_client.checklist_data.find({"checklist_id": checklist_id}))
         for column in columns:
@@ -353,6 +354,9 @@ class ChecklistEdit(APIView):
                 }
             row_dict["data"] = row_data
             mongo_client.checklist_data.insert_one(row_dict)
+
+        mongo_client.checklists.update_one({'checklist_id': checklist_id}, {
+            "$set": {'data': checklist_column_data_all, 'columns':column_id, 'rows': n_rows+new_rows}})
 
         return ui_utils.handle_response(class_name, data='success', success=True)
 
