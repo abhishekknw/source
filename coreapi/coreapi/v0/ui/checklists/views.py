@@ -227,9 +227,11 @@ class ChecklistEdit(APIView):
         class_name = self.__class__.__name__
         columns = request.data['checklist_columns']
         static_column = request.data['static_column_values']
-        # n_rows = len(static_column)
-        # n_cols = len(columns)
-        # column_ids = [x["column_id"] for x in columns]
+        new_checklist_columns = request.data['new_checklist_columns'] \
+            if 'new_checklist_columns' in request.data else []
+        new_static_column_values = request.data['new_static_column_values'] \
+            if 'new_static_column_values' in request.data else {}
+
         checklist_column_all_query = list(mongo_client.checklists.find({"checklist_id": checklist_id}))
         if len(checklist_column_all_query)==0:
             result = "checklist does not exist"
@@ -241,6 +243,28 @@ class ChecklistEdit(APIView):
         lower_level_checklists = request.data['lower_level_checklists'] \
             if 'lower_level_checklists' in request.data else []
         n_rows = checklist_column_all['rows']
+        n_cols = checklist_column_all['columns']
+        if new_static_column_values is not {}:
+            first_element = list(new_static_column_values.values())[0]
+            new_rows = len(first_element)
+        else:
+            new_rows = 0
+
+        # adding column data to checklists table
+        # currently, new static column cannot be added to table
+        column_id = n_cols
+        new_checklist_col_data = {}
+        for column in new_checklist_columns:
+            column_id = column_id + 1
+            column_options = column['column_options'] if 'column_options' in column else None
+            if column_options and not isinstance(column_options, list):
+                column_options = column_options.split(',')
+                column['column_options'] = column_options
+            column['column_id'] = column_id
+            new_checklist_col_data[str(int(column_id))] = column
+        checklist_column_data_all.update(new_checklist_col_data)
+        mongo_client.checklists.update_one({'checklist_id': checklist_id}, {
+            "$set": {'data': checklist_column_data_all, 'columns':column_id, 'rows': n_rows+new_rows}})
 
         checklist_data_all = list(mongo_client.checklist_data.find({"checklist_id": checklist_id}))
         for column in columns:
@@ -251,22 +275,28 @@ class ChecklistEdit(APIView):
             mongo_client.checklists.update_one({'checklist_id': checklist_id}, {
                 "$set": {'data': checklist_column_data_all}})
 
-        if isinstance(static_column, dict):
-            static_column_indices = static_column.keys()
-            static_column_ids = [int(x) for x in static_column.keys()]
-        else:
-            static_column_indices = ["1"]
-            static_column_ids = [1]
+        if not isinstance(static_column, dict):
+        #     static_column_indices = static_column.keys()
+        #     static_column_ids = [int(x) for x in static_column.keys()]
+        # else:
+        #     static_column_indices = ["1"]
+        #     static_column_ids = [1]
             static_column = {"1": static_column}
 
+        timestamp = datetime.datetime.utcnow()
+        campaign_id = checklist_column_all["campaign_id"]
+        supplier_id = checklist_column_all["supplier_id"]
 
         for column in exist_static_column_indices:
             column_id = int(column)
             curr_column_data = static_column[column]
+            new_column_data = new_static_column_values[column]
             column_options = curr_column_data['column_options'] if 'column_options' in curr_column_data else None
             if column_options and not isinstance(column_options, list):
                 column_options = column_options.split(',')
                 curr_column_data['column_options'] = column_options
+            column_name = checklist_column_data_all[column]['column_name']
+            column_type = checklist_column_data_all[column]['column_type']
 
             for row_id in range(1, n_rows+1):
                 row_data = [x for x in curr_column_data if x["row_id"] == row_id]
@@ -283,6 +313,30 @@ class ChecklistEdit(APIView):
                     exist_row_data['cell_value'] = row_data[0]['cell_value']
                     mongo_client.checklist_data.update_one({'rowid': int(row_id), 'checklist_id': checklist_id}, {
                         "$set": {'data.'+column: row_data[0]}})
+
+        row_dict = {"created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id,
+                    "checklist_id": checklist_id, "status": "active", "data": {}}
+
+        for row_id in range(n_rows+1, n_rows+new_rows+1):
+            row_index = row_id - (n_rows+1)
+            row_dict['rowid'] = row_id
+            row_data = {}
+            for column in exist_static_column_indices:
+                column_id = int(column)
+                column_name = checklist_column_data_all[column]['column_name']
+                column_type = checklist_column_data_all[column]['column_type']
+                curr_row_data = new_static_column_values[column][row_index]
+                order_id = curr_row_data['order_id']
+                cell_value = curr_row_data['cell_value']
+                row_data[column] = {
+                    "column_id": column_id,
+                    "column_name": column_name,
+                    "column_type": column_type,
+                    "cell_value": cell_value,
+                    "order_id": order_id
+                }
+            row_dict["data"] = row_data
+            mongo_client.checklist_data.insert_one(row_dict)
 
         return ui_utils.handle_response(class_name, data='success', success=True)
 
