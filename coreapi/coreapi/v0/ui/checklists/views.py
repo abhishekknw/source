@@ -272,6 +272,8 @@ class ChecklistEdit(APIView):
             new_checklist_col_data[str(int(column_id))] = column
         checklist_column_data_all.update(new_checklist_col_data)
 
+        total_cols = column_id
+
         checklist_data_all = list(mongo_client.checklist_data.find({"checklist_id": checklist_id}))
         for column in columns:
             column_id = column['column_id']
@@ -356,7 +358,7 @@ class ChecklistEdit(APIView):
             mongo_client.checklist_data.insert_one(row_dict)
 
         mongo_client.checklists.update_one({'checklist_id': checklist_id}, {
-            "$set": {'data': checklist_column_data_all, 'columns':column_id, 'rows': n_rows+new_rows}})
+            "$set": {'data': checklist_column_data_all, 'columns':total_cols, 'rows': n_rows+new_rows}})
 
         return ui_utils.handle_response(class_name, data='success', success=True)
 
