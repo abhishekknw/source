@@ -222,15 +222,20 @@ class ChecklistEntry(APIView):
 
 
 class ChecklistEdit(APIView):
+
     def post(self, request, checklist_id):
         checklist_id = int(checklist_id)
         class_name = self.__class__.__name__
-        columns = request.data['checklist_columns']
-        static_column = request.data['static_column_values']
+        columns = request.data['checklist_columns'] if 'checklist_columns' in request.data else []
+        static_column = request.data['static_column_values'] if 'static_column_values' in request.data else {}
         new_checklist_columns = request.data['new_checklist_columns'] \
             if 'new_checklist_columns' in request.data else []
         new_static_column_values = request.data['new_static_column_values'] \
             if 'new_static_column_values' in request.data else {}
+        delete_rows = request.data['delete_rows'] if 'delete_rows' in request.data else []
+        for row in delete_rows:
+            mongo_client.checklist_data.update_one({"checklist_id": int(checklist_id), "rowid": int(row)},
+                                                   {"$set": {'status': 'inactive'}})
 
         checklist_column_all_query = list(mongo_client.checklists.find({"checklist_id": checklist_id}))
         if len(checklist_column_all_query)==0:
@@ -244,7 +249,7 @@ class ChecklistEdit(APIView):
             if 'lower_level_checklists' in request.data else []
         n_rows = checklist_column_all['rows']
         n_cols = checklist_column_all['columns']
-        if new_static_column_values is not {}:
+        if new_static_column_values:
             first_element = list(new_static_column_values.values())[0]
             new_rows = len(first_element)
         else:
@@ -289,30 +294,41 @@ class ChecklistEdit(APIView):
 
         for column in exist_static_column_indices:
             column_id = int(column)
-            curr_column_data = static_column[column]
-            new_column_data = new_static_column_values[column]
-            column_options = curr_column_data['column_options'] if 'column_options' in curr_column_data else None
-            if column_options and not isinstance(column_options, list):
-                column_options = column_options.split(',')
-                curr_column_data['column_options'] = column_options
+            if static_column:
+                curr_column_data = static_column[column]
+                column_options = curr_column_data['column_options'] if 'column_options' in curr_column_data else None
+                if column_options and not isinstance(column_options, list):
+                    column_options = column_options.split(',')
+                    curr_column_data['column_options'] = column_options
+            else:
+                curr_column_data = []
             column_name = checklist_column_data_all[column]['column_name']
             column_type = checklist_column_data_all[column]['column_type']
 
             for row_id in range(1, n_rows+1):
                 row_data = [x for x in curr_column_data if x["row_id"] == row_id]
+                exist_row = [x for x in checklist_data_all if x['rowid'] == row_id][0]
+                exist_row_status = exist_row['status']
+
                 if len(lower_level_checklists) > 0:
-                    lower_level_array = [x['static_column_values'] for x in lower_level_checklists
-                                         if x['parent_row_id'] == row_id]
-                    lower_level_static_column_values = lower_level_array[0] if len(lower_level_array) > 0 else {}
-                    lower_level_rows = lower_level_static_column_values[column]\
-                        if column in lower_level_static_column_values else None
-                    mongo_client.checklist_data.update_one({'rowid': int(row_id), 'checklist_id': checklist_id}, {
-                        "$set": {'data.'+column+'.lower_level_row_values': lower_level_rows}})
+                    if exist_row_status == 'inactive':
+                        print "cannot add lower level checklists to deleted row", row_id
+                    else:
+                        lower_level_array = [x['static_column_values'] for x in lower_level_checklists
+                                             if x['parent_row_id'] == row_id]
+                        lower_level_static_column_values = lower_level_array[0] if len(lower_level_array) > 0 else {}
+                        lower_level_rows = lower_level_static_column_values[column]\
+                            if column in lower_level_static_column_values else None
+                        mongo_client.checklist_data.update_one({'rowid': int(row_id), 'checklist_id': checklist_id}, {
+                            "$set": {'data.'+column+'.lower_level_row_values': lower_level_rows}})
                 if len(row_data)>0:
-                    exist_row_data = [x['data'][column] for x in checklist_data_all if x['rowid'] == row_id][0]
-                    exist_row_data['cell_value'] = row_data[0]['cell_value']
-                    mongo_client.checklist_data.update_one({'rowid': int(row_id), 'checklist_id': checklist_id}, {
-                        "$set": {'data.'+column: row_data[0]}})
+                    if exist_row_status == 'inactive':
+                        print "cannot edit labels of deleted row", row_id
+                    else:
+                        exist_row_data = [x['data'][column] for x in checklist_data_all if x['rowid'] == row_id][0]
+                        exist_row_data['cell_value'] = row_data[0]['cell_value']
+                        mongo_client.checklist_data.update_one({'rowid': int(row_id), 'checklist_id': checklist_id}, {
+                            "$set": {'data.'+column: row_data[0]}})
 
         row_dict = {"created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id,
                     "checklist_id": checklist_id, "status": "active", "data": {}}
@@ -385,78 +401,6 @@ class GetSupplierChecklists(APIView):
         return ui_utils.handle_response(class_name, data=checklists, success=True)
 
 
-# class GetSupplierChecklists(APIView):
-#     # used for getting a list of all checklists of a particular supplier within a campaign
-#     def get(self, request, campaign_id, supplier_id):
-#         checklists = Checklist.objects.filter(campaign_id=campaign_id, supplier_id = supplier_id).exclude(status='inactive')
-#         checklist_type = request.query_params.get('query_type')
-#         if checklist_type == 'list':
-#             checklists = checklists.exclude(is_template=1)
-#         if checklist_type == 'template':
-#             checklists = checklists.filter(is_template=1)
-#
-#         checklist_dict = []
-#         for item in checklists:
-#             list_item = ChecklistSerializer(item).data
-#             checklist_dict.append(list_item)
-#         return ui_utils.handle_response({}, data=checklist_dict, success=True)
-
-# class GetChecklistData(APIView):
-#     # viewing a particular checklist
-#     @staticmethod
-#     def get(request,checklist_id):
-#         checklist_info = Checklist.objects.get(id=checklist_id)
-#         last_entry_id = checklist_info.rows
-#         checklist_columns = ChecklistColumns.objects.filter(checklist_id=checklist_id).exclude(status='inactive')
-#         checklist_data = ChecklistData.objects.filter(checklist_id=checklist_id).exclude(status='inactive')
-#         checklist_rows = []
-#
-#         values = []
-#         checklist_items_dict = {}
-#         checklist_items_dict_part = []
-#         for item in checklist_columns:
-#             curr_item = ChecklistColumnsSerializer(item).data
-#             checklist_items_dict[item.column_id] = curr_item
-#             curr_item_part = {key:curr_item[key] for key in ['column_id', 'column_name', 'column_type']}
-#             checklist_items_dict_part.append(curr_item_part)
-#
-#         rows = []
-#         row_labels = checklist_data.filter(column_id = 1).values('row_id','cell_value')
-#         for row in row_labels:
-#             rows.append(row)
-#
-#         previous_entry_id = -1
-#         current_list = []
-#         for i in range(1, last_entry_id+1):
-#             entry_data = checklist_data.filter(row_id = i).exclude(column_id=1)
-#            # if entry_data is not None:
-#             for keys in checklist_columns:
-#                 key_name = keys.column_name
-#                 item_id = keys.column_id
-#                 key_query = entry_data.filter(column_id=item_id).first()
-#                 if (not key_query):
-#                     continue
-#                 key_value = key_query.cell_value
-#                 #current_row[key_name] = key_value
-#                 current_row = ({
-#                     "row_id": i,
-#                     "column_id": item_id,
-#                     "value": key_value
-#                 })
-#                 if i != previous_entry_id and current_list != []:
-#                     values.append(current_list)
-#                     current_list = []
-#                 # current_list.append(current_row)
-#                 previous_entry_id = i
-#                 values.append(current_row)
-#
-#         all_data = {
-#             'column_headers': checklist_items_dict_part,
-#             'row_headers': rows,
-#             'values': values,
-#         }
-#
-#         return ui_utils.handle_response({}, data=all_data, success=True)
 class GetChecklistData(APIView):
     @staticmethod
     def get(request, checklist_id):
