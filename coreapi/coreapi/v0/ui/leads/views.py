@@ -608,6 +608,30 @@ class EditLeadsForm(APIView):
         return ui_utils.handle_response({}, data='success', success=True)
 
 
+class EditLeadsForm(APIView):
+    @staticmethod
+    def put(request, form_id):
+        name = request.data['name'] if 'name' in request.data.keys() else None
+        if name is not None:
+            mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"leads_form_name": name}})
+        return ui_utils.handle_response({}, data='success', success=True)
+
+
+class UpdateExtraLeads(APIView):
+    @staticmethod
+    def put(request, form_id):
+        extra_leads = request.data['extra_leads'] if 'extra_leads' in request.data.keys() else None
+        extra_hot_leads = request.data['extra_hot_leads'] if 'extra_hot_leads' in request.data.keys() else None
+        set_dict = {}
+        if extra_leads:
+            set_dict["extra_leads"] = extra_leads
+        if extra_hot_leads:
+            set_dict["extra_hot_leads"] = extra_hot_leads
+        if set_dict != {}:
+            mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": set_dict})
+        return ui_utils.handle_response({}, data='success', success=True)
+
+
 class GenerateDemoData(APIView):
     def put(self, request):
         #leads_form_test_data = mongo_test.leads_forms.find_one({"leads_form_id": 13})
