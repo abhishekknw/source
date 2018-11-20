@@ -4,7 +4,7 @@ from views import (EntityType, EntityTypeGetOne)
 
 urlpatterns = [
     url(r'^entity-type/$', EntityType.as_view()),
-    url(r'^entity-type/(?P<entity_type_id>[A-Z_a-z0-9]+)/$', EntityTypeGetOne.as_view()),
+    url(r'^entity-type/(?P<entity_type_id>[A-Z_a-z0-9]+)/$', EntityType.as_view()),
 ]
 
 router = DefaultRouter()
