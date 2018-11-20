@@ -185,7 +185,7 @@ class CreateLeadsForm(APIView):
     def post(request, campaign_id):
         leads_form_name = request.data['leads_form_name']
         leads_form_items = request.data['leads_form_items']
-        global_hot_lead_criteria = request.data['global_hot_lead_criteria'] if global_hot_lead_criteria in request.data else None
+        global_hot_lead_criteria = request.data['global_hot_lead_criteria'] if 'global_hot_lead_criteria' in request.data else None
         item_id = 0
         max_id_data = mongo_client.leads_forms.find_one(sort=[('leads_form_id', -1)])
         max_id = max_id_data['leads_form_id'] if max_id_data is not None else 0
