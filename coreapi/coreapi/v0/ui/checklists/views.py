@@ -20,9 +20,12 @@ def insert_static_cols(row_dict_original,static_column_values, static_column_nam
     counter = 0
 
     for curr_row in first_column_rows:
-        rowid = curr_row["row_id"]
+        order_id = curr_row["order_id"] if 'order_id' in curr_row else curr_row["row_id"]
+        #rowid = curr_row["row_id"]
+        rowid = order_id
         row_dict = row_dict_original.copy()
         row_dict["rowid"] = rowid
+        row_dict["order_id"] = order_id
         cell_value = curr_row['cell_value']
 
         #if curr_row in lower_level_rows:
@@ -43,7 +46,11 @@ def insert_static_cols(row_dict_original,static_column_values, static_column_nam
             }
             if static_column_str in lower_level_static_column_values.keys():
                 lower_level_row_values = lower_level_static_column_values[static_column_str]
-                static_data[static_column_str]["lower_level_row_values"] = lower_level_row_values
+                lower_level_row_values_2 = []
+                for lower_level_row in lower_level_row_values:
+                    lower_level_row["row_id"] = lower_level_row.pop("order_id")
+                    lower_level_row_values_2.append(lower_level_row)
+                static_data[static_column_str]["lower_level_row_values"] = lower_level_row_values_2
 
         row_dict["data"] = static_data
         mongo_client.checklist_data.insert_one(row_dict)
@@ -284,11 +291,6 @@ class ChecklistEdit(APIView):
                 "$set": {'data': checklist_column_data_all}})
 
         if not isinstance(static_column, dict):
-        #     static_column_indices = static_column.keys()
-        #     static_column_ids = [int(x) for x in static_column.keys()]
-        # else:
-        #     static_column_indices = ["1"]
-        #     static_column_ids = [1]
             static_column = {"1": static_column}
 
         timestamp = datetime.datetime.utcnow()
