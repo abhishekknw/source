@@ -69,12 +69,6 @@ def send_mail_with_attachment(filepath, subject, to):
 
 @shared_task()
 def send_mail_generic(subject, to, html_body, cc=None, attachment_filepath=None):
-    email_data = {
-        'subject': subject,
-        'to': to,
-        'body': html_body
-    }
-    attachment = None
     email = EmailMultiAlternatives(subject, body=html_body,to=to)
     if cc:
         email.cc = cc
