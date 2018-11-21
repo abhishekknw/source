@@ -310,6 +310,7 @@ class DashBoardViewSet(viewsets.ViewSet):
         object_id_alias = 'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__object_id'
 
         shortlisted_suppliers = ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id)
+        shortlisted_suppliers_id_map = {supplier.object_id: supplier for supplier in shortlisted_suppliers}
         shortlisted_suppliers_id_list = [supplier.object_id for supplier in shortlisted_suppliers]
         shortlisted_spaces_id_list = [supplier.id for supplier in shortlisted_suppliers]
         shortlisted_spaces_id_dict = {supplier.id: supplier.object_id for supplier in shortlisted_suppliers}
@@ -410,7 +411,9 @@ class DashBoardViewSet(viewsets.ViewSet):
                 'supplier': supplier_objects_id_list[id],
                 'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
                 'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {},
-                'shortlisted_space_id': ss_id_dict_by_supplier_id[id]
+                'shortlisted_space_id': ss_id_dict_by_supplier_id[id],
+                'phase' : shortlisted_suppliers_id_map[supplier_objects_id_list[id]['supplier_id']].phase_no.phase_no if
+                    shortlisted_suppliers_id_map[supplier_objects_id_list[id]['supplier_id']].phase_no else None
             }
             if id in inv_data_objects_list:
                 data['supplier']['inv_data'] = inv_data_objects_list[id]
@@ -432,7 +435,9 @@ class DashBoardViewSet(viewsets.ViewSet):
                 'supplier': supplier_objects_id_list[id],
                 'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
                 'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {},
-                'shortlisted_space_id': ss_id_dict_by_supplier_id[id]
+                'shortlisted_space_id': ss_id_dict_by_supplier_id[id],
+                'phase': shortlisted_suppliers_id_map[supplier_objects_id_list[id]['supplier_id']].phase_no.phase_no if
+                    shortlisted_suppliers_id_map[supplier_objects_id_list[id]['supplier_id']].phase_no else None
             }
             if id in inv_data_objects_list:
                 data['supplier']['inv_data'] = inv_data_objects_list[id]
@@ -453,7 +458,9 @@ class DashBoardViewSet(viewsets.ViewSet):
                 'supplier': supplier_objects_id_list[id],
                 'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
                 'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {},
-                'shortlisted_space_id': ss_id_dict_by_supplier_id[id]
+                'shortlisted_space_id': ss_id_dict_by_supplier_id[id],
+                'phase': shortlisted_suppliers_id_map[supplier_objects_id_list[id]['supplier_id']].phase_no.phase_no if
+                    shortlisted_suppliers_id_map[supplier_objects_id_list[id]['supplier_id']].phase_no else None
             }
             if id in inv_data_objects_list:
                 data['supplier']['inv_data'] = inv_data_objects_list[id]
