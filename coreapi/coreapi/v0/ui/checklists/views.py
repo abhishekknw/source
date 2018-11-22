@@ -3,6 +3,7 @@ import v0.ui.utils as ui_utils
 from celery import shared_task
 from v0.ui.common.models import mongo_client, mongo_test
 import datetime
+import collections
 
 def insert_static_cols(row_dict_original,static_column_values, static_column_names, static_column_types, lower_level_checklists):
     #lower_level_rows = list(set([x["parent_row_id"] for x in lower_level_checklists]))
@@ -16,6 +17,7 @@ def insert_static_cols(row_dict_original,static_column_values, static_column_nam
     first_column_rows = static_column_values["1"]
 
     counter = 0
+    row_dict_array = []
 
     for curr_row in first_column_rows:
         order_id = curr_row["order_id"] if 'order_id' in curr_row else curr_row["row_id"]
@@ -35,7 +37,7 @@ def insert_static_cols(row_dict_original,static_column_values, static_column_nam
             static_column_str = str(static_column)
             if static_column > 1:
                 curr_static_column_values = static_column_values[static_column_str]
-                cell_value = [x["cell_value"] for x in curr_static_column_values if x["row_id"] == rowid][0]
+                cell_value = [x["cell_value"] for x in curr_static_column_values if x["order_id"] == rowid][0]
             static_data[static_column_str] = {
                 "cell_value": cell_value,
                 "column_id": static_column,
@@ -53,6 +55,12 @@ def insert_static_cols(row_dict_original,static_column_values, static_column_nam
         row_dict["data"] = static_data
         mongo_client.checklist_data.insert_one(row_dict)
     return
+
+def sort_dict(random_dict):
+    sorted_dict = collections.OrderedDict()
+    for key in sorted(random_dict.keys()):
+        sorted_dict[key] = random_dict[key]
+    return sorted_dict
 
 class CreateChecklistTemplate(APIView):
     def post(self, request, campaign_id):
@@ -101,22 +109,33 @@ class CreateChecklistTemplate(APIView):
             'static_columns': static_column_indices
         }
         column_id = 0
+        order_ids = []
         static_column_names = {}
         static_column_types = {}
         for column in checklist_columns:
             column_id = column_id + 1
+            order_id = column['order_id']
+            order_ids.append(order_id)
             column_options = column['column_options'] if 'column_options' in column else None
             if column_options and not isinstance(column_options, list):
                 column_options = column_options.split(',')
                 column['column_options'] = column_options
             column['column_id'] = column_id
-            mongo_form['data'][str(column_id)] = column
+            mongo_form['data'][str(order_id)] = column
             # if column_id == 1:
             #     first_column_name = column['column_name']
             #     first_column_type = column['column_type']
             if column_id in static_column_ids:
                 static_column_names[str(column_id)] = column['column_name']
                 static_column_types[str(column_id)] = column['column_type']
+
+        # sorting data
+        form_data = mongo_form['data']
+        form_data_sorted = collections.OrderedDict()
+        for key in sorted(form_data.keys()):
+            form_data_sorted[key] = form_data[key]
+        mongo_form['data'] = form_data_sorted
+
         mongo_client.checklists.insert_one(mongo_form)
         timestamp = datetime.datetime.utcnow()
 
@@ -302,8 +321,10 @@ class ChecklistEdit(APIView):
             new_column_data = column
             new_column_data['order_id'] = checklist_column_data_all[str(column_id)]['order_id']
             checklist_column_data_all[str(column_id)] = new_column_data
-            mongo_client.checklists.update_one({'checklist_id': checklist_id}, {
-                "$set": {'data': checklist_column_data_all}})
+        print checklist_column_data_all
+        checklist_column_data_all = sort_dict(checklist_column_data_all)
+        mongo_client.checklists.update_one({'checklist_id': checklist_id}, {
+            "$set": {'data': checklist_column_data_all}})
 
         if not isinstance(static_column, dict):
             static_column = {"1": static_column}
@@ -352,18 +373,20 @@ class ChecklistEdit(APIView):
 
         row_dict = {"created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id,
                     "checklist_id": checklist_id, "status": "active", "data": {}}
-        row_array = []
+        row_array = {}
+        row_data = {}
 
         for row_id in range(n_rows+1, n_rows+new_rows+1):
             row_index = row_id - (n_rows+1)
             row_dict['rowid'] = row_id
-            row_data = {}
+            all_rows_dict = {}
             for column in exist_static_column_indices:
                 column_id = int(column)
                 column_name = checklist_column_data_all[column]['column_name']
                 column_type = checklist_column_data_all[column]['column_type']
                 curr_row_data = new_static_column_values[column][row_index]
                 order_id = curr_row_data['order_id']
+                row_dict['order_id'] = order_id
                 cell_value = curr_row_data['cell_value']
                 row_data[column] = {
                     "column_id": column_id,
@@ -373,7 +396,11 @@ class ChecklistEdit(APIView):
                     "order_id": order_id
                 }
             row_dict["data"] = row_data
-            mongo_client.checklist_data.insert_one(row_dict)
+            all_rows_dict[order_id] = row_dict
+            all_rows_dict = sort_dict(all_rows_dict)
+        for curr_row_key in all_rows_dict.keys():
+            curr_row_dict = all_rows_dict[curr_row_key]
+            mongo_client.checklist_data.insert_one(curr_row_dict)
 
         mongo_client.checklists.update_one({'checklist_id': checklist_id}, {
             "$set": {'data': checklist_column_data_all, 'columns':total_cols, 'rows': n_rows+new_rows}})
