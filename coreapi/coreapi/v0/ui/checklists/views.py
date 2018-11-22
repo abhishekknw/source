@@ -214,6 +214,9 @@ class ChecklistEntry(APIView):
         elif checklist['is_template'] == True:
             data = 'checklist is a template'
             success = False
+        elif checklist['status'] == 'frozen':
+            data = 'checklist is already frozen'
+            success = False
         else:
             checklist_type = checklist['checklist_type'] if checklist['checklist_type'] else None
             supplier_id = checklist['supplier_id'] if checklist_type == 'supplier'else None
@@ -237,20 +240,34 @@ class ChecklistEdit(APIView):
             if 'new_checklist_columns' in request.data else []
         new_static_column_values = request.data['new_static_column_values'] \
             if 'new_static_column_values' in request.data else {}
-        delete_rows = request.data['delete_rows'] if 'delete_rows' in request.data else []
-        for row in delete_rows:
-            mongo_client.checklist_data.update_one({"checklist_id": int(checklist_id), "rowid": int(row)},
-                                                   {"$set": {'status': 'inactive'}})
+
 
         if not isinstance(new_static_column_values, dict):
             new_static_column_values = {"1": new_static_column_values}
 
         checklist_column_all_query = list(mongo_client.checklists.find({"checklist_id": checklist_id}))
-        if len(checklist_column_all_query)==0:
+
+        if len(checklist_column_all_query) == 0:
             result = "checklist does not exist"
             return ui_utils.handle_response(class_name, data=result, success=False)
         else:
             checklist_column_all = checklist_column_all_query[0]
+
+        checklist_status = checklist_column_all['status']
+
+        if checklist_status == 'inactive':
+            result = "checklist is already deleted"
+            return ui_utils.handle_response(class_name, data=result, success=False)
+        elif checklist_status == 'frozen':
+            result = "checklist is frozen, cannot be modified"
+            return ui_utils.handle_response(class_name, data=result, success=False)
+
+        delete_rows = request.data['delete_rows'] if 'delete_rows' in request.data else []
+        for row in delete_rows:
+            mongo_client.checklist_data.update_one({"checklist_id": int(checklist_id), "rowid": int(row)},
+                                                   {"$set": {'status': 'inactive'}})
+
+
         checklist_column_data_all = checklist_column_all['data']
         exist_static_column_indices = checklist_column_all['static_columns']
         lower_level_checklists = request.data['lower_level_checklists'] \
@@ -335,6 +352,7 @@ class ChecklistEdit(APIView):
 
         row_dict = {"created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id,
                     "checklist_id": checklist_id, "status": "active", "data": {}}
+        row_array = []
 
         for row_id in range(n_rows+1, n_rows+new_rows+1):
             row_index = row_id - (n_rows+1)
@@ -361,6 +379,7 @@ class ChecklistEdit(APIView):
             "$set": {'data': checklist_column_data_all, 'columns':total_cols, 'rows': n_rows+new_rows}})
 
         return ui_utils.handle_response(class_name, data='success', success=True)
+
 
 
 class GetCampaignChecklists(APIView):
@@ -406,6 +425,28 @@ class GetSupplierChecklists(APIView):
         #     checklist_dict.append(list_item)
         return ui_utils.handle_response(class_name, data=checklists, success=True)
 
+
+class FreezeChecklist(APIView):
+    @staticmethod
+    def put(request,checklist_id, state):
+        current_data = mongo_client.checklists.find_one({"checklist_id": int(checklist_id)})
+        current_status = current_data['status']
+        if current_status == 'inactive':
+            response = 'checklist is already deleted'
+            return ui_utils.handle_response({}, data=response, success=False)
+        if current_status == 'active':
+            if state == '0':
+                response = 'checklist is already active'
+                return ui_utils.handle_response({}, data=response, success=False)
+            if state == '1':
+                mongo_client.checklists.update_one({"checklist_id": int(checklist_id)},  {"$set": {'status': 'frozen'}})
+        if current_status == 'frozen':
+            if state == '0':
+                mongo_client.checklists.update_one({"checklist_id": int(checklist_id)}, {"$set": {'status': 'active'}})
+            if state == '1':
+                response = 'checklist is already frozen'
+                return ui_utils.handle_response({}, data=response, success=False)
+        return ui_utils.handle_response({}, data='success', success=True)
 
 class GetChecklistData(APIView):
     @staticmethod
@@ -462,8 +503,20 @@ class DeleteChecklist(APIView):
     # deactivating a full checklist
     @staticmethod
     def put(request,checklist_id):
-        mongo_client.checklists.update_one({"checklist_id": int(checklist_id)},  {"$set": {'status': 'inactive'}})
-        return ui_utils.handle_response({}, data='success', success=True)
+        checklist_info = mongo_client.checklists.find_one({"checklist_id": int(checklist_id)})
+        success = False
+        if checklist_info is None:
+            return ui_utils.handle_response({}, data='checklist does not exist', success=success)
+        checklist_status = checklist_info['status'] if 'status' in checklist_info else 'active'
+        if checklist_status == 'inactive':
+            data = 'checklist is already deleted'
+        elif checklist_status == 'frozen':
+            data = "checklist is frozen, cannot be modified"
+        else:
+            mongo_client.checklists.update_one({"checklist_id": int(checklist_id)},  {"$set": {'status': 'inactive'}})
+            data = 'success'
+            success = True
+        return ui_utils.handle_response({}, data=data, success=success)
 
 class DeleteChecklistRow(APIView):
 

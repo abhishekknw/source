@@ -4044,6 +4044,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
 
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
+        print "e3",e
         return ui_utils.handle_response(function, exception_object=e)
 
 
