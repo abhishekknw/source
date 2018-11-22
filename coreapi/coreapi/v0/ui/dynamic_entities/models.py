@@ -20,9 +20,9 @@ class SupplyEntity(MongoModel):
     '''
     entity_attributes: list of dicts, which looks like this:
         "entity_attributes":[{"name":"latitude","type":"Float", "value":12.9803195},{"name":"longitude","type":"Float",
-        "value": 77.7509302},{"name":"area", "type":"String", "value":Whitefield}, {"name":"pincode", "type":"Integer",
+        "value": 77.7509302},{"name":"area", "type":"String", "value":"Whitefield"}, {"name":"pincode", "type":"Integer",
         "value":560066},{"name": "locality", "type":"String", "value":"Channasandra"},
-        {"name":"inventories", "type":"InventoryList", value:[]}]
+        {"name":"inventories", "type":"InventoryList", "value":[]}]
     '''
     name = fields.CharField()
     entity_type = fields.CharField()  # This should be present in entity_type fields
@@ -32,6 +32,7 @@ class SupplyEntity(MongoModel):
     created_by = fields.CharField()
     supplier_id = fields.CharField()  # This can be changed to entity_id
     campaign_id = fields.CharField()
+    created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
 
     class Meta:

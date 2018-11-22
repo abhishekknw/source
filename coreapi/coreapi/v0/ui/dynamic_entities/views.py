@@ -1,7 +1,9 @@
 from rest_framework.views import APIView
 import v0.ui.utils as ui_utils
-from models import SupplyEntityType
+from models import SupplyEntityType, SupplyEntity
 from bson.objectid import ObjectId
+from datetime import datetime
+from v0.ui.account.models import Profile
 
 
 class EntityType(APIView):
@@ -54,5 +56,41 @@ class EntityTypeGetOne(APIView):
             "entity_attributes": supply_entity_type.entity_attributes
         }
         return ui_utils.handle_response('', data=supply_entity_type, success=True)
+
+
+def create_validation_msg(dict_of_required_attributes):
+    is_valid = True
+    validation_msg_dict = {'missing_data':[]}
+    for key, value in dict_of_required_attributes.items():
+        if not value:
+            is_valid = False
+            validation_msg_dict['missing_data'].append(key)
+    return (is_valid, validation_msg_dict)
+
+
+class Entity(APIView):
+    @staticmethod
+    def post(request):
+        name = request.data['name'] if 'name' in request.data['name'] else None
+        entity_type = request.data['entity_type'] if 'entity_type' in request.data else None
+        is_custom = request.data['is_custom'] if 'is_custom' in request.data else None
+        entity_attributes = request.data['entity_attributes']
+        supplier_id = request.data['supplier_id'] if 'supplier_id' in request.data else None
+        campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data else None
+        dict_of_req_attributes = {"entity_type": entity_type, "is_custom": is_custom,
+             "entity_attributes": entity_attributes, "supplier_id": supplier_id, "campaign_id": campaign_id}
+        (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
+        entity_dict = dict_of_req_attributes
+        entity_dict['created_by'] = request.user.id
+        profile_id = request.user.profile_id
+        profile = Profile.objects.filter(id=profile_id).all()
+        if len(profile) == 0:
+            return
+        entity_dict['organisation_id'] = profile[0].organisation_id
+        entity_dict['created_at'] = datetime.now()
+        if not is_valid:
+            return ui_utils.handle_response('', data=validation_msg_dict, success=False)
+        SupplyEntity(**entity_dict).save()
+        return ui_utils.handle_response('', data={"success": True}, success=True)
 
 
