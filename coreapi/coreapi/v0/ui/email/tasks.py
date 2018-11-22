@@ -100,7 +100,7 @@ class SendGraphPdf(APIView):
         return ui_utils.handle_response('', data={}, success=True)
 
 @shared_task()
-def send_booking_mails_ctrl(template_name,req_campaign_id=None):
+def send_booking_mails_ctrl(template_name,req_campaign_id=None, email=None):
     (campaign_assignement_by_campaign_id, campaign_assignement_by_campaign_id_admins, all_leads_forms,
      all_campaign_name_dict) = get_all_campaign_assignment_by_id("BOOKING_DETAILS_ADV")
     all_campaign_ids = list(set([lead_form['campaign_id'] for lead_form in all_leads_forms]))
@@ -110,8 +110,8 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None):
         supplier_list_details_by_status = get_supplier_list_by_status_ctrl(campaign_id)
         supplier_list_details_by_status = supplier_list_details_by_status
         booking_template = get_template(template_name)
-        # to_array = campaign_assignement_by_campaign_id[campaign_id]
-        to_array = ["yogesh.mhetre@machadalo.com"]
+        to_array = [email] if email else campaign_assignement_by_campaign_id[campaign_id]
+        
         html = booking_template.render(
             {'campaign_name': str(all_campaign_name_dict[campaign_id]),
              "details_dict": supplier_list_details_by_status})
@@ -140,21 +140,24 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None):
 class SendBookingDetailMails(APIView):
     @staticmethod
     def get(request, campaign_id):
-        send_booking_mails_ctrl('booking_details.html', campaign_id)
+        email_id = request.query_params.get("email", None)
+        send_booking_mails_ctrl('booking_details.html', campaign_id, email_id)
         return ui_utils.handle_response('', data={}, success=True)
 
 
 class SendPipelineDetailMails(APIView):
     @staticmethod
     def get(request, campaign_id):
-        send_booking_mails_ctrl('pipeline_details.html', campaign_id)
+        email_id = request.query_params.get("email", None)
+        send_booking_mails_ctrl('pipeline_details.html', campaign_id, email_id)
         return ui_utils.handle_response('', data={}, success=True)
 
 
 class SendAdvancedBookingDetailMails(APIView):
     @staticmethod
     def get(request, campaign_id):
-        send_booking_mails_ctrl('advanced_booking_details.html', campaign_id)
+        email_id = request.query_params.get("email", None)
+        send_booking_mails_ctrl('advanced_booking_details.html', campaign_id, email_id)
         return ui_utils.handle_response('', data={}, success=True)
 
 
