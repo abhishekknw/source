@@ -17,7 +17,7 @@ def insert_static_cols(row_dict_original,static_column_values, static_column_nam
     first_column_rows = static_column_values["1"]
 
     counter = 0
-    row_dict_array = []
+    row_dict_all = {}
 
     for curr_row in first_column_rows:
         order_id = curr_row["order_id"] if 'order_id' in curr_row else curr_row["row_id"]
@@ -53,6 +53,7 @@ def insert_static_cols(row_dict_original,static_column_values, static_column_nam
                 static_data[static_column_str]["lower_level_row_values"] = lower_level_row_values_2
 
         row_dict["data"] = static_data
+        row_dict_all[order_id] = row_dict
         mongo_client.checklist_data.insert_one(row_dict)
     return
 
@@ -376,10 +377,10 @@ class ChecklistEdit(APIView):
         row_array = {}
         row_data = {}
 
+        all_rows_dict = {}
         for row_id in range(n_rows+1, n_rows+new_rows+1):
             row_index = row_id - (n_rows+1)
             row_dict['rowid'] = row_id
-            all_rows_dict = {}
             for column in exist_static_column_indices:
                 column_id = int(column)
                 column_name = checklist_column_data_all[column]['column_name']
@@ -497,7 +498,8 @@ class GetChecklistData(APIView):
         values = []
         column_headers = []
         row_headers = []
-        checklist_info_columns = checklist_info['data']
+        checklist_info_columns_unsorted = checklist_info['data']
+        checklist_info_columns = sort_dict(checklist_info_columns_unsorted)
         columns_list = checklist_info_columns.keys()
         for column in columns_list:
             column_headers.append(checklist_info_columns[column])

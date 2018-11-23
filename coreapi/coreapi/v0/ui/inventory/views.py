@@ -593,7 +593,6 @@ class CampaignInventory(APIView):
         class_name = self.__class__.__name__
         # todo: reduce the time taken for this API. currently it takes 15ms to fetch data which is too much.
         try:
-            print "here1"
             proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
             response = website_utils.is_campaign(proposal)
             if not response.data['status']:
@@ -602,7 +601,6 @@ class CampaignInventory(APIView):
             # cache_key = v0_utils.create_cache_key(class_name, campaign_id)
             # cache_value = cache.get(cache_key)
             # cache_value = None
-            print "here2"
             response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id)
             if not response.data['status']:
                 return response
