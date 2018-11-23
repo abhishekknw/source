@@ -4,6 +4,7 @@ from celery import shared_task
 from v0.ui.common.models import mongo_client, mongo_test
 import datetime
 import collections
+from operator import itemgetter
 
 def insert_static_cols(row_dict_original,static_column_values, static_column_names, static_column_types, lower_level_checklists):
     #lower_level_rows = list(set([x["parent_row_id"] for x in lower_level_checklists]))
@@ -161,6 +162,7 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
 
     #for row in total_rows:
     top_level_rows = [x for x in total_rows if x.count('.')==0]
+    row_dict_all = {}
 
     for curr_row in top_level_rows:
         curr_level = 0
@@ -168,11 +170,14 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
         sub_rows = [x for x in total_rows if x.count('.') == 1 and x[0] == curr_row[0]]
 
         if rowid in exist_rows:
-            exist_row_data = [x['data'] for x in exist_rows_list if x['rowid'] == rowid][0]
+            exist_row_info = [x for x in exist_rows_list if x['rowid'] == rowid][0]
+            exist_row_data = exist_row_info['data']
         new_row_data = checklist_data[curr_row]
 
         row_dict = {"data": {}, "created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id,
                     "checklist_id": checklist_id, "rowid": rowid, "status": "active"}
+        order_id = exist_row_info['order_id']
+        row_dict['order_id'] = order_id
 
         for static_column in static_columns:
             row_dict['data'][static_column] = exist_row_data[static_column]
@@ -216,7 +221,11 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
                 row_dict['data'][str(column_id)]['cell_value'] = value
         if rowid in exist_rows:
             x = mongo_client.checklist_data.delete_many({'checklist_id': int(checklist_id), 'rowid': rowid}).deleted_count
-        mongo_client.checklist_data.insert_one(row_dict).inserted_id
+        row_dict_all[order_id] = row_dict.copy()
+    row_dict_all_sorted = sort_dict(row_dict_all)
+    for curr_row_order_id in row_dict_all_sorted.keys():
+        curr_row_dict = row_dict_all_sorted[curr_row_order_id]
+        mongo_client.checklist_data.insert_one(curr_row_dict)
     return
 
 
@@ -322,7 +331,6 @@ class ChecklistEdit(APIView):
             new_column_data = column
             new_column_data['order_id'] = checklist_column_data_all[str(column_id)]['order_id']
             checklist_column_data_all[str(column_id)] = new_column_data
-        print checklist_column_data_all
         checklist_column_data_all = sort_dict(checklist_column_data_all)
         mongo_client.checklists.update_one({'checklist_id': checklist_id}, {
             "$set": {'data': checklist_column_data_all}})
@@ -396,9 +404,9 @@ class ChecklistEdit(APIView):
                     "cell_value": cell_value,
                     "order_id": order_id
                 }
-            row_dict["data"] = row_data
-            all_rows_dict[order_id] = row_dict
-            all_rows_dict = sort_dict(all_rows_dict)
+            row_dict["data"] = row_data.copy()
+            all_rows_dict[order_id] = row_dict.copy()
+        all_rows_dict = sort_dict(all_rows_dict)
         for curr_row_key in all_rows_dict.keys():
             curr_row_dict = all_rows_dict[curr_row_key]
             mongo_client.checklist_data.insert_one(curr_row_dict)
@@ -495,6 +503,7 @@ class GetChecklistData(APIView):
             "checklist_id": checklist_info['checklist_id'],
         }
         checklist_data = list(mongo_client.checklist_data.find({"checklist_id": checklist_id}))
+        checklist_data = sorted(checklist_data, key=itemgetter('order_id'))
         values = []
         column_headers = []
         row_headers = []
@@ -510,6 +519,8 @@ class GetChecklistData(APIView):
                 continue
             curr_row_data = checklist['data']
             curr_row_columns = curr_row_data.keys()
+            curr_row_columns.sort()
+            print curr_row_columns
             for column in curr_row_columns:
                 value = curr_row_data[column]["cell_value"]
                 column_id = column
