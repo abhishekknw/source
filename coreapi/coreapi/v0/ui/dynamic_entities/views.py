@@ -60,6 +60,13 @@ class EntityTypeById(APIView):
         return ui_utils.handle_response('', data="success", success=True)
 
 
+    @staticmethod
+    def delete(request, entity_type_id):
+        exist_entity_query = SupplyEntityType.objects.raw({'_id': ObjectId(entity_type_id)})[0]
+        exist_entity_query.delete()
+        return ui_utils.handle_response('', data="success", success=True)
+
+
 def create_validation_msg(dict_of_required_attributes):
     is_valid = True
     validation_msg_dict = {'missing_data':[]}
@@ -139,3 +146,10 @@ class EntityById(APIView):
             return ui_utils.handle_response('', data=validation_msg_dict, success=False)
         SupplyEntity.objects.raw({'_id': ObjectId(entity_id)}).update({"$set": entity_dict})
         return ui_utils.handle_response('', data={"success": True}, success=True)
+
+
+    @staticmethod
+    def delete(request, entity_id):
+        exist_entity_query = SupplyEntity.objects.raw({'_id': ObjectId(entity_id)})[0]
+        exist_entity_query.delete()
+        return ui_utils.handle_response('', data="success", success=True)
