@@ -71,7 +71,7 @@ class Entity(APIView):
         entity_attributes = request.data['entity_attributes']
         supplier_id = request.data['supplier_id'] if 'supplier_id' in request.data else None
         campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data else None
-        dict_of_req_attributes = {"entity_type": entity_type, "is_custom": is_custom,
+        dict_of_req_attributes = {"name": name, "entity_type": entity_type, "is_custom": is_custom,
              "entity_attributes": entity_attributes, "supplier_id": supplier_id, "campaign_id": campaign_id}
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         entity_dict = dict_of_req_attributes
@@ -105,3 +105,29 @@ class Entity(APIView):
                 "created_at": supply_entity.created_at,
             }
         return ui_utils.handle_response('', data=all_supply_entity_dict, success=True)
+
+
+class EntityById(APIView):
+    @staticmethod
+    def put(request, entity_id):
+        name = request.data['name'] if 'name' in request.data else None
+        entity_type = request.data['entity_type'] if 'entity_type' in request.data else None
+        is_custom = request.data['is_custom'] if 'is_custom' in request.data else None
+        entity_attributes = request.data['entity_attributes']
+        supplier_id = request.data['supplier_id'] if 'supplier_id' in request.data else None
+        campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data else None
+        dict_of_req_attributes = {"name": name, "entity_type": entity_type, "is_custom": is_custom,
+             "entity_attributes": entity_attributes, "supplier_id": supplier_id, "campaign_id": campaign_id}
+        (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
+        entity_dict = dict_of_req_attributes
+        entity_dict['created_by'] = request.user.id
+        profile_id = request.user.profile_id
+        profile = Profile.objects.filter(id=profile_id).all()
+        if len(profile) == 0:
+            return
+        entity_dict['organisation_id'] = profile[0].organisation_id
+        entity_dict['created_at'] = datetime.now()
+        if not is_valid:
+            return ui_utils.handle_response('', data=validation_msg_dict, success=False)
+        SupplyEntity.objects.raw({'_id': ObjectId(entity_id)}).update({"$set": entity_dict})
+        return ui_utils.handle_response('', data={"success": True}, success=True)
