@@ -12,6 +12,10 @@ class EntityType(APIView):
         name = request.data['name']
         entity_attributes = request.data['entity_attributes']
         SupplyEntityType(**{'name': name, "entity_attributes": entity_attributes}).save()
+        dict_of_req_attributes = {"name": name, "entity_attributes": entity_attributes}
+        (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
+        if not is_valid:
+            return ui_utils.handle_response('', data=validation_msg_dict, success=False)
         return ui_utils.handle_response('', data={"success": True}, success=True)
 
 
@@ -46,6 +50,10 @@ class EntityTypeById(APIView):
         new_name = request.data['name'] if 'name' in request.data else None
         new_attributes = request.data['entity_attributes'] if 'entity_attributes' in request.data else None
         exist_entity_query = SupplyEntityType.objects.raw({'_id': ObjectId(entity_type_id)})[0]
+        dict_of_req_attributes = {"name": new_name, "entity_attributes": new_attributes}
+        (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
+        if not is_valid:
+            return ui_utils.handle_response('', data=validation_msg_dict, success=False)
         exist_entity_query.name = new_name
         exist_entity_query.entity_attributes = new_attributes
         exist_entity_query.save()
