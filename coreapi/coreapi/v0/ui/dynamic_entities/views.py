@@ -94,3 +94,20 @@ class Entity(APIView):
         return ui_utils.handle_response('', data={"success": True}, success=True)
 
 
+    @staticmethod
+    def get(request):
+        all_supply_entity = SupplyEntity.objects.all()
+        all_supply_entity_dict = {}
+        for supply_entity in all_supply_entity:
+            all_supply_entity_dict[str(supply_entity._id)] = {
+                "_id": str(supply_entity._id),
+                "name": supply_entity.name,
+                "entity_attributes": supply_entity.entity_attributes,
+                "is_custom": supply_entity.is_custom,
+                "organisation_id": supply_entity.organisation_id,
+                "created_by": supply_entity.created_by,
+                "supplier_id": supply_entity.supplier_id,
+                "campaign_id": supply_entity.campaign_id,
+                "created_at": supply_entity.created_at,
+            }
+        return ui_utils.handle_response('', data=all_supply_entity_dict, success=True)
