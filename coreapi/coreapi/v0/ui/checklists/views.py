@@ -153,6 +153,7 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
     all_checklist_columns_dict = checklist['data']
     n_cols = len(all_checklist_columns_dict)
     checklist_id = checklist['checklist_id']
+    deleted_columns = checklist['deleted_columns']
     static_columns = checklist['static_columns'] if 'static_columns' in checklist else ["1"]
     timestamp = datetime.datetime.utcnow()
     total_rows = checklist_data.keys()
@@ -171,6 +172,10 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
 
         if rowid in exist_rows:
             exist_row_info = [x for x in exist_rows_list if x['rowid'] == rowid][0]
+            exist_row_status = exist_row_info['status']
+            if exist_row_status == 'inactive':
+                print 'already deleted row id: ', rowid
+                break
             exist_row_data = exist_row_info['data']
         new_row_data = checklist_data[curr_row]
 
@@ -180,9 +185,14 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
         row_dict['order_id'] = order_id
 
         for static_column in static_columns:
+            if static_column in deleted_columns:
+                break
             row_dict['data'][static_column] = exist_row_data[static_column]
         columns = new_row_data.keys()
         for column in range(1, n_cols+1):
+            if str(column) in deleted_columns:
+                print 'already deleted column id: ', column
+                continue
             lower_level_row_values = []
             if str(column) in new_row_data:
                 column_data = new_row_data[str(column)]
@@ -296,6 +306,15 @@ class ChecklistEdit(APIView):
             mongo_client.checklist_data.update_one({"checklist_id": int(checklist_id), "rowid": int(row)},
                                                    {"$set": {'status': 'inactive'}})
 
+        delete_columns = map(str,request.data['delete_columns']) if 'delete_columns' in request.data else []
+        exist_inactive_columns = checklist_column_all['deleted_columns'] if 'deleted_columns' in checklist_column_all\
+            else []
+        if not delete_columns == []:
+            new_delete_columns = list(set(delete_columns+exist_inactive_columns))
+            mongo_client.checklists.update_one({"checklist_id": int(checklist_id)},
+                                                   {"$set": {'deleted_columns': new_delete_columns}})
+        else:
+            new_delete_columns = exist_inactive_columns
 
         checklist_column_data_all = checklist_column_all['data']
         exist_static_column_indices = checklist_column_all['static_columns']
@@ -325,9 +344,13 @@ class ChecklistEdit(APIView):
 
         total_cols = column_id
 
+        # editing existing columns
         checklist_data_all = list(mongo_client.checklist_data.find({"checklist_id": checklist_id}))
         for column in columns:
             column_id = column['column_id']
+            if str(column_id) in new_delete_columns:
+                print "cannot edit already deleted column ", column_id
+                continue
             new_column_data = column
             new_column_data['order_id'] = checklist_column_data_all[str(column_id)]['order_id']
             checklist_column_data_all[str(column_id)] = new_column_data
@@ -342,6 +365,7 @@ class ChecklistEdit(APIView):
         campaign_id = checklist_column_all["campaign_id"]
         supplier_id = checklist_column_all["supplier_id"]
 
+        # editing existing rows
         for column in exist_static_column_indices:
             column_id = int(column)
             if static_column:
@@ -380,6 +404,7 @@ class ChecklistEdit(APIView):
                         mongo_client.checklist_data.update_one({'rowid': int(row_id), 'checklist_id': checklist_id}, {
                             "$set": {'data.'+column: exist_row_data}})
 
+        # creating new rows
         row_dict = {"created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id,
                     "checklist_id": checklist_id, "status": "active", "data": {}}
         row_array = {}
@@ -508,10 +533,12 @@ class GetChecklistData(APIView):
         column_headers = []
         row_headers = []
         checklist_info_columns_unsorted = checklist_info['data']
+        checklist_info_deleted_columns = checklist_info['deleted_columns']
         checklist_info_columns = sort_dict(checklist_info_columns_unsorted)
         columns_list = checklist_info_columns.keys()
         for column in columns_list:
-            column_headers.append(checklist_info_columns[column])
+            if str(column) not in checklist_info_deleted_columns:
+                column_headers.append(checklist_info_columns[column])
         for checklist in checklist_data:
             row_id = checklist['rowid']
             if checklist['status']=='inactive':
@@ -520,7 +547,6 @@ class GetChecklistData(APIView):
             curr_row_data = checklist['data']
             curr_row_columns = curr_row_data.keys()
             curr_row_columns.sort()
-            print curr_row_columns
             for column in curr_row_columns:
                 value = curr_row_data[column]["cell_value"]
                 column_id = column
@@ -529,7 +555,7 @@ class GetChecklistData(APIView):
                         "cell_value": value,
                         "row_id": row_id
                     })
-                else:
+                elif column not in checklist_info_deleted_columns:
                     values.append({
                         "row_id": row_id,
                         "value": value,
