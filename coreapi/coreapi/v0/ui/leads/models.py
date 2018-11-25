@@ -78,12 +78,17 @@ class LeadsFormContacts(BaseModel):
 def add_extra_leads(leads_summary,campaign_list=None):
     leads_extras_all = list(mongo_client.leads_extras.find())
     leads_extras_dict = {}
-
+    leads_summary_dict = {}
     for single_leads_extras in leads_extras_all:
         if single_leads_extras['campaign_id'] not in leads_extras_dict:
             leads_extras_dict[single_leads_extras['campaign_id']] = {}
         if single_leads_extras['supplier_id'] not in leads_extras_dict[single_leads_extras['campaign_id']]:
             leads_extras_dict[single_leads_extras['campaign_id']][single_leads_extras['supplier_id']] = single_leads_extras
+    for single_summary in leads_summary:
+        if single_summary['campaign_id'] not in leads_summary_dict:
+            leads_summary_dict[single_summary['campaign_id']] = {}
+        if single_summary['supplier_id'] not in leads_summary_dict[single_summary['campaign_id']]:
+            leads_summary_dict[single_summary['campaign_id']][single_summary['supplier_id']] = single_summary
     for single_summary in leads_summary:
         if single_summary['campaign_id'] in leads_extras_dict:
             if single_summary['supplier_id'] in leads_extras_dict[single_summary['campaign_id']]:
@@ -91,6 +96,15 @@ def add_extra_leads(leads_summary,campaign_list=None):
                     single_summary['total_leads_count'] = leads_extras_dict[single_summary['campaign_id']][single_summary['supplier_id']]["extra_leads"]
                     single_summary['hot_leads_count'] = leads_extras_dict[single_summary['campaign_id']][single_summary['supplier_id']]["extra_hot_leads"]
                     single_summary['hot_leads_percentage'] = (float(single_summary['hot_leads_count'])/float(single_summary['total_leads_count']) * 100)
+    for extra_leads in leads_extras_all:
+        if extra_leads['campaign_id'] in campaign_list:
+            if (extra_leads['campaign_id'] not in leads_summary_dict) or (extra_leads['supplier_id'] not in leads_summary_dict[extra_leads['campaign_id']]):
+                leads_summary.append({'campaign_id': extra_leads['campaign_id'],
+                                      'supplier_id': extra_leads['supplier_id'],
+                                      'total_leads_count': extra_leads['extra_leads'],
+                                      'hot_leads_count': extra_leads['extra_hot_leads'],
+                                      'hot_leads_percentage': float(extra_leads['extra_hot_leads'])/float(extra_leads['extra_leads']) * 100,
+                                      })
     return leads_summary
 
 
