@@ -58,6 +58,7 @@ from serializers import SupplierPhaseSerializer
 from v0.ui.utils import handle_response
 from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignComments
+from v0.ui.common.models import mongo_client, mongo_test
 
 
 def convert_date_format(date):
@@ -2682,3 +2683,32 @@ class ImportSheetInExistingCampaign(APIView):
             return ui_utils.handle_response(class_name, data={}, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class GetOngoingSuppliersOfCampaign(APIView):
+
+    def get(self, request,campaign_id):
+        class_name = self.__class__.__name__
+        try:
+            date = request.query_params.get("date",None)
+            if date :
+                phases = SupplierPhase.objects.filter(campaign=campaign_id,start_date__lte=date,end_date__gte=date).values_list('id')
+                supplier_ids = ShortlistedSpaces.objects.filter(phase_no__in=phases).values_list('object_id')
+                suppliers = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
+                serializer = SupplierTypeSocietySerializer(suppliers, many=True)
+                form_details = mongo_client.leads_forms.find({"campaign_id":campaign_id})
+                data = {}
+                data["suppliers" ] = serializer.data
+                if form_details.count() > 0:
+                    form_id = form_details[0]['leads_form_id']
+                    data['form_id'] = form_id
+                    extra_leads = mongo_client.leads_extras.find({"campaign_id": campaign_id, "leads_form_id":form_id})
+                    extra_leads_supplier_map = {lead["supplier_id"].replace('"','') : lead for lead in extra_leads}
+                    for supplier in data["suppliers"]:
+                        if supplier["supplier_id"] in extra_leads_supplier_map:
+                            supplier["hot_leads"] = extra_leads_supplier_map[supplier["supplier_id"]]["extra_hot_leads"]
+                            supplier["total_leads"] = extra_leads_supplier_map[supplier["supplier_id"]][
+                                "extra_leads"]
+            return ui_utils.handle_response(class_name, data=data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+

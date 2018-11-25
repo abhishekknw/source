@@ -4,7 +4,8 @@ from views import (CreateInitialProposalBulkBasic, HashtagImagesViewSet, Initial
                    GetAccountProposalsAPIView, CurrentProposalAPIView, ProposalHistoryAPIView, ChildProposals,
                    CreateInitialProposal, ProposalViewSet, CreateFinalProposal, ProposalVersion, ProposalToCampaign,
                    FinalProposalAPIView, CreateProposalAPIView, ProposalImagesPath, convertDirectProposalToCampaign,
-                   CampaignToProposal, SupplierPhaseViewSet, getSupplierListByStatus, ImportSheetInExistingCampaign)
+                   CampaignToProposal, SupplierPhaseViewSet, getSupplierListByStatus, ImportSheetInExistingCampaign,
+                   GetOngoingSuppliersOfCampaign)
 
 urlpatterns = [
     url(r'^create-initial-proposal-basic/$', CreateInitialProposalBulkBasic.as_view()),
@@ -28,6 +29,7 @@ urlpatterns = [
     url(r'^(?P<campaign_id>[A-Z_a-z0-9-]+)/convert-to-proposal/$', CampaignToProposal.as_view()),
     url(r'^(?P<campaign_id>[A-Z_a-z0-9-]+)/get-suppliers-by-status/$', getSupplierListByStatus.as_view()),
     url(r'^import-sheet-in-existing-campaign/$', ImportSheetInExistingCampaign.as_view()),
+    url(r'^get-ongoing-suppliers/(?P<campaign_id>[A-Z_a-z0-9-]+)/$', GetOngoingSuppliersOfCampaign.as_view()),
 
 ]
 
