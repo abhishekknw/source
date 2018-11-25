@@ -581,13 +581,15 @@ class UpdateExtraLeads(APIView):
         extra_leads = request.data['extra_leads'] if 'extra_leads' in request.data.keys() else None
         extra_hot_leads = request.data['extra_hot_leads'] if 'extra_hot_leads' in request.data.keys() else None
         set_dict = {}
-        if extra_leads:
-            set_dict["extra_leads"] = extra_leads
-        if extra_hot_leads:
-            set_dict["extra_hot_leads"] = extra_hot_leads
+        # if extra_leads:
+        set_dict["extra_leads"] = extra_leads
+        # if extra_hot_leads:
+        set_dict["extra_hot_leads"] = extra_hot_leads
+        
         if set_dict != {}:
             set_dict["supplier_id"] = supplier_id
             set_dict["campaign_id"] = campaign_id
+
             mongo_client.leads_extras.update_one({"leads_form_id": int(form_id), "supplier_id":supplier_id}, {"$set": set_dict}, upsert=True)
         return ui_utils.handle_response({}, data='success', success=True)
 
