@@ -967,8 +967,8 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
         and_constraint.append({"created_at": {"$lte": user_end_datetime}})
     leads_form_data = list(mongo_client.leads.find(
         {"$and": and_constraint}, {"_id": 0}))
-
-    supplier_ids = list(set([x['supplier_id'] for x in leads_form_data]))
+    all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).all().values("object_id")
+    supplier_ids = list(set([x['object_id'] for x in all_shortlisted_spaces]))
 
     all_suppliers_list_non_analytics = {}
     all_localities_data_non_analytics = {}
@@ -994,7 +994,9 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
         supplier_id = curr_supplier_data['supplier_id']
         supplier_locality = curr_supplier_data['society_locality']
         supplier_flat_count = curr_supplier_data['flat_count'] if curr_supplier_data['flat_count'] else 0
-        lead_count = campaign_hot_leads_dict[supplier_id]
+        lead_count = campaign_hot_leads_dict[supplier_id] if supplier_id in campaign_hot_leads_dict else None
+        if not lead_count:
+            continue
         supplier_wise_lead_count[supplier_id] = lead_count
         hot_leads = lead_count['hot_leads']
         total_leads = lead_count['total_leads']
