@@ -3,6 +3,8 @@ import v0.ui.utils as ui_utils
 from celery import shared_task
 from v0.ui.common.models import mongo_client, mongo_test
 import datetime
+import collections
+from operator import itemgetter
 
 def insert_static_cols(row_dict_original,static_column_values, static_column_names, static_column_types, lower_level_checklists):
     #lower_level_rows = list(set([x["parent_row_id"] for x in lower_level_checklists]))
@@ -16,6 +18,7 @@ def insert_static_cols(row_dict_original,static_column_values, static_column_nam
     first_column_rows = static_column_values["1"]
 
     counter = 0
+    row_dict_all = {}
 
     for curr_row in first_column_rows:
         order_id = curr_row["order_id"] if 'order_id' in curr_row else curr_row["row_id"]
@@ -35,7 +38,7 @@ def insert_static_cols(row_dict_original,static_column_values, static_column_nam
             static_column_str = str(static_column)
             if static_column > 1:
                 curr_static_column_values = static_column_values[static_column_str]
-                cell_value = [x["cell_value"] for x in curr_static_column_values if x["row_id"] == rowid][0]
+                cell_value = [x["cell_value"] for x in curr_static_column_values if x["order_id"] == rowid][0]
             static_data[static_column_str] = {
                 "cell_value": cell_value,
                 "column_id": static_column,
@@ -51,8 +54,15 @@ def insert_static_cols(row_dict_original,static_column_values, static_column_nam
                 static_data[static_column_str]["lower_level_row_values"] = lower_level_row_values_2
 
         row_dict["data"] = static_data
+        row_dict_all[order_id] = row_dict
         mongo_client.checklist_data.insert_one(row_dict)
     return
+
+def sort_dict(random_dict):
+    sorted_dict = collections.OrderedDict()
+    for key in sorted(random_dict.keys()):
+        sorted_dict[key] = random_dict[key]
+    return sorted_dict
 
 class CreateChecklistTemplate(APIView):
     def post(self, request, campaign_id):
@@ -101,22 +111,33 @@ class CreateChecklistTemplate(APIView):
             'static_columns': static_column_indices
         }
         column_id = 0
+        order_ids = []
         static_column_names = {}
         static_column_types = {}
         for column in checklist_columns:
             column_id = column_id + 1
+            order_id = column['order_id']
+            order_ids.append(order_id)
             column_options = column['column_options'] if 'column_options' in column else None
             if column_options and not isinstance(column_options, list):
                 column_options = column_options.split(',')
                 column['column_options'] = column_options
             column['column_id'] = column_id
-            mongo_form['data'][str(column_id)] = column
+            mongo_form['data'][str(order_id)] = column
             # if column_id == 1:
             #     first_column_name = column['column_name']
             #     first_column_type = column['column_type']
             if column_id in static_column_ids:
                 static_column_names[str(column_id)] = column['column_name']
                 static_column_types[str(column_id)] = column['column_type']
+
+        # sorting data
+        form_data = mongo_form['data']
+        form_data_sorted = collections.OrderedDict()
+        for key in sorted(form_data.keys()):
+            form_data_sorted[key] = form_data[key]
+        mongo_form['data'] = form_data_sorted
+
         mongo_client.checklists.insert_one(mongo_form)
         timestamp = datetime.datetime.utcnow()
 
@@ -141,6 +162,7 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
 
     #for row in total_rows:
     top_level_rows = [x for x in total_rows if x.count('.')==0]
+    row_dict_all = {}
 
     for curr_row in top_level_rows:
         curr_level = 0
@@ -148,11 +170,14 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
         sub_rows = [x for x in total_rows if x.count('.') == 1 and x[0] == curr_row[0]]
 
         if rowid in exist_rows:
-            exist_row_data = [x['data'] for x in exist_rows_list if x['rowid'] == rowid][0]
+            exist_row_info = [x for x in exist_rows_list if x['rowid'] == rowid][0]
+            exist_row_data = exist_row_info['data']
         new_row_data = checklist_data[curr_row]
 
         row_dict = {"data": {}, "created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id,
                     "checklist_id": checklist_id, "rowid": rowid, "status": "active"}
+        order_id = exist_row_info['order_id']
+        row_dict['order_id'] = order_id
 
         for static_column in static_columns:
             row_dict['data'][static_column] = exist_row_data[static_column]
@@ -196,7 +221,11 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
                 row_dict['data'][str(column_id)]['cell_value'] = value
         if rowid in exist_rows:
             x = mongo_client.checklist_data.delete_many({'checklist_id': int(checklist_id), 'rowid': rowid}).deleted_count
-        mongo_client.checklist_data.insert_one(row_dict).inserted_id
+        row_dict_all[order_id] = row_dict.copy()
+    row_dict_all_sorted = sort_dict(row_dict_all)
+    for curr_row_order_id in row_dict_all_sorted.keys():
+        curr_row_dict = row_dict_all_sorted[curr_row_order_id]
+        mongo_client.checklist_data.insert_one(curr_row_dict)
     return
 
 
@@ -213,6 +242,9 @@ class ChecklistEntry(APIView):
             success = False
         elif checklist['is_template'] == True:
             data = 'checklist is a template'
+            success = False
+        elif checklist['status'] == 'frozen':
+            data = 'checklist is already frozen'
             success = False
         else:
             checklist_type = checklist['checklist_type'] if checklist['checklist_type'] else None
@@ -237,20 +269,34 @@ class ChecklistEdit(APIView):
             if 'new_checklist_columns' in request.data else []
         new_static_column_values = request.data['new_static_column_values'] \
             if 'new_static_column_values' in request.data else {}
-        delete_rows = request.data['delete_rows'] if 'delete_rows' in request.data else []
-        for row in delete_rows:
-            mongo_client.checklist_data.update_one({"checklist_id": int(checklist_id), "rowid": int(row)},
-                                                   {"$set": {'status': 'inactive'}})
+
 
         if not isinstance(new_static_column_values, dict):
             new_static_column_values = {"1": new_static_column_values}
 
         checklist_column_all_query = list(mongo_client.checklists.find({"checklist_id": checklist_id}))
-        if len(checklist_column_all_query)==0:
+
+        if len(checklist_column_all_query) == 0:
             result = "checklist does not exist"
             return ui_utils.handle_response(class_name, data=result, success=False)
         else:
             checklist_column_all = checklist_column_all_query[0]
+
+        checklist_status = checklist_column_all['status']
+
+        if checklist_status == 'inactive':
+            result = "checklist is already deleted"
+            return ui_utils.handle_response(class_name, data=result, success=False)
+        elif checklist_status == 'frozen':
+            result = "checklist is frozen, cannot be modified"
+            return ui_utils.handle_response(class_name, data=result, success=False)
+
+        delete_rows = request.data['delete_rows'] if 'delete_rows' in request.data else []
+        for row in delete_rows:
+            mongo_client.checklist_data.update_one({"checklist_id": int(checklist_id), "rowid": int(row)},
+                                                   {"$set": {'status': 'inactive'}})
+
+
         checklist_column_data_all = checklist_column_all['data']
         exist_static_column_indices = checklist_column_all['static_columns']
         lower_level_checklists = request.data['lower_level_checklists'] \
@@ -285,8 +331,9 @@ class ChecklistEdit(APIView):
             new_column_data = column
             new_column_data['order_id'] = checklist_column_data_all[str(column_id)]['order_id']
             checklist_column_data_all[str(column_id)] = new_column_data
-            mongo_client.checklists.update_one({'checklist_id': checklist_id}, {
-                "$set": {'data': checklist_column_data_all}})
+        checklist_column_data_all = sort_dict(checklist_column_data_all)
+        mongo_client.checklists.update_one({'checklist_id': checklist_id}, {
+            "$set": {'data': checklist_column_data_all}})
 
         if not isinstance(static_column, dict):
             static_column = {"1": static_column}
@@ -335,17 +382,20 @@ class ChecklistEdit(APIView):
 
         row_dict = {"created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id,
                     "checklist_id": checklist_id, "status": "active", "data": {}}
+        row_array = {}
+        row_data = {}
 
+        all_rows_dict = {}
         for row_id in range(n_rows+1, n_rows+new_rows+1):
             row_index = row_id - (n_rows+1)
             row_dict['rowid'] = row_id
-            row_data = {}
             for column in exist_static_column_indices:
                 column_id = int(column)
                 column_name = checklist_column_data_all[column]['column_name']
                 column_type = checklist_column_data_all[column]['column_type']
                 curr_row_data = new_static_column_values[column][row_index]
                 order_id = curr_row_data['order_id']
+                row_dict['order_id'] = order_id
                 cell_value = curr_row_data['cell_value']
                 row_data[column] = {
                     "column_id": column_id,
@@ -354,13 +404,18 @@ class ChecklistEdit(APIView):
                     "cell_value": cell_value,
                     "order_id": order_id
                 }
-            row_dict["data"] = row_data
-            mongo_client.checklist_data.insert_one(row_dict)
+            row_dict["data"] = row_data.copy()
+            all_rows_dict[order_id] = row_dict.copy()
+        all_rows_dict = sort_dict(all_rows_dict)
+        for curr_row_key in all_rows_dict.keys():
+            curr_row_dict = all_rows_dict[curr_row_key]
+            mongo_client.checklist_data.insert_one(curr_row_dict)
 
         mongo_client.checklists.update_one({'checklist_id': checklist_id}, {
             "$set": {'data': checklist_column_data_all, 'columns':total_cols, 'rows': n_rows+new_rows}})
 
         return ui_utils.handle_response(class_name, data='success', success=True)
+
 
 
 class GetCampaignChecklists(APIView):
@@ -407,6 +462,28 @@ class GetSupplierChecklists(APIView):
         return ui_utils.handle_response(class_name, data=checklists, success=True)
 
 
+class FreezeChecklist(APIView):
+    @staticmethod
+    def put(request,checklist_id, state):
+        current_data = mongo_client.checklists.find_one({"checklist_id": int(checklist_id)})
+        current_status = current_data['status']
+        if current_status == 'inactive':
+            response = 'checklist is already deleted'
+            return ui_utils.handle_response({}, data=response, success=False)
+        if current_status == 'active':
+            if state == '0':
+                response = 'checklist is already active'
+                return ui_utils.handle_response({}, data=response, success=False)
+            if state == '1':
+                mongo_client.checklists.update_one({"checklist_id": int(checklist_id)},  {"$set": {'status': 'frozen'}})
+        if current_status == 'frozen':
+            if state == '0':
+                mongo_client.checklists.update_one({"checklist_id": int(checklist_id)}, {"$set": {'status': 'active'}})
+            if state == '1':
+                response = 'checklist is already frozen'
+                return ui_utils.handle_response({}, data=response, success=False)
+        return ui_utils.handle_response({}, data='success', success=True)
+
 class GetChecklistData(APIView):
     @staticmethod
     def get(request, checklist_id):
@@ -426,10 +503,12 @@ class GetChecklistData(APIView):
             "checklist_id": checklist_info['checklist_id'],
         }
         checklist_data = list(mongo_client.checklist_data.find({"checklist_id": checklist_id}))
+        checklist_data = sorted(checklist_data, key=itemgetter('order_id'))
         values = []
         column_headers = []
         row_headers = []
-        checklist_info_columns = checklist_info['data']
+        checklist_info_columns_unsorted = checklist_info['data']
+        checklist_info_columns = sort_dict(checklist_info_columns_unsorted)
         columns_list = checklist_info_columns.keys()
         for column in columns_list:
             column_headers.append(checklist_info_columns[column])
@@ -440,6 +519,8 @@ class GetChecklistData(APIView):
                 continue
             curr_row_data = checklist['data']
             curr_row_columns = curr_row_data.keys()
+            curr_row_columns.sort()
+            print curr_row_columns
             for column in curr_row_columns:
                 value = curr_row_data[column]["cell_value"]
                 column_id = column
@@ -462,8 +543,20 @@ class DeleteChecklist(APIView):
     # deactivating a full checklist
     @staticmethod
     def put(request,checklist_id):
-        mongo_client.checklists.update_one({"checklist_id": int(checklist_id)},  {"$set": {'status': 'inactive'}})
-        return ui_utils.handle_response({}, data='success', success=True)
+        checklist_info = mongo_client.checklists.find_one({"checklist_id": int(checklist_id)})
+        success = False
+        if checklist_info is None:
+            return ui_utils.handle_response({}, data='checklist does not exist', success=success)
+        checklist_status = checklist_info['status'] if 'status' in checklist_info else 'active'
+        if checklist_status == 'inactive':
+            data = 'checklist is already deleted'
+        elif checklist_status == 'frozen':
+            data = "checklist is frozen, cannot be modified"
+        else:
+            mongo_client.checklists.update_one({"checklist_id": int(checklist_id)},  {"$set": {'status': 'inactive'}})
+            data = 'success'
+            success = True
+        return ui_utils.handle_response({}, data=data, success=success)
 
 class DeleteChecklistRow(APIView):
 

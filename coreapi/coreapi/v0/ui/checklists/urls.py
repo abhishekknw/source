@@ -1,7 +1,7 @@
 from django.conf.urls import url
 from views import (CreateChecklistTemplate, ChecklistEntry, GetCampaignChecklists,
                    GetSupplierChecklists, GetChecklistData, DeleteChecklist,
-                   DeleteChecklistRow, ChecklistEdit)
+                   DeleteChecklistRow, ChecklistEdit, FreezeChecklist)
 
 urlpatterns = [
     url(r'^(?P<campaign_id>[A-Z_a-z0-9]+)/create$', CreateChecklistTemplate.as_view()),
@@ -12,4 +12,5 @@ urlpatterns = [
     url(r'^(?P<checklist_id>[A-Z_a-z0-9]+)/delete_checklist$', DeleteChecklist.as_view()),
     url(r'^(?P<checklist_id>[A-Z_a-z0-9]+)/delete_row/(?P<row_id>[A-Z_a-z0-9]+)$', DeleteChecklistRow.as_view()),
     url(r'^(?P<checklist_id>[A-Z_a-z0-9]+)/edit', ChecklistEdit.as_view()),
+    url(r'^(?P<checklist_id>[A-Z_a-z0-9]+)/freeze/(?P<state>[0-1]+)$', FreezeChecklist.as_view()),
 ]

@@ -608,6 +608,7 @@ class CampaignInventory(APIView):
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
 
         except Exception as e:
+            print "e2", e
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def put(self, request, campaign_id):
