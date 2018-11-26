@@ -536,6 +536,7 @@ class GetChecklistData(APIView):
         checklist_info_deleted_columns = checklist_info['deleted_columns']
         checklist_info_columns = sort_dict(checklist_info_columns_unsorted)
         columns_list = checklist_info_columns.keys()
+        checklist_info_static_columns = checklist_info['static_columns']
         for column in columns_list:
             if str(column) not in checklist_info_deleted_columns:
                 column_headers.append(checklist_info_columns[column])
@@ -550,17 +551,18 @@ class GetChecklistData(APIView):
             for column in curr_row_columns:
                 value = curr_row_data[column]["cell_value"]
                 column_id = column
-                if column == '1':
-                    row_headers.append({
-                        "cell_value": value,
-                        "row_id": row_id
-                    })
-                elif column not in checklist_info_deleted_columns:
-                    values.append({
-                        "row_id": row_id,
-                        "value": value,
-                        "column_id": int(column_id)
-                    })
+                if column not in checklist_info_deleted_columns:
+                    if column in checklist_info_static_columns:
+                        row_headers.append({
+                            "cell_value": value,
+                            "row_id": row_id
+                        })
+                    else:
+                        values.append({
+                            "row_id": row_id,
+                            "value": value,
+                            "column_id": int(column_id)
+                        })
         final_data = {'values': values, 'column_headers': column_headers, 'row_headers': row_headers, 'checklist_info': checklist_dict}
         return ui_utils.handle_response({}, data=final_data, success=True)
 
