@@ -155,7 +155,7 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
     all_checklist_columns_dict = checklist['data']
     n_cols = len(all_checklist_columns_dict)
     checklist_id = checklist['checklist_id']
-    deleted_columns = checklist['deleted_columns']
+    deleted_columns = checklist['deleted_columns'] if 'deleted_columns' in checklist else []
     static_columns = checklist['static_columns'] if 'static_columns' in checklist else ["1"]
     timestamp = datetime.datetime.utcnow()
     total_rows = checklist_data.keys()
