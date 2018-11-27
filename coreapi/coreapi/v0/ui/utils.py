@@ -45,6 +45,7 @@ from v0.ui.inventory.models import (AdInventoryType, InventorySummary, FlyerInve
                                     GatewayArchInventory, PosterInventory)
 from v0.ui.base.models import DurationType
 from v0.ui.finances.models import PriceMappingDefault
+from v0.ui.account.models import Profile
 
 
 def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False, request=None):
@@ -937,3 +938,11 @@ def calculate_percentage(numerator, denominator):
         return round(numerator/denominator*100, 3)
     else:
         return 0
+
+
+def get_user_organisation_id(user):
+    profile_id = user.profile_id
+    profile = Profile.objects.filter(id=profile_id).all()
+    if len(profile) == 0:
+        return None
+    return profile[0].organisation_id
