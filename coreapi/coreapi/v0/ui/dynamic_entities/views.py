@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from v0.ui.utils import handle_response, get_user_organisation_id
+from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg
 from models import SupplyEntityType, SupplyEntity
 from bson.objectid import ObjectId
 from datetime import datetime
@@ -95,16 +95,6 @@ class EntityTypeById(APIView):
         exist_entity_query = SupplyEntityType.objects.raw({'_id': ObjectId(entity_type_id)})[0]
         exist_entity_query.delete()
         return handle_response('', data="success", success=True)
-
-
-def create_validation_msg(dict_of_required_attributes):
-    is_valid = True
-    validation_msg_dict = {'missing_data':[]}
-    for key, value in dict_of_required_attributes.items():
-        if not value:
-            is_valid = False
-            validation_msg_dict['missing_data'].append(key)
-    return (is_valid, validation_msg_dict)
 
 
 def validate_attribute_with_type(entity_type_attribute_dict, attribute_value):

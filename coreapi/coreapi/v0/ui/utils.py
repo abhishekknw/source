@@ -946,3 +946,13 @@ def get_user_organisation_id(user):
     if len(profile) == 0:
         return None
     return profile[0].organisation_id
+
+
+def create_validation_msg(dict_of_required_attributes):
+    is_valid = True
+    validation_msg_dict = {'missing_data':[]}
+    for key, value in dict_of_required_attributes.items():
+        if not value:
+            is_valid = False
+            validation_msg_dict['missing_data'].append(key)
+    return (is_valid, validation_msg_dict)
