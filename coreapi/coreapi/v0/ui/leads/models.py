@@ -108,11 +108,16 @@ def add_extra_leads(leads_summary,campaign_list=None):
     return leads_summary
 
 
-def get_leads_summary(campaign_list=None):
+def get_leads_summary(campaign_list=None, user_start_datetime=None,user_end_datetime=None):
     if campaign_list:
         if not isinstance(campaign_list, list):
             campaign_list = [campaign_list]
-        match_dict = {"campaign_id": {"$in": campaign_list}}
+        match_constraint = [{"campaign_id": {"$in": campaign_list}}]
+        if user_start_datetime:
+            match_constraint.append({"created_at": {"$gte": user_start_datetime}})
+        if user_end_datetime:
+            match_constraint.append({"created_at": {"$lte": user_end_datetime}})
+        match_dict = {"$and": match_constraint}
     else:
         match_dict = {}
     leads_summary = mongo_client.leads.aggregate(

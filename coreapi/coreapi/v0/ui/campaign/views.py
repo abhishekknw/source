@@ -183,10 +183,10 @@ def hot_lead_ratio_calculator(data_array):
     return data_array
 
 
-def lead_counter(campaign_id):
+def lead_counter(campaign_id, leads_form_data,user_start_datetime,user_end_datetime):
     result = {}
-    all_leads_summary = get_leads_summary(campaign_id)
-    all_campaign_leads = mongo_client.leads.find({"campaign_id":campaign_id})
+    all_leads_summary = get_leads_summary(campaign_id,user_start_datetime,user_end_datetime)
+    all_campaign_leads = leads_form_data
     for summary in all_leads_summary:
         result[summary['supplier_id']] = {"hot_leads": summary['hot_leads_count'],
                                           "total_leads": summary['total_leads_count'],
@@ -989,7 +989,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
             "suppliers": 0,
             "flat_count": 0
         }
-    campaign_hot_leads_dict = lead_counter(campaign_id)
+    campaign_hot_leads_dict = lead_counter(campaign_id, leads_form_data, user_start_datetime, user_end_datetime)
     for curr_supplier_data in supplier_data:
         supplier_id = curr_supplier_data['supplier_id']
         supplier_locality = curr_supplier_data['society_locality']
@@ -1524,7 +1524,7 @@ class CampaignLeadsCustom(APIView):
         try:
             query_type = request.query_params.get('query_type')
             if query_type not in ['supplier', 'flat', 'locality', 'date', 'weekday', 'phase']:
-                return 'incorrect query type'
+                data='incorrect query type'
             campaign_id = request.query_params.get('campaign_id', None)
             user_start_str = request.query_params.get('start_date', None)
             user_end_str = request.query_params.get('end_date', None)
