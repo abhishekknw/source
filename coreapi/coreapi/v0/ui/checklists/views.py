@@ -317,7 +317,8 @@ class ChecklistEdit(APIView):
             new_delete_columns = exist_inactive_columns
 
         checklist_column_data_all = checklist_column_all['data']
-        exist_static_column_indices = checklist_column_all['static_columns']
+        exist_static_column_indices = checklist_column_all['static_columns'] \
+            if 'static_columns' in checklist_column_all else []
         lower_level_checklists = request.data['lower_level_checklists'] \
             if 'lower_level_checklists' in request.data else []
         n_rows = checklist_column_all['rows']
