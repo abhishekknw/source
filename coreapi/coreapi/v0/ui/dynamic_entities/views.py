@@ -10,12 +10,19 @@ class EntityType(APIView):
     @staticmethod
     def post(request):
         name = request.data['name']
+        is_global = request.data['is_global'] if 'is_global' in request.data else False
         entity_attributes = request.data['entity_attributes']
-        SupplyEntityType(**{'name': name, "entity_attributes": entity_attributes}).save()
+        profile_id = request.user.profile_id
+        profile = Profile.objects.filter(id=profile_id).all()
+        if len(profile) == 0:
+            return
+        organisation_id = profile[0].organisation_id
         dict_of_req_attributes = {"name": name, "entity_attributes": entity_attributes}
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
             return ui_utils.handle_response('', data=validation_msg_dict, success=False)
+        SupplyEntityType(**{'name': name, "entity_attributes": entity_attributes, "organisation_id": organisation_id,
+                            "is_global": is_global, "created_at": datetime.now()}).save()
         return ui_utils.handle_response('', data={"success": True}, success=True)
 
 
@@ -49,6 +56,7 @@ class EntityTypeById(APIView):
     def put(request, entity_type_id):
         new_name = request.data['name'] if 'name' in request.data else None
         new_attributes = request.data['entity_attributes'] if 'entity_attributes' in request.data else None
+        is_global = request.data['is_global'] if 'is_global' in request.data else False
         exist_entity_query = SupplyEntityType.objects.raw({'_id': ObjectId(entity_type_id)})[0]
         dict_of_req_attributes = {"name": new_name, "entity_attributes": new_attributes}
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
@@ -56,6 +64,8 @@ class EntityTypeById(APIView):
             return ui_utils.handle_response('', data=validation_msg_dict, success=False)
         exist_entity_query.name = new_name
         exist_entity_query.entity_attributes = new_attributes
+        exist_entity_query.is_global = is_global
+        exist_entity_query.updated_at = datetime.now()
         exist_entity_query.save()
         return ui_utils.handle_response('', data="success", success=True)
 
@@ -80,13 +90,13 @@ def create_validation_msg(dict_of_required_attributes):
 class Entity(APIView):
     @staticmethod
     def post(request):
-        name = request.data['name'] if 'name' in request.data['name'] else None
-        entity_type = request.data['entity_type'] if 'entity_type' in request.data else None
+        name = request.data['name'] if 'name' in request.data else None
+        entity_type_id = request.data['entity_type_id'] if 'entity_type_id' in request.data else None
         is_custom = request.data['is_custom'] if 'is_custom' in request.data else None
         entity_attributes = request.data['entity_attributes']
         supplier_id = request.data['supplier_id'] if 'supplier_id' in request.data else None
         campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data else None
-        dict_of_req_attributes = {"name": name, "entity_type": entity_type, "is_custom": is_custom,
+        dict_of_req_attributes = {"name": name, "entity_type_id": entity_type_id, "is_custom": is_custom,
              "entity_attributes": entity_attributes, "supplier_id": supplier_id, "campaign_id": campaign_id}
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         entity_dict = dict_of_req_attributes
@@ -126,12 +136,12 @@ class EntityById(APIView):
     @staticmethod
     def put(request, entity_id):
         name = request.data['name'] if 'name' in request.data else None
-        entity_type = request.data['entity_type'] if 'entity_type' in request.data else None
+        entity_type_id = request.data['entity_type_id'] if 'entity_type_id' in request.data else None
         is_custom = request.data['is_custom'] if 'is_custom' in request.data else None
         entity_attributes = request.data['entity_attributes']
         supplier_id = request.data['supplier_id'] if 'supplier_id' in request.data else None
         campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data else None
-        dict_of_req_attributes = {"name": name, "entity_type": entity_type, "is_custom": is_custom,
+        dict_of_req_attributes = {"name": name, "entity_type_id": entity_type_id, "is_custom": is_custom,
              "entity_attributes": entity_attributes, "supplier_id": supplier_id, "campaign_id": campaign_id}
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         entity_dict = dict_of_req_attributes
@@ -141,7 +151,7 @@ class EntityById(APIView):
         if len(profile) == 0:
             return
         entity_dict['organisation_id'] = profile[0].organisation_id
-        entity_dict['created_at'] = datetime.now()
+        entity_dict['updated_at'] = datetime.now()
         if not is_valid:
             return ui_utils.handle_response('', data=validation_msg_dict, success=False)
         SupplyEntity.objects.raw({'_id': ObjectId(entity_id)}).update({"$set": entity_dict})
