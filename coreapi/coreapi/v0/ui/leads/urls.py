@@ -5,7 +5,7 @@ from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntrie
                    SmsContact, AddLeadFormItems, EditLeadsForm,
                    LeadsSummary, GetLeadsEntriesByCampaignId, GenerateLeadDataExcel,
                    SanitizeLeadsData, GenerateDemoData, UpdateLeadsDataSHA256, UpdateGlobalHotLeadCriteria,
-                   UpdateLeadsDataIsHot, UpdateExtraLeads)
+                   UpdateLeadsDataIsHot, UpdateExtraLeads, LeadsPermissionsAPI)
 
 urlpatterns = [
     url(r'^(?P<campaign_id>[A-Z_a-z0-9]+)/create$', CreateLeadsForm.as_view()),
@@ -30,7 +30,7 @@ urlpatterns = [
     url(r'^update_global_hot_lead_criteria/$', UpdateGlobalHotLeadCriteria.as_view()),
     url(r'^update_all_is_hot/$', UpdateLeadsDataIsHot.as_view()),
     url(r'^(?P<form_id>[0-9]+)/update_extra_leads/$', UpdateExtraLeads.as_view()),
-
+    url(r'^permissions$', LeadsPermissionsAPI.as_view()),
 ]
 
 router = DefaultRouter()

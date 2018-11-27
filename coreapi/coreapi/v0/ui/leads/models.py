@@ -1,7 +1,11 @@
 from django.db import models
 from v0.ui.base.models import BaseModel
 from v0.ui.common.models import mongo_client
+from pymodm.connection import connect
+from pymongo.write_concern import WriteConcern
+from pymodm import MongoModel, fields
 
+connect("mongodb://localhost:27017/machadalo", alias="mongo_app")
 
 LEAD_KEY_TYPES = (
     ('STRING', 'STRING'),
@@ -181,3 +185,17 @@ def get_leads_summary_by_campaign(campaign_list=None):
             ]
         )
     return list(leads_summary)
+
+
+class LeadsPermissions(MongoModel):
+    user_id = fields.IntegerField()
+    organisation_id = fields.CharField()
+    leads_permissions = fields.ListField()  # CREATE, UPDATE, READ, DELETE, FILL
+    allowed_campaigns = fields.ListField()  #  All if empty
+    created_by = fields.CharField()
+    created_at = fields.DateTimeField()
+    updated_at = fields.DateTimeField()
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'mongo_app'

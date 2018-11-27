@@ -1,12 +1,12 @@
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
-from models import (LeadsFormContacts, get_leads_summary)
+from models import (LeadsFormContacts, get_leads_summary, LeadsPermissions)
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.inventory.models import (InventoryActivityAssignment, InventoryActivity)
 import operator
-import v0.ui.utils as ui_utils
+from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg
 import boto3
 import os
 import datetime
@@ -160,14 +160,14 @@ class GetLeadsEntries(APIView):
 
         page_number = int(request.query_params.get('page_number',0))
         supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number)
-        return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
+        return handle_response({}, data=supplier_all_lead_entries, success=True)
 
 class GetLeadsEntriesBySupplier(APIView):
     @staticmethod
     def get(request, leads_form_id, supplier_id):
         page_number = int(request.query_params.get('page_number', 0))
         supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number)
-        return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
+        return handle_response({}, data=supplier_all_lead_entries, success=True)
 
 
 class GetLeadsEntriesByCampaignId(APIView):
@@ -177,7 +177,7 @@ class GetLeadsEntriesByCampaignId(APIView):
         page_number = int(request.query_params.get('page_number', 0))
         first_leads_form_id = mongo_client.leads_forms.find_one({"campaign_id":campaign_id})['leads_form_id']
         supplier_all_lead_entries = get_supplier_all_leads_entries(first_leads_form_id, supplier_id, page_number)
-        return ui_utils.handle_response({}, data=supplier_all_lead_entries, success=True)
+        return handle_response({}, data=supplier_all_lead_entries, success=True)
 
 
 class CreateLeadsForm(APIView):
@@ -208,7 +208,7 @@ class CreateLeadsForm(APIView):
         else:
             mongo_dict['global_hot_lead_criteria'] = create_global_hot_lead_criteria(mongo_dict)
         mongo_client.leads_forms.insert_one(mongo_dict)
-        return ui_utils.handle_response({}, data='success', success=True)
+        return handle_response({}, data='success', success=True)
 
 
 class GetLeadsForm(APIView):
@@ -223,7 +223,7 @@ class GetLeadsForm(APIView):
                 "leads_form_id": lead_from['leads_form_id'],
                 "leads_form_items": lead_from['data']
             }
-        return ui_utils.handle_response({}, data=lead_form_dict, success=True)
+        return handle_response({}, data=lead_form_dict, success=True)
 
 
 class LeadsFormBulkEntry(APIView):
@@ -343,7 +343,7 @@ class LeadsFormBulkEntry(APIView):
         print "inv_activity_assignment_activity_date_missing_societies", list(set(inv_activity_assignment_activity_date_missing_societies))
         print "inv_activit_missing_societies", list(set(inv_activity_missing_societies))
         print "not_present_in_shortlisted_societies", list(set(not_present_in_shortlisted_societies))
-        return ui_utils.handle_response({}, data='success', success=True)
+        return handle_response({}, data='success', success=True)
 
 
 class LeadsFormEntry(APIView):
@@ -355,7 +355,7 @@ class LeadsFormEntry(APIView):
         campaign_id = lead_form['campaign_id']
         lead_data = request.data["leads_form_entries"]
         enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id)
-        return ui_utils.handle_response({}, data='success', success=True)
+        return handle_response({}, data='success', success=True)
 
 
 @shared_task()
@@ -426,7 +426,7 @@ class SanitizeLeadsData(APIView):
     def put(self, request):
         class_name = self.__class__.__name__
         sanitize_leads_data.delay()
-        return ui_utils.handle_response(class_name, data='success', success=True)
+        return handle_response(class_name, data='success', success=True)
 
 
 def write_keys_to_file(keys_list):
@@ -462,7 +462,7 @@ class GenerateLeadForm(APIView):
         for lead in leads_form_data:
             keys_list.append(leads_form_data[lead]["key_name"])
         filename = write_keys_to_file(keys_list)
-        return ui_utils.handle_response({}, data={
+        return handle_response({}, data={
             'filepath': 'https://s3.ap-south-1.amazonaws.com/leads-forms-templates/' + filename}, success=True)
 
 
@@ -505,7 +505,7 @@ class DeleteLeadForm(APIView):
     def put(request, form_id):
         result = mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)},
                                      {"$set": {"status": "inactive"}})
-        return ui_utils.handle_response({}, data='success', success=True)
+        return handle_response({}, data='success', success=True)
 
 
 class DeleteLeadEntry(APIView):
@@ -513,7 +513,7 @@ class DeleteLeadEntry(APIView):
     def put(request, form_id, entry_id):
         result = mongo_client.leads.update_one({"leads_form_id": int(form_id), "entry_id": int(entry_id)},
                                      {"$set": {"status": "inactive"}})
-        return ui_utils.handle_response(result, data='success', success=True)
+        return handle_response(result, data='success', success=True)
 
 
 class AddLeadFormItems(APIView):
@@ -524,7 +524,7 @@ class AddLeadFormItems(APIView):
         for items_dict in items_dict_list:
             old_form = mongo_client.leads_forms.find_one({"leads_form_id": int(form_id)})
             if not old_form:
-                return ui_utils.handle_response(class_name, data={"status": "No for Found with this id"}, success=True)
+                return handle_response(class_name, data={"status": "No for Found with this id"}, success=True)
             old_form_items = old_form['data']
             max_item_id = 0
             max_order_id = 0
@@ -547,7 +547,7 @@ class AddLeadFormItems(APIView):
             old_form_items[str(max_item_id + 1)] = new_form_item
             global_hot_lead_criteria = create_global_hot_lead_criteria({'data':old_form_items})
             mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"data": old_form_items, 'global_hot_lead_criteria':global_hot_lead_criteria}})
-        return ui_utils.handle_response(class_name, data='success', success=True)
+        return handle_response(class_name, data='success', success=True)
 
 
 class EditLeadsForm(APIView):
@@ -556,7 +556,7 @@ class EditLeadsForm(APIView):
         name = request.data['name'] if 'name' in request.data.keys() else None
         if name is not None:
             mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"leads_form_name": name}})
-        return ui_utils.handle_response({}, data='success', success=True)
+        return handle_response({}, data='success', success=True)
 
 
 class EditLeadsForm(APIView):
@@ -565,7 +565,7 @@ class EditLeadsForm(APIView):
         name = request.data['name'] if 'name' in request.data.keys() else None
         if name is not None:
             mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"leads_form_name": name}})
-        return ui_utils.handle_response({}, data='success', success=True)
+        return handle_response({}, data='success', success=True)
 
 
 class UpdateExtraLeads(APIView):
@@ -574,9 +574,9 @@ class UpdateExtraLeads(APIView):
         supplier_id = request.data['supplier_id'] if 'supplier_id' in request.data.keys() else None
         campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data.keys() else None
         if not supplier_id:
-            return ui_utils.handle_response({}, data='failed', success=False)
+            return handle_response({}, data='failed', success=False)
         if not campaign_id:
-            return ui_utils.handle_response({}, data='failed', success=False)
+            return handle_response({}, data='failed', success=False)
 
         extra_leads = request.data['extra_leads'] if 'extra_leads' in request.data.keys() else None
         extra_hot_leads = request.data['extra_hot_leads'] if 'extra_hot_leads' in request.data.keys() else None
@@ -591,7 +591,7 @@ class UpdateExtraLeads(APIView):
             set_dict["campaign_id"] = campaign_id
 
             mongo_client.leads_extras.update_one({"leads_form_id": int(form_id), "supplier_id":supplier_id}, {"$set": set_dict}, upsert=True)
-        return ui_utils.handle_response({}, data='success', success=True)
+        return handle_response({}, data='success', success=True)
 
 
 class GenerateDemoData(APIView):
@@ -628,7 +628,7 @@ class GenerateDemoData(APIView):
                 new_data.append(curr_data_item)
             curr_lead['data'] = new_data
             mongo_test.leads.insert_one(curr_lead)
-        return ui_utils.handle_response({}, data='success', success=True)
+        return handle_response({}, data='success', success=True)
 
 
 class LeadsSummary(APIView):
@@ -698,7 +698,7 @@ class LeadsSummary(APIView):
                 "hot_leads": all_campaign_dict[campaign_id]['hot_leads'],
                 "campaign_status": this_campaign_status
             })
-        return ui_utils.handle_response(class_name, data=all_leads_summary, success=True)
+        return handle_response(class_name, data=all_leads_summary, success=True)
 
 
 class SmsContact(APIView):
@@ -713,7 +713,7 @@ class SmsContact(APIView):
             'form_id': form_id
         }))
         data.save()
-        return ui_utils.handle_response(class_name, data='success', success=True)
+        return handle_response(class_name, data='success', success=True)
 
     def get(self, request, form_id):
         class_name = self.__class__.__name__
@@ -722,7 +722,7 @@ class SmsContact(APIView):
         contacts_data = []
         for data in contacts_data_object:
             contacts_data.append(data)
-        return ui_utils.handle_response(class_name, data=contacts_data, success=True)
+        return handle_response(class_name, data=contacts_data, success=True)
 
 
 def create_lead_hash(lead_dict):
@@ -757,7 +757,7 @@ class UpdateLeadsDataSHA256(APIView):
                 bulk = mongo_client.leads.initialize_unordered_bulk_op()
         if counter > 0:
             bulk.execute()
-        return ui_utils.handle_response({}, data='success', success=True)
+        return handle_response({}, data='success', success=True)
 
 
 def create_global_hot_lead_criteria(curr_lead_form):
@@ -795,7 +795,7 @@ class UpdateGlobalHotLeadCriteria(APIView):
                 bulk = mongo_client.leads.initialize_unordered_bulk_op()
         if counter > 0:
             bulk.execute()
-        return ui_utils.handle_response({}, data='success', success=True)
+        return handle_response({}, data='success', success=True)
 
 
 def calculate_is_hot(curr_lead, global_hot_lead_criteria):
@@ -834,4 +834,24 @@ def update_leads_data_is_hot():
 class UpdateLeadsDataIsHot(APIView):
     def put(self, request):
         update_leads_data_is_hot.delay()
-        return ui_utils.handle_response({}, data='success', success=True)
+        return handle_response({}, data='success', success=True)
+
+
+class LeadsPermissionsAPI(APIView):
+    @staticmethod
+    def post(request):
+        leads_permissions = request.data['leads_permissions']
+        allowed_campaigns = request.data['allowed_campaigns']
+        user_id = request.data['user_id']
+        organisation_id = get_user_organisation_id(request.user)
+        dict_of_req_attributes = {"leads_permissions": leads_permissions,
+                                  "allowed_campaigns": allowed_campaigns,
+                                  "organisation_id": organisation_id, "user_id": user_id}
+        (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
+        if not is_valid:
+            return handle_response('', data=validation_msg_dict, success=False)
+        leads_permissions_dict = dict_of_req_attributes
+        leads_permissions_dict["created_by"] = request.user.id
+        leads_permissions_dict["created_at"] = datetime.datetime.now()
+        LeadsPermissions(**leads_permissions_dict).save()
+        return handle_response('', data={"success": True}, success=True)
