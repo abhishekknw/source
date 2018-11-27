@@ -203,6 +203,9 @@ class EntityById(APIView):
         entity_dict['updated_at'] = datetime.now()
         if not is_valid:
             return handle_response('', data=validation_msg_dict, success=False)
+        (is_valid_adv, validation_msg_dict_adv) = validate_with_entity_type(entity_dict, entity_type_id)
+        if not is_valid_adv:
+            return handle_response('', data=validation_msg_dict_adv, success=False)
         SupplyEntity.objects.raw({'_id': ObjectId(entity_id)}).update({"$set": entity_dict})
         return handle_response('', data={"success": True}, success=True)
 
