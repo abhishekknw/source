@@ -8,8 +8,11 @@ connect("mongodb://localhost:27017/machadalo", alias="mongo_app")
 class SupplyEntityType(MongoModel):
     name = fields.CharField()
     entity_attributes = fields.ListField()
+    is_global = fields.BooleanField()
     organisation_id = fields.CharField()
     created_by = fields.CharField()
+    created_at = fields.DateTimeField()
+    updated_at = fields.DateTimeField()
 
     class Meta:
         write_concern = WriteConcern(j=True)
@@ -25,7 +28,7 @@ class SupplyEntity(MongoModel):
         {"name":"inventories", "type":"InventoryList", "value":[]}]
     '''
     name = fields.CharField()
-    entity_type = fields.CharField()  # This should be present in entity_type fields
+    entity_type_id = fields.CharField()  # This should be present in entity_type fields
     is_custom = fields.BooleanField(default=False)  # are there any new attributes not present in SupplyEntityType?
     entity_attributes = fields.ListField()
     organisation_id = fields.CharField()
