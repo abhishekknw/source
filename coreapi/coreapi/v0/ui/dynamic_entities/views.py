@@ -5,7 +5,27 @@ from bson.objectid import ObjectId
 from datetime import datetime
 from validate_email import validate_email
 
+
+def validate_entity_type_data(entity_type_dict):
+    possible_attribute_types = ['FLOAT', 'INT', 'STRING', 'BOOLEAN', 'EMAIL', 'PASSWORD', 'PHONE', 'DROPDOWN', 'RADIO',
+                                'CHECKBOX', 'TEXTAREA', 'DATE', 'DATETIME', 'INVENTORYLIST']
+    validation_msg_dict = {'repeating_name_field': [], "type_mismatch": []}
+    is_valid = True
+    entity_type_attributes = entity_type_dict["entity_attributes"]
+    all_attribute_names = []
+    for single_attribute in entity_type_attributes:
+        if single_attribute['name'] in all_attribute_names:
+            is_valid = False
+            validation_msg_dict['repeating_name_field'].append(single_attribute['name'])
+        if single_attribute['type'] not in possible_attribute_types:
+            is_valid = False
+            validation_msg_dict['type_mismatch'].append(single_attribute['type'])
+        all_attribute_names.append(single_attribute['name'])
+    return is_valid, validation_msg_dict
+
+
 class EntityType(APIView):
+
     @staticmethod
     def post(request):
         name = request.data['name']
@@ -17,10 +37,14 @@ class EntityType(APIView):
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
             return handle_response('', data=validation_msg_dict, success=False)
-        SupplyEntityType(**{'name': name, "entity_attributes": entity_attributes, "organisation_id": organisation_id,
-                            "is_global": is_global, "created_at": datetime.now()}).save()
+        entity_type_dict = dict_of_req_attributes
+        entity_type_dict["is_global"] = is_global
+        entity_type_dict["created_at"] = datetime.now()
+        is_valid_adv, validation_msg_dict_adv = validate_entity_type_data(entity_type_dict)
+        if not is_valid_adv:
+            return handle_response('', data=validation_msg_dict_adv, success=False)
+        SupplyEntityType(**entity_type_dict).save()
         return handle_response('', data={"success": True}, success=True)
-
 
     @staticmethod
     def get(request):
@@ -52,16 +76,17 @@ class EntityTypeById(APIView):
         new_name = request.data['name'] if 'name' in request.data else None
         new_attributes = request.data['entity_attributes'] if 'entity_attributes' in request.data else None
         is_global = request.data['is_global'] if 'is_global' in request.data else False
-        exist_entity_query = SupplyEntityType.objects.raw({'_id': ObjectId(entity_type_id)})[0]
         dict_of_req_attributes = {"name": new_name, "entity_attributes": new_attributes}
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
             return handle_response('', data=validation_msg_dict, success=False)
-        exist_entity_query.name = new_name
-        exist_entity_query.entity_attributes = new_attributes
-        exist_entity_query.is_global = is_global
-        exist_entity_query.updated_at = datetime.now()
-        exist_entity_query.save()
+        entity_type_dict = dict_of_req_attributes
+        entity_type_dict["is_global"] = is_global
+        entity_type_dict["updated_at"] = datetime.now()
+        is_valid_adv, validation_msg_dict_adv = validate_entity_type_data(entity_type_dict)
+        if not is_valid_adv:
+            return handle_response('', data=validation_msg_dict_adv, success=False)
+        SupplyEntity.objects.raw({'_id': ObjectId(entity_type_id)}).update({"$set": entity_type_dict})
         return handle_response('', data="success", success=True)
 
 
@@ -83,8 +108,6 @@ def create_validation_msg(dict_of_required_attributes):
 
 
 def validate_attribute_with_type(entity_type_attribute_dict, attribute_value):
-    possible_attribute_types = ['FLOAT', 'INT', 'STRING', 'BOOLEAN', 'EMAIL', 'PASSWORD', 'PHONE', 'DROPDOWN', 'RADIO'
-                                'CHECKBOX', 'TEXTAREA', 'DATE', 'DATETIME', 'INVENTORYLIST']
     attribute_is_valid = True
     attribute_type = entity_type_attribute_dict['type']
     if attribute_type in ['DROPDOWN', 'CHECKBOX', 'RADIO']:
@@ -153,11 +176,11 @@ class Entity(APIView):
                                   "entity_attributes": entity_attributes, "supplier_id": supplier_id,
                                   "campaign_id": campaign_id, "organisation_id": organisation_id}
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
+        if not is_valid:
+            return handle_response('', data=validation_msg_dict, success=False)
         entity_dict = dict_of_req_attributes
         entity_dict['created_by'] = request.user.id
         entity_dict['created_at'] = datetime.now()
-        if not is_valid:
-            return handle_response('', data=validation_msg_dict, success=False)
         (is_valid_adv, validation_msg_dict_adv) = validate_with_entity_type(entity_dict,entity_type_id)
         if not is_valid_adv:
             return handle_response('', data=validation_msg_dict_adv, success=False)
@@ -198,11 +221,11 @@ class EntityById(APIView):
                                   "entity_attributes": entity_attributes, "supplier_id": supplier_id,
                                   "campaign_id": campaign_id, "organisation_id": organisation_id}
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
+        if not is_valid:
+            return handle_response('', data=validation_msg_dict, success=False)
         entity_dict = dict_of_req_attributes
         entity_dict['created_by'] = request.user.id
         entity_dict['updated_at'] = datetime.now()
-        if not is_valid:
-            return handle_response('', data=validation_msg_dict, success=False)
         (is_valid_adv, validation_msg_dict_adv) = validate_with_entity_type(entity_dict, entity_type_id)
         if not is_valid_adv:
             return handle_response('', data=validation_msg_dict_adv, success=False)
