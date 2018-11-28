@@ -14,5 +14,5 @@ urlpatterns = [
     url(r'^(?P<checklist_id>[A-Z_a-z0-9]+)/edit', ChecklistEdit.as_view()),
     url(r'^(?P<checklist_id>[A-Z_a-z0-9]+)/freeze/(?P<state>[0-1]+)$', FreezeChecklist.as_view()),
     url(r'^(?P<checklist_id>[A-Z_a-z0-9]+)/freeze/(?P<state>[0-1]+)$', FreezeChecklist.as_view()),
-    url(r'^permissions$', ChecklistPermissionsAPI.as_view()),
+    url(r'^permissions/$', ChecklistPermissionsAPI.as_view()),
 ]
