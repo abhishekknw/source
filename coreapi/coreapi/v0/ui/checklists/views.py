@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg
 from celery import shared_task
 from v0.ui.common.models import mongo_client, mongo_test
+from bson.objectid import ObjectId
 import datetime
 import collections
 from operator import itemgetter
@@ -622,7 +623,10 @@ class ChecklistPermissionsAPI(APIView):
         return handle_response('', data={"success": True}, success=True)
 
     @staticmethod
-    def get(request,organisation_id):
+    def get(request):
+        organisation_id = request.query_params.get("organisation_id",None)
+        if not organisation_id:
+            return handle_response('', data="Organisation Id Not Provided", success=False)
         checklist_permissions = ChecklistPermissions.objects.raw({"organisation_id" : organisation_id})
         data = []
         for permission in checklist_permissions:
@@ -637,5 +641,31 @@ class ChecklistPermissionsAPI(APIView):
             }
             data.append(permission_data)
         return handle_response('', data=data, success=True)
+
+    @staticmethod
+    def put(request):
+        permissions = request.data
+
+        for permission in permissions:
+            dict_of_req_attributes = {
+                "user_id": permission['user_id'],
+                "profile_id": permission['profile_id'],
+                "organisation_id": permission['organisation_id'],
+                "checklist_permissions": permission['checklist_permissions'],
+                "allowed_campaigns": permission['allowed_campaigns'],
+                "updated_at" : datetime.datetime.now()
+            }
+            ChecklistPermissions.objects.raw({'_id': ObjectId(permission['_id'])}).update({"$set": dict_of_req_attributes})
+        return handle_response('', data={"success": True}, success=True)
+
+    @staticmethod
+    def delete(request):
+        permission_id = request.query_params.get("permission_id",None)
+        if not permission_id:
+            return handle_response('', data="Permission Id Not Provided", success=False)
+        exist_permission_query = ChecklistPermissions.objects.raw({'_id': ObjectId(permission_id)})[0]
+        exist_permission_query.delete()
+        return handle_response('', data="success", success=True)
+
 
 
