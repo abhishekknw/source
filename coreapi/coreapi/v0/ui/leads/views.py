@@ -20,10 +20,10 @@ from django.conf import settings
 from v0.ui.common.models import mongo_client, mongo_test
 import pprint
 from random import randint
-import random
-import string
+import random, string
 pp = pprint.PrettyPrinter(depth=6)
 import hashlib
+from bson.objectid import ObjectId
 
 
 def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id):
@@ -877,5 +877,27 @@ class LeadsPermissionsAPI(APIView):
         else:
             leads_permissions = 'organisation not found'
         return handle_response('', data=leads_permissions, success=True)
+
+
+    @staticmethod
+    def delete(request):
+        permission_id = request.query_params.get("permission_id", None)
+        if not permission_id:
+            return handle_response('', data="Permission Id Not Provided", success=False)
+        exist_permission_query = LeadsPermissions.objects.raw({'_id': ObjectId(permission_id)})[0]
+        exist_permission_query.delete()
+        return handle_response('', data="success", success=True)
+
+    @staticmethod
+    def put(request):
+        permissions = request.data
+
+        for permission in permissions:
+            curr_permission = permission.copy()
+            curr_permission.pop('_id')
+            curr_permission['updated_at'] = datetime.datetime.now()
+            LeadsPermissions.objects.raw({'_id': ObjectId(permission['_id'])}).update({"$set": curr_permission})
+        return handle_response('', data={"success": True}, success=True)
+
 
 
