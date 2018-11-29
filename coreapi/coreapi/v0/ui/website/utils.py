@@ -3742,6 +3742,7 @@ def manipulate_object_key_values(suppliers, supplier_type_code=v0_constants.soci
                     supplier[key] = item
         return suppliers
     except Exception as e:
+        print "e2", e
         raise Exception(function, ui_utils.get_system_error(e))
 
 
@@ -4399,6 +4400,7 @@ def map_objects_ids_to_objects(mapping):
                 output[content_type_id, supplier['supplier_id']] = merge_two_dicts(supplier, extra_data)
         return ui_utils.handle_response(function, data=output, success=True)
     except Exception as e:
+        print"e1", e
         return ui_utils.handle_response(function, exception_object=e)
 
 

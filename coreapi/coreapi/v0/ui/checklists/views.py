@@ -63,7 +63,11 @@ def insert_static_cols(row_dict_original,static_column_values, static_column_nam
 
 def sort_dict(random_dict):
     sorted_dict = collections.OrderedDict()
-    for key in sorted(random_dict.keys()):
+    random_keys = random_dict.keys()
+    keys = sorted([int(x) for x in random_dict.keys()])
+    for key in keys:
+        if isinstance(random_keys[0], unicode) or isinstance(random_keys[0], str):
+            key = str(key)
         sorted_dict[key] = random_dict[key]
     return sorted_dict
 
