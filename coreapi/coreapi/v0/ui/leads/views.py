@@ -247,6 +247,9 @@ class GetLeadsForm(APIView):
 class LeadsFormBulkEntry(APIView):
     @staticmethod
     def post(request, leads_form_id):
+        is_permitted, validation_msg_dict = is_user_permitted("FILL", request.user, leads_form_id=leads_form_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
         source_file = request.data['file']
         wb = load_workbook(source_file)
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
@@ -367,7 +370,7 @@ class LeadsFormBulkEntry(APIView):
 class LeadsFormEntry(APIView):
     @staticmethod
     def post(request, leads_form_id):
-        is_permitted, validation_msg_dict = is_user_permitted("CREATE", request.user, leads_form_id=leads_form_id)
+        is_permitted, validation_msg_dict = is_user_permitted("FILL", request.user, leads_form_id=leads_form_id)
         if not is_permitted:
             return handle_response('', data=validation_msg_dict, success=False)
         supplier_id = request.data['supplier_id']
@@ -525,6 +528,9 @@ class DeleteLeadForm(APIView):
     # Entire form is deactivated
     @staticmethod
     def put(request, form_id):
+        is_permitted, validation_msg_dict = is_user_permitted("DELETE", request.user, leads_form_id=form_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
         result = mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)},
                                      {"$set": {"status": "inactive"}})
         return handle_response({}, data='success', success=True)
@@ -533,6 +539,9 @@ class DeleteLeadForm(APIView):
 class DeleteLeadEntry(APIView):
     @staticmethod
     def put(request, form_id, entry_id):
+        is_permitted, validation_msg_dict = is_user_permitted("DELETE", request.user, leads_form_id=form_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
         result = mongo_client.leads.update_one({"leads_form_id": int(form_id), "entry_id": int(entry_id)},
                                      {"$set": {"status": "inactive"}})
         return handle_response(result, data='success', success=True)
@@ -541,6 +550,9 @@ class DeleteLeadEntry(APIView):
 class AddLeadFormItems(APIView):
     # this function is used to add
     def put(self, request, form_id):
+        is_permitted, validation_msg_dict = is_user_permitted("UPDATE", request.user, leads_form_id=form_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
         class_name = self.__class__.__name__
         items_dict_list = request.data
         for items_dict in items_dict_list:
@@ -575,15 +587,9 @@ class AddLeadFormItems(APIView):
 class EditLeadsForm(APIView):
     @staticmethod
     def put(request, form_id):
-        name = request.data['name'] if 'name' in request.data.keys() else None
-        if name is not None:
-            mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"leads_form_name": name}})
-        return handle_response({}, data='success', success=True)
-
-
-class EditLeadsForm(APIView):
-    @staticmethod
-    def put(request, form_id):
+        is_permitted, validation_msg_dict = is_user_permitted("UPDATE", request.user, leads_form_id=form_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
         name = request.data['name'] if 'name' in request.data.keys() else None
         if name is not None:
             mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"leads_form_name": name}})
@@ -593,6 +599,9 @@ class EditLeadsForm(APIView):
 class UpdateExtraLeads(APIView):
     @staticmethod
     def put(request, form_id):
+        is_permitted, validation_msg_dict = is_user_permitted("FILL", request.user, leads_form_id=form_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
         supplier_id = request.data['supplier_id'] if 'supplier_id' in request.data.keys() else None
         campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data.keys() else None
         if not supplier_id:
