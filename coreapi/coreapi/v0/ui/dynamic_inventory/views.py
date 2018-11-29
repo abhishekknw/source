@@ -67,3 +67,12 @@ class BaseInventoryAPIById(APIView):
         base_inventory_dict["updated_at"] = datetime.now()
         BaseInventory.objects.raw({'_id': ObjectId(base_inventory_id)}).update({"$set": base_inventory_dict})
         return handle_response('', data="success", success=True)
+
+    @staticmethod
+    def delete(request, base_inventory_id):
+        exist_entity_query = list(BaseInventory.objects.raw({'_id': ObjectId(base_inventory_id)}))
+        if len(exist_entity_query) == 1:
+            exist_entity_query[0].delete()
+        else:
+            return handle_response('', data="id does not exist", success=False)
+        return handle_response('', data="success", success=True)
