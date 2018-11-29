@@ -1,9 +1,10 @@
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
-from views import (BaseInventoryAPI)
+from views import (BaseInventoryAPI, BaseInventoryAPIById)
 
 urlpatterns = [
-    url(r'^base-inventory$', BaseInventoryAPI.as_view()),
+    url(r'^base-inventory/$', BaseInventoryAPI.as_view()),
+    url(r'^base-inventory/(?P<base_inventory_id>[A-Z_a-z0-9]+)/$', BaseInventoryAPIById.as_view()),
 ]
 
 router = DefaultRouter()

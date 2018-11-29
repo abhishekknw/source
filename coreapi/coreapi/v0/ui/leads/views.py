@@ -858,15 +858,7 @@ class LeadsPermissionsAPI(APIView):
 
     @staticmethod
     def get(request):
-        user_id = request.user.id
-        # contacts_data_object = LeadsFormContacts.objects.filter(form_id=form_id).values('contact_name',
-        #                                                                                'contact_mobile')
-        #user_id = request.query_params.get('user_id', None)
         organisation_id = get_user_organisation_id(request.user)
-        #leads_permissions_objects = LeadsPermissions.objects
-        # if user_id is not None:
-        #     leads_permissions_objects = leads_permissions_objects.filter(user_id=user_id)
-        #SupplyEntity.objects.raw({'_id': ObjectId(entity_type_id)}).update({"$set": entity_type_dict})
         if organisation_id is not None:
             leads_permissions_all = LeadsPermissions.objects.raw({'organisation_id': organisation_id})[0]
             leads_permissions = {
