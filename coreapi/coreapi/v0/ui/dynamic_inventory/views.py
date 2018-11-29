@@ -38,3 +38,15 @@ class BaseInventoryAPI(APIView):
                 "base_attributes": base_inventory.base_attributes
             }
         return handle_response('', data=all_base_inventory_dict, success=True)
+
+
+class BaseInventoryAPIById(APIView):
+    @staticmethod
+    def get(request, base_inventory_id):
+        base_inventory = BaseInventory.objects.raw({'_id': ObjectId(base_inventory_id)})[0]
+        base_inventory = {
+            "_id": str(base_inventory._id),
+            "name": base_inventory.name,
+            "entity_attributes": base_inventory.base_attributes
+        }
+        return handle_response('', data=base_inventory, success=True)
