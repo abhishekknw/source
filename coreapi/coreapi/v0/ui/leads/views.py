@@ -20,10 +20,10 @@ from django.conf import settings
 from v0.ui.common.models import mongo_client, mongo_test
 import pprint
 from random import randint
-import random
-import string
+import random, string
 pp = pprint.PrettyPrinter(depth=6)
 import hashlib
+from bson.objectid import ObjectId
 
 
 def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id):
@@ -855,3 +855,49 @@ class LeadsPermissionsAPI(APIView):
         leads_permissions_dict["created_at"] = datetime.datetime.now()
         LeadsPermissions(**leads_permissions_dict).save()
         return handle_response('', data={"success": True}, success=True)
+
+    @staticmethod
+    def get(request):
+        user_id = request.user.id
+        # contacts_data_object = LeadsFormContacts.objects.filter(form_id=form_id).values('contact_name',
+        #                                                                                'contact_mobile')
+        #user_id = request.query_params.get('user_id', None)
+        organisation_id = get_user_organisation_id(request.user)
+        #leads_permissions_objects = LeadsPermissions.objects
+        # if user_id is not None:
+        #     leads_permissions_objects = leads_permissions_objects.filter(user_id=user_id)
+        #SupplyEntity.objects.raw({'_id': ObjectId(entity_type_id)}).update({"$set": entity_type_dict})
+        if organisation_id is not None:
+            leads_permissions_all = LeadsPermissions.objects.raw({'organisation_id': organisation_id})[0]
+            leads_permissions = {
+            "organisation_id": leads_permissions_all.organisation_id,
+            "leads_permissions": leads_permissions_all.leads_permissions,
+            "allowed_campaigns": leads_permissions_all.allowed_campaigns
+        }
+        else:
+            leads_permissions = 'organisation not found'
+        return handle_response('', data=leads_permissions, success=True)
+
+
+    @staticmethod
+    def delete(request):
+        permission_id = request.query_params.get("permission_id", None)
+        if not permission_id:
+            return handle_response('', data="Permission Id Not Provided", success=False)
+        exist_permission_query = LeadsPermissions.objects.raw({'_id': ObjectId(permission_id)})[0]
+        exist_permission_query.delete()
+        return handle_response('', data="success", success=True)
+
+    @staticmethod
+    def put(request):
+        permissions = request.data
+
+        for permission in permissions:
+            curr_permission = permission.copy()
+            curr_permission.pop('_id')
+            curr_permission['updated_at'] = datetime.datetime.now()
+            LeadsPermissions.objects.raw({'_id': ObjectId(permission['_id'])}).update({"$set": curr_permission})
+        return handle_response('', data={"success": True}, success=True)
+
+
+
