@@ -20,10 +20,10 @@ class BaseInventoryAPI(APIView):
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
             return handle_response('', data=validation_msg_dict, success=False)
-        entity_type_dict = dict_of_req_attributes
-        entity_type_dict["is_global"] = is_global
-        entity_type_dict["created_at"] = datetime.now()
-        BaseInventory(**entity_type_dict).save()
+        base_inventory_dict = dict_of_req_attributes
+        base_inventory_dict["is_global"] = is_global
+        base_inventory_dict["created_at"] = datetime.now()
+        BaseInventory(**base_inventory_dict).save()
         return handle_response('', data={"success": True}, success=True)
 
 
@@ -50,3 +50,20 @@ class BaseInventoryAPIById(APIView):
             "entity_attributes": base_inventory.base_attributes
         }
         return handle_response('', data=base_inventory, success=True)
+
+
+    @staticmethod
+    def put(request, base_inventory_id):
+        name = request.data['name'] if 'name' in request.data else None
+        base_attributes = request.data['base_attributes'] if 'base_attributes' in request.data else None
+        is_global = request.data['is_global'] if 'is_global' in request.data else False
+        inventory_type = request.data['inventory_type'] if 'inventory_type' in request.data else None
+        dict_of_req_attributes = {"name": name, "base_attributes": base_attributes, "inventory_type":inventory_type}
+        (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
+        if not is_valid:
+            return handle_response('', data=validation_msg_dict, success=False)
+        base_inventory_dict = dict_of_req_attributes
+        base_inventory_dict["is_global"] = is_global
+        base_inventory_dict["updated_at"] = datetime.now()
+        BaseInventory.objects.raw({'_id': ObjectId(base_inventory_id)}).update({"$set": base_inventory_dict})
+        return handle_response('', data="success", success=True)
