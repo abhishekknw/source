@@ -16,7 +16,7 @@ class BaseInventory(MongoModel):
     name = fields.CharField()
     is_global = fields.BooleanField(default=False)
     inventory_type = fields.CharField()  # Time based, Frequency Based, Space Based
-    inventory_attributes = fields.ListField()  # latitude, longitude, frequency, duration, height, width, etc.
+    base_attributes = fields.ListField()  # latitude, longitude, frequency, duration, height, width, etc.
     organisation_id = fields.CharField()
     created_by = fields.CharField()
     supplier_id = fields.CharField()  # This can be changed to entity_id
