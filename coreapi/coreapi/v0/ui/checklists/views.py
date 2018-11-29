@@ -631,13 +631,13 @@ class ChecklistPermissionsAPI(APIView):
         data = []
         for permission in checklist_permissions:
             permission_data = {
-                "_id" : str(permission._id),
-                "user_id" : permission.user_id,
-                "profile_id" : permission.profile_id,
-                "organisation_id" : permission.organisation_id,
-                "checklist_permissions" : permission.checklist_permissions,
-                "allowed_campaigns" : permission.allowed_campaigns,
-                "created_by" : permission.created_by
+                "_id": str(permission._id),
+                "user_id": permission.user_id,
+                "profile_id": permission.profile_id,
+                "organisation_id": permission.organisation_id,
+                "checklist_permissions": permission.checklist_permissions,
+                "allowed_campaigns": permission.allowed_campaigns,
+                "created_by": permission.created_by
             }
             data.append(permission_data)
         return handle_response('', data=data, success=True)
