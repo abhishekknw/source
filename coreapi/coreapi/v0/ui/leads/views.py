@@ -23,7 +23,25 @@ from random import randint
 import random, string
 pp = pprint.PrettyPrinter(depth=6)
 import hashlib
-from bson.objectid import ObjectId
+
+
+def is_user_permitted(permission_type, user, **kwargs):
+    is_permitted = True
+    validation_msg_dict = {'msg': None}
+    leads_form_id = kwargs['leads_form_id'] if 'leads_form_id' in kwargs else None
+    camaign_id = kwargs['camaign_id'] if 'camaign_id' in kwargs else None
+    permission_list = list(LeadsPermissions.objects.raw({'user_id': user.id}))
+    if len(permission_list) == 0:
+        is_permitted = True
+        validation_msg_dict['msg'] = 'no_permission_document'
+        return is_permitted, validation_msg_dict
+    else:
+        permission_obj = permission_list[0]
+        leads_permissions = permission_obj.leads_permissions
+        if permission_type not in leads_permissions:
+            is_permitted = False
+            validation_msg_dict['msg'] = 'not_permitted'
+            return is_permitted, validation_msg_dict
 
 
 def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id):
@@ -349,8 +367,12 @@ class LeadsFormBulkEntry(APIView):
 class LeadsFormEntry(APIView):
     @staticmethod
     def post(request, leads_form_id):
+        is_permitted, validation_msg_dict = is_user_permitted("CREATE", request.user, leads_form_id=leads_form_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
         supplier_id = request.data['supplier_id']
         lead_form = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)})
+        lead_form['last_entry_id']
         entry_id = lead_form['last_entry_id'] + 1 if 'last_entry_id' in lead_form else 1
         campaign_id = lead_form['campaign_id']
         lead_data = request.data["leads_form_entries"]
