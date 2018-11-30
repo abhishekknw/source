@@ -952,7 +952,7 @@ def create_validation_msg(dict_of_required_attributes):
     is_valid = True
     validation_msg_dict = {'missing_data':[]}
     for key, value in dict_of_required_attributes.items():
-        if not value:
+        if value is None:
             is_valid = False
             validation_msg_dict['missing_data'].append(key)
     return (is_valid, validation_msg_dict)
