@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg
+from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg, is_user_permitted
 from celery import shared_task
 from v0.ui.common.models import mongo_client, mongo_test
 from bson.objectid import ObjectId
@@ -7,6 +7,26 @@ import datetime
 import collections
 from operator import itemgetter
 from models import ChecklistPermissions
+
+
+def is_user_permitted(permission_type, user, **kwargs):
+    is_permitted = True
+    validation_msg_dict = {'msg': None}
+    checklist_id = kwargs['checklist_id'] if 'checklist_id' in kwargs else None
+    campaign_id = kwargs['campaign_id'] if 'campaign_id' in kwargs else None
+    permission_list = list(ChecklistPermissions.objects.raw({'user_id': user.id}))
+
+    if len(permission_list) == 0:
+        is_permitted = True
+        validation_msg_dict['msg'] = 'no_permission_document'
+        return is_permitted, validation_msg_dict
+    else:
+        permission_obj = permission_list[0]
+        checklist_permissions = permission_obj.checklist_permissions
+        if permission_type not in checklist_permissions:
+            is_permitted = False
+            validation_msg_dict['msg'] = 'not_permitted'
+    return is_permitted, validation_msg_dict
 
 
 def insert_static_cols(row_dict_original,static_column_values, static_column_names, static_column_types, lower_level_checklists):
@@ -61,6 +81,7 @@ def insert_static_cols(row_dict_original,static_column_values, static_column_nam
         mongo_client.checklist_data.insert_one(row_dict)
     return
 
+
 def sort_dict(random_dict):
     sorted_dict = collections.OrderedDict()
     random_keys = random_dict.keys()
@@ -71,12 +92,17 @@ def sort_dict(random_dict):
         sorted_dict[key] = random_dict[key]
     return sorted_dict
 
+
 class CreateChecklistTemplate(APIView):
     def post(self, request, campaign_id):
         """
         :param request:
         :return:
         """
+
+        is_permitted, validation_msg_dict = is_user_permitted("CREATE", request.user)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
         class_name = self.__class__.__name__
         checklist_name = request.data['checklist_name']
         checklist_columns = request.data['checklist_columns']
@@ -153,7 +179,7 @@ class CreateChecklistTemplate(APIView):
 
         insert_static_cols(row_dict,static_column_values, static_column_names, static_column_types, lower_level_checklists)
 
-        return handle_response({}, data='success', success=True)
+        return handle_response(class_name, data='success', success=True)
 
 
 def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
@@ -249,6 +275,11 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
 class ChecklistEntry(APIView):
     # used to create and update checklist elements
     def put(self, request, checklist_id):
+
+        is_permitted, validation_msg_dict = is_user_permitted("FILL", request.user, checklist_id=checklist_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
+
         checklist = mongo_client.checklists.find_one({"checklist_id": int(checklist_id)})
 
         if checklist == None:
@@ -278,6 +309,9 @@ class ChecklistEntry(APIView):
 class ChecklistEdit(APIView):
 
     def post(self, request, checklist_id):
+        is_permitted, validation_msg_dict = is_user_permitted("UPDATE", request.user, checklist_id=checklist_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
         checklist_id = int(checklist_id)
         class_name = self.__class__.__name__
         columns = request.data['checklist_columns'] if 'checklist_columns' in request.data else []
@@ -286,7 +320,6 @@ class ChecklistEdit(APIView):
             if 'new_checklist_columns' in request.data else []
         new_static_column_values = request.data['new_static_column_values'] \
             if 'new_static_column_values' in request.data else {}
-
 
         if not isinstance(new_static_column_values, dict):
             new_static_column_values = {"1": new_static_column_values}
@@ -450,7 +483,6 @@ class ChecklistEdit(APIView):
         return handle_response(class_name, data='success', success=True)
 
 
-
 class GetCampaignChecklists(APIView):
     # used for getting a list of all checklists of a campaign
     def get(self, request, campaign_id):
@@ -498,6 +530,9 @@ class GetSupplierChecklists(APIView):
 class FreezeChecklist(APIView):
     @staticmethod
     def put(request,checklist_id, state):
+        is_permitted, validation_msg_dict = is_user_permitted("FREEZE", request.user, checklist_id=checklist_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
         current_data = mongo_client.checklists.find_one({"checklist_id": int(checklist_id)})
         current_status = current_data['status']
         if current_status == 'inactive':
@@ -582,6 +617,9 @@ class DeleteChecklist(APIView):
     # deactivating a full checklist
     @staticmethod
     def put(request,checklist_id):
+        is_permitted, validation_msg_dict = is_user_permitted("DELETE", request.user, checklist_id=checklist_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
         checklist_info = mongo_client.checklists.find_one({"checklist_id": int(checklist_id)})
         success = False
         if checklist_info is None:

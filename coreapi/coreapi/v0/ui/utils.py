@@ -46,6 +46,7 @@ from v0.ui.inventory.models import (AdInventoryType, InventorySummary, FlyerInve
 from v0.ui.base.models import DurationType
 from v0.ui.finances.models import PriceMappingDefault
 from v0.ui.account.models import Profile
+from pymodm import MongoModel, fields
 
 
 def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False, request=None):
@@ -979,3 +980,24 @@ def validate_attributes(attributes_dict):
             is_valid = False
             attribute_validation_dict['unknown_types'].append(curr_type)
     return (is_valid, attribute_validation_dict)
+
+
+# this is under testing
+def is_user_permitted(permission_type, user, **kwargs):
+    is_permitted = True
+    validation_msg_dict = {'msg': None}
+    leads_form_id = kwargs['leads_form_id'] if 'leads_form_id' in kwargs else None
+    camaign_id = kwargs['campaign_id'] if 'campaign_id' in kwargs else None
+    model_name = kwargs['model_name'] if 'model_name' in kwargs else None
+    permission_list = list(getattr(model_name).objects.raw({'user_id': user.id}))
+    if len(permission_list) == 0:
+        is_permitted = True
+        validation_msg_dict['msg'] = 'no_permission_document'
+        return is_permitted, validation_msg_dict
+    else:
+        permission_obj = permission_list[0]
+        leads_permissions = permission_obj.leads_permissions
+        if permission_type not in leads_permissions:
+            is_permitted = False
+            validation_msg_dict['msg'] = 'not_permitted'
+            return is_permitted, validation_msg_dict
