@@ -23,7 +23,25 @@ from random import randint
 import random, string
 pp = pprint.PrettyPrinter(depth=6)
 import hashlib
-from bson.objectid import ObjectId
+
+
+def is_user_permitted(permission_type, user, **kwargs):
+    is_permitted = True
+    validation_msg_dict = {'msg': None}
+    leads_form_id = kwargs['leads_form_id'] if 'leads_form_id' in kwargs else None
+    camaign_id = kwargs['camaign_id'] if 'camaign_id' in kwargs else None
+    permission_list = list(LeadsPermissions.objects.raw({'user_id': user.id}))
+    if len(permission_list) == 0:
+        is_permitted = True
+        validation_msg_dict['msg'] = 'no_permission_document'
+        return is_permitted, validation_msg_dict
+    else:
+        permission_obj = permission_list[0]
+        leads_permissions = permission_obj.leads_permissions
+        if permission_type not in leads_permissions:
+            is_permitted = False
+            validation_msg_dict['msg'] = 'not_permitted'
+            return is_permitted, validation_msg_dict
 
 
 def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id):
@@ -229,6 +247,9 @@ class GetLeadsForm(APIView):
 class LeadsFormBulkEntry(APIView):
     @staticmethod
     def post(request, leads_form_id):
+        is_permitted, validation_msg_dict = is_user_permitted("FILL", request.user, leads_form_id=leads_form_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
         source_file = request.data['file']
         wb = load_workbook(source_file)
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
@@ -349,8 +370,12 @@ class LeadsFormBulkEntry(APIView):
 class LeadsFormEntry(APIView):
     @staticmethod
     def post(request, leads_form_id):
+        is_permitted, validation_msg_dict = is_user_permitted("FILL", request.user, leads_form_id=leads_form_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
         supplier_id = request.data['supplier_id']
         lead_form = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)})
+        lead_form['last_entry_id']
         entry_id = lead_form['last_entry_id'] + 1 if 'last_entry_id' in lead_form else 1
         campaign_id = lead_form['campaign_id']
         lead_data = request.data["leads_form_entries"]
@@ -503,6 +528,9 @@ class DeleteLeadForm(APIView):
     # Entire form is deactivated
     @staticmethod
     def put(request, form_id):
+        is_permitted, validation_msg_dict = is_user_permitted("DELETE", request.user, leads_form_id=form_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
         result = mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)},
                                      {"$set": {"status": "inactive"}})
         return handle_response({}, data='success', success=True)
@@ -511,6 +539,9 @@ class DeleteLeadForm(APIView):
 class DeleteLeadEntry(APIView):
     @staticmethod
     def put(request, form_id, entry_id):
+        is_permitted, validation_msg_dict = is_user_permitted("DELETE", request.user, leads_form_id=form_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
         result = mongo_client.leads.update_one({"leads_form_id": int(form_id), "entry_id": int(entry_id)},
                                      {"$set": {"status": "inactive"}})
         return handle_response(result, data='success', success=True)
@@ -519,6 +550,9 @@ class DeleteLeadEntry(APIView):
 class AddLeadFormItems(APIView):
     # this function is used to add
     def put(self, request, form_id):
+        is_permitted, validation_msg_dict = is_user_permitted("UPDATE", request.user, leads_form_id=form_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
         class_name = self.__class__.__name__
         items_dict_list = request.data
         for items_dict in items_dict_list:
@@ -553,15 +587,9 @@ class AddLeadFormItems(APIView):
 class EditLeadsForm(APIView):
     @staticmethod
     def put(request, form_id):
-        name = request.data['name'] if 'name' in request.data.keys() else None
-        if name is not None:
-            mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"leads_form_name": name}})
-        return handle_response({}, data='success', success=True)
-
-
-class EditLeadsForm(APIView):
-    @staticmethod
-    def put(request, form_id):
+        is_permitted, validation_msg_dict = is_user_permitted("UPDATE", request.user, leads_form_id=form_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
         name = request.data['name'] if 'name' in request.data.keys() else None
         if name is not None:
             mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"leads_form_name": name}})
@@ -571,6 +599,9 @@ class EditLeadsForm(APIView):
 class UpdateExtraLeads(APIView):
     @staticmethod
     def put(request, form_id):
+        is_permitted, validation_msg_dict = is_user_permitted("FILL", request.user, leads_form_id=form_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
         supplier_id = request.data['supplier_id'] if 'supplier_id' in request.data.keys() else None
         campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data.keys() else None
         if not supplier_id:
