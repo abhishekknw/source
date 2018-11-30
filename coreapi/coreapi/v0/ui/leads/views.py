@@ -612,9 +612,9 @@ class EditLeadsForm(APIView):
         return handle_response({}, data='success', success=True)
 
 
-class UpdateExtraLeads(APIView):
+class InsertExtraLeads(APIView):
     @staticmethod
-    def put(request, form_id):
+    def post(request, form_id):
         is_permitted, validation_msg_dict = is_user_permitted("FILL", request.user, leads_form_id=form_id)
         if not is_permitted:
             return handle_response('', data=validation_msg_dict, success=False)
@@ -636,8 +636,9 @@ class UpdateExtraLeads(APIView):
         if set_dict != {}:
             set_dict["supplier_id"] = supplier_id
             set_dict["campaign_id"] = campaign_id
+            set_dict["created_at"] = datetime.datetime.now()
 
-            mongo_client.leads_extras.update_one({"leads_form_id": int(form_id), "supplier_id":supplier_id}, {"$set": set_dict}, upsert=True)
+            mongo_client.leads_extras.insert_one(set_dict)
         return handle_response({}, data='success', success=True)
 
 
