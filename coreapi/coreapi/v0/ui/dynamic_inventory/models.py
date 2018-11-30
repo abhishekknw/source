@@ -19,8 +19,6 @@ class BaseInventory(MongoModel):
     base_attributes = fields.ListField()  # latitude, longitude, frequency, duration, height, width, etc.
     organisation_id = fields.CharField()
     created_by = fields.CharField()
-    supplier_id = fields.CharField()  # This can be changed to entity_id
-    campaign_id = fields.CharField()
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
 
@@ -43,8 +41,6 @@ class Inventory(MongoModel):
     inventory_attributes = fields.ListField()  # latitude, longitude, frequency, duration, height, width, etc.
     organisation_id = fields.CharField()
     created_by = fields.CharField()
-    supplier_id = fields.CharField()  # This can be changed to entity_id
-    campaign_id = fields.CharField()
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
 
