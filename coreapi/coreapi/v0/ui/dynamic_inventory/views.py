@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg
+from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg, validate_attributes
 from models import BaseInventory, Inventory
 from bson.objectid import ObjectId
 from datetime import datetime
@@ -20,6 +20,9 @@ class BaseInventoryAPI(APIView):
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
             return handle_response('', data=validation_msg_dict, success=False)
+        (is_valid_attributes, validation_msg_dict_attributes) = validate_attributes(inventory_attributes)
+        if not is_valid_attributes:
+            return handle_response('', data=validation_msg_dict_attributes, success=False)
         base_inventory_dict = dict_of_req_attributes
         base_inventory_dict["is_global"] = is_global
         base_inventory_dict["created_at"] = datetime.now()
@@ -62,6 +65,9 @@ class BaseInventoryAPIById(APIView):
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
             return handle_response('', data=validation_msg_dict, success=False)
+        (is_valid_attributes, validation_msg_dict_attributes) = validate_attributes(inventory_attributes)
+        if not is_valid_attributes:
+            return handle_response('', data=validation_msg_dict_attributes, success=False)
         base_inventory_dict = dict_of_req_attributes
         base_inventory_dict["is_global"] = is_global
         base_inventory_dict["updated_at"] = datetime.now()
@@ -88,6 +94,9 @@ class InventoryAPI(APIView):
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
             return handle_response('', data=validation_msg_dict, success=False)
+        (is_valid_attributes, validation_msg_dict_attributes) = validate_attributes(inventory_attributes)
+        if not is_valid_attributes:
+            return handle_response('', data=validation_msg_dict_attributes, success=False)
         inventory_dict = dict_of_req_attributes
         inventory_dict["is_global"] = is_global
         inventory_dict["created_at"] = datetime.now()
@@ -131,6 +140,9 @@ class InventoryAPIById(APIView):
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
             return handle_response('', data=validation_msg_dict, success=False)
+        (is_valid_attributes, validation_msg_dict_attributes) = validate_attributes(inventory_attributes)
+        if not is_valid_attributes:
+            return handle_response('', data=validation_msg_dict_attributes, success=False)
         inventory_dict = dict_of_req_attributes
         inventory_dict["is_global"] = is_global
         inventory_dict["updated_at"] = datetime.now()
