@@ -235,12 +235,28 @@ class GetLeadsForm(APIView):
         campaign_lead_form = mongo_client.leads_forms.find(
             {"$and": [{"campaign_id": campaign_id}, {"status": {"$ne": "inactive"}}]}, {"_id": 0})
         lead_form_dict = {}
-        for lead_from in campaign_lead_form:
-            lead_form_dict[lead_from["leads_form_id"]] = {
-                "leads_form_name": lead_from['leads_form_name'],
-                "leads_form_id": lead_from['leads_form_id'],
-                "leads_form_items": lead_from['data']
+        for lead_form in campaign_lead_form:
+            lead_form_dict[lead_form["leads_form_id"]] = {
+                "leads_form_name": lead_form['leads_form_name'],
+                "leads_form_id": lead_form['leads_form_id'],
+                "leads_form_items": lead_form['data']
             }
+        return handle_response({}, data=lead_form_dict, success=True)
+
+
+class GetLeadsFormById(APIView):
+    @staticmethod
+    def get(request, leads_form_id):
+        lead_form = list(mongo_client.leads_forms.find(
+            {"$and": [{"leads_form_id": int(leads_form_id)}, {"status": {"$ne": "inactive"}}]}))
+        lead_form_dict = {}
+        if len(lead_form) > 0:
+            lead_form = lead_form[0]
+            lead_form_dict = {
+                    "leads_form_name": lead_form['leads_form_name'],
+                    "leads_form_id": lead_form['leads_form_id'],
+                    "leads_form_items": lead_form['data']
+                }
         return handle_response({}, data=lead_form_dict, success=True)
 
 
@@ -596,9 +612,9 @@ class EditLeadsForm(APIView):
         return handle_response({}, data='success', success=True)
 
 
-class UpdateExtraLeads(APIView):
+class InsertExtraLeads(APIView):
     @staticmethod
-    def put(request, form_id):
+    def post(request, form_id):
         is_permitted, validation_msg_dict = is_user_permitted("FILL", request.user, leads_form_id=form_id)
         if not is_permitted:
             return handle_response('', data=validation_msg_dict, success=False)
@@ -620,8 +636,9 @@ class UpdateExtraLeads(APIView):
         if set_dict != {}:
             set_dict["supplier_id"] = supplier_id
             set_dict["campaign_id"] = campaign_id
+            set_dict["created_at"] = datetime.datetime.now()
 
-            mongo_client.leads_extras.update_one({"leads_form_id": int(form_id), "supplier_id":supplier_id}, {"$set": set_dict}, upsert=True)
+            mongo_client.leads_extras.insert_one(set_dict)
         return handle_response({}, data='success', success=True)
 
 

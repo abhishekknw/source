@@ -5,12 +5,13 @@ from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntrie
                    SmsContact, AddLeadFormItems, EditLeadsForm,
                    LeadsSummary, GetLeadsEntriesByCampaignId, GenerateLeadDataExcel,
                    SanitizeLeadsData, GenerateDemoData, UpdateLeadsDataSHA256, UpdateGlobalHotLeadCriteria,
-                   UpdateLeadsDataIsHot, UpdateExtraLeads, LeadsPermissionsAPI)
+                   UpdateLeadsDataIsHot, InsertExtraLeads, LeadsPermissionsAPI, GetLeadsFormById)
 
 urlpatterns = [
     url(r'^(?P<campaign_id>[A-Z_a-z0-9]+)/create$', CreateLeadsForm.as_view()),
     url(r'^(?P<campaign_id>[A-Z_a-z0-9]+)/form$', GetLeadsForm.as_view()),
     url(r'^(?P<leads_form_id>[A-Z_a-z0-9]+)/insert_lead$', LeadsFormEntry.as_view()),
+    url(r'^(?P<leads_form_id>[A-Z_a-z0-9]+)/form_by_id/$', GetLeadsFormById.as_view()),
     url(r'^(?P<leads_form_id>[A-Z_a-z0-9]+)/entry_list/(?P<supplier_id>[A-Z_a-z0-9]+)$', GetLeadsEntriesBySupplier.as_view()),
     url(r'^(?P<leads_form_id>[A-Z_a-z0-9]+)/entry_list/$', GetLeadsEntries.as_view()),
     url(r'^(?P<campaign_id>[A-Z_a-z0-9]+)/entry_list_by_campaign_id$', GetLeadsEntriesByCampaignId.as_view()),
@@ -29,7 +30,7 @@ urlpatterns = [
     url(r'^update_leads_data_sha256/$', UpdateLeadsDataSHA256.as_view()),
     url(r'^update_global_hot_lead_criteria/$', UpdateGlobalHotLeadCriteria.as_view()),
     url(r'^update_all_is_hot/$', UpdateLeadsDataIsHot.as_view()),
-    url(r'^(?P<form_id>[0-9]+)/update_extra_leads/$', UpdateExtraLeads.as_view()),
+    url(r'^(?P<form_id>[0-9]+)/insert_extra_leads/$', InsertExtraLeads.as_view()),
     url(r'^permissions$', LeadsPermissionsAPI.as_view()),
 ]
 

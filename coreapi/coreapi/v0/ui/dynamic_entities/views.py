@@ -159,12 +159,9 @@ class Entity(APIView):
         entity_type_id = request.data['entity_type_id'] if 'entity_type_id' in request.data else None
         is_custom = request.data['is_custom'] if 'is_custom' in request.data else None
         entity_attributes = request.data['entity_attributes']
-        supplier_id = request.data['supplier_id'] if 'supplier_id' in request.data else None
-        campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data else None
         organisation_id = get_user_organisation_id(request.user)
         dict_of_req_attributes = {"name": name, "entity_type_id": entity_type_id, "is_custom": is_custom,
-                                  "entity_attributes": entity_attributes, "supplier_id": supplier_id,
-                                  "campaign_id": campaign_id, "organisation_id": organisation_id}
+                                  "entity_attributes": entity_attributes, "organisation_id": organisation_id}
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
             return handle_response('', data=validation_msg_dict, success=False)
@@ -190,8 +187,6 @@ class Entity(APIView):
                 "is_custom": supply_entity.is_custom,
                 "organisation_id": supply_entity.organisation_id,
                 "created_by": supply_entity.created_by,
-                "supplier_id": supply_entity.supplier_id,
-                "campaign_id": supply_entity.campaign_id,
                 "created_at": supply_entity.created_at,
             }
         return handle_response('', data=all_supply_entity_dict, success=True)
@@ -204,12 +199,9 @@ class EntityById(APIView):
         entity_type_id = request.data['entity_type_id'] if 'entity_type_id' in request.data else None
         is_custom = request.data['is_custom'] if 'is_custom' in request.data else None
         entity_attributes = request.data['entity_attributes']
-        supplier_id = request.data['supplier_id'] if 'supplier_id' in request.data else None
-        campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data else None
         organisation_id = get_user_organisation_id(request.user)
         dict_of_req_attributes = {"name": name, "entity_type_id": entity_type_id, "is_custom": is_custom,
-                                  "entity_attributes": entity_attributes, "supplier_id": supplier_id,
-                                  "campaign_id": campaign_id, "organisation_id": organisation_id}
+                                  "entity_attributes": entity_attributes, "organisation_id": organisation_id}
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
             return handle_response('', data=validation_msg_dict, success=False)
