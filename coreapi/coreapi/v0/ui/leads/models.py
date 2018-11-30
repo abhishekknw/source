@@ -79,8 +79,43 @@ class LeadsFormContacts(BaseModel):
         db_table = 'leads_form_contacts'
 
 
+def get_aggregated_extra_leads(campaign_list=None):
+    if campaign_list:
+        if not isinstance(campaign_list, list):
+            campaign_list = [campaign_list]
+        match_dict = {"campaign_id": {"$in": campaign_list}}
+    else:
+        match_dict = {}
+    leads_summary = mongo_client.leads_extras.aggregate(
+            [
+                {
+                    "$match": match_dict
+                },
+                {
+                    "$group":
+                        {
+                            "_id": {"campaign_id": "$campaign_id", "supplier_id": "$supplier_id"},
+                            "campaign_id": {"$first": '$campaign_id'},
+                            "supplier_id": {"$first": '$supplier_id'},
+                            "extra_leads":{"$sum":"$extra_leads"},
+                            "extra_hot_leads": {"$sum": "$extra_hot_leads"},
+                        }
+                },
+                {
+                    "$project": {
+                        "campaign_id": 1,
+                        "supplier_id": 1,
+                        "extra_leads": 1,
+                        "extra_hot_leads": 1,
+                    }
+                }
+            ]
+        )
+    return list(leads_summary)
+
+
 def add_extra_leads(leads_summary,campaign_list=None):
-    leads_extras_all = list(mongo_client.leads_extras.find())
+    leads_extras_all = get_aggregated_extra_leads()
     leads_extras_dict = {}
     leads_summary_dict = {}
     for single_leads_extras in leads_extras_all:

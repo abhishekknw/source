@@ -33,8 +33,6 @@ class SupplyEntity(MongoModel):
     entity_attributes = fields.ListField()
     organisation_id = fields.CharField()
     created_by = fields.CharField()
-    supplier_id = fields.CharField()  # This can be changed to entity_id
-    campaign_id = fields.CharField()
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
 
