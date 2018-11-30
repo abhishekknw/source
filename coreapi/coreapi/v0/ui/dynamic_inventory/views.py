@@ -20,7 +20,7 @@ class BaseInventoryAPI(APIView):
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
             return handle_response('', data=validation_msg_dict, success=False)
-        (is_valid_attributes, validation_msg_dict_attributes) = validate_attributes(inventory_attributes)
+        (is_valid_attributes, validation_msg_dict_attributes) = validate_attributes(base_attributes)
         if not is_valid_attributes:
             return handle_response('', data=validation_msg_dict_attributes, success=False)
         base_inventory_dict = dict_of_req_attributes
@@ -65,7 +65,7 @@ class BaseInventoryAPIById(APIView):
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
             return handle_response('', data=validation_msg_dict, success=False)
-        (is_valid_attributes, validation_msg_dict_attributes) = validate_attributes(inventory_attributes)
+        (is_valid_attributes, validation_msg_dict_attributes) = validate_attributes(base_attributes)
         if not is_valid_attributes:
             return handle_response('', data=validation_msg_dict_attributes, success=False)
         base_inventory_dict = dict_of_req_attributes
