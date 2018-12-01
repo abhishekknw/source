@@ -29,7 +29,7 @@ def is_user_permitted(permission_type, user, **kwargs):
     is_permitted = True
     validation_msg_dict = {'msg': None}
     leads_form_id = kwargs['leads_form_id'] if 'leads_form_id' in kwargs else None
-    camaign_id = kwargs['camaign_id'] if 'camaign_id' in kwargs else None
+    campaign_id = kwargs['campaign_id'] if 'campaign_id' in kwargs else None
     permission_list = list(LeadsPermissions.objects.raw({'user_id': user.id}))
     if len(permission_list) == 0:
         is_permitted = True
@@ -41,7 +41,7 @@ def is_user_permitted(permission_type, user, **kwargs):
         if permission_type not in leads_permissions:
             is_permitted = False
             validation_msg_dict['msg'] = 'not_permitted'
-            return is_permitted, validation_msg_dict
+        return is_permitted, validation_msg_dict
 
 
 def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id):
