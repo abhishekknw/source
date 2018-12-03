@@ -487,7 +487,12 @@ class GetCampaignChecklists(APIView):
     # used for getting a list of all checklists of a campaign
     def get(self, request, campaign_id):
         class_name = self.__class__.__name__
-        all_campaign_checklists = list(mongo_client.checklists.find({"campaign_id": campaign_id, "status": "active"}))
+        status = request.query_params.get('status', 'both')
+        if status == 'both':
+            all_campaign_checklists = list(mongo_client.checklists.find({"$and": [{"campaign_id": campaign_id},
+                                                                         {"status": {"$ne": "inactive"}}]}))
+        else:
+            all_campaign_checklists = list(mongo_client.checklists.find({"campaign_id": campaign_id, "status": status}))
         checklist_id_list = [checklist['checklist_id'] for checklist in all_campaign_checklists]
         checklists = [get_checklist_by_id(checklist_id) for checklist_id in checklist_id_list]
         return handle_response(class_name, data=checklists, success=True)
@@ -497,8 +502,15 @@ class GetSupplierChecklists(APIView):
     # used for getting a list of all checklists of a campaign
     def get(self, request, campaign_id, supplier_id):
         class_name = self.__class__.__name__
-        all_campaign_checklists = list(mongo_client.checklists.find({'campaign_id': campaign_id, 'supplier_id': supplier_id,
-                                                         'status': 'active'}))
+        status = request.query_params.get('status', 'both')
+        if status == 'both':
+            all_campaign_checklists = list(mongo_client.checklists.find({"$and": [{"campaign_id": campaign_id,
+                                           "supplier_id": supplier_id}, {"status": {"$ne": "inactive"}}]}))
+        else:
+            all_campaign_checklists = list(mongo_client.checklists.find({"campaign_id": campaign_id,
+                                           "supplier_id": supplier_id, "status": status}))
+        # all_campaign_checklists = list(mongo_client.checklists.find({'campaign_id': campaign_id, 'supplier_id': supplier_id,
+        #                                                  'status': 'active'}))
         checklist_id_list = [checklist['checklist_id'] for checklist in all_campaign_checklists]
         checklists = [get_checklist_by_id(checklist_id) for checklist_id in checklist_id_list]
         return handle_response(class_name, data=checklists, success=True)
@@ -530,6 +542,15 @@ class FreezeChecklist(APIView):
         return handle_response({}, data='success', success=True)
 
 
+# class FreezeChecklistAll(APIView):
+#     @staticmethod
+#     def get(request, state):
+#         campaign_id = request.query_params.get("campaign_id", None)
+#         supplier_id = request.query_params.get("supplier_id", None)
+
+
+
+
 def get_checklist_by_id(checklist_id):
     checklist_id = int(checklist_id)
     checklist_info = mongo_client.checklists.find_one({"checklist_id": checklist_id})
@@ -538,12 +559,12 @@ def get_checklist_by_id(checklist_id):
     elif checklist_info['status'] == 'inactive':
         return handle_response({}, data="checklist already deleted", success=False)
     checklist_dict = {
-        "checklist_type": checklist_info['checklist_type'],
+        "checklist_type": checklist_info['checklist_type'] if 'checklist_type' in checklist_info else "campaign",
         "campaign_id": checklist_info['campaign_id'],
-        "rows": checklist_info['rows'],
-        "supplier_id": checklist_info['supplier_id'],
-        "checklist_name": checklist_info['checklist_name'],
-        "is_template": checklist_info['is_template'],
+        "rows": checklist_info['rows'] if 'rows' in checklist_info else None,
+        "supplier_id": checklist_info['supplier_id'] if 'supplier_id' in checklist_info else None,
+        "checklist_name": checklist_info['checklist_name'] if 'checklist_name' in checklist_info else None,
+        "is_template": checklist_info['is_template'] if 'is_template' in checklist_info else False,
         "checklist_id": checklist_info['checklist_id'],
         "status": checklist_info['status'] if 'status' in checklist_info else 'active',
     }
