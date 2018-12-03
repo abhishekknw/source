@@ -7,6 +7,7 @@ import datetime
 import collections
 from operator import itemgetter
 from models import ChecklistPermissions
+from v0.ui.campaign.models import CampaignAssignment
 
 
 def is_user_permitted(permission_type, user, **kwargs):
@@ -500,6 +501,26 @@ class ChecklistEdit(APIView):
             "$set": {'data': checklist_column_data_all, 'columns':total_cols, 'rows': n_rows+new_rows}})
 
         return handle_response(class_name, data='success', success=True)
+
+
+class GetAllChecklists(APIView):
+    # used for getting a list of all checklists of a campaign
+    def get(self, request):
+        class_name = self.__class__.__name__
+        campaign_list = CampaignAssignment.objects.filter(assigned_to_id=request.user.id).values_list('campaign_id', flat=True) \
+            .distinct()
+        campaign_list = [campaign_id for campaign_id in campaign_list]
+        all_campaign_checklists = list(mongo_client.checklists.find({"$and": [{"campaign_id": {"$in": campaign_list}},
+                                                                         {"status": {"$ne": "inactive"}}]}))
+        all_campaign_checklists_dict = {}
+        for single_object in all_campaign_checklists:
+            if single_object['campaign_id'] not in all_campaign_checklists_dict:
+                all_campaign_checklists_dict[single_object['campaign_id']] = []
+            all_campaign_checklists_dict[single_object['campaign_id']].append(single_object['checklist_id'])
+        for campaign_id in campaign_list:
+            if campaign_id not in all_campaign_checklists_dict:
+                all_campaign_checklists_dict[campaign_id] = []
+        return handle_response(class_name, data=all_campaign_checklists_dict, success=True)
 
 
 class GetCampaignChecklists(APIView):
