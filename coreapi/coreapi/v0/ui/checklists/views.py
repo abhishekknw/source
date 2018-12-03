@@ -545,6 +545,7 @@ def get_checklist_by_id(checklist_id):
         "checklist_name": checklist_info['checklist_name'],
         "is_template": checklist_info['is_template'],
         "checklist_id": checklist_info['checklist_id'],
+        "status": checklist_info['status'] if 'status' in checklist_info else 'active',
     }
     checklist_data = list(mongo_client.checklist_data.find({"checklist_id": checklist_id}))
     try:
