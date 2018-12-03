@@ -653,38 +653,32 @@ class DeleteChecklistRow(APIView):
 class ChecklistPermissionsAPI(APIView):
     @staticmethod
     def post(request):
-        checklist_permissions = request.data['checklist_permissions']
-        allowed_campaigns = request.data['allowed_campaigns']
-        user_id = request.data['user_id']
-        profile_id = request.data['profile_id']
-        organisation_id = get_user_organisation_id(request.user)
-        dict_of_req_attributes = {"checklist_permissions": checklist_permissions,
-                                  "allowed_campaigns": allowed_campaigns,
-                                  "organisation_id": organisation_id, "user_id": user_id, "profile_id": profile_id}
-        (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
-        if not is_valid:
-            return handle_response('', data=validation_msg_dict, success=False)
-        checklist_permissions_dict = dict_of_req_attributes
-        checklist_permissions_dict["created_by"] = request.user.id
-        checklist_permissions_dict["created_at"] = datetime.datetime.now()
-        ChecklistPermissions(**checklist_permissions_dict).save()
+        for single_obj in request.data:
+            checklist_permissions = single_obj['checklist_permissions']
+            user_id = single_obj['user_id']
+            organisation_id = get_user_organisation_id(request.user)
+            dict_of_req_attributes = {"checklist_permissions": checklist_permissions,
+                                      "organisation_id": organisation_id, "user_id": user_id}
+            (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
+            if not is_valid:
+                return handle_response('', data=validation_msg_dict, success=False)
+            checklist_permissions_dict = dict_of_req_attributes
+            checklist_permissions_dict["created_by"] = request.user.id
+            checklist_permissions_dict["created_at"] = datetime.datetime.now()
+            ChecklistPermissions(**checklist_permissions_dict).save()
         return handle_response('', data={"success": True}, success=True)
 
     @staticmethod
     def get(request):
-        organisation_id = request.query_params.get("organisation_id",None)
-        if not organisation_id:
-            return handle_response('', data="Organisation Id Not Provided", success=False)
-        checklist_permissions = ChecklistPermissions.objects.raw({"organisation_id" : organisation_id})
+        organisation_id = get_user_organisation_id(request.user)
+        checklist_permissions = ChecklistPermissions.objects.raw({"organisation_id": organisation_id})
         data = []
         for permission in checklist_permissions:
             permission_data = {
-                "_id": str(permission._id),
+                "id": str(permission._id),
                 "user_id": permission.user_id,
-                "profile_id": permission.profile_id,
                 "organisation_id": permission.organisation_id,
                 "checklist_permissions": permission.checklist_permissions,
-                "allowed_campaigns": permission.allowed_campaigns,
                 "created_by": permission.created_by
             }
             data.append(permission_data)
@@ -693,17 +687,13 @@ class ChecklistPermissionsAPI(APIView):
     @staticmethod
     def put(request):
         permissions = request.data
-
         for permission in permissions:
             dict_of_req_attributes = {
                 "user_id": permission['user_id'],
-                "profile_id": permission['profile_id'],
-                "organisation_id": permission['organisation_id'],
                 "checklist_permissions": permission['checklist_permissions'],
-                "allowed_campaigns": permission['allowed_campaigns'],
-                "updated_at" : datetime.datetime.now()
+                "updated_at": datetime.datetime.now()
             }
-            ChecklistPermissions.objects.raw({'_id': ObjectId(permission['_id'])}).update({"$set": dict_of_req_attributes})
+            ChecklistPermissions.objects.raw({'_id': ObjectId(permission['id'])}).update({"$set": dict_of_req_attributes})
         return handle_response('', data={"success": True}, success=True)
 
     @staticmethod
