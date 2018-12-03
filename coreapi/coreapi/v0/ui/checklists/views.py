@@ -543,6 +543,26 @@ class GetCampaignChecklists(APIView):
         return handle_response(class_name, data=checklists, success=True)
 
 
+class GetAllChecklistsTemplates(APIView):
+    # used for getting a list of all checklists of a campaign
+    def get(self, request):
+        class_name = self.__class__.__name__
+        campaign_list = CampaignAssignment.objects.filter(assigned_to_id=request.user.id).values_list('campaign_id', flat=True) \
+            .distinct()
+        campaign_list = [campaign_id for campaign_id in campaign_list]
+        all_campaign_checklists = list(mongo_client.checklists.find({"$and": [{"campaign_id": {"$in": campaign_list}},
+                                                                              {"status": {"$ne": "inactive"}},
+                                                                              {"is_template": True}]}))
+        checklist_id_list = []
+        for checklist in all_campaign_checklists:
+            is_permitted, validation_msg = is_user_permitted("VIEW", request.user,
+                                                             checklist_id=checklist['checklist_id'])
+            if is_permitted:
+                checklist_id_list.append(checklist['checklist_id'])
+        checklists = [get_checklist_by_id(checklist_id) for checklist_id in checklist_id_list]
+        return handle_response(class_name, data=checklists, success=True)
+
+
 class GetSupplierChecklists(APIView):
     # used for getting a list of all checklists of a campaign
     def get(self, request, campaign_id, supplier_id):
