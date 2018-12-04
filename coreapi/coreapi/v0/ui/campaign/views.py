@@ -36,6 +36,7 @@ import requests
 from celery import shared_task
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 from v0.ui.common.models import mongo_client
+from statistics import mode
 
 
 class CampaignAPIView(APIView):
@@ -955,6 +956,39 @@ class CampaignLeadsMultiple(APIView):
         return ui_utils.handle_response(class_name, data=multi_campaign_return_data, success=True)
 
 
+def get_mean_median_mode(all_suppliers_list, list_of_attributes):
+    list_of_attributes.append('flat_count')
+    all_attribute_item_list = {}
+    percentage_by_flat_of_attribute = {}
+    return_dict = {}
+    for supplier in all_suppliers_list:
+        for attribute in list_of_attributes:
+            if attribute not in all_suppliers_list[supplier]:
+                return return_dict
+            if attribute not in all_attribute_item_list:
+                all_attribute_item_list[attribute] = []
+            all_attribute_item_list[attribute].append(all_suppliers_list[supplier][attribute])
+            if attribute != 'flat_count':
+                if attribute not in percentage_by_flat_of_attribute:
+                    percentage_by_flat_of_attribute[attribute] = []
+                percentage_by_flat_of_attribute[attribute].append(int(round(float(all_suppliers_list[supplier][attribute])/float(all_suppliers_list[supplier]['flat_count']) * 100)))
+    for attribute in list_of_attributes:
+        if attribute != 'flat_count':
+            return_dict[attribute] = {
+                'prcentage_by_flat': float(sum(all_attribute_item_list[attribute]))/float(sum(all_attribute_item_list['flat_count'])) * 100 ,
+                'mean': np.average(all_attribute_item_list[attribute]),
+                'median_by_society': np.median(all_attribute_item_list[attribute]),
+            }
+    for attribute in percentage_by_flat_of_attribute:
+        if attribute != 'flat_count':
+            try:
+                return_dict[attribute]['mode'] = mode(percentage_by_flat_of_attribute[attribute])
+            except Exception as ex:
+                print ex
+                return_dict[attribute]['mode'] = None
+    return return_dict
+
+
 def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_date_str=None):
     format_str = '%d/%m/%Y'
     phase_start_weekday = 'Tuesday' # this is used to set the phase cycle
@@ -1185,7 +1219,8 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
     all_weekdays_data = z_calculator_dict(weekday_data_hot_ratio,"hot_leads_percentage")
     all_phase_data = z_calculator_dict(phase_data_hot_ratio,"hot_leads_percentage")
     all_flat_data = hot_lead_ratio_calculator(all_flat_data)
-
+    mean_median_dict = get_mean_median_mode(all_suppliers_list, ['interested', 'total'])
+    print mean_median_dict
     final_data = {'supplier_data': all_suppliers_list, 'date_data': all_dates_data,
                   'locality_data': all_localities_data, 'weekday_data': all_weekdays_data,
                   'flat_data': all_flat_data, 'phase_data': phase_data, 'overall_data': overall_data}
