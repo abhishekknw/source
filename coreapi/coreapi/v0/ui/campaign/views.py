@@ -1003,13 +1003,11 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
         {"$and": and_constraint}, {"_id": 0}))
     all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).all().values("object_id")
     supplier_ids = list(set([x['object_id'] for x in all_shortlisted_spaces]))
-
     all_suppliers_list_non_analytics = {}
     all_localities_data_non_analytics = {}
     supplier_wise_lead_count = {}
     supplier_data_1 = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
     supplier_data = SupplierTypeSocietySerializer2(supplier_data_1, many=True).data
-
     all_flat_data = {}
     flat_categories = ['0-150', '151-399', '400+']
     flat_category_id = 0
@@ -1165,7 +1163,11 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
         curr_weekday = weekday_names[str(time.weekday())]
 
         supplier_id = curr_data['supplier_id']
-        curr_supplier_data = [x for x in supplier_data if x['supplier_id']==supplier_id][0]
+
+        curr_supplier_data = [x for x in supplier_data if x['supplier_id']==supplier_id]
+        if len(curr_supplier_data) == 0:
+            continue
+        curr_supplier_data = curr_supplier_data[0]
         flat_count = curr_supplier_data['flat_count'] if curr_supplier_data['flat_count'] else 0
         if curr_date not in date_data:
             date_data[curr_date] = {
@@ -1220,7 +1222,6 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
     all_phase_data = z_calculator_dict(phase_data_hot_ratio,"hot_leads_percentage")
     all_flat_data = hot_lead_ratio_calculator(all_flat_data)
     mean_median_dict = get_mean_median_mode(all_suppliers_list, ['interested', 'total'])
-    print mean_median_dict
     final_data = {'supplier_data': all_suppliers_list, 'date_data': all_dates_data,
                   'locality_data': all_localities_data, 'weekday_data': all_weekdays_data,
                   'flat_data': all_flat_data, 'phase_data': phase_data, 'overall_data': overall_data}
