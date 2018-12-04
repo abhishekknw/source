@@ -979,6 +979,13 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
     all_flat_data = {}
     flat_categories = ['0-150', '151-399', '400+']
     flat_category_id = 0
+    overall_data = {
+        'supplier_count': 0,
+        'total_leads': 0,
+        'total_hot_leads': 0,
+        'flat_count': 0
+    }
+
     for flat_category in flat_categories:
         flat_category_id = flat_category_id + 1
         all_flat_data[flat_category] = {
@@ -991,6 +998,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
         }
     campaign_hot_leads_dict = lead_counter(campaign_id, leads_form_data, user_start_datetime, user_end_datetime)
     for curr_supplier_data in supplier_data:
+        overall_data['supplier_count'] +=  1
         supplier_id = curr_supplier_data['supplier_id']
         supplier_locality = curr_supplier_data['society_locality']
         supplier_flat_count = curr_supplier_data['flat_count'] if curr_supplier_data['flat_count'] else 0
@@ -1000,6 +1008,9 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
         supplier_wise_lead_count[supplier_id] = lead_count
         hot_leads = lead_count['hot_leads']
         total_leads = lead_count['total_leads']
+        overall_data['total_leads'] += total_leads
+        overall_data['total_hot_leads'] += hot_leads
+        overall_data['flat_count'] += supplier_flat_count
         # getting society information
 
         hot_leads_percentage = round(float(hot_leads) / float(total_leads), 5)*100 if total_leads > 0 else 0
@@ -1177,7 +1188,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
 
     final_data = {'supplier_data': all_suppliers_list, 'date_data': all_dates_data,
                   'locality_data': all_localities_data, 'weekday_data': all_weekdays_data,
-                  'flat_data': all_flat_data, 'phase_data': phase_data}
+                  'flat_data': all_flat_data, 'phase_data': phase_data, 'overall_data': overall_data}
     return final_data
 
 
