@@ -36,7 +36,6 @@ import requests
 from celery import shared_task
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 from v0.ui.common.models import mongo_client
-from statistics import mode
 
 
 class CampaignAPIView(APIView):
@@ -956,6 +955,28 @@ class CampaignLeadsMultiple(APIView):
         return ui_utils.handle_response(class_name, data=multi_campaign_return_data, success=True)
 
 
+def calculate_mode(num_list,window_size=3):
+    if len(num_list) == 0:
+        return None
+    if len(num_list) == 1:
+        return num_list[0]
+    freq_by_windows = [0 for i in range(0,(num_list[-1] - num_list[0])/2 + 1)]
+    for num in num_list:
+        window_index = (num - num_list[0])/window_size
+        freq_by_windows[window_index] +=1
+    max_freq_index = 0
+    max_freq_value = 0
+
+    for idx,freq in enumerate(freq_by_windows):
+        if freq >= max_freq_value:
+            max_freq_index = idx
+            max_freq_value = freq
+    max_index_lower = num_list[0] + window_size * max_freq_index
+    max_index_upper = max_index_lower + window_size - 1
+    mode = float((max_index_upper + max_index_lower))/2.0
+    return mode
+
+
 def get_mean_median_mode(all_suppliers_list, list_of_attributes):
     list_of_attributes.append('flat_count')
     all_attribute_item_list = {}
@@ -976,16 +997,17 @@ def get_mean_median_mode(all_suppliers_list, list_of_attributes):
         if attribute != 'flat_count':
             return_dict[attribute] = {
                 'prcentage_by_flat': float(sum(all_attribute_item_list[attribute]))/float(sum(all_attribute_item_list['flat_count'])) * 100 ,
-                'mean': np.average(all_attribute_item_list[attribute]),
+                'mean_by_society': np.average(all_attribute_item_list[attribute]),
                 'median_by_society': np.median(all_attribute_item_list[attribute]),
             }
     for attribute in percentage_by_flat_of_attribute:
         if attribute != 'flat_count':
             try:
-                return_dict[attribute]['mode'] = mode(percentage_by_flat_of_attribute[attribute])
+                percentage_by_flat_of_attribute[attribute] = sorted(percentage_by_flat_of_attribute[attribute])
+                return_dict[attribute]['mode_percent_by_flat'] = calculate_mode(percentage_by_flat_of_attribute[attribute])
             except Exception as ex:
                 print ex
-                return_dict[attribute]['mode'] = None
+                return_dict[attribute]['mode_percent_by_flat'] = None
     return return_dict
 
 
@@ -1222,6 +1244,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
     all_phase_data = z_calculator_dict(phase_data_hot_ratio,"hot_leads_percentage")
     all_flat_data = hot_lead_ratio_calculator(all_flat_data)
     mean_median_dict = get_mean_median_mode(all_suppliers_list, ['interested', 'total'])
+    overall_data['supplier_stats'] = mean_median_dict
     final_data = {'supplier_data': all_suppliers_list, 'date_data': all_dates_data,
                   'locality_data': all_localities_data, 'weekday_data': all_weekdays_data,
                   'flat_data': all_flat_data, 'phase_data': phase_data, 'overall_data': overall_data}
