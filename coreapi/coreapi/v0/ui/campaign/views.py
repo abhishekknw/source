@@ -992,7 +992,8 @@ def get_mean_median_mode(all_suppliers_list, list_of_attributes):
             if attribute != 'flat_count':
                 if attribute not in percentage_by_flat_of_attribute:
                     percentage_by_flat_of_attribute[attribute] = []
-                percentage_by_flat_of_attribute[attribute].append(int(round(float(all_suppliers_list[supplier][attribute])/float(all_suppliers_list[supplier]['flat_count']) * 100)))
+                if all_suppliers_list[supplier]['flat_count'] != 0:
+                    percentage_by_flat_of_attribute[attribute].append(int(round(float(all_suppliers_list[supplier][attribute])/float(all_suppliers_list[supplier]['flat_count']) * 100)))
     for attribute in list_of_attributes:
         if attribute != 'flat_count':
             return_dict[attribute] = {
