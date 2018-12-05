@@ -764,7 +764,12 @@ class ChecklistPermissionsAPI(APIView):
     def get(request):
         organisation_id = get_user_organisation_id(request.user)
         checklist_permissions = ChecklistPermissions.objects.raw({"organisation_id": organisation_id})
-        all_user_id_list = [permission.user_id for permission in checklist_permissions]
+        all_user_id_list = []
+        for permission in checklist_permissions:
+            if permission.user_id not in all_user_id_list:
+                all_user_id_list.append(permission.user_id)
+            if permission.created_by not in all_user_id_list:
+                all_user_id_list.append(permission.created_by)
         all_user_objects = BaseUser.objects.filter(id__in=all_user_id_list).all()
         all_user_dict = {user.id: {"first_name": user.first_name,
                                     "last_name": user.last_name,
