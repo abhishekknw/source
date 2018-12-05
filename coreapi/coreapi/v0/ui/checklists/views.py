@@ -8,6 +8,7 @@ import collections
 from operator import itemgetter
 from models import ChecklistPermissions
 from v0.ui.campaign.models import CampaignAssignment
+from v0.ui.proposal.models import ProposalInfo
 
 
 def is_user_permitted(permission_type, user, **kwargs):
@@ -510,8 +511,12 @@ class GetAllChecklists(APIView):
         campaign_list = CampaignAssignment.objects.filter(assigned_to_id=request.user.id).values_list('campaign_id', flat=True) \
             .distinct()
         campaign_list = [campaign_id for campaign_id in campaign_list]
+        all_campaign_name = ProposalInfo.objects.filter(proposal_id__in=campaign_list).values('proposal_id',
+                                                                                                     'name')
+        all_campaign_name_dict = {campaign['proposal_id']: campaign['name'] for campaign in all_campaign_name}
         all_campaign_checklists = list(mongo_client.checklists.find({"$and": [{"campaign_id": {"$in": campaign_list}},
                                                                          {"status": {"$ne": "inactive"}}]}))
+        all_checklist_names = {checklist["checklist_id"]: checklist["checklist_name"] for checklist in all_campaign_checklists}
         all_campaign_checklists_dict = {}
         for single_object in all_campaign_checklists:
             if single_object['campaign_id'] not in all_campaign_checklists_dict:
@@ -520,7 +525,21 @@ class GetAllChecklists(APIView):
         for campaign_id in campaign_list:
             if campaign_id not in all_campaign_checklists_dict:
                 all_campaign_checklists_dict[campaign_id] = []
-        return handle_response(class_name, data=all_campaign_checklists_dict, success=True)
+        all_campaign_checklists_list = []
+        for campaign_id in all_campaign_checklists_dict:
+            campaign_checklist_dict = {
+                "campaign_id": campaign_id,
+                "campaign_name": all_campaign_name_dict[campaign_id],
+                "checklists": []
+            }
+
+            for checklist_id in all_campaign_checklists_dict[campaign_id]:
+                campaign_checklist_dict["checklists"].append({
+                    "checklist_name": all_checklist_names[checklist_id],
+                    "checklist_id": checklist_id
+                })
+            all_campaign_checklists_list.append(campaign_checklist_dict)
+        return handle_response(class_name, data=all_campaign_checklists_list, success=True)
 
 
 class GetCampaignChecklists(APIView):
