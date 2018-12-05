@@ -776,10 +776,10 @@ class ChecklistPermissionsAPI(APIView):
         for permission in checklist_permissions:
             permission_data = {
                 "id": str(permission._id),
-                "user_id": all_user_dict[int(permission.user_id)],
+                "user_id": all_user_dict[int(permission.user_id)] if int(permission.user_id) in all_user_dict else None,
                 "organisation_id": permission.organisation_id,
                 "checklist_permissions": permission.checklist_permissions,
-                "created_by": all_user_dict[int(permission.created_by)]
+                "created_by": all_user_dict[int(permission.created_by)] if int(permission.created_by) in all_user_dict else None
             }
             data.append(permission_data)
         return handle_response('', data=data, success=True)
