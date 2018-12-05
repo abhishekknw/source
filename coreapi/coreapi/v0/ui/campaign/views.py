@@ -999,10 +999,12 @@ def get_mean_median_mode(all_suppliers_list, list_of_attributes):
             percentage_by_flat = 0
             if attribute in all_attribute_item_list and all_attribute_item_list['flat_count'] != 0:
                 percentage_by_flat = float(sum(all_attribute_item_list[attribute]))/float(sum(all_attribute_item_list['flat_count'])) * 100
+            mean_by_society = np.average(all_attribute_item_list[attribute]) if attribute in all_attribute_item_list else 0
+            median_by_society = np.median(all_attribute_item_list[attribute]) if attribute in all_attribute_item_list else 0
             return_dict[attribute] = {
                 'percentage_by_flat':  percentage_by_flat,
-                'mean_by_society': np.average(all_attribute_item_list[attribute]),
-                'median_by_society': np.median(all_attribute_item_list[attribute]),
+                'mean_by_society': mean_by_society,
+                'median_by_society': median_by_society,
             }
     for attribute in percentage_by_flat_of_attribute:
         if attribute != 'flat_count':
