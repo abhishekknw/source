@@ -206,7 +206,6 @@ class EntityById(APIView):
         if not is_valid:
             return handle_response('', data=validation_msg_dict, success=False)
         entity_dict = dict_of_req_attributes
-        entity_dict['created_by'] = request.user.id
         entity_dict['updated_at'] = datetime.now()
         (is_valid_adv, validation_msg_dict_adv) = validate_with_entity_type(entity_dict, entity_type_id)
         if not is_valid_adv:

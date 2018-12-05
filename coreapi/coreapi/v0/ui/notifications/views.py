@@ -46,3 +46,11 @@ class NotificationsAPI(APIView):
                 "created_at": notification.created_at,
             }
         return handle_response('', data=all_notifications_dict, success=True)
+
+
+class NotificationsMarkReadAPI(APIView):
+    @staticmethod
+    def put(request, notification_id):
+        notification_dict = {"is_read": True, "updated_at": datetime.now()}
+        Notifications.objects.raw({'_id': ObjectId(notification_id)}).update({"$set": notification_dict})
+        return handle_response('', data={"success": True}, success=True)
