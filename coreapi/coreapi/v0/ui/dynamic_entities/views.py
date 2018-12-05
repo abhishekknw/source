@@ -28,9 +28,9 @@ class EntityType(APIView):
 
     @staticmethod
     def post(request):
-        name = request.data['name']
+        name = request.data['name'] if 'name' in request.data else False
         is_global = request.data['is_global'] if 'is_global' in request.data else False
-        entity_attributes = request.data['entity_attributes']
+        entity_attributes = request.data['entity_attributes'] if 'entity_attributes' in request.data else False
         organisation_id = get_user_organisation_id(request.user)
         dict_of_req_attributes = {"name": name, "entity_attributes": entity_attributes,
                                   "organisation_id": organisation_id}
