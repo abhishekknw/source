@@ -9,6 +9,8 @@ from operator import itemgetter
 from models import ChecklistPermissions
 from v0.ui.campaign.models import CampaignAssignment
 from v0.ui.proposal.models import ProposalInfo
+from v0.ui.common.models import BaseUser
+from v0.ui.user.serializers import BaseUserSerializer
 
 
 def is_user_permitted(permission_type, user, **kwargs):
@@ -762,14 +764,22 @@ class ChecklistPermissionsAPI(APIView):
     def get(request):
         organisation_id = get_user_organisation_id(request.user)
         checklist_permissions = ChecklistPermissions.objects.raw({"organisation_id": organisation_id})
+        all_user_id_list = [permission.user_id for permission in checklist_permissions]
+        all_user_objects = BaseUser.objects.filter(id__in=all_user_id_list).all()
+        all_user_dict = {user.id: {"first_name": user.first_name,
+                                    "last_name": user.last_name,
+                                    "username": user.username,
+                                    "email": user.email,
+                                    "id": user.id
+                                      } for user in all_user_objects}
         data = []
         for permission in checklist_permissions:
             permission_data = {
                 "id": str(permission._id),
-                "user_id": permission.user_id,
+                "user_id": all_user_dict[int(permission.user_id)],
                 "organisation_id": permission.organisation_id,
                 "checklist_permissions": permission.checklist_permissions,
-                "created_by": permission.created_by
+                "created_by": all_user_dict[int(permission.created_by)]
             }
             data.append(permission_data)
         return handle_response('', data=data, success=True)
