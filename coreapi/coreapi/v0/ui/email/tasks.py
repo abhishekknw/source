@@ -30,9 +30,9 @@ def get_all_campaign_assignment_by_id(email_type):
                                                                  "last_sent": email_setting["last_sent"],
                                                                  "user_type": email_setting["user_type"]}
     all_leads_forms = list(mongo_client.leads_forms.find())
-    all_campaign_id_list = [leads_form['campaign_id'] for leads_form in all_leads_forms]
-    all_campaign_assignment = CampaignAssignment.objects.filter(campaign_id__in=all_campaign_id_list).values(
+    all_campaign_assignment = CampaignAssignment.objects.values(
         'campaign_id', 'assigned_to__email').all()
+    all_campaign_id_list = [campaign_assignment['campaign_id'] for campaign_assignment in all_campaign_assignment]
     campaign_assignement_by_campaign_id = {}
     campaign_assignement_by_campaign_id_admins = {}
     all_campaign_name = ProposalInfo.objects.filter(proposal_id__in=all_campaign_id_list).values('proposal_id', 'name')
