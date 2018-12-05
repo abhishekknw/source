@@ -1039,7 +1039,6 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
         'total_hot_leads': 0,
         'flat_count': 0
     }
-
     for flat_category in flat_categories:
         flat_category_id = flat_category_id + 1
         all_flat_data[flat_category] = {
@@ -1052,13 +1051,13 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
         }
     campaign_hot_leads_dict = lead_counter(campaign_id, leads_form_data, user_start_datetime, user_end_datetime)
     for curr_supplier_data in supplier_data:
-        overall_data['supplier_count'] +=  1
         supplier_id = curr_supplier_data['supplier_id']
         supplier_locality = curr_supplier_data['society_locality']
         supplier_flat_count = curr_supplier_data['flat_count'] if curr_supplier_data['flat_count'] else 0
         lead_count = campaign_hot_leads_dict[supplier_id] if supplier_id in campaign_hot_leads_dict else None
         if not lead_count:
             continue
+        overall_data['supplier_count'] += 1
         supplier_wise_lead_count[supplier_id] = lead_count
         hot_leads = lead_count['hot_leads']
         total_leads = lead_count['total_leads']
@@ -1137,7 +1136,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
     if len(campaign_dates) == 0:
         final_data_dict = {'supplier': {}, 'date': {},
                            'locality': {}, 'weekday': {},
-                           'flat': {}, 'phase': {}}
+                           'flat': {}, 'phase': {}, 'overall_data': {}}
         return final_data_dict
     weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
                      '4': 'Friday', '5': 'Saturday', '6': 'Sunday'}
@@ -1260,6 +1259,12 @@ class CampaignLeads(APIView):
         user_end_date_str = request.query_params.get('end_date', None)
         campaign_id = request.query_params.get('campaign_id', None)
         final_data = get_leads_data_for_campaign(campaign_id, user_start_date_str, user_end_date_str)
+        start_date = datetime.now() - timedelta(days=60)
+        final_data['last_week'] = get_leads_data_for_campaign(campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
+        start_date = datetime.now() - timedelta(days=80)
+        final_data['last_two_weeks'] = get_leads_data_for_campaign(campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
+        start_date = datetime.now() - timedelta(days=90)
+        final_data['last_three_weeks'] = get_leads_data_for_campaign(campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
         return ui_utils.handle_response(class_name, data=final_data, success=True)
 
 
