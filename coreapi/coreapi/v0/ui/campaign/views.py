@@ -955,6 +955,62 @@ class CampaignLeadsMultiple(APIView):
         return ui_utils.handle_response(class_name, data=multi_campaign_return_data, success=True)
 
 
+def calculate_mode(num_list,window_size=3):
+    if len(num_list) == 0:
+        return None
+    if len(num_list) == 1:
+        return num_list[0]
+    freq_by_windows = [0 for i in range(0,(num_list[-1] - num_list[0])/2 + 1)]
+    for num in num_list:
+        window_index = (num - num_list[0])/window_size
+        freq_by_windows[window_index] +=1
+    max_freq_index = 0
+    max_freq_value = 0
+
+    for idx,freq in enumerate(freq_by_windows):
+        if freq >= max_freq_value:
+            max_freq_index = idx
+            max_freq_value = freq
+    max_index_lower = num_list[0] + window_size * max_freq_index
+    max_index_upper = max_index_lower + window_size - 1
+    mode = float((max_index_upper + max_index_lower))/2.0
+    return mode
+
+
+def get_mean_median_mode(all_suppliers_list, list_of_attributes):
+    list_of_attributes.append('flat_count')
+    all_attribute_item_list = {}
+    percentage_by_flat_of_attribute = {}
+    return_dict = {}
+    for supplier in all_suppliers_list:
+        for attribute in list_of_attributes:
+            if attribute not in all_suppliers_list[supplier]:
+                return return_dict
+            if attribute not in all_attribute_item_list:
+                all_attribute_item_list[attribute] = []
+            all_attribute_item_list[attribute].append(all_suppliers_list[supplier][attribute])
+            if attribute != 'flat_count':
+                if attribute not in percentage_by_flat_of_attribute:
+                    percentage_by_flat_of_attribute[attribute] = []
+                percentage_by_flat_of_attribute[attribute].append(int(round(float(all_suppliers_list[supplier][attribute])/float(all_suppliers_list[supplier]['flat_count']) * 100)))
+    for attribute in list_of_attributes:
+        if attribute != 'flat_count':
+            return_dict[attribute] = {
+                'prcentage_by_flat': float(sum(all_attribute_item_list[attribute]))/float(sum(all_attribute_item_list['flat_count'])) * 100 ,
+                'mean_by_society': np.average(all_attribute_item_list[attribute]),
+                'median_by_society': np.median(all_attribute_item_list[attribute]),
+            }
+    for attribute in percentage_by_flat_of_attribute:
+        if attribute != 'flat_count':
+            try:
+                percentage_by_flat_of_attribute[attribute] = sorted(percentage_by_flat_of_attribute[attribute])
+                return_dict[attribute]['mode_percent_by_flat'] = calculate_mode(percentage_by_flat_of_attribute[attribute])
+            except Exception as ex:
+                print ex
+                return_dict[attribute]['mode_percent_by_flat'] = None
+    return return_dict
+
+
 def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_date_str=None):
     format_str = '%d/%m/%Y'
     phase_start_weekday = 'Tuesday' # this is used to set the phase cycle
@@ -969,13 +1025,11 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
         {"$and": and_constraint}, {"_id": 0}))
     all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).all().values("object_id")
     supplier_ids = list(set([x['object_id'] for x in all_shortlisted_spaces]))
-
     all_suppliers_list_non_analytics = {}
     all_localities_data_non_analytics = {}
     supplier_wise_lead_count = {}
     supplier_data_1 = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
     supplier_data = SupplierTypeSocietySerializer2(supplier_data_1, many=True).data
-
     all_flat_data = {}
     flat_categories = ['0-150', '151-399', '400+']
     flat_category_id = 0
@@ -985,7 +1039,6 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
         'total_hot_leads': 0,
         'flat_count': 0
     }
-
     for flat_category in flat_categories:
         flat_category_id = flat_category_id + 1
         all_flat_data[flat_category] = {
@@ -998,13 +1051,13 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
         }
     campaign_hot_leads_dict = lead_counter(campaign_id, leads_form_data, user_start_datetime, user_end_datetime)
     for curr_supplier_data in supplier_data:
-        overall_data['supplier_count'] +=  1
         supplier_id = curr_supplier_data['supplier_id']
         supplier_locality = curr_supplier_data['society_locality']
         supplier_flat_count = curr_supplier_data['flat_count'] if curr_supplier_data['flat_count'] else 0
         lead_count = campaign_hot_leads_dict[supplier_id] if supplier_id in campaign_hot_leads_dict else None
         if not lead_count:
             continue
+        overall_data['supplier_count'] += 1
         supplier_wise_lead_count[supplier_id] = lead_count
         hot_leads = lead_count['hot_leads']
         total_leads = lead_count['total_leads']
@@ -1083,7 +1136,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
     if len(campaign_dates) == 0:
         final_data_dict = {'supplier': {}, 'date': {},
                            'locality': {}, 'weekday': {},
-                           'flat': {}, 'phase': {}}
+                           'flat': {}, 'phase': {}, 'overall_data': {}}
         return final_data_dict
     weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
                      '4': 'Friday', '5': 'Saturday', '6': 'Sunday'}
@@ -1131,7 +1184,11 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
         curr_weekday = weekday_names[str(time.weekday())]
 
         supplier_id = curr_data['supplier_id']
-        curr_supplier_data = [x for x in supplier_data if x['supplier_id']==supplier_id][0]
+
+        curr_supplier_data = [x for x in supplier_data if x['supplier_id']==supplier_id]
+        if len(curr_supplier_data) == 0:
+            continue
+        curr_supplier_data = curr_supplier_data[0]
         flat_count = curr_supplier_data['flat_count'] if curr_supplier_data['flat_count'] else 0
         if curr_date not in date_data:
             date_data[curr_date] = {
@@ -1185,7 +1242,8 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
     all_weekdays_data = z_calculator_dict(weekday_data_hot_ratio,"hot_leads_percentage")
     all_phase_data = z_calculator_dict(phase_data_hot_ratio,"hot_leads_percentage")
     all_flat_data = hot_lead_ratio_calculator(all_flat_data)
-
+    mean_median_dict = get_mean_median_mode(all_suppliers_list, ['interested', 'total'])
+    overall_data['supplier_stats'] = mean_median_dict
     final_data = {'supplier_data': all_suppliers_list, 'date_data': all_dates_data,
                   'locality_data': all_localities_data, 'weekday_data': all_weekdays_data,
                   'flat_data': all_flat_data, 'phase_data': phase_data, 'overall_data': overall_data}
@@ -1201,6 +1259,12 @@ class CampaignLeads(APIView):
         user_end_date_str = request.query_params.get('end_date', None)
         campaign_id = request.query_params.get('campaign_id', None)
         final_data = get_leads_data_for_campaign(campaign_id, user_start_date_str, user_end_date_str)
+        start_date = datetime.now() - timedelta(days=60)
+        final_data['last_week'] = get_leads_data_for_campaign(campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
+        start_date = datetime.now() - timedelta(days=80)
+        final_data['last_two_weeks'] = get_leads_data_for_campaign(campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
+        start_date = datetime.now() - timedelta(days=90)
+        final_data['last_three_weeks'] = get_leads_data_for_campaign(campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
         return ui_utils.handle_response(class_name, data=final_data, success=True)
 
 
