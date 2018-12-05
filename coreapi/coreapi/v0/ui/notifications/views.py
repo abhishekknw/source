@@ -23,3 +23,26 @@ class NotificationsAPI(APIView):
         notification_dict["created_at"] = datetime.now()
         Notifications(**notification_dict).save()
         return handle_response('', data={"success": True}, success=True)
+
+    @staticmethod
+    def get(request):
+        to_id = request.user.id
+        from_id = request.query_params.get("from_id", None)
+        is_read = request.query_params.get("is_read", None)
+        filter_object = {"to_id":to_id}
+        if from_id:
+            filter_object["from_id"] = from_id
+        if is_read:
+            filter_object["is_read"] = True if is_read.lower() == "true" else False
+        all_notifications = Notifications.objects.raw(filter_object)
+        all_notifications_dict = {}
+        for notification in all_notifications:
+            all_notifications_dict[str(notification._id)] = {
+                "id": str(notification._id),
+                "notification_msg": notification.notification_msg,
+                "to_id": notification.to_id,
+                "from_id": notification.from_id,
+                "module_name": notification.module_name,
+                "created_at": notification.created_at,
+            }
+        return handle_response('', data=all_notifications_dict, success=True)
