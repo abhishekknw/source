@@ -2708,9 +2708,15 @@ class GetOngoingSuppliersOfCampaign(APIView):
                     extra_leads_supplier_map = {lead["supplier_id"].replace('"','') : lead for lead in extra_leads}
                     for supplier in data["suppliers"]:
                         if supplier["supplier_id"] in extra_leads_supplier_map:
-                            supplier["hot_leads"] = extra_leads_supplier_map[supplier["supplier_id"]]["extra_hot_leads"]
-                            supplier["total_leads"] = extra_leads_supplier_map[supplier["supplier_id"]][
-                                "extra_leads"]
+                            if 'leads' not in extra_leads_supplier_map:
+                                supplier["leads"] = []
+
+                            temp_data = {
+                                'hot_leads' : extra_leads_supplier_map[supplier["supplier_id"]]["extra_hot_leads"],
+                                'total_leads' : extra_leads_supplier_map[supplier["supplier_id"]]["extra_leads"],
+                                'timestamp' : extra_leads_supplier_map[supplier["supplier_id"]]["created_at"],
+                            }
+                            supplier["leads"].append(temp_data)
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
