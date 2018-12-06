@@ -199,6 +199,9 @@ def genrate_supplier_data(data):
                         'society_longitude': float(row[7].value) if row[7].value else None,
                         'tower_count': int(row[8].value) if row[8].value else None,
                         'flat_count': int(row[9].value) if row[9].value else None,
+                        'address1' : row[20].value if row[20].value else None,
+                        'society_type_quality' : row[21].value if row[21].value else None,
+                        'landmark' : row[22].value if row[22].value else None,
                     }))
                     contact_data_list.append(ContactDetails(**{
                         'name': row[18].value.strip() if row[18].value else None,
