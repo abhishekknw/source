@@ -8,6 +8,9 @@ import collections
 from operator import itemgetter
 from models import ChecklistPermissions
 from v0.ui.campaign.models import CampaignAssignment
+from v0.ui.proposal.models import ProposalInfo
+from v0.ui.common.models import BaseUser
+from v0.ui.user.serializers import BaseUserSerializer
 
 
 def is_user_permitted(permission_type, user, **kwargs):
@@ -510,8 +513,12 @@ class GetAllChecklists(APIView):
         campaign_list = CampaignAssignment.objects.filter(assigned_to_id=request.user.id).values_list('campaign_id', flat=True) \
             .distinct()
         campaign_list = [campaign_id for campaign_id in campaign_list]
+        all_campaign_name = ProposalInfo.objects.filter(proposal_id__in=campaign_list).values('proposal_id',
+                                                                                                     'name')
+        all_campaign_name_dict = {campaign['proposal_id']: campaign['name'] for campaign in all_campaign_name}
         all_campaign_checklists = list(mongo_client.checklists.find({"$and": [{"campaign_id": {"$in": campaign_list}},
                                                                          {"status": {"$ne": "inactive"}}]}))
+        all_checklist_names = {checklist["checklist_id"]: checklist["checklist_name"] for checklist in all_campaign_checklists}
         all_campaign_checklists_dict = {}
         for single_object in all_campaign_checklists:
             if single_object['campaign_id'] not in all_campaign_checklists_dict:
@@ -520,7 +527,21 @@ class GetAllChecklists(APIView):
         for campaign_id in campaign_list:
             if campaign_id not in all_campaign_checklists_dict:
                 all_campaign_checklists_dict[campaign_id] = []
-        return handle_response(class_name, data=all_campaign_checklists_dict, success=True)
+        all_campaign_checklists_list = []
+        for campaign_id in all_campaign_checklists_dict:
+            campaign_checklist_dict = {
+                "campaign_id": campaign_id,
+                "campaign_name": all_campaign_name_dict[campaign_id],
+                "checklists": []
+            }
+
+            for checklist_id in all_campaign_checklists_dict[campaign_id]:
+                campaign_checklist_dict["checklists"].append({
+                    "checklist_name": all_checklist_names[checklist_id],
+                    "checklist_id": checklist_id
+                })
+            all_campaign_checklists_list.append(campaign_checklist_dict)
+        return handle_response(class_name, data=all_campaign_checklists_list, success=True)
 
 
 class GetCampaignChecklists(APIView):
@@ -743,14 +764,27 @@ class ChecklistPermissionsAPI(APIView):
     def get(request):
         organisation_id = get_user_organisation_id(request.user)
         checklist_permissions = ChecklistPermissions.objects.raw({"organisation_id": organisation_id})
+        all_user_id_list = []
+        for permission in checklist_permissions:
+            if permission.user_id not in all_user_id_list:
+                all_user_id_list.append(permission.user_id)
+            if permission.created_by not in all_user_id_list:
+                all_user_id_list.append(permission.created_by)
+        all_user_objects = BaseUser.objects.filter(id__in=all_user_id_list).all()
+        all_user_dict = {user.id: {"first_name": user.first_name,
+                                    "last_name": user.last_name,
+                                    "username": user.username,
+                                    "email": user.email,
+                                    "id": user.id
+                                      } for user in all_user_objects}
         data = []
         for permission in checklist_permissions:
             permission_data = {
                 "id": str(permission._id),
-                "user_id": permission.user_id,
+                "user_id": all_user_dict[int(permission.user_id)] if int(permission.user_id) in all_user_dict else None,
                 "organisation_id": permission.organisation_id,
                 "checklist_permissions": permission.checklist_permissions,
-                "created_by": permission.created_by
+                "created_by": all_user_dict[int(permission.created_by)] if int(permission.created_by) in all_user_dict else None
             }
             data.append(permission_data)
         return handle_response('', data=data, success=True)
@@ -777,4 +811,35 @@ class ChecklistPermissionsAPI(APIView):
         return handle_response('', data="success", success=True)
 
 
+class ChecklistPermissionsByUserIdAPI(APIView):
+    @staticmethod
+    def get(request, user_id):
+        organisation_id = get_user_organisation_id(request.user)
+        checklist_permissions = list(ChecklistPermissions.objects.raw(
+            {"user_id": int(user_id), "organisation_id": organisation_id}))
+        all_user_id_list = []
+        for permission in checklist_permissions:
+            if permission.user_id not in all_user_id_list:
+                all_user_id_list.append(permission.user_id)
+            if permission.created_by not in all_user_id_list:
+                all_user_id_list.append(permission.created_by)
 
+        all_user_objects = BaseUser.objects.filter(id__in=all_user_id_list).all()
+        all_user_dict = {user.id: {"first_name": user.first_name,
+                                    "last_name": user.last_name,
+                                    "username": user.username,
+                                    "email": user.email,
+                                    "id": user.id
+                                      } for user in all_user_objects}
+        if len(checklist_permissions) == 0:
+            return handle_response('', data="no_permission_exists", success=True)
+
+        checklist_permissions = checklist_permissions[0]
+        permission_data = {
+            "id": str(checklist_permissions._id),
+            "user_id": all_user_dict[int(checklist_permissions.user_id)] if int(checklist_permissions.user_id) in all_user_dict else None,
+            "organisation_id": checklist_permissions.organisation_id,
+            "checklist_permissions": checklist_permissions.checklist_permissions,
+            "created_by": all_user_dict[int(checklist_permissions.created_by)] if int(checklist_permissions.created_by) in all_user_dict else None
+        }
+        return handle_response('', data=permission_data, success=True)
