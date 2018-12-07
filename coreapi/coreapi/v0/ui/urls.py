@@ -20,6 +20,7 @@ urlpatterns = [
     url(r'^dynamic-entities/', include('v0.ui.dynamic_entities.urls')),
     url(r'^dynamic-inventory/', include('v0.ui.dynamic_inventory.urls')),
     url(r'^notifications/', include('v0.ui.notifications.urls')),
+    url(r'^users/', include('v0.ui.user.urls')),
     url(r'^website/', include('v0.ui.account.urls')),
     url(r'^website/', include('v0.ui.campaign.urls')),
     url(r'^website/', include('v0.ui.finances.urls')),
