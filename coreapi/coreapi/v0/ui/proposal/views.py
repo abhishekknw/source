@@ -2490,7 +2490,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         rejected_flats = 0
         for status in shortlisted_spaces_by_phase_dict[phase_id]:
             phase_booked_suppliers = len(shortlisted_spaces_by_phase_dict[phase_id][status])
-            phase_booked_flats = sum(supplier['flat_count'] for supplier in shortlisted_spaces_by_phase_dict[phase_id][status])
+            phase_booked_flats = sum(supplier['flat_count'] for supplier in shortlisted_spaces_by_phase_dict[phase_id][status] if supplier['flat_count'])
             if status in verbally_booked_status:
                 total_booked_suppliers_count += phase_booked_suppliers
                 total_booked_flats += phase_booked_flats
@@ -2714,7 +2714,8 @@ class GetOngoingSuppliersOfCampaign(APIView):
                             temp_data = {
                                 'hot_leads' : extra_leads_supplier_map[supplier["supplier_id"]]["extra_hot_leads"],
                                 'total_leads' : extra_leads_supplier_map[supplier["supplier_id"]]["extra_leads"],
-                                'timestamp' : extra_leads_supplier_map[supplier["supplier_id"]]["created_at"],
+                                'timestamp' : extra_leads_supplier_map[supplier["supplier_id"]]["created_at"]
+                                            if 'created_at' in extra_leads_supplier_map[supplier["supplier_id"]] else None,
                             }
                             supplier["leads"].append(temp_data)
             return ui_utils.handle_response(class_name, data=data, success=True)
