@@ -199,6 +199,9 @@ def genrate_supplier_data(data):
                         'society_longitude': float(row[7].value) if row[7].value else None,
                         'tower_count': int(row[8].value) if row[8].value else None,
                         'flat_count': int(row[9].value) if row[9].value else None,
+                        'address1' : row[20].value if row[20].value else None,
+                        'society_type_quality' : row[21].value if row[21].value else None,
+                        'landmark' : row[22].value if row[22].value else None,
                     }))
                     contact_data_list.append(ContactDetails(**{
                         'name': row[18].value.strip() if row[18].value else None,
@@ -307,14 +310,14 @@ def assign_inv_dates(data):
                         })
                         inv_act_assignement_list.append(temp_data)
 
-                    elif inv['activity_type'] == 'CLOSURE' and inv['inv_name'] == 'POSTER':
-                        temp_data = InventoryActivityAssignment(**{
-                            'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
-                            'activity_date': convert_date_format(date + datetime.timedelta(days=3)),
-                            'assigned_by': assigned_by,
-                            'assigned_to': assigned_to
-                        })
-                        inv_act_assignement_list.append(temp_data)
+                    # elif inv['activity_type'] == 'CLOSURE' and inv['inv_name'] == 'POSTER':
+                    #     temp_data = InventoryActivityAssignment(**{
+                    #         'inventory_activity': InventoryActivity.objects.get(id=inv['id']),
+                    #         'activity_date': convert_date_format(date + datetime.timedelta(days=3)),
+                    #         'assigned_by': assigned_by,
+                    #         'assigned_to': assigned_to
+                    #     })
+                    #     inv_act_assignement_list.append(temp_data)
 
             if inv['inv_name'] == 'STALL':
                 date = None
@@ -2487,7 +2490,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         rejected_flats = 0
         for status in shortlisted_spaces_by_phase_dict[phase_id]:
             phase_booked_suppliers = len(shortlisted_spaces_by_phase_dict[phase_id][status])
-            phase_booked_flats = sum(supplier['flat_count'] for supplier in shortlisted_spaces_by_phase_dict[phase_id][status])
+            phase_booked_flats = sum(supplier['flat_count'] for supplier in shortlisted_spaces_by_phase_dict[phase_id][status] if supplier['flat_count'])
             if status in verbally_booked_status:
                 total_booked_suppliers_count += phase_booked_suppliers
                 total_booked_flats += phase_booked_flats
@@ -2705,9 +2708,16 @@ class GetOngoingSuppliersOfCampaign(APIView):
                     extra_leads_supplier_map = {lead["supplier_id"].replace('"','') : lead for lead in extra_leads}
                     for supplier in data["suppliers"]:
                         if supplier["supplier_id"] in extra_leads_supplier_map:
-                            supplier["hot_leads"] = extra_leads_supplier_map[supplier["supplier_id"]]["extra_hot_leads"]
-                            supplier["total_leads"] = extra_leads_supplier_map[supplier["supplier_id"]][
-                                "extra_leads"]
+                            if 'leads' not in extra_leads_supplier_map:
+                                supplier["leads"] = []
+
+                            temp_data = {
+                                'hot_leads' : extra_leads_supplier_map[supplier["supplier_id"]]["extra_hot_leads"],
+                                'total_leads' : extra_leads_supplier_map[supplier["supplier_id"]]["extra_leads"],
+                                'timestamp' : extra_leads_supplier_map[supplier["supplier_id"]]["created_at"]
+                                            if 'created_at' in extra_leads_supplier_map[supplier["supplier_id"]] else None,
+                            }
+                            supplier["leads"].append(temp_data)
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)

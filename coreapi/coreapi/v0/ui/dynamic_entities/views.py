@@ -28,9 +28,9 @@ class EntityType(APIView):
 
     @staticmethod
     def post(request):
-        name = request.data['name']
+        name = request.data['name'] if 'name' in request.data else False
         is_global = request.data['is_global'] if 'is_global' in request.data else False
-        entity_attributes = request.data['entity_attributes']
+        entity_attributes = request.data['entity_attributes'] if 'entity_attributes' in request.data else False
         organisation_id = get_user_organisation_id(request.user)
         dict_of_req_attributes = {"name": name, "entity_attributes": entity_attributes,
                                   "organisation_id": organisation_id}
@@ -52,7 +52,7 @@ class EntityType(APIView):
         all_supply_entity_type_dict = {}
         for supply_entity_type in all_supply_entity_type:
             all_supply_entity_type_dict[str(supply_entity_type._id)] = {
-                "_id": str(supply_entity_type._id),
+                "id": str(supply_entity_type._id),
                 "name": supply_entity_type.name,
                 "entity_attributes": supply_entity_type.entity_attributes
             }
@@ -64,7 +64,7 @@ class EntityTypeById(APIView):
     def get(request, entity_type_id):
         supply_entity_type = SupplyEntityType.objects.raw({'_id':ObjectId(entity_type_id)})[0]
         supply_entity_type = {
-            "_id": str(supply_entity_type._id),
+            "id": str(supply_entity_type._id),
             "name": supply_entity_type.name,
             "entity_attributes": supply_entity_type.entity_attributes
         }
@@ -181,7 +181,7 @@ class Entity(APIView):
         all_supply_entity_dict = {}
         for supply_entity in all_supply_entity:
             all_supply_entity_dict[str(supply_entity._id)] = {
-                "_id": str(supply_entity._id),
+                "id": str(supply_entity._id),
                 "name": supply_entity.name,
                 "entity_attributes": supply_entity.entity_attributes,
                 "is_custom": supply_entity.is_custom,
@@ -206,7 +206,6 @@ class EntityById(APIView):
         if not is_valid:
             return handle_response('', data=validation_msg_dict, success=False)
         entity_dict = dict_of_req_attributes
-        entity_dict['created_by'] = request.user.id
         entity_dict['updated_at'] = datetime.now()
         (is_valid_adv, validation_msg_dict_adv) = validate_with_entity_type(entity_dict, entity_type_id)
         if not is_valid_adv:

@@ -8,7 +8,7 @@ class UserProfile(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID,  unique=True, editable=True, null=False, related_name='user_profile', db_column='user_id', on_delete=models.CASCADE)
     is_city_manager = models.BooleanField(db_column='is_city_manager', default=False)
     is_cluster_manager = models.BooleanField(db_column='is_cluster_manager', default=False)
-    is_normal_user =  models.BooleanField(db_column='is_normal_user', default=False)
+    is_normal_user = models.BooleanField(db_column='is_normal_user', default=False)
     society_form_access = models.BooleanField(db_column='society_form_access', default=False)
     corporate_form_access = models.BooleanField(db_column='corporate_form_access', default=False)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, db_column='created_by', null=True)

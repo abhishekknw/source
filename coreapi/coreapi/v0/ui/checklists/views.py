@@ -7,6 +7,10 @@ import datetime
 import collections
 from operator import itemgetter
 from models import ChecklistPermissions
+from v0.ui.campaign.models import CampaignAssignment
+from v0.ui.proposal.models import ProposalInfo
+from v0.ui.common.models import BaseUser
+from v0.ui.user.serializers import BaseUserSerializer
 
 
 def is_user_permitted(permission_type, user, **kwargs):
@@ -15,7 +19,6 @@ def is_user_permitted(permission_type, user, **kwargs):
     checklist_id = kwargs['checklist_id'] if 'checklist_id' in kwargs else None
     campaign_id = kwargs['campaign_id'] if 'campaign_id' in kwargs else None
     permission_list = list(ChecklistPermissions.objects.raw({'user_id': user.id}))
-
     if len(permission_list) == 0:
         is_permitted = True
         validation_msg_dict['msg'] = 'no_permission_document'
@@ -23,9 +26,29 @@ def is_user_permitted(permission_type, user, **kwargs):
     else:
         permission_obj = permission_list[0]
         checklist_permissions = permission_obj.checklist_permissions
-        if permission_type not in checklist_permissions:
-            is_permitted = False
-            validation_msg_dict['msg'] = 'not_permitted'
+        if checklist_id:
+            checklist_level_permissions = permission_obj.checklist_permissions['checklists']
+            if str(checklist_id) not in checklist_level_permissions:
+                is_permitted = False
+                validation_msg_dict['msg'] = 'not_permitted'
+                return is_permitted, validation_msg_dict
+            else:
+                if permission_type not in checklist_level_permissions[str(checklist_id)]:
+                    print checklist_id, "here"
+                    is_permitted = False
+                    validation_msg_dict['msg'] = 'not_permitted'
+                    return is_permitted, validation_msg_dict
+        elif campaign_id:
+            champaign_level_permissions = permission_obj.checklist_permissions['campaigns']
+            if campaign_id not in champaign_level_permissions:
+                is_permitted = False
+                validation_msg_dict['msg'] = 'not_permitted'
+                return is_permitted, validation_msg_dict
+            else:
+                if permission_type not in champaign_level_permissions[campaign_id]:
+                    is_permitted = False
+                    validation_msg_dict['msg'] = 'not_permitted'
+                    return is_permitted, validation_msg_dict
     return is_permitted, validation_msg_dict
 
 
@@ -100,7 +123,7 @@ class CreateChecklistTemplate(APIView):
         :return:
         """
 
-        is_permitted, validation_msg_dict = is_user_permitted("CREATE", request.user)
+        is_permitted, validation_msg_dict = is_user_permitted("EDIT", request.user, campaign_id=campaign_id)
         if not is_permitted:
             return handle_response('', data=validation_msg_dict, success=False)
         class_name = self.__class__.__name__
@@ -309,7 +332,7 @@ class ChecklistEntry(APIView):
 class ChecklistEdit(APIView):
 
     def post(self, request, checklist_id):
-        is_permitted, validation_msg_dict = is_user_permitted("UPDATE", request.user, checklist_id=checklist_id)
+        is_permitted, validation_msg_dict = is_user_permitted("EDIT", request.user, checklist_id=checklist_id)
         if not is_permitted:
             return handle_response('', data=validation_msg_dict, success=False)
         checklist_id = int(checklist_id)
@@ -483,6 +506,44 @@ class ChecklistEdit(APIView):
         return handle_response(class_name, data='success', success=True)
 
 
+class GetAllChecklists(APIView):
+    # used for getting a list of all checklists of a campaign
+    def get(self, request):
+        class_name = self.__class__.__name__
+        campaign_list = CampaignAssignment.objects.filter(assigned_to_id=request.user.id).values_list('campaign_id', flat=True) \
+            .distinct()
+        campaign_list = [campaign_id for campaign_id in campaign_list]
+        all_campaign_name = ProposalInfo.objects.filter(proposal_id__in=campaign_list).values('proposal_id',
+                                                                                                     'name')
+        all_campaign_name_dict = {campaign['proposal_id']: campaign['name'] for campaign in all_campaign_name}
+        all_campaign_checklists = list(mongo_client.checklists.find({"$and": [{"campaign_id": {"$in": campaign_list}},
+                                                                         {"status": {"$ne": "inactive"}}]}))
+        all_checklist_names = {checklist["checklist_id"]: checklist["checklist_name"] for checklist in all_campaign_checklists}
+        all_campaign_checklists_dict = {}
+        for single_object in all_campaign_checklists:
+            if single_object['campaign_id'] not in all_campaign_checklists_dict:
+                all_campaign_checklists_dict[single_object['campaign_id']] = []
+            all_campaign_checklists_dict[single_object['campaign_id']].append(single_object['checklist_id'])
+        for campaign_id in campaign_list:
+            if campaign_id not in all_campaign_checklists_dict:
+                all_campaign_checklists_dict[campaign_id] = []
+        all_campaign_checklists_list = []
+        for campaign_id in all_campaign_checklists_dict:
+            campaign_checklist_dict = {
+                "campaign_id": campaign_id,
+                "campaign_name": all_campaign_name_dict[campaign_id],
+                "checklists": []
+            }
+
+            for checklist_id in all_campaign_checklists_dict[campaign_id]:
+                campaign_checklist_dict["checklists"].append({
+                    "checklist_name": all_checklist_names[checklist_id],
+                    "checklist_id": checklist_id
+                })
+            all_campaign_checklists_list.append(campaign_checklist_dict)
+        return handle_response(class_name, data=all_campaign_checklists_list, success=True)
+
+
 class GetCampaignChecklists(APIView):
     # used for getting a list of all checklists of a campaign
     def get(self, request, campaign_id):
@@ -493,7 +554,32 @@ class GetCampaignChecklists(APIView):
                                                                          {"status": {"$ne": "inactive"}}]}))
         else:
             all_campaign_checklists = list(mongo_client.checklists.find({"campaign_id": campaign_id, "status": status}))
-        checklist_id_list = [checklist['checklist_id'] for checklist in all_campaign_checklists]
+        checklist_id_list = []
+        for checklist in all_campaign_checklists:
+            is_permitted, validation_msg = is_user_permitted("VIEW", request.user,
+                                                             checklist_id=checklist['checklist_id'])
+            if is_permitted:
+                checklist_id_list.append(checklist['checklist_id'])
+        checklists = [get_checklist_by_id(checklist_id) for checklist_id in checklist_id_list]
+        return handle_response(class_name, data=checklists, success=True)
+
+
+class GetAllChecklistsTemplates(APIView):
+    # used for getting a list of all checklists of a campaign
+    def get(self, request):
+        class_name = self.__class__.__name__
+        campaign_list = CampaignAssignment.objects.filter(assigned_to_id=request.user.id).values_list('campaign_id', flat=True) \
+            .distinct()
+        campaign_list = [campaign_id for campaign_id in campaign_list]
+        all_campaign_checklists = list(mongo_client.checklists.find({"$and": [{"campaign_id": {"$in": campaign_list}},
+                                                                              {"status": {"$ne": "inactive"}},
+                                                                              {"is_template": True}]}))
+        checklist_id_list = []
+        for checklist in all_campaign_checklists:
+            is_permitted, validation_msg = is_user_permitted("VIEW", request.user,
+                                                             checklist_id=checklist['checklist_id'])
+            if is_permitted:
+                checklist_id_list.append(checklist['checklist_id'])
         checklists = [get_checklist_by_id(checklist_id) for checklist_id in checklist_id_list]
         return handle_response(class_name, data=checklists, success=True)
 
@@ -509,9 +595,11 @@ class GetSupplierChecklists(APIView):
         else:
             all_campaign_checklists = list(mongo_client.checklists.find({"campaign_id": campaign_id,
                                            "supplier_id": supplier_id, "status": status}))
-        # all_campaign_checklists = list(mongo_client.checklists.find({'campaign_id': campaign_id, 'supplier_id': supplier_id,
-        #                                                  'status': 'active'}))
-        checklist_id_list = [checklist['checklist_id'] for checklist in all_campaign_checklists]
+        checklist_id_list = []
+        for checklist in all_campaign_checklists:
+            is_permitted, validation_msg = is_user_permitted("VIEW", request.user, checklist_id=checklist['checklist_id'])
+            if is_permitted:
+                checklist_id_list.append(checklist['checklist_id'])
         checklists = [get_checklist_by_id(checklist_id) for checklist_id in checklist_id_list]
         return handle_response(class_name, data=checklists, success=True)
 
@@ -519,9 +607,6 @@ class GetSupplierChecklists(APIView):
 class FreezeChecklist(APIView):
     @staticmethod
     def put(request,checklist_id, state):
-        is_permitted, validation_msg_dict = is_user_permitted("FREEZE", request.user, checklist_id=checklist_id)
-        if not is_permitted:
-            return handle_response('', data=validation_msg_dict, success=False)
         current_data = mongo_client.checklists.find_one({"checklist_id": int(checklist_id)})
         current_status = current_data['status']
         if current_status == 'inactive':
@@ -532,9 +617,15 @@ class FreezeChecklist(APIView):
                 response = 'checklist is already active'
                 return handle_response({}, data=response, success=False)
             if state == '1':
+                is_permitted, validation_msg_dict = is_user_permitted("FREEZE", request.user, checklist_id=checklist_id)
+                if not is_permitted:
+                    return handle_response('', data=validation_msg_dict, success=False)
                 mongo_client.checklists.update_one({"checklist_id": int(checklist_id)},  {"$set": {'status': 'frozen'}})
         if current_status == 'frozen':
             if state == '0':
+                is_permitted, validation_msg_dict = is_user_permitted("UNFREEZE", request.user, checklist_id=checklist_id)
+                if not is_permitted:
+                    return handle_response('', data=validation_msg_dict, success=False)
                 mongo_client.checklists.update_one({"checklist_id": int(checklist_id)}, {"$set": {'status': 'active'}})
             if state == '1':
                 response = 'checklist is already frozen'
@@ -547,8 +638,6 @@ class FreezeChecklist(APIView):
 #     def get(request, state):
 #         campaign_id = request.query_params.get("campaign_id", None)
 #         supplier_id = request.query_params.get("supplier_id", None)
-
-
 
 
 def get_checklist_by_id(checklist_id):
@@ -615,6 +704,9 @@ def get_checklist_by_id(checklist_id):
 class GetChecklistData(APIView):
     @staticmethod
     def get(request, checklist_id):
+        is_permitted, validation_msg_dict = is_user_permitted("VIEW", request.user, checklist_id=checklist_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
         final_data = get_checklist_by_id(checklist_id)
         return handle_response({}, data=final_data, success=True)
 
@@ -672,14 +764,27 @@ class ChecklistPermissionsAPI(APIView):
     def get(request):
         organisation_id = get_user_organisation_id(request.user)
         checklist_permissions = ChecklistPermissions.objects.raw({"organisation_id": organisation_id})
+        all_user_id_list = []
+        for permission in checklist_permissions:
+            if permission.user_id not in all_user_id_list:
+                all_user_id_list.append(permission.user_id)
+            if permission.created_by not in all_user_id_list:
+                all_user_id_list.append(permission.created_by)
+        all_user_objects = BaseUser.objects.filter(id__in=all_user_id_list).all()
+        all_user_dict = {user.id: {"first_name": user.first_name,
+                                    "last_name": user.last_name,
+                                    "username": user.username,
+                                    "email": user.email,
+                                    "id": user.id
+                                      } for user in all_user_objects}
         data = []
         for permission in checklist_permissions:
             permission_data = {
                 "id": str(permission._id),
-                "user_id": permission.user_id,
+                "user_id": all_user_dict[int(permission.user_id)] if int(permission.user_id) in all_user_dict else None,
                 "organisation_id": permission.organisation_id,
                 "checklist_permissions": permission.checklist_permissions,
-                "created_by": permission.created_by
+                "created_by": all_user_dict[int(permission.created_by)] if int(permission.created_by) in all_user_dict else None
             }
             data.append(permission_data)
         return handle_response('', data=data, success=True)
@@ -706,4 +811,35 @@ class ChecklistPermissionsAPI(APIView):
         return handle_response('', data="success", success=True)
 
 
+class ChecklistPermissionsByUserIdAPI(APIView):
+    @staticmethod
+    def get(request, user_id):
+        organisation_id = get_user_organisation_id(request.user)
+        checklist_permissions = list(ChecklistPermissions.objects.raw(
+            {"user_id": int(user_id), "organisation_id": organisation_id}))
+        all_user_id_list = []
+        for permission in checklist_permissions:
+            if permission.user_id not in all_user_id_list:
+                all_user_id_list.append(permission.user_id)
+            if permission.created_by not in all_user_id_list:
+                all_user_id_list.append(permission.created_by)
 
+        all_user_objects = BaseUser.objects.filter(id__in=all_user_id_list).all()
+        all_user_dict = {user.id: {"first_name": user.first_name,
+                                    "last_name": user.last_name,
+                                    "username": user.username,
+                                    "email": user.email,
+                                    "id": user.id
+                                      } for user in all_user_objects}
+        if len(checklist_permissions) == 0:
+            return handle_response('', data="no_permission_exists", success=True)
+
+        checklist_permissions = checklist_permissions[0]
+        permission_data = {
+            "id": str(checklist_permissions._id),
+            "user_id": all_user_dict[int(checklist_permissions.user_id)] if int(checklist_permissions.user_id) in all_user_dict else None,
+            "organisation_id": checklist_permissions.organisation_id,
+            "checklist_permissions": checklist_permissions.checklist_permissions,
+            "created_by": all_user_dict[int(checklist_permissions.created_by)] if int(checklist_permissions.created_by) in all_user_dict else None
+        }
+        return handle_response('', data=permission_data, success=True)
