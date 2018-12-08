@@ -305,13 +305,13 @@ class ChecklistEntry(APIView):
 
         checklist = mongo_client.checklists.find_one({"checklist_id": int(checklist_id)})
 
-        if checklist == None:
+        if checklist is None:
             data = 'Checklist id does not exist'
             success = False
-        elif checklist['status']=='inactive':
+        elif checklist['status'] == 'inactive':
             data = 'deleted checklist'
             success = False
-        elif checklist['is_template'] == True:
+        elif checklist['is_template'] is True:
             data = 'checklist is a template'
             success = False
         elif checklist['status'] == 'frozen':
@@ -323,6 +323,7 @@ class ChecklistEntry(APIView):
             rows_data = request.data
             campaign_id = checklist['campaign_id']
             enter_row_to_mongo(rows_data, supplier_id, campaign_id, checklist)
+            new_notification = request.data['notification'] if request.data['checklist_type'] else None
             data = 'success'
             success = True
 
