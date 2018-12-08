@@ -344,7 +344,7 @@ class ChecklistEdit(APIView):
             if 'new_checklist_columns' in request.data else []
         new_static_column_values = request.data['new_static_column_values'] \
             if 'new_static_column_values' in request.data else {}
-
+        is_template = request.data['is_tempalte'] if is_template in request.data else None
         if not isinstance(new_static_column_values, dict):
             new_static_column_values = {"1": new_static_column_values}
 
@@ -501,8 +501,12 @@ class ChecklistEdit(APIView):
             curr_row_dict = all_rows_dict[curr_row_key]
             mongo_client.checklist_data.insert_one(curr_row_dict)
 
+        set_checklist_dict = {'data': checklist_column_data_all, 'columns': total_cols, 'rows': n_rows+new_rows}
+
+        if is_template:
+            set_checklist_dict['is_template'] = is_template
         mongo_client.checklists.update_one({'checklist_id': checklist_id}, {
-            "$set": {'data': checklist_column_data_all, 'columns':total_cols, 'rows': n_rows+new_rows}})
+            "$set": set_checklist_dict})
 
         return handle_response(class_name, data='success', success=True)
 
