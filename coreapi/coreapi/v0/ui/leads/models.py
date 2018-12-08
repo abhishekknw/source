@@ -236,7 +236,7 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['tot
         dr = raw_data[dr_index]
         if nr in raw_data_available and dr in raw_data_available:
             metric_name = nr + '/' + dr
-            project_dict[metric_name] = {"$divide": [nr, dr]}
+            project_dict[metric_name] = {"$divide": ['$'+nr, '$'+dr]}
     final_array = [
         {
             "$match": match_dict
@@ -248,8 +248,8 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['tot
             "$project": project_dict
         }
     ]
-
-    leads_summary = list(mongo_client.leads.aggregate(final_array))
+    leads_summary = mongo_client.leads.aggregate(final_array)
+    leads_summary = list(leads_summary)
     return leads_summary
 
 
@@ -288,6 +288,76 @@ def get_leads_summary_by_campaign(campaign_list=None):
         )
     return list(leads_summary)
 
+count_details_parent_map = {
+    'supplier':{'parent':'campaign', 'model_name': 'ShortlistedSpaces', 'database_type': 'mysql',
+                'self_name_model': 'object_id', 'parent_name_model': 'proposal_id', 'storage_type': 'name'},
+    'checklist': {'parent': 'campaign', 'model_name': 'checklists', 'database_type': 'mongodb',
+                 'self_name_model': 'checklist_id', 'parent_name_model': 'campaign_id', 'storage_type': 'unique'},
+    'flat': {'parent': 'supplier', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                 'self_name_model': 'checklist_id', 'parent_name_model': 'campaign_id', 'storage_type': 'count'}
+}
+
+count_details_kids_map = {
+    'campaign': {'supplier', 'checklist'},
+    'supplier': {'flat'}
+}
+
+def get_count_details(entity):
+    entity_details = count_details_parent_map[entity]
+
+
+def get_count_by_higher_level(highest_level, lowest_level, highest_level_list):
+    # kids = parent_order.keys()
+    # parents = parent_order.values()
+    # if higher_level not in parents:
+    #     return('incorrect higher level')
+    # elif lower_level not in kids:
+    #     return('incorrect lower level')
+    desc_sequence = find_level_sequence(highest_level, lowest_level)
+    curr_level_id = 0
+    last_level_id = len(desc_sequence)-1
+    while curr_level_id < last_level_id:
+        curr_level = desc_sequence[curr_level_id]
+        next_level = desc_sequence[curr_level_id+1]
+        entity_details = count_details_parent_map[next_level]
+        (model_name, database_type, self_model_name, parent_model_name, storage_type) = (
+            entity_details['model_name'], entity_details['database_type'], entity_details['self_name_model'],
+            entity_details['parent_name_model'], entity_details['storage_type'])
+
+        if curr_level_id==0:
+            match_list = highest_level_list
+        else:
+            match_list = []
+        if storage_type == 'unique':
+            if database_type == 'mongodb':
+                match_constraint = [{parent_model_name: {"$in": match_list}}]
+                match_dict = {"$and": match_constraint}
+                query = mongo_client[model_name].aggregate(
+                    [
+                        {
+                            "$match": match_dict
+                        },
+                        {
+                            "$group":
+                                {
+                                    "checklist_id":{"$first": '$checklist_id'},
+                                }
+                        },
+                    ]
+                )
+                #count = mongo_client[model_name].find({}).distinct(self_model_name).length
+            else:
+                count = model_name.objects.get
+
+def find_level_sequence(highest_level, lowest_level):
+    sequence = []
+    curr_level = lowest_level
+    while curr_level is not highest_level:
+        sequence.append(curr_level)
+        next_level = count_details_parent_map[curr_level]
+        curr_level = next_level
+    desc_sequence = sequence[::-1]
+    return desc_sequence
 
 class LeadsPermissions(MongoModel):
     user_id = fields.IntegerField()

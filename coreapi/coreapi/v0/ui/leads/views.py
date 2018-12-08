@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
-from models import (LeadsFormContacts, get_leads_summary, LeadsPermissions)
+from models import (LeadsFormContacts, get_leads_summary, LeadsPermissions, get_leads_summary_all)
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
@@ -687,14 +687,10 @@ class LeadsSummary(APIView):
         user_id = BaseUser.objects.get(username=username).id
         campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id).values_list('campaign_id', flat=True).distinct()
         campaign_list = [campaign_id for campaign_id in campaign_list]
-        all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).values('proposal_id',
-                                                                                                          'object_id',
-                                                                                                          'phase_no_id',
-                                                                                                          'is_completed',
-                                                                                                          'proposal__name',
-                                                                                                          'proposal__tentative_start_date',
-                                                                                                          'proposal__tentative_end_date',
-                                                                                                          'proposal__campaign_state')
+        all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).\
+            values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name', 'proposal__tentative_start_date',
+                   'proposal__tentative_end_date', 'proposal__campaign_state')
+
         all_campaign_dict = {}
         all_shortlisted_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier]
         all_supplier_society = SupplierTypeSociety.objects.filter(supplier_id__in=all_shortlisted_supplier_id).values('supplier_id', 'flat_count')
@@ -938,6 +934,21 @@ class LeadsPermissionsAPI(APIView):
             curr_permission['updated_at'] = datetime.datetime.now()
             LeadsPermissions.objects.raw({'_id': ObjectId(permission['_id'])}).update({"$set": curr_permission})
         return handle_response('', data={"success": True}, success=True)
+
+
+class GetLeadsDataGeneric(APIView):
+    @staticmethod
+    def put(request):
+        all_data = request.data
+        default_raw_data = ['total_leads', 'hot_leads']
+        default_metrics = ['2/1']
+        data_scope = all_data['data_scope'] if 'data_scope' in all_data else None
+        data_point = all_data['data_point'] if 'data_point' in all_data else None
+        raw_data = all_data['raw_data'] if 'raw_data' in all_data else default_raw_data
+        metrics = all_data['metrics'] if 'metrics' in all_data else default_metrics
+        mongo_query = get_leads_summary_all(data_scope, data_point, raw_data, metrics)
+        return handle_response('', data=mongo_query, success=True)
+
 
 
 
