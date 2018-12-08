@@ -190,6 +190,68 @@ def get_leads_summary(campaign_list=None, user_start_datetime=None,user_end_date
     updated_leads_summary = add_extra_leads(leads_summary, campaign_list)
     return updated_leads_summary
 
+# this function is used to get the number of desired raw data or metrics for the given
+# data point within the chosen scope
+
+
+def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['total_leads','hot_leads'],
+                          metrics = ['2/1']):
+    match_dict = {}
+    scope_restrictor_count = len(data_scope.keys()) if data_scope is not None else 0 # get number of restrictors
+    if scope_restrictor_count == 0: # case of full database
+        match_dict = {}
+        # else do something else
+    group_dict = {
+        "_id": {},
+    }
+    project_dict = {}
+    data_point_category = data_point['category']
+    data_point_levels = data_point['level']
+    if data_point is None:
+        return 'no data point criteria specified'
+    if data_point_category == 'unordered':
+        if 'campaign' in data_point_levels:
+            group_dict["_id"]["campaign_id"] = "$campaign_id"
+            group_dict["campaign_id"] = {"$first": "$campaign_id"}
+            project_dict["campaign_id"] = 1
+        if 'supplier' in data_point_levels:
+            group_dict["_id"]["supplier_id"] = "$supplier_id"
+            group_dict["supplier_id"] = {"$first": "$supplier_id"}
+            project_dict["supplier_id"] = 1
+    raw_data_available = ['total_leads','hot_leads']
+    # for curr_data in raw_data:
+    #     if curr_data in raw_data_available:
+    #         group_dict[curr_data]
+    if 'total_leads' in raw_data:
+        group_dict["total_leads"] = {"$sum": 1}
+        project_dict["total_leads"] = 1
+    if 'hot_leads' in raw_data:
+        group_dict["hot_leads"] = {"$sum": {"$cond": ["$is_hot", 1, 0]}}
+        project_dict["hot_leads"] = 1
+    operators = ['/'] # more operators will be added later
+    for curr_metric in metrics:
+        nr_index = int(curr_metric.split('/')[0])-1
+        dr_index = int(curr_metric.split('/')[1])-1
+        nr = raw_data[nr_index]
+        dr = raw_data[dr_index]
+        if nr in raw_data_available and dr in raw_data_available:
+            metric_name = nr + '/' + dr
+            project_dict[metric_name] = {"$divide": [nr, dr]}
+    final_array = [
+        {
+            "$match": match_dict
+        },
+        {
+            "$group": group_dict
+        },
+        {
+            "$project": project_dict
+        }
+    ]
+
+    leads_summary = list(mongo_client.leads.aggregate(final_array))
+    return leads_summary
+
 
 def get_leads_summary_by_campaign(campaign_list=None):
     if campaign_list:
