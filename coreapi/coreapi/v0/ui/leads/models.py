@@ -4,6 +4,8 @@ from v0.ui.common.models import mongo_client
 from pymodm.connection import connect
 from pymongo.write_concern import WriteConcern
 from pymodm import MongoModel, fields
+from v0.ui.proposal.models import ShortlistedSpaces
+from v0.ui.supplier.models import SupplierTypeSociety
 
 connect("mongodb://localhost:27017/machadalo", alias="mongo_app")
 
@@ -249,8 +251,9 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['tot
         }
     ]
     leads_summary = mongo_client.leads.aggregate(final_array)
+    test_lower_level_elements = get_details_by_higher_level('supplier', 'flat', ['BENBLDBHRSAPP', 'BENBLDBHRSAPR'])
     leads_summary = list(leads_summary)
-    return leads_summary
+    return (test_lower_level_elements)
 
 
 def get_leads_summary_by_campaign(campaign_list=None):
@@ -294,7 +297,7 @@ count_details_parent_map = {
     'checklist': {'parent': 'campaign', 'model_name': 'checklists', 'database_type': 'mongodb',
                  'self_name_model': 'checklist_id', 'parent_name_model': 'campaign_id', 'storage_type': 'unique'},
     'flat': {'parent': 'supplier', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
-                 'self_name_model': 'checklist_id', 'parent_name_model': 'campaign_id', 'storage_type': 'count'}
+                 'self_name_model': 'flat_count', 'parent_name_model': 'supplier_id', 'storage_type': 'count'}
 }
 
 count_details_kids_map = {
@@ -305,8 +308,27 @@ count_details_kids_map = {
 def get_count_details(entity):
     entity_details = count_details_parent_map[entity]
 
+def find_level_sequence(highest_level, lowest_level):
+    sequence = []
+    curr_level = lowest_level
+    n_levels = 3
+    n=0
+    while n < n_levels:
+        sequence.append(curr_level)
+        if curr_level == highest_level:
+            desc_sequence = sequence[::-1]
+            return desc_sequence
+        elif curr_level not in count_details_parent_map:
+            error_message = "incorrect hierarchy"
+        else:
+            next_level = count_details_parent_map[curr_level]['parent']
+            curr_level = next_level
+            n = n + 1
+    if n>=n_levels:
+        error_message = "too many levels"
+    return error_message
 
-def get_count_by_higher_level(highest_level, lowest_level, highest_level_list):
+def get_details_by_higher_level(highest_level, lowest_level, highest_level_list):
     # kids = parent_order.keys()
     # parents = parent_order.values()
     # if higher_level not in parents:
@@ -327,37 +349,62 @@ def get_count_by_higher_level(highest_level, lowest_level, highest_level_list):
         if curr_level_id==0:
             match_list = highest_level_list
         else:
-            match_list = []
-        if storage_type == 'unique':
+            match_list = next_level_match_list
+        query = []
+        if storage_type == 'unique' or storage_type == 'name':
             if database_type == 'mongodb':
                 match_constraint = [{parent_model_name: {"$in": match_list}}]
                 match_dict = {"$and": match_constraint}
                 query = mongo_client[model_name].aggregate(
                     [
-                        {
-                            "$match": match_dict
-                        },
+                        {"$match": match_dict},
                         {
                             "$group":
                                 {
-                                    "checklist_id":{"$first": '$checklist_id'},
+                                    "_id": {self_model_name: '$'+self_model_name, parent_model_name: '$'+ parent_model_name},
+                                    parent_model_name:{"$first": '$'+parent_model_name},
                                 }
                         },
+                        {
+                            "$project":
+                                {
+                                    parent_model_name: 1,
+                                    self_model_name: 1
+                                }
+                        }
                     ]
                 )
-                #count = mongo_client[model_name].find({}).distinct(self_model_name).length
+                query = list(query)
+                next_level_match_list = [x["_id"][self_model_name] for x in query]
+                # count = mongo_client[model_name].find({}).distinct(self_model_name).length
+            elif database_type == 'mysql':
+                first_part_query = model_name+'.objects.filter('
+                full_query = first_part_query+ parent_model_name+'__in=match_list)'
+                #query = eval(model_name).objects.filter(proposal_id__in=match_list)
+                query = list(eval(full_query).values(self_model_name, parent_model_name))
+                next_level_match_list = list(set([x[self_model_name] for x in query]))
             else:
-                count = model_name.objects.get
+                print("database does not exist")
+        elif storage_type == 'count':
+            if database_type == 'mongodb':
+                match_constraint = [{parent_model_name: {"$in": match_list}}]
+                match_dict = {"$and": match_constraint}
+                query = mongo_client[model_name].find(match_dict, {'_id': 0, parent_model_name: 1, self_model_name: 1})
+                query = list(query)
+            elif database_type == 'mysql':
+                first_part_query = model_name + '.objects.filter('
+                full_query = first_part_query + parent_model_name + '__in=match_list)'
+                query = list(eval(full_query).values(self_model_name, parent_model_name))
+                next_level_match_array = [x[self_model_name] for x in query]
+                next_level_match_list = [sum(next_level_match_array)]
+                print next_level_match_list
+            else:
+                print("database does not exist")
+        else:
+            print("pass")
+        curr_level_id = curr_level_id+1
+    return query
 
-def find_level_sequence(highest_level, lowest_level):
-    sequence = []
-    curr_level = lowest_level
-    while curr_level is not highest_level:
-        sequence.append(curr_level)
-        next_level = count_details_parent_map[curr_level]
-        curr_level = next_level
-    desc_sequence = sequence[::-1]
-    return desc_sequence
 
 class LeadsPermissions(MongoModel):
     user_id = fields.IntegerField()
