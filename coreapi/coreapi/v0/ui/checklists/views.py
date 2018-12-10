@@ -11,7 +11,7 @@ from v0.ui.campaign.models import CampaignAssignment
 from v0.ui.proposal.models import ProposalInfo
 from v0.ui.common.models import BaseUser
 from v0.ui.user.serializers import BaseUserSerializer
-from not v0.ui.notifications.views import create_new_notification_bulk
+from v0.ui.notifications.views import create_new_notification_bulk
 
 
 def is_user_permitted(permission_type, user, **kwargs):
