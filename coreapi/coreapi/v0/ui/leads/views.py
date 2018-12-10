@@ -636,6 +636,7 @@ class InsertExtraLeads(APIView):
         if set_dict != {}:
             set_dict["supplier_id"] = supplier_id
             set_dict["campaign_id"] = campaign_id
+            set_dict["leads_form_id"] = int(form_id)
             set_dict["created_at"] = datetime.datetime.now()
 
             mongo_client.leads_extras.insert_one(set_dict)
