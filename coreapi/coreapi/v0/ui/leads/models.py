@@ -251,7 +251,7 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['tot
         }
     ]
     leads_summary = mongo_client.leads.aggregate(final_array)
-    test_lower_level_elements = get_details_by_higher_level('supplier', 'flat', ['BENBLDBHRSAPP', 'BENBLDBHRSAPR'])
+    test_lower_level_elements = get_details_by_higher_level('supplier,campaign', 'lead', ['TESYOG06F2', 'BYJMACC9CA'])
     leads_summary = list(leads_summary)
     return (test_lower_level_elements)
 
@@ -297,7 +297,9 @@ count_details_parent_map = {
     'checklist': {'parent': 'campaign', 'model_name': 'checklists', 'database_type': 'mongodb',
                  'self_name_model': 'checklist_id', 'parent_name_model': 'campaign_id', 'storage_type': 'unique'},
     'flat': {'parent': 'supplier', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
-                 'self_name_model': 'flat_count', 'parent_name_model': 'supplier_id', 'storage_type': 'count'}
+                 'self_name_model': 'flat_count', 'parent_name_model': 'supplier_id', 'storage_type': 'count'},
+    'lead': {'parent': 'supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+             'self_name_model': 'entry_id', 'parent_name_model': 'supplier_id,campaign_id', 'storage_type': 'count'},
 }
 
 count_details_kids_map = {
@@ -328,16 +330,21 @@ def find_level_sequence(highest_level, lowest_level):
         error_message = "too many levels"
     return error_message
 
-def get_details_by_higher_level(highest_level, lowest_level, highest_level_list):
-    # kids = parent_order.keys()
-    # parents = parent_order.values()
-    # if higher_level not in parents:
-    #     return('incorrect higher level')
-    # elif lower_level not in kids:
-    #     return('incorrect lower level')
-    desc_sequence = find_level_sequence(highest_level, lowest_level)
+
+def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None):
+    second_lowest_parent = count_details_parent_map[lowest_level]['parent']
+    second_lowest_parent_name_model = count_details_parent_map[lowest_level]['parent_name_model']
+    if ',' in second_lowest_parent or ',' in second_lowest_parent_name_model:
+        parents = second_lowest_parent.split(',')
+        desc_sequence = [parents, lowest_level]
+        parent_model_names = second_lowest_parent_name_model.split(',')
+        parent_type = 'multiple'
+    else:
+        desc_sequence = find_level_sequence(highest_level, lowest_level)
+        parent_type = 'single'
     curr_level_id = 0
-    last_level_id = len(desc_sequence)-1
+    last_level_id = len(desc_sequence) - 1
+
     while curr_level_id < last_level_id:
         curr_level = desc_sequence[curr_level_id]
         next_level = desc_sequence[curr_level_id+1]
@@ -346,58 +353,85 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list)
             entity_details['model_name'], entity_details['database_type'], entity_details['self_name_model'],
             entity_details['parent_name_model'], entity_details['storage_type'])
 
+        if parent_type == 'multiple':
+            parent_model_name = default_value_type if default_value_type in parent_model_names else parent_model_names[-1]
+        else:
+            parent_model_names = [parent_model_name]
+
         if curr_level_id==0:
             match_list = highest_level_list
         else:
             match_list = next_level_match_list
         query = []
+
+        # general queries common to all storage types
+        if database_type == 'mongodb':
+            match_constraint = [{parent_model_name: {"$in": match_list}}]
+            match_dict = {"$and": match_constraint}
+        elif database_type == 'mysql':
+            first_part_query = model_name + '.objects.filter('
+            full_query = first_part_query + parent_model_name + '__in=match_list)'
+            query = list(eval(full_query).values(self_model_name, parent_model_name))
+        else:
+            return "database does not exist"
+
         if storage_type == 'unique' or storage_type == 'name':
             if database_type == 'mongodb':
-                match_constraint = [{parent_model_name: {"$in": match_list}}]
-                match_dict = {"$and": match_constraint}
+                group_dict = {"_id":{self_model_name: '$' + self_model_name},
+                              self_model_name: {"$first": '$' + self_model_name}}
+                project_dict = {self_model_name: 1, "_id":0}
+                for curr_parent_model_name in parent_model_names:
+                    group_dict["_id"][curr_parent_model_name] = '$' + curr_parent_model_name
+                    group_dict[curr_parent_model_name] = {"$first": '$' + curr_parent_model_name}
+                    project_dict[curr_parent_model_name] = 1
+
                 query = mongo_client[model_name].aggregate(
                     [
                         {"$match": match_dict},
                         {
-                            "$group":
-                                {
-                                    "_id": {self_model_name: '$'+self_model_name, parent_model_name: '$'+ parent_model_name},
-                                    parent_model_name:{"$first": '$'+parent_model_name},
-                                }
+                            "$group": group_dict
                         },
                         {
-                            "$project":
-                                {
-                                    parent_model_name: 1,
-                                    self_model_name: 1
-                                }
+                            "$project": project_dict
                         }
                     ]
                 )
                 query = list(query)
-                next_level_match_list = [x["_id"][self_model_name] for x in query]
+                print query
+                next_level_match_list = [x[self_model_name] for x in query]
                 # count = mongo_client[model_name].find({}).distinct(self_model_name).length
             elif database_type == 'mysql':
-                first_part_query = model_name+'.objects.filter('
-                full_query = first_part_query+ parent_model_name+'__in=match_list)'
-                #query = eval(model_name).objects.filter(proposal_id__in=match_list)
-                query = list(eval(full_query).values(self_model_name, parent_model_name))
                 next_level_match_list = list(set([x[self_model_name] for x in query]))
             else:
                 print("database does not exist")
         elif storage_type == 'count':
             if database_type == 'mongodb':
-                match_constraint = [{parent_model_name: {"$in": match_list}}]
-                match_dict = {"$and": match_constraint}
-                query = mongo_client[model_name].find(match_dict, {'_id': 0, parent_model_name: 1, self_model_name: 1})
+                project_dict = {'total':1, "_id":0}
+                group_dict = {'_id':{},'total':{"$sum": 1}}
+                for curr_parent_model_name in parent_model_names:
+                    group_dict["_id"][curr_parent_model_name] = '$' + curr_parent_model_name
+                    group_dict[curr_parent_model_name] = {"$first": '$' + curr_parent_model_name}
+                    project_dict[curr_parent_model_name] = 1
+                print (project_dict,group_dict)
+                query = mongo_client[model_name].aggregate(
+                    [
+                        {"$match": match_dict},
+                        {
+                            "$group": group_dict
+                        },
+                        {
+                            "$project": project_dict
+                        }
+                    ]
+                )
                 query = list(query)
+                # this is not complete yet
             elif database_type == 'mysql':
                 first_part_query = model_name + '.objects.filter('
                 full_query = first_part_query + parent_model_name + '__in=match_list)'
                 query = list(eval(full_query).values(self_model_name, parent_model_name))
                 next_level_match_array = [x[self_model_name] for x in query]
                 next_level_match_list = [sum(next_level_match_array)]
-                print next_level_match_list
             else:
                 print("database does not exist")
         else:

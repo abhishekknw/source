@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
-from models import (LeadsFormContacts, get_leads_summary, LeadsPermissions, get_leads_summary_all)
+from models import (LeadsFormContacts, get_leads_summary, LeadsPermissions, get_leads_summary_all,
+                    get_details_by_higher_level)
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
@@ -948,6 +949,17 @@ class GetLeadsDataGeneric(APIView):
         metrics = all_data['metrics'] if 'metrics' in all_data else default_metrics
         mongo_query = get_leads_summary_all(data_scope, data_point, raw_data, metrics)
         return handle_response('', data=mongo_query, success=True)
+
+class GetListsCounts(APIView):
+    @staticmethod
+    def put(request):
+        data = request.data
+        highest_level = data['highest_level']
+        lowest_level = data['lowest_level']
+        highest_level_list = data['highest_level_values']
+        default_value_type = data['default_value_type'] if 'default_value_type' in data else None
+        final_output = get_details_by_higher_level(highest_level,lowest_level,highest_level_list, default_value_type)
+        return handle_response('', data=final_output, success=True)
 
 
 
