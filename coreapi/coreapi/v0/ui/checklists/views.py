@@ -11,6 +11,7 @@ from v0.ui.campaign.models import CampaignAssignment
 from v0.ui.proposal.models import ProposalInfo
 from v0.ui.common.models import BaseUser
 from v0.ui.user.serializers import BaseUserSerializer
+from v0.ui.notifications.views import create_new_notification_bulk
 
 
 def is_user_permitted(permission_type, user, **kwargs):
@@ -27,18 +28,28 @@ def is_user_permitted(permission_type, user, **kwargs):
         permission_obj = permission_list[0]
         checklist_permissions = permission_obj.checklist_permissions
         if checklist_id:
+            campaign_id = list(mongo_client.checklists.find({"checklist_id":int(checklist_id)}))[0]['campaign_id']
             checklist_level_permissions = permission_obj.checklist_permissions['checklists']
             if str(checklist_id) not in checklist_level_permissions:
-                is_permitted = False
-                validation_msg_dict['msg'] = 'not_permitted'
-                return is_permitted, validation_msg_dict
+                champaign_level_permissions = permission_obj.checklist_permissions['campaigns']
+                if campaign_id not in champaign_level_permissions:
+                    is_permitted = False
+                    validation_msg_dict['msg'] = 'not_permitted'
+                    return is_permitted, validation_msg_dict
+                else:
+                    if permission_type not in champaign_level_permissions[campaign_id]:
+                        is_permitted = False
+                        validation_msg_dict['msg'] = 'not_permitted'
+                        return is_permitted, validation_msg_dict
             else:
                 if permission_type not in checklist_level_permissions[str(checklist_id)]:
-                    print checklist_id, "here"
                     is_permitted = False
                     validation_msg_dict['msg'] = 'not_permitted'
                     return is_permitted, validation_msg_dict
         elif campaign_id:
+            if 'campaigns' not in permission_obj.checklist_permissions:
+                validation_msg_dict['msg'] = 'not_permitted'
+                return False, validation_msg_dict
             champaign_level_permissions = permission_obj.checklist_permissions['campaigns']
             if campaign_id not in champaign_level_permissions:
                 is_permitted = False
@@ -305,13 +316,13 @@ class ChecklistEntry(APIView):
 
         checklist = mongo_client.checklists.find_one({"checklist_id": int(checklist_id)})
 
-        if checklist == None:
+        if checklist is None:
             data = 'Checklist id does not exist'
             success = False
-        elif checklist['status']=='inactive':
+        elif checklist['status'] == 'inactive':
             data = 'deleted checklist'
             success = False
-        elif checklist['is_template'] == True:
+        elif checklist['is_template'] is True:
             data = 'checklist is a template'
             success = False
         elif checklist['status'] == 'frozen':
@@ -323,6 +334,8 @@ class ChecklistEntry(APIView):
             rows_data = request.data
             campaign_id = checklist['campaign_id']
             enter_row_to_mongo(rows_data, supplier_id, campaign_id, checklist)
+            new_notifications = request.data['notifications'] if 'notifications' in request.data else None
+            create_new_notification_bulk(request.user, new_notifications, "checklist")
             data = 'success'
             success = True
 
@@ -343,7 +356,7 @@ class ChecklistEdit(APIView):
             if 'new_checklist_columns' in request.data else []
         new_static_column_values = request.data['new_static_column_values'] \
             if 'new_static_column_values' in request.data else {}
-
+        is_template = request.data['is_template'] if "is_template" in request.data else None
         if not isinstance(new_static_column_values, dict):
             new_static_column_values = {"1": new_static_column_values}
 
@@ -500,8 +513,12 @@ class ChecklistEdit(APIView):
             curr_row_dict = all_rows_dict[curr_row_key]
             mongo_client.checklist_data.insert_one(curr_row_dict)
 
+        set_checklist_dict = {'data': checklist_column_data_all, 'columns': total_cols, 'rows': n_rows+new_rows}
+
+        if is_template:
+            set_checklist_dict['is_template'] = is_template
         mongo_client.checklists.update_one({'checklist_id': checklist_id}, {
-            "$set": {'data': checklist_column_data_all, 'columns':total_cols, 'rows': n_rows+new_rows}})
+            "$set": set_checklist_dict})
 
         return handle_response(class_name, data='success', success=True)
 
@@ -551,6 +568,7 @@ class GetCampaignChecklists(APIView):
         status = request.query_params.get('status', 'both')
         if status == 'both':
             all_campaign_checklists = list(mongo_client.checklists.find({"$and": [{"campaign_id": campaign_id},
+                                                                                  {"checklist_type": "campaign"},
                                                                          {"status": {"$ne": "inactive"}}]}))
         else:
             all_campaign_checklists = list(mongo_client.checklists.find({"campaign_id": campaign_id, "status": status}))

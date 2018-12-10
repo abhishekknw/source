@@ -4,6 +4,8 @@ from v0.ui.common.models import mongo_client
 from pymodm.connection import connect
 from pymongo.write_concern import WriteConcern
 from pymodm import MongoModel, fields
+from v0.ui.proposal.models import ShortlistedSpaces
+from v0.ui.supplier.models import SupplierTypeSociety
 
 connect("mongodb://localhost:27017/machadalo", alias="mongo_app")
 
@@ -190,6 +192,69 @@ def get_leads_summary(campaign_list=None, user_start_datetime=None,user_end_date
     updated_leads_summary = add_extra_leads(leads_summary, campaign_list)
     return updated_leads_summary
 
+# this function is used to get the number of desired raw data or metrics for the given
+# data point within the chosen scope
+
+
+def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['total_leads','hot_leads'],
+                          metrics = ['2/1']):
+    match_dict = {}
+    scope_restrictor_count = len(data_scope.keys()) if data_scope is not None else 0 # get number of restrictors
+    if scope_restrictor_count == 0: # case of full database
+        match_dict = {}
+        # else do something else
+    group_dict = {
+        "_id": {},
+    }
+    project_dict = {}
+    data_point_category = data_point['category']
+    data_point_levels = data_point['level']
+    if data_point is None:
+        return 'no data point criteria specified'
+    if data_point_category == 'unordered':
+        if 'campaign' in data_point_levels:
+            group_dict["_id"]["campaign_id"] = "$campaign_id"
+            group_dict["campaign_id"] = {"$first": "$campaign_id"}
+            project_dict["campaign_id"] = 1
+        if 'supplier' in data_point_levels:
+            group_dict["_id"]["supplier_id"] = "$supplier_id"
+            group_dict["supplier_id"] = {"$first": "$supplier_id"}
+            project_dict["supplier_id"] = 1
+    raw_data_available = ['total_leads','hot_leads']
+    # for curr_data in raw_data:
+    #     if curr_data in raw_data_available:
+    #         group_dict[curr_data]
+    if 'total_leads' in raw_data:
+        group_dict["total_leads"] = {"$sum": 1}
+        project_dict["total_leads"] = 1
+    if 'hot_leads' in raw_data:
+        group_dict["hot_leads"] = {"$sum": {"$cond": ["$is_hot", 1, 0]}}
+        project_dict["hot_leads"] = 1
+    operators = ['/'] # more operators will be added later
+    for curr_metric in metrics:
+        nr_index = int(curr_metric.split('/')[0])-1
+        dr_index = int(curr_metric.split('/')[1])-1
+        nr = raw_data[nr_index]
+        dr = raw_data[dr_index]
+        if nr in raw_data_available and dr in raw_data_available:
+            metric_name = nr + '/' + dr
+            project_dict[metric_name] = {"$divide": ['$'+nr, '$'+dr]}
+    final_array = [
+        {
+            "$match": match_dict
+        },
+        {
+            "$group": group_dict
+        },
+        {
+            "$project": project_dict
+        }
+    ]
+    leads_summary = mongo_client.leads.aggregate(final_array)
+    test_lower_level_elements = get_details_by_higher_level('supplier', 'flat', ['BENBLDBHRSAPP', 'BENBLDBHRSAPR'])
+    leads_summary = list(leads_summary)
+    return (test_lower_level_elements)
+
 
 def get_leads_summary_by_campaign(campaign_list=None):
     if campaign_list:
@@ -225,6 +290,120 @@ def get_leads_summary_by_campaign(campaign_list=None):
             ]
         )
     return list(leads_summary)
+
+count_details_parent_map = {
+    'supplier':{'parent':'campaign', 'model_name': 'ShortlistedSpaces', 'database_type': 'mysql',
+                'self_name_model': 'object_id', 'parent_name_model': 'proposal_id', 'storage_type': 'name'},
+    'checklist': {'parent': 'campaign', 'model_name': 'checklists', 'database_type': 'mongodb',
+                 'self_name_model': 'checklist_id', 'parent_name_model': 'campaign_id', 'storage_type': 'unique'},
+    'flat': {'parent': 'supplier', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                 'self_name_model': 'flat_count', 'parent_name_model': 'supplier_id', 'storage_type': 'count'}
+}
+
+count_details_kids_map = {
+    'campaign': {'supplier', 'checklist'},
+    'supplier': {'flat'}
+}
+
+def get_count_details(entity):
+    entity_details = count_details_parent_map[entity]
+
+def find_level_sequence(highest_level, lowest_level):
+    sequence = []
+    curr_level = lowest_level
+    n_levels = 3
+    n=0
+    while n < n_levels:
+        sequence.append(curr_level)
+        if curr_level == highest_level:
+            desc_sequence = sequence[::-1]
+            return desc_sequence
+        elif curr_level not in count_details_parent_map:
+            error_message = "incorrect hierarchy"
+        else:
+            next_level = count_details_parent_map[curr_level]['parent']
+            curr_level = next_level
+            n = n + 1
+    if n>=n_levels:
+        error_message = "too many levels"
+    return error_message
+
+def get_details_by_higher_level(highest_level, lowest_level, highest_level_list):
+    # kids = parent_order.keys()
+    # parents = parent_order.values()
+    # if higher_level not in parents:
+    #     return('incorrect higher level')
+    # elif lower_level not in kids:
+    #     return('incorrect lower level')
+    desc_sequence = find_level_sequence(highest_level, lowest_level)
+    curr_level_id = 0
+    last_level_id = len(desc_sequence)-1
+    while curr_level_id < last_level_id:
+        curr_level = desc_sequence[curr_level_id]
+        next_level = desc_sequence[curr_level_id+1]
+        entity_details = count_details_parent_map[next_level]
+        (model_name, database_type, self_model_name, parent_model_name, storage_type) = (
+            entity_details['model_name'], entity_details['database_type'], entity_details['self_name_model'],
+            entity_details['parent_name_model'], entity_details['storage_type'])
+
+        if curr_level_id==0:
+            match_list = highest_level_list
+        else:
+            match_list = next_level_match_list
+        query = []
+        if storage_type == 'unique' or storage_type == 'name':
+            if database_type == 'mongodb':
+                match_constraint = [{parent_model_name: {"$in": match_list}}]
+                match_dict = {"$and": match_constraint}
+                query = mongo_client[model_name].aggregate(
+                    [
+                        {"$match": match_dict},
+                        {
+                            "$group":
+                                {
+                                    "_id": {self_model_name: '$'+self_model_name, parent_model_name: '$'+ parent_model_name},
+                                    parent_model_name:{"$first": '$'+parent_model_name},
+                                }
+                        },
+                        {
+                            "$project":
+                                {
+                                    parent_model_name: 1,
+                                    self_model_name: 1
+                                }
+                        }
+                    ]
+                )
+                query = list(query)
+                next_level_match_list = [x["_id"][self_model_name] for x in query]
+                # count = mongo_client[model_name].find({}).distinct(self_model_name).length
+            elif database_type == 'mysql':
+                first_part_query = model_name+'.objects.filter('
+                full_query = first_part_query+ parent_model_name+'__in=match_list)'
+                #query = eval(model_name).objects.filter(proposal_id__in=match_list)
+                query = list(eval(full_query).values(self_model_name, parent_model_name))
+                next_level_match_list = list(set([x[self_model_name] for x in query]))
+            else:
+                print("database does not exist")
+        elif storage_type == 'count':
+            if database_type == 'mongodb':
+                match_constraint = [{parent_model_name: {"$in": match_list}}]
+                match_dict = {"$and": match_constraint}
+                query = mongo_client[model_name].find(match_dict, {'_id': 0, parent_model_name: 1, self_model_name: 1})
+                query = list(query)
+            elif database_type == 'mysql':
+                first_part_query = model_name + '.objects.filter('
+                full_query = first_part_query + parent_model_name + '__in=match_list)'
+                query = list(eval(full_query).values(self_model_name, parent_model_name))
+                next_level_match_array = [x[self_model_name] for x in query]
+                next_level_match_list = [sum(next_level_match_array)]
+                print next_level_match_list
+            else:
+                print("database does not exist")
+        else:
+            print("pass")
+        curr_level_id = curr_level_id+1
+    return query
 
 
 class LeadsPermissions(MongoModel):
