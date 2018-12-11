@@ -1271,6 +1271,7 @@ class CampaignLeads(APIView):
         final_data['last_two_weeks'] = get_leads_data_for_campaign(campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
         start_date = datetime.now() - timedelta(days=90)
         final_data['last_three_weeks'] = get_leads_data_for_campaign(campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
+        final_data['overall_data'] = get_leads_data_for_campaign(campaign_id)['overall_data']
         return ui_utils.handle_response(class_name, data=final_data, success=True)
 
 
