@@ -134,63 +134,68 @@ class SocietyDataImport(APIView):
         wb = load_workbook(source_file)
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
         society_data_list = []
+
         for index, row in enumerate(ws.iter_rows()):
             if index > 0:
                 print index
                 society_data_list.append({
                     'society_name': row[0].value if row[0].value else None,
                     'society_city': str(row[1].value) if row[1].value else None,
-                    'society_locality': row[2].value if row[2].value else None,
-                    'society_subarea': row[3].value if row[3].value else None,
-                    'society_code': row[4].value if row[4].value else None,
-                    'supplier_code': row[5].value if row[5].value else None,
-                    'supplier_id': row[6].value if row[6].value else None,
-                    'society_zip': int(row[7].value) if row[7].value else None,
-                    'society_address1' : row[8].value if row[8].value else None,
-                    'landmark' : row[9].value if row[9].value else None,
-                    'society_type_quality' : row[10].value if row[10].value else None,
-                    'society_latitude': float(row[11].value) if row[11].value else None,
-                    'society_longitude': float(row[12].value) if row[12].value else None,
-                    'tower_count': int(row[13].value) if row[13].value else None,
-                    'flat_count': int(row[14].value) if row[14].value else None,
-                    'vacant_flat_count' : int(row[15].value) if row[15].value else None,
-                    'bachelor_tenants_allowed': row[16].value if row[16].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'designation': row[17].value if row[17].value else None,
-                    'salutation': row[18].value if row[18].value else None,
-                    'contact_name': row[19].value if row[19].value else None,
-                    'email': row[20].value if row[20].value else None,
-                    'mobile': row[21].value if row[21].value else None,
-                    'landline': row[22].value if row[22].value else None,
-                    'name_for_payment': row[23].value if row[23].value else None,
-                    'ifsc_code': row[24].value if row[24].value else None,
-                    'bank_name': row[25].value if row[25].value else None,
-                    'account_no': row[26].value if row[26].value else None,
-                    'relationship_manager' : row[27].value if row[27].value else None,
-                    'age_of_society' : row[28].value if row[28].value else None,
-                    'stall_allowed': True if row[29].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'total_stall_count': row[30].value if row[30].value else None,
-                    'poster_allowed_nb': True if row[31].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'nb_per_tower': int(row[32].value) if row[32].value else None,
-                    'poster_allowed_lift': True if row[33].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'lift_per_tower': int(row[34].value) if row[34].value else None,
-                    'flier_allowed': True if row[35].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'flier_frequency': int(row[36].value) if row[36].value else None,
-                    'stall_price': float(row[37].value) if row[37].value else None,
-                    'poster_price': float(row[38].value) if row[38].value else None,
-                    'flier_price': float(row[39].value) if row[39].value else None,
-                    'status': row[40].value,
-                    'comments': row[41].value,
+                    'society_city_code': str(row[2].value) if row[2].value else None,
+                    'society_locality': row[3].value if row[3].value else None,
+                    'society_locality_code': row[4].value if row[4].value else None,
+                    'society_subarea': row[5].value if row[5].value else None,
+                    'society_subarea_code': row[6].value if row[6].value else None,
+                    'society_code': row[7].value if row[7].value else None,
+                    'supplier_code': row[8].value if row[8].value else None,
+                    'supplier_id': row[9].value if row[9].value else None,
+                    'society_zip': int(row[10].value) if row[10].value else None,
+                    'society_address1' : row[11].value if row[11].value else None,
+                    'landmark' : row[12].value if row[12].value else None,
+                    'society_type_quality' : row[13].value if row[13].value else None,
+                    'society_latitude': float(row[14].value) if row[14].value else None,
+                    'society_longitude': float(row[15].value) if row[15].value else None,
+                    'tower_count': int(row[16].value) if row[16].value else None,
+                    'flat_count': int(row[17].value) if row[17].value else None,
+                    'vacant_flat_count' : int(row[18].value) if row[18].value else None,
+                    'bachelor_tenants_allowed': row[19].value if row[19].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'designation': row[20].value if row[20].value else None,
+                    'salutation': row[21].value if row[21].value else None,
+                    'contact_name': row[22].value if row[22].value else None,
+                    'email': row[23].value if row[23].value else None,
+                    'mobile': row[24].value if row[24].value else None,
+                    'landline': row[25].value if row[25].value else None,
+                    'name_for_payment': row[26].value if row[26].value else None,
+                    'ifsc_code': row[27].value if row[27].value else None,
+                    'bank_name': row[28].value if row[28].value else None,
+                    'account_no': row[29].value if row[29].value else None,
+                    'relationship_manager' : row[30].value if row[30].value else None,
+                    'age_of_society' : row[31].value if row[31].value else None,
+                    'stall_allowed': True if row[32].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'total_stall_count': row[33].value if row[34].value else None,
+                    'poster_allowed_nb': True if row[34].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'nb_per_tower': int(row[35].value) if row[32].value else None,
+                    'poster_allowed_lift': True if row[36].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'lift_per_tower': int(row[37].value) if row[34].value else None,
+                    'flier_allowed': True if row[38].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'flier_frequency': int(row[39].value) if row[39].value else None,
+                    'stall_price': float(row[40].value) if row[40].value else None,
+                    'poster_price': float(row[41].value) if row[41].value else None,
+                    'flier_price': float(row[42].value) if row[42].value else None,
+                    'status': row[43].value,
+                    'comments': row[44].value,
                 })
         all_states_map = get_state_map()
         all_city_map = get_city_map()
         all_city_area_map = get_city_area_map()
         all_city_subarea_map = get_city_subarea_map()
+
         for society in society_data_list:
             if society['supplier_code'] is not None:
                 data = {
-                    'city_code': society['society_city'],
-                    'area_code': society['society_locality'],
-                    'subarea_code': society['society_subarea'],
+                    'city_code': society['society_city_code'],
+                    'area_code': society['society_locality_code'],
+                    'subarea_code': society['society_subarea_code'],
                     'supplier_type': 'RS',
                     'supplier_code': society['supplier_code'],
                     'supplier_name': society['society_name']
@@ -199,17 +204,50 @@ class SocietyDataImport(APIView):
                 if society['supplier_id']:
                     supplier_id = society['supplier_id']
                 else:
-                    supplier_id = get_supplier_id(data, state_name=all_states_map[society['society_city']]['state_name'],
-                                              state_code=all_states_map[society['society_city']]['state_code'])
+                    supplier_id = get_supplier_id(data, state_name=all_states_map[society['society_city_code']]['state_name'],
+                                              state_code=all_states_map[society['society_city_code']]['state_code'])
 
                 supplier_length = len(SupplierTypeSociety.objects.filter(supplier_id=supplier_id))
-                if supplier_length:
+                if len(SupplierTypeSociety.objects.filter(society_name=society['society_name'])):
+                    print society['society_name']
+                    # instance = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
+                    instance = SupplierTypeSociety.objects.filter(society_name=society['society_name'])[0]
+                    supplier_id = instance.supplier_id
+                    instance.society_name = society['society_name']
+                    instance.society_locality = society['society_locality']
+                    instance.society_city = society['society_city']
+                    instance.society_state = all_states_map[society['society_city_code']]['state_name']
+                    instance.society_subarea = society['society_subarea']
+                    instance.supplier_code = society['supplier_code']
+                    instance.society_zip = society['society_zip']
+                    instance.society_address1 = society['society_address1']
+                    instance.landmark = society['landmark']
+                    instance.society_type_quality = society['society_type_quality']
+                    instance.society_latitude = society['society_latitude']
+                    instance.society_longitude = society['society_longitude']
+                    instance.tower_count = society['tower_count']
+                    instance.flat_count = society['flat_count']
+                    instance.vacant_flat_count = society['vacant_flat_count']
+                    instance.bachelor_tenants_allowed = society['bachelor_tenants_allowed']
+                    instance.name_for_payment = society['name_for_payment']
+                    instance.ifsc_code = society['ifsc_code']
+                    instance.bank_name = society['bank_name']
+                    instance.account_no = society['account_no']
+                    instance.relationship_manager = society['relationship_manager']
+                    instance.age_of_society = society['age_of_society']
+                    instance.stall_allowed = society['stall_allowed']
+                    instance.supplier_status = society['status']
+                    instance.comments = society['comments']
+                    instance.save()
+                    new_society = instance
+
+                elif supplier_length:
                     instance = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
                     instance.society_name = society['society_name']
-                    instance.society_locality = all_city_area_map[society['society_locality']]
-                    instance.society_city = all_city_map[society['society_city']]
-                    instance.society_state = all_states_map[society['society_city']]['state_name']
-                    instance.society_subarea = all_city_subarea_map[society['society_subarea']]
+                    instance.society_locality = society['society_locality']
+                    instance.society_city = society['society_city']
+                    instance.society_state = all_states_map[society['society_city_code']]['state_name']
+                    instance.society_subarea = society['society_subarea']
                     instance.supplier_code = society['supplier_code']
                     instance.society_zip = society['society_zip']
                     instance.society_address1 = society['society_address1']
@@ -237,10 +275,10 @@ class SocietyDataImport(APIView):
                     new_society = SupplierTypeSociety(**{
                         'supplier_id': supplier_id,
                         'society_name': society['society_name'],
-                        'society_locality': all_city_area_map[society['society_locality']],
-                        'society_city': all_city_map[society['society_city']],
-                        'society_state': all_states_map[society['society_city']]['state_name'],
-                        'society_subarea': all_city_subarea_map[society['society_subarea']],
+                        'society_locality': society['society_locality'],
+                        'society_city': society['society_city'],
+                        'society_state': all_states_map[society['society_city_code']]['state_name'],
+                        'society_subarea': society['society_subarea'],
                         'supplier_code': society['supplier_code'],
                         'society_zip': society['society_zip'],
                         'society_address1': society['society_address1'],
@@ -264,18 +302,19 @@ class SocietyDataImport(APIView):
                     })
                     new_society.save()
 
-                new_contact_data = {
-                    'name': society['contact_name'],
-                    'email': society['email'],
-                    'designation': society['designation'],
-                    'salutation': society['salutation'],
-                    'mobile': society['mobile'],
-                    'landline': society['landline'],
-                    'content_type': get_content_type('RS').data['data'],
-                    'object_id': supplier_id
-                }
-                obj, is_created = ContactDetails.objects.get_or_create(**new_contact_data)
-                obj.save()
+                # new_contact_data = {
+                #     'name': society['contact_name'],
+                #     'email': society['email'],
+                #     'designation': society['designation'],
+                #     'salutation': society['salutation'],
+                #     'mobile': society['mobile'],
+                #     'landline': society['landline'],
+                #     'content_type': get_content_type('RS').data['data'],
+                #     'object_id': supplier_id
+                # }
+                # obj, is_created = ContactDetails.objects.get_or_create(**new_contact_data)
+                # obj.save()
+
                 rs_content_type = get_content_type('RS').data['data']
                 create_price_mapping_default('7', "POSTER", "A4", new_society,
                                              society['poster_price'], rs_content_type, supplier_id)
@@ -305,8 +344,8 @@ class SocietyDataImport(APIView):
                     'nb_count': society['tower_count'] * society['nb_per_tower'] if society['tower_count'] and society['nb_per_tower'] else None,
                     'user': 1,
                     'content_type': 46,
-                    'flier_frequency': society['flier_frequency'],
-                    'total_stall_count': society['total_stall_count'],
+                    'flier_frequency': society['flier_frequency'] if society['flier_frequency'] else None,
+                    'total_stall_count': society['total_stall_count'] if society['total_stall_count'] else None,
                     'poster_allowed_lift': True,
                 }
                 class_name = self.__class__.__name__
@@ -2927,4 +2966,3 @@ class deleteShortlistedSpaces(APIView):
             return ui_utils.handle_response({}, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response({}, exception_object=e, request=request)
-

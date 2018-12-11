@@ -6,6 +6,7 @@ from v0.ui.website import views
 from v0.ui.campaign.views import CreateSupplierPhaseData
 from v0.ui.proposal.views import SupplierPhaseViewSet
 from v0.ui.proposal.views import HashtagImagesViewSet
+from views import CheckExstingSuppliers
 urlpatterns = [
 
     url(r'^campaign/society/shortlist/$', views.ShortlistSocietyAPIView.as_view()),
@@ -32,7 +33,9 @@ urlpatterns = [
     url(r'^export-all-supplier_data/$', views.ExportAllSupplierData.as_view()),
     url(r'^clone-profile/$', views.CloneProfile.as_view()),
     url(r'^get-relationship-and-past-campaigns-data/$', views.GetRelationshipAndPastCampaignsData.as_view()),
-    url(r'^create-supplier-phase-data/$', CreateSupplierPhaseData.as_view())
+    url(r'^create-supplier-phase-data/$', CreateSupplierPhaseData.as_view()),
+    url(r'^check-existing-suppliers/$', CheckExstingSuppliers.as_view()),
+
 ]
 
 router = DefaultRouter()
