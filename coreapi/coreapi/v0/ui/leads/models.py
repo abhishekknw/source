@@ -297,9 +297,12 @@ count_details_parent_map = {
     'checklist': {'parent': 'campaign', 'model_name': 'checklists', 'database_type': 'mongodb',
                  'self_name_model': 'checklist_id', 'parent_name_model': 'campaign_id', 'storage_type': 'unique'},
     'flat': {'parent': 'supplier', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
-                 'self_name_model': 'flat_count', 'parent_name_model': 'supplier_id', 'storage_type': 'count'},
+                 'self_name_model': 'flat_count', 'parent_name_model': 'campaign_id', 'storage_type': 'sum'},
     'lead': {'parent': 'supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
-             'self_name_model': 'entry_id', 'parent_name_model': 'supplier_id,campaign_id', 'storage_type': 'count'},
+                 'self_name_model': 'entry_id', 'parent_name_model': 'supplier_id,campaign_id', 'storage_type': 'count'},
+    'hot_lead': {'parent': 'supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+                 'self_name_model': 'is_hot', 'parent_name_model': 'supplier_id,campaign_id',
+                 'storage_type': 'condition'},
 }
 
 count_details_kids_map = {
@@ -404,10 +407,22 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 next_level_match_list = list(set([x[self_model_name] for x in query]))
             else:
                 print("database does not exist")
-        elif storage_type == 'count':
+
+        elif storage_type == 'count' or storage_type == 'sum' or storage_type == 'condition':
             if database_type == 'mongodb':
                 project_dict = {'total':1, "_id":0}
-                group_dict = {'_id':{},'total':{"$sum": 1}}
+                if storage_type == 'count':
+                    group_dict = {'_id': {}, 'total': {"$sum": 1}}
+                elif storage_type == 'sum':
+                    group_dict = {'_id': {}, 'total': {"$sum": self_model_name}}
+                else:
+                    print entity_details
+                    if 'incrementing_value' in entity_details:
+                        incrementing_value = entity_details['incrementing_value']
+                        group_dict = {'_id': {}, 'total': {"$sum":{
+                            "$sum": {"$cond":[{"$eq": ["$"+self_model_name,incrementing_value]}, 1, 0]}}}}
+                    else:
+                        group_dict = {'_id': {}, 'total': {"$sum": {"$cond": ["$"+self_model_name, 1, 0]}}}
                 for curr_parent_model_name in parent_model_names:
                     group_dict["_id"][curr_parent_model_name] = '$' + curr_parent_model_name
                     group_dict[curr_parent_model_name] = {"$first": '$' + curr_parent_model_name}
@@ -425,13 +440,16 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     ]
                 )
                 query = list(query)
-                # this is not complete yet
+            # this is not complete yet
             elif database_type == 'mysql':
                 first_part_query = model_name + '.objects.filter('
                 full_query = first_part_query + parent_model_name + '__in=match_list)'
                 query = list(eval(full_query).values(self_model_name, parent_model_name))
                 next_level_match_array = [x[self_model_name] for x in query]
-                next_level_match_list = [sum(next_level_match_array)]
+                if storage_type == 'count':
+                    next_level_match_list = len(next_level_match_array)
+                else:
+                    next_level_match_list = [sum(next_level_match_array)]
             else:
                 print("database does not exist")
         else:
