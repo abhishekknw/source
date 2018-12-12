@@ -684,8 +684,7 @@ class LeadsSummary(APIView):
 
     def get(self, request):
         class_name = self.__class__.__name__
-        username = request.user
-        user_id = BaseUser.objects.get(username=username).id
+        user_id = request.user.id
         campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id).values_list('campaign_id', flat=True).distinct()
         campaign_list = [campaign_id for campaign_id in campaign_list]
         all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).\
@@ -718,6 +717,8 @@ class LeadsSummary(APIView):
         all_campaign_summary = get_leads_summary(campaign_list)
         all_leads_summary = []
         for campaign_summary in all_campaign_summary:
+            if campaign_summary['campaign_id'] not in all_campaign_dict:
+                continue
             all_campaign_dict[campaign_summary['campaign_id']]['hot_leads'] += campaign_summary['hot_leads_count']
             all_campaign_dict[campaign_summary['campaign_id']]['total_leads'] += campaign_summary['total_leads_count']
         for campaign_id in all_campaign_dict:
