@@ -6,7 +6,7 @@ from views import (ShortlistSocietyCountAPIView, BookCampaignAPIView,
                    DeleteInventoryActivityAssignment, GetCampaignAssignments, DeleteCampaignAssignments,
                    GetAdInventoryTypeAndDurationTypeData, AddDynamicInventoryIds, DeleteAdInventoryIds,
                    CampaignLeads, CityWiseMultipleCampaignLeads, PhaseWiseMultipleCampaignLeads, CampaignLeadsCustom,
-                   SupplierPhaseUpdate, Comment, CampaignLeadsMultiple, GetPermissionBoxImages)
+                   Comment, CampaignLeadsMultiple, GetPermissionBoxImages)
 from v0.ui.website.views import (GetAssignedIdImagesListApiView)
 
 urlpatterns = [
@@ -28,7 +28,7 @@ urlpatterns = [
     url(r'^phase-wise-multiple-campaign/$', PhaseWiseMultipleCampaignLeads.as_view()),
     url(r'^dashboard/get_leads_by_campaign_custom/$',  CampaignLeadsCustom.as_view()),
     url(r'^(?P<campaign_id>[A-Z_a-z0-9-]+)/comment/$', Comment.as_view()),
-    url(r'^update-supplier-phase/$', SupplierPhaseUpdate.as_view()),
+    # url(r'^update-supplier-phase/$', SupplierPhaseUpdate.as_view()),
     url(r'get-permission-box-images/(?P<campaign_id>[A-Z_a-z0-9]+)/(?P<supplier_id>[A-Z_a-z0-9]+)/$', GetPermissionBoxImages.as_view()),
     #url(r'^fix-invalid-dates/$', FixInvalidDates.as_view()),
 ]

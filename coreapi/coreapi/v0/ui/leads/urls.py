@@ -2,7 +2,7 @@ from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntries, GetLeadsEntriesBySupplier,
                    LeadsFormBulkEntry, GenerateLeadForm, DeleteLeadForm, DeleteLeadEntry,
-                   SmsContact, AddLeadFormItems, EditLeadsForm,
+                   AddLeadFormItems, EditLeadsForm,
                    LeadsSummary, GetLeadsEntriesByCampaignId, GenerateLeadDataExcel,
                    SanitizeLeadsData, GenerateDemoData, UpdateLeadsDataSHA256, UpdateGlobalHotLeadCriteria,
                    UpdateLeadsDataIsHot, InsertExtraLeads, LeadsPermissionsAPI, GetLeadsFormById, GetLeadsDataGeneric)
@@ -21,8 +21,8 @@ urlpatterns = [
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_form$', DeleteLeadForm.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_entry/(?P<entry_id>[A-Z_a-z0-9]+)$', DeleteLeadEntry.as_view()),
     url(r'^sanitize_leads_data/$', SanitizeLeadsData.as_view()),
-    url(r'^(?P<form_id>[0-9]+)/add_sms_contact$', SmsContact.as_view()),
-    url(r'^(?P<form_id>[0-9]+)/get_sms_contacts$', SmsContact.as_view()),
+    # url(r'^(?P<form_id>[0-9]+)/add_sms_contact$', SmsContact.as_view()),
+    # url(r'^(?P<form_id>[0-9]+)/get_sms_contacts$', SmsContact.as_view()),
     url(r'^(?P<form_id>[0-9]+)/add_fields', AddLeadFormItems.as_view()),
     url(r'^(?P<form_id>[0-9]+)/edit_form_name', EditLeadsForm.as_view()),
     url(r'^summary/', LeadsSummary.as_view()),
