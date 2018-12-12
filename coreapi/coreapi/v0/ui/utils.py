@@ -161,7 +161,7 @@ def get_supplier_id(data):
     error = 'You might want to double check the state name {0} and state code {1} defined in ui constants'.format(v0_constants.state_name, v0_constants.state_code)
     try:
         try:
-            state_object = State.objects.get(state_name=state_name, state_code=state_code)
+            # state_object = State.objects.get(state_name=state_name, state_code=state_code)
             city_object = City.objects.get(city_code=data.get('city_code'), state_code=state_object)
             area_object = CityArea.objects.get(area_code=data.get('area_code'), city_code=city_object)
             subarea_object = CitySubArea.objects.get(subarea_code=data.get('subarea_code'), area_code=area_object)
