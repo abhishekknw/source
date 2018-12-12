@@ -162,7 +162,7 @@ def get_supplier_id(data):
     try:
         try:
             # state_object = State.objects.get(state_name=state_name, state_code=state_code)
-            city_object = City.objects.get(city_code=data.get('city_code'), state_code=state_object)
+            city_object = City.objects.get(city_code=data.get('city_code'))
             area_object = CityArea.objects.get(area_code=data.get('area_code'), city_code=city_object)
             subarea_object = CitySubArea.objects.get(subarea_code=data.get('subarea_code'), area_code=area_object)
 
