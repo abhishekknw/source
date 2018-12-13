@@ -1,3 +1,4 @@
+from __future__ import division
 from django.db import models
 from v0.ui.base.models import BaseModel
 from v0.ui.common.models import mongo_client
@@ -192,11 +193,48 @@ def get_leads_summary(campaign_list=None, user_start_datetime=None,user_end_date
     updated_leads_summary = add_extra_leads(leads_summary, campaign_list)
     return updated_leads_summary
 
+
+level_name_by_model_id = {
+    "supplier_id": "supplier", "object_id": "supplier", "campaign_id": "campaign", "proposal_id": "campaign"
+}
+
+# def merge_dict_array(dict_array, key_array):
+#     dict_keys = dict_array.keys()
+#     values_list = []
+#     for key in dict_keys:
+#         values_list.append(dict_array[key])
+#     values_list = sum(values_list,[])
+#     value_keys = values_list[0].keys()
+#
+#     filtered_list = []
+#     for value in values_list:
+#         new_value = {}
+#         for value_key in value_keys:
+#             if value_key in key_array:
+#                 new_value[value_key]=value[value_key]
+#         filtered_list.append(new_value)
+#
+#     return filtered_list
+
+# function to check whether a dict array key structure matches a desired key array
+def get_similar_structure_keys(main_dict, required_keys):
+    keys = main_dict.keys()
+
+    similar_array = []
+    for key_name in keys:
+        curr_array = main_dict[key_name]
+        curr_keys = curr_array[0].keys()
+        curr_keys = [level_name_by_model_id[x] if x in level_name_by_model_id else x for x in
+                         curr_keys]
+        matching_keys = required_keys + [key_name]
+        print curr_keys, matching_keys
+        if curr_keys == matching_keys:
+            similar_array.append(key_name)
+    return similar_array
+
 # this function is used to get the number of desired raw data or metrics for the given
 # data point within the chosen scope
-
-
-def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['total_leads','hot_leads'],
+def get_leads_summary_all_old(data_scope = None, data_point = None, raw_data = ['total_leads','hot_leads'],
                           metrics = ['2/1']):
     match_dict = {}
     scope_restrictor_count = len(data_scope.keys()) if data_scope is not None else 0 # get number of restrictors
@@ -256,6 +294,57 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['tot
     return (test_lower_level_elements)
 
 
+# currently working with the following constraints:
+# exactly one scope restrictor with exact match, one type of data point, one raw data element, metrics ignored
+def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['lead'],
+                          metrics = ['2/1']):
+
+    data_scope_first = data_scope['1']
+    highest_level = data_scope_first['value_type']
+    lowest_grouping_level = data_point['level']
+    if highest_level == lowest_grouping_level:
+        return "lowest level should be lower than highest level"
+    individual_metric_output = {}
+    highest_level_values = data_scope_first['values']['exact']
+    default_value_type = data_scope_first['value_type']
+    for curr_metric in raw_data:
+        lowest_level = curr_metric
+        curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values, default_value_type)
+        individual_metric_output[lowest_level] = curr_output
+
+    matching_format_metrics = get_similar_structure_keys(individual_metric_output, lowest_grouping_level)
+    print matching_format_metrics
+    #raw_metrics = individual_metric_output.keys()
+    combined_array = []
+
+    first_metric_array = individual_metric_output[matching_format_metrics[0]] if len(matching_format_metrics)>0 else []
+    print first_metric_array
+    for ele_id in range(0,len(first_metric_array)):
+        curr_dict = first_metric_array[ele_id]
+        new_dict = curr_dict.copy()
+        for metric in matching_format_metrics[1:len(matching_format_metrics)]:
+            new_dict[metric]=individual_metric_output[metric][ele_id][metric]
+        combined_array.append(new_dict)
+
+    for curr_metric in metrics:
+        op = '/'
+        nr_index = int(curr_metric.split(op)[0])-1
+        dr_index = int(curr_metric.split(op)[1])-1
+        nr = raw_data[nr_index]
+        dr = raw_data[dr_index]
+        if nr in raw_data and dr in raw_data:
+            metric_name = nr + op + dr
+        derived_array = []
+        for curr_dict in combined_array:
+            nr_value = curr_dict[nr]
+            dr_value = curr_dict[dr]
+            result_value = eval(str(nr_value)+op+str(dr_value))
+            curr_dict[metric_name]=result_value
+            derived_array.append(curr_dict)
+
+    return [individual_metric_output, combined_array]
+
+
 def get_leads_summary_by_campaign(campaign_list=None):
     if campaign_list:
         if not isinstance(campaign_list, list):
@@ -297,7 +386,7 @@ count_details_parent_map = {
     'checklist': {'parent': 'campaign', 'model_name': 'checklists', 'database_type': 'mongodb',
                  'self_name_model': 'checklist_id', 'parent_name_model': 'campaign_id', 'storage_type': 'unique'},
     'flat': {'parent': 'supplier', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
-                 'self_name_model': 'flat_count', 'parent_name_model': 'campaign_id', 'storage_type': 'sum'},
+                 'self_name_model': 'flat_count', 'parent_name_model': 'supplier_id', 'storage_type': 'sum'},
     'lead': {'parent': 'supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                  'self_name_model': 'entry_id', 'parent_name_model': 'supplier_id,campaign_id', 'storage_type': 'count'},
     'hot_lead': {'parent': 'supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
@@ -357,7 +446,10 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             entity_details['parent_name_model'], entity_details['storage_type'])
 
         if parent_type == 'multiple':
-            parent_model_name = default_value_type if default_value_type in parent_model_names else parent_model_names[-1]
+            if default_value_type in parents:
+                value_type_index = parents.index(default_value_type)
+                parent_model_name = parent_model_names[value_type_index]
+            #parent_model_name = default_value_type if default_value_type in parent_model_names else parent_model_names[-1]
         else:
             parent_model_names = [parent_model_name]
 
@@ -400,7 +492,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     ]
                 )
                 query = list(query)
-                print query
                 next_level_match_list = [x[self_model_name] for x in query]
                 # count = mongo_client[model_name].find({}).distinct(self_model_name).length
             elif database_type == 'mysql':
@@ -409,20 +500,20 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 print("database does not exist")
 
         elif storage_type == 'count' or storage_type == 'sum' or storage_type == 'condition':
+            print "next_level =", next_level
             if database_type == 'mongodb':
-                project_dict = {'total':1, "_id":0}
+                project_dict = {next_level:1, "_id":0}
                 if storage_type == 'count':
-                    group_dict = {'_id': {}, 'total': {"$sum": 1}}
+                    group_dict = {'_id': {}, next_level: {"$sum": 1}}
                 elif storage_type == 'sum':
-                    group_dict = {'_id': {}, 'total': {"$sum": self_model_name}}
+                    group_dict = {'_id': {}, next_level: {"$sum": self_model_name}}
                 else:
-                    print entity_details
                     if 'incrementing_value' in entity_details:
                         incrementing_value = entity_details['incrementing_value']
-                        group_dict = {'_id': {}, 'total': {"$sum":{
+                        group_dict = {'_id': {}, next_level: {"$sum":{
                             "$sum": {"$cond":[{"$eq": ["$"+self_model_name,incrementing_value]}, 1, 0]}}}}
                     else:
-                        group_dict = {'_id': {}, 'total': {"$sum": {"$cond": ["$"+self_model_name, 1, 0]}}}
+                        group_dict = {'_id': {}, next_level: {"$sum": {"$cond": ["$"+self_model_name, 1, 0]}}}
                 for curr_parent_model_name in parent_model_names:
                     group_dict["_id"][curr_parent_model_name] = '$' + curr_parent_model_name
                     group_dict[curr_parent_model_name] = {"$first": '$' + curr_parent_model_name}
