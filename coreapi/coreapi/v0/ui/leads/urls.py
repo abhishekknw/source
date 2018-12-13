@@ -6,7 +6,8 @@ from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntrie
                    LeadsSummary, GetLeadsEntriesByCampaignId, GenerateLeadDataExcel,
                    SanitizeLeadsData, GenerateDemoData, UpdateLeadsDataSHA256, UpdateGlobalHotLeadCriteria,
                    UpdateLeadsDataIsHot, InsertExtraLeads, LeadsPermissionsAPI, LeadsPermissionsSelfAPI,
-                   LeadsPermissionsByUserIdAPI, GetLeadsFormById, GetLeadsDataGeneric,GetAllLeadFormsByCampaigns)
+                   LeadsPermissionsByUserIdAPI, GetLeadsFormById, GetLeadsDataGeneric,GetAllLeadFormsByCampaigns,
+                    UpdateLeadDate)
 
 urlpatterns = [
     url(r'^(?P<campaign_id>[A-Z_a-z0-9]+)/create$', CreateLeadsForm.as_view()),
@@ -37,6 +38,7 @@ urlpatterns = [
     url(r'^permissions/(?P<user_id>[A-Z_a-z0-9]+)/$', LeadsPermissionsByUserIdAPI.as_view()),
     url(r'^list_all_leads_forms_by_campaign/$', GetAllLeadFormsByCampaigns.as_view()),
     url(r'^get-leads-data-generic/$', GetLeadsDataGeneric.as_view()),
+    url(r'^(?P<campaign_id>[A-Z_a-z0-9]+)/update-lead-date/(?P<supplier_id>[A-Z_a-z0-9]+)/$', UpdateLeadDate.as_view()),
 ]
 
 router = DefaultRouter()
