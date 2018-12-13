@@ -21,6 +21,9 @@ from v0.ui.common.models import mongo_client, mongo_test
 import pprint
 from random import randint
 import random, string
+
+from v0.ui.proposal.views import convert_date_format
+
 pp = pprint.PrettyPrinter(depth=6)
 import hashlib
 
@@ -949,6 +952,23 @@ class GetLeadsDataGeneric(APIView):
         metrics = all_data['metrics'] if 'metrics' in all_data else default_metrics
         mongo_query = get_leads_summary_all(data_scope, data_point, raw_data, metrics)
         return handle_response('', data=mongo_query, success=True)
+
+class UpdateLeadDate(APIView):
+    @staticmethod
+    def get(request, campaign_id, supplier_id):
+        date = request.query_params.get("date",None)
+        if not date:
+            return handle_response('', data="Provide date", success=True)
+        leads = mongo_client.leads.find({"campaign_id": campaign_id, "supplier_id": supplier_id})
+        for lead in leads:
+            curr_lead = lead.copy()
+            curr_lead.pop('_id')
+            curr_lead['created_at'] = convert_date_format(date)
+            curr_lead['updated_at'] = datetime.datetime.now()
+            mongo_client.leads.update_one({'_id': lead['_id']},{"$set": curr_lead})
+        return handle_response('', data={"success": True}, success=True)
+
+
 
 
 
