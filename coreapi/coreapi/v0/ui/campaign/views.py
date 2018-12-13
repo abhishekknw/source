@@ -24,7 +24,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework import status
 import gpxpy.geo
-from v0.ui.leads.models import LeadsFormData, get_leads_summary, get_leads_summary_by_campaign
+from v0.ui.leads.models import get_leads_summary, get_leads_summary_by_campaign
 from v0.ui.base.models import DurationType
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from django.core.cache import cache
@@ -1777,65 +1777,66 @@ class Comment(APIView):
         return ui_utils.handle_response({}, data=all_campaign_comments_dict, success=True)
 
 
-class SupplierPhaseUpdate(APIView):
+# class SupplierPhaseUpdate(APIView):
+#
+#     def put(self,request):
+#         class_name = self.__class__.__name__
+#         leads_form_data_objects = LeadsFormData.objects.exclude(status='inactive').order_by('created_at').all()
+#         campaign_list = list(set(leads_form_data_objects.values_list('campaign_id',flat=True)))
+#         leads_form_data = []
+#         data_keys = ['created_at','supplier_id','campaign_id']
+#         # for item in leads_form_items_objects:
+#         #     leads_form_items.append(item.__dict__)
+#         supplier_phase_data = []
+#         for data in leads_form_data_objects:
+#             curr_data = data.__dict__
+#             data_part = {key:curr_data[key] for key in data_keys}
+#             leads_form_data.append(data_part)
+#         now_time = timezone.now()
+#         suppliers_list_campaigns = []
+#         for campaign_id in campaign_list:
+#             leads_form_data_campaign = [x for x in leads_form_data if x['campaign_id'] == campaign_id]
+#             campaign_dates = [x['created_at'] for x in leads_form_data_campaign]
+#             start_datetime = campaign_dates[0]
+#             start_datetime_phase = start_datetime - timedelta(days=start_datetime.weekday())
+#             end_datetime = campaign_dates[len(campaign_dates)-1]
+#             end_datetime_phase = end_datetime + timedelta(days=(6-start_datetime.weekday()))
+#             total_phases = (end_datetime_phase - start_datetime_phase).days/7
+#             actual_phase = 1
+#             for curr_phase in range(0, total_phases):
+#                 start_datetime_curr_phase = start_datetime + timedelta(days=7*curr_phase)
+#                 end_datetime_curr_phase = start_datetime_curr_phase + timedelta(days=7)
+#                 suppliers_list = list(set([x['supplier_id'] for x in leads_form_data_campaign if start_datetime_curr_phase <=
+#                                         x['created_at'] < end_datetime_curr_phase]))
+#                 if len(suppliers_list)>0:
+#                     curr_campaign_phase_data = {
+#                         'phase_no': actual_phase,
+#                         'start_date': start_datetime_curr_phase,
+#                         'end_date': end_datetime_curr_phase,
+#                         'campaign_id': campaign_id,
+#                         'created_at': now_time,
+#                         'updated_at': now_time,
+#                         'comments': 'migrated from historic data'
+#                     }
+#                     SupplierPhase(**curr_campaign_phase_data).save()
+#                     for supplier in suppliers_list:
+#                         suppliers_list_campaigns.append({
+#                             'object_id': supplier,
+#                             'campaign_id': campaign_id,
+#                             'phase_no': actual_phase
+#                         })
+#                     actual_phase = actual_phase+1
+#
+#         # updating shortlisted spaces table
+#         for curr_element in suppliers_list_campaigns:
+#             object_id = curr_element['object_id']
+#             campaign_id = curr_element['campaign_id']
+#             phase_no = curr_element['phase_no']
+#             phase_no_id = SupplierPhase.objects.get(campaign_id=campaign_id, phase_no = phase_no).id
+#             ShortlistedSpaces.objects.filter(proposal_id=campaign_id, object_id=object_id).update(phase_no_id=phase_no_id)
+#
+#         return ui_utils.handle_response(class_name, data={}, success=True)
 
-    def put(self,request):
-        class_name = self.__class__.__name__
-        leads_form_data_objects = LeadsFormData.objects.exclude(status='inactive').order_by('created_at').all()
-        campaign_list = list(set(leads_form_data_objects.values_list('campaign_id',flat=True)))
-        leads_form_data = []
-        data_keys = ['created_at','supplier_id','campaign_id']
-        # for item in leads_form_items_objects:
-        #     leads_form_items.append(item.__dict__)
-        supplier_phase_data = []
-        for data in leads_form_data_objects:
-            curr_data = data.__dict__
-            data_part = {key:curr_data[key] for key in data_keys}
-            leads_form_data.append(data_part)
-        now_time = timezone.now()
-        suppliers_list_campaigns = []
-        for campaign_id in campaign_list:
-            leads_form_data_campaign = [x for x in leads_form_data if x['campaign_id'] == campaign_id]
-            campaign_dates = [x['created_at'] for x in leads_form_data_campaign]
-            start_datetime = campaign_dates[0]
-            start_datetime_phase = start_datetime - timedelta(days=start_datetime.weekday())
-            end_datetime = campaign_dates[len(campaign_dates)-1]
-            end_datetime_phase = end_datetime + timedelta(days=(6-start_datetime.weekday()))
-            total_phases = (end_datetime_phase - start_datetime_phase).days/7
-            actual_phase = 1
-            for curr_phase in range(0, total_phases):
-                start_datetime_curr_phase = start_datetime + timedelta(days=7*curr_phase)
-                end_datetime_curr_phase = start_datetime_curr_phase + timedelta(days=7)
-                suppliers_list = list(set([x['supplier_id'] for x in leads_form_data_campaign if start_datetime_curr_phase <=
-                                        x['created_at'] < end_datetime_curr_phase]))
-                if len(suppliers_list)>0:
-                    curr_campaign_phase_data = {
-                        'phase_no': actual_phase,
-                        'start_date': start_datetime_curr_phase,
-                        'end_date': end_datetime_curr_phase,
-                        'campaign_id': campaign_id,
-                        'created_at': now_time,
-                        'updated_at': now_time,
-                        'comments': 'migrated from historic data'
-                    }
-                    SupplierPhase(**curr_campaign_phase_data).save()
-                    for supplier in suppliers_list:
-                        suppliers_list_campaigns.append({
-                            'object_id': supplier,
-                            'campaign_id': campaign_id,
-                            'phase_no': actual_phase
-                        })
-                    actual_phase = actual_phase+1
-
-        # updating shortlisted spaces table
-        for curr_element in suppliers_list_campaigns:
-            object_id = curr_element['object_id']
-            campaign_id = curr_element['campaign_id']
-            phase_no = curr_element['phase_no']
-            phase_no_id = SupplierPhase.objects.get(campaign_id=campaign_id, phase_no = phase_no).id
-            ShortlistedSpaces.objects.filter(proposal_id=campaign_id, object_id=object_id).update(phase_no_id=phase_no_id)
-
-        return ui_utils.handle_response(class_name, data={}, success=True)
 
 class GetPermissionBoxImages(APIView):
     @staticmethod
