@@ -141,10 +141,15 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
             "order_id": curr_item["order_id"] if "order_id" in curr_item else None,
             "key_name": curr_item["key_name"],
         })
-    headers.extend(({
-        "order_id": 0,
-        "key_name": "Supplier Name"
-    },
+    headers.extend((
+        {
+            "order_id": 0,
+            "key_name": "Entry Id"
+        },
+        {
+            "order_id": 0,
+            "key_name": "Supplier Name"
+        },
         {
             "order_id": 0,
             "key_name": "Lead Date"
@@ -172,12 +177,17 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
     for entry in leads_data_list:
         curr_entry = entry['data']
         entry_date = entry['created_at']
+        entry_id = entry['entry_id']
         if supplier_id == 'All':
             curr_supplier_id = entry['supplier_id']
             curr_supplier_name = supplier_id_names[curr_supplier_id]
         else:
             curr_supplier_name = supplier_name
         new_entry = [
+            {
+                "entry_id": 0,
+                "value": entry_id
+            },
             {
                 "order_id": 0,
                 "value": curr_supplier_name
