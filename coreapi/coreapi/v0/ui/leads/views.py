@@ -121,7 +121,7 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
     leads_forms_items = leads_forms["data"]
     if supplier_id == 'All':
         leads_data = mongo_client.leads.find({"$and": [{"leads_form_id": int(leads_form_id)}, {"status": {"$ne": "inactive"}}]},
-                                              {"_id": 0})
+                                             {"_id": 0})
         leads_data_list = list(leads_data)
         suppliers_list = []
         for lead_data in leads_data_list:
@@ -139,12 +139,15 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
 
     hot_leads = [x['entry_id'] for x in leads_data_list if x['is_hot'] == True]
     headers = []
+    all_order_ids = []
     for form_item in leads_forms_items:
         curr_item = leads_forms_items[form_item]
         headers.append({
             "order_id": curr_item["order_id"] if "order_id" in curr_item else None,
             "key_name": curr_item["key_name"],
         })
+        if curr_item["order_id"] not in all_order_ids:
+            all_order_ids.append(curr_item["order_id"])
     headers.extend((
         {
             "order_id": 0,
@@ -202,6 +205,8 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
             }
         ]
         for item in curr_entry:
+            if item["item_id"] not in all_order_ids:
+                continue
             value = None
             if item["value"]:
                 if isinstance(item["value"], basestring):
@@ -607,6 +612,24 @@ class DeleteLeadEntry(APIView):
         result = mongo_client.leads.update_one({"leads_form_id": int(form_id), "entry_id": int(entry_id)},
                                      {"$set": {"status": "inactive"}})
         return handle_response(result, data='success', success=True)
+
+
+class DeleteLeadItem(APIView):
+    @staticmethod
+    def put(request, form_id, item_id):
+        is_permitted, validation_msg_dict = is_user_permitted("EDIT", request.user, leads_form_id=form_id)
+        if not is_permitted:
+            return handle_response('', data=validation_msg_dict, success=False)
+        old_form = mongo_client.leads_forms.find_one({"leads_form_id": int(form_id)})
+        if not old_form:
+            return handle_response({}, data={"status": "No for Found with this id"}, success=True)
+        old_form_items = old_form['data']
+        new_form_items = {}
+        for form_item in old_form_items:
+            if str(old_form_items[form_item]['item_id']) != str(item_id):
+                new_form_items[str(old_form_items[form_item]['item_id'])] = old_form_items[form_item]
+        mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"data": new_form_items}})
+        return handle_response({}, data='success', success=True)
 
 
 class AddLeadFormItems(APIView):
