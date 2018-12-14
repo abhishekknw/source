@@ -195,7 +195,8 @@ def get_leads_summary(campaign_list=None, user_start_datetime=None,user_end_date
 
 
 level_name_by_model_id = {
-    "supplier_id": "supplier", "object_id": "supplier", "campaign_id": "campaign", "proposal_id": "campaign"
+    "supplier_id": "supplier", "object_id": "supplier", "campaign_id": "campaign", "proposal_id": "campaign",
+    "flat_count": "flat"
 }
 
 # def merge_dict_array(dict_array, key_array):
@@ -216,6 +217,44 @@ level_name_by_model_id = {
 #
 #     return filtered_list
 
+def find_key_alias_dict_array(dict_array, key_name):
+    first_element = dict_array[0]
+    dict_keys = first_element.keys()
+    for key in dict_keys:
+        if key in level_name_by_model_id and level_name_by_model_id[key]==key_name:
+            return key
+    return key_name
+
+
+def merge_dict_array_single(metric_dict,key_name):
+    key_values = []
+    final_array = []
+    metric_list = metric_dict.keys()
+    first_array = metric_dict[metric_list[0]]
+    local_key_names = {}
+    for curr_metric in metric_dict:
+        curr_array = metric_dict[curr_metric]
+        local_key_name = find_key_alias_dict_array(curr_array, key_name)
+        local_key_names[curr_metric] = local_key_name
+        if curr_array==first_array:
+            key_values = [x[local_key_name] for x in curr_array]
+    for curr_value in key_values:
+        curr_final_dict = {}
+        missing_value = False
+        for curr_metric in metric_list:
+            local_key_name = local_key_names[curr_metric]
+            curr_dict = [x for x in metric_dict[curr_metric] if x[local_key_name]==curr_value]
+            if not curr_dict == []:
+                curr_final_dict.update(curr_dict[0])
+            else:
+                missing_value = True
+                continue
+
+        if missing_value == False:
+            final_array.append(curr_final_dict)
+    return final_array
+
+
 # function to check whether a dict array key structure matches a desired key array
 def get_similar_structure_keys(main_dict, required_keys):
     keys = main_dict.keys()
@@ -226,8 +265,9 @@ def get_similar_structure_keys(main_dict, required_keys):
         curr_keys = curr_array[0].keys()
         curr_keys = [level_name_by_model_id[x] if x in level_name_by_model_id else x for x in
                          curr_keys]
+        if not isinstance(required_keys, list):
+            required_keys = [required_keys]
         matching_keys = required_keys + [key_name]
-        print curr_keys, matching_keys
         if curr_keys == matching_keys:
             similar_array.append(key_name)
     return similar_array
@@ -301,30 +341,37 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['lea
 
     data_scope_first = data_scope['1']
     highest_level = data_scope_first['value_type']
-    lowest_grouping_level = data_point['level']
-    if highest_level == lowest_grouping_level:
-        return "lowest level should be lower than highest level"
+    grouping_level = data_point['level']
+    # if highest_level == grouping_level:
+    #     return "lowest level should be lower than highest level"
     individual_metric_output = {}
     highest_level_values = data_scope_first['values']['exact']
     default_value_type = data_scope_first['value_type']
     for curr_metric in raw_data:
         lowest_level = curr_metric
-        curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values, default_value_type)
+        curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
+                                                  default_value_type, grouping_level)
         individual_metric_output[lowest_level] = curr_output
 
-    matching_format_metrics = get_similar_structure_keys(individual_metric_output, lowest_grouping_level)
-    print matching_format_metrics
+    matching_format_metrics = get_similar_structure_keys(individual_metric_output, grouping_level[0])
     #raw_metrics = individual_metric_output.keys()
     combined_array = []
 
     first_metric_array = individual_metric_output[matching_format_metrics[0]] if len(matching_format_metrics)>0 else []
-    print first_metric_array
     for ele_id in range(0,len(first_metric_array)):
         curr_dict = first_metric_array[ele_id]
         new_dict = curr_dict.copy()
         for metric in matching_format_metrics[1:len(matching_format_metrics)]:
             new_dict[metric]=individual_metric_output[metric][ele_id][metric]
         combined_array.append(new_dict)
+
+    single_array = merge_dict_array_single(individual_metric_output, grouping_level[0])
+    single_array_keys = single_array[0].keys()
+    reverse_map = {}
+    for key in single_array_keys:
+        reverse_key = level_name_by_model_id[key] if key in level_name_by_model_id else None
+        if reverse_key in raw_data:
+            reverse_map[reverse_key] = key
 
     for curr_metric in metrics:
         op = '/'
@@ -335,14 +382,15 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['lea
         if nr in raw_data and dr in raw_data:
             metric_name = nr + op + dr
         derived_array = []
-        for curr_dict in combined_array:
-            nr_value = curr_dict[nr]
-            dr_value = curr_dict[dr]
+        for curr_dict in single_array:
+            nr_value = curr_dict[nr] if nr in curr_dict else curr_dict[reverse_map[nr]]
+            dr_value = curr_dict[dr] if dr in curr_dict else curr_dict[reverse_map[dr]]
             result_value = eval(str(nr_value)+op+str(dr_value))
             curr_dict[metric_name]=result_value
             derived_array.append(curr_dict)
 
-    return [individual_metric_output, combined_array]
+    #single_array = {}
+    return [individual_metric_output, combined_array, single_array]
 
 
 def get_leads_summary_by_campaign(campaign_list=None):
@@ -423,7 +471,7 @@ def find_level_sequence(highest_level, lowest_level):
     return error_message
 
 
-def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None):
+def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None, grouping_level=None):
     second_lowest_parent = count_details_parent_map[lowest_level]['parent']
     second_lowest_parent_name_model = count_details_parent_map[lowest_level]['parent_name_model']
     if ',' in second_lowest_parent or ',' in second_lowest_parent_name_model:
@@ -436,6 +484,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         parent_type = 'single'
     curr_level_id = 0
     last_level_id = len(desc_sequence) - 1
+
+    all_results = []
 
     while curr_level_id < last_level_id:
         curr_level = desc_sequence[curr_level_id]
@@ -495,12 +545,13 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 next_level_match_list = [x[self_model_name] for x in query]
                 # count = mongo_client[model_name].find({}).distinct(self_model_name).length
             elif database_type == 'mysql':
+                if grouping_level in parent_model_names:
+                    all_results.append(query)
                 next_level_match_list = list(set([x[self_model_name] for x in query]))
             else:
                 print("database does not exist")
 
         elif storage_type == 'count' or storage_type == 'sum' or storage_type == 'condition':
-            print "next_level =", next_level
             if database_type == 'mongodb':
                 project_dict = {next_level:1, "_id":0}
                 if storage_type == 'count':
@@ -518,7 +569,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     group_dict["_id"][curr_parent_model_name] = '$' + curr_parent_model_name
                     group_dict[curr_parent_model_name] = {"$first": '$' + curr_parent_model_name}
                     project_dict[curr_parent_model_name] = 1
-                print (project_dict,group_dict)
                 query = mongo_client[model_name].aggregate(
                     [
                         {"$match": match_dict},
@@ -531,12 +581,16 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     ]
                 )
                 query = list(query)
+                all_results.append(query)
             # this is not complete yet
             elif database_type == 'mysql':
                 first_part_query = model_name + '.objects.filter('
                 full_query = first_part_query + parent_model_name + '__in=match_list)'
                 query = list(eval(full_query).values(self_model_name, parent_model_name))
-                next_level_match_array = [x[self_model_name] for x in query]
+                all_results.append(query)
+                print query
+                next_level_match_array = [x[self_model_name] for x in query if x[self_model_name] is not None]
+                print next_level_match_array
                 if storage_type == 'count':
                     next_level_match_list = len(next_level_match_array)
                 else:
