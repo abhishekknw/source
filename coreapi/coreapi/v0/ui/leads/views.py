@@ -44,8 +44,9 @@ def is_user_permitted(permission_type, user, **kwargs):
         permission_obj = permission_list[0]
         leads_permissions = permission_obj.leads_permissions
         if leads_form_id:
-            campaign_id = list(mongo_client.leadss.find({"leads_form_id":int(leads_form_id)}))[0]['campaign_id']
-            leads_level_permissions = permission_obj.leads_permissions['leadss']
+            all_campaign_ids = list(mongo_client.leads_forms.find({"leads_form_id": int(leads_form_id)}))
+            campaign_id = all_campaign_ids[0]['campaign_id']
+            leads_level_permissions = permission_obj.leads_permissions['leads_forms']
             if str(leads_form_id) not in leads_level_permissions:
                 champaign_level_permissions = permission_obj.leads_permissions['campaigns']
                 if campaign_id not in champaign_level_permissions:
@@ -651,9 +652,16 @@ class EditLeadsForm(APIView):
         is_permitted, validation_msg_dict = is_user_permitted("EDIT", request.user, leads_form_id=form_id)
         if not is_permitted:
             return handle_response('', data=validation_msg_dict, success=False)
+        leads_form_items = request.data['leads_form_items'] if 'leads_form_items' in request.data.keys() else None
         name = request.data['name'] if 'name' in request.data.keys() else None
-        if name is not None:
-            mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": {"leads_form_name": name}})
+        if not name and not leads_form_items:
+            return handle_response({}, data='success', success=True)
+        set_dict = {}
+        if name:
+            set_dict["leads_form_name"] = name
+        if leads_form_items:
+            set_dict["data"] = leads_form_items
+        mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": set_dict})
         return handle_response({}, data='success', success=True)
 
 

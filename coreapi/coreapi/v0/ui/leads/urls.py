@@ -26,7 +26,7 @@ urlpatterns = [
     # url(r'^(?P<form_id>[0-9]+)/add_sms_contact$', SmsContact.as_view()),
     # url(r'^(?P<form_id>[0-9]+)/get_sms_contacts$', SmsContact.as_view()),
     url(r'^(?P<form_id>[0-9]+)/add_fields', AddLeadFormItems.as_view()),
-    url(r'^(?P<form_id>[0-9]+)/edit_form_name', EditLeadsForm.as_view()),
+    url(r'^(?P<form_id>[0-9]+)/edit_form', EditLeadsForm.as_view()),
     url(r'^summary/', LeadsSummary.as_view()),
     url(r'^generate_demo_data/$', GenerateDemoData.as_view()),
     url(r'^update_leads_data_sha256/$', UpdateLeadsDataSHA256.as_view()),
