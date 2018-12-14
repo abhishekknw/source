@@ -443,7 +443,7 @@ class LeadsFormEntry(APIView):
         supplier_id = request.data['supplier_id']
         lead_form = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)})
         lead_form['last_entry_id']
-        entry_id = lead_form['last_entry_id'] + 1 if 'last_entry_id' in lead_form else 1
+        entry_id = lead_form['last_entry_id'] + 1 if ('last_entry_id' in lead_form and lead_form['last_entry_id']) else 1
         campaign_id = lead_form['campaign_id']
         lead_data = request.data["leads_form_entries"]
         enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id)
