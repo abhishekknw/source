@@ -1165,6 +1165,12 @@ class UpdateLeadDate(APIView):
             mongo_client.leads.update_one({'_id': lead['_id']},{"$set": curr_lead})
         return handle_response('', data={"success": True}, success=True)
 
+class DeleteExtraLeadEntry(APIView):
+    @staticmethod
+    def delete(request, id):
+        mongo_client.leads_extras.remove({"_id":ObjectId(id)})
+        return handle_response('', data={"success": True}, success=True)
+
 
 
 
