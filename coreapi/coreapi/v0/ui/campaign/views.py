@@ -24,7 +24,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework import status
 import gpxpy.geo
-from v0.ui.leads.models import get_leads_summary, get_leads_summary_by_campaign
+from v0.ui.leads.models import get_leads_summary, get_leads_summary_by_campaign, get_extra_leads_dict
 from v0.ui.base.models import DurationType
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from django.core.cache import cache
@@ -322,6 +322,10 @@ class DashBoardViewSet(viewsets.ViewSet):
         flat_count = 0
         supplier_objects_id_list = {supplier['supplier_id']: supplier for supplier in suppliers}
         all_leads_count = get_leads_summary(campaign_id)
+        all_campaign_extra_leads = {}
+        all_extra_leads = get_extra_leads_dict(campaign_id)
+        if campaign_id in all_extra_leads:
+            all_campaign_extra_leads = all_extra_leads[campaign_id]
         supplier_wise_leads_count = {}
 
         for leads in all_leads_count:
@@ -410,6 +414,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             data = {
                 'supplier': supplier_objects_id_list[id],
                 'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
+                'extra_leads_data': all_campaign_extra_leads[id] if id in all_campaign_extra_leads else {},
                 'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {},
                 'shortlisted_space_id': ss_id_dict_by_supplier_id[id],
                 'phase' : shortlisted_suppliers_id_map[supplier_objects_id_list[id]['supplier_id']].phase_no.phase_no if
@@ -434,6 +439,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             data = {
                 'supplier': supplier_objects_id_list[id],
                 'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
+                'extra_leads_data': all_campaign_extra_leads[id] if id in all_campaign_extra_leads else {},
                 'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {},
                 'shortlisted_space_id': ss_id_dict_by_supplier_id[id],
                 'phase': shortlisted_suppliers_id_map[supplier_objects_id_list[id]['supplier_id']].phase_no.phase_no if
@@ -457,6 +463,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             data = {
                 'supplier': supplier_objects_id_list[id],
                 'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
+                'extra_leads_data': all_campaign_extra_leads[id] if id in all_campaign_extra_leads else {},
                 'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {},
                 'shortlisted_space_id': ss_id_dict_by_supplier_id[id],
                 'phase': shortlisted_suppliers_id_map[supplier_objects_id_list[id]['supplier_id']].phase_no.phase_no if

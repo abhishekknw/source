@@ -18,6 +18,34 @@ connect("mongodb://localhost:27017/machadalo", alias="mongo_app")
 #     class Meta:
 #         db_table = 'leads_form_contacts'
 
+def get_extra_leads_dict(campaign_list=None):
+    if campaign_list:
+        if not isinstance(campaign_list, list):
+            campaign_list = [campaign_list]
+        match_dict = {"campaign_id": {"$in": campaign_list}}
+    else:
+        match_dict = {}
+    all_leads_count = get_leads_summary(campaign_list=campaign_list, user_start_datetime=None, user_end_datetime=None,
+                                        with_extra=False)
+    suppliers_with_data = [data_point["supplier_id"] for data_point in all_leads_count if data_point["total_leads_count"] > 0]
+    all_extra_leads = list(mongo_client.leads_extras.find(match_dict))
+    all_extra_leads_dict = {}
+    for extra_leads in all_extra_leads:
+        if extra_leads['supplier_id'] in suppliers_with_data:
+            continue
+        if extra_leads['campaign_id'] not in all_extra_leads_dict:
+            all_extra_leads_dict[extra_leads['campaign_id']] = {}
+        if extra_leads['supplier_id'] not in all_extra_leads_dict[extra_leads['campaign_id']]:
+            all_extra_leads_dict[extra_leads['campaign_id']][extra_leads['supplier_id']] = []
+        all_extra_leads_dict[extra_leads['campaign_id']][extra_leads['supplier_id']].append({
+            "supplier_id":extra_leads["supplier_id"],
+            "extra_hot_leads": extra_leads["extra_hot_leads"],
+            "extra_leads": extra_leads["extra_leads"],
+            "created_at": extra_leads["created_at"],
+            "leads_form_id": extra_leads["leads_form_id"],
+        })
+    return all_extra_leads_dict
+
 
 def get_aggregated_extra_leads(campaign_list=None):
     if campaign_list:
@@ -87,7 +115,7 @@ def add_extra_leads(leads_summary,campaign_list=None):
     return leads_summary
 
 
-def get_leads_summary(campaign_list=None, user_start_datetime=None,user_end_datetime=None):
+def get_leads_summary(campaign_list=None, user_start_datetime=None,user_end_datetime=None, with_extra=True):
     if campaign_list:
         if not isinstance(campaign_list, list):
             campaign_list = [campaign_list]
@@ -127,8 +155,9 @@ def get_leads_summary(campaign_list=None, user_start_datetime=None,user_end_date
             ]
         )
     leads_summary = list(leads_summary)
-    updated_leads_summary = add_extra_leads(leads_summary, campaign_list)
-    return updated_leads_summary
+    if with_extra:
+        leads_summary = add_extra_leads(leads_summary, campaign_list)
+    return leads_summary
 
 # this function is used to get the number of desired raw data or metrics for the given
 # data point within the chosen scope
