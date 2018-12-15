@@ -7,7 +7,7 @@ from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntrie
                    SanitizeLeadsData, GenerateDemoData, UpdateLeadsDataSHA256, UpdateGlobalHotLeadCriteria,
                    UpdateLeadsDataIsHot, InsertExtraLeads, LeadsPermissionsAPI, LeadsPermissionsSelfAPI,
                    LeadsPermissionsByUserIdAPI, GetLeadsFormById, GetLeadsDataGeneric,GetAllLeadFormsByCampaigns,
-                    UpdateLeadDate, DeleteExtraLeadEntry)
+                    UpdateLeadDate, DeleteExtraLeadEntry, DeleteLeadItem)
 
 urlpatterns = [
     url(r'^(?P<campaign_id>[A-Z_a-z0-9]+)/create$', CreateLeadsForm.as_view()),
@@ -22,11 +22,12 @@ urlpatterns = [
     url(r'^(?P<leads_form_id>[A-Z_a-z0-9]+)/generate_lead_data_excel', GenerateLeadDataExcel.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_form$', DeleteLeadForm.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_entry/(?P<entry_id>[A-Z_a-z0-9]+)$', DeleteLeadEntry.as_view()),
+    url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_form_element/(?P<item_id>[A-Z_a-z0-9]+)$', DeleteLeadItem.as_view()),
     url(r'^sanitize_leads_data/$', SanitizeLeadsData.as_view()),
     # url(r'^(?P<form_id>[0-9]+)/add_sms_contact$', SmsContact.as_view()),
     # url(r'^(?P<form_id>[0-9]+)/get_sms_contacts$', SmsContact.as_view()),
     url(r'^(?P<form_id>[0-9]+)/add_fields', AddLeadFormItems.as_view()),
-    url(r'^(?P<form_id>[0-9]+)/edit_form_name', EditLeadsForm.as_view()),
+    url(r'^(?P<form_id>[0-9]+)/edit_form', EditLeadsForm.as_view()),
     url(r'^summary/', LeadsSummary.as_view()),
     url(r'^generate_demo_data/$', GenerateDemoData.as_view()),
     url(r'^update_leads_data_sha256/$', UpdateLeadsDataSHA256.as_view()),
