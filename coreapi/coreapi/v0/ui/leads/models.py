@@ -7,6 +7,7 @@ from pymongo.write_concern import WriteConcern
 from pymodm import MongoModel, fields
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.supplier.models import SupplierTypeSociety
+import copy
 
 connect("mongodb://localhost:27017/machadalo", alias="mongo_app")
 
@@ -225,8 +226,21 @@ def find_key_alias_dict_array(dict_array, key_name):
             return key
     return key_name
 
+def convert_dict_arrays_keys_to_standard_names(dict_arrays):
+    final_array = []
+    for curr_array in dict_arrays:
+        keys = curr_array[0].keys()
+        new_array = []
+        for curr_dict in curr_array:
+            for curr_key in keys:
+                new_key = level_name_by_model_id[curr_key] if curr_key in level_name_by_model_id else curr_key
+                curr_dict[new_key] = curr_dict.pop(curr_key)
+            new_array.append(curr_dict)
+        final_array.append(new_array)
+    return final_array
 
-def merge_dict_array_single(metric_dict,key_name):
+
+def merge_dict_array_dict_single(metric_dict,key_name):
     key_values = []
     final_array = []
     metric_list = metric_dict.keys()
@@ -249,7 +263,26 @@ def merge_dict_array_single(metric_dict,key_name):
             else:
                 missing_value = True
                 continue
+        if missing_value == False:
+            final_array.append(curr_final_dict)
+    return final_array
 
+
+def merge_dict_array_array_single(array, key_name):
+    final_array=[]
+    first_array = array[0]
+    first_array_keys = first_array[0].keys()
+    desired_key_values = [x[key_name] for x in first_array]
+    for curr_value in desired_key_values:
+        curr_final_dict = {}
+        missing_value = False
+        for curr_array in array:
+            curr_dict = [x for x in curr_array if x[key_name]==curr_value]
+            if not curr_dict == []:
+                curr_final_dict.update(curr_dict[0])
+            else:
+                missing_value = True
+                continue
         if missing_value == False:
             final_array.append(curr_final_dict)
     return final_array
@@ -353,9 +386,11 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['lea
                                                   default_value_type, grouping_level)
         individual_metric_output[lowest_level] = curr_output
 
-    matching_format_metrics = get_similar_structure_keys(individual_metric_output, grouping_level[0])
+    matching_format_metrics = get_similar_structure_keys(individual_metric_output, grouping_level)
     #raw_metrics = individual_metric_output.keys()
     combined_array = []
+
+    print matching_format_metrics
 
     first_metric_array = individual_metric_output[matching_format_metrics[0]] if len(matching_format_metrics)>0 else []
     for ele_id in range(0,len(first_metric_array)):
@@ -365,7 +400,7 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['lea
             new_dict[metric]=individual_metric_output[metric][ele_id][metric]
         combined_array.append(new_dict)
 
-    single_array = merge_dict_array_single(individual_metric_output, grouping_level[0])
+    single_array = merge_dict_array_dict_single(individual_metric_output, grouping_level[0])
     single_array_keys = single_array[0].keys()
     reverse_map = {}
     for key in single_array_keys:
@@ -373,24 +408,50 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['lea
         if reverse_key in raw_data:
             reverse_map[reverse_key] = key
 
+    print single_array
+    derived_array = copy.deepcopy(single_array)
+    metric_names = []
     for curr_metric in metrics:
         op = '/'
-        nr_index = int(curr_metric.split(op)[0])-1
-        dr_index = int(curr_metric.split(op)[1])-1
-        nr = raw_data[nr_index]
-        dr = raw_data[dr_index]
-        if nr in raw_data and dr in raw_data:
+        split_metric = curr_metric.split(op)
+
+        if not split_metric[0][0] == 'm':
+            nr_source = raw_data
+            nr_index = int(split_metric[0])-1
+            nr = nr_source[nr_index]
+        else:
+            nr_source = metric_names
+            nr_index = int(split_metric[0][1:])-1
+            nr = nr_source[nr_index]
+
+        if not split_metric[1][0] == 'm':
+            dr_source = raw_data
+            dr_index = int(split_metric[1])-1
+            dr = raw_data[dr_index]
+        else:
+            dr_source = metric_names
+            dr_index = int(split_metric[1][1:])-1
+            dr = metric_names[dr_index]
+
+        print nr, dr
+
+        # dr_index = int(split_metric[1])-1
+        # dr = raw_data[dr_index]
+
+        if nr in nr_source and dr in dr_source:
             metric_name = nr + op + dr
-        derived_array = []
-        for curr_dict in single_array:
+            metric_names.append(metric_name)
+        #derived_array = []
+        for curr_dict in derived_array:
             nr_value = curr_dict[nr] if nr in curr_dict else curr_dict[reverse_map[nr]]
             dr_value = curr_dict[dr] if dr in curr_dict else curr_dict[reverse_map[dr]]
             result_value = eval(str(nr_value)+op+str(dr_value))
+            #curr_dict_copy = curr_dict.copy()
             curr_dict[metric_name]=result_value
-            derived_array.append(curr_dict)
+            #derived_array.append(curr_dict_copy)
 
     #single_array = {}
-    return [individual_metric_output, combined_array, single_array]
+    return [individual_metric_output, single_array, derived_array]
 
 
 def get_leads_summary_by_campaign(campaign_list=None):
@@ -472,6 +533,7 @@ def find_level_sequence(highest_level, lowest_level):
 
 
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None, grouping_level=None):
+    grouping_level = grouping_level[0]
     second_lowest_parent = count_details_parent_map[lowest_level]['parent']
     second_lowest_parent_name_model = count_details_parent_map[lowest_level]['parent_name_model']
     if ',' in second_lowest_parent or ',' in second_lowest_parent_name_model:
@@ -482,6 +544,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     else:
         desc_sequence = find_level_sequence(highest_level, lowest_level)
         parent_type = 'single'
+        parents = [second_lowest_parent]
     curr_level_id = 0
     last_level_id = len(desc_sequence) - 1
 
@@ -545,7 +608,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 next_level_match_list = [x[self_model_name] for x in query]
                 # count = mongo_client[model_name].find({}).distinct(self_model_name).length
             elif database_type == 'mysql':
-                if grouping_level in parent_model_names:
+                if grouping_level in parents:
+                    print 'true'
                     all_results.append(query)
                 next_level_match_list = list(set([x[self_model_name] for x in query]))
             else:
@@ -588,9 +652,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 full_query = first_part_query + parent_model_name + '__in=match_list)'
                 query = list(eval(full_query).values(self_model_name, parent_model_name))
                 all_results.append(query)
-                print query
                 next_level_match_array = [x[self_model_name] for x in query if x[self_model_name] is not None]
-                print next_level_match_array
                 if storage_type == 'count':
                     next_level_match_list = len(next_level_match_array)
                 else:
@@ -600,7 +662,9 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         else:
             print("pass")
         curr_level_id = curr_level_id+1
-    return query
+    new_results = convert_dict_arrays_keys_to_standard_names(all_results)
+    single_array_results = merge_dict_array_array_single(new_results,grouping_level)
+    return single_array_results
 
 
 class LeadsPermissions(MongoModel):
