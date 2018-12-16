@@ -11,6 +11,8 @@ import copy
 
 connect("mongodb://localhost:27017/machadalo", alias="mongo_app")
 
+
+
 LEAD_KEY_TYPES = (
     ('STRING', 'STRING'),
     ('BOOLEAN', 'BOOLEAN'),
@@ -200,24 +202,6 @@ level_name_by_model_id = {
     "flat_count": "flat"
 }
 
-# def merge_dict_array(dict_array, key_array):
-#     dict_keys = dict_array.keys()
-#     values_list = []
-#     for key in dict_keys:
-#         values_list.append(dict_array[key])
-#     values_list = sum(values_list,[])
-#     value_keys = values_list[0].keys()
-#
-#     filtered_list = []
-#     for value in values_list:
-#         new_value = {}
-#         for value_key in value_keys:
-#             if value_key in key_array:
-#                 new_value[value_key]=value[value_key]
-#         filtered_list.append(new_value)
-#
-#     return filtered_list
-
 def find_key_alias_dict_array(dict_array, key_name):
     first_element = dict_array[0]
     dict_keys = first_element.keys()
@@ -225,6 +209,7 @@ def find_key_alias_dict_array(dict_array, key_name):
         if key in level_name_by_model_id and level_name_by_model_id[key]==key_name:
             return key
     return key_name
+
 
 def convert_dict_arrays_keys_to_standard_names(dict_arrays):
     final_array = []
@@ -304,6 +289,7 @@ def get_similar_structure_keys(main_dict, required_keys):
         if curr_keys == matching_keys:
             similar_array.append(key_name)
     return similar_array
+
 
 # this function is used to get the number of desired raw data or metrics for the given
 # data point within the chosen scope
@@ -390,7 +376,6 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['lea
     #raw_metrics = individual_metric_output.keys()
     combined_array = []
 
-    print matching_format_metrics
 
     first_metric_array = individual_metric_output[matching_format_metrics[0]] if len(matching_format_metrics)>0 else []
     for ele_id in range(0,len(first_metric_array)):
@@ -408,7 +393,7 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['lea
         if reverse_key in raw_data:
             reverse_map[reverse_key] = key
 
-    print single_array
+
     derived_array = copy.deepcopy(single_array)
     metric_names = []
     for curr_metric in metrics:
@@ -433,10 +418,6 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['lea
             dr_index = int(split_metric[1][1:])-1
             dr = metric_names[dr_index]
 
-        print nr, dr
-
-        # dr_index = int(split_metric[1])-1
-        # dr = raw_data[dr_index]
 
         if nr in nr_source and dr in dr_source:
             metric_name = nr + op + dr
@@ -446,11 +427,8 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['lea
             nr_value = curr_dict[nr] if nr in curr_dict else curr_dict[reverse_map[nr]]
             dr_value = curr_dict[dr] if dr in curr_dict else curr_dict[reverse_map[dr]]
             result_value = eval(str(nr_value)+op+str(dr_value))
-            #curr_dict_copy = curr_dict.copy()
             curr_dict[metric_name]=result_value
-            #derived_array.append(curr_dict_copy)
 
-    #single_array = {}
     return [individual_metric_output, single_array, derived_array]
 
 

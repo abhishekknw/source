@@ -18,3 +18,18 @@ class ChecklistPermissions(MongoModel):
     class Meta:
         write_concern = WriteConcern(j=True)
         connection_alias = 'mongo_app'
+
+
+class ChecklistData(MongoModel):
+    status = fields.CharField()
+    supplier_id = fields.CharField()
+    order_id = fields.IntegerField()
+    campaign_id = fields.CharField()
+    checklist_id = fields.IntegerField()
+    rowid = fields.IntegerField()
+    created_at = fields.DateTimeField()
+    data = fields.DictField()
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'mongo_app'

@@ -11,6 +11,7 @@ from v0.ui.campaign.models import CampaignAssignment
 from v0.ui.proposal.models import ProposalInfo
 from v0.ui.common.models import BaseUser
 from v0.ui.user.serializers import BaseUserSerializer
+import numpy as np
 
 
 def is_user_permitted(permission_type, user, **kwargs):
@@ -124,6 +125,11 @@ def sort_dict(random_dict):
             key = str(key)
         sorted_dict[key] = random_dict[key]
     return sorted_dict
+
+
+def sort_list_by_key_value(list_to_be_sorted, sorting_key):
+    newlist = sorted(list_to_be_sorted, key=itemgetter(sorting_key))
+    return newlist
 
 
 class CreateChecklistTemplate(APIView):
@@ -859,3 +865,103 @@ class ChecklistPermissionsByUserIdAPI(APIView):
             "created_by": all_user_dict[int(checklist_permissions.created_by)] if int(checklist_permissions.created_by) in all_user_dict else None
         }
         return handle_response('', data=permission_data, success=True)
+
+
+def get_numeric_in_array_dict(curr_dict):
+    new_dict = {}
+    for key in curr_dict.keys():
+        curr_array = curr_dict[key]
+        new_array = []
+        for x in curr_array:
+            if isinstance(x,(int,long,float)):
+                new_array.append(x)
+        new_dict[key]=new_array
+    return new_dict
+
+
+def binary_operation(a, b, op):
+    operator_map = {"/": round(float(a)/b,5), "*":a*b, "+":a+b, "-": a-b}
+    return operator_map[op]
+
+
+def process_metrics(operations_array, raw_map):
+    final_array = []
+    for metric_array in operations_array:
+        a_code = metric_array[0]
+        b_code = metric_array[1]
+        op = metric_array[2]
+        if type(a_code) is unicode:
+            if a_code[0] == 'm':
+                a_code = a_code[1:]
+                a = final_array[int(a_code) - 1]
+            else:
+                a = raw_map[a_code]
+        else:
+            a = a_code
+        if type(b_code) is unicode:
+            if b_code[0] == 'm':
+                b_code = b_code[1:]
+                b = final_array[int(b_code) - 1]
+            else:
+                b = raw_map[b_code]
+        else:
+            b = b_code
+        curr_result = binary_operation(a, b, op)
+        final_array.append(curr_result)
+    return final_array
+
+# used to get checklist metrics
+class ChecklistMetrics(APIView):
+    @staticmethod
+    def put(request):
+        checklist_id = request.data['checklist_id']
+        column_ids = request.data['column_ids']
+        result_operations = request.data['result_operations']
+        column_operations = request.data['column_operations']
+        checklist_data_list_unsorted = list(mongo_client.checklist_data.find({"checklist_id":checklist_id}))
+        #checklist_data_list = sort_list_by_key_value(checklist_data_list_unsorted,'rowid')
+        checklist_data_list = checklist_data_list_unsorted
+        column_value_dict = {}
+        for curr_dict in checklist_data_list:
+            for curr_column in column_ids:
+                if curr_column not in curr_dict['data']:
+                    continue
+                curr_column_value = curr_dict['data'][curr_column]['cell_value']
+                if curr_column not in column_value_dict:
+                    column_value_dict[curr_column] = []
+                column_value_dict[curr_column].append(curr_column_value)
+        numeric_dict = get_numeric_in_array_dict(column_value_dict)
+        result_map = {}
+        for column_id in column_ids:
+            curr_column_operations_array = column_operations[column_id]
+            result_index = curr_column_operations_array[0]
+            curr_operation = curr_column_operations_array[1]
+            curr_col_values = numeric_dict[column_id]
+            curr_result_str = 'np.'+curr_operation+'(numeric_dict["'+column_id+'"])'
+            curr_result = eval(curr_result_str)
+            result_map[result_index] = curr_result
+        # final_result_array = []
+        # for metric_array in result_operations:
+        #     a_code = metric_array[0]
+        #     b_code = metric_array[1]
+        #     op = metric_array[2]
+        #     if type(a_code) is unicode:
+        #         if a_code[0] == 'm':
+        #             a_code = a_code[1:]
+        #             a = final_result_array[int(a_code)-1]
+        #         else:
+        #             a = result_map[a_code]
+        #     else:
+        #         a = a_code
+        #     if type(b_code) is unicode:
+        #         if b_code[0] == 'm':
+        #             b_code = b_code[1:]
+        #             b = final_result_array[int(b_code)-1]
+        #         else:
+        #             b = result_map[b_code]
+        #     else:
+        #         b = b_code
+        #     curr_result = binary_operation(a, b, op)
+        #     final_result_array.append(curr_result)
+        final_result = process_metrics(result_operations,result_map)
+        return handle_response('', data=[numeric_dict,result_map, final_result], success=True)
