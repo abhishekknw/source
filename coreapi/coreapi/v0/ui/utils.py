@@ -958,11 +958,12 @@ def create_validation_msg(dict_of_required_attributes):
             validation_msg_dict['missing_data'].append(key)
     return (is_valid, validation_msg_dict)
 
+
 def validate_attributes(attributes_dict):
     is_valid = True
     names = [x['name'] for x in attributes_dict if 'name' in x]
     types = [x['type'] for x in attributes_dict if 'type' in x]
-    attribute_validation_dict = {'unknown_keys':[], 'unknown_types': []}
+    attribute_validation_dict = {'unknown_keys': [], 'unknown_types': []}
     all_keys = list(set([item for sublist in attributes_dict for item in sublist]))
     allowed_keys = ['name', 'type', 'is_required']
     allowed_types = ['INT', 'FLOAT', 'STRING', 'DATE', 'EMAIL']

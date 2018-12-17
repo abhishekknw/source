@@ -33,14 +33,14 @@ class BaseInventoryAPI(APIView):
     @staticmethod
     def get(request):
         all_base_inventory = BaseInventory.objects.all()
-        all_base_inventory_dict = {}
+        all_base_inventory_list = []
         for base_inventory in all_base_inventory:
-            all_base_inventory_dict[str(base_inventory._id)] = {
+            all_base_inventory_list.append({
                 "_id": str(base_inventory._id),
                 "name": base_inventory.name,
                 "base_attributes": base_inventory.base_attributes
-            }
-        return handle_response('', data=all_base_inventory_dict, success=True)
+            })
+        return handle_response('', data=all_base_inventory_list, success=True)
 
 
 class BaseInventoryAPIById(APIView):
@@ -79,6 +79,7 @@ class BaseInventoryAPIById(APIView):
         exist_entity_query = list(BaseInventory.objects.raw({'_id': ObjectId(base_inventory_id)}))
         if len(exist_entity_query) == 1:
             exist_entity_query[0].delete()
+            return handle_response('', data="success", success=True)
         else:
             return handle_response('', data="id does not exist", success=False)
 
