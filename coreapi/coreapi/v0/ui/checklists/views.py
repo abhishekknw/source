@@ -6,12 +6,14 @@ from bson.objectid import ObjectId
 import datetime
 import collections
 from operator import itemgetter
-from models import ChecklistPermissions
+from models import ChecklistPermissions, ChecklistData, ChecklistOperators
 from v0.ui.campaign.models import CampaignAssignment
 from v0.ui.proposal.models import ProposalInfo
 from v0.ui.common.models import BaseUser
 from v0.ui.user.serializers import BaseUserSerializer
 import numpy as np
+from bson import Binary, Code
+from bson.json_util import dumps
 
 
 def is_user_permitted(permission_type, user, **kwargs):
@@ -965,3 +967,32 @@ class ChecklistMetrics(APIView):
         #     final_result_array.append(curr_result)
         final_result = process_metrics(result_operations,result_map)
         return handle_response('', data=[numeric_dict,result_map, final_result], success=True)
+
+    @staticmethod
+    def post(request):
+        metrics_data = request.data
+        existing_data_count = len(list(ChecklistOperators.objects.raw({})))
+        operator_id = existing_data_count+1
+        metrics_data["operator_id"]=operator_id
+        ChecklistOperators(**metrics_data).save()
+        return handle_response('', data="success", success=True)
+
+    @staticmethod
+    def get(request):
+        checklist_id = request.query_params.get("checklist_id",None)
+        operator_response = list(ChecklistOperators.objects.raw({"checklist_id": int(checklist_id)}))
+        fields = ["operator_id", "checklist_id", "column_ids","column_operations","result_operations"]
+        final_response = {}
+        counter = 1
+        for curr_response in operator_response:
+            #print(curr_response.to_son().to_dict)
+            final_response[counter] = {
+                "operator_id":curr_response.operator_id,
+                "checklist_id": curr_response.checklist_id,
+                "column_ids": curr_response.column_ids,
+                "column_operations": curr_response.column_operations,
+                "result_operations": curr_response.result_operations,
+                "operator_name": curr_response.operator_name
+            }
+            counter = counter + 1
+        return handle_response('',data=final_response, success=True)

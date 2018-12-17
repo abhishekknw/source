@@ -33,3 +33,16 @@ class ChecklistData(MongoModel):
     class Meta:
         write_concern = WriteConcern(j=True)
         connection_alias = 'mongo_app'
+
+
+class ChecklistOperators(MongoModel):
+    operator_id = fields.IntegerField()
+    checklist_id = fields.IntegerField()
+    column_ids = fields.ListField()
+    column_operations = fields.DictField()
+    result_operations = fields.ListField()
+    operator_name = fields.CharField()
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'mongo_app'
