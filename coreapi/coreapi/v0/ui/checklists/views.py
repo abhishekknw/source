@@ -912,8 +912,8 @@ def process_metrics(operations_array, raw_map):
         final_array.append(curr_result)
     return final_array
 
-# used to get checklist metrics
-class ChecklistMetrics(APIView):
+
+class ChecklistUnsavedOperators(APIView):
     @staticmethod
     def put(request):
         checklist_id = request.data['checklist_id']
@@ -921,7 +921,6 @@ class ChecklistMetrics(APIView):
         result_operations = request.data['result_operations']
         column_operations = request.data['column_operations']
         checklist_data_list_unsorted = list(mongo_client.checklist_data.find({"checklist_id":checklist_id}))
-        #checklist_data_list = sort_list_by_key_value(checklist_data_list_unsorted,'rowid')
         checklist_data_list = checklist_data_list_unsorted
         column_value_dict = {}
         for curr_dict in checklist_data_list:
@@ -942,31 +941,12 @@ class ChecklistMetrics(APIView):
             curr_result_str = 'np.'+curr_operation+'(numeric_dict["'+column_id+'"])'
             curr_result = eval(curr_result_str)
             result_map[result_index] = curr_result
-        # final_result_array = []
-        # for metric_array in result_operations:
-        #     a_code = metric_array[0]
-        #     b_code = metric_array[1]
-        #     op = metric_array[2]
-        #     if type(a_code) is unicode:
-        #         if a_code[0] == 'm':
-        #             a_code = a_code[1:]
-        #             a = final_result_array[int(a_code)-1]
-        #         else:
-        #             a = result_map[a_code]
-        #     else:
-        #         a = a_code
-        #     if type(b_code) is unicode:
-        #         if b_code[0] == 'm':
-        #             b_code = b_code[1:]
-        #             b = final_result_array[int(b_code)-1]
-        #         else:
-        #             b = result_map[b_code]
-        #     else:
-        #         b = b_code
-        #     curr_result = binary_operation(a, b, op)
-        #     final_result_array.append(curr_result)
         final_result = process_metrics(result_operations,result_map)
         return handle_response('', data=[numeric_dict,result_map, final_result], success=True)
+
+
+# used to get checklist metrics
+class ChecklistSavedOperators(APIView):
 
     @staticmethod
     def post(request):
@@ -980,19 +960,28 @@ class ChecklistMetrics(APIView):
     @staticmethod
     def get(request):
         checklist_id = request.query_params.get("checklist_id",None)
-        operator_response = list(ChecklistOperators.objects.raw({"checklist_id": int(checklist_id)}))
+        operator_response = list(ChecklistOperators.objects.raw({"$and": [{"checklist_id": int(checklist_id)}, {
+            "status": {"$ne": "inactive"}}]}))
         fields = ["operator_id", "checklist_id", "column_ids","column_operations","result_operations"]
         final_response = {}
         counter = 1
         for curr_response in operator_response:
             #print(curr_response.to_son().to_dict)
+            operator_name = curr_response.operator_name if curr_response.operator_name else None
             final_response[counter] = {
                 "operator_id":curr_response.operator_id,
                 "checklist_id": curr_response.checklist_id,
                 "column_ids": curr_response.column_ids,
                 "column_operations": curr_response.column_operations,
                 "result_operations": curr_response.result_operations,
-                "operator_name": curr_response.operator_name
+                "operator_name": operator_name
             }
             counter = counter + 1
         return handle_response('',data=final_response, success=True)
+
+    @staticmethod
+    def delete(request):
+        operator_id = request.query_params.get("operator_id", None)
+        operator_response = mongo_client.checklist_operators.update_one(
+            {"operator_id": int(operator_id)}, {"$set": {'status': 'inactive'}})
+        return handle_response('', data="success", success=True)

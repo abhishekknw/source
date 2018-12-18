@@ -36,6 +36,7 @@ class ChecklistData(MongoModel):
 
 
 class ChecklistOperators(MongoModel):
+    status = fields.CharField()
     operator_id = fields.IntegerField()
     checklist_id = fields.IntegerField()
     column_ids = fields.ListField()

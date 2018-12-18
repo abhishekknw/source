@@ -467,6 +467,7 @@ def get_leads_summary_by_campaign(campaign_list=None):
         )
     return list(leads_summary)
 
+
 count_details_parent_map = {
     'supplier':{'parent':'campaign', 'model_name': 'ShortlistedSpaces', 'database_type': 'mysql',
                 'self_name_model': 'object_id', 'parent_name_model': 'proposal_id', 'storage_type': 'name'},
@@ -475,10 +476,9 @@ count_details_parent_map = {
     'flat': {'parent': 'supplier', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
                  'self_name_model': 'flat_count', 'parent_name_model': 'supplier_id', 'storage_type': 'sum'},
     'lead': {'parent': 'supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
-                 'self_name_model': 'entry_id', 'parent_name_model': 'supplier_id,campaign_id', 'storage_type': 'count'},
+             'self_name_model': 'entry_id', 'parent_name_model': 'supplier_id,campaign_id', 'storage_type': 'count'},
     'hot_lead': {'parent': 'supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
-                 'self_name_model': 'is_hot', 'parent_name_model': 'supplier_id,campaign_id',
-                 'storage_type': 'condition'},
+                 'self_name_model': 'is_hot', 'parent_name_model': 'supplier_id,campaign_id', 'storage_type': 'condition'},
 }
 
 count_details_kids_map = {
@@ -486,8 +486,6 @@ count_details_kids_map = {
     'supplier': {'flat'}
 }
 
-def get_count_details(entity):
-    entity_details = count_details_parent_map[entity]
 
 def find_level_sequence(highest_level, lowest_level):
     sequence = []
@@ -508,6 +506,15 @@ def find_level_sequence(highest_level, lowest_level):
     if n>=n_levels:
         error_message = "too many levels"
     return error_message
+
+
+geographical_parent_details = {
+    'base':'supplier','model_name':'SupplierTypeSociety', 'database_type':'mysql',
+    'base_model_name':'supplier_id','storage_type':'name',
+    'member_names': {'locality': 'society_locality', 'city': 'society_city', 'state': 'society_state',
+                     'supplier': 'supplier_id'}
+}
+
 
 
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None, grouping_level=None):

@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
 from models import (LeadsFormContacts, get_leads_summary, LeadsPermissions, get_leads_summary_all,
-                    get_details_by_higher_level)
+                    get_details_by_higher_level, geographical_parent_details)
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
@@ -129,14 +129,7 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
         leads_data_start_end = [x for x in leads_data_start if x['created_at'].date() <= kwargs['end_date']]
         leads_data_list = leads_data_start_end
 
-    # first_entry = (page_number-1)*leads_per_page+1
-    # if first_entry>len(leads_data_list):
-    #     leads_data_list_paginated = []
-    # else:
-    #     last_entry = min(page_number*leads_per_page, len(leads_data_list))
-    #     leads_data_list_sorted = list(set(leads_data_list))
-    #     leads_data_list_paginated = leads_data_list_sorted[first_entry:(last_entry-1)]
-    #leads_data_values_itemid = [x["data"] for x in leads_data_list]
+
     leads_data_values = []
     for entry in leads_data_list:
         curr_entry = entry['data']
@@ -962,5 +955,21 @@ class GetListsCounts(APIView):
         return handle_response('', data=final_output, success=True)
 
 
+class GeographicalLevelsTest(APIView):
+
+    @staticmethod
+    def put(request):
+        highest_level = request.data['highest_level']
+        lowest_level = request.data['lowest_level'] if 'lowest_level' in request.data else 'supplier'
+        highest_level_list = request.data['highest_level_list']
+        model_name = geographical_parent_details['model_name']
+        parent_name_model = geographical_parent_details['member_names'][highest_level]
+        self_name_model = geographical_parent_details['member_names'][lowest_level]
+        match_list = highest_level_list
+        query = model_name+'.objects.filter('+parent_name_model+'__in=match_list)'
+        query_values = list(eval(query).values(parent_name_model,self_name_model))
+        final_values_with_null = [dict(t) for t in {tuple(d.items()) for d in query_values}]
+        final_values = [d for d in final_values_with_null if all(d.values())]
+        return handle_response('',data=final_values,success=True)
 
 

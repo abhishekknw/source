@@ -6,7 +6,7 @@ from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntrie
                    LeadsSummary, GetLeadsEntriesByCampaignId, GenerateLeadDataExcel,
                    SanitizeLeadsData, GenerateDemoData, UpdateLeadsDataSHA256, UpdateGlobalHotLeadCriteria,
                    UpdateLeadsDataIsHot, InsertExtraLeads, LeadsPermissionsAPI, GetLeadsFormById, GetLeadsDataGeneric,
-                   GetListsCounts)
+                   GetListsCounts, GeographicalLevelsTest)
 
 urlpatterns = [
     url(r'^(?P<campaign_id>[A-Z_a-z0-9]+)/create$', CreateLeadsForm.as_view()),
@@ -35,6 +35,8 @@ urlpatterns = [
     url(r'^permissions$', LeadsPermissionsAPI.as_view()),
     url(r'^get-leads-data-generic/$', GetLeadsDataGeneric.as_view()),
     url(r'^get-lists-counts-generic/$', GetListsCounts.as_view()),
+    url(r'^geographical-levels-test', GeographicalLevelsTest.as_view()),
+
 ]
 
 router = DefaultRouter()
