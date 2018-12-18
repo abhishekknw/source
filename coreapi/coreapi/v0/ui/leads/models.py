@@ -76,7 +76,8 @@ def add_extra_leads(leads_summary, campaign_list=None):
                                               'supplier_id': supplier_id,
                                               'total_leads_count': total_leads_count,
                                               'hot_leads_count': hot_leads_count,
-                                              'hot_leads_percentage': float(total_leads_count)/float(hot_leads_count) * 100,
+                                              'hot_leads_percentage': float(total_leads_count) / float(
+                                                  hot_leads_count) * 100 if hot_leads_count > 0 else 0,
                                               })
     return leads_summary
 
