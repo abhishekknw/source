@@ -1177,8 +1177,40 @@ class DeleteExtraLeadEntry(APIView):
         mongo_client.leads_extras.remove({"_id":ObjectId(id)})
         return handle_response('', data={"success": True}, success=True)
 
+class GetLeadsEntry(APIView):
+    @staticmethod
+    def get(request, form_id, supplier_id, entry_id):
+        data = mongo_client.leads.find({'leads_form_id': int(form_id), 'supplier_id': supplier_id, 'entry_id': int(entry_id)})
 
+        lead_form = list(mongo_client.leads_forms.find(
+            {"$and": [{"leads_form_id": int(form_id)}, {"status": {"$ne": "inactive"}}]}))
+        lead_form_dict = {}
+        if len(lead_form) > 0:
+            lead_form = lead_form[0]
+            lead_form_dict = {
+                "leads_form_name": lead_form['leads_form_name'],
+                "leads_form_id": lead_form['leads_form_id'],
+                "leads_form_items": lead_form['data']
+            }
+        # leads_form_items_map_by_item_id = {item['item_id']: item for item in lead_form_dict['leads_form_items']}
+        lead_entry_map_by_item_id = {item['item_id']:item for item in data[0]['data']}
 
+        for key,value in lead_form_dict['leads_form_items'].iteritems():
+            value['value'] = lead_entry_map_by_item_id[value['item_id']]['value']
 
+        return handle_response('', data=lead_form_dict, success=True)
+
+class UpdateLeadsEntry(APIView):
+    @staticmethod
+    def put(request, form_id, supplier_id, entry_id):
+        data = request.data
+        lead_instance = mongo_client.leads.find({'leads_form_id': int(form_id), 'supplier_id': supplier_id, 'entry_id': int(entry_id)})[0]
+        lead_entry_map_by_item_id = {item['item_id']:item for k,item in data.iteritems()}
+        for lead_item in lead_instance['data']:
+            lead_item['value'] = lead_entry_map_by_item_id[int(lead_item['item_id'])]['value']
+        mongo_client.leads.update_one(
+            {"leads_form_id": int(form_id), "entry_id": int(entry_id), "supplier_id": supplier_id},
+            {"$set": {"data": lead_instance}})
+        return handle_response('', data={"success": True}, success=True)
 
 
