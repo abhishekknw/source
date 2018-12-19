@@ -255,6 +255,7 @@ def merge_dict_array_dict_single(metric_dict,key_name):
 
 def merge_dict_array_array_single(array, key_name):
     final_array=[]
+    print array, key_name
     first_array = array[0]
     first_array_keys = first_array[0].keys()
     desired_key_values = [x[key_name] for x in first_array]
@@ -291,91 +292,88 @@ def get_similar_structure_keys(main_dict, required_keys):
     return similar_array
 
 
-# this function is used to get the number of desired raw data or metrics for the given
-# data point within the chosen scope
-def get_leads_summary_all_old(data_scope = None, data_point = None, raw_data = ['total_leads','hot_leads'],
-                          metrics = ['2/1']):
-    match_dict = {}
-    scope_restrictor_count = len(data_scope.keys()) if data_scope is not None else 0 # get number of restrictors
-    if scope_restrictor_count == 0: # case of full database
+def get_leads_summary_by_campaign(campaign_list=None):
+    if campaign_list:
+        if not isinstance(campaign_list, list):
+            campaign_list = [campaign_list]
+        match_dict = {"campaign_id": {"$in": campaign_list}}
+    else:
         match_dict = {}
-        # else do something else
-    group_dict = {
-        "_id": {},
-    }
-    project_dict = {}
-    data_point_category = data_point['category']
-    data_point_levels = data_point['level']
-    if data_point is None:
-        return 'no data point criteria specified'
-    if data_point_category == 'unordered':
-        if 'campaign' in data_point_levels:
-            group_dict["_id"]["campaign_id"] = "$campaign_id"
-            group_dict["campaign_id"] = {"$first": "$campaign_id"}
-            project_dict["campaign_id"] = 1
-        if 'supplier' in data_point_levels:
-            group_dict["_id"]["supplier_id"] = "$supplier_id"
-            group_dict["supplier_id"] = {"$first": "$supplier_id"}
-            project_dict["supplier_id"] = 1
-    raw_data_available = ['total_leads','hot_leads']
-    # for curr_data in raw_data:
-    #     if curr_data in raw_data_available:
-    #         group_dict[curr_data]
-    if 'total_leads' in raw_data:
-        group_dict["total_leads"] = {"$sum": 1}
-        project_dict["total_leads"] = 1
-    if 'hot_leads' in raw_data:
-        group_dict["hot_leads"] = {"$sum": {"$cond": ["$is_hot", 1, 0]}}
-        project_dict["hot_leads"] = 1
-    operators = ['/'] # more operators will be added later
-    for curr_metric in metrics:
-        nr_index = int(curr_metric.split('/')[0])-1
-        dr_index = int(curr_metric.split('/')[1])-1
-        nr = raw_data[nr_index]
-        dr = raw_data[dr_index]
-        if nr in raw_data_available and dr in raw_data_available:
-            metric_name = nr + '/' + dr
-            project_dict[metric_name] = {"$divide": ['$'+nr, '$'+dr]}
-    final_array = [
-        {
-            "$match": match_dict
-        },
-        {
-            "$group": group_dict
-        },
-        {
-            "$project": project_dict
-        }
-    ]
-    leads_summary = mongo_client.leads.aggregate(final_array)
-    test_lower_level_elements = get_details_by_higher_level('supplier,campaign', 'lead', ['TESYOG06F2', 'BYJMACC9CA'])
-    leads_summary = list(leads_summary)
-    return (test_lower_level_elements)
+    leads_summary = mongo_client.leads.aggregate(
+            [
+                {
+                    "$match": match_dict
+                },
+                {
+                    "$group":
+                        {
+                            "_id": {"campaign_id": "$campaign_id"},
+                            "campaign_id": {"$first": '$campaign_id'},
+                            "total_leads_count": {"$sum": 1},
+                            "hot_leads_count": {"$sum": {"$cond": ["$is_hot", 1, 0]}},
+                        }
+                },
+                {
+                    "$project": {
+                        "campaign_id": 1,
+                        "supplier_id": 1,
+                        "total_leads_count": 1,
+                        "hot_leads_count": 1,
+                        "hot_leads_percentage": {
+                            "$multiply": [{"$divide": [100, "$total_leads_count"]}, "$hot_leads_count"]},
+                    }
+                }
+            ]
+        )
+    return list(leads_summary)
 
 
 # currently working with the following constraints:
-# exactly one scope restrictor with exact match, one type of data point, one raw data element, metrics ignored
-def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['lead'],
+# exactly one scope restrictor with exact match, one type of data point
+def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['lead','hot_lead'],
                           metrics = ['2/1']):
 
     data_scope_first = data_scope['1']
     highest_level = data_scope_first['value_type']
     grouping_level = data_point['level']
+    grouping_level_first = grouping_level[0]
     # if highest_level == grouping_level:
     #     return "lowest level should be lower than highest level"
     individual_metric_output = {}
     highest_level_values = data_scope_first['values']['exact']
     default_value_type = data_scope_first['value_type']
+    data_scope_category = data_scope_first['category']
+    data_point_category = data_point['category']
     for curr_metric in raw_data:
         lowest_level = curr_metric
-        curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
-                                                  default_value_type, grouping_level)
+        if data_scope_category == 'geographical':
+            lowest_geographical_level = geographical_parent_details['base']
+            if data_point_category == 'geographical':
+                results_by_lowest_level = False if grouping_level_first == lowest_geographical_level else True
+                result_dict = get_details_by_higher_level_geographical(
+                    highest_level, highest_level_values, grouping_level_first, results_by_lowest_level)
+                curr_dict = result_dict['final_dict']
+                curr_highest_level_values = result_dict['single_list']
+            else:
+                lowest_geographical_level = geographical_parent_details['base']
+                result_dict = get_details_by_higher_level_geographical(
+                    highest_level, highest_level_values, lowest_geographical_level)
+                curr_dict = result_dict['final_dict']
+                curr_highest_level_values = result_dict['single_list']
+            # highest_level = lowest_geographical_level
+            # highest_level_values = curr_highest_level_values
+            # default_value_type = highest_level
+            # grouping_level = highest_level
+            lgl = lowest_geographical_level
+            curr_output = get_details_by_higher_level(lgl, lowest_level, curr_highest_level_values, lgl, lgl, curr_dict)
+        else:
+            curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
+                                                  default_value_type, grouping_level_first)
+        print curr_output
         individual_metric_output[lowest_level] = curr_output
 
     matching_format_metrics = get_similar_structure_keys(individual_metric_output, grouping_level)
-    #raw_metrics = individual_metric_output.keys()
     combined_array = []
-
 
     first_metric_array = individual_metric_output[matching_format_metrics[0]] if len(matching_format_metrics)>0 else []
     for ele_id in range(0,len(first_metric_array)):
@@ -432,42 +430,6 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['lea
     return [individual_metric_output, single_array, derived_array]
 
 
-def get_leads_summary_by_campaign(campaign_list=None):
-    if campaign_list:
-        if not isinstance(campaign_list, list):
-            campaign_list = [campaign_list]
-        match_dict = {"campaign_id": {"$in": campaign_list}}
-    else:
-        match_dict = {}
-    leads_summary = mongo_client.leads.aggregate(
-            [
-                {
-                    "$match": match_dict
-                },
-                {
-                    "$group":
-                        {
-                            "_id": {"campaign_id": "$campaign_id"},
-                            "campaign_id": {"$first": '$campaign_id'},
-                            "total_leads_count": {"$sum": 1},
-                            "hot_leads_count": {"$sum": {"$cond": ["$is_hot", 1, 0]}},
-                        }
-                },
-                {
-                    "$project": {
-                        "campaign_id": 1,
-                        "supplier_id": 1,
-                        "total_leads_count": 1,
-                        "hot_leads_count": 1,
-                        "hot_leads_percentage": {
-                            "$multiply": [{"$divide": [100, "$total_leads_count"]}, "$hot_leads_count"]},
-                    }
-                }
-            ]
-        )
-    return list(leads_summary)
-
-
 count_details_parent_map = {
     'supplier':{'parent':'campaign', 'model_name': 'ShortlistedSpaces', 'database_type': 'mysql',
                 'self_name_model': 'object_id', 'parent_name_model': 'proposal_id', 'storage_type': 'name'},
@@ -516,9 +478,33 @@ geographical_parent_details = {
 }
 
 
+def get_details_by_higher_level_geographical(highest_level, highest_level_list, lowest_level='supplier',
+                                             results_by_lowest_level=0):
+    # highest_level = request.data['highest_level']
+    # lowest_level = request.data['lowest_level'] if 'lowest_level' in request.data else 'supplier'
+    # highest_level_list = request.data['highest_level_list']
+    model_name = geographical_parent_details['model_name']
+    parent_name_model = geographical_parent_details['member_names'][highest_level]
+    self_name_model = geographical_parent_details['member_names'][lowest_level]
+    match_list = highest_level_list
+    query = eval(model_name + '.objects.filter(' + parent_name_model + '__in=match_list)')
+    lowest_level = geographical_parent_details['base']
+    lowest_level_model_name = geographical_parent_details['base_model_name']
+    if results_by_lowest_level == 1:
+        query_values = list(query.values(parent_name_model, self_name_model, lowest_level_model_name))
+        list_values = list(query.values_list(lowest_level_model_name, flat=True))
+    else:
+        query_values = list(query.values(parent_name_model, self_name_model))
+        list_values = list(query.values_list(self_name_model, flat=True))
+    list_values_distinct = list(set([x for x in list_values if x is not None]))
+    final_values_with_null = [dict(t) for t in {tuple(d.items()) for d in query_values}]
+    final_dict = [d for d in final_values_with_null if all(d.values())]
+    return {'final_dict':final_dict, 'single_list':list_values_distinct}
 
-def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None, grouping_level=None):
-    grouping_level = grouping_level[0]
+
+def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
+                                grouping_level=None, all_results = []):
+    #grouping_level = grouping_level[0]
     second_lowest_parent = count_details_parent_map[lowest_level]['parent']
     second_lowest_parent_name_model = count_details_parent_map[lowest_level]['parent_name_model']
     if ',' in second_lowest_parent or ',' in second_lowest_parent_name_model:
@@ -533,7 +519,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     curr_level_id = 0
     last_level_id = len(desc_sequence) - 1
 
-    all_results = []
 
     while curr_level_id < last_level_id:
         curr_level = desc_sequence[curr_level_id]
@@ -547,7 +532,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             if default_value_type in parents:
                 value_type_index = parents.index(default_value_type)
                 parent_model_name = parent_model_names[value_type_index]
-            #parent_model_name = default_value_type if default_value_type in parent_model_names else parent_model_names[-1]
         else:
             parent_model_names = [parent_model_name]
 
@@ -630,12 +614,16 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     ]
                 )
                 query = list(query)
+                if isinstance(all_results[0],dict):
+                    all_results = [all_results]
                 all_results.append(query)
             # this is not complete yet
             elif database_type == 'mysql':
                 first_part_query = model_name + '.objects.filter('
                 full_query = first_part_query + parent_model_name + '__in=match_list)'
                 query = list(eval(full_query).values(self_model_name, parent_model_name))
+                if isinstance(all_results[0],dict):
+                    all_results = [all_results]
                 all_results.append(query)
                 next_level_match_array = [x[self_model_name] for x in query if x[self_model_name] is not None]
                 if storage_type == 'count':
@@ -648,6 +636,10 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             print("pass")
         curr_level_id = curr_level_id+1
     new_results = convert_dict_arrays_keys_to_standard_names(all_results)
+    print 'new_results', new_results
+    # if len(new_results)==1 and isinstance(new_results[0],list) and len(new_results[0])==1:
+    #     new_results = new_results[0]
+    print 'grouping level', grouping_level
     single_array_results = merge_dict_array_array_single(new_results,grouping_level)
     return single_array_results
 

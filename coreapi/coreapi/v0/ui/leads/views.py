@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
 from models import (LeadsFormContacts, get_leads_summary, LeadsPermissions, get_leads_summary_all,
-                    get_details_by_higher_level, geographical_parent_details)
+                    get_details_by_higher_level, geographical_parent_details, get_details_by_higher_level_geographical)
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
@@ -943,6 +943,7 @@ class GetLeadsDataGeneric(APIView):
         mongo_query = get_leads_summary_all(data_scope, data_point, raw_data, metrics)
         return handle_response('', data=mongo_query, success=True)
 
+
 class GetListsCounts(APIView):
     @staticmethod
     def put(request):
@@ -962,14 +963,11 @@ class GeographicalLevelsTest(APIView):
         highest_level = request.data['highest_level']
         lowest_level = request.data['lowest_level'] if 'lowest_level' in request.data else 'supplier'
         highest_level_list = request.data['highest_level_list']
-        model_name = geographical_parent_details['model_name']
-        parent_name_model = geographical_parent_details['member_names'][highest_level]
-        self_name_model = geographical_parent_details['member_names'][lowest_level]
-        match_list = highest_level_list
-        query = model_name+'.objects.filter('+parent_name_model+'__in=match_list)'
-        query_values = list(eval(query).values(parent_name_model,self_name_model))
-        final_values_with_null = [dict(t) for t in {tuple(d.items()) for d in query_values}]
-        final_values = [d for d in final_values_with_null if all(d.values())]
-        return handle_response('',data=final_values,success=True)
+        results_by_lowest_level = request.data['results_by_lowest_level'] \
+            if 'results_by_lowest_level' in request.data else 0
+        result_dict = get_details_by_higher_level_geographical(
+            highest_level, highest_level_list, lowest_level, results_by_lowest_level)
+        return handle_response('',data={'final_dict':result_dict['final_dict'],
+                                        'single_list':result_dict['single_list']},success=True)
 
 
