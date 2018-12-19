@@ -1018,6 +1018,8 @@ def get_mean_median_mode(all_suppliers_list, list_of_attributes):
             try:
                 percentage_by_flat_of_attribute[attribute] = sorted(percentage_by_flat_of_attribute[attribute])
                 return_dict[attribute]['mode_percent_by_flat'] = calculate_mode(percentage_by_flat_of_attribute[attribute])
+                return_dict[attribute]['median_percent_by_flat'] = np.median(percentage_by_flat_of_attribute[attribute])
+                return_dict[attribute]['mean_percent_by_flat'] = np.average(percentage_by_flat_of_attribute[attribute])
             except Exception as ex:
                 print ex
                 return_dict[attribute]['mode_percent_by_flat'] = None
