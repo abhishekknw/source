@@ -50,7 +50,7 @@ class BaseInventoryAPIById(APIView):
         base_inventory = {
             "_id": str(base_inventory._id),
             "name": base_inventory.name,
-            "entity_attributes": base_inventory.base_attributes
+            "base_attributes": base_inventory.base_attributes
         }
         return handle_response('', data=base_inventory, success=True)
 

@@ -424,14 +424,18 @@ class LeadsFormBulkEntry(APIView):
                     mongo_client.leads.insert_one(lead_dict)
                     entry_id = entry_id + 1  # will be saved in the end
         missing_societies.sort()
-        print "missing societies", missing_societies
-        print "unresolved_societies", list(set(unresolved_societies))
-        print "more_than_ones_same_shortlisted_society", list(set(more_than_ones_same_shortlisted_society))
-        print "inv_activity_assignment_missing_societies", list(set(inv_activity_assignment_missing_societies))
-        print "inv_activity_assignment_activity_date_missing_societies", list(set(inv_activity_assignment_activity_date_missing_societies))
-        print "inv_activit_missing_societies", list(set(inv_activity_missing_societies))
-        print "not_present_in_shortlisted_societies", list(set(not_present_in_shortlisted_societies))
-        return handle_response({}, data='success', success=True)
+        missing_dict = {
+            "missing societies": missing_societies,
+            "unresolved_societies": list(set(unresolved_societies)),
+            "more_than_ones_same_shortlisted_society": list(set(more_than_ones_same_shortlisted_society)),
+            "inv_activity_assignment_missing_societies": list(set(inv_activity_assignment_missing_societies)),
+            "inv_activity_assignment_activity_date_missing_societies": list(
+                set(inv_activity_assignment_activity_date_missing_societies)),
+            "inv_activit_missing_societies": list(set(inv_activity_missing_societies)),
+            "not_present_in_shortlisted_societies": list(set(not_present_in_shortlisted_societies))
+        }
+        print missing_dict
+        return handle_response({}, data=missing_dict, success=True)
 
 
 class LeadsFormEntry(APIView):
