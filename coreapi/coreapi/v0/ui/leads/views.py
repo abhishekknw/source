@@ -424,14 +424,18 @@ class LeadsFormBulkEntry(APIView):
                     mongo_client.leads.insert_one(lead_dict)
                     entry_id = entry_id + 1  # will be saved in the end
         missing_societies.sort()
-        print "missing societies", missing_societies
-        print "unresolved_societies", list(set(unresolved_societies))
-        print "more_than_ones_same_shortlisted_society", list(set(more_than_ones_same_shortlisted_society))
-        print "inv_activity_assignment_missing_societies", list(set(inv_activity_assignment_missing_societies))
-        print "inv_activity_assignment_activity_date_missing_societies", list(set(inv_activity_assignment_activity_date_missing_societies))
-        print "inv_activit_missing_societies", list(set(inv_activity_missing_societies))
-        print "not_present_in_shortlisted_societies", list(set(not_present_in_shortlisted_societies))
-        return handle_response({}, data='success', success=True)
+        missing_dict = {
+            "missing societies": missing_societies,
+            "unresolved_societies": list(set(unresolved_societies)),
+            "more_than_ones_same_shortlisted_society": list(set(more_than_ones_same_shortlisted_society)),
+            "inv_activity_assignment_missing_societies": list(set(inv_activity_assignment_missing_societies)),
+            "inv_activity_assignment_activity_date_missing_societies": list(
+                set(inv_activity_assignment_activity_date_missing_societies)),
+            "inv_activit_missing_societies": list(set(inv_activity_missing_societies)),
+            "not_present_in_shortlisted_societies": list(set(not_present_in_shortlisted_societies))
+        }
+        print missing_dict
+        return handle_response({}, data=missing_dict, success=True)
 
 
 class LeadsFormEntry(APIView):
@@ -726,7 +730,10 @@ class GenerateDemoData(APIView):
         # copy leads form data
         leads_form_object = mongo_client.leads_forms.find({})
         leads_form_all = list(leads_form_object)
+        allchar = string.ascii_letters.lower()
         for curr_form in leads_form_all:
+            curr_form['leads_form_name'] = "".join(random.choice(allchar) for x in range(randint(6, 10)))
+            curr_form['leads_form_name'] = curr_form['leads_form_name'].title() + " Lead Form"
             mongo_test.leads_forms.insert_one(curr_form)
         for curr_lead in leads_data_all:
             leads_form_id = curr_lead['leads_form_id']
@@ -741,7 +748,6 @@ class GenerateDemoData(APIView):
                 key_type = curr_leads_form_item['key_type']
                 if 'number' in key_name.lower() or 'phone' in key_name.lower():
                     curr_data_item['value'] = randint(9000000000,9999999999)
-                allchar = string.ascii_letters.lower()
                 if 'email' in key_type.lower():
                     r1 = "".join(random.choice(allchar) for x in range(randint(4, 6)))
                     r2 = "".join(random.choice(allchar) for x in range(randint(4, 6)))
