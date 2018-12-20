@@ -893,7 +893,7 @@ class ChecklistPermissionsSelfAPI(APIView):
     def get(request):
         organisation_id = get_user_organisation_id(request.user)
         checklist_permissions = list(ChecklistPermissions.objects.raw(
-            {"user_id": int(request.user.profile_id), "organisation_id": organisation_id}))
+            {"profile_id": int(request.user.profile_id), "organisation_id": organisation_id}))
         all_user_id_list = []
         all_profile_id_list = []
         for permission in checklist_permissions:

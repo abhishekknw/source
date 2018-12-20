@@ -6,7 +6,7 @@ from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntrie
                    LeadsSummary, GetLeadsEntriesByCampaignId, GenerateLeadDataExcel,
                    SanitizeLeadsData, GenerateDemoData, UpdateLeadsDataSHA256, UpdateGlobalHotLeadCriteria,
                    UpdateLeadsDataIsHot, InsertExtraLeads, LeadsPermissionsAPI, LeadsPermissionsSelfAPI,
-                   LeadsPermissionsByUserIdAPI, GetLeadsFormById, GetLeadsDataGeneric,GetAllLeadFormsByCampaigns,
+                   LeadsPermissionsByProfileIdAPI, GetLeadsFormById, GetLeadsDataGeneric,GetAllLeadFormsByCampaigns,
                     UpdateLeadDate, DeleteExtraLeadEntry, DeleteLeadItem, GetLeadsEntry, UpdateLeadsEntry)
 
 urlpatterns = [
@@ -36,7 +36,7 @@ urlpatterns = [
     url(r'^(?P<form_id>[0-9]+)/insert_extra_leads/$', InsertExtraLeads.as_view()),
     url(r'^permissions/$', LeadsPermissionsAPI.as_view()),
     url(r'^permissions/self/$', LeadsPermissionsSelfAPI.as_view()),
-    url(r'^permissions/(?P<user_id>[A-Z_a-z0-9]+)/$', LeadsPermissionsByUserIdAPI.as_view()),
+    url(r'^permissions/(?P<profile_id>[A-Z_a-z0-9]+)/$', LeadsPermissionsByProfileIdAPI.as_view()),
     url(r'^list_all_leads_forms_by_campaign/$', GetAllLeadFormsByCampaigns.as_view()),
     url(r'^get-leads-data-generic/$', GetLeadsDataGeneric.as_view()),
     url(r'^(?P<campaign_id>[A-Z_a-z0-9]+)/update-lead-date/(?P<supplier_id>[A-Z_a-z0-9]+)/$', UpdateLeadDate.as_view()),
