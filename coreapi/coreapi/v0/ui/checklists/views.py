@@ -232,6 +232,9 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
     top_level_rows = [x for x in total_rows if x.count('.')==0]
     row_dict_all = {}
 
+    if not (set(top_level_rows)<set(exist_rows)):
+        return [False, 'some rows do not exist']
+
     for curr_row in top_level_rows:
         curr_level = 0
         rowid = int(curr_row)
@@ -244,6 +247,8 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
                 print 'already deleted row id: ', rowid
                 break
             exist_row_data = exist_row_info['data']
+        else:
+            return [False,'row '+str(rowid)+' does not exist']
         new_row_data = checklist_data[curr_row]
 
         row_dict = {"data": {}, "created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id,
@@ -303,7 +308,7 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
     for curr_row_order_id in row_dict_all_sorted.keys():
         curr_row_dict = row_dict_all_sorted[curr_row_order_id]
         mongo_client.checklist_data.insert_one(curr_row_dict)
-    return
+    return [True,'']
 
 
 class ChecklistEntry(APIView):
@@ -335,7 +340,9 @@ class ChecklistEntry(APIView):
             campaign_id = checklist['campaign_id']
             new_notifications = request.data['notifications'] if 'notifications' in request.data else None
             del request.data['notifications']
-            enter_row_to_mongo(rows_data, supplier_id, campaign_id, checklist)
+            rows_entered = enter_row_to_mongo(rows_data, supplier_id, campaign_id, checklist)
+            if rows_entered[0]==False:
+                return handle_response({}, data=rows_entered[1], success=False)
             create_new_notification_bulk(request.user, new_notifications, "checklist")
             data = 'success'
             success = True
