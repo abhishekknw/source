@@ -6,7 +6,7 @@ connect("mongodb://localhost:27017/machadalo", alias="mongo_app")
 
 
 class ChecklistPermissions(MongoModel):
-    user_id = fields.IntegerField()
+    profile_id = fields.IntegerField()
     organisation_id = fields.CharField()
     checklist_permissions = fields.ListField()  # CREATE, UPDATE, READ, DELETE, FREEZE, UNFREEZE, FILL
     allowed_campaigns = fields.ListField()  #  All if empty
