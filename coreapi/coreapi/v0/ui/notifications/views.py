@@ -20,7 +20,8 @@ def create_new_notification(user, to_id, notification_msg, module_name):
 
 def create_new_notification_bulk(user, notification_list, module_name):
     for notification in notification_list:
-        create_new_notification(user, notification["to_id"], notification["notification_msg"], module_name)
+        for to_id in notification["to_id"]:
+            create_new_notification(user, to_id, notification["notification_msg"], module_name)
     return
 
 
