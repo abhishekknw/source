@@ -199,7 +199,7 @@ def get_leads_summary(campaign_list=None, user_start_datetime=None,user_end_date
 
 level_name_by_model_id = {
     "supplier_id": "supplier", "object_id": "supplier", "campaign_id": "campaign", "proposal_id": "campaign",
-    "flat_count": "flat"
+    "flat_count": "flat","total_negotiated_price":"cost"
 }
 
 def find_key_alias_dict_array(dict_array, key_name):
@@ -369,7 +369,6 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['lea
         else:
             curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
                                                   default_value_type, grouping_level_first)
-        print curr_output
         individual_metric_output[lowest_level] = curr_output
 
     matching_format_metrics = get_similar_structure_keys(individual_metric_output, grouping_level)
@@ -422,9 +421,10 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['lea
             metric_names.append(metric_name)
         #derived_array = []
         for curr_dict in derived_array:
+            print curr_dict
             nr_value = curr_dict[nr] if nr in curr_dict else curr_dict[reverse_map[nr]]
             dr_value = curr_dict[dr] if dr in curr_dict else curr_dict[reverse_map[dr]]
-            result_value = eval(str(nr_value)+op+str(dr_value))
+            result_value = eval(str(nr_value)+op+str(dr_value)) if dr_value>0 and dr_value is not None else None
             curr_dict[metric_name]=result_value
 
     return [individual_metric_output, single_array, derived_array]
@@ -441,6 +441,9 @@ count_details_parent_map = {
              'self_name_model': 'entry_id', 'parent_name_model': 'supplier_id,campaign_id', 'storage_type': 'count'},
     'hot_lead': {'parent': 'supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                  'self_name_model': 'is_hot', 'parent_name_model': 'supplier_id,campaign_id', 'storage_type': 'condition'},
+    'cost': {'parent': 'supplier,campaign', 'model_name':'ShortlistedSpaces', 'database_type': 'mysql',
+             'self_name_model': 'total_negotiated_price', 'parent_name_model': 'object_id,proposal_id',
+             'storage_type': 'sum'}
 }
 
 count_details_kids_map = {
@@ -519,7 +522,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     curr_level_id = 0
     last_level_id = len(desc_sequence) - 1
 
-
     while curr_level_id < last_level_id:
         curr_level = desc_sequence[curr_level_id]
         next_level = desc_sequence[curr_level_id+1]
@@ -578,7 +580,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 # count = mongo_client[model_name].find({}).distinct(self_model_name).length
             elif database_type == 'mysql':
                 if grouping_level in parents:
-                    print 'true'
                     all_results.append(query)
                 next_level_match_list = list(set([x[self_model_name] for x in query]))
             else:
@@ -614,33 +615,38 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     ]
                 )
                 query = list(query)
-                if isinstance(all_results[0],dict):
-                    all_results = [all_results]
-                all_results.append(query)
+                if not query==[]:
+                    all_results.append(query)
             # this is not complete yet
             elif database_type == 'mysql':
                 first_part_query = model_name + '.objects.filter('
                 full_query = first_part_query + parent_model_name + '__in=match_list)'
-                query = list(eval(full_query).values(self_model_name, parent_model_name))
-                if isinstance(all_results[0],dict):
-                    all_results = [all_results]
+                all_values = parent_model_names
+                all_values.append(self_model_name)
+                #query = list(eval(full_query).values(self_model_name, parent_model_names))
+                query = list(eval(full_query).values(*all_values))
                 all_results.append(query)
                 next_level_match_array = [x[self_model_name] for x in query if x[self_model_name] is not None]
                 if storage_type == 'count':
                     next_level_match_list = len(next_level_match_array)
                 else:
+                    next_level_match_array=[int(x) for x in next_level_match_array]
                     next_level_match_list = [sum(next_level_match_array)]
             else:
                 print("database does not exist")
         else:
             print("pass")
         curr_level_id = curr_level_id+1
-    new_results = convert_dict_arrays_keys_to_standard_names(all_results)
-    print 'new_results', new_results
-    # if len(new_results)==1 and isinstance(new_results[0],list) and len(new_results[0])==1:
-    #     new_results = new_results[0]
-    print 'grouping level', grouping_level
-    single_array_results = merge_dict_array_array_single(new_results,grouping_level)
+        print all_results
+        if not len(all_results) == 0 and isinstance(all_results[0], dict):
+            all_results = [all_results]
+    if not all_results==[]:
+        new_results = convert_dict_arrays_keys_to_standard_names(all_results)
+        print 'new_results', new_results
+        print 'grouping level', grouping_level
+        single_array_results = merge_dict_array_array_single(new_results,grouping_level)
+    else:
+        single_array_results = []
     return single_array_results
 
 
