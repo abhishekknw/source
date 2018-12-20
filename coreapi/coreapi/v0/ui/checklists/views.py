@@ -344,7 +344,8 @@ class ChecklistEntry(APIView):
             rows_entered = enter_row_to_mongo(rows_data, supplier_id, campaign_id, checklist)
             if rows_entered[0]==False:
                 return handle_response({}, data=rows_entered[1], success=False)
-            create_new_notification_bulk(request.user, new_notifications, "checklist")
+            if new_notifications:
+                create_new_notification_bulk(request.user, new_notifications, "checklist")
             data = 'success'
             success = True
 
