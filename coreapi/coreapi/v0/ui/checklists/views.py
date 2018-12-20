@@ -230,9 +230,10 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
 
     #for row in total_rows:
     top_level_rows = [x for x in total_rows if x.count('.')==0]
+    top_level_rows_int = [int(x) for x in total_rows if x.count('.')==0]
     row_dict_all = {}
 
-    if not (set(top_level_rows)<set(exist_rows)):
+    if not (set(top_level_rows_int)<=set(exist_rows)):
         return [False, 'some rows do not exist']
 
     for curr_row in top_level_rows:
