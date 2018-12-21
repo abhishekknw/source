@@ -365,15 +365,11 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['lea
                     highest_level, highest_level_values, lowest_geographical_level)
                 curr_dict = result_dict['final_dict']
                 curr_highest_level_values = result_dict['single_list']
-            # highest_level = lowest_geographical_level
-            # highest_level_values = curr_highest_level_values
-            # default_value_type = highest_level
-            # grouping_level = highest_level
             lgl = lowest_geographical_level
             curr_output = get_details_by_higher_level(lgl, lowest_level, curr_highest_level_values, lgl, lgl, curr_dict)
         else:
             curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
-                                                  default_value_type, grouping_level_first)
+                                                      default_value_type, grouping_level_first)
         individual_metric_output[lowest_level] = curr_output
 
     matching_format_metrics = get_similar_structure_keys(individual_metric_output, grouping_level)
@@ -399,38 +395,67 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['lea
     derived_array = copy.deepcopy(single_array)
     metric_names = []
     for curr_metric in metrics:
-        op = '/'
-        split_metric = curr_metric.split(op)
+        a_code = curr_metric[0]
+        b_code = curr_metric[1]
+        op = curr_metric[2]
+        a_source = raw_data
+        b_source = raw_data
 
-        if not split_metric[0][0] == 'm':
-            nr_source = raw_data
-            nr_index = int(split_metric[0])-1
-            nr = nr_source[nr_index]
+        if type(a_code) is unicode:
+            if a_code[0] == 'm':
+                a_code = a_code[1:]
+                a = metric_names[int(a_code) - 1]
+                a_source = metric_names
+            else:
+                a = raw_data[int(a_code)-1]
         else:
-            nr_source = metric_names
-            nr_index = int(split_metric[0][1:])-1
-            nr = nr_source[nr_index]
-
-        if not split_metric[1][0] == 'm':
-            dr_source = raw_data
-            dr_index = int(split_metric[1])-1
-            dr = raw_data[dr_index]
+            a = a_code
+        if type(b_code) is unicode:
+            if b_code[0] == 'm':
+                b_code = b_code[1:]
+                b = metric_names[int(b_code) - 1]
+                b_source = metric_names
+            else:
+                b = raw_data[int(b_code)-1]
         else:
-            dr_source = metric_names
-            dr_index = int(split_metric[1][1:])-1
-            dr = metric_names[dr_index]
+            b = b_code
 
-
-        if nr in nr_source and dr in dr_source:
-            metric_name = nr + op + dr
-            metric_names.append(metric_name)
-        #derived_array = []
+        # op = '/'
+        # split_metric = curr_metric.split(op)
+        #
+        # if not split_metric[0][0] == 'm':
+        #     nr_source = raw_data
+        #     nr_index = int(split_metric[0])-1
+        #     nr = nr_source[nr_index]
+        # else:
+        #     nr_source = metric_names
+        #     nr_index = int(split_metric[0][1:])-1
+        #     nr = nr_source[nr_index]
+        #
+        # if not split_metric[1][0] == 'm':
+        #     dr_source = raw_data
+        #     dr_index = int(split_metric[1])-1
+        #     dr = raw_data[dr_index]
+        # else:
+        #     dr_source = metric_names
+        #     dr_index = int(split_metric[1][1:])-1
+        #     dr = metric_names[dr_index]
+        # if nr in nr_source and dr in dr_source:
+        metric_name_a = curr_metric[3]['nr'] if len(curr_metric) > 3 and 'nr' in curr_metric[3] else a
+        metric_name_b = curr_metric[3]['dr'] if len(curr_metric) > 3 and 'dr' in curr_metric[3] else b
+        metric_name_op = curr_metric[3]['op'] if len(curr_metric) > 3 and 'op' in curr_metric[3] else op
+        metric_name = str(metric_name_a) + metric_name_op + str(metric_name_b)
+        metric_names.append(metric_name)
         for curr_dict in derived_array:
-            print curr_dict
-            nr_value = curr_dict[nr] if nr in curr_dict else curr_dict[reverse_map[nr]]
-            dr_value = curr_dict[dr] if dr in curr_dict else curr_dict[reverse_map[dr]]
-            result_value = eval(str(nr_value)+op+str(dr_value)) if dr_value>0 and dr_value is not None else None
-            curr_dict[metric_name]=result_value
+            nr_value = a
+            dr_value = b
+            if type(nr_value) is str or type(nr_value) is unicode:
+                nr_value = curr_dict[a] if a in curr_dict else curr_dict[reverse_map[a]]
+            if type(dr_value) is str or type(dr_value) is unicode:
+                dr_value = curr_dict[b] if b in curr_dict else curr_dict[reverse_map[b]]
+            result_value = eval(str(nr_value)+op+str(dr_value)) if \
+                not dr_value == 0 and nr_value is not None and dr_value is not None else None
+            curr_dict[metric_name] = result_value
 
     return [individual_metric_output, single_array, derived_array]
 

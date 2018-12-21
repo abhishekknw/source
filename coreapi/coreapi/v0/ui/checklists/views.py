@@ -948,7 +948,7 @@ class ChecklistUnsavedOperators(APIView):
         return handle_response('', data=[numeric_dict,result_map, final_result], success=True)
 
 
-# used to get checklist metrics
+# used to store, retrieve and manage operator details
 class ChecklistSavedOperators(APIView):
 
     @staticmethod
@@ -988,3 +988,8 @@ class ChecklistSavedOperators(APIView):
         operator_response = mongo_client.checklist_operators.update_one(
             {"operator_id": int(operator_id)}, {"$set": {'status': 'inactive'}})
         return handle_response('', data="success", success=True)
+
+# # used to get results from execution of saved operators
+# class ChecklistSavedOperatorsResult(APIView):
+#
+#
