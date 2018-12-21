@@ -944,7 +944,7 @@ class ChecklistUnsavedOperators(APIView):
             curr_result_str = 'np.'+curr_operation+'(numeric_dict["'+column_id+'"])'
             curr_result = eval(curr_result_str)
             result_map[result_index] = curr_result
-        final_result = process_metrics(result_operations,result_map)
+        final_result = process_metrics(result_operations,result_map)[-1]
         return handle_response('', data=[numeric_dict,result_map, final_result], success=True)
 
 
@@ -989,7 +989,48 @@ class ChecklistSavedOperators(APIView):
             {"operator_id": int(operator_id)}, {"$set": {'status': 'inactive'}})
         return handle_response('', data="success", success=True)
 
-# # used to get results from execution of saved operators
-# class ChecklistSavedOperatorsResult(APIView):
-#
-#
+
+# used to get results from execution of saved operators
+class ChecklistSavedOperatorsResult(APIView):
+    @staticmethod
+    def get(request, checklist_id):
+        operator_id = request.query_params.get('operator_id',None)
+        match_dict = {"$and": [{"checklist_id": int(checklist_id)},  {"status": {"$ne": "inactive"}}]}
+        if operator_id is not None:
+            match_dict['operator_id'] = int(operator_id)
+        operator_response = list(mongo_client.checklist_operators.find(match_dict,{"_id":0}))
+        checklist_data_list = list(mongo_client.checklist_data.find({"checklist_id":int(checklist_id)}))
+        # operator_response = list(ChecklistOperators.objects.raw({"$and": [{"checklist_id": int(checklist_id)}, {
+        #     "status": {"$ne": "inactive"}}]}))
+        result_dict = {}
+
+        for curr_response in operator_response:
+            column_ids = curr_response['column_ids']
+            result_operations = curr_response['result_operations']
+            column_operations = curr_response['column_operations']
+            operator_id = curr_response['operator_id']
+            column_value_dict = {}
+            for curr_dict in checklist_data_list:
+                for curr_column in column_ids:
+                    if curr_column not in curr_dict['data']:
+                        continue
+                    curr_column_value = curr_dict['data'][curr_column]['cell_value']
+                    if curr_column not in column_value_dict:
+                        column_value_dict[curr_column] = []
+                    column_value_dict[curr_column].append(curr_column_value)
+            if column_value_dict == {}:
+                return handle_response('', data=column_value_dict, success=True)
+            numeric_dict = get_numeric_in_array_dict(column_value_dict)
+            result_map = {}
+            for column_id in column_ids:
+                curr_column_operations_array = column_operations[column_id]
+                result_index = curr_column_operations_array[0]
+                curr_operation = curr_column_operations_array[1]
+                curr_col_values = numeric_dict[column_id]
+                curr_result_str = 'np.' + curr_operation + '(numeric_dict["' + column_id + '"])'
+                curr_result = eval(curr_result_str)
+                result_map[result_index] = curr_result
+            curr_result = process_metrics(result_operations, result_map)[-1]
+            result_dict[str(operator_id)] = {'result': curr_result, 'column_operations': column_operations,
+                                             'result_operations':result_operations}
+        return handle_response('', data=result_dict, success=True)
