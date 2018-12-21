@@ -1868,3 +1868,46 @@ class GetPermissionBoxImages(APIView):
 #             })
 #         return ui_utils.handle_response(class_name, data={}, success=True)
 
+
+class CampaignWiseSummary(APIView):
+    @staticmethod
+    def get(request):
+        user_id = request.user.id
+        all_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id).all()
+        all_campaign_ids = [campaign.campaign_id for campaign in all_campaigns]
+        leads_summary_by_campaign = get_leads_summary_by_campaign(all_campaign_ids)
+        campaign_summary = {}
+        all_campaign_spaces = ShortlistedSpaces.objects.filter(proposal_id__in=all_campaign_ids).all()
+        campaign_supplier_map = {}
+        reverse_campaign_supplier_map = {}
+        all_supplier_ids = []
+        for space in all_campaign_spaces:
+            if space.proposal_id not in campaign_supplier_map:
+                campaign_supplier_map[space.proposal_id] = []
+            campaign_supplier_map[space.proposal_id].append(space.object_id)
+            if space.object_id not in all_supplier_ids:
+                all_supplier_ids.append(space.object_id)
+            reverse_campaign_supplier_map[space.object_id] = space.proposal_id
+        all_society_flat_counts = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).values(
+            "supplier_id", "flat_count")
+        campaign_flat_count_map = {}
+        for society in all_society_flat_counts:
+            campaign_id = reverse_campaign_supplier_map[society["supplier_id"]]
+            if campaign_id not in campaign_flat_count_map:
+                campaign_flat_count_map[campaign_id] = 0
+            if society["flat_count"]:
+                campaign_flat_count_map[campaign_id] += society["flat_count"]
+        for lead_summary in leads_summary_by_campaign:
+            flat_count = campaign_flat_count_map[lead_summary["campaign_id"]]
+            campaign_summary[lead_summary["campaign_id"]] = {
+                "total_leads_count": lead_summary["total_leads_count"],
+                "hot_leads_count": lead_summary["hot_leads_count"],
+                "hot_leads_percentage": lead_summary["hot_leads_percentage"],
+                "total_supplier_count": len(campaign_supplier_map[lead_summary["campaign_id"]]),
+                "total_flat_count": flat_count,
+                "hot_leads_percentage_by_flat": float(lead_summary["hot_leads_count"]) / float(
+                    flat_count)*100 if flat_count > 0 else None,
+                "total_leads_percentage_by_flat": float(lead_summary["total_leads_count"]) / float(
+                    flat_count)*100 if flat_count > 0 else None
+            }
+        return ui_utils.handle_response({}, data=campaign_summary, success=True)
