@@ -1177,6 +1177,7 @@ class DeleteExtraLeadEntry(APIView):
         mongo_client.leads_extras.remove({"_id":ObjectId(id)})
         return handle_response('', data={"success": True}, success=True)
 
+
 class GetLeadsEntry(APIView):
     @staticmethod
     def get(request, form_id, supplier_id, entry_id):
@@ -1200,17 +1201,28 @@ class GetLeadsEntry(APIView):
 
         return handle_response('', data=lead_form_dict, success=True)
 
+
 class UpdateLeadsEntry(APIView):
     @staticmethod
     def put(request, form_id, supplier_id, entry_id):
         data = request.data
-        lead_instance = mongo_client.leads.find({'leads_form_id': int(form_id), 'supplier_id': supplier_id, 'entry_id': int(entry_id)})[0]
-        lead_entry_map_by_item_id = {item['item_id']:item for k,item in data.iteritems()}
-        for lead_item in lead_instance['data']:
+        lead_dict = list(mongo_client.leads.find({'leads_form_id': int(form_id), 'supplier_id': supplier_id, 'entry_id': int(entry_id)}))
+        lead_form = mongo_client.leads_forms.find({"leads_form_id": int(form_id)})[0]
+        if len(lead_dict) == 0:
+            return handle_response('', data={"error_msg": "lead_not_present"}, success=False)
+        lead_dict = lead_dict[0]
+        lead_entry_map_by_item_id = {item['item_id']: item for k, item in data.iteritems()}
+        for lead_item in lead_dict['data']:
             lead_item['value'] = lead_entry_map_by_item_id[int(lead_item['item_id'])]['value']
-        mongo_client.leads.update_one(
-            {"leads_form_id": int(form_id), "entry_id": int(entry_id), "supplier_id": supplier_id},
-            {"$set": {"data": lead_instance}})
+
+        lead_dict["is_hot"] = calculate_is_hot(lead_dict, lead_form['global_hot_lead_criteria'])
+        lead_sha_256 = create_lead_hash(lead_dict)
+        lead_dict["lead_sha_256"] = lead_sha_256
+        lead_already_exist = True if len(list(mongo_client.leads.find({"lead_sha_256": lead_sha_256}))) > 0 else False
+        if not lead_already_exist:
+            mongo_client.leads.update_one(
+                {"leads_form_id": int(form_id), "entry_id": int(entry_id), "supplier_id": supplier_id},
+                {"$set": {"data": lead_dict["data"], "lead_sha_256": lead_sha_256, "is_hot": lead_dict["is_hot"]}})
         return handle_response('', data={"success": True}, success=True)
 
 
