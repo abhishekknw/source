@@ -6597,6 +6597,8 @@ def create_inventory_ids(supplier_object, filter_code, is_import_sheet=False, su
             tower_count = supplier_inv_mapping[supplier_object.supplier_id][filter_code['id']]
             if tower_count is None:
                 tower_count = 1
+        if str(filter_code['id']) == 'SB':
+            tower_count = 2
         for count in range(int(tower_count)):
             data = Struct(adinventory_id='TESTINVID' + str(filter_code['id']) + '00' + str(count + 1))
             inventory_ids.append(data)
