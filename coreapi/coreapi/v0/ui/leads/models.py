@@ -233,6 +233,8 @@ def merge_dict_array_dict_single(metric_dict,key_name):
     local_key_names = {}
     for curr_metric in metric_dict:
         curr_array = metric_dict[curr_metric]
+        if curr_array == []:
+            continue
         local_key_name = find_key_alias_dict_array(curr_array, key_name)
         local_key_names[curr_metric] = local_key_name
         if curr_array==first_array:
@@ -255,7 +257,8 @@ def merge_dict_array_dict_single(metric_dict,key_name):
 
 def merge_dict_array_array_single(array, key_name):
     final_array=[]
-    print array, key_name
+    if array==[]:
+        return array
     first_array = array[0]
     first_array_keys = first_array[0].keys()
     desired_key_values = [x[key_name] for x in first_array]
@@ -281,6 +284,8 @@ def get_similar_structure_keys(main_dict, required_keys):
     similar_array = []
     for key_name in keys:
         curr_array = main_dict[key_name]
+        if curr_array == []:
+            continue
         curr_keys = curr_array[0].keys()
         curr_keys = [level_name_by_model_id[x] if x in level_name_by_model_id else x for x in
                          curr_keys]
@@ -383,7 +388,7 @@ def get_leads_summary_all(data_scope = None, data_point = None, raw_data = ['lea
         combined_array.append(new_dict)
 
     single_array = merge_dict_array_dict_single(individual_metric_output, grouping_level[0])
-    single_array_keys = single_array[0].keys()
+    single_array_keys = single_array[0].keys() if len(single_array)>0 else []
     reverse_map = {}
     for key in single_array_keys:
         reverse_key = level_name_by_model_id[key] if key in level_name_by_model_id else None
@@ -625,7 +630,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 all_values.append(self_model_name)
                 #query = list(eval(full_query).values(self_model_name, parent_model_names))
                 query = list(eval(full_query).values(*all_values))
-                all_results.append(query)
+                if not query==[]:
+                    all_results.append(query)
                 next_level_match_array = [x[self_model_name] for x in query if x[self_model_name] is not None]
                 if storage_type == 'count':
                     next_level_match_list = len(next_level_match_array)
@@ -640,7 +646,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         print all_results
         if not len(all_results) == 0 and isinstance(all_results[0], dict):
             all_results = [all_results]
-    if not all_results==[]:
+    print len(all_results)
+    if not len(all_results)==[]:
         new_results = convert_dict_arrays_keys_to_standard_names(all_results)
         print 'new_results', new_results
         print 'grouping level', grouping_level
