@@ -33,6 +33,7 @@ from v0.ui.proposal.models import ProposalInfo
 def is_user_permitted(permission_type, user, **kwargs):
     is_permitted = True
     validation_msg_dict = {'msg': None}
+    return is_permitted, validation_msg_dict
     leads_form_id = kwargs['leads_form_id'] if 'leads_form_id' in kwargs else None
     campaign_id = kwargs['campaign_id'] if 'campaign_id' in kwargs else None
     permission_list = list(LeadsPermissions.objects.raw({'user_id': user.id}))
@@ -446,7 +447,6 @@ class LeadsFormEntry(APIView):
             return handle_response('', data=validation_msg_dict, success=False)
         supplier_id = request.data['supplier_id']
         lead_form = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)})
-        lead_form['last_entry_id']
         entry_id = lead_form['last_entry_id'] + 1 if ('last_entry_id' in lead_form and lead_form['last_entry_id']) else 1
         campaign_id = lead_form['campaign_id']
         lead_data = request.data["leads_form_entries"]
@@ -1177,6 +1177,7 @@ class DeleteExtraLeadEntry(APIView):
         mongo_client.leads_extras.remove({"_id":ObjectId(id)})
         return handle_response('', data={"success": True}, success=True)
 
+
 class GetLeadsEntry(APIView):
     @staticmethod
     def get(request, form_id, supplier_id, entry_id):
@@ -1200,17 +1201,28 @@ class GetLeadsEntry(APIView):
 
         return handle_response('', data=lead_form_dict, success=True)
 
+
 class UpdateLeadsEntry(APIView):
     @staticmethod
     def put(request, form_id, supplier_id, entry_id):
         data = request.data
-        lead_instance = mongo_client.leads.find({'leads_form_id': int(form_id), 'supplier_id': supplier_id, 'entry_id': int(entry_id)})[0]
-        lead_entry_map_by_item_id = {item['item_id']:item for k,item in data.iteritems()}
-        for lead_item in lead_instance['data']:
+        lead_dict = list(mongo_client.leads.find({'leads_form_id': int(form_id), 'supplier_id': supplier_id, 'entry_id': int(entry_id)}))
+        lead_form = mongo_client.leads_forms.find({"leads_form_id": int(form_id)})[0]
+        if len(lead_dict) == 0:
+            return handle_response('', data={"error_msg": "lead_not_present"}, success=False)
+        lead_dict = lead_dict[0]
+        lead_entry_map_by_item_id = {item['item_id']: item for k, item in data.iteritems()}
+        for lead_item in lead_dict['data']:
             lead_item['value'] = lead_entry_map_by_item_id[int(lead_item['item_id'])]['value']
-        mongo_client.leads.update_one(
-            {"leads_form_id": int(form_id), "entry_id": int(entry_id), "supplier_id": supplier_id},
-            {"$set": {"data": lead_instance}})
+
+        lead_dict["is_hot"] = calculate_is_hot(lead_dict, lead_form['global_hot_lead_criteria'])
+        lead_sha_256 = create_lead_hash(lead_dict)
+        lead_dict["lead_sha_256"] = lead_sha_256
+        lead_already_exist = True if len(list(mongo_client.leads.find({"lead_sha_256": lead_sha_256}))) > 0 else False
+        if not lead_already_exist:
+            mongo_client.leads.update_one(
+                {"leads_form_id": int(form_id), "entry_id": int(entry_id), "supplier_id": supplier_id},
+                {"$set": {"data": lead_dict["data"], "lead_sha_256": lead_sha_256, "is_hot": lead_dict["is_hot"]}})
         return handle_response('', data={"success": True}, success=True)
 
 
