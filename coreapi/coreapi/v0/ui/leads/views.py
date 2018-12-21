@@ -33,6 +33,7 @@ from v0.ui.proposal.models import ProposalInfo
 def is_user_permitted(permission_type, user, **kwargs):
     is_permitted = True
     validation_msg_dict = {'msg': None}
+    return is_permitted, validation_msg_dict
     leads_form_id = kwargs['leads_form_id'] if 'leads_form_id' in kwargs else None
     campaign_id = kwargs['campaign_id'] if 'campaign_id' in kwargs else None
     permission_list = list(LeadsPermissions.objects.raw({'user_id': user.id}))
