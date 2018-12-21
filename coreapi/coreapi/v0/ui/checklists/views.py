@@ -688,12 +688,14 @@ def get_checklist_by_id(checklist_id):
         checklist_data = sorted(checklist_data, key=itemgetter('rowid'))
     values = []
     column_headers = []
-    row_headers = []
+    row_headers = {}
     checklist_info_columns_unsorted = checklist_info['data']
     checklist_info_deleted_columns = checklist_info['deleted_columns'] if 'deleted_columns' in checklist_info else []
     checklist_info_columns = sort_dict(checklist_info_columns_unsorted)
     columns_list = checklist_info_columns.keys()
     checklist_info_static_columns = checklist_info['static_columns'] if 'static_columns' in checklist_info else []
+    for column in checklist_info_static_columns:
+        row_headers[column] = []
     for column in columns_list:
         if str(column) not in checklist_info_deleted_columns:
             column_headers.append(checklist_info_columns[column])
@@ -708,9 +710,10 @@ def get_checklist_by_id(checklist_id):
         for column in curr_row_columns:
             value = curr_row_data[column]["cell_value"]
             column_id = column
+            #row_headers[column_id] = []
             if column not in checklist_info_deleted_columns:
                 if column in checklist_info_static_columns:
-                    row_headers.append({
+                    row_headers[column_id].append({
                         "cell_value": value,
                         "row_id": row_id
                     })
