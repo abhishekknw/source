@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
-from models import (get_leads_summary, LeadsPermissions, get_leads_summary_all)
+from models import (get_leads_summary, LeadsPermissions, get_leads_summary_all,
+                    get_details_by_higher_level, geographical_parent_details, get_details_by_higher_level_geographical)
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
@@ -173,14 +174,7 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
         leads_data_start_end = [x for x in leads_data_start if x['created_at'].date() <= kwargs['end_date']]
         leads_data_list = leads_data_start_end
 
-    # first_entry = (page_number-1)*leads_per_page+1
-    # if first_entry>len(leads_data_list):
-    #     leads_data_list_paginated = []
-    # else:
-    #     last_entry = min(page_number*leads_per_page, len(leads_data_list))
-    #     leads_data_list_sorted = list(set(leads_data_list))
-    #     leads_data_list_paginated = leads_data_list_sorted[first_entry:(last_entry-1)]
-    #leads_data_values_itemid = [x["data"] for x in leads_data_list]
+
     leads_data_values = []
     for entry in leads_data_list:
         curr_entry = entry['data']
@@ -1177,6 +1171,32 @@ class DeleteExtraLeadEntry(APIView):
         mongo_client.leads_extras.remove({"_id":ObjectId(id)})
         return handle_response('', data={"success": True}, success=True)
 
+
+class GetListsCounts(APIView):
+    @staticmethod
+    def put(request):
+        data = request.data
+        highest_level = data['highest_level']
+        lowest_level = data['lowest_level']
+        highest_level_list = data['highest_level_values']
+        default_value_type = data['default_value_type'] if 'default_value_type' in data else None
+        final_output = get_details_by_higher_level(highest_level,lowest_level,highest_level_list, default_value_type)
+        return handle_response('', data=final_output, success=True)
+
+
+class GeographicalLevelsTest(APIView):
+
+    @staticmethod
+    def put(request):
+        highest_level = request.data['highest_level']
+        lowest_level = request.data['lowest_level'] if 'lowest_level' in request.data else 'supplier'
+        highest_level_list = request.data['highest_level_list']
+        results_by_lowest_level = request.data['results_by_lowest_level'] \
+            if 'results_by_lowest_level' in request.data else 0
+        result_dict = get_details_by_higher_level_geographical(
+            highest_level, highest_level_list, lowest_level, results_by_lowest_level)
+        return handle_response('',data={'final_dict':result_dict['final_dict'],
+                                        'single_list':result_dict['single_list']},success=True)
 
 class GetLeadsEntry(APIView):
     @staticmethod
