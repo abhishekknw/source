@@ -28,7 +28,9 @@ AD_INVENTORY_CHOICES = (
     ('TROLLEY', 'TROLLEY'),
     ('WALL_INVENTORY', 'WALL_INVENTORY'),
     ('FLOOR_INVENTORY', 'FLOOR_INVENTORY'),
-    ('GATEWAY ARCH', 'GATEWAY ARCH')
+    ('GATEWAY ARCH', 'GATEWAY ARCH'),
+    ('SUNBOARD', 'SUNBOARD'),
+    ('BANNER','BANNER')
 )
 
 INVENTORY_ACTIVITY_TYPES = (
@@ -331,6 +333,10 @@ class InventorySummary(BaseModel):
     non_lit = models.BooleanField(default=False)
     gateway_arch_length = models.FloatField(default=0.0, null=True)
     gateway_arch_breadth = models.FloatField(default=0.0, null=True)
+    sun_board_allowed = models.BooleanField(default=False)
+    sun_board_length = models.FloatField(blank=True, null=True)
+    sun_board_breadth = models.FloatField(blank=True, null=True)
+    sun_board_height = models.FloatField(blank=True, null=True)
 
     class Meta:
 
@@ -374,6 +380,10 @@ class BannerInventory(models.Model):
     banner_location = models.CharField(db_column='BANNER_DISPLAY_LOCATION', max_length=50, blank=True)  # Field name made lowercase.
     banner_size = models.CharField(db_column='BANNER_SIZE', max_length=10, blank=True)  # Field name made lowercase.
     inventory_status = models.CharField(db_column='INVENTORY_STATUS', blank=True,  max_length=15)  # Field name made lowercase.
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
 
     class Meta:
 
@@ -512,3 +522,17 @@ class Filters(BaseModel):
 
     class Meta:
         db_table = 'filters'
+
+class SunBoardInventory(BaseModel):
+    """
+
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, unique=True)
+    content_type = models.ForeignKey(ContentType, null=True)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'sun_board_inventory'
