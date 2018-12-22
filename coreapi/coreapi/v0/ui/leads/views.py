@@ -89,7 +89,7 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
                  "leads_form_id": lead_form['leads_form_id'], "entry_id": entry_id, "status": "active"}
     for lead_item_data in lead_data:
         if "value" not in lead_item_data:
-            continue
+            lead_item_data["value"] = None
         item_dict = {}
         item_id = lead_item_data["item_id"]
         key_name = all_form_items_dict[str(item_id)]["key_name"]
