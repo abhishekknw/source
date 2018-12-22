@@ -1879,11 +1879,11 @@ class CampaignWiseSummary(APIView):
         user_id = request.user.id
         all_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id).all()
         all_campaign_ids = [campaign.campaign_id for campaign in all_campaigns]
-        leads_summary_by_campaign = get_leads_summary_by_campaign(all_campaign_ids)
         leads_summary_by_supplier = get_leads_summary(all_campaign_ids)
         campaign_supplier_map = {}
         reverse_campaign_supplier_map = {}
         all_supplier_ids = []
+        campaign_wise_leads = {}
         for summary_point in leads_summary_by_supplier:
             if summary_point["campaign_id"] not in campaign_supplier_map:
                 campaign_supplier_map[summary_point["campaign_id"]] = []
@@ -1891,6 +1891,13 @@ class CampaignWiseSummary(APIView):
                 campaign_supplier_map[summary_point["campaign_id"]].append(summary_point["supplier_id"])
             if summary_point["supplier_id"] not in all_supplier_ids:
                 all_supplier_ids.append(summary_point["supplier_id"])
+            if summary_point["campaign_id"] not in campaign_wise_leads:
+                campaign_wise_leads[summary_point["campaign_id"]] = {
+                    "total_leads_count": 0, "hot_leads_count": 0
+                }
+            campaign_wise_leads[summary_point["campaign_id"]]["total_leads_count"] += summary_point["total_leads_count"]
+            campaign_wise_leads[summary_point["campaign_id"]]["hot_leads_count"] += summary_point["hot_leads_count"]
+
             reverse_campaign_supplier_map[summary_point["supplier_id"]] = summary_point["campaign_id"]
         campaign_summary = {"campaign_wise": {}, "overall": {}}
         all_society_flat_counts = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).values(
@@ -1911,16 +1918,15 @@ class CampaignWiseSummary(APIView):
             summary_point["flat_count"] = supplier_flat_count_map[summary_point["supplier_id"]]
             leads_summary_by_supplier_dict[summary_point["campaign_id"]][summary_point["supplier_id"]] = summary_point
 
-        for lead_summary in leads_summary_by_campaign:
-            if lead_summary["campaign_id"] not in campaign_flat_count_map:
+        for campaign_id in campaign_wise_leads:
+            if campaign_id not in campaign_flat_count_map:
                 continue
-            flat_count = campaign_flat_count_map[lead_summary["campaign_id"]]
-            analytics = get_mean_median_mode(leads_summary_by_supplier_dict[lead_summary["campaign_id"]], ["total_leads_count", "hot_leads_count"])
-            campaign_summary["campaign_wise"][lead_summary["campaign_id"]] = {
-                "total_leads_count": lead_summary["total_leads_count"],
-                "hot_leads_count": lead_summary["hot_leads_count"],
-                "hot_leads_percentage": lead_summary["hot_leads_percentage"],
-                "total_supplier_count": len(campaign_supplier_map[lead_summary["campaign_id"]]),
+            flat_count = campaign_flat_count_map[campaign_id]
+            analytics = get_mean_median_mode(leads_summary_by_supplier_dict[campaign_id], ["total_leads_count", "hot_leads_count"])
+            campaign_summary["campaign_wise"][campaign_id] = {
+                "total_leads_count": campaign_wise_leads[campaign_id]["total_leads_count"],
+                "hot_leads_count": campaign_wise_leads[campaign_id]["hot_leads_count"],
+                "total_supplier_count": len(campaign_supplier_map[campaign_id]),
                 "flat_count": flat_count,
                 "hot_leads_analytics": {
                     "percentage_by_flat": analytics["hot_leads_count"]["percentage_by_flat"],
