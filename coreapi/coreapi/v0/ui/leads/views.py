@@ -254,8 +254,9 @@ class CreateLeadsForm(APIView):
         item_id = 0
         max_id_data = mongo_client.leads_forms.find_one(sort=[('leads_form_id', -1)])
         max_id = max_id_data['leads_form_id'] if max_id_data is not None else 0
+        new_leads_form_id = max_id+1
         mongo_dict = {
-            'leads_form_id': max_id+1,
+            'leads_form_id': new_leads_form_id,
             'campaign_id': campaign_id,
             'leads_form_name': leads_form_name,
             'data': {},
@@ -273,6 +274,7 @@ class CreateLeadsForm(APIView):
         else:
             mongo_dict['global_hot_lead_criteria'] = create_global_hot_lead_criteria(mongo_dict)
         mongo_client.leads_forms.insert_one(mongo_dict)
+        add_single_leads_permission(request.user.profile_id, new_leads_form_id, ["EDIT", "VIEW", "DELETE", "FILL", "FREEZE", "UNFREEZE"])
         return handle_response({}, data='success', success=True)
 
 
@@ -996,6 +998,24 @@ class GetAllLeadFormsByCampaigns(APIView):
                 })
             all_campaign_leads_forms_list.append(campaign_checklist_dict)
         return handle_response(class_name, data=all_campaign_leads_forms_list, success=True)
+
+
+def add_single_leads_permission(profile_id, leads_form_id, new_permissions):
+    existing_leads_form_permissions_dict = list(LeadsPermissions.objects.raw({"profile_id": profile_id}))
+    if len(existing_leads_form_permissions_dict) == 0:
+        return handle_response({}, data='something_is_wrong', success=False)
+    existing_leads_form_permissions_dict = existing_leads_form_permissions_dict[0]
+    permissions_id = str(existing_leads_form_permissions_dict._id)
+    old_leads_form_permissions = existing_leads_form_permissions_dict.leads_permissions
+    if "leads_forms" not in old_leads_form_permissions:
+        old_leads_form_permissions["leads_forms"] = {}
+    old_leads_form_permissions["leads_forms"][str(leads_form_id)] = new_permissions
+    dict_of_req_attributes = {
+        "profile_id": profile_id,
+        "leads_permissions": old_leads_form_permissions,
+        "updated_at": datetime.datetime.now()
+    }
+    LeadsPermissions.objects.raw({'_id': ObjectId(permissions_id)}).update({"$set": dict_of_req_attributes})
 
 
 class LeadsPermissionsAPI(APIView):

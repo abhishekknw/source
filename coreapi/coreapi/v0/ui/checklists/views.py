@@ -222,7 +222,7 @@ class CreateChecklistTemplate(APIView):
                         "checklist_id": checklist_id, "status": "active"}
 
         insert_static_cols(row_dict,static_column_values, static_column_names, static_column_types, lower_level_checklists)
-        add_single_checklist_permission(request.user.id, checklist_id, ["EDIT", "VIEW", "DELETE", "FILL", "FREEZE", "UNFREEZE"])
+        add_single_checklist_permission(request.user.profile_id, checklist_id, ["EDIT", "VIEW", "DELETE", "FILL", "FREEZE", "UNFREEZE"])
         return handle_response(class_name, data='success', success=True)
 
 
@@ -784,8 +784,8 @@ class DeleteChecklistRow(APIView):
         return handle_response({}, data='success', success=True)
 
 
-def add_single_checklist_permission(user_id, checklist_id, new_permissions):
-    existing_checklist_permissions_dict = list(ChecklistPermissions.objects.raw({"user_id": user_id}))
+def add_single_checklist_permission(profile_id, checklist_id, new_permissions):
+    existing_checklist_permissions_dict = list(ChecklistPermissions.objects.raw({"profile_id": profile_id}))
     if len(existing_checklist_permissions_dict) == 0:
         return handle_response({}, data='something_is_wrong', success=False)
     existing_checklist_permissions_dict = existing_checklist_permissions_dict[0]
@@ -795,7 +795,7 @@ def add_single_checklist_permission(user_id, checklist_id, new_permissions):
         old_checklist_permissions["checklists"] = {}
     old_checklist_permissions["checklists"][str(checklist_id)] = new_permissions
     dict_of_req_attributes = {
-        "user_id": user_id,
+        "profile_id": profile_id,
         "checklist_permissions": old_checklist_permissions,
         "updated_at": datetime.datetime.now()
     }
