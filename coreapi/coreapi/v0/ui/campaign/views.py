@@ -1892,7 +1892,7 @@ class CampaignWiseSummary(APIView):
             if summary_point["supplier_id"] not in all_supplier_ids:
                 all_supplier_ids.append(summary_point["supplier_id"])
             reverse_campaign_supplier_map[summary_point["supplier_id"]] = summary_point["campaign_id"]
-        campaign_summary = {}
+        campaign_summary = {"campaign_wise": {}, "overall": {}}
         all_society_flat_counts = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).values(
             "supplier_id", "flat_count")
         campaign_flat_count_map = {}
@@ -1916,12 +1916,12 @@ class CampaignWiseSummary(APIView):
                 continue
             flat_count = campaign_flat_count_map[lead_summary["campaign_id"]]
             analytics = get_mean_median_mode(leads_summary_by_supplier_dict[lead_summary["campaign_id"]], ["total_leads_count", "hot_leads_count"])
-            campaign_summary[lead_summary["campaign_id"]] = {
+            campaign_summary["campaign_wise"][lead_summary["campaign_id"]] = {
                 "total_leads_count": lead_summary["total_leads_count"],
                 "hot_leads_count": lead_summary["hot_leads_count"],
                 "hot_leads_percentage": lead_summary["hot_leads_percentage"],
                 "total_supplier_count": len(campaign_supplier_map[lead_summary["campaign_id"]]),
-                "total_flat_count": flat_count,
+                "flat_count": flat_count,
                 "hot_leads_analytics": {
                     "percentage_by_flat": analytics["hot_leads_count"]["percentage_by_flat"],
                     "mean_percent_by_flat": analytics["hot_leads_count"]["mean_percent_by_flat"],
@@ -1939,4 +1939,31 @@ class CampaignWiseSummary(APIView):
                     "mean_by_society": analytics["total_leads_count"]["mean_by_society"],
                 },
             }
+        analytics = get_mean_median_mode(campaign_summary["campaign_wise"], ["total_leads_count", "hot_leads_count"])
+        campaign_summary["overall"]["total_leads_analytics"] = {
+            "percentage_by_flat": analytics["total_leads_count"]["percentage_by_flat"],
+            "mean_percent_by_flat": analytics["total_leads_count"]["mean_percent_by_flat"],
+            "median_percent_by_flat": analytics["total_leads_count"]["median_percent_by_flat"],
+            "mode_percent_by_flat": analytics["total_leads_count"]["mode_percent_by_flat"],
+            "median_by_campaign": analytics["total_leads_count"]["median_by_society"],
+            "mean_by_campaign": analytics["total_leads_count"]["mean_by_society"],
+        }
+        campaign_summary["overall"]["hot_leads_analytics"] = {
+            "percentage_by_flat": analytics["hot_leads_count"]["percentage_by_flat"],
+            "mean_percent_by_flat": analytics["hot_leads_count"]["mean_percent_by_flat"],
+            "median_percent_by_flat": analytics["hot_leads_count"]["median_percent_by_flat"],
+            "mode_percent_by_flat": analytics["hot_leads_count"]["mode_percent_by_flat"],
+            "median_by_campaign": analytics["hot_leads_count"]["median_by_society"],
+            "mean_by_campaign": analytics["hot_leads_count"]["mean_by_society"],
+        }
+        campaign_summary["overall"]["total_supplier_count"] = 0
+        campaign_summary["overall"]["total_leads_count"] = 0
+        campaign_summary["overall"]["hot_leads_count"] = 0
+        campaign_summary["overall"]["flat_count"] = 0
+        for campaign in campaign_summary["campaign_wise"]:
+            campaign_summary["overall"]["total_leads_count"] += campaign_summary["campaign_wise"][campaign]["total_leads_count"]
+            campaign_summary["overall"]["hot_leads_count"] += campaign_summary["campaign_wise"][campaign]["hot_leads_count"]
+            campaign_summary["overall"]["flat_count"] += campaign_summary["campaign_wise"][campaign]["flat_count"]
+            campaign_summary["overall"]["total_supplier_count"] += campaign_summary["campaign_wise"][campaign]["total_supplier_count"]
+
         return ui_utils.handle_response({}, data=campaign_summary, success=True)
