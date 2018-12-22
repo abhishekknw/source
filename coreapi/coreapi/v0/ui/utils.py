@@ -148,7 +148,7 @@ def save_basic_supplier_details(supplier_type_code, data):
         return handle_response(function_name, exception_object=e)
 
 
-def get_supplier_id(data, state_name=v0_constants.state_name, state_code=v0_constants.state_code):
+def get_supplier_id(data):
     """
     :param request: request parameter
     :param data: dict containing valid keys . Note the keys should be 'city', 'area', sub_area', 'supplier_type' ,
@@ -161,8 +161,8 @@ def get_supplier_id(data, state_name=v0_constants.state_name, state_code=v0_cons
     error = 'You might want to double check the state name {0} and state code {1} defined in ui constants'.format(v0_constants.state_name, v0_constants.state_code)
     try:
         try:
-            state_object = State.objects.get(state_name=state_name, state_code=state_code)
-            city_object = City.objects.get(city_code=data.get('city_code'), state_code=state_object)
+            # state_object = State.objects.get(state_name=state_name, state_code=state_code)
+            city_object = City.objects.get(city_code=data.get('city_code'))
             area_object = CityArea.objects.get(area_code=data.get('area_code'), city_code=city_object)
             subarea_object = CitySubArea.objects.get(subarea_code=data.get('subarea_code'), area_code=area_object)
 
@@ -958,14 +958,15 @@ def create_validation_msg(dict_of_required_attributes):
             validation_msg_dict['missing_data'].append(key)
     return (is_valid, validation_msg_dict)
 
+
 def validate_attributes(attributes_dict):
     is_valid = True
     names = [x['name'] for x in attributes_dict if 'name' in x]
     types = [x['type'] for x in attributes_dict if 'type' in x]
-    attribute_validation_dict = {'unknown_keys':[], 'unknown_types': []}
+    attribute_validation_dict = {'unknown_keys': [], 'unknown_types': []}
     all_keys = list(set([item for sublist in attributes_dict for item in sublist]))
-    allowed_keys = ['name', 'type']
-    allowed_types = ['Int', 'Float', 'String', 'Date', 'Email']
+    allowed_keys = ['name', 'type', 'is_required']
+    allowed_types = ['INT', 'FLOAT', 'STRING', 'DATE', 'EMAIL']
     # if not (all_keys=={('type','name')} or all_keys=={('name','type')}):
     duplicate_names = list(set([x for x in names if names.count(x)>1]))
     if not duplicate_names == []:

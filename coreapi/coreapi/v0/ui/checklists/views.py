@@ -14,11 +14,13 @@ from v0.ui.user.serializers import BaseUserSerializer
 import numpy as np
 from bson import Binary, Code
 from bson.json_util import dumps
+from v0.ui.notifications.views import create_new_notification_bulk
 
 
 def is_user_permitted(permission_type, user, **kwargs):
     is_permitted = True
     validation_msg_dict = {'msg': None}
+    return is_permitted, validation_msg_dict
     checklist_id = kwargs['checklist_id'] if 'checklist_id' in kwargs else None
     campaign_id = kwargs['campaign_id'] if 'campaign_id' in kwargs else None
     permission_list = list(ChecklistPermissions.objects.raw({'user_id': user.id}))
@@ -237,7 +239,11 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
 
     #for row in total_rows:
     top_level_rows = [x for x in total_rows if x.count('.')==0]
+    top_level_rows_int = [int(x) for x in total_rows if x.count('.')==0]
     row_dict_all = {}
+
+    if not (set(top_level_rows_int)<=set(exist_rows)):
+        return [False, 'some rows do not exist']
 
     for curr_row in top_level_rows:
         curr_level = 0
@@ -251,6 +257,8 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
                 print 'already deleted row id: ', rowid
                 break
             exist_row_data = exist_row_info['data']
+        else:
+            return [False,'row '+str(rowid)+' does not exist']
         new_row_data = checklist_data[curr_row]
 
         row_dict = {"data": {}, "created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id,
@@ -310,7 +318,7 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
     for curr_row_order_id in row_dict_all_sorted.keys():
         curr_row_dict = row_dict_all_sorted[curr_row_order_id]
         mongo_client.checklist_data.insert_one(curr_row_dict)
-    return
+    return [True,'']
 
 
 class ChecklistEntry(APIView):
@@ -340,8 +348,14 @@ class ChecklistEntry(APIView):
             supplier_id = checklist['supplier_id'] if checklist_type == 'supplier'else None
             rows_data = request.data
             campaign_id = checklist['campaign_id']
-            enter_row_to_mongo(rows_data, supplier_id, campaign_id, checklist)
-            new_notification = request.data['notification'] if 'notification' in request.data else None
+            new_notifications = request.data['notifications'] if 'notifications' in request.data else None
+            if 'notifications' in request.data:
+                del request.data['notifications']
+            rows_entered = enter_row_to_mongo(rows_data, supplier_id, campaign_id, checklist)
+            if rows_entered[0]==False:
+                return handle_response({}, data=rows_entered[1], success=False)
+            if new_notifications:
+                create_new_notification_bulk(request.user, new_notifications, "checklist")
             data = 'success'
             success = True
 
@@ -1034,3 +1048,36 @@ class ChecklistSavedOperatorsResult(APIView):
             result_dict[str(operator_id)] = {'result': curr_result, 'column_operations': column_operations,
                                              'result_operations':result_operations}
         return handle_response('', data=result_dict, success=True)
+
+class ChecklistPermissionsSelfAPI(APIView):
+    @staticmethod
+    def get(request):
+        organisation_id = get_user_organisation_id(request.user)
+        checklist_permissions = list(ChecklistPermissions.objects.raw(
+            {"user_id": int(request.user.id), "organisation_id": organisation_id}))
+        all_user_id_list = []
+        for permission in checklist_permissions:
+            if permission.user_id not in all_user_id_list:
+                all_user_id_list.append(permission.user_id)
+            if permission.created_by not in all_user_id_list:
+                all_user_id_list.append(permission.created_by)
+
+        all_user_objects = BaseUser.objects.filter(id__in=all_user_id_list).all()
+        all_user_dict = {user.id: {"first_name": user.first_name,
+                                    "last_name": user.last_name,
+                                    "username": user.username,
+                                    "email": user.email,
+                                    "id": user.id
+                                      } for user in all_user_objects}
+        if len(checklist_permissions) == 0:
+            return handle_response('', data="no_permission_exists", success=True)
+
+        checklist_permissions = checklist_permissions[0]
+        permission_data = {
+            "id": str(checklist_permissions._id),
+            "user_id": all_user_dict[int(checklist_permissions.user_id)] if int(checklist_permissions.user_id) in all_user_dict else None,
+            "organisation_id": checklist_permissions.organisation_id,
+            "checklist_permissions": checklist_permissions.checklist_permissions,
+            "created_by": all_user_dict[int(checklist_permissions.created_by)] if int(checklist_permissions.created_by) in all_user_dict else None
+        }
+        return handle_response('', data=permission_data, success=True)

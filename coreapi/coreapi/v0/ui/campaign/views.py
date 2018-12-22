@@ -1,4 +1,5 @@
 import random
+import math
 import numpy as np
 from django.db.models import Count, Sum
 from dateutil import tz
@@ -24,7 +25,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework import status
 import gpxpy.geo
-from v0.ui.leads.models import LeadsFormData, get_leads_summary, get_leads_summary_by_campaign
+from v0.ui.leads.models import get_leads_summary, get_leads_summary_by_campaign, get_extra_leads_dict
 from v0.ui.base.models import DurationType
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from django.core.cache import cache
@@ -322,6 +323,10 @@ class DashBoardViewSet(viewsets.ViewSet):
         flat_count = 0
         supplier_objects_id_list = {supplier['supplier_id']: supplier for supplier in suppliers}
         all_leads_count = get_leads_summary(campaign_id)
+        all_campaign_extra_leads = {}
+        all_extra_leads = get_extra_leads_dict(campaign_id)
+        if campaign_id in all_extra_leads:
+            all_campaign_extra_leads = all_extra_leads[campaign_id]
         supplier_wise_leads_count = {}
 
         for leads in all_leads_count:
@@ -410,6 +415,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             data = {
                 'supplier': supplier_objects_id_list[id],
                 'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
+                'extra_leads_data': all_campaign_extra_leads[id] if id in all_campaign_extra_leads else {},
                 'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {},
                 'shortlisted_space_id': ss_id_dict_by_supplier_id[id],
                 'phase' : shortlisted_suppliers_id_map[supplier_objects_id_list[id]['supplier_id']].phase_no.phase_no if
@@ -434,6 +440,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             data = {
                 'supplier': supplier_objects_id_list[id],
                 'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
+                'extra_leads_data': all_campaign_extra_leads[id] if id in all_campaign_extra_leads else {},
                 'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {},
                 'shortlisted_space_id': ss_id_dict_by_supplier_id[id],
                 'phase': shortlisted_suppliers_id_map[supplier_objects_id_list[id]['supplier_id']].phase_no.phase_no if
@@ -457,6 +464,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             data = {
                 'supplier': supplier_objects_id_list[id],
                 'leads_data': supplier_wise_leads_count[id] if id in supplier_wise_leads_count else {},
+                'extra_leads_data': all_campaign_extra_leads[id] if id in all_campaign_extra_leads else {},
                 'images_data': all_images_by_supplier[id] if id in all_images_by_supplier else {},
                 'shortlisted_space_id': ss_id_dict_by_supplier_id[id],
                 'phase': shortlisted_suppliers_id_map[supplier_objects_id_list[id]['supplier_id']].phase_no.phase_no if
@@ -977,23 +985,26 @@ def calculate_mode(num_list,window_size=3):
     return mode
 
 
-def get_mean_median_mode(all_suppliers_list, list_of_attributes):
+def get_mean_median_mode(object_list, list_of_attributes):
+    # flat_count is mandatory in object
     list_of_attributes.append('flat_count')
     all_attribute_item_list = {}
     percentage_by_flat_of_attribute = {}
     return_dict = {}
-    for supplier in all_suppliers_list:
+    for object in object_list:
         for attribute in list_of_attributes:
-            if attribute not in all_suppliers_list[supplier]:
+            if attribute not in object_list[object]:
                 return return_dict
             if attribute not in all_attribute_item_list:
                 all_attribute_item_list[attribute] = []
-            all_attribute_item_list[attribute].append(all_suppliers_list[supplier][attribute])
+            if object_list[object][attribute]:
+                all_attribute_item_list[attribute].append(object_list[object][attribute])
             if attribute != 'flat_count':
                 if attribute not in percentage_by_flat_of_attribute:
                     percentage_by_flat_of_attribute[attribute] = []
-                if all_suppliers_list[supplier]['flat_count'] != 0:
-                    percentage_by_flat_of_attribute[attribute].append(int(round(float(all_suppliers_list[supplier][attribute])/float(all_suppliers_list[supplier]['flat_count']) * 100)))
+                if object_list[object]['flat_count'] != 0:
+                    if object_list[object]['flat_count']:
+                        percentage_by_flat_of_attribute[attribute].append(int(round(float(object_list[object][attribute])/float(object_list[object]['flat_count']) * 100)))
     for attribute in list_of_attributes:
         if attribute != 'flat_count':
             percentage_by_flat = 0
@@ -1003,14 +1014,16 @@ def get_mean_median_mode(all_suppliers_list, list_of_attributes):
             median_by_society = np.median(all_attribute_item_list[attribute]) if attribute in all_attribute_item_list else 0
             return_dict[attribute] = {
                 'percentage_by_flat':  percentage_by_flat,
-                'mean_by_society': mean_by_society,
-                'median_by_society': median_by_society,
+                'mean_by_society': 0 if math.isnan(mean_by_society) else mean_by_society,
+                'median_by_society': 0 if math.isnan(median_by_society) else median_by_society,
             }
     for attribute in percentage_by_flat_of_attribute:
         if attribute != 'flat_count':
             try:
                 percentage_by_flat_of_attribute[attribute] = sorted(percentage_by_flat_of_attribute[attribute])
                 return_dict[attribute]['mode_percent_by_flat'] = calculate_mode(percentage_by_flat_of_attribute[attribute])
+                return_dict[attribute]['median_percent_by_flat'] = np.median(percentage_by_flat_of_attribute[attribute])
+                return_dict[attribute]['mean_percent_by_flat'] = np.average(percentage_by_flat_of_attribute[attribute])
             except Exception as ex:
                 print ex
                 return_dict[attribute]['mode_percent_by_flat'] = None
@@ -1265,12 +1278,13 @@ class CampaignLeads(APIView):
         user_end_date_str = request.query_params.get('end_date', None)
         campaign_id = request.query_params.get('campaign_id', None)
         final_data = get_leads_data_for_campaign(campaign_id, user_start_date_str, user_end_date_str)
-        start_date = datetime.now() - timedelta(days=60)
+        start_date = datetime.now() - timedelta(days=7)
         final_data['last_week'] = get_leads_data_for_campaign(campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
-        start_date = datetime.now() - timedelta(days=80)
+        start_date = datetime.now() - timedelta(days=14)
         final_data['last_two_weeks'] = get_leads_data_for_campaign(campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
-        start_date = datetime.now() - timedelta(days=90)
+        start_date = datetime.now() - timedelta(days=21)
         final_data['last_three_weeks'] = get_leads_data_for_campaign(campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
+        final_data['overall_data'] = get_leads_data_for_campaign(campaign_id)['overall_data']
         return ui_utils.handle_response(class_name, data=final_data, success=True)
 
 
@@ -1776,65 +1790,66 @@ class Comment(APIView):
         return ui_utils.handle_response({}, data=all_campaign_comments_dict, success=True)
 
 
-class SupplierPhaseUpdate(APIView):
+# class SupplierPhaseUpdate(APIView):
+#
+#     def put(self,request):
+#         class_name = self.__class__.__name__
+#         leads_form_data_objects = LeadsFormData.objects.exclude(status='inactive').order_by('created_at').all()
+#         campaign_list = list(set(leads_form_data_objects.values_list('campaign_id',flat=True)))
+#         leads_form_data = []
+#         data_keys = ['created_at','supplier_id','campaign_id']
+#         # for item in leads_form_items_objects:
+#         #     leads_form_items.append(item.__dict__)
+#         supplier_phase_data = []
+#         for data in leads_form_data_objects:
+#             curr_data = data.__dict__
+#             data_part = {key:curr_data[key] for key in data_keys}
+#             leads_form_data.append(data_part)
+#         now_time = timezone.now()
+#         suppliers_list_campaigns = []
+#         for campaign_id in campaign_list:
+#             leads_form_data_campaign = [x for x in leads_form_data if x['campaign_id'] == campaign_id]
+#             campaign_dates = [x['created_at'] for x in leads_form_data_campaign]
+#             start_datetime = campaign_dates[0]
+#             start_datetime_phase = start_datetime - timedelta(days=start_datetime.weekday())
+#             end_datetime = campaign_dates[len(campaign_dates)-1]
+#             end_datetime_phase = end_datetime + timedelta(days=(6-start_datetime.weekday()))
+#             total_phases = (end_datetime_phase - start_datetime_phase).days/7
+#             actual_phase = 1
+#             for curr_phase in range(0, total_phases):
+#                 start_datetime_curr_phase = start_datetime + timedelta(days=7*curr_phase)
+#                 end_datetime_curr_phase = start_datetime_curr_phase + timedelta(days=7)
+#                 suppliers_list = list(set([x['supplier_id'] for x in leads_form_data_campaign if start_datetime_curr_phase <=
+#                                         x['created_at'] < end_datetime_curr_phase]))
+#                 if len(suppliers_list)>0:
+#                     curr_campaign_phase_data = {
+#                         'phase_no': actual_phase,
+#                         'start_date': start_datetime_curr_phase,
+#                         'end_date': end_datetime_curr_phase,
+#                         'campaign_id': campaign_id,
+#                         'created_at': now_time,
+#                         'updated_at': now_time,
+#                         'comments': 'migrated from historic data'
+#                     }
+#                     SupplierPhase(**curr_campaign_phase_data).save()
+#                     for supplier in suppliers_list:
+#                         suppliers_list_campaigns.append({
+#                             'object_id': supplier,
+#                             'campaign_id': campaign_id,
+#                             'phase_no': actual_phase
+#                         })
+#                     actual_phase = actual_phase+1
+#
+#         # updating shortlisted spaces table
+#         for curr_element in suppliers_list_campaigns:
+#             object_id = curr_element['object_id']
+#             campaign_id = curr_element['campaign_id']
+#             phase_no = curr_element['phase_no']
+#             phase_no_id = SupplierPhase.objects.get(campaign_id=campaign_id, phase_no = phase_no).id
+#             ShortlistedSpaces.objects.filter(proposal_id=campaign_id, object_id=object_id).update(phase_no_id=phase_no_id)
+#
+#         return ui_utils.handle_response(class_name, data={}, success=True)
 
-    def put(self,request):
-        class_name = self.__class__.__name__
-        leads_form_data_objects = LeadsFormData.objects.exclude(status='inactive').order_by('created_at').all()
-        campaign_list = list(set(leads_form_data_objects.values_list('campaign_id',flat=True)))
-        leads_form_data = []
-        data_keys = ['created_at','supplier_id','campaign_id']
-        # for item in leads_form_items_objects:
-        #     leads_form_items.append(item.__dict__)
-        supplier_phase_data = []
-        for data in leads_form_data_objects:
-            curr_data = data.__dict__
-            data_part = {key:curr_data[key] for key in data_keys}
-            leads_form_data.append(data_part)
-        now_time = timezone.now()
-        suppliers_list_campaigns = []
-        for campaign_id in campaign_list:
-            leads_form_data_campaign = [x for x in leads_form_data if x['campaign_id'] == campaign_id]
-            campaign_dates = [x['created_at'] for x in leads_form_data_campaign]
-            start_datetime = campaign_dates[0]
-            start_datetime_phase = start_datetime - timedelta(days=start_datetime.weekday())
-            end_datetime = campaign_dates[len(campaign_dates)-1]
-            end_datetime_phase = end_datetime + timedelta(days=(6-start_datetime.weekday()))
-            total_phases = (end_datetime_phase - start_datetime_phase).days/7
-            actual_phase = 1
-            for curr_phase in range(0, total_phases):
-                start_datetime_curr_phase = start_datetime + timedelta(days=7*curr_phase)
-                end_datetime_curr_phase = start_datetime_curr_phase + timedelta(days=7)
-                suppliers_list = list(set([x['supplier_id'] for x in leads_form_data_campaign if start_datetime_curr_phase <=
-                                        x['created_at'] < end_datetime_curr_phase]))
-                if len(suppliers_list)>0:
-                    curr_campaign_phase_data = {
-                        'phase_no': actual_phase,
-                        'start_date': start_datetime_curr_phase,
-                        'end_date': end_datetime_curr_phase,
-                        'campaign_id': campaign_id,
-                        'created_at': now_time,
-                        'updated_at': now_time,
-                        'comments': 'migrated from historic data'
-                    }
-                    SupplierPhase(**curr_campaign_phase_data).save()
-                    for supplier in suppliers_list:
-                        suppliers_list_campaigns.append({
-                            'object_id': supplier,
-                            'campaign_id': campaign_id,
-                            'phase_no': actual_phase
-                        })
-                    actual_phase = actual_phase+1
-
-        # updating shortlisted spaces table
-        for curr_element in suppliers_list_campaigns:
-            object_id = curr_element['object_id']
-            campaign_id = curr_element['campaign_id']
-            phase_no = curr_element['phase_no']
-            phase_no_id = SupplierPhase.objects.get(campaign_id=campaign_id, phase_no = phase_no).id
-            ShortlistedSpaces.objects.filter(proposal_id=campaign_id, object_id=object_id).update(phase_no_id=phase_no_id)
-
-        return ui_utils.handle_response(class_name, data={}, success=True)
 
 class GetPermissionBoxImages(APIView):
     @staticmethod
@@ -1857,3 +1872,71 @@ class GetPermissionBoxImages(APIView):
 #             })
 #         return ui_utils.handle_response(class_name, data={}, success=True)
 
+
+class CampaignWiseSummary(APIView):
+    @staticmethod
+    def get(request):
+        user_id = request.user.id
+        all_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id).all()
+        all_campaign_ids = [campaign.campaign_id for campaign in all_campaigns]
+        leads_summary_by_campaign = get_leads_summary_by_campaign(all_campaign_ids)
+        leads_summary_by_supplier = get_leads_summary(all_campaign_ids)
+        campaign_supplier_map = {}
+        reverse_campaign_supplier_map = {}
+        all_supplier_ids = []
+        for summary_point in leads_summary_by_supplier:
+            if summary_point["campaign_id"] not in campaign_supplier_map:
+                campaign_supplier_map[summary_point["campaign_id"]] = []
+            if summary_point["supplier_id"] not in campaign_supplier_map[summary_point["campaign_id"]]:
+                campaign_supplier_map[summary_point["campaign_id"]].append(summary_point["supplier_id"])
+            if summary_point["supplier_id"] not in all_supplier_ids:
+                all_supplier_ids.append(summary_point["supplier_id"])
+            reverse_campaign_supplier_map[summary_point["supplier_id"]] = summary_point["campaign_id"]
+        campaign_summary = {}
+        all_society_flat_counts = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).values(
+            "supplier_id", "flat_count")
+        campaign_flat_count_map = {}
+        supplier_flat_count_map = {}
+        for society in all_society_flat_counts:
+            supplier_flat_count_map[society["supplier_id"]] = society["flat_count"]
+            campaign_id = reverse_campaign_supplier_map[society["supplier_id"]]
+            if campaign_id not in campaign_flat_count_map:
+                campaign_flat_count_map[campaign_id] = 0
+            if society["flat_count"]:
+                campaign_flat_count_map[campaign_id] += society["flat_count"]
+        leads_summary_by_supplier_dict = {}
+        for summary_point in leads_summary_by_supplier:
+            if summary_point["campaign_id"] not in leads_summary_by_supplier_dict:
+                leads_summary_by_supplier_dict[summary_point["campaign_id"]] = {}
+            summary_point["flat_count"] = supplier_flat_count_map[summary_point["supplier_id"]]
+            leads_summary_by_supplier_dict[summary_point["campaign_id"]][summary_point["supplier_id"]] = summary_point
+
+        for lead_summary in leads_summary_by_campaign:
+            if lead_summary["campaign_id"] not in campaign_flat_count_map:
+                continue
+            flat_count = campaign_flat_count_map[lead_summary["campaign_id"]]
+            analytics = get_mean_median_mode(leads_summary_by_supplier_dict[lead_summary["campaign_id"]], ["total_leads_count", "hot_leads_count"])
+            campaign_summary[lead_summary["campaign_id"]] = {
+                "total_leads_count": lead_summary["total_leads_count"],
+                "hot_leads_count": lead_summary["hot_leads_count"],
+                "hot_leads_percentage": lead_summary["hot_leads_percentage"],
+                "total_supplier_count": len(campaign_supplier_map[lead_summary["campaign_id"]]),
+                "total_flat_count": flat_count,
+                "hot_leads_analytics": {
+                    "percentage_by_flat": analytics["hot_leads_count"]["percentage_by_flat"],
+                    "mean_percent_by_flat": analytics["hot_leads_count"]["mean_percent_by_flat"],
+                    "median_percent_by_flat": analytics["hot_leads_count"]["median_percent_by_flat"],
+                    "mode_percent_by_flat": analytics["hot_leads_count"]["mode_percent_by_flat"],
+                    "median_by_society": analytics["hot_leads_count"]["median_by_society"],
+                    "mean_by_society": analytics["hot_leads_count"]["mean_by_society"],
+                },
+                "total_leads_analytics": {
+                    "percentage_by_flat": analytics["total_leads_count"]["percentage_by_flat"],
+                    "mean_percent_by_flat": analytics["total_leads_count"]["mean_percent_by_flat"],
+                    "median_percent_by_flat": analytics["total_leads_count"]["median_percent_by_flat"],
+                    "mode_percent_by_flat": analytics["total_leads_count"]["mode_percent_by_flat"],
+                    "median_by_society": analytics["total_leads_count"]["median_by_society"],
+                    "mean_by_society": analytics["total_leads_count"]["mean_by_society"],
+                },
+            }
+        return ui_utils.handle_response({}, data=campaign_summary, success=True)

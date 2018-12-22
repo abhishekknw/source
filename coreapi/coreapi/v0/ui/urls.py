@@ -23,6 +23,7 @@ urlpatterns = [
     url(r'^users/', include('v0.ui.user.urls')),
     url(r'^website/', include('v0.ui.account.urls')),
     url(r'^website/', include('v0.ui.campaign.urls')),
+    url(r'^campaign/', include('v0.ui.campaign.urls')),
     url(r'^website/', include('v0.ui.finances.urls')),
     url(r'^website/', include('v0.ui.inventory.urls')),
     url(r'^website/', include('v0.ui.permissions.urls')),
