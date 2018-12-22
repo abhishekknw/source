@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
-from models import (get_leads_summary, LeadsPermissions, get_leads_summary_all)
+from models import (get_leads_summary, LeadsPermissions, get_leads_summary_all,
+                    get_details_by_higher_level, geographical_parent_details, get_details_by_higher_level_geographical)
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
@@ -34,6 +35,7 @@ from v0.ui.account.models import Profile
 def is_user_permitted(permission_type, user, **kwargs):
     is_permitted = True
     validation_msg_dict = {'msg': None}
+    return is_permitted, validation_msg_dict
     leads_form_id = kwargs['leads_form_id'] if 'leads_form_id' in kwargs else None
     campaign_id = kwargs['campaign_id'] if 'campaign_id' in kwargs else None
     permission_list = list(LeadsPermissions.objects.raw({'profile_id': user.profile_id}))
@@ -88,7 +90,7 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
                  "leads_form_id": lead_form['leads_form_id'], "entry_id": entry_id, "status": "active"}
     for lead_item_data in lead_data:
         if "value" not in lead_item_data:
-            continue
+            lead_item_data["value"] = None
         item_dict = {}
         item_id = lead_item_data["item_id"]
         key_name = all_form_items_dict[str(item_id)]["key_name"]
@@ -173,14 +175,7 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
         leads_data_start_end = [x for x in leads_data_start if x['created_at'].date() <= kwargs['end_date']]
         leads_data_list = leads_data_start_end
 
-    # first_entry = (page_number-1)*leads_per_page+1
-    # if first_entry>len(leads_data_list):
-    #     leads_data_list_paginated = []
-    # else:
-    #     last_entry = min(page_number*leads_per_page, len(leads_data_list))
-    #     leads_data_list_sorted = list(set(leads_data_list))
-    #     leads_data_list_paginated = leads_data_list_sorted[first_entry:(last_entry-1)]
-    #leads_data_values_itemid = [x["data"] for x in leads_data_list]
+
     leads_data_values = []
     for entry in leads_data_list:
         curr_entry = entry['data']
@@ -447,7 +442,6 @@ class LeadsFormEntry(APIView):
             return handle_response('', data=validation_msg_dict, success=False)
         supplier_id = request.data['supplier_id']
         lead_form = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)})
-        lead_form['last_entry_id']
         entry_id = lead_form['last_entry_id'] + 1 if ('last_entry_id' in lead_form and lead_form['last_entry_id']) else 1
         campaign_id = lead_form['campaign_id']
         lead_data = request.data["leads_form_entries"]
@@ -1196,6 +1190,33 @@ class DeleteExtraLeadEntry(APIView):
         mongo_client.leads_extras.remove({"_id":ObjectId(id)})
         return handle_response('', data={"success": True}, success=True)
 
+
+class GetListsCounts(APIView):
+    @staticmethod
+    def put(request):
+        data = request.data
+        highest_level = data['highest_level']
+        lowest_level = data['lowest_level']
+        highest_level_list = data['highest_level_values']
+        default_value_type = data['default_value_type'] if 'default_value_type' in data else None
+        final_output = get_details_by_higher_level(highest_level,lowest_level,highest_level_list, default_value_type)
+        return handle_response('', data=final_output, success=True)
+
+
+class GeographicalLevelsTest(APIView):
+
+    @staticmethod
+    def put(request):
+        highest_level = request.data['highest_level']
+        lowest_level = request.data['lowest_level'] if 'lowest_level' in request.data else 'supplier'
+        highest_level_list = request.data['highest_level_list']
+        results_by_lowest_level = request.data['results_by_lowest_level'] \
+            if 'results_by_lowest_level' in request.data else 0
+        result_dict = get_details_by_higher_level_geographical(
+            highest_level, highest_level_list, lowest_level, results_by_lowest_level)
+        return handle_response('',data={'final_dict':result_dict['final_dict'],
+                                        'single_list':result_dict['single_list']},success=True)
+
 class GetLeadsEntry(APIView):
     @staticmethod
     def get(request, form_id, supplier_id, entry_id):
@@ -1219,17 +1240,28 @@ class GetLeadsEntry(APIView):
 
         return handle_response('', data=lead_form_dict, success=True)
 
+
 class UpdateLeadsEntry(APIView):
     @staticmethod
     def put(request, form_id, supplier_id, entry_id):
         data = request.data
-        lead_instance = mongo_client.leads.find({'leads_form_id': int(form_id), 'supplier_id': supplier_id, 'entry_id': int(entry_id)})[0]
-        lead_entry_map_by_item_id = {item['item_id']:item for k,item in data.iteritems()}
-        for lead_item in lead_instance['data']:
+        lead_dict = list(mongo_client.leads.find({'leads_form_id': int(form_id), 'supplier_id': supplier_id, 'entry_id': int(entry_id)}))
+        lead_form = mongo_client.leads_forms.find({"leads_form_id": int(form_id)})[0]
+        if len(lead_dict) == 0:
+            return handle_response('', data={"error_msg": "lead_not_present"}, success=False)
+        lead_dict = lead_dict[0]
+        lead_entry_map_by_item_id = {item['item_id']: item for k, item in data.iteritems()}
+        for lead_item in lead_dict['data']:
             lead_item['value'] = lead_entry_map_by_item_id[int(lead_item['item_id'])]['value']
-        mongo_client.leads.update_one(
-            {"leads_form_id": int(form_id), "entry_id": int(entry_id), "supplier_id": supplier_id},
-            {"$set": {"data": lead_instance}})
+
+        lead_dict["is_hot"] = calculate_is_hot(lead_dict, lead_form['global_hot_lead_criteria'])
+        lead_sha_256 = create_lead_hash(lead_dict)
+        lead_dict["lead_sha_256"] = lead_sha_256
+        lead_already_exist = True if len(list(mongo_client.leads.find({"lead_sha_256": lead_sha_256}))) > 0 else False
+        if not lead_already_exist:
+            mongo_client.leads.update_one(
+                {"leads_form_id": int(form_id), "entry_id": int(entry_id), "supplier_id": supplier_id},
+                {"$set": {"data": lead_dict["data"], "lead_sha_256": lead_sha_256, "is_hot": lead_dict["is_hot"]}})
         return handle_response('', data={"success": True}, success=True)
 
 

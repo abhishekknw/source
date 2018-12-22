@@ -660,7 +660,9 @@ inventory_type_duration_dict_list = {
     'SL': ['STALL', 'Small', 'Unit Daily'],
     'FL': ['FLIER', 'Door-to-Door', 'Unit Daily'],
     'CD': ['CAR DISPLAY', 'Standard', 'Unit Daily'],
-    'GA': ['Gateway Arch', 'Non Lit', 'Unit Quaterly']
+    'GA': ['Gateway Arch', 'Non Lit', 'Unit Quaterly'],
+    'SB': ['SUNBOARD', 'Normal', 'Unit Quaterly'],
+    'BA': ['BANNER', 'Small', 'Campaign Weekly']
 }
 
 # this dict maps keys directly to db values. do not change
@@ -685,7 +687,8 @@ type_dict = {
     'premium': 'Premium',
     'door_to_door': 'Door-to-Door',
     'mail_box': 'Mailbox',
-    'lobby': 'Lobby'
+    'lobby': 'Lobby',
+    'normal': 'Normal'
 }
 
 # format to be used in datetime
@@ -1177,9 +1180,13 @@ codes_to_model_names = {
     flier_inventory_code: 'FlyerInventory',
     poster_inventory_code: 'PosterInventory',
     car_display_inventory_code: 'StallInventory',
-    'GA' : 'GatewayArchInventory',
+    'GA': 'GatewayArchInventory',
     'gateway arch' : 'GatewayArchInventory',
     'GATEWAY ARCH' : 'GatewayArchInventory',
+    'SUNBOARD': 'SunBoardInventory',
+    'SB': 'SunBoardInventory',
+    'BA': 'BannerInventory',
+    'BANNER': 'BannerInventory'
 }
 # model to codes
 model_to_codes = {
@@ -1198,7 +1205,9 @@ model_to_codes = {
     'FL': 'FlyerInventory',
     'GA': 'GatewayArchInventory',
     'PosterInventory': 'PO',
-    'SupplierTypeBusDepot': bus_depot_code
+    'SupplierTypeBusDepot': bus_depot_code,
+    'SB': 'SunBoardInventory',
+    'BA': 'BannerInventory'
 
 }
 
