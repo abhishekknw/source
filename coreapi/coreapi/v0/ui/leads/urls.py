@@ -5,7 +5,7 @@ from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntrie
                    SmsContact, AddLeadFormItems, EditLeadsForm,
                    LeadsSummary, GetLeadsEntriesByCampaignId, GenerateLeadDataExcel,
                    SanitizeLeadsData, GenerateDemoData, UpdateLeadsDataSHA256, UpdateGlobalHotLeadCriteria,
-                   UpdateLeadsDataIsHot, InsertExtraLeads, LeadsPermissionsAPI, GetLeadsFormById, GetLeadsDataGeneric,
+                   UpdateLeadsDataIsHot, InsertExtraLeads, LeadsPermissionsAPI, GetLeadsFormById,
                    GetListsCounts, GeographicalLevelsTest)
 
 urlpatterns = [
@@ -33,7 +33,6 @@ urlpatterns = [
     url(r'^update_all_is_hot/$', UpdateLeadsDataIsHot.as_view()),
     url(r'^(?P<form_id>[0-9]+)/insert_extra_leads/$', InsertExtraLeads.as_view()),
     url(r'^permissions$', LeadsPermissionsAPI.as_view()),
-    url(r'^get-leads-data-generic/$', GetLeadsDataGeneric.as_view()),
     url(r'^get-lists-counts-generic/$', GetListsCounts.as_view()),
     url(r'^geographical-levels-test', GeographicalLevelsTest.as_view()),
 
