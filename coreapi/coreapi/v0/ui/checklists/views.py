@@ -213,7 +213,7 @@ class CreateChecklistTemplate(APIView):
                         "checklist_id": checklist_id, "status": "active"}
 
         insert_static_cols(row_dict,static_column_values, static_column_names, static_column_types, lower_level_checklists)
-
+        add_single_checklist_permission(request.user.id, checklist_id, ["EDIT", "VIEW", "DELETE", "FILL", "FREEZE", "UNFREEZE"])
         return handle_response(class_name, data='success', success=True)
 
 
@@ -770,6 +770,24 @@ class DeleteChecklistRow(APIView):
         mongo_client.checklist_data.update_one({"checklist_id": int(checklist_id), "rowid": int(row_id)},
                                                {"$set": {'status': 'inactive'}})
         return handle_response({}, data='success', success=True)
+
+
+def add_single_checklist_permission(user_id, checklist_id, new_permissions):
+    existing_checklist_permissions_dict = list(ChecklistPermissions.objects.raw({"user_id": user_id}))
+    if len(existing_checklist_permissions_dict) == 0:
+        return handle_response({}, data='something_is_wrong', success=False)
+    existing_checklist_permissions_dict = existing_checklist_permissions_dict[0]
+    permissions_id = str(existing_checklist_permissions_dict._id)
+    old_checklist_permissions = existing_checklist_permissions_dict.checklist_permissions
+    if "checklists" not in old_checklist_permissions:
+        old_checklist_permissions["checklists"] = {}
+    old_checklist_permissions["checklists"][str(checklist_id)] = new_permissions
+    dict_of_req_attributes = {
+        "user_id": user_id,
+        "checklist_permissions": old_checklist_permissions,
+        "updated_at": datetime.datetime.now()
+    }
+    ChecklistPermissions.objects.raw({'_id': ObjectId(permissions_id)}).update({"$set": dict_of_req_attributes})
 
 
 class ChecklistPermissionsAPI(APIView):
