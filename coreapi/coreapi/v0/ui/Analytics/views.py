@@ -296,3 +296,58 @@ class GetLeadsDataGeneric(APIView):
         metrics = all_data['metrics'] if 'metrics' in all_data else default_metrics
         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics)
         return handle_response('', data=mongo_query, success=True)
+
+
+class AnalyticSavedOperators(APIView):
+    @staticmethod
+    def post(request):
+        operator_value = request.data['operator_value']
+        owner_type = request.data['owner_type']
+        operator_name = request.data['operator_name']
+        user = request.user
+        user_id = user.id
+        organisation_id = get_user_organisation_id(user)
+        owner_id = user_id if owner_type == 'user' else organisation_id
+        final_operator_data = {}
+        last_operator_list = mongo_client.analytic_operators.find_one(sort=[("operator_id", -1)])
+        operator_id = 1
+        if last_operator_list is not None:
+            operator_id = last_operator_list["operator_id"]
+        final_operator_data ={
+            "operator_id": operator_id,
+            "owner_type": owner_type,
+            "owner_id": str(owner_id),
+            "operator_value": operator_value,
+            "operator_name": operator_name
+        }
+        mongo_client.analytic_operators.insert_one(final_operator_data)
+        return handle_response('', data="success", success=True)
+    
+    @staticmethod
+    def get(request):
+        query_type = request.query_params.get('type')
+        query_value = request.query_params.get('value')
+        if query_type == 'operator_id':
+            query_dict = mongo_client.analytic_operators.find_one({'operator_id':int(query_value)})
+        elif query_type == 'operator_name':
+            query_dict = mongo_client.analytic_operators.find_one({'operator_name': str(query_value)})
+        operator_data = query_dict["operator_value"] if query_dict is not None else {}
+        return handle_response('', data=operator_data, success=True)
+
+    @staticmethod
+    def put(request):
+        query_type = request.data['type']
+        query_value = request.data['value']
+        if query_type == 'operator_id':
+            query_dict = mongo_client.analytic_operators.find_one({'operator_id': int(query_value)})
+        elif query_type == 'operator_name':
+            query_dict = mongo_client.analytic_operators.find_one({'operator_name': str(query_value)})
+        operator_data = query_dict["operator_value"] if query_dict is not None else {}
+        if operator_data == {}:
+            return handle_response('', data=operator_data, success=True)
+        data_scope = request.data['data_scope'] if 'data_scope' in request.data else operator_data['data_scope']
+        data_point = request.data['data_point'] if 'data_point' in request.data else operator_data['data_point']
+        raw_data = request.data['raw_data'] if 'raw_data' in request.data else operator_data['raw_data']
+        metrics = operator_data['metrics']
+        mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics)
+        return handle_response('', data=mongo_query, success=True)
