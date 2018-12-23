@@ -77,7 +77,10 @@ def insert_static_cols(row_dict_original,static_column_values, static_column_nam
     counter = 0
     row_dict_all = {}
 
+    order_id_str = "order_id"
     for curr_row in first_column_rows:
+        if "row_id" in curr_row and order_id_str == "order_id":
+            order_id_str = "row_id"
         order_id = curr_row["order_id"] if 'order_id' in curr_row else curr_row["row_id"]
         #rowid = curr_row["row_id"]
         rowid = order_id
@@ -95,7 +98,7 @@ def insert_static_cols(row_dict_original,static_column_values, static_column_nam
             static_column_str = str(static_column)
             if static_column > 1:
                 curr_static_column_values = static_column_values[static_column_str]
-                cell_value = [x["cell_value"] for x in curr_static_column_values if x["order_id"] == rowid][0]
+                cell_value = [x["cell_value"] for x in curr_static_column_values if x[order_id_str] == rowid][0]
             static_data[static_column_str] = {
                 "cell_value": cell_value,
                 "column_id": static_column,
