@@ -379,6 +379,8 @@ class ChecklistEdit(APIView):
             if 'new_checklist_columns' in request.data else []
         new_static_column_values = request.data['new_static_column_values'] \
             if 'new_static_column_values' in request.data else {}
+
+
         is_template = request.data['is_template'] if "is_template" in request.data else None
         if not isinstance(new_static_column_values, dict):
             new_static_column_values = {"1": new_static_column_values}
@@ -390,6 +392,12 @@ class ChecklistEdit(APIView):
             return handle_response(class_name, data=result, success=False)
         else:
             checklist_column_all = checklist_column_all_query[0]
+
+        exist_static_column_indices = checklist_column_all['static_columns'] \
+            if 'static_columns' in checklist_column_all else []
+
+        if not new_static_column_values.keys() == exist_static_column_indices:
+            return handle_response(class_name, data='improper static column info in new rows', success=False)
 
         checklist_status = checklist_column_all['status']
 
@@ -416,8 +424,6 @@ class ChecklistEdit(APIView):
             new_delete_columns = exist_inactive_columns
 
         checklist_column_data_all = checklist_column_all['data']
-        exist_static_column_indices = checklist_column_all['static_columns'] \
-            if 'static_columns' in checklist_column_all else []
         lower_level_checklists = request.data['lower_level_checklists'] \
             if 'lower_level_checklists' in request.data else []
         n_rows = checklist_column_all['rows']
@@ -469,7 +475,10 @@ class ChecklistEdit(APIView):
         for column in exist_static_column_indices:
             column_id = int(column)
             if static_column:
-                curr_column_data = static_column[column]
+                if column in static_column:
+                    curr_column_data = static_column[column]
+                else:
+                    continue
                 column_options = curr_column_data['column_options'] if 'column_options' in curr_column_data else None
                 if column_options and not isinstance(column_options, list):
                     column_options = column_options.split(',')
