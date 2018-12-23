@@ -39,3 +39,15 @@ class SupplyEntity(MongoModel):
     class Meta:
         write_concern = WriteConcern(j=True)
         connection_alias = 'mongo_app'
+
+
+class BaseSupplyEntityType(MongoModel):
+    name = fields.CharField()
+    entity_attributes = fields.ListField()
+    created_by = fields.CharField()
+    created_at = fields.DateTimeField()
+    updated_at = fields.DateTimeField()
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'mongo_app'
