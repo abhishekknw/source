@@ -1,3 +1,16 @@
+import numpy as np
+
+
+def get_metrics_from_code(code, raw_metrics, derived_metrics):
+    if type(code) is unicode or type(code) is str:
+        if code[0] == 'm':
+            code_index = code[1:]
+            metric = derived_metrics[int(code_index) - 1]
+        else:
+            metric = raw_metrics[int(code) - 1]
+    else:
+        metric=code
+    return metric
 
 
 level_name_by_model_id = {
@@ -35,6 +48,52 @@ geographical_parent_details = {
     'member_names': {'locality': 'society_locality', 'city': 'society_city', 'state': 'society_state',
                      'supplier': 'supplier_id'}
 }
+
+
+def z_calculator_array_multiple(data_array, metrics_array_dict):
+    result_array = []
+    global_data = {}
+    for curr_metric in metrics_array_dict:
+        global_data[curr_metric] = {}
+        global_data[curr_metric]['global_mean'] = np.mean(metrics_array_dict[curr_metric])
+        global_data[curr_metric]['stdev'] = np.std(metrics_array_dict[curr_metric])
+    for curr_data in data_array:
+        for curr_metric in metrics_array_dict:
+            global_mean = global_data[curr_metric]['global_mean']
+            stdev = global_data[curr_metric]['stdev']
+            curr_mean = curr_data[curr_metric]
+            if curr_mean is None:
+                continue
+            z_value = (curr_mean - global_mean) / stdev if not stdev == 0 else 0
+            z_score_name = curr_metric+' z_score'
+            z_color_name = curr_metric+' z_category'
+            curr_data[z_score_name] = z_value
+            if z_value > 1:
+                color = 'Green'
+            elif z_value < -1:
+                color = 'Red'
+            else:
+                color = 'Yellow'
+            curr_data[z_color_name] = color
+
+    return data_array
+
+
+# redundant
+def sum_array_by_key(array, keys):
+    count_dict = {}
+    # valid_array =[]
+    # for curr_dict in array:
+    #     append = True
+    #     for curr_key in keys:
+    #         if curr_dict[curr_key] is None:
+    #             append = False
+    #     if append:
+    #         valid_array.append(curr_dict)
+    for curr_key in keys:
+        values = [x[curr_key] for x in array if x[curr_key] is not None]
+        count_dict[curr_key]=values
+    return count_dict
 
 def binary_operation(a, b, op):
     operator_map = {"/": round(float(a)/b,5), "*":a*b, "+":a+b, "-": a-b}

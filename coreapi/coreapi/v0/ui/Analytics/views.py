@@ -1,6 +1,7 @@
 from utils import (level_name_by_model_id, merge_dict_array_array_single, merge_dict_array_dict_single,
                    convert_dict_arrays_keys_to_standard_names, get_similar_structure_keys, geographical_parent_details,
-                   count_details_parent_map, count_details_kids_map, find_level_sequence, binary_operation)
+                   count_details_parent_map, count_details_kids_map, find_level_sequence, binary_operation,
+                   sum_array_by_key, z_calculator_array_multiple, get_metrics_from_code)
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -8,10 +9,12 @@ import copy
 from rest_framework.views import APIView
 from v0.ui.utils import handle_response, get_user_organisation_id
 
+statistics_map = {"z_score": z_calculator_array_multiple}
+
 
 # currently working with the following constraints:
 # exactly one scope restrictor with exact match, one type of data point
-def get_data_analytics(data_scope = None, data_point = None, raw_data = [], metrics = []):
+def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metrics = [], statistical_information = None):
     data_scope_first = data_scope['1']
     highest_level = data_scope_first['value_type']
     grouping_level = data_point['level']
@@ -19,7 +22,8 @@ def get_data_analytics(data_scope = None, data_point = None, raw_data = [], metr
     # if highest_level == grouping_level:
     #     return "lowest level should be lower than highest level"
     individual_metric_output = {}
-    highest_level_values = data_scope_first['values']['exact']
+    highest_level_values = data_scope_first['values']['exact'] if 'values' in data_scope_first \
+        and 'exact' in data_scope_first['values'] else []
     default_value_type = data_scope_first['value_type']
     data_scope_category = data_scope_first['category']
     data_point_category = data_point['category']
@@ -68,13 +72,13 @@ def get_data_analytics(data_scope = None, data_point = None, raw_data = [], metr
 
     derived_array = copy.deepcopy(single_array)
     metric_names = []
+    metric_processed = []
+
     for curr_metric in metrics:
         a_code = curr_metric[0]
         b_code = curr_metric[1]
         op = curr_metric[2]
-        a_source = raw_data
-        b_source = raw_data
-
+        a = get_metrics_from_code(a_code,raw_data, metric_names)
         if type(a_code) is unicode:
             if a_code[0] == 'm':
                 a_code = a_code[1:]
@@ -99,18 +103,40 @@ def get_data_analytics(data_scope = None, data_point = None, raw_data = [], metr
         metric_name_op = curr_metric[3]['op'] if len(curr_metric) > 3 and 'op' in curr_metric[3] else op
         metric_name = str(metric_name_a) + metric_name_op + str(metric_name_b)
         metric_names.append(metric_name)
-        for curr_dict in derived_array:
+        metric_processed.append({
+            "a": a,
+            "b": b,
+            "op": op,
+            "name": metric_name
+        })
+
+    for curr_dict in derived_array:
+        for curr_metric in metric_processed:
+            a = curr_metric["a"]
+            b = curr_metric["b"]
             nr_value = a
             dr_value = b
             if type(nr_value) is str or type(nr_value) is unicode:
                 nr_value = curr_dict[a] if a in curr_dict else curr_dict[reverse_map[a]]
             if type(dr_value) is str or type(dr_value) is unicode:
                 dr_value = curr_dict[b] if b in curr_dict else curr_dict[reverse_map[b]]
-            result_value = binary_operation(float(nr_value), float(dr_value), op) if \
+            result_value = binary_operation(float(nr_value), float(dr_value), curr_metric['op']) if \
                 not dr_value == 0 and nr_value is not None and dr_value is not None else None
-            curr_dict[metric_name] = result_value
+            curr_dict[curr_metric['name']] = result_value
 
-    return [individual_metric_output, single_array, derived_array]
+    if statistical_information is not None:
+        stats = statistical_information['stats']
+        stat_metrics_indices = statistical_information['metrics']
+        stat_metrics = []
+        for curr_index in stat_metrics_indices:
+            stat_metrics.append(get_metrics_from_code(curr_index,raw_data,metric_names))
+        metrics_array_dict = sum_array_by_key(derived_array, stat_metrics)
+
+    for curr_stat in stats:
+        statistics_array = statistics_map[curr_stat](derived_array, metrics_array_dict)
+        derived_array = statistics_array
+
+    return [individual_metric_output, statistics_array]
 
 
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
@@ -153,11 +179,17 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
 
         # general queries common to all storage types
         if database_type == 'mongodb':
-            match_constraint = [{parent_model_name: {"$in": match_list}}]
-            match_dict = {"$and": match_constraint}
+            if highest_level_list == [] or highest_level_list == None:
+                match_dict ={}
+            else:
+                match_constraint = [{parent_model_name: {"$in": match_list}}]
+                match_dict = {"$and": match_constraint}
         elif database_type == 'mysql':
-            first_part_query = model_name + '.objects.filter('
-            full_query = first_part_query + parent_model_name + '__in=match_list)'
+            if highest_level_list == [] or highest_level_list == None:
+                full_query = model_name + '.objects.all()'
+            else:
+                first_part_query = model_name + '.objects.filter('
+                full_query = first_part_query + parent_model_name + '__in=match_list)'
             query = list(eval(full_query).values(self_model_name, parent_model_name))
         else:
             return "database does not exist"
@@ -225,13 +257,9 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 query = list(query)
                 if not query==[]:
                     all_results.append(query)
-            # this is not complete yet
             elif database_type == 'mysql':
-                first_part_query = model_name + '.objects.filter('
-                full_query = first_part_query + parent_model_name + '__in=match_list)'
                 all_values = parent_model_names
                 all_values.append(self_model_name)
-                #query = list(eval(full_query).values(self_model_name, parent_model_names))
                 query = list(eval(full_query).values(*all_values))
                 if not query==[]:
                     all_results.append(query)
@@ -290,7 +318,8 @@ class GetLeadsDataGeneric(APIView):
         data_point = all_data['data_point'] if 'data_point' in all_data else None
         raw_data = all_data['raw_data'] if 'raw_data' in all_data else default_raw_data
         metrics = all_data['metrics'] if 'metrics' in all_data else default_metrics
-        mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics)
+        statistical_information = all_data['statistical_information'] if 'statistical_information' in all_data else None
+        mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information)
         return handle_response('', data=mongo_query, success=True)
 
 
