@@ -10,7 +10,7 @@ from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntrie
                     UpdateLeadDate, DeleteExtraLeadEntry, DeleteLeadItem, GetLeadsEntry, UpdateLeadsEntry, GeographicalLevelsTest,
                    GetListsCounts)
 
-from one_time_scripts import UpdateLeadsMissingItems
+from one_time_scripts import UpdateLeadsMissingItems, UpdateLeadsEntryIds
 
 
 urlpatterns = [
@@ -49,7 +49,8 @@ urlpatterns = [
     url(r'^delete-extra-lead-entry/(?P<id>[A-Z_a-z0-9]+)/$', DeleteExtraLeadEntry.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/get-leads-entry/(?P<supplier_id>[A-Z_a-z0-9]+)/(?P<entry_id>[A-Z_a-z0-9]+)/$', GetLeadsEntry.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/update-leads-entry/(?P<supplier_id>[A-Z_a-z0-9]+)/(?P<entry_id>[A-Z_a-z0-9]+)/$', UpdateLeadsEntry.as_view()),
-    url(r'^update-missing-items', UpdateLeadsMissingItems.as_view()),
+    url(r'^update-missing-items/', UpdateLeadsMissingItems.as_view()),
+    url(r'^update-entry-ids/', UpdateLeadsEntryIds.as_view()),
 ]
 
 router = DefaultRouter()

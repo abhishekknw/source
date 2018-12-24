@@ -40,3 +40,20 @@ class UpdateLeadsMissingItems(APIView):
             mongo_client.leads.update_one({"_id": ObjectId(str(lead["_id"]))},
                                           {"$set": {"data": final_data_list}})
         return handle_response('', data={"success": True}, success=True)
+
+
+class UpdateLeadsEntryIds(APIView):
+    @staticmethod
+    def put(request):
+        all_leads_forms = list(mongo_client.leads_forms.find())
+        for leads_form in all_leads_forms:
+            leads_form_id = leads_form["leads_form_id"]
+            entry_id = 0
+            all_leads_form_leads = mongo_client.leads.find({"leads_form_id": int(leads_form_id)}).sort("created_at", 1)
+            for lead in all_leads_form_leads:
+                entry_id = entry_id + 1
+                _id = ObjectId(str(lead["_id"]))
+                mongo_client.leads.update_one({"_id":_id}, {"$set": {"entry_id": entry_id}})
+            mongo_client.leads_forms.update_one({"leads_form_id": leads_form_id},
+                                                {"$set": {"last_entry_id": entry_id}})
+        return handle_response('', data={"success": True}, success=True)
