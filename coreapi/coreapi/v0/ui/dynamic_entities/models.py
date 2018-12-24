@@ -9,6 +9,7 @@ class SupplyEntityType(MongoModel):
     name = fields.CharField()
     entity_attributes = fields.ListField()
     is_global = fields.BooleanField()
+    base_entity_type = fields.CharField()  # id of the base entity type
     organisation_id = fields.CharField()
     created_by = fields.CharField()
     created_at = fields.DateTimeField()
