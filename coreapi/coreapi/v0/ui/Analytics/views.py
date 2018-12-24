@@ -1,6 +1,6 @@
 from utils import (level_name_by_model_id, merge_dict_array_array_single, merge_dict_array_dict_single,
                    convert_dict_arrays_keys_to_standard_names, get_similar_structure_keys, geographical_parent_details,
-                   count_details_parent_map, count_details_kids_map, find_level_sequence)
+                   count_details_parent_map, count_details_kids_map, find_level_sequence, binary_operation)
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -106,7 +106,7 @@ def get_data_analytics(data_scope = None, data_point = None, raw_data = [], metr
                 nr_value = curr_dict[a] if a in curr_dict else curr_dict[reverse_map[a]]
             if type(dr_value) is str or type(dr_value) is unicode:
                 dr_value = curr_dict[b] if b in curr_dict else curr_dict[reverse_map[b]]
-            result_value = eval(str(nr_value) + op + str(dr_value)) if \
+            result_value = binary_operation(float(nr_value), float(dr_value), op) if \
                 not dr_value == 0 and nr_value is not None and dr_value is not None else None
             curr_dict[metric_name] = result_value
 
@@ -246,14 +246,10 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         else:
             print("pass")
         curr_level_id = curr_level_id+1
-        print all_results
         if not len(all_results) == 0 and isinstance(all_results[0], dict):
             all_results = [all_results]
-    print len(all_results)
     if not len(all_results)==[]:
         new_results = convert_dict_arrays_keys_to_standard_names(all_results)
-        print 'new_results', new_results
-        print 'grouping level', grouping_level
         single_array_results = merge_dict_array_array_single(new_results,grouping_level)
     else:
         single_array_results = []

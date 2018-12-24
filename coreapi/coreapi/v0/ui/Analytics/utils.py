@@ -36,6 +36,9 @@ geographical_parent_details = {
                      'supplier': 'supplier_id'}
 }
 
+def binary_operation(a, b, op):
+    operator_map = {"/": round(float(a)/b,5), "*":a*b, "+":a+b, "-": a-b}
+    return operator_map[op]
 
 def merge_dict_array_dict_single(metric_dict,key_name):
     key_values = []
