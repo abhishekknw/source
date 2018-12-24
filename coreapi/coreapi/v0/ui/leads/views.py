@@ -435,7 +435,6 @@ class LeadsFormBulkEntry(APIView):
             "inv_activit_missing_societies": list(set(inv_activity_missing_societies)),
             "not_present_in_shortlisted_societies": list(set(not_present_in_shortlisted_societies))
         }
-        print missing_dict
         return handle_response({}, data=missing_dict, success=True)
 
 
