@@ -1,6 +1,7 @@
 from validate_email import validate_email
 from datetime import datetime
 from models import SupplyEntityType
+from bson.objectid import ObjectId
 
 
 def validate_entity_type_data(entity_type_dict):
