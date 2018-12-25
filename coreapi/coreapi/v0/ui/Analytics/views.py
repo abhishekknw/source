@@ -1,7 +1,7 @@
 from utils import (level_name_by_model_id, merge_dict_array_array_single, merge_dict_array_dict_single,
                    convert_dict_arrays_keys_to_standard_names, get_similar_structure_keys, geographical_parent_details,
                    count_details_parent_map, count_details_kids_map, find_level_sequence, binary_operation,
-                   sum_array_by_key, z_calculator_array_multiple, get_metrics_from_code)
+                   sum_array_by_key, z_calculator_array_multiple, get_metrics_from_code, time_parent_names)
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -11,12 +11,21 @@ from v0.ui.utils import handle_response, get_user_organisation_id
 
 statistics_map = {"z_score": z_calculator_array_multiple}
 
+unilevel_categories = ['time']
+
 
 # currently working with the following constraints:
 # exactly one scope restrictor with exact match, one type of data point
 def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metrics = [], statistical_information = None):
-    data_scope_first = data_scope['1']
-    highest_level = data_scope_first['value_type']
+    unilevel_constraints = {}
+    data_scope_keys = data_scope.keys()
+    for curr_key in data_scope_keys:
+        if data_scope[curr_key]["category"] in unilevel_categories:
+            unilevel_constraints[curr_key] = data_scope[curr_key]
+            data_scope.pop(curr_key)
+    data_scope_keys = data_scope.keys()
+    data_scope_first = data_scope[data_scope_keys[0]] if data_scope_keys is not [] else {}
+    highest_level = data_scope_first['value_type'] if 'value_type' in data_scope_first else None
     grouping_level = data_point['level']
     grouping_level_first = grouping_level[0]
     # if highest_level == grouping_level:
@@ -24,9 +33,9 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
     individual_metric_output = {}
     highest_level_values = data_scope_first['values']['exact'] if 'values' in data_scope_first \
         and 'exact' in data_scope_first['values'] else []
-    default_value_type = data_scope_first['value_type']
-    data_scope_category = data_scope_first['category']
+    default_value_type = data_scope_first['value_type'] if data_scope_first is not None else None
     data_point_category = data_point['category']
+    data_scope_category = data_scope_first['category'] if data_scope_first is not None else data_point_category
     for curr_metric in raw_data:
         lowest_level = curr_metric
         if data_scope_category == 'geographical':
@@ -44,10 +53,11 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
                 curr_dict = result_dict['final_dict']
                 curr_highest_level_values = result_dict['single_list']
             lgl = lowest_geographical_level
-            curr_output = get_details_by_higher_level(lgl, lowest_level, curr_highest_level_values, lgl, lgl, curr_dict)
+            curr_output = get_details_by_higher_level(lgl, lowest_level, curr_highest_level_values, lgl, lgl, curr_dict,
+                                                      [],unilevel_constraints)
         else:
             curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
-                                                      default_value_type, grouping_level_first)
+                                                      default_value_type, grouping_level_first, [],unilevel_constraints)
         individual_metric_output[lowest_level] = curr_output
 
     matching_format_metrics = get_similar_structure_keys(individual_metric_output, grouping_level)
@@ -139,9 +149,26 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
     return [individual_metric_output, statistics_array]
 
 
+# def get_details_by_higher_levels(data_scope, lowest_level, default_value_type=None,
+#                                 grouping_level=None, all_results = []):
+#     second_lowest_parent = count_details_parent_map[lowest_level]['parent']
+#     second_lowest_parent_name_model = count_details_parent_map[lowest_level]['parent_name_model']
+#     highest_levels_number = len(data_scope)
+#     if ',' in second_lowest_parent or ',' in second_lowest_parent_name_model:
+#         parents = second_lowest_parent.split(',')
+#         desc_sequence = [parents, lowest_level]
+#         parent_model_names = second_lowest_parent_name_model.split(',')
+#         parent_type = 'multiple'
+#     else:
+#         desc_sequence = find_level_sequence(highest_level, lowest_level)
+#         parent_type = 'single'
+#         parents = [second_lowest_parent]
+#     curr_level_id = 0
+#     last_level_id = len(desc_sequence) - 1
+
+
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
-                                grouping_level=None, all_results = []):
-    #grouping_level = grouping_level[0]
+                                grouping_level=None, all_results = [], unilevel_constraints = {}):
     second_lowest_parent = count_details_parent_map[lowest_level]['parent']
     second_lowest_parent_name_model = count_details_parent_map[lowest_level]['parent_name_model']
     if ',' in second_lowest_parent or ',' in second_lowest_parent_name_model:
@@ -179,13 +206,27 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
 
         # general queries common to all storage types
         if database_type == 'mongodb':
-            if highest_level_list == [] or highest_level_list == None:
+            if highest_level_list == [] or highest_level_list is None:
                 match_dict ={}
             else:
                 match_constraint = [{parent_model_name: {"$in": match_list}}]
                 match_dict = {"$and": match_constraint}
+            if next_level == lowest_level and not unilevel_constraints == {}:
+                first_constraint_index = unilevel_constraints.keys()[0]
+                first_constraint = unilevel_constraints[first_constraint_index]
+                category = first_constraint['category']
+                map_name = category + '_parent_names'
+                variable_name = eval(map_name)['default']
+                match_type = first_constraint["match_type"]
+                match_list = first_constraint["values"]
+                if match_type == 0:
+                    match_list = match_list["exact"]
+                    add_constraint = [{variable_name:{"$in": match_list}}]
+                else:
+                    match_list = match_list["range"]
+                    add_constraint = [{variable_name:{"$gte": match_list[0],"$lte": match_list[1]}}]
         elif database_type == 'mysql':
-            if highest_level_list == [] or highest_level_list == None:
+            if highest_level_list == [] or highest_level_list is None:
                 full_query = model_name + '.objects.all()'
             else:
                 first_part_query = model_name + '.objects.filter('

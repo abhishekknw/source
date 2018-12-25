@@ -50,6 +50,11 @@ geographical_parent_details = {
 }
 
 
+time_parent_names = {
+    "default": "created_at"
+}
+
+
 def z_calculator_array_multiple(data_array, metrics_array_dict):
     result_array = []
     global_data = {}
@@ -95,9 +100,11 @@ def sum_array_by_key(array, keys):
         count_dict[curr_key]=values
     return count_dict
 
+
 def binary_operation(a, b, op):
     operator_map = {"/": round(float(a)/b,5), "*":a*b, "+":a+b, "-": a-b}
     return operator_map[op]
+
 
 def merge_dict_array_dict_single(metric_dict,key_name):
     key_values = []
@@ -175,34 +182,34 @@ def merge_dict_array_array_single(array, key_name):
     return final_array
 
 
-def merge_dict_array_dict_single(metric_dict, key_name):
-    key_values = []
-    final_array = []
-    metric_list = metric_dict.keys()
-    first_array = metric_dict[metric_list[0]]
-    local_key_names = {}
-    for curr_metric in metric_dict:
-        curr_array = metric_dict[curr_metric]
-        if curr_array == []:
-            continue
-        local_key_name = find_key_alias_dict_array(curr_array, key_name)
-        local_key_names[curr_metric] = local_key_name
-        if curr_array==first_array:
-            key_values = [x[local_key_name] for x in curr_array]
-    for curr_value in key_values:
-        curr_final_dict = {}
-        missing_value = False
-        for curr_metric in metric_list:
-            local_key_name = local_key_names[curr_metric]
-            curr_dict = [x for x in metric_dict[curr_metric] if x[local_key_name]==curr_value]
-            if not curr_dict == []:
-                curr_final_dict.update(curr_dict[0])
-            else:
-                missing_value = True
-                continue
-        if missing_value == False:
-            final_array.append(curr_final_dict)
-    return final_array
+# def merge_dict_array_dict_single(metric_dict, key_name):
+#     key_values = []
+#     final_array = []
+#     metric_list = metric_dict.keys()
+#     first_array = metric_dict[metric_list[0]]
+#     local_key_names = {}
+#     for curr_metric in metric_dict:
+#         curr_array = metric_dict[curr_metric]
+#         if curr_array == []:
+#             continue
+#         local_key_name = find_key_alias_dict_array(curr_array, key_name)
+#         local_key_names[curr_metric] = local_key_name
+#         if curr_array==first_array:
+#             key_values = [x[local_key_name] for x in curr_array]
+#     for curr_value in key_values:
+#         curr_final_dict = {}
+#         missing_value = False
+#         for curr_metric in metric_list:
+#             local_key_name = local_key_names[curr_metric]
+#             curr_dict = [x for x in metric_dict[curr_metric] if x[local_key_name]==curr_value]
+#             if not curr_dict == []:
+#                 curr_final_dict.update(curr_dict[0])
+#             else:
+#                 missing_value = True
+#                 continue
+#         if missing_value == False:
+#             final_array.append(curr_final_dict)
+#     return final_array
 
 
 # function to check whether a dict array key structure matches a desired key array
