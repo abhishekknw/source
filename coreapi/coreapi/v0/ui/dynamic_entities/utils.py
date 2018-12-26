@@ -6,9 +6,9 @@ from models import SupplyEntityType, BaseSupplyEntityType
 
 def validate_entity_type_data(entity_type_dict):
     possible_attribute_types = ['FLOAT', 'INT', 'STRING', 'BOOLEAN', 'EMAIL', 'PASSWORD', 'PHONE', 'DROPDOWN', 'RADIO',
-                                'CHECKBOX', 'TEXTAREA', 'DATE', 'DATETIME', 'INVENTORYLIST']
-    validation_msg_dict = {'repeating_name_field': [], "type_mismatch": [], "other_errors":[],
-                           "base_entity_fields_mismatch":[]}
+                                'CHECKBOX', 'TEXTAREA', 'DATE', 'DATETIME', 'INVENTORY', "ENTITY"]
+    validation_msg_dict = {'repeating_name_field': [], "type_mismatch": [], "other_errors": [],
+                           "base_entity_fields_mismatch": []}
     is_valid = True
     entity_type_attributes = entity_type_dict["entity_attributes"]
     base_entity_type_id = entity_type_dict["base_entity_type_id"]

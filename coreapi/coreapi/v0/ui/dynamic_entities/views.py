@@ -58,7 +58,9 @@ class EntityTypeById(APIView):
         new_name = request.data['name'] if 'name' in request.data else None
         new_attributes = request.data['entity_attributes'] if 'entity_attributes' in request.data else None
         is_global = request.data['is_global'] if 'is_global' in request.data else False
-        dict_of_req_attributes = {"name": new_name, "entity_attributes": new_attributes}
+        base_entity_type_id = request.data['base_entity_type_id'] if 'base_entity_type_id' in request.data else False
+        dict_of_req_attributes = {"name": new_name, "entity_attributes": new_attributes,
+                                  "base_entity_type_id": base_entity_type_id}
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
             return handle_response('', data=validation_msg_dict, success=False)
