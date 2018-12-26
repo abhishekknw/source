@@ -108,6 +108,8 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
     lead_already_exist = True if len(list(mongo_client.leads.find({"lead_sha_256": lead_sha_256}))) > 0 else False
     if not lead_already_exist:
         mongo_client.leads.insert_one(lead_dict).inserted_id
+        mongo_client.leads_forms.update_one({"leads_form_id": lead_form['leads_form_id']},
+                                            {"$set": {"last_entry_id": entry_id}})
     return
 
 
@@ -421,6 +423,7 @@ class LeadsFormBulkEntry(APIView):
                 if not lead_already_exist:
                     mongo_client.leads.insert_one(lead_dict)
                     entry_id = entry_id + 1  # will be saved in the end
+        mongo_client.leads_forms.update_one({"leads_form_id": leads_form_id}, {"$set": {"last_entry_id": entry_id}})
         missing_societies.sort()
         missing_dict = {
             "missing societies": missing_societies,
