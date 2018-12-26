@@ -108,6 +108,7 @@ class Entity(APIView):
         for supply_entity in all_supply_entity:
             all_supply_entity_dict[str(supply_entity._id)] = {
                 "id": str(supply_entity._id),
+                "entity_type_id": str(supply_entity.entity_type_id),
                 "name": supply_entity.name,
                 "entity_attributes": supply_entity.entity_attributes,
                 "is_custom": supply_entity.is_custom,
@@ -124,6 +125,7 @@ class EntityById(APIView):
         supply_entity = SupplyEntity.objects.raw({'_id':ObjectId(entity_id)})[0]
         supply_entity = {
             "id": str(supply_entity._id),
+            "entity_type_id": str(supply_entity.entity_type_id),
             "name": supply_entity.name,
             "entity_attributes": supply_entity.entity_attributes,
             "is_custom": supply_entity.is_custom,
