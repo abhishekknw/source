@@ -8,6 +8,7 @@ from v0.ui.supplier.models import SupplierTypeSociety
 import copy
 from rest_framework.views import APIView
 from v0.ui.utils import handle_response, get_user_organisation_id
+from datetime import datetime
 
 statistics_map = {"z_score": z_calculator_array_multiple}
 
@@ -204,42 +205,64 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             match_list = next_level_match_list
         query = []
 
+        if next_level == lowest_level and not unilevel_constraints == {}:
+            first_constraint_index = unilevel_constraints.keys()[0]
+            first_constraint = unilevel_constraints[first_constraint_index]
+            add_category = first_constraint['category']
+            add_map_name = add_category + '_parent_names'
+            add_variable_name = eval(add_map_name)['default']
+            add_match_type = first_constraint["match_type"]
+            add_match_list = first_constraint["values"]
+
         # general queries common to all storage types
         if database_type == 'mongodb':
+            add_constraint = []
+            project_dict = {}
+            group_dict = {}
             if highest_level_list == [] or highest_level_list is None:
                 match_dict ={}
+
             else:
                 match_constraint = [{parent_model_name: {"$in": match_list}}]
                 match_dict = {"$and": match_constraint}
             if next_level == lowest_level and not unilevel_constraints == {}:
-                first_constraint_index = unilevel_constraints.keys()[0]
-                first_constraint = unilevel_constraints[first_constraint_index]
-                category = first_constraint['category']
-                map_name = category + '_parent_names'
-                variable_name = eval(map_name)['default']
-                match_type = first_constraint["match_type"]
-                match_list = first_constraint["values"]
-                if match_type == 0:
-                    match_list = match_list["exact"]
-                    add_constraint = [{variable_name:{"$in": match_list}}]
+                project_dict = {add_variable_name:1}
+                if add_match_type == 0:
+                    add_match_list = add_match_list["exact"]
+                    add_constraint = [{add_variable_name:{"$in": match_list}}]
                 else:
-                    match_list = match_list["range"]
-                    add_constraint = [{variable_name:{"$gte": match_list[0],"$lte": match_list[1]}}]
+                    add_match_list = add_match_list["range"]
+                    start_value = add_match_list[0]
+                    end_value = add_match_list[1]
+                    if add_category == 'time':
+                        start_value = datetime.strptime(start_value, "%Y-%m-%d")
+                        end_value = datetime.strptime(end_value, "%Y-%m-%d")
+                    add_constraint = [{add_variable_name:{"$gte": start_value, "$lte": end_value}}]
+                match_constraint = match_constraint + add_constraint
         elif database_type == 'mysql':
+            add_query = ''
+            if next_level == lowest_level and not unilevel_constraints == {}:
+                if add_match_type == 0:
+                    add_query = '.filter(' + add_variable_name + '__in=add_match_list)'
+                    add_match_list = add_match_list["exact"]
+                else:
+                    add_query = '.filter(' + add_variable_name + '__range=add_match_list)'
+                    add_match_list = add_match_list["range"]
             if highest_level_list == [] or highest_level_list is None:
                 full_query = model_name + '.objects.all()'
             else:
                 first_part_query = model_name + '.objects.filter('
                 full_query = first_part_query + parent_model_name + '__in=match_list)'
+            full_query = full_query + add_query
             query = list(eval(full_query).values(self_model_name, parent_model_name))
         else:
             return "database does not exist"
 
         if storage_type == 'unique' or storage_type == 'name':
             if database_type == 'mongodb':
-                group_dict = {"_id":{self_model_name: '$' + self_model_name},
-                              self_model_name: {"$first": '$' + self_model_name}}
-                project_dict = {self_model_name: 1, "_id":0}
+                group_dict.update({"_id":{self_model_name: '$' + self_model_name},
+                              self_model_name: {"$first": '$' + self_model_name}})
+                project_dict.update({self_model_name: 1, "_id":0})
                 for curr_parent_model_name in parent_model_names:
                     group_dict["_id"][curr_parent_model_name] = '$' + curr_parent_model_name
                     group_dict[curr_parent_model_name] = {"$first": '$' + curr_parent_model_name}
@@ -256,6 +279,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                         }
                     ]
                 )
+
                 query = list(query)
                 next_level_match_list = [x[self_model_name] for x in query]
                 # count = mongo_client[model_name].find({}).distinct(self_model_name).length
@@ -268,16 +292,16 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
 
         elif storage_type == 'count' or storage_type == 'sum' or storage_type == 'condition':
             if database_type == 'mongodb':
-                project_dict = {next_level:1, "_id":0}
+                project_dict.update({next_level:1, "_id":0})
                 if storage_type == 'count':
-                    group_dict = {'_id': {}, next_level: {"$sum": 1}}
+                    group_dict.update({'_id': {}, next_level: {"$sum": 1}})
                 elif storage_type == 'sum':
-                    group_dict = {'_id': {}, next_level: {"$sum": self_model_name}}
+                    group_dict.update({'_id': {}, next_level: {"$sum": self_model_name}})
                 else:
                     if 'incrementing_value' in entity_details:
                         incrementing_value = entity_details['incrementing_value']
-                        group_dict = {'_id': {}, next_level: {"$sum":{
-                            "$sum": {"$cond":[{"$eq": ["$"+self_model_name,incrementing_value]}, 1, 0]}}}}
+                        group_dict.update({'_id': {}, next_level: {"$sum":{
+                            "$sum": {"$cond":[{"$eq": ["$"+self_model_name,incrementing_value]}, 1, 0]}}}})
                     else:
                         group_dict = {'_id': {}, next_level: {"$sum": {"$cond": ["$"+self_model_name, 1, 0]}}}
                 for curr_parent_model_name in parent_model_names:
