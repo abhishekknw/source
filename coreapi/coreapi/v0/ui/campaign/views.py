@@ -1873,6 +1873,110 @@ class GetPermissionBoxImages(APIView):
 #         return ui_utils.handle_response(class_name, data={}, success=True)
 
 
+def get_campaign_wise_summary_by_user(user_id, user_start_datetime=None):
+    all_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id).all()
+    all_campaign_ids = [campaign.campaign_id for campaign in all_campaigns]
+    leads_summary_by_supplier = get_leads_summary(all_campaign_ids,user_start_datetime=user_start_datetime)
+    campaign_supplier_map = {}
+    reverse_campaign_supplier_map = {}
+    all_supplier_ids = []
+    campaign_wise_leads = {}
+    for summary_point in leads_summary_by_supplier:
+        if summary_point["campaign_id"] not in campaign_supplier_map:
+            campaign_supplier_map[summary_point["campaign_id"]] = []
+        if summary_point["supplier_id"] not in campaign_supplier_map[summary_point["campaign_id"]]:
+            campaign_supplier_map[summary_point["campaign_id"]].append(summary_point["supplier_id"])
+        if summary_point["supplier_id"] not in all_supplier_ids:
+            all_supplier_ids.append(summary_point["supplier_id"])
+        if summary_point["campaign_id"] not in campaign_wise_leads:
+            campaign_wise_leads[summary_point["campaign_id"]] = {
+                "total_leads_count": 0, "hot_leads_count": 0
+            }
+        campaign_wise_leads[summary_point["campaign_id"]]["total_leads_count"] += summary_point["total_leads_count"]
+        campaign_wise_leads[summary_point["campaign_id"]]["hot_leads_count"] += summary_point["hot_leads_count"]
+
+        reverse_campaign_supplier_map[summary_point["supplier_id"]] = summary_point["campaign_id"]
+    campaign_summary = {"campaign_wise": {}, "all_campaigns": {}}
+    all_society_flat_counts = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).values(
+        "supplier_id", "flat_count")
+    campaign_flat_count_map = {}
+    supplier_flat_count_map = {}
+    for society in all_society_flat_counts:
+        supplier_flat_count_map[society["supplier_id"]] = society["flat_count"]
+        campaign_id = reverse_campaign_supplier_map[society["supplier_id"]]
+        if campaign_id not in campaign_flat_count_map:
+            campaign_flat_count_map[campaign_id] = 0
+        if society["flat_count"]:
+            campaign_flat_count_map[campaign_id] += society["flat_count"]
+    leads_summary_by_supplier_dict = {}
+    for summary_point in leads_summary_by_supplier:
+        if summary_point["campaign_id"] not in leads_summary_by_supplier_dict:
+            leads_summary_by_supplier_dict[summary_point["campaign_id"]] = {}
+        if summary_point["supplier_id"] in supplier_flat_count_map:
+            summary_point["flat_count"] = supplier_flat_count_map[summary_point["supplier_id"]]
+        else:
+            summary_point["flat_count"] = 0
+        leads_summary_by_supplier_dict[summary_point["campaign_id"]][summary_point["supplier_id"]] = summary_point
+
+    for campaign_id in campaign_wise_leads:
+        if campaign_id not in campaign_flat_count_map:
+            continue
+        flat_count = campaign_flat_count_map[campaign_id]
+        analytics = get_mean_median_mode(leads_summary_by_supplier_dict[campaign_id],
+                                         ["total_leads_count", "hot_leads_count"])
+        campaign_summary["campaign_wise"][campaign_id] = {
+            "total_leads_count": campaign_wise_leads[campaign_id]["total_leads_count"],
+            "hot_leads_count": campaign_wise_leads[campaign_id]["hot_leads_count"],
+            "total_supplier_count": len(campaign_supplier_map[campaign_id]),
+            "flat_count": flat_count,
+            "hot_leads_analytics": {
+                "percentage_by_flat": analytics["hot_leads_count"]["percentage_by_flat"],
+                "mean_percent_by_flat": analytics["hot_leads_count"]["mean_percent_by_flat"],
+                "median_percent_by_flat": analytics["hot_leads_count"]["median_percent_by_flat"],
+                "mode_percent_by_flat": analytics["hot_leads_count"]["mode_percent_by_flat"],
+                "median_by_society": analytics["hot_leads_count"]["median_by_society"],
+                "mean_by_society": analytics["hot_leads_count"]["mean_by_society"],
+            },
+            "total_leads_analytics": {
+                "percentage_by_flat": analytics["total_leads_count"]["percentage_by_flat"],
+                "mean_percent_by_flat": analytics["total_leads_count"]["mean_percent_by_flat"],
+                "median_percent_by_flat": analytics["total_leads_count"]["median_percent_by_flat"],
+                "mode_percent_by_flat": analytics["total_leads_count"]["mode_percent_by_flat"],
+                "median_by_society": analytics["total_leads_count"]["median_by_society"],
+                "mean_by_society": analytics["total_leads_count"]["mean_by_society"],
+            },
+        }
+    analytics = get_mean_median_mode(campaign_summary["campaign_wise"], ["total_leads_count", "hot_leads_count"])
+    campaign_summary["all_campaigns"]["total_leads_analytics"] = {
+        "percentage_by_flat": analytics["total_leads_count"]["percentage_by_flat"],
+        "mean_percent_by_flat": analytics["total_leads_count"]["mean_percent_by_flat"],
+        "median_percent_by_flat": analytics["total_leads_count"]["median_percent_by_flat"],
+        "mode_percent_by_flat": analytics["total_leads_count"]["mode_percent_by_flat"],
+        "median_by_campaign": analytics["total_leads_count"]["median_by_society"],
+        "mean_by_campaign": analytics["total_leads_count"]["mean_by_society"],
+    }
+    campaign_summary["all_campaigns"]["hot_leads_analytics"] = {
+        "percentage_by_flat": analytics["hot_leads_count"]["percentage_by_flat"],
+        "mean_percent_by_flat": analytics["hot_leads_count"]["mean_percent_by_flat"],
+        "median_percent_by_flat": analytics["hot_leads_count"]["median_percent_by_flat"],
+        "mode_percent_by_flat": analytics["hot_leads_count"]["mode_percent_by_flat"],
+        "median_by_campaign": analytics["hot_leads_count"]["median_by_society"],
+        "mean_by_campaign": analytics["hot_leads_count"]["mean_by_society"],
+    }
+    campaign_summary["all_campaigns"]["total_supplier_count"] = 0
+    campaign_summary["all_campaigns"]["total_leads_count"] = 0
+    campaign_summary["all_campaigns"]["hot_leads_count"] = 0
+    campaign_summary["all_campaigns"]["flat_count"] = 0
+    for campaign in campaign_summary["campaign_wise"]:
+        campaign_summary["all_campaigns"]["total_leads_count"] += campaign_summary["campaign_wise"][campaign][
+            "total_leads_count"]
+        campaign_summary["all_campaigns"]["hot_leads_count"] += campaign_summary["campaign_wise"][campaign]["hot_leads_count"]
+        campaign_summary["all_campaigns"]["flat_count"] += campaign_summary["campaign_wise"][campaign]["flat_count"]
+        campaign_summary["all_campaigns"]["total_supplier_count"] += campaign_summary["campaign_wise"][campaign][
+            "total_supplier_count"]
+    return campaign_summary
+
+
 class CampaignWiseSummary(APIView):
     @staticmethod
     def get(request):
