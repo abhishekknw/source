@@ -1914,7 +1914,10 @@ def get_campaign_wise_summary_by_user(user_id, user_start_datetime=None):
     for summary_point in leads_summary_by_supplier:
         if summary_point["campaign_id"] not in leads_summary_by_supplier_dict:
             leads_summary_by_supplier_dict[summary_point["campaign_id"]] = {}
-        summary_point["flat_count"] = supplier_flat_count_map[summary_point["supplier_id"]]
+        if summary_point["supplier_id"] in supplier_flat_count_map:
+            summary_point["flat_count"] = supplier_flat_count_map[summary_point["supplier_id"]]
+        else:
+            summary_point["flat_count"] = 0
         leads_summary_by_supplier_dict[summary_point["campaign_id"]][summary_point["supplier_id"]] = summary_point
 
     for campaign_id in campaign_wise_leads:
