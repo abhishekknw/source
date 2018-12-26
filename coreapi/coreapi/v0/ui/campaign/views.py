@@ -1878,6 +1878,8 @@ class GetPermissionBoxImages(APIView):
 def get_campaign_wise_summary_by_user(user_id, user_start_datetime=None):
     all_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id).all()
     all_campaign_ids = [campaign.campaign_id for campaign in all_campaigns]
+    all_campaign_objects = ProposalInfo.objects.filter(proposal_id__in=all_campaign_ids).all()
+    all_campaign_id_name_map = {campaign.proposal_id: campaign.name for campaign in all_campaign_objects}
     leads_summary_by_supplier = get_leads_summary(all_campaign_ids,user_start_datetime=user_start_datetime)
     campaign_supplier_map = {}
     reverse_campaign_supplier_map = {}
@@ -1927,6 +1929,7 @@ def get_campaign_wise_summary_by_user(user_id, user_start_datetime=None):
         analytics = get_mean_median_mode(leads_summary_by_supplier_dict[campaign_id],
                                          ["total_leads_count", "hot_leads_count"])
         campaign_summary["campaign_wise"][campaign_id] = {
+            "name": all_campaign_id_name_map[campaign_id],
             "total_leads_count": campaign_wise_leads[campaign_id]["total_leads_count"],
             "hot_leads_count": campaign_wise_leads[campaign_id]["hot_leads_count"],
             "total_supplier_count": len(campaign_supplier_map[campaign_id]),
