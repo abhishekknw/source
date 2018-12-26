@@ -5,16 +5,17 @@ from bson.objectid import ObjectId
 from datetime import datetime
 from utils import validate_entity_type_data, validate_with_entity_type
 
-class EntityType(APIView):
 
+class EntityType(APIView):
     @staticmethod
     def post(request):
         name = request.data['name'] if 'name' in request.data else False
         is_global = request.data['is_global'] if 'is_global' in request.data else False
         entity_attributes = request.data['entity_attributes'] if 'entity_attributes' in request.data else False
         organisation_id = get_user_organisation_id(request.user)
+        base_entity_type_id = request.data['base_entity_type_id'] if 'base_entity_type_id' in request.data else False
         dict_of_req_attributes = {"name": name, "entity_attributes": entity_attributes,
-                                  "organisation_id": organisation_id}
+                                  "organisation_id": organisation_id, "base_entity_type_id": base_entity_type_id}
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
             return handle_response('', data=validation_msg_dict, success=False)
