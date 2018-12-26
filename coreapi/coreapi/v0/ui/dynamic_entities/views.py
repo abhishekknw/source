@@ -120,6 +120,20 @@ class Entity(APIView):
 
 class EntityById(APIView):
     @staticmethod
+    def get(request, entity_id):
+        supply_entity = SupplyEntity.objects.raw({'_id':ObjectId(entity_id)})[0]
+        supply_entity = {
+            "id": str(supply_entity._id),
+            "name": supply_entity.name,
+            "entity_attributes": supply_entity.entity_attributes,
+            "is_custom": supply_entity.is_custom,
+            "organisation_id": supply_entity.organisation_id,
+            "created_by": supply_entity.created_by,
+            "created_at": supply_entity.created_at,
+        }
+        return handle_response('', data=supply_entity, success=True)
+
+    @staticmethod
     def put(request, entity_id):
         name = request.data['name'] if 'name' in request.data else None
         entity_type_id = request.data['entity_type_id'] if 'entity_type_id' in request.data else None
