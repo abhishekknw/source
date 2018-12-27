@@ -4085,6 +4085,9 @@ def handle_update_campaign_inventories(user, data):
             supplier_stall_locations = supplier['stall_locations'] if 'stall_locations' in supplier else None
             if supplier_stall_locations and isinstance(supplier_stall_locations,list):
                 supplier_stall_locations = ','.join(supplier_stall_locations)
+            supplier_sunboard_locations = supplier['sunboard_location'] if 'sunboard_location' in supplier else None
+            if supplier_sunboard_locations and isinstance(supplier_sunboard_locations, list):
+                supplier_sunboard_locations = ','.join(supplier_sunboard_locations)
             shortlisted_spaces[ss_global_id] = {
                 'phase': supplier['phase'],
                 'phase_no': supplier['phase_no'],
@@ -4097,7 +4100,8 @@ def handle_update_campaign_inventories(user, data):
                 'stall_locations': supplier_stall_locations,
                 'is_completed' : supplier['is_completed'],
                 'cost_per_flat' : supplier['cost_per_flat'],
-                'booking_priority': supplier['booking_priority']
+                'booking_priority': supplier['booking_priority'],
+                'sunboard_location': supplier['sunboard_location'],
             }
 
             shortlisted_inventories = supplier['shortlisted_inventories']
@@ -4184,6 +4188,7 @@ def update_campaign_inventories(data):
             obj.is_completed = shortlisted_spaces[ss_global_id]['is_completed']
             obj.cost_per_flat = shortlisted_spaces[ss_global_id]['cost_per_flat']
             obj.booking_priority = shortlisted_spaces[ss_global_id]['booking_priority']
+            obj.sunboard_location = shortlisted_spaces[ss_global_id]['sunboard_location']
 
         sid_ids = shortlisted_inventory_details.keys()
         sid_objects = ShortlistedInventoryPricingDetails.objects.filter(id__in=sid_ids)

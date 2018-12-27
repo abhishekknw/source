@@ -1008,7 +1008,7 @@ def get_mean_median_mode(object_list, list_of_attributes):
     for attribute in list_of_attributes:
         if attribute != 'flat_count':
             percentage_by_flat = 0
-            if attribute in all_attribute_item_list and all_attribute_item_list['flat_count'] != 0:
+            if attribute in all_attribute_item_list and sum(all_attribute_item_list['flat_count']) != 0:
                 percentage_by_flat = float(sum(all_attribute_item_list[attribute]))/float(sum(all_attribute_item_list['flat_count'])) * 100
             mean_by_society = np.average(all_attribute_item_list[attribute]) if attribute in all_attribute_item_list else 0
             median_by_society = np.median(all_attribute_item_list[attribute]) if attribute in all_attribute_item_list else 0
@@ -1021,9 +1021,11 @@ def get_mean_median_mode(object_list, list_of_attributes):
         if attribute != 'flat_count':
             try:
                 percentage_by_flat_of_attribute[attribute] = sorted(percentage_by_flat_of_attribute[attribute])
+                median_percent_by_flat = np.median(percentage_by_flat_of_attribute[attribute])
+                mean_percent_by_flat = np.average(percentage_by_flat_of_attribute[attribute])
                 return_dict[attribute]['mode_percent_by_flat'] = calculate_mode(percentage_by_flat_of_attribute[attribute])
-                return_dict[attribute]['median_percent_by_flat'] = np.median(percentage_by_flat_of_attribute[attribute])
-                return_dict[attribute]['mean_percent_by_flat'] = np.average(percentage_by_flat_of_attribute[attribute])
+                return_dict[attribute]['median_percent_by_flat'] = 0 if math.isnan(median_percent_by_flat) else median_percent_by_flat
+                return_dict[attribute]['mean_percent_by_flat'] = 0 if math.isnan(median_percent_by_flat) else mean_percent_by_flat
             except Exception as ex:
                 print ex
                 return_dict[attribute]['mode_percent_by_flat'] = None
@@ -1981,66 +1983,12 @@ class CampaignWiseSummary(APIView):
     @staticmethod
     def get(request):
         user_id = request.user.id
-        all_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id).all()
-        all_campaign_ids = [campaign.campaign_id for campaign in all_campaigns]
-        leads_summary_by_campaign = get_leads_summary_by_campaign(all_campaign_ids)
-        leads_summary_by_supplier = get_leads_summary(all_campaign_ids)
-        campaign_supplier_map = {}
-        reverse_campaign_supplier_map = {}
-        all_supplier_ids = []
-        for summary_point in leads_summary_by_supplier:
-            if summary_point["campaign_id"] not in campaign_supplier_map:
-                campaign_supplier_map[summary_point["campaign_id"]] = []
-            if summary_point["supplier_id"] not in campaign_supplier_map[summary_point["campaign_id"]]:
-                campaign_supplier_map[summary_point["campaign_id"]].append(summary_point["supplier_id"])
-            if summary_point["supplier_id"] not in all_supplier_ids:
-                all_supplier_ids.append(summary_point["supplier_id"])
-            reverse_campaign_supplier_map[summary_point["supplier_id"]] = summary_point["campaign_id"]
         campaign_summary = {}
-        all_society_flat_counts = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).values(
-            "supplier_id", "flat_count")
-        campaign_flat_count_map = {}
-        supplier_flat_count_map = {}
-        for society in all_society_flat_counts:
-            supplier_flat_count_map[society["supplier_id"]] = society["flat_count"]
-            campaign_id = reverse_campaign_supplier_map[society["supplier_id"]]
-            if campaign_id not in campaign_flat_count_map:
-                campaign_flat_count_map[campaign_id] = 0
-            if society["flat_count"]:
-                campaign_flat_count_map[campaign_id] += society["flat_count"]
-        leads_summary_by_supplier_dict = {}
-        for summary_point in leads_summary_by_supplier:
-            if summary_point["campaign_id"] not in leads_summary_by_supplier_dict:
-                leads_summary_by_supplier_dict[summary_point["campaign_id"]] = {}
-            summary_point["flat_count"] = supplier_flat_count_map[summary_point["supplier_id"]]
-            leads_summary_by_supplier_dict[summary_point["campaign_id"]][summary_point["supplier_id"]] = summary_point
-
-        for lead_summary in leads_summary_by_campaign:
-            if lead_summary["campaign_id"] not in campaign_flat_count_map:
-                continue
-            flat_count = campaign_flat_count_map[lead_summary["campaign_id"]]
-            analytics = get_mean_median_mode(leads_summary_by_supplier_dict[lead_summary["campaign_id"]], ["total_leads_count", "hot_leads_count"])
-            campaign_summary[lead_summary["campaign_id"]] = {
-                "total_leads_count": lead_summary["total_leads_count"],
-                "hot_leads_count": lead_summary["hot_leads_count"],
-                "hot_leads_percentage": lead_summary["hot_leads_percentage"],
-                "total_supplier_count": len(campaign_supplier_map[lead_summary["campaign_id"]]),
-                "total_flat_count": flat_count,
-                "hot_leads_analytics": {
-                    "percentage_by_flat": analytics["hot_leads_count"]["percentage_by_flat"],
-                    "mean_percent_by_flat": analytics["hot_leads_count"]["mean_percent_by_flat"],
-                    "median_percent_by_flat": analytics["hot_leads_count"]["median_percent_by_flat"],
-                    "mode_percent_by_flat": analytics["hot_leads_count"]["mode_percent_by_flat"],
-                    "median_by_society": analytics["hot_leads_count"]["median_by_society"],
-                    "mean_by_society": analytics["hot_leads_count"]["mean_by_society"],
-                },
-                "total_leads_analytics": {
-                    "percentage_by_flat": analytics["total_leads_count"]["percentage_by_flat"],
-                    "mean_percent_by_flat": analytics["total_leads_count"]["mean_percent_by_flat"],
-                    "median_percent_by_flat": analytics["total_leads_count"]["median_percent_by_flat"],
-                    "mode_percent_by_flat": analytics["total_leads_count"]["mode_percent_by_flat"],
-                    "median_by_society": analytics["total_leads_count"]["median_by_society"],
-                    "mean_by_society": analytics["total_leads_count"]["mean_by_society"],
-                },
-            }
+        start_date = datetime.now() - timedelta(days=7)
+        campaign_summary['last_week'] = get_campaign_wise_summary_by_user(user_id, start_date)
+        start_date = datetime.now() - timedelta(days=14)
+        campaign_summary['last_two_weeks'] = get_campaign_wise_summary_by_user(user_id, start_date)
+        start_date = datetime.now() - timedelta(days=21)
+        campaign_summary['last_three_weeks'] = get_campaign_wise_summary_by_user(user_id, start_date)
+        campaign_summary['overall'] = get_campaign_wise_summary_by_user(user_id)
         return ui_utils.handle_response({}, data=campaign_summary, success=True)

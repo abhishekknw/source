@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
-from models import (get_leads_summary, LeadsPermissions, get_leads_summary_all)
+from models import (get_leads_summary, LeadsPermissions, get_leads_summary_all,
+                    get_details_by_higher_level, geographical_parent_details, get_details_by_higher_level_geographical)
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
@@ -28,6 +29,7 @@ pp = pprint.PrettyPrinter(depth=6)
 import hashlib
 from bson.objectid import ObjectId
 from v0.ui.proposal.models import ProposalInfo
+from v0.ui.account.models import Profile
 
 
 def is_user_permitted(permission_type, user, **kwargs):
@@ -36,7 +38,7 @@ def is_user_permitted(permission_type, user, **kwargs):
     return is_permitted, validation_msg_dict
     leads_form_id = kwargs['leads_form_id'] if 'leads_form_id' in kwargs else None
     campaign_id = kwargs['campaign_id'] if 'campaign_id' in kwargs else None
-    permission_list = list(LeadsPermissions.objects.raw({'user_id': user.id}))
+    permission_list = list(LeadsPermissions.objects.raw({'profile_id': user.profile_id}))
     if len(permission_list) == 0:
         is_permitted = True
         validation_msg_dict['msg'] = 'no_permission_document'
@@ -88,7 +90,7 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
                  "leads_form_id": lead_form['leads_form_id'], "entry_id": entry_id, "status": "active"}
     for lead_item_data in lead_data:
         if "value" not in lead_item_data:
-            continue
+            lead_item_data["value"] = None
         item_dict = {}
         item_id = lead_item_data["item_id"]
         key_name = all_form_items_dict[str(item_id)]["key_name"]
@@ -175,14 +177,7 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
         leads_data_start_end = [x for x in leads_data_start if x['created_at'].date() <= kwargs['end_date']]
         leads_data_list = leads_data_start_end
 
-    # first_entry = (page_number-1)*leads_per_page+1
-    # if first_entry>len(leads_data_list):
-    #     leads_data_list_paginated = []
-    # else:
-    #     last_entry = min(page_number*leads_per_page, len(leads_data_list))
-    #     leads_data_list_sorted = list(set(leads_data_list))
-    #     leads_data_list_paginated = leads_data_list_sorted[first_entry:(last_entry-1)]
-    #leads_data_values_itemid = [x["data"] for x in leads_data_list]
+
     leads_data_values = []
     for entry in leads_data_list:
         curr_entry = entry['data']
@@ -261,8 +256,9 @@ class CreateLeadsForm(APIView):
         item_id = 0
         max_id_data = mongo_client.leads_forms.find_one(sort=[('leads_form_id', -1)])
         max_id = max_id_data['leads_form_id'] if max_id_data is not None else 0
+        new_leads_form_id = max_id+1
         mongo_dict = {
-            'leads_form_id': max_id+1,
+            'leads_form_id': new_leads_form_id,
             'campaign_id': campaign_id,
             'leads_form_name': leads_form_name,
             'data': {},
@@ -280,6 +276,7 @@ class CreateLeadsForm(APIView):
         else:
             mongo_dict['global_hot_lead_criteria'] = create_global_hot_lead_criteria(mongo_dict)
         mongo_client.leads_forms.insert_one(mongo_dict)
+        add_single_leads_permission(request.user.profile_id, new_leads_form_id, ["EDIT", "VIEW", "DELETE", "FILL", "FREEZE", "UNFREEZE"])
         return handle_response({}, data='success', success=True)
 
 
@@ -1005,15 +1002,33 @@ class GetAllLeadFormsByCampaigns(APIView):
         return handle_response(class_name, data=all_campaign_leads_forms_list, success=True)
 
 
+def add_single_leads_permission(profile_id, leads_form_id, new_permissions):
+    existing_leads_form_permissions_dict = list(LeadsPermissions.objects.raw({"profile_id": profile_id}))
+    if len(existing_leads_form_permissions_dict) == 0:
+        return handle_response({}, data='something_is_wrong', success=False)
+    existing_leads_form_permissions_dict = existing_leads_form_permissions_dict[0]
+    permissions_id = str(existing_leads_form_permissions_dict._id)
+    old_leads_form_permissions = existing_leads_form_permissions_dict.leads_permissions
+    if "leads_forms" not in old_leads_form_permissions:
+        old_leads_form_permissions["leads_forms"] = {}
+    old_leads_form_permissions["leads_forms"][str(leads_form_id)] = new_permissions
+    dict_of_req_attributes = {
+        "profile_id": profile_id,
+        "leads_permissions": old_leads_form_permissions,
+        "updated_at": datetime.datetime.now()
+    }
+    LeadsPermissions.objects.raw({'_id': ObjectId(permissions_id)}).update({"$set": dict_of_req_attributes})
+
+
 class LeadsPermissionsAPI(APIView):
     @staticmethod
     def post(request):
         for single_obj in request.data:
             leads_permissions = single_obj['leads_permissions']
-            user_id = single_obj['user_id']
+            profile_id = single_obj['profile_id']
             organisation_id = get_user_organisation_id(request.user)
             dict_of_req_attributes = {"leads_permissions": leads_permissions,
-                                      "organisation_id": organisation_id, "user_id": user_id}
+                                      "organisation_id": organisation_id, "profile_id": profile_id}
             (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
             if not is_valid:
                 return handle_response('', data=validation_msg_dict, success=False)
@@ -1029,9 +1044,10 @@ class LeadsPermissionsAPI(APIView):
         if organisation_id is not None:
             leads_permissions_all = LeadsPermissions.objects.raw({'organisation_id': organisation_id})
             all_user_id_list = []
+            all_profile_id_list = []
             for permission in leads_permissions_all:
-                if permission.user_id not in all_user_id_list:
-                    all_user_id_list.append(permission.user_id)
+                if permission.profile_id not in all_profile_id_list:
+                    all_profile_id_list.append(permission.profile_id)
                 if permission.created_by not in all_user_id_list:
                     all_user_id_list.append(permission.created_by)
             all_user_objects = BaseUser.objects.filter(id__in=all_user_id_list).all()
@@ -1041,12 +1057,18 @@ class LeadsPermissionsAPI(APIView):
                                        "email": user.email,
                                        "id": user.id
                                        } for user in all_user_objects}
+            all_profile_objects = Profile.objects.filter(id__in=all_profile_id_list).all()
+            all_profile_dict = {profile.id: {
+                    "id": profile.id,
+                    "name": profile.name,
+                    "is_standard": profile.is_standard,
+                    "organisation_id": profile.organisation_id,
+                } for profile in all_profile_objects}
             data = []
             for permission in leads_permissions_all:
                 permission_data = {
                     "id": str(permission._id),
-                    "user_id": all_user_dict[int(permission.user_id)] if int(
-                        permission.user_id) in all_user_dict else None,
+                    "profile_id": all_profile_dict[int(permission.profile_id)] if int(permission.profile_id) in all_profile_dict else None,
                     "organisation_id": permission.organisation_id,
                     "leads_permissions": permission.leads_permissions,
                     "created_by": all_user_dict[int(permission.created_by)] if int(
@@ -1077,33 +1099,40 @@ class LeadsPermissionsAPI(APIView):
         return handle_response('', data={"success": True}, success=True)
 
 
-class LeadsPermissionsByUserIdAPI(APIView):
+class LeadsPermissionsByProfileIdAPI(APIView):
     @staticmethod
-    def get(request, user_id):
+    def get(request, profile_id):
         organisation_id = get_user_organisation_id(request.user)
         leads_permissions = list(LeadsPermissions.objects.raw(
-            {"user_id": int(user_id), "organisation_id": organisation_id}))
+            {"profile_id": int(profile_id), "organisation_id": organisation_id}))
         all_user_id_list = []
+        all_profile_id_list = []
         for permission in leads_permissions:
-            if permission.user_id not in all_user_id_list:
-                all_user_id_list.append(permission.user_id)
+            if permission.profile_id not in all_profile_id_list:
+                all_profile_id_list.append(permission.profile_id)
             if permission.created_by not in all_user_id_list:
                 all_user_id_list.append(permission.created_by)
 
         all_user_objects = BaseUser.objects.filter(id__in=all_user_id_list).all()
         all_user_dict = {user.id: {"first_name": user.first_name,
-                                    "last_name": user.last_name,
-                                    "username": user.username,
-                                    "email": user.email,
-                                    "id": user.id
-                                      } for user in all_user_objects}
+                                   "last_name": user.last_name,
+                                   "username": user.username,
+                                   "email": user.email,
+                                   "id": user.id
+                                   } for user in all_user_objects}
+        all_profile_objects = Profile.objects.filter(id__in=all_profile_id_list).all()
+        all_profile_dict = {profile.id: {"name": profile.name,
+                                         "id": profile.id,
+                                         "is_standard": profile.is_standard,
+                                         "organisation_id": profile.organisation_id,
+                                         } for profile in all_profile_objects}
         if len(leads_permissions) == 0:
             return handle_response('', data="no_permission_exists", success=True)
 
         leads_permissions = leads_permissions[0]
         permission_data = {
             "id": str(leads_permissions._id),
-            "user_id": all_user_dict[int(leads_permissions.user_id)] if int(leads_permissions.user_id) in all_user_dict else None,
+            "profile_id": all_profile_dict[int(leads_permissions.profile_id)] if int(leads_permissions.profile_id) in all_profile_dict else None,
             "organisation_id": leads_permissions.organisation_id,
             "leads_permissions": leads_permissions.leads_permissions,
             "created_by": all_user_dict[int(leads_permissions.created_by)] if int(leads_permissions.created_by) in all_user_dict else None
@@ -1116,28 +1145,34 @@ class LeadsPermissionsSelfAPI(APIView):
     def get(request):
         organisation_id = get_user_organisation_id(request.user)
         leads_permissions = list(LeadsPermissions.objects.raw(
-            {"user_id": int(request.user.id), "organisation_id": organisation_id}))
+            {"profile_id": int(request.user.profile_id), "organisation_id": organisation_id}))
         all_user_id_list = []
+        all_profile_id_list = []
         for permission in leads_permissions:
-            if permission.user_id not in all_user_id_list:
-                all_user_id_list.append(permission.user_id)
             if permission.created_by not in all_user_id_list:
                 all_user_id_list.append(permission.created_by)
+            if permission.profile_id not in all_profile_id_list:
+                all_profile_id_list.append(permission.profile_id)
 
         all_user_objects = BaseUser.objects.filter(id__in=all_user_id_list).all()
         all_user_dict = {user.id: {"first_name": user.first_name,
-                                    "last_name": user.last_name,
-                                    "username": user.username,
-                                    "email": user.email,
-                                    "id": user.id
-                                      } for user in all_user_objects}
+                                   "last_name": user.last_name,
+                                   "username": user.username,
+                                   "email": user.email,
+                                   "id": user.id
+                                   } for user in all_user_objects}
+        all_profile_objects = Profile.objects.filter(id__in=all_profile_id_list).all()
+        all_profile_dict = {profile.id: {"name": profile.name,
+                                         "is_standard": profile.is_standard,
+                                         "organisation_id": profile.organisation_id,
+                                         } for profile in all_profile_objects}
         if len(leads_permissions) == 0:
             return handle_response('', data="no_permission_exists", success=True)
 
         leads_permissions = leads_permissions[0]
         permission_data = {
             "id": str(leads_permissions._id),
-            "user_id": all_user_dict[int(leads_permissions.user_id)] if int(leads_permissions.user_id) in all_user_dict else None,
+            "profile_id": all_profile_dict[int(leads_permissions.profile_id)] if int(leads_permissions.profile_id) in all_profile_dict else None,
             "organisation_id": leads_permissions.organisation_id,
             "leads_permissions": leads_permissions.leads_permissions,
             "created_by": all_user_dict[int(leads_permissions.created_by)] if int(leads_permissions.created_by) in all_user_dict else None
@@ -1179,6 +1214,32 @@ class DeleteExtraLeadEntry(APIView):
         mongo_client.leads_extras.remove({"_id":ObjectId(id)})
         return handle_response('', data={"success": True}, success=True)
 
+
+class GetListsCounts(APIView):
+    @staticmethod
+    def put(request):
+        data = request.data
+        highest_level = data['highest_level']
+        lowest_level = data['lowest_level']
+        highest_level_list = data['highest_level_values']
+        default_value_type = data['default_value_type'] if 'default_value_type' in data else None
+        final_output = get_details_by_higher_level(highest_level,lowest_level,highest_level_list, default_value_type)
+        return handle_response('', data=final_output, success=True)
+
+
+class GeographicalLevelsTest(APIView):
+
+    @staticmethod
+    def put(request):
+        highest_level = request.data['highest_level']
+        lowest_level = request.data['lowest_level'] if 'lowest_level' in request.data else 'supplier'
+        highest_level_list = request.data['highest_level_list']
+        results_by_lowest_level = request.data['results_by_lowest_level'] \
+            if 'results_by_lowest_level' in request.data else 0
+        result_dict = get_details_by_higher_level_geographical(
+            highest_level, highest_level_list, lowest_level, results_by_lowest_level)
+        return handle_response('',data={'final_dict':result_dict['final_dict'],
+                                        'single_list':result_dict['single_list']},success=True)
 
 class GetLeadsEntry(APIView):
     @staticmethod

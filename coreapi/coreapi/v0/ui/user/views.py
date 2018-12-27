@@ -22,3 +22,22 @@ class UserAPI(APIView):
                                    } for user in all_users]
         return handle_response('', data=all_user_list, success=True)
 
+
+class UserAPISelf(APIView):
+    @staticmethod
+    def get(request):
+        user = request.user
+        profile_id = request.user.profile_id
+        profile = Profile.objects.filter(id=profile_id).all()[0]
+        user = {
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "username": user.username,
+            "email": user.email,
+            "profile": {
+                "name": profile.name,
+                "id": profile.id
+            }
+        }
+        return handle_response('', data=user, success=True)
