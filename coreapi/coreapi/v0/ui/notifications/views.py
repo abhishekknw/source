@@ -5,9 +5,9 @@ from bson.objectid import ObjectId
 from datetime import datetime
 
 
-def create_new_notification(user, to_id, from_id, notification_msg, module_name):
+def create_new_notification(user, to_id, notification_msg, module_name):
     organisation_id = get_user_organisation_id(user)
-    dict_of_req_attributes = {"to_id": to_id, "from_id": from_id, "notification_msg": notification_msg,
+    dict_of_req_attributes = {"to_id": to_id, "from_id": user.id, "notification_msg": notification_msg,
                               "organisation_id": organisation_id, "module_name": module_name}
     (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
     if not is_valid:
@@ -18,12 +18,18 @@ def create_new_notification(user, to_id, from_id, notification_msg, module_name)
     return is_valid, validation_msg_dict
 
 
+def create_new_notification_bulk(user, notification_list, module_name):
+    for notification in notification_list:
+        for to_id in notification["to_id"]:
+            create_new_notification(user, to_id, notification["notification_msg"], module_name)
+    return
+
+
 class NotificationsAPI(APIView):
 
     @staticmethod
     def post(request):
         to_id = request.data['to_id'] if 'to_id' in request.data else None
-        from_id = request.data['from_id'] if 'from_id' in request.data else None
         notification_msg = request.data['notification_msg'] if 'from_id' in request.data else None
         module_name = request.data['module_name'] if "module_name" in request.data else None
         is_valid, validation_msg_dict = create_new_notification(request.user, to_id, from_id, notification_msg, module_name)

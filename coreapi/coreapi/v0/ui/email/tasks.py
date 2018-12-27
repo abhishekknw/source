@@ -83,17 +83,23 @@ class SendGraphPdf(APIView):
     def post(request):
         file = request.data['file']
         campaign_id = request.data['campaign_id']
+        start_date = request.data['start_date']
+        end_date = request.data['end_date']
+        if start_date and end_date:
+            start_date = datetime.datetime.strptime(str(start_date),"%Y-%m-%d").strftime("%d-%b-%Y")
+            end_date = datetime.datetime.strptime(str(end_date), "%Y-%m-%d").strftime("%d-%b-%Y")
         (campaign_assignement_by_campaign_id, campaign_assignement_by_campaign_id_admins, all_leads_forms,
          all_campaign_name_dict) = get_all_campaign_assignment_by_id("WEEKLY_LEADS_GRAPH")
         to_array = campaign_assignement_by_campaign_id[campaign_id]
-        # to_array = ["kshitij.mittal01@gmail.com"]
+        # to_array = ["yogesh.mhetre@machadalo.com"]
         all_campaign_name = ProposalInfo.objects.filter(proposal_id=campaign_id).values('proposal_id','name')
         all_campaign_name_dict = {campaign['proposal_id']: campaign['name'] for campaign in all_campaign_name}
         this_campaign_name = str(all_campaign_name_dict[campaign_id])
         filename = 'leads_graph_' + str(all_campaign_name_dict[campaign_id]) + '_' + str(datetime.datetime.now().date()) + '.pdf'
         self_leads_template = get_template('leads_graph_email.html')
         html_body = self_leads_template.render({'campaign_name': this_campaign_name})
-        email = EmailMultiAlternatives("Leads Graphs", body=html_body, to=to_array)
+        subject = "Leads Graphs from " + str(start_date) + " to " + str(end_date)
+        email = EmailMultiAlternatives(subject, body=html_body, to=to_array)
         email.attach(filename, file.read(), 'application/pdf')
         email.content_subtype = 'html'
         email.send()
