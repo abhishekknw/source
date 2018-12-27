@@ -92,7 +92,7 @@ class PriceMappingDefault(BaseModel):
     actual_supplier_price = models.IntegerField(db_column='ACTUAL_SOCIETY_PRICE', null=True, blank=True)
     duration_type = models.ForeignKey('DurationType', db_column='DURATION_ID', blank=True, null=True,
                                       on_delete=models.CASCADE)
-    content_type = models.ForeignKey(ContentType, null=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     object_id = models.CharField(db_index=True, max_length=supplier_id_max_length, null=True)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
@@ -106,17 +106,17 @@ class ShortlistedInventoryPricingDetails(BaseModel):
     Model for storing calculated price and count of an inventory for a given supplier.
     A particular inventory type is identified by it's content_type_id.
     """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
-    inventory_content_type = models.ForeignKey(ContentType, null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, on_delete=models.CASCADE)
+    inventory_content_type = models.ForeignKey(ContentType, null=True, blank=True, on_delete=models.CASCADE)
     inventory_id = models.CharField(max_length=255, null=True, blank=True)
     inventory_price = models.FloatField(default=0.0, null=True)
     inventory_count = models.IntegerField(default=0, null=True)
     factor = models.IntegerField(default=0.0, null=True)
-    ad_inventory_type = models.ForeignKey('AdInventoryType', null=True)
-    ad_inventory_duration = models.ForeignKey('DurationType', null=True)
+    ad_inventory_type = models.ForeignKey('AdInventoryType', null=True, on_delete=models.CASCADE)
+    ad_inventory_duration = models.ForeignKey('DurationType', null=True, on_delete=models.CASCADE)
     release_date = models.DateTimeField(null=True, blank=True)
     closure_date = models.DateTimeField(null=True, blank=True)
-    shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True)
+    shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True, on_delete=models.CASCADE)
     objects = managers.GeneralManager()
     inventory_object = fields.GenericForeignKey('inventory_content_type', 'inventory_id')
     comment = models.CharField(max_length=1000, null=True, blank=True)
@@ -154,7 +154,7 @@ class AbstractGeneralCost(BaseModel):
     also one mastercost sheet will only have one "cost", doesn't matter what type ( ofcourse different types of costs, but all are actualy
     a cost ! ).
     """
-    proposal_master_cost = models.ForeignKey('ProposalMasterCost', null=True, blank=True)
+    proposal_master_cost = models.ForeignKey('ProposalMasterCost', null=True, blank=True, on_delete=models.CASCADE)
     total_cost = models.FloatField(null=True, blank=True)
     comment = models.CharField(max_length=1000, null=True, blank=True)
 
@@ -193,7 +193,7 @@ class SpaceBookingCost(AbstractGeneralCost):
     """
     SpaceBookingCost  is broken down into various costs. Hence a model is made to store it's pieces.
     """
-    supplier_type = models.ForeignKey(ContentType, null=True, blank=True)
+    supplier_type = models.ForeignKey(ContentType, null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'space_booking_cost'
@@ -275,9 +275,9 @@ class AuditDate(BaseModel):
     """
     A particular inventory can have multiple audit dates
     """
-    shortlisted_inventory = models.ForeignKey(ShortlistedInventoryPricingDetails, null=True, blank=True)
+    shortlisted_inventory = models.ForeignKey(ShortlistedInventoryPricingDetails, null=True, blank=True, on_delete=models.CASCADE)
     audit_date = models.DateTimeField(null=True, blank=True)
-    audited_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
+    audited_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'audit_date'
@@ -300,8 +300,8 @@ class ProposalMasterCost(BaseModel):
     Only one instance of MasterCost exists for one proposal version, proposal
     proposal_version alone does not make any sense. it's always tied to a proposal instance.
     """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
-    proposal = models.OneToOneField('ProposalInfo', null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, on_delete=models.CASCADE)
+    proposal = models.OneToOneField('ProposalInfo', null=True, blank=True, on_delete=models.CASCADE)
     agency_cost = models.FloatField(null=True, blank=True)
     basic_cost = models.FloatField(null=True, blank=True)
     discount = models.FloatField(null=True, blank=True)

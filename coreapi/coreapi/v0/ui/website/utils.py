@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import math
 import re
 import datetime
-import StringIO
+from io import StringIO
 from types import *
 import os
 import uuid

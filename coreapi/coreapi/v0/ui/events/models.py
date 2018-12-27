@@ -38,7 +38,7 @@ class Events(models.Model):
     poster_spaces_count = models.IntegerField(db_column='POSTER_SPACES_COUNT', blank=True, null=True)
     standee_spaces_count = models.IntegerField(db_column='STANDEE_SPACES_COUNT', blank=True, null=True)
     event_status = models.CharField(db_column='EVENT_STATUS', max_length=10, blank=True, null=True)
-    content_type = models.ForeignKey(ContentType, null=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()

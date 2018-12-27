@@ -9,7 +9,7 @@ from celery.result import GroupResult, AsyncResult
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import transaction
 from django.db.models import Q, F, Sum
 from django.forms.models import model_to_dict

@@ -12,7 +12,7 @@ class ProposalCenterMapping(BaseModel):
     """
     for a given proposal, stores lat, long, radius, city, pincode etc.
     """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, on_delete=models.CASCADE)
     proposal = models.ForeignKey('ProposalInfo', db_index=True, related_name='centers', on_delete=models.CASCADE)
     center_name = models.CharField(max_length=50)
     address = models.CharField(max_length=150, null=True, blank=True)
@@ -137,7 +137,7 @@ class ProposalInfo(BaseModel):
     parent stores the information that from what proposal_id, the current proposal_id was created.
     is_campaign determines weather this proposal is a campaign or not.
     """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, on_delete=models.CASCADE)
     proposal_id = models.CharField(max_length=255, primary_key=True)
     account = models.ForeignKey('AccountInfo', related_name='proposals', on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=50, blank=True, null=True)
@@ -150,7 +150,7 @@ class ProposalInfo(BaseModel):
     tentative_start_date = models.DateTimeField(null=True)
     tentative_end_date = models.DateTimeField(null=True)
     campaign_state = models.CharField(max_length=10, null=True, blank=True)
-    parent = models.ForeignKey('ProposalInfo', null=True, blank=True, default=None)
+    parent = models.ForeignKey('ProposalInfo', null=True, blank=True, default=None, on_delete=models.CASCADE)
     objects = managers.GeneralManager()
     is_disabled = models.BooleanField(default=False)
     invoice_number = models.CharField(max_length=1000, null=True, blank=True)
@@ -198,9 +198,9 @@ class ProposalMetrics(BaseModel):
     for proposal x, metric m1 has value of v1 for supplier S.
     for proposal x, metric m2 has value of v2 for supplier S.
     """
-    proposal_master_cost = models.ForeignKey(ProposalMasterCost, null=True, blank=True)
+    proposal_master_cost = models.ForeignKey(ProposalMasterCost, null=True, blank=True, on_delete=models.CASCADE)
     metric_name = models.CharField(max_length=255, null=True, blank=True)
-    supplier_type = models.ForeignKey(ContentType, null=True, blank=True)
+    supplier_type = models.ForeignKey(ContentType, null=True, blank=True, on_delete=models.CASCADE)
     value = models.FloatField(null=True, blank=True)
 
     class Meta:
@@ -213,10 +213,10 @@ class ProposalCenterSuppliers(BaseModel):
     used when CreateInitialProposal is called. each center can have different suppliers allowed.
     each supplier is identified by a content_type and a unique code predefined for it.
     """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
-    proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
-    center = models.ForeignKey('ProposalCenterMapping', null=True, blank=True)
-    supplier_content_type = models.ForeignKey(ContentType, null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, on_delete=models.CASCADE)
+    proposal = models.ForeignKey('ProposalInfo', null=True, blank=True, on_delete=models.CASCADE)
+    center = models.ForeignKey('ProposalCenterMapping', null=True, blank=True, on_delete=models.CASCADE)
+    supplier_content_type = models.ForeignKey(ContentType, null=True, blank=True, on_delete=models.CASCADE)
     supplier_type_code = models.CharField(max_length=255, null=True, blank=True)
     objects = managers.GeneralManager()
 
@@ -233,7 +233,7 @@ class ImageMapping(BaseModel):
     image_url = models.CharField(db_column='IMAGE_URL', max_length=100)
     comments = models.CharField(db_column='COMMENTS', max_length=100, blank=True, null=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True, null=True)
-    content_type = models.ForeignKey(ContentType, null=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
@@ -246,7 +246,7 @@ class ShortlistedSpacesVersion(models.Model):
     space_mapping_version = models.ForeignKey('SpaceMappingVersion', db_index=True, related_name='spaces_version',
                                               on_delete=models.CASCADE)
     supplier_code = models.CharField(max_length=4)
-    content_type = models.ForeignKey(ContentType, related_name='spaces_version')
+    content_type = models.ForeignKey(ContentType, related_name='spaces_version', on_delete=models.CASCADE)
     object_id = models.CharField(max_length=12)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     buffer_status = models.BooleanField(default=False)
@@ -262,13 +262,13 @@ class ShortlistedSpaces(BaseModel):
     in one campaign it's status can be removed while in the other it's buffered. Hence this model is made
     for mapping such relations.
     """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, on_delete=models.CASCADE)
     space_mapping = models.ForeignKey('SpaceMapping', db_index=True, related_name='spaces', on_delete=models.CASCADE,
                                       null=True, blank=True)
-    center = models.ForeignKey('ProposalCenterMapping', null=True, blank=True)
-    proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
+    center = models.ForeignKey('ProposalCenterMapping', null=True, blank=True, on_delete=models.CASCADE)
+    proposal = models.ForeignKey('ProposalInfo', null=True, blank=True, on_delete=models.CASCADE)
     supplier_code = models.CharField(max_length=4, null=True, blank=True)
-    content_type = models.ForeignKey(ContentType, related_name='spaces')
+    content_type = models.ForeignKey(ContentType, related_name='spaces', on_delete=models.CASCADE)
     object_id = models.CharField(max_length=supplier_id_max_length)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     buffer_status = models.BooleanField(default=False)
@@ -297,9 +297,9 @@ class HashTagImages(BaseModel):
     """
     This model stores campaign images which is hashtagged by BANNER,RECEIPT...etc
     """
-    campaign = models.ForeignKey('ProposalInfo', null=False, blank=False)
+    campaign = models.ForeignKey('ProposalInfo', null=False, blank=False, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=supplier_id_max_length)
-    content_type = models.ForeignKey(ContentType, null=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     image_path = models.CharField(max_length=1000, null=True, blank=True)
     hashtag = models.CharField(max_length=255)
     comment = models.CharField(max_length=1000, null=True, blank=True)
@@ -318,7 +318,7 @@ class SupplierPhase(BaseModel):
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
     comments = models.CharField(max_length=255, null=True, blank=True)
-    campaign = models.ForeignKey('ProposalInfo', null=False, blank=False)
+    campaign = models.ForeignKey('ProposalInfo', null=False, blank=False, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'supplier_phase'

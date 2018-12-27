@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.db import models, migrations
 import datetime
 from django.utils.timezone import utc
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -33,8 +34,8 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(default=datetime.datetime(2016, 12, 1, 0, 0, tzinfo=utc), editable=False)),
                 ('updated_at', models.DateTimeField(default=datetime.datetime(2016, 12, 1, 0, 0, tzinfo=utc), editable=False)),
                 ('object_id', models.CharField(max_length=1000)),
-                ('amenity', models.ForeignKey(blank=True, to='v0.Amenity', null=True)),
-                ('content_type', models.ForeignKey(to='contenttypes.ContentType')),
+                ('amenity', models.ForeignKey(blank=True, to='v0.Amenity', null=True, on_delete=django.db.models.deletion.CASCADE)),
+                ('content_type', models.ForeignKey(to='contenttypes.ContentType', on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'abstract': False,

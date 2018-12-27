@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.db import models, migrations
 import datetime
 from django.utils.timezone import utc
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -20,7 +21,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(default=datetime.datetime(2016, 12, 1, 0, 0, tzinfo=utc), editable=False)),
                 ('updated_at', models.DateTimeField(default=datetime.datetime(2016, 12, 1, 0, 0, tzinfo=utc), editable=False)),
                 ('activity_type', models.CharField(max_length=255, null=True, choices=[('RELEASE', 'RELEASE'), ('CLOSURE', 'CLOSURE'), ('AUDIT', 'AUDIT')])),
-                ('shortlisted_inventory_details', models.ForeignKey(to='v0.ShortlistedInventoryPricingDetails')),
+                ('shortlisted_inventory_details', models.ForeignKey(to='v0.ShortlistedInventoryPricingDetails', on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'db_table': 'inventory_activity',
@@ -46,6 +47,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='inventoryactivityassignment',
             name='inventory_activity',
-            field=models.ForeignKey(blank=True, to='v0.InventoryActivity', null=True),
+            field=models.ForeignKey(blank=True, to='v0.InventoryActivity', null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
     ]

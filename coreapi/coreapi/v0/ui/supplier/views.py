@@ -2,7 +2,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 import json
 import requests
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.forms.models import model_to_dict
 from openpyxl import load_workbook
 import csv

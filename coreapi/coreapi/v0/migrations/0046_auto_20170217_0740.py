@@ -5,6 +5,7 @@ from django.db import models, migrations
 import datetime
 from django.utils.timezone import utc
 from django.conf import settings
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -22,9 +23,9 @@ class Migration(migrations.Migration):
                 ('updated_at', models.DateTimeField(default=datetime.datetime(2016, 12, 1, 0, 0, tzinfo=utc), editable=False)),
                 ('activity_type', models.CharField(max_length=255, choices=[('RELEASE', 'RELEASE'), ('CLOSURE', 'CLOSURE'), ('AUDIT', 'AUDIT')])),
                 ('activity_date', models.CharField(max_length=255)),
-                ('assigned_by', models.ForeignKey(related_name='activity_assigned_by', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
-                ('assigned_to', models.ForeignKey(related_name='activity_assigned_to', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
-                ('shortlisted_inventory_details', models.ForeignKey(to='v0.ShortlistedInventoryPricingDetails')),
+                ('assigned_by', models.ForeignKey(related_name='activity_assigned_by', blank=True, to=settings.AUTH_USER_MODEL, null=True, on_delete=django.db.models.deletion.CASCADE)),
+                ('assigned_to', models.ForeignKey(related_name='activity_assigned_to', blank=True, to=settings.AUTH_USER_MODEL, null=True, on_delete=django.db.models.deletion.CASCADE)),
+                ('shortlisted_inventory_details', models.ForeignKey(to='v0.ShortlistedInventoryPricingDetails', on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'db_table': 'inventory_activity_assignment',
@@ -45,7 +46,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='inventoryactivityimage',
             name='activity_by',
-            field=models.ForeignKey(blank=True, to=settings.AUTH_USER_MODEL, null=True),
+            field=models.ForeignKey(blank=True, to=settings.AUTH_USER_MODEL, null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='inventoryactivityimage',
@@ -55,7 +56,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='inventoryactivityimage',
             name='inventory_activity_assignment',
-            field=models.ForeignKey(blank=True, to='v0.InventoryActivityAssignment', null=True),
+            field=models.ForeignKey(blank=True, to='v0.InventoryActivityAssignment', null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
         # migrations.AlterUniqueTogether(
         #     name='inventoryactivityassignment',

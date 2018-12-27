@@ -20,11 +20,11 @@ class Organisation(BaseModel):
     This is model which captures the essence of any organisation interacting with our system. The class
     Business is merly a type of this model and will be soon be deleted once, the data is migrated into this model.
     """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     organisation_id = models.CharField(max_length=30, primary_key=True)
     name = models.CharField(max_length=255, blank=True)
-    type_name = models.ForeignKey('BusinessTypes', null=True, blank=True)
-    sub_type = models.ForeignKey('BusinessSubTypes', null=True, blank=True)
+    type_name = models.ForeignKey('BusinessTypes', null=True, blank=True, on_delete=models.CASCADE)
+    sub_type = models.ForeignKey('BusinessSubTypes', null=True, blank=True, on_delete=models.CASCADE)
     phone = models.CharField(max_length=12, blank=True)
     email = models.CharField(max_length=50, blank=True)
     address = models.CharField(max_length=255, blank=True)
@@ -45,8 +45,8 @@ class OrganisationMap(BaseModel):
     """
     Generic table that maps relationship between any two organisations.
     """
-    first_organisation = models.ForeignKey(Organisation, related_name='first_organisation')
-    second_organisation = models.ForeignKey(Organisation, related_name='second_organisation')
+    first_organisation = models.ForeignKey(Organisation, related_name='first_organisation', on_delete=models.CASCADE)
+    second_organisation = models.ForeignKey(Organisation, related_name='second_organisation', on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'organisation_map'

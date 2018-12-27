@@ -5,6 +5,7 @@ from django.db import models, migrations
 import datetime
 from django.conf import settings
 from django.utils.timezone import utc
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -44,7 +45,7 @@ class Migration(migrations.Migration):
                 ('route_count_originate', models.IntegerField(null=True, blank=True)),
                 ('route_count_terminate', models.IntegerField(null=True, blank=True)),
                 ('bus_types', models.CharField(max_length=20, null=True, blank=True)),
-                ('user', models.ForeignKey(default=1, to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(default=1, to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'db_table': 'supplier_type_bus_depot',
