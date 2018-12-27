@@ -21,6 +21,7 @@ from rest_framework.pagination import PageNumberPagination
 from datetime import datetime
 from dateutil import tz
 from v0.ui.account.models import Profile
+from v0.ui.utils import get_user_organisation_id
 
 
 class GetBusinessTypesAPIView(APIView):
@@ -572,3 +573,11 @@ class LoginLog(APIView):
             curr_activity['login_timestamp'] = activity.created_at.replace(tzinfo=from_zone).astimezone(to_zone)
             log_data.append(curr_activity)
         return ui_utils.handle_response({}, data=log_data, success=True)
+
+
+class ProfileAPIView(APIView):
+    def get(self, request):
+        organisation_id = get_user_organisation_id(request.user)
+        all_profiles = Profile.objects.filter(organisation_id=organisation_id).all()
+        all_profiles_list = [{"name": profile.name, "id": profile.id} for profile in all_profiles]
+        return ui_utils.handle_response({}, data=all_profiles_list, success=True)

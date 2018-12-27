@@ -1,7 +1,7 @@
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 from views import (BusinessAPIListView, BusinessAccounts, Accounts, AccountAPIView, BusinessContacts, AccountContacts,
-                   GetBusinessTypesAPIView, GetBusinessSubTypesAPIView, AccountViewSet, LoginLog)
+                   GetBusinessTypesAPIView, GetBusinessSubTypesAPIView, AccountViewSet, LoginLog, ProfileAPIView)
 
 urlpatterns = [
     url(r'^businesses/$', BusinessAPIListView.as_view(), name='get-all-business-info'),
@@ -13,6 +13,7 @@ urlpatterns = [
     url(r'^create_business/load_business_types/$', GetBusinessTypesAPIView.as_view(), name='get-business-types'),
     url(r'^subtypes/(?P<id>[A-Z_a-z0-9]+)/$', GetBusinessSubTypesAPIView.as_view(), name='get-business-subtypes'),
     url(r'^get_login_log/$', LoginLog.as_view(), name='get-login-log'),
+    url(r'^profiles/$', ProfileAPIView.as_view(), name='get-login-log'),
 ]
 
 router = DefaultRouter()

@@ -2,7 +2,7 @@ from django.conf.urls import url
 from views import (CreateChecklistTemplate, ChecklistEntry, GetCampaignChecklists,
                    GetSupplierChecklists, GetChecklistData, DeleteChecklist,
                    DeleteChecklistRow, ChecklistEdit, FreezeChecklist, ChecklistPermissionsAPI, GetAllChecklists,
-                   GetAllChecklistsTemplates, ChecklistPermissionsByUserIdAPI, ChecklistSavedOperators,
+                   GetAllChecklistsTemplates, ChecklistPermissionsByProfileIdAPI, ChecklistSavedOperators,
                    ChecklistUnsavedOperators, ChecklistSavedOperatorsResult, ChecklistPermissionsSelfAPI)
 
 urlpatterns = [
@@ -20,7 +20,7 @@ urlpatterns = [
     url(r'^(?P<checklist_id>[A-Z_a-z0-9]+)/freeze/(?P<state>[0-1]+)$', FreezeChecklist.as_view()),
     url(r'^permissions/$', ChecklistPermissionsAPI.as_view()),
     url(r'^permissions/self/$', ChecklistPermissionsSelfAPI.as_view()),
-    url(r'^permissions/(?P<user_id>[A-Z_a-z0-9]+)/$', ChecklistPermissionsByUserIdAPI.as_view()),
+    url(r'^permissions/(?P<profile_id>[A-Z_a-z0-9]+)/$', ChecklistPermissionsByProfileIdAPI.as_view()),
     url(r'^metrics/$', ChecklistSavedOperators.as_view()),
     url(r'^unsaved-metrics/$', ChecklistUnsavedOperators.as_view()),
     url(r'^(?P<checklist_id>[A-Z_a-z0-9]+)/metrics/$', ChecklistSavedOperatorsResult.as_view()),
