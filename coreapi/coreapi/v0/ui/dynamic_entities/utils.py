@@ -29,7 +29,7 @@ def validate_entity_type_data(entity_type_dict):
             validation_msg_dict['type_mismatch'].append(single_attribute['type'])
         all_attribute_names.append(single_attribute['name'])
         entity_type_attributes_dict[single_attribute['name']] = single_attribute
-    for base_entity_attribute in base_entity_type["entity_attributes"]:
+    for base_entity_attribute in base_entity_type.entity_attributes:
         if "is_required" in base_entity_attribute:
             if base_entity_attribute["is_required"]:
                 if base_entity_attribute["name"] not in entity_type_attributes_dict:
