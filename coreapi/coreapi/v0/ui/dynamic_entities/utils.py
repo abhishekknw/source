@@ -13,7 +13,7 @@ def validate_entity_type_data(entity_type_dict):
     entity_type_attributes = entity_type_dict["entity_attributes"]
     base_entity_type_id = entity_type_dict["base_entity_type_id"]
     all_attribute_names = []
-    base_entity_type = BaseSupplyEntityType.objects.raw({'_id': ObjectId(base_entity_type_id)})
+    base_entity_type = list(BaseSupplyEntityType.objects.raw({'_id': ObjectId(base_entity_type_id)}))
     if len(base_entity_type) == 0:
         is_valid = False
         validation_msg_dict['other_errors'].append("base_entity_type_not_found")
