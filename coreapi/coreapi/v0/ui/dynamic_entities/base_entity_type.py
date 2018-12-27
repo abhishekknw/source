@@ -18,9 +18,9 @@ class BaseEntityType(APIView):
             return handle_response('', data=validation_msg_dict, success=False)
         entity_type_dict = dict_of_req_attributes
         entity_type_dict["created_at"] = datetime.now()
-        is_valid_adv, validation_msg_dict_adv = validate_entity_type_data(entity_type_dict)
-        if not is_valid_adv:
-            return handle_response('', data=validation_msg_dict_adv, success=False)
+        # is_valid_adv, validation_msg_dict_adv = validate_entity_type_data(entity_type_dict)
+        # if not is_valid_adv:
+        #     return handle_response('', data=validation_msg_dict_adv, success=False)
         BaseSupplyEntityType(**entity_type_dict).save()
         return handle_response('', data={"success": True}, success=True)
 
@@ -58,9 +58,9 @@ class BaseEntityTypeById(APIView):
             return handle_response('', data=validation_msg_dict, success=False)
         base_entity_type_dict = dict_of_req_attributes
         base_entity_type_dict["updated_at"] = datetime.now()
-        is_valid_adv, validation_msg_dict_adv = validate_entity_type_data(base_entity_type_dict)
-        if not is_valid_adv:
-            return handle_response('', data=validation_msg_dict_adv, success=False)
+        # is_valid_adv, validation_msg_dict_adv = validate_entity_type_data(base_entity_type_dict)
+        # if not is_valid_adv:
+        #     return handle_response('', data=validation_msg_dict_adv, success=False)
         BaseSupplyEntityType.objects.raw({'_id': ObjectId(base_entity_type_id)}).update({"$set": base_entity_type_dict})
         return handle_response('', data="success", success=True)
 
