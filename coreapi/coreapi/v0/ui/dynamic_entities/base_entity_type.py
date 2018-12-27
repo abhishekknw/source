@@ -39,8 +39,8 @@ class BaseEntityType(APIView):
 
 class BaseEntityTypeById(APIView):
     @staticmethod
-    def get(request, base_base_entity_type_id):
-        base_supply_entity_type = BaseSupplyEntityType.objects.raw({'_id':ObjectId(base_base_entity_type_id)})[0]
+    def get(request, base_entity_type_id):
+        base_supply_entity_type = BaseSupplyEntityType.objects.raw({'_id':ObjectId(base_entity_type_id)})[0]
         base_supply_entity_type = {
             "id": str(base_supply_entity_type._id),
             "name": base_supply_entity_type.name,

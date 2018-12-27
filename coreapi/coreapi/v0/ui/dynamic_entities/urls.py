@@ -9,7 +9,7 @@ urlpatterns = [
     url(r'^entity$', Entity.as_view()),
     url(r'^entity/(?P<entity_id>[A-Z_a-z0-9]+)$', EntityById.as_view()),
     url(r'^base-entity-type/$', BaseEntityType.as_view()),
-    url(r'^base-entity-type/(?P<entity_type_id>[A-Z_a-z0-9]+)/$', BaseEntityTypeById.as_view()),
+    url(r'^base-entity-type/(?P<base_entity_type_id>[A-Z_a-z0-9]+)/$', BaseEntityTypeById.as_view()),
 ]
 
 router = DefaultRouter()
