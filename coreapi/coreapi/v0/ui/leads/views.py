@@ -1060,6 +1060,7 @@ class LeadsPermissionsAPI(APIView):
                                        } for user in all_user_objects}
             all_profile_objects = Profile.objects.filter(id__in=all_profile_id_list).all()
             all_profile_dict = {profile.id: {
+                    "id": profile.id,
                     "name": profile.name,
                     "is_standard": profile.is_standard,
                     "organisation_id": profile.organisation_id,
@@ -1122,6 +1123,7 @@ class LeadsPermissionsByProfileIdAPI(APIView):
                                    } for user in all_user_objects}
         all_profile_objects = Profile.objects.filter(id__in=all_profile_id_list).all()
         all_profile_dict = {profile.id: {"name": profile.name,
+                                         "id": profile.id,
                                          "is_standard": profile.is_standard,
                                          "organisation_id": profile.organisation_id,
                                          } for profile in all_profile_objects}
