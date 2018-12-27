@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 from rest_framework.serializers import ModelSerializer
-from models import City, CityArea, CitySubArea, State
+from .models import City, CityArea, CitySubArea, State
 
 class CitySubAreaSerializer(ModelSerializer):
     class Meta:

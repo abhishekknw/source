@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
-from views import (CreateInitialProposalBulkBasic, HashtagImagesViewSet, InitialProposalAPIView,
+from .views import (CreateInitialProposalBulkBasic, HashtagImagesViewSet, InitialProposalAPIView,
                    GetAccountProposalsAPIView, CurrentProposalAPIView, ProposalHistoryAPIView, ChildProposals,
                    CreateInitialProposal, ProposalViewSet, CreateFinalProposal, ProposalVersion, ProposalToCampaign,
                    FinalProposalAPIView, CreateProposalAPIView, ProposalImagesPath, convertDirectProposalToCampaign,

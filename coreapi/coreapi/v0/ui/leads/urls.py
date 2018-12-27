@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
-from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntries, GetLeadsEntriesBySupplier,
+from .views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntries, GetLeadsEntriesBySupplier,
                    LeadsFormBulkEntry, GenerateLeadForm, DeleteLeadForm, DeleteLeadEntry,
                    AddLeadFormItems, EditLeadsForm,
                    LeadsSummary, GetLeadsEntriesByCampaignId, GenerateLeadDataExcel,
@@ -10,7 +11,7 @@ from views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntrie
                    DeleteExtraLeadEntry, DeleteLeadItem, GetLeadsEntry, UpdateLeadsEntry, GeographicalLevelsTest,
                    GetListsCounts)
 
-from one_time_scripts import UpdateLeadsMissingItems, UpdateLeadsEntryIds
+from .one_time_scripts import UpdateLeadsMissingItems, UpdateLeadsEntryIds
 
 
 urlpatterns = [

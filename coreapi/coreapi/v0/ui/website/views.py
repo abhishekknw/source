@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import csv
 import json
 import os
@@ -17,7 +19,7 @@ from rest_framework.decorators import list_route
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
-import tasks
+from . import tasks
 from v0.ui.components.models import SocietyTower, FlatType, Amenity
 from v0.ui.components.serializers import AmenitySerializer
 from v0.ui.account.serializers import (BusinessTypesSerializer, BusinessSubTypesSerializer, ProfileSimpleSerializer,
@@ -56,7 +58,7 @@ from v0.ui.finances.models import ShortlistedInventoryPricingDetails, PriceMappi
 from v0.ui.permissions.models import ObjectLevelPermission, GeneralUserPermission, Role, RoleHierarchy
 from v0.ui.base.serializers import ContentTypeSerializer
 
-import utils as website_utils
+from . import utils as website_utils
 import v0.ui.utils as ui_utils
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0 import errors
@@ -714,7 +716,7 @@ class ImportCorporateData(APIView):
                             'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
                         }
                         response = requests.post(url, json.dumps(data), headers=headers)
-                        print "{0} done \n".format(data['supplier_id'])
+                        print("{0} done \n".format(data['supplier_id']))
 
             source_file.close()
             return Response(data="success", status=status.HTTP_200_OK)
@@ -1639,11 +1641,11 @@ class CheckExstingSuppliers(APIView):
                     if SupplierTypeSociety.objects.filter(society_name=name) or SupplierTypeSociety.objects.filter(supplier_id=id):
                         count = count + 1
                         s = str(count) + " " + name
-                        print s
+                        print(s)
                     else:
                         rcount = rcount + 1
-                        print name
-                print str(count) + "and" + str(rcount)
+                        print(name)
+                print(str(count) + "and" + str(rcount))
             data = {
                 'on_platform' : count,
                 'not_on_platform' : rcount

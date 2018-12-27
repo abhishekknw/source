@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 from rest_framework.serializers import ModelSerializer
-from models import DoorToDoorInfo, DataSciencesCost, EventStaffingCost, IdeationDesignCost, LogisticOperationsCost, \
+from .models import DoorToDoorInfo, DataSciencesCost, EventStaffingCost, IdeationDesignCost, LogisticOperationsCost, \
     PriceMapping, PriceMappingDefault, PrintingCost, RatioDetails, SpaceBookingCost, SpaceBookingCost, \
     ShortlistedInventoryPricingDetails, AuditDate
 from v0.ui.inventory.serializers import InventoryActivitySerializerWithInventoryAssignmentsAndImages, \

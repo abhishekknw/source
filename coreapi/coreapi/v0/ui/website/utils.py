@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import math
 import re
 import datetime
@@ -55,7 +57,7 @@ from v0.ui.proposal.serializers import ProposalInfoSerializer, ProposalCenterMap
 from v0.ui.campaign.models import CampaignAssignment, GenericExportFileName
 import v0.ui.utils as ui_utils
 from v0 import errors
-import tasks
+from . import tasks
 import v0.constants as v0_constants
 from v0.ui.finances.models import (RatioDetails, PrintingCost, LogisticOperationsCost, IdeationDesignCost,
                                    SpaceBookingCost, EventStaffingCost, DataSciencesCost,
@@ -3742,7 +3744,7 @@ def manipulate_object_key_values(suppliers, supplier_type_code=v0_constants.soci
                     supplier[key] = item
         return suppliers
     except Exception as e:
-        print "e2", e
+        print("e2", e)
         raise Exception(function, ui_utils.get_system_error(e))
 
 
@@ -4045,7 +4047,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
 
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
-        print "e3",e
+        print("e3",e)
         return ui_utils.handle_response(function, exception_object=e)
 
 
@@ -4409,7 +4411,7 @@ def map_objects_ids_to_objects(mapping):
                 output[content_type_id, supplier['supplier_id']] = merge_two_dicts(supplier, extra_data)
         return ui_utils.handle_response(function, data=output, success=True)
     except Exception as e:
-        print"e1", e
+        print("e1", e)
         return ui_utils.handle_response(function, exception_object=e)
 
 
@@ -4817,7 +4819,7 @@ def sort_inventory_ids_on_proposal_count(master_inventory_ids, inventory_ids):
                 result.insert(0, inv_id)
 
         return ui_utils.handle_response(function, data=result, success=True)
-    except Exception  as e:
+    except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
 
@@ -6591,7 +6593,7 @@ def create_inventory_ids(supplier_object, filter_code, is_import_sheet=False, su
     """
     function_name = create_inventory_ids.__name__
     try:
-        print supplier_object.society_name
+        print(supplier_object.society_name)
         tower_count = int(supplier_object.tower_count) if supplier_object.tower_count else 1
         inventory_ids = []
         Struct = namedtuple('Struct', 'adinventory_id')
@@ -6611,7 +6613,7 @@ def create_inventory_ids(supplier_object, filter_code, is_import_sheet=False, su
 
         return inventory_ids
     except Exception as e:
-        print e
+        print(e)
         return Exception(function_name, ui_utils.get_system_error(e))
 
 

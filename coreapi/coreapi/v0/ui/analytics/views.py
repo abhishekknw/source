@@ -1,4 +1,6 @@
-from utils import (level_name_by_model_id, merge_dict_array_array_single, merge_dict_array_dict_single,
+from __future__ import print_function
+from __future__ import absolute_import
+from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge_dict_array_dict_single,
                    convert_dict_arrays_keys_to_standard_names, get_similar_structure_keys, geographical_parent_details,
                    count_details_parent_map, count_details_kids_map, find_level_sequence, binary_operation,
                    sum_array_by_key, z_calculator_array_multiple, get_metrics_from_code, time_parent_names)

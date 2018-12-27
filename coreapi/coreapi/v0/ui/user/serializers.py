@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 from rest_framework.serializers import ModelSerializer
-from models import UserProfile
+from .models import UserProfile
 from v0.ui.base.serializers import GroupSerializer
 from v0.ui.account.serializers import ProfileNestedSerializer
 from v0.ui.permissions.serializers import PermissionsSerializer

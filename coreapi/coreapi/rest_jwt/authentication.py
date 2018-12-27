@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 import jwt
-import utils
+from . import utils
 from django.utils.encoding import smart_text
 from django.utils.translation import ugettext as _
 from rest_framework import exceptions

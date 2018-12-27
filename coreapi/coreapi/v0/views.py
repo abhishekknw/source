@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import random
 
 from django.contrib.contenttypes.models import ContentType
@@ -41,11 +43,11 @@ from v0.ui.components.models import CommunityHallInfo, LiftDetails, NoticeBoardD
 from v0.ui.components.serializers import LiftDetailsSerializer, CommunityHallInfoSerializer, FlatTypeSerializer, \
     NoticeBoardDetailsSerializer, SocietyFlatSerializer, SwimmingPoolInfoSerializer, MailboxInfoSerializer, \
     CommonAreaDetailsSerializer, SocietyTowerSerializer
-import utils as v0_utils
-from constants import model_names
+from . import utils as v0_utils
+from .constants import model_names
 import v0.ui.utils as ui_utils
-import errors
-import constants as v0_constants
+from . import errors
+from . import constants as v0_constants
 import v0.ui.website.utils as website_utils
 from v0.ui.supplier.models import SupplierInfo, SupplierTypeCorporate, SupplierAmenitiesMap
 
@@ -1670,5 +1672,5 @@ class CopyOrganisation(APIView):
             try:
                 organisation_model.objects.create(**data)
             except Exception as e:
-                print e
+                print(e)
         return ui_utils.handle_response(class_name, data='success', success=True)

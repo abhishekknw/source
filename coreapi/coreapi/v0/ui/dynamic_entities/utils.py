@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from validate_email import validate_email
 from datetime import datetime
-from models import SupplyEntityType, BaseSupplyEntityType
+from .models import SupplyEntityType, BaseSupplyEntityType
 from bson.objectid import ObjectId
 
 

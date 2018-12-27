@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import json
 import requests
 from django.core.urlresolvers import reverse
@@ -12,10 +14,10 @@ from v0.ui.utils import (get_supplier_id, handle_response, get_content_type, sav
                          save_basic_supplier_details)
 from v0.ui.website.utils import manipulate_object_key_values, return_price
 import v0.ui.website.utils as website_utils
-from models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeGym,
+from .models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeGym,
                     SupplierTypeRetailShop, CorporateParkCompanyList, CorporateBuilding, SupplierTypeBusDepot,
                     SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE)
-from serializers import (UICorporateSerializer, SupplierTypeSocietySerializer, SupplierAmenitiesMapSerializer,
+from .serializers import (UICorporateSerializer, SupplierTypeSocietySerializer, SupplierAmenitiesMapSerializer,
                          UISalonSerializer, SupplierTypeSalon, SupplierTypeGymSerializer, RetailShopSerializer,
                          SupplierInfoSerializer, SupplierInfo, SupplierTypeCorporateSerializer,
                          CorporateBuildingGetSerializer, CorporateParkCompanyListSerializer, CorporateBuildingSerializer,
@@ -101,7 +103,7 @@ def get_city_subarea_map():
 
 def create_price_mapping_default(days_count, adinventory_name, adinventory_type, new_society,
                                  actual_supplier_price, content_type, supplier_id):
-    print new_society.society_name
+    print(new_society.society_name)
     duration_types = DurationType.objects.filter()
     adinventory_types = AdInventoryType.objects.filter(adinventory_name=adinventory_name)
     for adinv_type in adinventory_types:
@@ -137,7 +139,7 @@ class SocietyDataImport(APIView):
 
         for index, row in enumerate(ws.iter_rows()):
             if index > 0:
-                print index
+                print(index)
                 society_data_list.append({
                     'society_name': row[0].value if row[0].value else None,
                     'society_city': str(row[1].value) if row[1].value else None,
@@ -209,7 +211,7 @@ class SocietyDataImport(APIView):
 
                 supplier_length = len(SupplierTypeSociety.objects.filter(supplier_id=supplier_id))
                 if len(SupplierTypeSociety.objects.filter(society_name=society['society_name'])):
-                    print society['society_name']
+                    print(society['society_name'])
                     # instance = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
                     instance = SupplierTypeSociety.objects.filter(society_name=society['society_name'])[0]
                     supplier_id = instance.supplier_id
@@ -377,10 +379,10 @@ class SocietyDataImport(APIView):
                 try:
                     inventory_summary_insert(final_data, supplier_inventory_data)
                 except ObjectDoesNotExist as e:
-                    print e
+                    print(e)
                     # return ui_utils.handle_response(class_name, exception_object=e, request=request)
                 except Exception as e:
-                    print e
+                    print(e)
                     # return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
         return handle_response({}, data='success', success=True)
 
@@ -2390,7 +2392,7 @@ class ImportSocietyData(APIView):
                             for i in range(abc):
                                 tower = SocietyTower(supplier=society_object, object_id=supplier_id, content_type=content_type)
                                 tower.save()
-                        print "{0} done \n".format(data['supplier_id'])
+                        print("{0} done \n".format(data['supplier_id']))
             source_file.close()
             return Response(data="success", status=status.HTTP_200_OK)
         except ObjectDoesNotExist as e:
@@ -2560,7 +2562,7 @@ class ImportSupplierDataFromSheet(APIView):
 
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
-            print e.message or e.args
+            print(e.message or e.args)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
@@ -2613,7 +2615,7 @@ class ImportContactDetails(APIView):
                             contact_object.save()
 
                             # print it for universe satisfaction that something is going on !
-                            print '{0} supplier contact done'.format(data['supplier_id'])
+                            print('{0} supplier contact done'.format(data['supplier_id']))
                         except ObjectDoesNotExist as e:
                             return ui_utils.handle_response(class_name, exception_object=e, request=request)
                         except Exception as e:
@@ -2938,7 +2940,7 @@ class deleteSuppliers(APIView):
                 FlatType.objects.filter(object_id=supplier_id).delete()
                 SupplierTypeSociety.objects.filter(supplier_id=supplier_id).delete()
 
-            print "Suppliers in shortlisted spaces (not deleted)", unremoved_suppliers
+            print("Suppliers in shortlisted spaces (not deleted)", unremoved_suppliers)
 
             return ui_utils.handle_response({}, data='success', success=True)
         except Exception as e:
@@ -2962,7 +2964,7 @@ class deleteShortlistedSpaces(APIView):
             for shortlisted_space_id in remaining_spaces:
                 ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces_id=shortlisted_space_id).delete()
                 ShortlistedSpaces.objects.filter(id=shortlisted_space_id).delete()
-            print "ShortlistedSpaces containing images (not deleted)", spaces_containing_images
+            print("ShortlistedSpaces containing images (not deleted)", spaces_containing_images)
             return ui_utils.handle_response({}, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response({}, exception_object=e, request=request)

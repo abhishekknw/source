@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 from rest_framework.serializers import ModelSerializer
-from models import (SocietyInventoryBooking, InventoryLocation, AdInventoryLocationMapping, AdInventoryType,
+from .models import (SocietyInventoryBooking, InventoryLocation, AdInventoryLocationMapping, AdInventoryType,
                     BannerInventory, PosterInventory, InventorySummary, StreetFurniture, StallInventory, FlyerInventory,
                     StandeeInventory, WallInventory, InventoryInfo, PoleInventory, PosterInventoryMapping,
                     GatewayArchInventory, InventoryActivity, InventoryTypeVersion, InventoryActivityImage, InventoryType,

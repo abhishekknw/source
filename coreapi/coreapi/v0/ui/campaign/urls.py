@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 from django.views.decorators.cache import cache_page
-from views import (ShortlistSocietyCountAPIView, BookCampaignAPIView,
+from .views import (ShortlistSocietyCountAPIView, BookCampaignAPIView,
                    FinalCampaignBookingAPIView, campaignListAPIVIew, CampaignAPIView, DashBoardViewSet,
                    DeleteInventoryActivityAssignment, GetCampaignAssignments, DeleteCampaignAssignments,
                    GetAdInventoryTypeAndDurationTypeData, AddDynamicInventoryIds, DeleteAdInventoryIds,

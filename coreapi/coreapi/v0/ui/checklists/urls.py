@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 from django.conf.urls import url
-from views import (CreateChecklistTemplate, ChecklistEntry, GetCampaignChecklists,
+from .views import (CreateChecklistTemplate, ChecklistEntry, GetCampaignChecklists,
                    GetSupplierChecklists, GetChecklistData, DeleteChecklist,
                    DeleteChecklistRow, ChecklistEdit, FreezeChecklist, ChecklistPermissionsAPI, GetAllChecklists,
                    GetAllChecklistsTemplates, ChecklistPermissionsByProfileIdAPI, ChecklistSavedOperators,

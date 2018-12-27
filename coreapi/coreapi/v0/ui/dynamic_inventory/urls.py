@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
-from views import (BaseInventoryAPI, BaseInventoryAPIById, InventoryAPI, InventoryAPIById)
+from .views import (BaseInventoryAPI, BaseInventoryAPIById, InventoryAPI, InventoryAPIById)
 
 urlpatterns = [
     url(r'^base-inventory/$', BaseInventoryAPI.as_view()),

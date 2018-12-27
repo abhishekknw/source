@@ -1,11 +1,12 @@
+from __future__ import absolute_import
 import random, string
 from rest_framework.views import APIView
 from rest_framework import viewsets, status
 from django.db import transaction
 import v0.ui.utils as ui_utils
-from models import AccountInfo, BusinessAccountContact, BusinessSubTypes, BusinessTypes
+from .models import AccountInfo, BusinessAccountContact, BusinessSubTypes, BusinessTypes
 from rest_framework.response import Response
-from serializers import BusinessTypesSerializer, AccountInfoSerializer
+from .serializers import BusinessTypesSerializer, AccountInfoSerializer
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.organisation.models import Organisation
 from v0.ui.account.models import ContactDetails, Signup, ActivityLog

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from django.conf.urls import include, url
 
 from rest_framework.routers import DefaultRouter
@@ -6,7 +7,7 @@ from v0.ui.website import views
 from v0.ui.campaign.views import CreateSupplierPhaseData
 from v0.ui.proposal.views import SupplierPhaseViewSet
 from v0.ui.proposal.views import HashtagImagesViewSet
-from views import CheckExstingSuppliers
+from .views import CheckExstingSuppliers
 urlpatterns = [
 
     url(r'^campaign/society/shortlist/$', views.ShortlistSocietyAPIView.as_view()),

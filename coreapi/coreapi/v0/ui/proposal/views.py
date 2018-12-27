@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from rest_framework.views import APIView
 from rest_framework import viewsets, status
 from django.db.models import Count, Sum, F
@@ -16,8 +18,8 @@ import datetime
 import time
 import random
 import string
-from models import ProposalInfo, ProposalCenterMapping
-from serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer, ProposalCenterMappingSpaceSerializer,
+from .models import ProposalInfo, ProposalCenterMapping
+from .serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer, ProposalCenterMappingSpaceSerializer,
                          ProposalCenterMappingVersionSpaceSerializer)
 from rest_framework.decorators import detail_route, list_route
 from v0.ui.account.models import AccountInfo, ContactDetails
@@ -36,9 +38,9 @@ from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMa
                                         ProposalCenterMappingVersionSpaceSerializer, SpaceMappingVersionSerializer,
                                         ProposalSocietySerializer, ProposalCorporateSerializer, HashtagImagesSerializer)
 from v0.ui.inventory.models import (SupplierTypeSociety, AdInventoryType, InventorySummary)
-from models import (ProposalInfo, ProposalCenterMapping, ProposalCenterMappingVersion, SpaceMappingVersion,
+from .models import (ProposalInfo, ProposalCenterMapping, ProposalCenterMappingVersion, SpaceMappingVersion,
                     SpaceMapping, ShortlistedSpacesVersion, ShortlistedSpaces, SupplierPhase)
-from serializers import (SupplierPhaseSerializer)
+from .serializers import (SupplierPhaseSerializer)
 from v0.ui.inventory.models import (AdInventoryType,InventoryActivityAssignment,InventorySummary,InventoryTypeVersion,
                                     InventoryType,InventoryActivity)
 from v0.ui.inventory.serializers import (InventoryTypeSerializer, InventoryTypeVersionSerializer)
@@ -53,8 +55,8 @@ from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
 from v0.ui.base.models import DurationType
 from v0 import errors
 from rest_framework import viewsets
-from models import SupplierPhase, ProposalInfo
-from serializers import SupplierPhaseSerializer
+from .models import SupplierPhase, ProposalInfo
+from .serializers import SupplierPhaseSerializer
 from v0.ui.utils import handle_response
 from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignComments
@@ -68,38 +70,38 @@ def convert_date_format(date):
         date = datetime.datetime.strptime(str(date), '%d/%m/%Y')
         return date
     except Exception as ex:
-        print ex
+        print(ex)
     try:
         date = datetime.datetime.strptime(str(date), '%d/%m/%y')
         return date
     except Exception as ex:
-        print ex
+        print(ex)
     try:
         date = datetime.datetime.strptime(str(date), '%d-%m-%Y')
         return date
     except Exception as ex:
-        print ex
+        print(ex)
     try:
         date = datetime.datetime.strptime(str(date), '%d-%m-%y')
         return date
     except Exception as ex:
-        print ex
+        print(ex)
     try:
         date = datetime.datetime.strptime(str(date), '%m-%d-%Y')
         return date
     except Exception as ex:
-        print ex
+        print(ex)
     try:
         date = datetime.datetime.strptime(str(date), '%Y-%d-%m %H:%M:%S')
-        print date
+        print(date)
         return date
     except Exception as ex:
-        print ex
+        print(ex)
     try:
         date = datetime.datetime.strptime(str(date), '%m-%d-%y')
         return date
     except Exception as ex:
-        print ex
+        print(ex)
         return date
 
 
@@ -147,7 +149,7 @@ def genrate_supplier_data(data):
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
         for index, row in enumerate(ws.iter_rows()):
             if index > 0:
-                print "row is " + str(index)
+                print("row is " + str(index))
                 try:
                     if not row[1].value:
                         continue
@@ -286,8 +288,8 @@ def assign_inv_dates(data):
         inv_act_assignement_list = []
         index = 0
         for inv in inv_data:
-            print "Assignment inv : " + str(index)
-            print inv['supplier_id']
+            print("Assignment inv : " + str(index))
+            print(inv['supplier_id'])
             index += 1
             assigned_by = None
             assigned_to = None

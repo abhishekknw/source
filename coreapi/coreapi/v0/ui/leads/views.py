@@ -1,6 +1,8 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
-from models import (LeadsFormContacts, get_leads_summary, LeadsPermissions)
+from .models import (get_leads_summary, LeadsPermissions)
 from v0.ui.analytics.views import (get_data_analytics, get_details_by_higher_level,
                                    get_details_by_higher_level_geographical, geographical_parent_details)
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -546,7 +548,7 @@ def write_keys_to_file(keys_list):
             s3.put_object(Body=f, Bucket='leads-forms-templates', Key=filename)
             os.unlink(filepath)
         except Exception as ex:
-            print ex
+            print(ex)
     return filename
 
 class GenerateLeadForm(APIView):
