@@ -35,6 +35,7 @@ class EntityType(APIView):
         for supply_entity_type in all_supply_entity_type:
             all_supply_entity_type_dict[str(supply_entity_type._id)] = {
                 "id": str(supply_entity_type._id),
+                "base_entity_type_id": str(supply_entity_type.base_entity_type_id),
                 "name": supply_entity_type.name,
                 "entity_attributes": supply_entity_type.entity_attributes
             }
@@ -47,6 +48,7 @@ class EntityTypeById(APIView):
         supply_entity_type = SupplyEntityType.objects.raw({'_id':ObjectId(entity_type_id)})[0]
         supply_entity_type = {
             "id": str(supply_entity_type._id),
+            "base_entity_type_id": str(supply_entity_type.base_entity_type_id),
             "name": supply_entity_type.name,
             "entity_attributes": supply_entity_type.entity_attributes
         }
