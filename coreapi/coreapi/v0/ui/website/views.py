@@ -2,6 +2,7 @@ import csv
 import json
 import os
 import requests
+from openpyxl import load_workbook
 from celery.result import GroupResult, AsyncResult
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -1619,3 +1620,36 @@ class GetRelationshipAndPastCampaignsData(APIView):
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class CheckExstingSuppliers(APIView):
+    def post(self, request):
+        try:
+            # source_file = request.data['file']
+            supplier_data = SupplierTypeSociety.objects.all()
+            source_file = request.data['file']
+            wb = load_workbook(source_file)
+            ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+            count = 0
+            rcount = 0
+            for index, row in enumerate(ws.iter_rows()):
+                if index > 0:
+
+                    name = row[0].value
+                    id = row[1].value
+                    if SupplierTypeSociety.objects.filter(society_name=name) or SupplierTypeSociety.objects.filter(supplier_id=id):
+                        count = count + 1
+                        s = str(count) + " " + name
+                        print s
+                    else:
+                        rcount = rcount + 1
+                        print name
+                print str(count) + "and" + str(rcount)
+            data = {
+                'on_platform' : count,
+                'not_on_platform' : rcount
+            }
+
+            return ui_utils.handle_response({}, data=data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response({}, exception_object=e, request=request)
+

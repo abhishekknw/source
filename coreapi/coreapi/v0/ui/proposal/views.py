@@ -138,7 +138,6 @@ def create_proposal_object(organisation_id, account_id, user, tentative_cost, na
 def genrate_supplier_data(data):
     function_name = genrate_supplier_data.__name__
     try:
-
         supplier_data = SupplierTypeSociety.objects.all()
         society_data_list = []
         contact_data_list = []
@@ -2718,6 +2717,27 @@ class GetOngoingSuppliersOfCampaign(APIView):
                                             if 'created_at' in extra_leads_supplier_map[supplier["supplier_id"]] else None,
                             }
                             supplier["leads"].append(temp_data)
+            return ui_utils.handle_response(class_name, data=data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class GetExtraLead(APIView):
+    def get(self, request, campaign_id, form_id, supplier_id):
+        class_name = self.__class__.__name__
+        try:
+            extra_leads = mongo_client.leads_extras.find({"campaign_id": campaign_id, "leads_form_id": int(form_id), "supplier_id": supplier_id})
+            data = []
+            for lead in extra_leads:
+                temp_data = {
+                    "id": str(lead['_id']),
+                    "supplier_id": lead['supplier_id'],
+                    "campaign_id": lead['campaign_id'],
+                    "leads_form_id":lead['leads_form_id'],
+                    "extra_hot_leads": lead['extra_hot_leads'],
+                    "extra_leads": lead['extra_leads'],
+                    "created_at": lead['created_at']
+                }
+                data.append(temp_data)
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)

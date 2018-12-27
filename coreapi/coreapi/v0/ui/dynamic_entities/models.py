@@ -9,6 +9,7 @@ class SupplyEntityType(MongoModel):
     name = fields.CharField()
     entity_attributes = fields.ListField()
     is_global = fields.BooleanField()
+    base_entity_type_id = fields.CharField()  # id of the base entity type
     organisation_id = fields.CharField()
     created_by = fields.CharField()
     created_at = fields.DateTimeField()
@@ -32,6 +33,18 @@ class SupplyEntity(MongoModel):
     is_custom = fields.BooleanField(default=False)  # are there any new attributes not present in SupplyEntityType?
     entity_attributes = fields.ListField()
     organisation_id = fields.CharField()
+    created_by = fields.CharField()
+    created_at = fields.DateTimeField()
+    updated_at = fields.DateTimeField()
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'mongo_app'
+
+
+class BaseSupplyEntityType(MongoModel):
+    name = fields.CharField()
+    entity_attributes = fields.ListField()
     created_by = fields.CharField()
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()

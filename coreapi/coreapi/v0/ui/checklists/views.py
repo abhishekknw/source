@@ -14,23 +14,26 @@ from v0.ui.user.serializers import BaseUserSerializer
 import numpy as np
 from bson import Binary, Code
 from bson.json_util import dumps
+from v0.ui.notifications.views import create_new_notification_bulk
+from v0.ui.account.models import Profile
 
 
 def is_user_permitted(permission_type, user, **kwargs):
     is_permitted = True
     validation_msg_dict = {'msg': None}
+    return is_permitted, validation_msg_dict
     checklist_id = kwargs['checklist_id'] if 'checklist_id' in kwargs else None
     campaign_id = kwargs['campaign_id'] if 'campaign_id' in kwargs else None
-    permission_list = list(ChecklistPermissions.objects.raw({'user_id': user.id}))
+    permission_list = list(ChecklistPermissions.objects.raw({'profile_id': user.profile_id}))
     if len(permission_list) == 0:
-        is_permitted = True
+        is_permitted = False
         validation_msg_dict['msg'] = 'no_permission_document'
         return is_permitted, validation_msg_dict
     else:
         permission_obj = permission_list[0]
         checklist_permissions = permission_obj.checklist_permissions
         if checklist_id:
-            campaign_id = list(mongo_client.checklists.find({"checklist_id":int(checklist_id)}))[0]['campaign_id']
+            campaign_id = list(mongo_client.checklists.find({"checklist_id": int(checklist_id)}))[0]['campaign_id']
             checklist_level_permissions = permission_obj.checklist_permissions['checklists']
             if str(checklist_id) not in checklist_level_permissions:
                 champaign_level_permissions = permission_obj.checklist_permissions['campaigns']
@@ -79,7 +82,10 @@ def insert_static_cols(row_dict_original,static_column_values, static_column_nam
     counter = 0
     row_dict_all = {}
 
+    order_id_str = "order_id"
     for curr_row in first_column_rows:
+        if "row_id" in curr_row and order_id_str == "order_id":
+            order_id_str = "row_id"
         order_id = curr_row["order_id"] if 'order_id' in curr_row else curr_row["row_id"]
         #rowid = curr_row["row_id"]
         rowid = order_id
@@ -97,7 +103,7 @@ def insert_static_cols(row_dict_original,static_column_values, static_column_nam
             static_column_str = str(static_column)
             if static_column > 1:
                 curr_static_column_values = static_column_values[static_column_str]
-                cell_value = [x["cell_value"] for x in curr_static_column_values if x["order_id"] == rowid][0]
+                cell_value = [x["cell_value"] for x in curr_static_column_values if x[order_id_str] == rowid][0]
             static_data[static_column_str] = {
                 "cell_value": cell_value,
                 "column_id": static_column,
@@ -219,7 +225,7 @@ class CreateChecklistTemplate(APIView):
                         "checklist_id": checklist_id, "status": "active"}
 
         insert_static_cols(row_dict,static_column_values, static_column_names, static_column_types, lower_level_checklists)
-
+        add_single_checklist_permission(request.user.profile_id, checklist_id, ["EDIT", "VIEW", "DELETE", "FILL", "FREEZE", "UNFREEZE"])
         return handle_response(class_name, data='success', success=True)
 
 
@@ -237,7 +243,11 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
 
     #for row in total_rows:
     top_level_rows = [x for x in total_rows if x.count('.')==0]
+    top_level_rows_int = [int(x) for x in total_rows if x.count('.')==0]
     row_dict_all = {}
+
+    if not (set(top_level_rows_int)<=set(exist_rows)):
+        return [False, 'some rows do not exist']
 
     for curr_row in top_level_rows:
         curr_level = 0
@@ -251,6 +261,8 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
                 print 'already deleted row id: ', rowid
                 break
             exist_row_data = exist_row_info['data']
+        else:
+            return [False,'row '+str(rowid)+' does not exist']
         new_row_data = checklist_data[curr_row]
 
         row_dict = {"data": {}, "created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id,
@@ -310,7 +322,7 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
     for curr_row_order_id in row_dict_all_sorted.keys():
         curr_row_dict = row_dict_all_sorted[curr_row_order_id]
         mongo_client.checklist_data.insert_one(curr_row_dict)
-    return
+    return [True,'']
 
 
 class ChecklistEntry(APIView):
@@ -340,8 +352,14 @@ class ChecklistEntry(APIView):
             supplier_id = checklist['supplier_id'] if checklist_type == 'supplier'else None
             rows_data = request.data
             campaign_id = checklist['campaign_id']
-            enter_row_to_mongo(rows_data, supplier_id, campaign_id, checklist)
-            new_notification = request.data['notification'] if 'notification' in request.data else None
+            new_notifications = request.data['notifications'] if 'notifications' in request.data else None
+            if 'notifications' in request.data:
+                del request.data['notifications']
+            rows_entered = enter_row_to_mongo(rows_data, supplier_id, campaign_id, checklist)
+            if rows_entered[0]==False:
+                return handle_response({}, data=rows_entered[1], success=False)
+            if new_notifications:
+                create_new_notification_bulk(request.user, new_notifications, "checklist")
             data = 'success'
             success = True
 
@@ -362,6 +380,8 @@ class ChecklistEdit(APIView):
             if 'new_checklist_columns' in request.data else []
         new_static_column_values = request.data['new_static_column_values'] \
             if 'new_static_column_values' in request.data else {}
+
+
         is_template = request.data['is_template'] if "is_template" in request.data else None
         if not isinstance(new_static_column_values, dict):
             new_static_column_values = {"1": new_static_column_values}
@@ -373,6 +393,12 @@ class ChecklistEdit(APIView):
             return handle_response(class_name, data=result, success=False)
         else:
             checklist_column_all = checklist_column_all_query[0]
+
+        exist_static_column_indices = checklist_column_all['static_columns'] \
+            if 'static_columns' in checklist_column_all else []
+
+        if not new_static_column_values.keys() == exist_static_column_indices:
+            return handle_response(class_name, data='improper static column info in new rows', success=False)
 
         checklist_status = checklist_column_all['status']
 
@@ -399,8 +425,6 @@ class ChecklistEdit(APIView):
             new_delete_columns = exist_inactive_columns
 
         checklist_column_data_all = checklist_column_all['data']
-        exist_static_column_indices = checklist_column_all['static_columns'] \
-            if 'static_columns' in checklist_column_all else []
         lower_level_checklists = request.data['lower_level_checklists'] \
             if 'lower_level_checklists' in request.data else []
         n_rows = checklist_column_all['rows']
@@ -452,7 +476,10 @@ class ChecklistEdit(APIView):
         for column in exist_static_column_indices:
             column_id = int(column)
             if static_column:
-                curr_column_data = static_column[column]
+                if column in static_column:
+                    curr_column_data = static_column[column]
+                else:
+                    continue
                 column_options = curr_column_data['column_options'] if 'column_options' in curr_column_data else None
                 if column_options and not isinstance(column_options, list):
                     column_options = column_options.split(',')
@@ -769,15 +796,33 @@ class DeleteChecklistRow(APIView):
         return handle_response({}, data='success', success=True)
 
 
+def add_single_checklist_permission(profile_id, checklist_id, new_permissions):
+    existing_checklist_permissions_dict = list(ChecklistPermissions.objects.raw({"profile_id": profile_id}))
+    if len(existing_checklist_permissions_dict) == 0:
+        return handle_response({}, data='something_is_wrong', success=False)
+    existing_checklist_permissions_dict = existing_checklist_permissions_dict[0]
+    permissions_id = str(existing_checklist_permissions_dict._id)
+    old_checklist_permissions = existing_checklist_permissions_dict.checklist_permissions
+    if "checklists" not in old_checklist_permissions:
+        old_checklist_permissions["checklists"] = {}
+    old_checklist_permissions["checklists"][str(checklist_id)] = new_permissions
+    dict_of_req_attributes = {
+        "profile_id": profile_id,
+        "checklist_permissions": old_checklist_permissions,
+        "updated_at": datetime.datetime.now()
+    }
+    ChecklistPermissions.objects.raw({'_id': ObjectId(permissions_id)}).update({"$set": dict_of_req_attributes})
+
+
 class ChecklistPermissionsAPI(APIView):
     @staticmethod
     def post(request):
         for single_obj in request.data:
             checklist_permissions = single_obj['checklist_permissions']
-            user_id = single_obj['user_id']
+            profile_id = single_obj['profile_id']
             organisation_id = get_user_organisation_id(request.user)
             dict_of_req_attributes = {"checklist_permissions": checklist_permissions,
-                                      "organisation_id": organisation_id, "user_id": user_id}
+                                      "organisation_id": organisation_id, "profile_id": profile_id}
             (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
             if not is_valid:
                 return handle_response('', data=validation_msg_dict, success=False)
@@ -792,9 +837,10 @@ class ChecklistPermissionsAPI(APIView):
         organisation_id = get_user_organisation_id(request.user)
         checklist_permissions = ChecklistPermissions.objects.raw({"organisation_id": organisation_id})
         all_user_id_list = []
+        all_profile_id_list = []
         for permission in checklist_permissions:
-            if permission.user_id not in all_user_id_list:
-                all_user_id_list.append(permission.user_id)
+            if permission.profile_id not in all_profile_id_list:
+                all_profile_id_list.append(permission.profile_id)
             if permission.created_by not in all_user_id_list:
                 all_user_id_list.append(permission.created_by)
         all_user_objects = BaseUser.objects.filter(id__in=all_user_id_list).all()
@@ -804,11 +850,18 @@ class ChecklistPermissionsAPI(APIView):
                                     "email": user.email,
                                     "id": user.id
                                       } for user in all_user_objects}
+        all_profile_objects = Profile.objects.filter(id__in=all_profile_id_list).all()
+        all_profile_dict = {profile.id: {
+                                        "id": profile.id,
+                                        "name": profile.name,
+                                        "is_standard": profile.is_standard,
+                                        "organisation_id": profile.organisation_id,
+                                    } for profile in all_profile_objects}
         data = []
         for permission in checklist_permissions:
             permission_data = {
                 "id": str(permission._id),
-                "user_id": all_user_dict[int(permission.user_id)] if int(permission.user_id) in all_user_dict else None,
+                "profile_id": all_profile_dict[int(permission.profile_id)] if int(permission.profile_id) in all_profile_dict else None,
                 "organisation_id": permission.organisation_id,
                 "checklist_permissions": permission.checklist_permissions,
                 "created_by": all_user_dict[int(permission.created_by)] if int(permission.created_by) in all_user_dict else None
@@ -821,7 +874,7 @@ class ChecklistPermissionsAPI(APIView):
         permissions = request.data
         for permission in permissions:
             dict_of_req_attributes = {
-                "user_id": permission['user_id'],
+                "profile_id": permission['profile_id'],
                 "checklist_permissions": permission['checklist_permissions'],
                 "updated_at": datetime.datetime.now()
             }
@@ -838,16 +891,17 @@ class ChecklistPermissionsAPI(APIView):
         return handle_response('', data="success", success=True)
 
 
-class ChecklistPermissionsByUserIdAPI(APIView):
+class ChecklistPermissionsByProfileIdAPI(APIView):
     @staticmethod
-    def get(request, user_id):
+    def get(request, profile_id):
         organisation_id = get_user_organisation_id(request.user)
         checklist_permissions = list(ChecklistPermissions.objects.raw(
-            {"user_id": int(user_id), "organisation_id": organisation_id}))
+            {"profile_id": int(profile_id), "organisation_id": organisation_id}))
         all_user_id_list = []
+        all_profile_id_list = []
         for permission in checklist_permissions:
-            if permission.user_id not in all_user_id_list:
-                all_user_id_list.append(permission.user_id)
+            if permission.profile_id not in all_profile_id_list:
+                all_profile_id_list.append(permission.profile_id)
             if permission.created_by not in all_user_id_list:
                 all_user_id_list.append(permission.created_by)
 
@@ -858,13 +912,19 @@ class ChecklistPermissionsByUserIdAPI(APIView):
                                     "email": user.email,
                                     "id": user.id
                                       } for user in all_user_objects}
+        all_profile_objects = Profile.objects.filter(id__in=all_profile_id_list).all()
+        all_profile_dict = {profile.id: {"name": profile.name,
+                                         "id": profile.id,
+                                         "is_standard": profile.is_standard,
+                                         "organisation_id": profile.organisation_id,
+                                         } for profile in all_profile_objects}
         if len(checklist_permissions) == 0:
             return handle_response('', data="no_permission_exists", success=True)
 
         checklist_permissions = checklist_permissions[0]
         permission_data = {
             "id": str(checklist_permissions._id),
-            "user_id": all_user_dict[int(checklist_permissions.user_id)] if int(checklist_permissions.user_id) in all_user_dict else None,
+            "profile_id": all_profile_dict[int(checklist_permissions.profile_id)] if int(checklist_permissions.profile_id) in all_profile_dict else None,
             "organisation_id": checklist_permissions.organisation_id,
             "checklist_permissions": checklist_permissions.checklist_permissions,
             "created_by": all_user_dict[int(checklist_permissions.created_by)] if int(checklist_permissions.created_by) in all_user_dict else None
@@ -1034,3 +1094,42 @@ class ChecklistSavedOperatorsResult(APIView):
             result_dict[str(operator_id)] = {'result': curr_result, 'column_operations': column_operations,
                                              'result_operations':result_operations}
         return handle_response('', data=result_dict, success=True)
+
+class ChecklistPermissionsSelfAPI(APIView):
+    @staticmethod
+    def get(request):
+        organisation_id = get_user_organisation_id(request.user)
+        checklist_permissions = list(ChecklistPermissions.objects.raw(
+            {"profile_id": int(request.user.profile_id), "organisation_id": organisation_id}))
+        all_user_id_list = []
+        all_profile_id_list = []
+        for permission in checklist_permissions:
+            if permission.created_by not in all_user_id_list:
+                all_user_id_list.append(permission.created_by)
+            if permission.profile_id not in all_profile_id_list:
+                all_profile_id_list.append(permission.profile_id)
+
+        all_user_objects = BaseUser.objects.filter(id__in=all_user_id_list).all()
+        all_user_dict = {user.id: {"first_name": user.first_name,
+                                    "last_name": user.last_name,
+                                    "username": user.username,
+                                    "email": user.email,
+                                    "id": user.id
+                                      } for user in all_user_objects}
+        all_profile_objects = Profile.objects.filter(id__in=all_profile_id_list).all()
+        all_profile_dict = {profile.id: {"name": profile.name,
+                                       "is_standard": profile.is_standard,
+                                       "organisation_id": profile.organisation_id,
+                                   } for profile in all_profile_objects}
+        if len(checklist_permissions) == 0:
+            return handle_response('', data="no_permission_exists", success=True)
+
+        checklist_permissions = checklist_permissions[0]
+        permission_data = {
+            "id": str(checklist_permissions._id),
+            "profile_id": all_profile_dict[int(checklist_permissions.profile_id)] if int(checklist_permissions.profile_id) in all_profile_dict else None,
+            "organisation_id": checklist_permissions.organisation_id,
+            "checklist_permissions": checklist_permissions.checklist_permissions,
+            "created_by": all_user_dict[int(checklist_permissions.created_by)] if int(checklist_permissions.created_by) in all_user_dict else None
+        }
+        return handle_response('', data=permission_data, success=True)
