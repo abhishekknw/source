@@ -1,7 +1,8 @@
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
-from models import (get_leads_summary, LeadsPermissions, get_leads_summary_all,
-                    get_details_by_higher_level, geographical_parent_details, get_details_by_higher_level_geographical)
+from models import (get_leads_summary, LeadsPermissions)
+from v0.ui.analytics.views import (get_data_analytics, get_details_by_higher_level,
+                                   get_details_by_higher_level_geographical, geographical_parent_details)
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
@@ -1180,33 +1181,6 @@ class LeadsPermissionsSelfAPI(APIView):
         return handle_response('', data=permission_data, success=True)
 
 
-class GetLeadsDataGeneric(APIView):
-    @staticmethod
-    def put(request):
-        all_data = request.data
-        default_raw_data = ['total_leads', 'hot_leads']
-        default_metrics = ['2/1']
-        data_scope = all_data['data_scope'] if 'data_scope' in all_data else None
-        data_point = all_data['data_point'] if 'data_point' in all_data else None
-        raw_data = all_data['raw_data'] if 'raw_data' in all_data else default_raw_data
-        metrics = all_data['metrics'] if 'metrics' in all_data else default_metrics
-        mongo_query = get_leads_summary_all(data_scope, data_point, raw_data, metrics)
-        return handle_response('', data=mongo_query, success=True)
-
-class UpdateLeadDate(APIView):
-    @staticmethod
-    def get(request, campaign_id, supplier_id):
-        date = request.query_params.get("date",None)
-        if not date:
-            return handle_response('', data="Provide date", success=True)
-        leads = mongo_client.leads.find({"campaign_id": campaign_id, "supplier_id": supplier_id})
-        for lead in leads:
-            curr_lead = lead.copy()
-            curr_lead.pop('_id')
-            curr_lead['created_at'] = convert_date_format(date)
-            curr_lead['updated_at'] = datetime.datetime.now()
-            mongo_client.leads.update_one({'_id': lead['_id']},{"$set": curr_lead})
-        return handle_response('', data={"success": True}, success=True)
 
 class DeleteExtraLeadEntry(APIView):
     @staticmethod
