@@ -5,6 +5,7 @@ from django.db import models, migrations
 import datetime
 from django.utils.timezone import utc
 from django.conf import settings
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -22,7 +23,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(default=datetime.datetime(2016, 12, 1, 0, 0, tzinfo=utc), editable=False)),
                 ('updated_at', models.DateTimeField(default=datetime.datetime(2016, 12, 1, 0, 0, tzinfo=utc), editable=False)),
                 ('audit_date', models.DateTimeField(default=datetime.datetime(2017, 1, 9, 11, 17, 28, 642959, tzinfo=utc))),
-                ('audited_by', models.ForeignKey(blank=True, to=settings.AUTH_USER_MODEL, null=True)),
+                ('audited_by', models.ForeignKey(blank=True, to=settings.AUTH_USER_MODEL, null=True, on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'abstract': False,
@@ -36,7 +37,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='shortlistedinventorypricingdetails',
             name='inventory_content_type',
-            field=models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True),
+            field=models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='shortlistedinventorypricingdetails',
@@ -51,16 +52,16 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='shortlistedinventorypricingdetails',
             name='shortlisted_spaces',
-            field=models.ForeignKey(blank=True, to='v0.ShortlistedSpaces', null=True),
+            field=models.ForeignKey(blank=True, to='v0.ShortlistedSpaces', null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='auditdate',
             name='shortlisted_inventory',
-            field=models.ForeignKey(blank=True, to='v0.ShortlistedInventoryPricingDetails', null=True),
+            field=models.ForeignKey(blank=True, to='v0.ShortlistedInventoryPricingDetails', null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='shortlistedinventorypricingdetails',
             name='audit_dates',
-            field=models.ForeignKey(blank=True, to='v0.AuditDate', null=True),
+            field=models.ForeignKey(blank=True, to='v0.AuditDate', null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
     ]

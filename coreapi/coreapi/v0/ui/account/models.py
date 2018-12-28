@@ -13,7 +13,7 @@ class Profile(BaseModel):
     This model describes profile. a user can only have one profile.
     """
     name = models.CharField(max_length=255)
-    organisation = models.ForeignKey('Organisation')
+    organisation = models.ForeignKey('Organisation', on_delete=models.CASCADE)
     is_standard = models.BooleanField(default=False)
 
     class Meta:
@@ -38,8 +38,8 @@ class Signup(models.Model):
 
 class BusinessAccountContact(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
-    content_type = models.ForeignKey(ContentType)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, on_delete=models.CASCADE)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=20)
     business_account_id = fields.GenericForeignKey('content_type','object_id')
     name = models.CharField(db_column='NAME', max_length=50, blank=True)
@@ -55,7 +55,7 @@ class BusinessAccountContact(BaseModel):
 
 
 class BusinessInfo(BaseModel):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, on_delete=models.CASCADE)
     business_id = models.CharField(db_column='BUSINESS_ID',max_length=15, primary_key=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True) ## changed -> name
     type_name = models.ForeignKey('BusinessTypes',related_name='type_set',db_column='TYPE', blank=False,null=False, on_delete=models.CASCADE) ## changed -> CharField
@@ -87,10 +87,10 @@ class BusinessInfo(BaseModel):
 
 
 class AccountInfo(BaseModel):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, on_delete=models.CASCADE)
     account_id = models.CharField(db_column='ACCOUNT_ID', max_length=15, primary_key=True)
     business  = models.ForeignKey(BusinessInfo, related_name='accounts', db_column='BUSINESS_ID', null=True, on_delete=models.CASCADE)
-    organisation = models.ForeignKey('Organisation', null=True, blank=True)
+    organisation = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
     name    = models.CharField(db_column='NAME', max_length=50, blank=True)
     phone       = models.CharField(db_column='PHONE', max_length=10,  blank=True)
     email       = models.CharField(db_column='EMAILID',  max_length=50, blank=True)
@@ -143,7 +143,7 @@ class ContactDetails(BaseModel):
     designation = models.CharField(max_length=155, null=True, blank=True)
     department = models.CharField(max_length=155, null=True, blank=True)
     comments = models.TextField(max_length=255, null=True, blank=True)
-    content_type = models.ForeignKey(ContentType, null=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
@@ -155,7 +155,7 @@ class ContactDetails(BaseModel):
 
 class ContactDetailsGeneric(models.Model):
     id = models.AutoField(db_column='CONTACT_ID', primary_key=True)  # Field name made lowercase.
-    content_type = models.ForeignKey(ContentType, related_name='contacts')
+    content_type = models.ForeignKey(ContentType, related_name='contacts', on_delete=models.CASCADE)
     object_id = models.CharField(max_length=12)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     contact_type = models.CharField(db_column='CONTACT_TYPE',  max_length=30, blank=True, null=True)  # Field name made lowercase.
@@ -220,7 +220,7 @@ class BusinessSubTypes(BaseModel):
 
 
 class ActivityLog(BaseModel):
-    user = models.ForeignKey('BaseUser', null=False, blank=False)
-    organisation = models.ForeignKey('Organisation')
+    user = models.ForeignKey('BaseUser', null=False, blank=False, on_delete=models.CASCADE)
+    organisation = models.ForeignKey('Organisation', on_delete=models.CASCADE)
     class Meta:
         db_table = 'activity_log'

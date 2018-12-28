@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -34,6 +35,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='shortlistedinventorypricingdetails',
             name='inventory_content_type',
-            field=models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True),
+            field=models.ForeignKey(blank=True, to='contenttypes.ContentType', null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
     ]

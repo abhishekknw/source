@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.db import models, migrations
 import datetime
 from django.utils.timezone import utc
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -22,7 +23,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(serialize=False, primary_key=True, db_column='ID')),
                 ('adinventory_id', models.CharField(unique=True, max_length=22, db_column='ADINVENTORY_ID')),
                 ('object_id', models.CharField(max_length=20, null=True)),
-                ('content_type', models.ForeignKey(to='contenttypes.ContentType', null=True)),
+                ('content_type', models.ForeignKey(to='contenttypes.ContentType', null=True, on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'db_table': 'gateway_arch_inventory',

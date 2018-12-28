@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.db import models, migrations
 import datetime
 from django.utils.timezone import utc
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -32,7 +33,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ObjectLevelPermission',
             fields=[
-                ('permission_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='auth.Permission')),
+                ('permission_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='auth.Permission', on_delete=django.db.models.deletion.CASCADE)),
                 ('view', models.BooleanField(default=False)),
                 ('update', models.BooleanField(default=False)),
                 ('create', models.BooleanField(default=False)),
@@ -54,7 +55,7 @@ class Migration(migrations.Migration):
                 ('updated_at', models.DateTimeField(default=datetime.datetime(2016, 12, 1, 0, 0, tzinfo=utc), editable=False)),
                 ('name', models.CharField(max_length=255)),
                 ('is_standard', models.BooleanField(default=False)),
-                ('organisation', models.ForeignKey(to='v0.Organisation')),
+                ('organisation', models.ForeignKey(to='v0.Organisation', on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'db_table': 'profile',
@@ -63,11 +64,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='objectlevelpermission',
             name='profile',
-            field=models.ForeignKey(to='v0.Profile'),
+            field=models.ForeignKey(to='v0.Profile', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='generaluserpermission',
             name='profile',
-            field=models.ForeignKey(to='v0.Profile'),
+            field=models.ForeignKey(to='v0.Profile', on_delete=django.db.models.deletion.CASCADE),
         ),
     ]

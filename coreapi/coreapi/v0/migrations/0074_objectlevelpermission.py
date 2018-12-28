@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -25,8 +26,8 @@ class Migration(migrations.Migration):
                 ('view_all', models.BooleanField(default=False)),
                 ('update_all', models.BooleanField(default=False)),
                 ('description', models.CharField(max_length=1000, null=True, blank=True)),
-                ('content_type', models.ForeignKey(to='contenttypes.ContentType')),
-                ('profile', models.ForeignKey(to='v0.Profile')),
+                ('content_type', models.ForeignKey(to='contenttypes.ContentType', on_delete=django.db.models.deletion.CASCADE)),
+                ('profile', models.ForeignKey(to='v0.Profile', on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'db_table': 'object_level_permission',
