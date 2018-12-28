@@ -615,7 +615,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
 
 
 class LeadsPermissions(MongoModel):
-    user_id = fields.IntegerField()
+    profile_id = fields.IntegerField()
     organisation_id = fields.CharField()
     leads_permissions = fields.ListField()  # CREATE, UPDATE, READ, DELETE, FILL
     allowed_campaigns = fields.ListField()  #  All if empty

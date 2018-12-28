@@ -5,16 +5,17 @@ from bson.objectid import ObjectId
 from datetime import datetime
 from utils import validate_entity_type_data, validate_with_entity_type
 
-class EntityType(APIView):
 
+class EntityType(APIView):
     @staticmethod
     def post(request):
         name = request.data['name'] if 'name' in request.data else False
         is_global = request.data['is_global'] if 'is_global' in request.data else False
         entity_attributes = request.data['entity_attributes'] if 'entity_attributes' in request.data else False
         organisation_id = get_user_organisation_id(request.user)
+        base_entity_type_id = request.data['base_entity_type_id'] if 'base_entity_type_id' in request.data else False
         dict_of_req_attributes = {"name": name, "entity_attributes": entity_attributes,
-                                  "organisation_id": organisation_id}
+                                  "organisation_id": organisation_id, "base_entity_type_id": base_entity_type_id}
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
             return handle_response('', data=validation_msg_dict, success=False)
@@ -34,6 +35,7 @@ class EntityType(APIView):
         for supply_entity_type in all_supply_entity_type:
             all_supply_entity_type_dict[str(supply_entity_type._id)] = {
                 "id": str(supply_entity_type._id),
+                "base_entity_type_id": str(supply_entity_type.base_entity_type_id),
                 "name": supply_entity_type.name,
                 "entity_attributes": supply_entity_type.entity_attributes
             }
@@ -46,6 +48,7 @@ class EntityTypeById(APIView):
         supply_entity_type = SupplyEntityType.objects.raw({'_id':ObjectId(entity_type_id)})[0]
         supply_entity_type = {
             "id": str(supply_entity_type._id),
+            "base_entity_type_id": str(supply_entity_type.base_entity_type_id),
             "name": supply_entity_type.name,
             "entity_attributes": supply_entity_type.entity_attributes
         }
@@ -57,7 +60,9 @@ class EntityTypeById(APIView):
         new_name = request.data['name'] if 'name' in request.data else None
         new_attributes = request.data['entity_attributes'] if 'entity_attributes' in request.data else None
         is_global = request.data['is_global'] if 'is_global' in request.data else False
-        dict_of_req_attributes = {"name": new_name, "entity_attributes": new_attributes}
+        base_entity_type_id = request.data['base_entity_type_id'] if 'base_entity_type_id' in request.data else False
+        dict_of_req_attributes = {"name": new_name, "entity_attributes": new_attributes,
+                                  "base_entity_type_id": base_entity_type_id}
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
             return handle_response('', data=validation_msg_dict, success=False)
@@ -108,6 +113,7 @@ class Entity(APIView):
         for supply_entity in all_supply_entity:
             all_supply_entity_dict[str(supply_entity._id)] = {
                 "id": str(supply_entity._id),
+                "entity_type_id": str(supply_entity.entity_type_id),
                 "name": supply_entity.name,
                 "entity_attributes": supply_entity.entity_attributes,
                 "is_custom": supply_entity.is_custom,
@@ -119,6 +125,21 @@ class Entity(APIView):
 
 
 class EntityById(APIView):
+    @staticmethod
+    def get(request, entity_id):
+        supply_entity = SupplyEntity.objects.raw({'_id':ObjectId(entity_id)})[0]
+        supply_entity = {
+            "id": str(supply_entity._id),
+            "entity_type_id": str(supply_entity.entity_type_id),
+            "name": supply_entity.name,
+            "entity_attributes": supply_entity.entity_attributes,
+            "is_custom": supply_entity.is_custom,
+            "organisation_id": supply_entity.organisation_id,
+            "created_by": supply_entity.created_by,
+            "created_at": supply_entity.created_at,
+        }
+        return handle_response('', data=supply_entity, success=True)
+
     @staticmethod
     def put(request, entity_id):
         name = request.data['name'] if 'name' in request.data else None

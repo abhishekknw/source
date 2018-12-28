@@ -40,8 +40,6 @@ class UpdateLeadsMissingItems(APIView):
             mongo_client.leads.update_one({"_id": ObjectId(str(lead["_id"]))},
                                           {"$set": {"data": final_data_list}})
         return handle_response('', data={"success": True}, success=True)
-
-
 class UpdateLeadsEntryIds(APIView):
     @staticmethod
     def put(request):
