@@ -2405,13 +2405,15 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     "POSTER": [],
                     "STALL": [],
                     "STANDEE": [],
-                    "FLIER": []
+                    "FLIER": [],
+                    "BANNER": []
                 }
         inventory_days_dict = {
             "POSTER": None,
             "STALL": None,
             "STANDEE": None,
-            "FLIER": None
+            "FLIER": None,
+            "BANNER": None
         }
         for inventory_activity in inventory_activity_assignment:
             inventoy_name = inventory_activity['inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name']
