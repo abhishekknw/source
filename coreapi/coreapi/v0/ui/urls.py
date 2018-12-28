@@ -21,6 +21,7 @@ urlpatterns = [
     url(r'^dynamic-inventory/', include('v0.ui.dynamic_inventory.urls')),
     url(r'^notifications/', include('v0.ui.notifications.urls')),
     url(r'^users/', include('v0.ui.user.urls')),
+    url(r'^accounts/', include('v0.ui.account.urls')),
     url(r'^website/', include('v0.ui.account.urls')),
     url(r'^website/', include('v0.ui.campaign.urls')),
     url(r'^campaign/', include('v0.ui.campaign.urls')),
@@ -31,7 +32,7 @@ urlpatterns = [
     url(r'^website/', include('v0.ui.supplier.urls')),
     url(r'^website/', include('v0.ui.email.urls')),
     url(r'^website/', include('v0.ui.website.urls')),
-
+    url(r'^analytics/', include('v0.ui.analytics.urls')),
 
 
     # url(r'^website/create_business/load_business_types/',web_views.getBusinessTypesAPIView.as_view()),
