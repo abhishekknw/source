@@ -150,23 +150,6 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
     return [individual_metric_output, statistics_array]
 
 
-# def get_details_by_higher_levels(data_scope, lowest_level, default_value_type=None,
-#                                 grouping_level=None, all_results = []):
-#     second_lowest_parent = count_details_parent_map[lowest_level]['parent']
-#     second_lowest_parent_name_model = count_details_parent_map[lowest_level]['parent_name_model']
-#     highest_levels_number = len(data_scope)
-#     if ',' in second_lowest_parent or ',' in second_lowest_parent_name_model:
-#         parents = second_lowest_parent.split(',')
-#         desc_sequence = [parents, lowest_level]
-#         parent_model_names = second_lowest_parent_name_model.split(',')
-#         parent_type = 'multiple'
-#     else:
-#         desc_sequence = find_level_sequence(highest_level, lowest_level)
-#         parent_type = 'single'
-#         parents = [second_lowest_parent]
-#     curr_level_id = 0
-#     last_level_id = len(desc_sequence) - 1
-
 
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
                                 grouping_level=None, all_results = [], unilevel_constraints = {}):

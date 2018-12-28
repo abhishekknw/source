@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
-from models import (LeadsFormContacts, get_leads_summary, LeadsPermissions)
+from models import (get_leads_summary, LeadsPermissions)
 from v0.ui.analytics.views import (get_data_analytics, get_details_by_higher_level,
                                    get_details_by_higher_level_geographical, geographical_parent_details)
 from v0.ui.supplier.models import SupplierTypeSociety
