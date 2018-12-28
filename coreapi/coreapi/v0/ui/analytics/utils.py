@@ -38,7 +38,9 @@ count_details_parent_map = {
                  'self_name_model': 'is_hot', 'parent_name_model': 'supplier_id,campaign_id', 'storage_type': 'condition'},
     'cost': {'parent': 'supplier,campaign', 'model_name':'ShortlistedSpaces', 'database_type': 'mysql',
              'self_name_model': 'total_negotiated_price', 'parent_name_model': 'object_id,proposal_id',
-             'storage_type': 'sum'}
+             'storage_type': 'sum'},
+    'phase': {'parent': 'campaign', 'model_name': 'SupplierPhase', 'database_type': 'mysql',
+              'self_model_name': 'phase_no', 'parent_model_name':'campaign_id', 'storage_type': 'unique'}
 }
 
 
