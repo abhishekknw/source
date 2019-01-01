@@ -199,7 +199,7 @@ def handle_society_flat_detail(flat_detail, suppliers_dict, content_type):
         flat_instances = []
         for society_id in supplier_ids:
             total_flat_count = 0
-            for flat_type_code, flat_type_value in flat_type_dict.iteritems():
+            for flat_type_code, flat_type_value in flat_type_dict.items():
                 count_range = flat_detail['detail'][flat_type_code] if flat_detail.get(flat_type_code) else [0, v0_constants.flat_type_default_params[flat_type_code]['count']]
                 size_range = flat_detail['detail'][flat_type_code] if flat_detail.get(flat_type_code) else [0, v0_constants.flat_type_default_params[flat_type_code]['size']]
                 assert count_range[0] <= count_range[1], "Invalid Count Range"
@@ -239,7 +239,7 @@ def handle_tower_details(tower_detail, suppliers_dict, content_type):
         assert tower_range[0] <= tower_range[1], "Invalid Tower Range"
         supplier_ids = suppliers_dict.keys()
         tower_instances = []
-        for supplier_id, detail in suppliers_dict.iteritems():
+        for supplier_id, detail in suppliers_dict.items():
             total_tower_count = random.randint(int(tower_range[0]), int(tower_range[1]))
             for tower_number in range(total_tower_count):
                 data = {

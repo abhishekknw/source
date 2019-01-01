@@ -638,7 +638,7 @@ def get_content_types(codes):
         ContentType = apps.get_model('contenttypes', 'ContentType')
         content_types = ContentType.objects.get_for_models(*model_classes)
         final_content_types = {}
-        for model_class, content_type in content_types.iteritems():
+        for model_class, content_type in content_types.items():
             model_code = v0_constants.model_to_codes[model_class.__name__]
             final_content_types[model_code] = content_type
         return handle_response(function, data=final_content_types, success=True)

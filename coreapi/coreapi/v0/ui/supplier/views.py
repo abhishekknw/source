@@ -2086,7 +2086,7 @@ class FilteredSuppliers(APIView):
             if priority_index_filters:
                 # if you have provided pi filters only then a pi index map is calculated for each supplier
                 pi_index_map = website_utils.handle_priority_index_filters(supplier_type_code, priority_index_filters, final_suppliers_id_list)
-                supplier_id_to_pi_map = {supplier_id: detail['total_priority_index'] for supplier_id, detail in pi_index_map.iteritems()}
+                supplier_id_to_pi_map = {supplier_id: detail['total_priority_index'] for supplier_id, detail in pi_index_map.items()}
 
             # the following function sets the pricing as before and it's temprorary.
             total_suppliers, suppliers_inventory_count = website_utils.set_pricing_temproray(total_suppliers.values(), final_suppliers_id_list, supplier_type_code, coordinates, supplier_id_to_pi_map)
@@ -2286,7 +2286,7 @@ class FilteredSuppliersAPIView(APIView):
                 suppliers_data.append(supplier)
                 suppliers_count += 1
 
-                for society_key, actual_key in v0_constants.society_common_keys.iteritems():
+                for society_key, actual_key in v0_constants.society_common_keys.items():
                     if society_key in supplier.keys():
                         value = supplier[society_key]
                         del supplier[society_key]
