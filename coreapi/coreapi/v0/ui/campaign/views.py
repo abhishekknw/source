@@ -1932,8 +1932,8 @@ def get_campaign_wise_summary_by_user(user_id, user_start_datetime=None):
                                          ["total_leads_count", "hot_leads_count"])
         campaign_summary["campaign_wise"][campaign_id] = {
             "name": all_campaign_id_name_map[campaign_id],
-            "total_leads_count": campaign_wise_leads[campaign_id]["total_leads_count"],
-            "hot_leads_count": campaign_wise_leads[campaign_id]["hot_leads_count"],
+            "total": campaign_wise_leads[campaign_id]["total_leads_count"],
+            "interested": campaign_wise_leads[campaign_id]["hot_leads_count"],
             "total_supplier_count": len(campaign_supplier_map[campaign_id]),
             "flat_count": flat_count,
             "hot_leads_analytics": {
@@ -1953,31 +1953,31 @@ def get_campaign_wise_summary_by_user(user_id, user_start_datetime=None):
                 "mean_by_society": analytics["total_leads_count"]["mean_by_society"],
             },
         }
-    analytics = get_mean_median_mode(campaign_summary["campaign_wise"], ["total_leads_count", "hot_leads_count"])
+    analytics = get_mean_median_mode(campaign_summary["campaign_wise"], ["total", "interested"])
     campaign_summary["all_campaigns"]["total_leads_analytics"] = {
-        "percentage_by_flat": analytics["total_leads_count"]["percentage_by_flat"],
-        "mean_percent_by_flat": analytics["total_leads_count"]["mean_percent_by_flat"],
-        "median_percent_by_flat": analytics["total_leads_count"]["median_percent_by_flat"],
-        "mode_percent_by_flat": analytics["total_leads_count"]["mode_percent_by_flat"],
-        "median_by_campaign": analytics["total_leads_count"]["median_by_society"],
-        "mean_by_campaign": analytics["total_leads_count"]["mean_by_society"],
+        "percentage_by_flat": analytics["total"]["percentage_by_flat"],
+        "mean_percent_by_flat": analytics["total"]["mean_percent_by_flat"],
+        "median_percent_by_flat": analytics["total"]["median_percent_by_flat"],
+        "mode_percent_by_flat": analytics["total"]["mode_percent_by_flat"],
+        "median_by_campaign": analytics["total"]["median_by_society"],
+        "mean_by_campaign": analytics["total"]["mean_by_society"],
     }
     campaign_summary["all_campaigns"]["hot_leads_analytics"] = {
-        "percentage_by_flat": analytics["hot_leads_count"]["percentage_by_flat"],
-        "mean_percent_by_flat": analytics["hot_leads_count"]["mean_percent_by_flat"],
-        "median_percent_by_flat": analytics["hot_leads_count"]["median_percent_by_flat"],
-        "mode_percent_by_flat": analytics["hot_leads_count"]["mode_percent_by_flat"],
-        "median_by_campaign": analytics["hot_leads_count"]["median_by_society"],
-        "mean_by_campaign": analytics["hot_leads_count"]["mean_by_society"],
+        "percentage_by_flat": analytics["interested"]["percentage_by_flat"],
+        "mean_percent_by_flat": analytics["interested"]["mean_percent_by_flat"],
+        "median_percent_by_flat": analytics["interested"]["median_percent_by_flat"],
+        "mode_percent_by_flat": analytics["interested"]["mode_percent_by_flat"],
+        "median_by_campaign": analytics["interested"]["median_by_society"],
+        "mean_by_campaign": analytics["interested"]["mean_by_society"],
     }
     campaign_summary["all_campaigns"]["total_supplier_count"] = 0
-    campaign_summary["all_campaigns"]["total_leads_count"] = 0
-    campaign_summary["all_campaigns"]["hot_leads_count"] = 0
+    campaign_summary["all_campaigns"]["total"] = 0
+    campaign_summary["all_campaigns"]["interested"] = 0
     campaign_summary["all_campaigns"]["flat_count"] = 0
     for campaign in campaign_summary["campaign_wise"]:
-        campaign_summary["all_campaigns"]["total_leads_count"] += campaign_summary["campaign_wise"][campaign][
-            "total_leads_count"]
-        campaign_summary["all_campaigns"]["hot_leads_count"] += campaign_summary["campaign_wise"][campaign]["hot_leads_count"]
+        campaign_summary["all_campaigns"]["total"] += campaign_summary["campaign_wise"][campaign][
+            "total"]
+        campaign_summary["all_campaigns"]["interested"] += campaign_summary["campaign_wise"][campaign]["interested"]
         campaign_summary["all_campaigns"]["flat_count"] += campaign_summary["campaign_wise"][campaign]["flat_count"]
         campaign_summary["all_campaigns"]["total_supplier_count"] += campaign_summary["campaign_wise"][campaign][
             "total_supplier_count"]
