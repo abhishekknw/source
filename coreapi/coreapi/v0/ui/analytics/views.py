@@ -1,9 +1,10 @@
 from __future__ import print_function
 from __future__ import absolute_import
 from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge_dict_array_dict_single,
-                   convert_dict_arrays_keys_to_standard_names, get_similar_structure_keys, geographical_parent_details,
-                   count_details_parent_map, count_details_kids_map, find_level_sequence, binary_operation,
-                   sum_array_by_key, z_calculator_array_multiple, get_metrics_from_code, time_parent_names)
+                    convert_dict_arrays_keys_to_standard_names, get_similar_structure_keys, geographical_parent_details,
+                    count_details_parent_map, count_details_kids_map, find_level_sequence, binary_operation,
+                    sum_array_by_key, z_calculator_array_multiple, get_metrics_from_code, time_parent_names,
+                    count_details_parent_map_time, date_to_other_groups)
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -21,24 +22,27 @@ unilevel_categories = ['time']
 # exactly one scope restrictor with exact match, one type of data point
 def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metrics = [], statistical_information = None):
     unilevel_constraints = {}
-    data_scope_keys = data_scope.keys()
-    for curr_key in data_scope_keys:
-        if data_scope[curr_key]["category"] in unilevel_categories:
-            unilevel_constraints[curr_key] = data_scope[curr_key]
-            data_scope.pop(curr_key)
-    data_scope_keys = data_scope.keys()
-    data_scope_first = data_scope[data_scope_keys[0]] if data_scope_keys is not [] else {}
+    data_scope_first = {}
+    if not data_scope == {}:
+        data_scope_keys = data_scope.keys()
+        for curr_key in data_scope_keys:
+            if data_scope[curr_key]["category"] in unilevel_categories:
+                unilevel_constraints[curr_key] = data_scope[curr_key]
+                data_scope.pop(curr_key)
+        data_scope_keys = data_scope.keys() if not data_scope == {} else []
+        data_scope_first = data_scope[data_scope_keys[0]] if data_scope_keys is not [] else {}
     highest_level = data_scope_first['value_type'] if 'value_type' in data_scope_first else None
     grouping_level = data_point['level']
     grouping_level_first = grouping_level[0]
+    grouping_category = data_point["category"]
     # if highest_level == grouping_level:
     #     return "lowest level should be lower than highest level"
     individual_metric_output = {}
     highest_level_values = data_scope_first['values']['exact'] if 'values' in data_scope_first \
         and 'exact' in data_scope_first['values'] else []
-    default_value_type = data_scope_first['value_type'] if data_scope_first is not None else None
+    default_value_type = data_scope_first['value_type'] if not data_scope_first == {} else None
     data_point_category = data_point['category']
-    data_scope_category = data_scope_first['category'] if data_scope_first is not None else data_point_category
+    data_scope_category = data_scope_first['category'] if not data_scope_first == {} else data_point_category
     for curr_metric in raw_data:
         lowest_level = curr_metric
         if data_scope_category == 'geographical':
@@ -57,10 +61,10 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
                 curr_highest_level_values = result_dict['single_list']
             lgl = lowest_geographical_level
             curr_output = get_details_by_higher_level(lgl, lowest_level, curr_highest_level_values, lgl, lgl, curr_dict,
-                                                      [],unilevel_constraints)
+                                                      [],unilevel_constraints, grouping_category)
         else:
             curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
-                                                      default_value_type, grouping_level_first, [],unilevel_constraints)
+                        default_value_type, grouping_level_first, [],unilevel_constraints, grouping_category)
         individual_metric_output[lowest_level] = curr_output
 
     matching_format_metrics = get_similar_structure_keys(individual_metric_output, grouping_level)
@@ -82,8 +86,10 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
         reverse_key = level_name_by_model_id[key] if key in level_name_by_model_id else None
         if reverse_key in raw_data:
             reverse_map[reverse_key] = key
-
-    derived_array = copy.deepcopy(single_array)
+    if "sublevel" in data_point:
+        date_map = date_to_other_groups(single_array,grouping_level[0], data_point["sublevel"])
+    #single_array = list(date_map.values())
+    derived_array = copy.deepcopy(date_map)
     metric_names = []
     metric_processed = []
 
@@ -92,7 +98,7 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
         b_code = curr_metric[1]
         op = curr_metric[2]
         a = get_metrics_from_code(a_code,raw_data, metric_names)
-        if type(a_code) is unicode:
+        if type(a_code) is str:
             if a_code[0] == 'm':
                 a_code = a_code[1:]
                 a = metric_names[int(a_code) - 1]
@@ -101,7 +107,7 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
                 a = raw_data[int(a_code) - 1]
         else:
             a = a_code
-        if type(b_code) is unicode:
+        if type(b_code) is str:
             if b_code[0] == 'm':
                 b_code = b_code[1:]
                 b = metric_names[int(b_code) - 1]
@@ -129,14 +135,16 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
             b = curr_metric["b"]
             nr_value = a
             dr_value = b
-            if type(nr_value) is str or type(nr_value) is unicode:
+            if type(nr_value) is str:
                 nr_value = curr_dict[a] if a in curr_dict else curr_dict[reverse_map[a]]
-            if type(dr_value) is str or type(dr_value) is unicode:
+            if type(dr_value) is str:
                 dr_value = curr_dict[b] if b in curr_dict else curr_dict[reverse_map[b]]
             result_value = binary_operation(float(nr_value), float(dr_value), curr_metric['op']) if \
                 not dr_value == 0 and nr_value is not None and dr_value is not None else None
             curr_dict[curr_metric['name']] = result_value
 
+    stats = []
+    statistics_array = []
     if statistical_information is not None:
         stats = statistical_information['stats']
         stat_metrics_indices = statistical_information['metrics']
@@ -149,47 +157,34 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
         statistics_array = statistics_map[curr_stat](derived_array, metrics_array_dict)
         derived_array = statistics_array
 
-    return [individual_metric_output, statistics_array]
-
-
-# def get_details_by_higher_levels(data_scope, lowest_level, default_value_type=None,
-#                                 grouping_level=None, all_results = []):
-#     second_lowest_parent = count_details_parent_map[lowest_level]['parent']
-#     second_lowest_parent_name_model = count_details_parent_map[lowest_level]['parent_name_model']
-#     highest_levels_number = len(data_scope)
-#     if ',' in second_lowest_parent or ',' in second_lowest_parent_name_model:
-#         parents = second_lowest_parent.split(',')
-#         desc_sequence = [parents, lowest_level]
-#         parent_model_names = second_lowest_parent_name_model.split(',')
-#         parent_type = 'multiple'
-#     else:
-#         desc_sequence = find_level_sequence(highest_level, lowest_level)
-#         parent_type = 'single'
-#         parents = [second_lowest_parent]
-#     curr_level_id = 0
-#     last_level_id = len(desc_sequence) - 1
+    return [individual_metric_output, derived_array]
 
 
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
-                                grouping_level=None, all_results = [], unilevel_constraints = {}):
-    second_lowest_parent = count_details_parent_map[lowest_level]['parent']
-    second_lowest_parent_name_model = count_details_parent_map[lowest_level]['parent_name_model']
+                                grouping_level=None, all_results = [], unilevel_constraints = {},
+                                grouping_category = ""):
+    default_map = count_details_parent_map
+    if highest_level == None:
+        highest_level = grouping_level
+    if grouping_category == 'time':
+        default_map = count_details_parent_map_time
+    second_lowest_parent = default_map[lowest_level]['parent']
+    second_lowest_parent_name_model = default_map[lowest_level]['parent_name_model']
     if ',' in second_lowest_parent or ',' in second_lowest_parent_name_model:
         parents = second_lowest_parent.split(',')
-        desc_sequence = [parents, lowest_level]
+        desc_sequence = [parents, lowest_level, default_map]
         parent_model_names = second_lowest_parent_name_model.split(',')
         parent_type = 'multiple'
     else:
-        desc_sequence = find_level_sequence(highest_level, lowest_level)
+        desc_sequence = find_level_sequence(highest_level, lowest_level, default_map)
         parent_type = 'single'
         parents = [second_lowest_parent]
     curr_level_id = 0
     last_level_id = len(desc_sequence) - 1
-
     while curr_level_id < last_level_id:
         curr_level = desc_sequence[curr_level_id]
         next_level = desc_sequence[curr_level_id+1]
-        entity_details = count_details_parent_map[next_level]
+        entity_details = default_map[next_level]
         (model_name, database_type, self_model_name, parent_model_name, storage_type) = (
             entity_details['model_name'], entity_details['database_type'], entity_details['self_name_model'],
             entity_details['parent_name_model'], entity_details['storage_type'])
@@ -284,7 +279,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
 
                 query = list(query)
                 next_level_match_list = [x[self_model_name] for x in query]
-                # count = mongo_client[model_name].find({}).distinct(self_model_name).length
             elif database_type == 'mysql':
                 if grouping_level in parents:
                     all_results.append(query)
@@ -302,14 +296,15 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 else:
                     if 'incrementing_value' in entity_details:
                         incrementing_value = entity_details['incrementing_value']
-                        group_dict.update({'_id': {}, next_level: {"$sum":{
-                            "$sum": {"$cond":[{"$eq": ["$"+self_model_name,incrementing_value]}, 1, 0]}}}})
+                        group_dict.update({'_id': {}, next_level: {"$sum":
+                        {"$cond":[{"$eq": ["$"+self_model_name,incrementing_value]}, 1, 0]}}})
                     else:
                         group_dict = {'_id': {}, next_level: {"$sum": {"$cond": ["$"+self_model_name, 1, 0]}}}
                 for curr_parent_model_name in parent_model_names:
                     group_dict["_id"][curr_parent_model_name] = '$' + curr_parent_model_name
                     group_dict[curr_parent_model_name] = {"$first": '$' + curr_parent_model_name}
                     project_dict[curr_parent_model_name] = 1
+                print(match_dict, group_dict, project_dict)
                 query = mongo_client[model_name].aggregate(
                     [
                         {"$match": match_dict},
@@ -345,7 +340,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             all_results = [all_results]
     if not len(all_results)==[]:
         new_results = convert_dict_arrays_keys_to_standard_names(all_results)
-        single_array_results = merge_dict_array_array_single(new_results,grouping_level)
+        single_array_results = merge_dict_array_array_single(new_results, grouping_level)
     else:
         single_array_results = []
     return single_array_results
@@ -373,6 +368,30 @@ def get_details_by_higher_level_geographical(highest_level, highest_level_list, 
     final_values_with_null = [dict(t) for t in {tuple(d.items()) for d in query_values}]
     final_dict = [d for d in final_values_with_null if all(d.values())]
     return {'final_dict':final_dict, 'single_list':list_values_distinct}
+
+
+def get_details_by_date(lowest_level, highest_level, highest_level_list):
+
+    match_dict = {}
+
+    match_constraint = [{parent_model_name: {"$in": match_list}}]
+    final_result = mongo_client.leads.aggregate(
+    [
+        {
+            "$match": {"campaign_id": ["BYJMACC9CA", "TESYOG06F2"]}
+        },
+        {
+            "$group":
+                {
+                    "_id": {"year":{"$year": "$created_at"},
+                            "month":{"$month": "$created_at"},
+                            "day":{"$dayOfMonth": "$created_at"}},
+                    "campaign_id": {"$first": '$campaign_id'},
+                    "total_leads_count": {"$sum": 1},
+                    "hot_leads_count": {"$sum": {"$cond": ["$is_hot", 1, 0]}},
+                }
+        }
+    ])
 
 
 class GetLeadsDataGeneric(APIView):
