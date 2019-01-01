@@ -22,7 +22,7 @@ def fix_campaign_assignment(apps, schema_editor):
             campaign_instance_map[campaign_id] = []
         campaign_instance_map[campaign_id].append(instance)
 
-    for campaign_id, instance_list in campaign_instance_map.iteritems():
+    for campaign_id, instance_list in campaign_instance_map.items():
         if len(instance_list) > 1:
             # delete everything except for the first object
             for instance in instance_list[1:]:

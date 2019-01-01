@@ -142,10 +142,10 @@ class CreateAdInventoryTypeDurationType(APIView):
                                                                                                  v0_constants.database_name))
 
             # for simplicity i have every combination
-            for duration_code, duration_value in v0_constants.duration_dict.iteritems():
+            for duration_code, duration_value in v0_constants.duration_dict.items():
                 DurationType.objects.get_or_create(duration_name=duration_value)
             for inventory_tuple in AD_INVENTORY_CHOICES:
-                for ad_inventory_type_code, ad_inventory_type_value in v0_constants.type_dict.iteritems():
+                for ad_inventory_type_code, ad_inventory_type_value in v0_constants.type_dict.items():
                     AdInventoryType.objects.get_or_create(adinventory_name=inventory_tuple[0],
                                                           adinventory_type=ad_inventory_type_value)
             return ui_utils.handle_response(class_name, data='success', success=True)
@@ -684,7 +684,7 @@ class CampaignSuppliersInventoryList(APIView):
 
             assigned_to_query = Q()
             if assigned_to:
-                assigned_to_query = Q(assigned_to_id=long(assigned_to))
+                assigned_to_query = Q(assigned_to_id=int(assigned_to))
 
             # cache_key = v0_utils.create_cache_key(class_name, assigned_date_range_query, proposal_query, assigned_to_query)
 
@@ -1090,7 +1090,7 @@ class AssignInventoryActivityDateUsers(APIView):
             # to reduce db hits, all users are stored and queried beforehand.
             users = set()
             for assignment_data in assignment_detail:
-                for date, user in assignment_data['date_user_assignments'].iteritems():
+                for date, user in assignment_data['date_user_assignments'].items():
                     users.add(long(user))
             user_map = BaseUser.objects.in_bulk(users)
             inventory_activity_assignment_objects = []
@@ -1113,7 +1113,7 @@ class AssignInventoryActivityDateUsers(APIView):
                             shortlisted_inventory_details=shortlisted_inventory_detail_map[shortlisted_inv_detail_id],
                             activity_type=activity_type
                         )
-                    for date, user in assignment_data['date_user_assignments'].iteritems():
+                    for date, user in assignment_data['date_user_assignments'].items():
                         # if it's AUDIT, you keep on creating objects
                         if inventory_activity_instance.activity_type == INVENTORY_ACTIVITY_TYPES[2][0]:
                             inv_act_assignment, is_created = InventoryActivityAssignment.objects.get_or_create(
@@ -1159,7 +1159,7 @@ class ReassignInventoryActivityDateUsers(APIView):
                 inventory_activity_assignment_ids)
             user_map = BaseUser.objects.in_bulk(user_ids)
             inventory_activity_assignment_objects = []
-            for inventory_activity_assignment_id, detail in data.iteritems():
+            for inventory_activity_assignment_id, detail in data.items():
                 instance = inventory_activity_assignment_map[long(inventory_activity_assignment_id)]
                 instance.reassigned_activity_date = ui_utils.get_aware_datetime_from_string(
                     detail['reassigned_activity_date'])

@@ -2518,21 +2518,21 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 total_rejected_flats += phase_booked_flats
                 all_rejected_supplier_count = all_rejected_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
         total_booked_suppliers_list = flatten_list(
-            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].iteritems()])
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items()])
         confirmed_booked_suppliers_list = flatten_list(
-            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].iteritems() if
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
              status in confirmed_booked_status])
         verbally_booked_suppliers_list = flatten_list(
-            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].iteritems() if
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
              status in verbally_booked_status])
         followup_required_suppliers_list = flatten_list(
-            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].iteritems() if
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
              status in followup_req_status])
         rejected_suppliers_list = flatten_list(
-            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].iteritems() if
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
              status in rejected_status])
         not_initiated_suppliers_list = flatten_list(
-            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].iteritems() if
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
              status in not_initiated_status])
 
         phase_dict = {
