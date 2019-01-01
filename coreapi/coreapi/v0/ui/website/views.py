@@ -1008,7 +1008,7 @@ class ExportAllSupplierData(APIView):
                     continue
 
                 # set all possible inventory_allowed fields to 0 first
-                for code, name in v0_constants.inventory_code_to_name.iteritems():
+                for code, name in v0_constants.inventory_code_to_name.items():
                     inv_name_key = website_utils.join_with_underscores(name).lower()
                     pricing_dict[supplier_id][inv_name_key + '_' + 'allowed'] = 0
 
@@ -1053,14 +1053,14 @@ class ExportAllSupplierData(APIView):
                     'supplier_type_code': supplier_type_code
                 }
                 # set key, value from pricing_dict to basic_data_dict
-                for key, value in pricing_dict[supplier_id].iteritems():
+                for key, value in pricing_dict[supplier_id].items():
                     basic_data_dict[key] = value
 
                 result.append(basic_data_dict)
             # add pricing headers to current headers.
             headers = v0_constants.basic_supplier_export_headers
             data_keys = v0_constants.basic_supplier_data_keys
-            for inventory_name, header_list in v0_constants.price_mapping_default_headers.iteritems():
+            for inventory_name, header_list in v0_constants.price_mapping_default_headers.items():
                 for header_tuple in header_list:
 
                     inv_name_key = website_utils.join_with_underscores(inventory_name).lower()
@@ -1530,7 +1530,7 @@ class GetAssignedIdImagesListApiView(APIView):
                 supplier_code_list[supplier['supplier_code']].append(supplier)
 
             inv_act_image_objects_with_distance = []
-            for key, value in supplier_code_list.iteritems():
+            for key, value in supplier_code_list.items():
                 supplier_id_list = []
                 if key == 'RS':
                     for supplier in value:

@@ -84,7 +84,7 @@ class BaseUserUpdateSerializer(ModelSerializer):
             instance.set_password(password)
             del validated_data['password']
 
-        for key, value in validated_data.iteritems():
+        for key, value in validated_data.items():
             setattr(instance, key, value)
 
         instance.save()
