@@ -52,7 +52,7 @@ python-magic==0.4.15
 pytz==2018.7
 PyYAML==3.13
 ratelim==0.1.6
-redis==3.0.1
+redis==2.10.6
 requests==2.21.0
 s3cmd==2.0.2
 s3transfer==0.1.13
@@ -61,5 +61,6 @@ six==1.12.0
 sqlparse==0.2.4
 uritemplate==3.0.0
 urllib3==1.24.1
+uWSGI==2.0.17.1
 validate-email==1.3
 vine==1.1.4
