@@ -52,7 +52,11 @@ count_details_parent_map_time = {
              'self_name_model': 'entry_id', 'parent_name_model': 'created_at', 'storage_type': 'count'},
     'hot_lead': {'parent': 'date', 'model_name': 'leads1', 'database_type': 'mongodb',
                  'self_name_model': 'is_hot', 'parent_name_model': 'created_at', 'storage_type': 'condition'},
-}
+    'lead_date_campaign': {'parent':'date,campaign', 'model_name': 'leads1', 'database_type': 'mongodb',
+                           'self_name_model': 'entry_id', 'parent_name_model': 'created_at,campaign_id',
+                           'storage_type': 'count'}
+
+    }
 
 geographical_parent_details = {
     'base': 'supplier', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
@@ -250,6 +254,7 @@ def get_similar_structure_keys(main_dict, required_keys):
 
 
 def find_level_sequence(highest_level, lowest_level, default_map = count_details_parent_map):
+
     sequence = []
     curr_level = lowest_level
     n_levels = 3
