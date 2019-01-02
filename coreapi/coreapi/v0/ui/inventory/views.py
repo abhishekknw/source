@@ -736,7 +736,7 @@ class InventoryActivityImageAPIView(APIView):
                 id=request.data['shortlisted_inventory_detail_id'])
             activity_date = request.data['activity_date']
             activity_type = request.data['activity_type']
-            activity_by = long(request.data['activity_by'])
+            activity_by = int(request.data['activity_by'])
             actual_activity_date = request.data['actual_activity_date']
             use_assigned_date = int(request.data['use_assigned_date'])
             assigned_to = request.user
@@ -1066,7 +1066,7 @@ class AssignInventoryActivityDateUsers(APIView):
         class_name = self.__class__.__name__
         try:
 
-            shortlisted_inventory_detail_ids = [long(sipd) for sipd in request.data['shortlisted_inventory_id_detail']]
+            shortlisted_inventory_detail_ids = [int(sipd) for sipd in request.data['shortlisted_inventory_id_detail']]
             assignment_detail = request.data['assignment_detail']
 
             shortlisted_inventory_detail_map = ShortlistedInventoryPricingDetails.objects.in_bulk(
@@ -1091,7 +1091,7 @@ class AssignInventoryActivityDateUsers(APIView):
             users = set()
             for assignment_data in assignment_detail:
                 for date, user in assignment_data['date_user_assignments'].items():
-                    users.add(long(user))
+                    users.add(int(user))
             user_map = BaseUser.objects.in_bulk(users)
             inventory_activity_assignment_objects = []
 
@@ -1125,7 +1125,7 @@ class AssignInventoryActivityDateUsers(APIView):
                                 inventory_activity=inventory_activity_instance)
                             inv_act_assignment.activity_date = ui_utils.get_aware_datetime_from_string(date)
 
-                        inv_act_assignment.assigned_to = user_map[long(user)]
+                        inv_act_assignment.assigned_to = user_map[int(user)]
                         inv_act_assignment.assigned_by = request.user
                         inventory_activity_assignment_objects.append(inv_act_assignment)
 
@@ -1153,17 +1153,17 @@ class ReassignInventoryActivityDateUsers(APIView):
         class_name = self.__class__.__name__
         try:
             data = request.data.copy()
-            inventory_activity_assignment_ids = [long(obj_id) for obj_id in data.keys()]
-            user_ids = [long(detail['assigned_to']) for detail in data.values()]
+            inventory_activity_assignment_ids = [int(obj_id) for obj_id in data.keys()]
+            user_ids = [int(detail['assigned_to']) for detail in data.values()]
             inventory_activity_assignment_map = InventoryActivityAssignment.objects.in_bulk(
                 inventory_activity_assignment_ids)
             user_map = BaseUser.objects.in_bulk(user_ids)
             inventory_activity_assignment_objects = []
             for inventory_activity_assignment_id, detail in data.items():
-                instance = inventory_activity_assignment_map[long(inventory_activity_assignment_id)]
+                instance = inventory_activity_assignment_map[int(inventory_activity_assignment_id)]
                 instance.reassigned_activity_date = ui_utils.get_aware_datetime_from_string(
                     detail['reassigned_activity_date'])
-                instance.assigned_to = user_map[long(detail['assigned_to'])]
+                instance.assigned_to = user_map[int(detail['assigned_to'])]
                 inventory_activity_assignment_objects.append(instance)
             bulk_update(inventory_activity_assignment_objects)
             return ui_utils.handle_response(class_name, data='successfully reassigned', success=True)
