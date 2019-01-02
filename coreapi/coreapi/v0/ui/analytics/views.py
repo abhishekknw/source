@@ -24,12 +24,12 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
     unilevel_constraints = {}
     data_scope_first = {}
     if not data_scope == {}:
-        data_scope_keys = data_scope.keys()
+        data_scope_keys = list(data_scope.keys()) if not data_scope == {} else []
+        print(data_scope_keys)
         for curr_key in data_scope_keys:
             if data_scope[curr_key]["category"] in unilevel_categories:
                 unilevel_constraints[curr_key] = data_scope[curr_key]
                 data_scope.pop(curr_key)
-        data_scope_keys = data_scope.keys() if not data_scope == {} else []
         data_scope_first = data_scope[data_scope_keys[0]] if data_scope_keys is not [] else {}
     highest_level = data_scope_first['value_type'] if 'value_type' in data_scope_first else None
     grouping_level = data_point['level']
@@ -93,6 +93,7 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
     metric_names = []
     metric_processed = []
 
+    print(metrics)
     for curr_metric in metrics:
         a_code = curr_metric[0]
         b_code = curr_metric[1]
@@ -163,16 +164,21 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
                                 grouping_category = ""):
+    # check for custom sequence
+    custom_level = lowest_level+'_'+grouping_level+'_'+highest_level
     default_map = count_details_parent_map
     if highest_level == None:
         highest_level = grouping_level
     if grouping_category == 'time':
         default_map = count_details_parent_map_time
+    if custom_level in default_map:
+        lowest_level_original = lowest_level
+        lowest_level = custom_level
     second_lowest_parent = default_map[lowest_level]['parent']
     second_lowest_parent_name_model = default_map[lowest_level]['parent_name_model']
     if ',' in second_lowest_parent or ',' in second_lowest_parent_name_model:
         parents = second_lowest_parent.split(',')
-        desc_sequence = [parents, lowest_level, default_map]
+        desc_sequence = [parents, lowest_level]
         parent_model_names = second_lowest_parent_name_model.split(',')
         parent_type = 'multiple'
     else:
@@ -288,9 +294,15 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
 
         elif storage_type == 'count' or storage_type == 'sum' or storage_type == 'condition':
             if database_type == 'mongodb':
-                project_dict.update({next_level:1, "_id":0})
+                if next_level == custom_level:
+                    project_dict.update({lowest_level_original:1, "_id":0})
+                else:
+                    project_dict.update({next_level:1, "_id":0})
                 if storage_type == 'count':
-                    group_dict.update({'_id': {}, next_level: {"$sum": 1}})
+                    if next_level == custom_level:
+                        group_dict.update({'_id': {}, lowest_level_original: {"$sum": 1}})
+                    else:
+                        group_dict.update({'_id': {}, next_level: {"$sum": 1}})
                 elif storage_type == 'sum':
                     group_dict.update({'_id': {}, next_level: {"$sum": self_model_name}})
                 else:
@@ -317,6 +329,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     ]
                 )
                 query = list(query)
+                print(query)
                 if not query==[]:
                     all_results.append(query)
             elif database_type == 'mysql':
@@ -338,6 +351,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         curr_level_id = curr_level_id+1
         if not len(all_results) == 0 and isinstance(all_results[0], dict):
             all_results = [all_results]
+    print(all_results)
     if not len(all_results)==[]:
         new_results = convert_dict_arrays_keys_to_standard_names(all_results)
         single_array_results = merge_dict_array_array_single(new_results, grouping_level)
@@ -399,7 +413,7 @@ class GetLeadsDataGeneric(APIView):
     def put(request):
         all_data = request.data
         default_raw_data = ['total_leads', 'hot_leads']
-        default_metrics = ['2/1']
+        default_metrics = []
         data_scope = all_data['data_scope'] if 'data_scope' in all_data else None
         data_point = all_data['data_point'] if 'data_point' in all_data else None
         raw_data = all_data['raw_data'] if 'raw_data' in all_data else default_raw_data
