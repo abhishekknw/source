@@ -4103,7 +4103,7 @@ def handle_update_campaign_inventories(user, data):
                 'is_completed' : supplier['is_completed'],
                 'cost_per_flat' : supplier['cost_per_flat'],
                 'booking_priority': supplier['booking_priority'],
-                'sunboard_location': supplier['sunboard_location'],
+                'sunboard_location': supplier['sunboard_location'] if 'sunboard_location' in supplier else None,
             }
 
             shortlisted_inventories = supplier['shortlisted_inventories']

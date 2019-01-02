@@ -210,8 +210,8 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
                 continue
             value = None
             if item["value"]:
-                if isinstance(item["value"], basestring):
-                    value = item["value"].encode('utf8').strip()
+                if isinstance(item["value"], (str,bytes)):
+                    value = item["value"].strip()
                 value = convertToNumber(item["value"])  # if possible
 
             new_entry.append({"order_id": item["item_id"], "value": value})
@@ -861,11 +861,11 @@ def create_lead_hash(lead_dict):
 
     for item in lead_dict['data']:
         if item['value']:
-            if isinstance(item["value"], basestring):
-                lead_hash_string += str(item['value'].encode('utf-8').strip())
+            if isinstance(item["value"], (str,bytes)):
+                lead_hash_string += str(item['value'].strip())
             else:
                 lead_hash_string += str(item['value'])
-    return hashlib.sha256(lead_hash_string).hexdigest()
+    return hashlib.sha256(lead_hash_string.encode('utf-8')).hexdigest()
 
 
 class UpdateLeadsDataSHA256(APIView):
