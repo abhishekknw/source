@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.db import models, migrations
 import datetime
 from django.utils.timezone import utc
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -17,7 +18,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='shortlistedinventorypricingdetails',
             name='supplier_content_type',
-            field=models.ForeignKey(related_name='supplier_content_type', blank=True, to='contenttypes.ContentType', null=True),
+            field=models.ForeignKey(related_name='supplier_content_type', blank=True, to='contenttypes.ContentType', null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AlterField(
             model_name='auditdate',
@@ -32,7 +33,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='shortlistedinventorypricingdetails',
             name='inventory_content_type',
-            field=models.ForeignKey(related_name='inventory_content_type', blank=True, to='contenttypes.ContentType', null=True),
+            field=models.ForeignKey(related_name='inventory_content_type', blank=True, to='contenttypes.ContentType', null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AlterField(
             model_name='shortlistedinventorypricingdetails',

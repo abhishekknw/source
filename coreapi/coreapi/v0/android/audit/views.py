@@ -1,8 +1,10 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import filters
-from serializers import AssignedAuditSerializer,AuditSerializer, AssignedAuditsTempSerializer
+from .serializers import AssignedAuditSerializer,AuditSerializer, AssignedAuditsTempSerializer
 from v0.ui.finances.models import AssignedAudits, Audits
 from v0.ui.inventory.models import SocietyInventoryBooking
 from datetime import date
@@ -23,7 +25,7 @@ class AssignedAuditAPIListView(APIView):
 
     def post(self, request, format=None):
 
-        print request.data
+        print(request.data)
         '''if 'campaign_id' in request.data:
             try:
                 campaign = Campaign.objects.get(pk=request.data['campaign_id'])

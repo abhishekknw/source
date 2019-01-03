@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from rest_framework.views import APIView
 import v0.ui.utils as ui_utils
 from django.core.mail import EmailMessage
-from models import EmailSettings
+from .models import EmailSettings
 from v0.ui.leads.views import get_leads_excel_sheet
 from v0.ui.campaign.models import CampaignAssignment
 from v0.ui.proposal.models import ProposalInfo
@@ -13,7 +14,7 @@ from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.views import convert_date_format
-from views import send_email, send_mail_generic
+from .views import send_email, send_mail_generic
 from v0.ui.common.models import BaseUser
 from celery import shared_task
 from django.conf import settings

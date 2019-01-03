@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 from django.conf.urls import url
 
 from rest_framework.routers import DefaultRouter
 
-from views import (TransactionDataImport, SocietyDataImport, FilteredSuppliersAPIView, ImportSocietyData,
+from .views import (TransactionDataImport, SocietyDataImport, FilteredSuppliersAPIView, ImportSocietyData,
                    ImportContactDetails, FilteredSuppliers, SupplierSearch, SupplierDetails, ImportSupplierDataFromSheet,
                    ImportSupplierData, addSupplierDirectToCampaign, deleteSuppliers, deleteShortlistedSpaces)
 

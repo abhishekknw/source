@@ -45,7 +45,7 @@ class GatewayArchInventory(BaseModel):
     """
     id = models.AutoField(db_column='ID', primary_key=True)
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
-    content_type = models.ForeignKey(ContentType, null=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
@@ -57,7 +57,7 @@ class InventoryActivity(BaseModel):
     """
     Stores activities like Release, Closure, Audits against each inventory
     """
-    shortlisted_inventory_details = models.ForeignKey(ShortlistedInventoryPricingDetails)
+    shortlisted_inventory_details = models.ForeignKey(ShortlistedInventoryPricingDetails, on_delete=models.CASCADE)
     activity_type = models.CharField(max_length=255, null=True,  choices=INVENTORY_ACTIVITY_TYPES)
 
     class Meta:
@@ -74,7 +74,7 @@ class StandeeInventory(BaseModel):
     standee_size = models.CharField(db_column='STANDEE_SIZE', max_length=10, blank=True, null=True)  # Field name made lowercase.
     standee_sides = models.CharField(db_column='STANDEE_SIDES', max_length=10, blank=True, null=True)  # Field name made lowercase.
     tower = models.ForeignKey('SocietyTower', db_column='TOWER_ID', related_name='standees', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
-    content_type = models.ForeignKey(ContentType, null=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
@@ -122,7 +122,7 @@ class WallInventory(BaseModel):
     wall_frame_status = models.CharField(db_column='WALL_FRAME_STATUS', max_length=5, blank=True, null=True)  # Field name made lowercase.
     wall_inventory_status = models.CharField(db_column='WALL_INVENTORY_STATUS', max_length=15, blank=True, null=True)  # Field name made lowercase.
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='walls', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
-    content_type = models.ForeignKey(ContentType, null=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
@@ -152,7 +152,7 @@ class StallInventory(BaseModel):
     furniture_details = models.CharField(db_column='STALL_FURNITURE_DETAILS', max_length=50, blank=True, null=True)  # Field name made lowercase.
     stall_size = models.CharField(db_column='STALL_SIZE', max_length=20, blank=True, null=True)  # Field name made lowercase.
     stall_timing = models.CharField(db_column='STALL_TIMINGS', max_length=20, blank=True, null=True)  # Field name made lowercase.
-    content_type = models.ForeignKey(ContentType, null=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
@@ -170,7 +170,7 @@ class FlyerInventory(BaseModel):
     mailbox_allowed = models.BooleanField(db_column='MAILBOX_ALLOWED', default=False)
     d2d_allowed = models.BooleanField(db_column='D2D_ALLOWED', default=False)
     lobbytolobby_allowed = models.BooleanField(db_column='LOBBYTOLOBBY_ALLOWED', default=False)
-    content_type = models.ForeignKey(ContentType, null=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
@@ -266,7 +266,7 @@ class InventoryTypeVersion(models.Model):
 
 class InventorySummary(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID,on_delete=models.CASCADE)
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='inventoy_summary', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE, unique=True)
     poster_allowed_nb = models.BooleanField(db_column='POSTER_ALLOWED_NB', default=False)
     poster_allowed_lift = models.BooleanField(db_column='POSTER_ALLOWED_LIFT', default=False)
@@ -324,7 +324,7 @@ class InventorySummary(BaseModel):
     poster_count_per_tower = models.IntegerField(db_column='POSTER_COUNT_PER_TOWER', null=True)
     poster_count_per_nb = models.IntegerField(db_column='POSTER_COUNT_PER_NB', null=True)
     standee_count_per_tower = models.IntegerField(db_column='STANDEE_COUNT_PER_TOWER', null=True)
-    content_type = models.ForeignKey(ContentType,default=None, null=True)
+    content_type = models.ForeignKey(ContentType,default=None, null=True, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
@@ -347,10 +347,10 @@ class InventoryActivityAssignment(BaseModel):
     Assignment of ( inv_global_id, act_date, act_t  ype ) to a user here in this table.
     """
 
-    inventory_activity = models.ForeignKey('InventoryActivity', null=True, blank=True)
+    inventory_activity = models.ForeignKey('InventoryActivity', null=True, blank=True, on_delete=models.CASCADE)
     activity_date = models.DateTimeField(max_length=255, null=True, blank=True)
-    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='activity_assigned_to', null=True, blank=True)
-    assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='activity_assigned_by', null=True, blank=True)
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='activity_assigned_to', null=True, blank=True, on_delete=models.CASCADE)
+    assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='activity_assigned_by', null=True, blank=True, on_delete=models.CASCADE)
     reassigned_activity_date = models.DateTimeField(null=True, blank=True)
 
     class Meta:
@@ -361,11 +361,11 @@ class InventoryActivityImage(BaseModel):
     """
     stores image path against each inventory_activity_assignment id
     """
-    inventory_activity_assignment = models.ForeignKey('InventoryActivityAssignment', null=True, blank=True)
+    inventory_activity_assignment = models.ForeignKey('InventoryActivityAssignment', null=True, blank=True, on_delete=models.CASCADE)
     image_path = models.CharField(max_length=1000, null=True, blank=True)
     comment = models.CharField(max_length=1000, null=True, blank=True)
     actual_activity_date = models.DateTimeField(null=True, blank=True)
-    activity_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
+    activity_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
 
@@ -380,7 +380,7 @@ class BannerInventory(models.Model):
     banner_location = models.CharField(db_column='BANNER_DISPLAY_LOCATION', max_length=50, blank=True)  # Field name made lowercase.
     banner_size = models.CharField(db_column='BANNER_SIZE', max_length=10, blank=True)  # Field name made lowercase.
     inventory_status = models.CharField(db_column='INVENTORY_STATUS', blank=True,  max_length=15)  # Field name made lowercase.
-    content_type = models.ForeignKey(ContentType, null=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
@@ -399,11 +399,11 @@ class PosterInventory(BaseModel):
     poster_count_per_notice_board = models.IntegerField(db_column='POSTER_COUNT_PER_NOTICE_BOARD', blank=True, null=True)  # Field name made lowercase.
     inventory_type_id = models.CharField(db_column='INVENTORY_TYPE_ID', max_length=255, blank=True, null=True)  # Field name made lowercase.
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)  # Field name made lowercase.
-    content_type = models.ForeignKey(ContentType, null=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     object_id = models.CharField(max_length= supplier_id_max_length, null=True)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
-    tower = models.ForeignKey(SocietyTower, null=True, blank=True)
+    tower = models.ForeignKey(SocietyTower, null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'poster_inventory'
@@ -463,7 +463,7 @@ class SocietyInventoryBooking(models.Model):
     start_date = models.DateField(db_column='START_DATE', null=True)
     end_date = models.DateField(db_column='END_DATE', null=True)
     audit_date = models.DateField(db_column='AUDIT_DATE', null=True)
-    content_type = models.ForeignKey(ContentType, null=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=12, null=True)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()
@@ -510,10 +510,10 @@ class Filters(BaseModel):
     different types of filters, we have content_type field for capturing that. These filters are predefined in constants
     and are populated from there.
     """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
-    center = models.ForeignKey('ProposalCenterMapping', null=True, blank=True)
-    proposal = models.ForeignKey('ProposalInfo', null=True, blank=True)
-    supplier_type = models.ForeignKey(ContentType, null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, on_delete=models.CASCADE)
+    center = models.ForeignKey('ProposalCenterMapping', null=True, blank=True, on_delete=models.CASCADE)
+    proposal = models.ForeignKey('ProposalInfo', null=True, blank=True, on_delete=models.CASCADE)
+    supplier_type = models.ForeignKey(ContentType, null=True, blank=True, on_delete=models.CASCADE)
     filter_name = models.CharField(max_length=255, null=True, blank=True)
     filter_code = models.CharField(max_length=255, null=True, blank=True)
     is_checked = models.BooleanField(default=False)
@@ -529,7 +529,7 @@ class SunBoardInventory(BaseModel):
     """
     id = models.AutoField(db_column='ID', primary_key=True)
     adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, unique=True)
-    content_type = models.ForeignKey(ContentType, null=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     objects = managers.GeneralManager()

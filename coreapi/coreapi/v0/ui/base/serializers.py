@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 from rest_framework.serializers import ModelSerializer
 from v0.managers import check_object_permission
 from django.core.exceptions import PermissionDenied
 import v0.constants as v0_constants
-from models import DurationType
+from .models import DurationType
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 

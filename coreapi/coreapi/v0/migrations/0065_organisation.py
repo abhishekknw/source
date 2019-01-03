@@ -5,6 +5,7 @@ from django.db import models, migrations
 import datetime
 from django.conf import settings
 from django.utils.timezone import utc
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -29,9 +30,9 @@ class Migration(migrations.Migration):
                 ('reference_email', models.CharField(max_length=50, blank=True)),
                 ('comments', models.TextField(max_length=100, blank=True)),
                 ('category', models.CharField(default='BUSINESS', max_length=30, choices=[('MACHADALO', 'MACHADALO'), ('BUSINESS', 'BUSINESS'), ('BUSINESS_AGENCY', 'BUSINESS_AGENCY'), ('SUPPLIER_AGENCY', 'SUPPLIER_AGENCY'), ('SUPPLIER', 'SUPPLIER')])),
-                ('sub_type', models.ForeignKey(blank=True, to='v0.BusinessSubTypes', null=True)),
-                ('type_name', models.ForeignKey(blank=True, to='v0.BusinessTypes', null=True)),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('sub_type', models.ForeignKey(blank=True, to='v0.BusinessSubTypes', null=True, on_delete=django.db.models.deletion.CASCADE)),
+                ('type_name', models.ForeignKey(blank=True, to='v0.BusinessTypes', null=True, on_delete=django.db.models.deletion.CASCADE)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'db_table': 'organisation',

@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 # python core imports
 import csv
 import json
@@ -17,7 +19,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import viewsets
-from serializers import UISocietySerializer, UITowerSerializer
+from .serializers import UISocietySerializer, UITowerSerializer
 from v0.ui.events.serializers import EventsSerializer
 from v0.ui.supplier.serializers import CorporateBuildingSerializer, CorporateParkCompanySerializer, \
     CorporateBuildingGetSerializer
@@ -37,10 +39,10 @@ from v0.ui.user.serializers import UserSerializer, UserProfileSerializer
 from v0.ui.location.serializers import CitySerializer, CityAreaSerializer, CitySubAreaSerializer, StateSerializer
 from v0.ui.account.models import ContactDetails, ContactDetailsGeneric
 from v0.ui.account.serializers import (ContactDetailsSerializer, ContactDetailsGenericSerializer)
-from inventory.models import (PosterInventory, InventorySummary, StreetFurniture,
+from .inventory.models import (PosterInventory, InventorySummary, StreetFurniture,
                               StallInventory, FlyerInventory, StandeeInventory, PoleInventory, SupplierTypeSociety,
                               InventorySummary, WallInventory)
-from inventory.serializers import PosterInventorySerializer
+from .inventory.serializers import PosterInventorySerializer
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeCorporate, SupplierAmenitiesMap, SupplierTypeCode, \
     SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, CorporateBuilding, CorporateParkCompanyList, \
     RETAIL_SHOP_TYPE
@@ -48,23 +50,23 @@ from v0.ui.supplier.serializers import (SupplierTypeCorporateSerializer, Supplie
                         SupplierTypeGymSerializer, SupplierTypeBusShelterSerializer, UICorporateSerializer, UISalonSerializer,
                         SupplierTypeCodeSerializer, SupplierTypeSocietySerializer, CorporateCompanyDetails,
                         CorporateParkCompanyListSerializer, RetailShopSerializer, BusDepotSerializer, BusShelterSerializer)
-from inventory.serializers import (StandeeInventorySerializer, WallInventorySerializer, PoleInventorySerializer,
+from .inventory.serializers import (StandeeInventorySerializer, WallInventorySerializer, PoleInventorySerializer,
                                    StallInventorySerializer, StreetFurnitureSerializer, FlyerInventorySerializer,
                                    InventorySummarySerializer)
 from v0.ui.proposal.models import ImageMapping
 from v0.ui.proposal.serializers import ImageMappingSerializer
 
 # project imports
-import utils as ui_utils
-import website.utils as website_utils
+from . import utils as ui_utils
+import v0.ui.website.utils as website_utils
 from coreapi.settings import BASE_DIR
 from v0.ui.user.models import UserAreas, UserCities, UserProfile
 from v0.ui.common.models import BaseUser
 from v0.constants import keys, decision
-from website.utils import save_price_mapping_default
+from .website.utils import save_price_mapping_default
 import v0.constants as v0_constants
-from utils import get_from_dict
-from controller import inventory_summary_insert
+from .utils import get_from_dict
+from .controller import inventory_summary_insert
 
 class UsersProfilesAPIView(APIView):
 
@@ -503,7 +505,7 @@ class InventorySummaryAPIView(APIView):
           description : flier lobby allowed or not
 
         """
-        print request.data
+        print(request.data)
         class_name = self.__class__.__name__
         response = ui_utils.get_supplier_inventory(request.data.copy(), id)
 

@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from rest_framework.views import APIView
 from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg, is_user_permitted
 from celery import shared_task
@@ -6,7 +8,7 @@ from bson.objectid import ObjectId
 import datetime
 import collections
 from operator import itemgetter
-from models import ChecklistPermissions, ChecklistData, ChecklistOperators
+from .models import ChecklistPermissions, ChecklistData, ChecklistOperators
 from v0.ui.campaign.models import CampaignAssignment
 from v0.ui.proposal.models import ProposalInfo
 from v0.ui.common.models import BaseUser
@@ -258,7 +260,7 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
             exist_row_info = [x for x in exist_rows_list if x['rowid'] == rowid][0]
             exist_row_status = exist_row_info['status']
             if exist_row_status == 'inactive':
-                print 'already deleted row id: ', rowid
+                print('already deleted row id: ', rowid)
                 break
             exist_row_data = exist_row_info['data']
         else:
@@ -277,7 +279,7 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
         columns = new_row_data.keys()
         for column in range(1, n_cols+1):
             if str(column) in deleted_columns:
-                print 'already deleted column id: ', column
+                print('already deleted column id: ', column)
                 continue
             lower_level_row_values = []
             if str(column) in new_row_data:
@@ -288,7 +290,7 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
                 continue
             column_id = column_data["column_id"]
             if str(column_id) in static_columns:
-                print 'cannot edit static column', column_id
+                print('cannot edit static column', column_id)
                 continue
             column_name = all_checklist_columns_dict[str(column_id)]["column_name"]
             column_type = all_checklist_columns_dict[str(column_id)]["column_type"]
@@ -456,7 +458,7 @@ class ChecklistEdit(APIView):
         for column in columns:
             column_id = column['column_id']
             if str(column_id) in new_delete_columns:
-                print "cannot edit already deleted column ", column_id
+                print("cannot edit already deleted column ", column_id)
                 continue
             new_column_data = column
             new_column_data['order_id'] = checklist_column_data_all[str(column_id)]['order_id']
@@ -496,7 +498,7 @@ class ChecklistEdit(APIView):
 
                 if len(lower_level_checklists) > 0:
                     if exist_row_status == 'inactive':
-                        print "cannot add lower level checklists to deleted row", row_id
+                        print("cannot add lower level checklists to deleted row", row_id)
                     else:
                         lower_level_array = [x['static_column_values'] for x in lower_level_checklists
                                              if x['parent_row_id'] == row_id]
@@ -507,7 +509,7 @@ class ChecklistEdit(APIView):
                             "$set": {'data.'+column+'.lower_level_row_values': lower_level_rows}})
                 if len(row_data)>0:
                     if exist_row_status == 'inactive':
-                        print "cannot edit labels of deleted row", row_id
+                        print("cannot edit labels of deleted row", row_id)
                     else:
                         exist_row_data = [x['data'][column] for x in checklist_data_all if x['rowid'] == row_id][0]
                         exist_row_data['cell_value'] = row_data[0]['cell_value']
@@ -729,7 +731,7 @@ def get_checklist_by_id(checklist_id):
     for checklist in checklist_data:
         row_id = checklist['rowid']
         if checklist['status'] == 'inactive':
-            print("# row already deleted: ", row_id)
+            print(("# row already deleted: ", row_id))
             continue
         curr_row_data = checklist['data']
         curr_row_columns = curr_row_data.keys()

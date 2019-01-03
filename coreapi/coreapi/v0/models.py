@@ -11,8 +11,9 @@
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
 
 from __future__ import unicode_literals
+from __future__ import absolute_import
 
-import managers
+from . import managers
 from django.conf import settings
 # from django.contrib.auth.models import AbstractUser, Permission
 from django.contrib.contenttypes import fields

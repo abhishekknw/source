@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 from rest_framework.views import APIView
 from v0.ui.utils import handle_response, create_validation_msg
-from models import BaseSupplyEntityType
+from .models import BaseSupplyEntityType
 from bson.objectid import ObjectId
 from datetime import datetime
-from utils import validate_entity_type_data
+from .utils import validate_entity_type_data
 
 
 class BaseEntityType(APIView):

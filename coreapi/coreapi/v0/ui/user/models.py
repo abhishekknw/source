@@ -11,7 +11,7 @@ class UserProfile(models.Model):
     is_normal_user = models.BooleanField(db_column='is_normal_user', default=False)
     society_form_access = models.BooleanField(db_column='society_form_access', default=False)
     corporate_form_access = models.BooleanField(db_column='corporate_form_access', default=False)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, db_column='created_by', null=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, db_column='created_by', null=True, on_delete=models.CASCADE)
     objects = managers.GeneralManager()
 
     def get_user(self):

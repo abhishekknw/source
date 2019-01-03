@@ -1,3 +1,4 @@
+from __future__ import print_function
 import json
 
 from django.core.urlresolvers import reverse
@@ -456,7 +457,7 @@ class CreateFinalProposalTestCase(APITestCase):
         # make the call
         response = self.client.post(url, data=json.dumps(self.data), content_type='application/json')
 
-        print response.data
+        print(response.data)
 
         # check the response
         self.assertEqual(response.status_code, status.HTTP_200_OK)

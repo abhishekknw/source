@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
-from inventory.models import SupplierTypeSociety
-from account.serializers import ContactDetailsSerializer
-from supplier.models import SupplierTypeCorporate, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, \
+from .inventory.models import SupplierTypeSociety
+from .account.serializers import ContactDetailsSerializer
+from .supplier.models import SupplierTypeCorporate, SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, \
     SupplierTypeBusDepot, SupplierInfo
 from v0.ui.components.models import SocietyTower
 from v0.ui.components.serializers import LiftDetailsSerializer, \

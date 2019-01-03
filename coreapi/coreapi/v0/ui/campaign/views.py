@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import random
 import math
 import numpy as np
@@ -16,8 +18,8 @@ import v0.constants as v0_constants
 from v0.ui.supplier.models import (SupplierTypeSociety)
 import v0.ui.website.utils as website_utils
 from django.db.models import Q, F
-from models import (CampaignSocietyMapping, Campaign, CampaignAssignment, CampaignComments)
-from serializers import (CampaignListSerializer, CampaignSerializer, CampaignAssignmentSerializer)
+from .models import (CampaignSocietyMapping, Campaign, CampaignAssignment, CampaignComments)
+from .serializers import (CampaignListSerializer, CampaignSerializer, CampaignAssignmentSerializer)
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2
 from v0.ui.inventory.models import InventoryActivityImage, InventoryActivityAssignment, InventoryActivity, AdInventoryType
@@ -1027,7 +1029,7 @@ def get_mean_median_mode(object_list, list_of_attributes):
                 return_dict[attribute]['median_percent_by_flat'] = 0 if math.isnan(median_percent_by_flat) else median_percent_by_flat
                 return_dict[attribute]['mean_percent_by_flat'] = 0 if math.isnan(median_percent_by_flat) else mean_percent_by_flat
             except Exception as ex:
-                print ex
+                print(ex)
                 return_dict[attribute]['mode_percent_by_flat'] = None
     return return_dict
 

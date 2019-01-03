@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import csv
 import json
 import os
@@ -7,7 +9,7 @@ from celery.result import GroupResult, AsyncResult
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import transaction
 from django.db.models import Q, F, Sum
 from django.forms.models import model_to_dict
@@ -17,7 +19,7 @@ from rest_framework.decorators import list_route
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
-import tasks
+from . import tasks
 from v0.ui.components.models import SocietyTower, FlatType, Amenity
 from v0.ui.components.serializers import AmenitySerializer
 from v0.ui.account.serializers import (BusinessTypesSerializer, BusinessSubTypesSerializer, ProfileSimpleSerializer,
@@ -56,7 +58,7 @@ from v0.ui.finances.models import ShortlistedInventoryPricingDetails, PriceMappi
 from v0.ui.permissions.models import ObjectLevelPermission, GeneralUserPermission, Role, RoleHierarchy
 from v0.ui.base.serializers import ContentTypeSerializer
 
-import utils as website_utils
+from . import utils as website_utils
 import v0.ui.utils as ui_utils
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0 import errors
@@ -714,7 +716,7 @@ class ImportCorporateData(APIView):
                             'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
                         }
                         response = requests.post(url, json.dumps(data), headers=headers)
-                        print "{0} done \n".format(data['supplier_id'])
+                        print("{0} done \n".format(data['supplier_id']))
 
             source_file.close()
             return Response(data="success", status=status.HTTP_200_OK)
@@ -1006,7 +1008,7 @@ class ExportAllSupplierData(APIView):
                     continue
 
                 # set all possible inventory_allowed fields to 0 first
-                for code, name in v0_constants.inventory_code_to_name.iteritems():
+                for code, name in v0_constants.inventory_code_to_name.items():
                     inv_name_key = website_utils.join_with_underscores(name).lower()
                     pricing_dict[supplier_id][inv_name_key + '_' + 'allowed'] = 0
 
@@ -1051,14 +1053,14 @@ class ExportAllSupplierData(APIView):
                     'supplier_type_code': supplier_type_code
                 }
                 # set key, value from pricing_dict to basic_data_dict
-                for key, value in pricing_dict[supplier_id].iteritems():
+                for key, value in pricing_dict[supplier_id].items():
                     basic_data_dict[key] = value
 
                 result.append(basic_data_dict)
             # add pricing headers to current headers.
             headers = v0_constants.basic_supplier_export_headers
             data_keys = v0_constants.basic_supplier_data_keys
-            for inventory_name, header_list in v0_constants.price_mapping_default_headers.iteritems():
+            for inventory_name, header_list in v0_constants.price_mapping_default_headers.items():
                 for header_tuple in header_list:
 
                     inv_name_key = website_utils.join_with_underscores(inventory_name).lower()
@@ -1528,7 +1530,7 @@ class GetAssignedIdImagesListApiView(APIView):
                 supplier_code_list[supplier['supplier_code']].append(supplier)
 
             inv_act_image_objects_with_distance = []
-            for key, value in supplier_code_list.iteritems():
+            for key, value in supplier_code_list.items():
                 supplier_id_list = []
                 if key == 'RS':
                     for supplier in value:
@@ -1639,11 +1641,11 @@ class CheckExstingSuppliers(APIView):
                     if SupplierTypeSociety.objects.filter(society_name=name) or SupplierTypeSociety.objects.filter(supplier_id=id):
                         count = count + 1
                         s = str(count) + " " + name
-                        print s
+                        print(s)
                     else:
                         rcount = rcount + 1
-                        print name
-                print str(count) + "and" + str(rcount)
+                        print(name)
+                print(str(count) + "and" + str(rcount))
             data = {
                 'on_platform' : count,
                 'not_on_platform' : rcount

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from __future__ import print_function
 
 from django.db import models, migrations
 from django.conf import settings
@@ -23,9 +24,9 @@ def update_account_organisation_field(apps, schema_editor):
                 instance.save()
                 c += 1
             except ObjectDoesNotExist:
-                print 'Organisation object does not exist for this business id {0}'.format(instance.business.pk)
+                print('Organisation object does not exist for this business id {0}'.format(instance.business.pk))
 
-    print 'updated {0} accounts'.format(c)
+    print('updated {0} accounts'.format(c))
 
 
 class Migration(migrations.Migration):

@@ -54,7 +54,7 @@ class BasicSupplierDetails(BaseModel):
     inherit from this class will have those fields automatically.
 
     """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, on_delete=models.CASCADE)
     supplier_id = models.CharField(max_length=20, primary_key=True)
     supplier_code = models.CharField(max_length=3, null=True)
     name = models.CharField(max_length=70, null=True, blank=True)
@@ -91,7 +91,7 @@ class SupplierTypeSociety(BaseModel):
         ('Other', 'Other')
     )
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, on_delete=models.CASCADE)
     objects = managers.GeneralManager()
     supplier_id = models.CharField(db_column='SUPPLIER_ID', primary_key=True, max_length=20)  # Field name made lowercase.
     supplier_code = models.CharField(db_column='SUPPLIER_CODE', max_length=3, null=True)
@@ -185,7 +185,7 @@ class SupplierTypeSociety(BaseModel):
     total_tenant_flat_count = models.IntegerField(null=True, blank=True)
     landmark = models.CharField(max_length=255, null=True, blank=True)
     feedback = models.CharField(max_length=255, null=True, blank=True)
-    representative = models.ForeignKey('Organisation', null=True, blank=True)
+    representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
     supplier_status = models.CharField(max_length=80, null=True,  choices=SUPPLIER_STATUS)
     comments = models.CharField(max_length=255, null=True, blank=True)
     relationship_manager = models.CharField(max_length=50, null=True, blank=True)
@@ -413,10 +413,10 @@ class SupplierAmenitiesMap(BaseModel):
     This table represents the idea that each supplier can have multiple amenities
     """
 
-    content_type = models.ForeignKey(ContentType)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=1000)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
-    amenity = models.ForeignKey('Amenity', null=True, blank=True)
+    amenity = models.ForeignKey('Amenity', null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'supplier_amenities_map'

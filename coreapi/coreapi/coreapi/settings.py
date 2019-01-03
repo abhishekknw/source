@@ -9,12 +9,13 @@ https://docs.djangoproject.com/en/1.8/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
+from __future__ import absolute_import
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 import datetime
 from django.utils import timezone
-from config import Config
+from .config import Config
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -30,7 +31,7 @@ ALLOWED_HOSTS = ['13.232.210.224', 'localhost','13.127.154.33', 'api.machadalo.c
 
 # Application definition
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -39,25 +40,25 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     # 'django_extensions',
     'rest_framework',
-    'corsheaders',
     'rest_jwt',
+    'corsheaders',
     'v0',
     'drf_generators',
     'rest_framework_swagger',
     'djcelery',
-)
+]
 
-MIDDLEWARE_CLASSES = (
-    'django.contrib.sessions.middleware.SessionMiddleware',
+
+MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-)
+]
 
 ROOT_URLCONF = 'coreapi.urls'
 

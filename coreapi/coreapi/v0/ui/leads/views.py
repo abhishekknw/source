@@ -1,6 +1,8 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
-from models import (get_leads_summary, LeadsPermissions)
+from .models import (get_leads_summary, LeadsPermissions)
 from v0.ui.analytics.views import (get_data_analytics, get_details_by_higher_level,
                                    get_details_by_higher_level_geographical, geographical_parent_details)
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -208,8 +210,8 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
                 continue
             value = None
             if item["value"]:
-                if isinstance(item["value"], basestring):
-                    value = item["value"].encode('utf8').strip()
+                if isinstance(item["value"], (str,bytes)):
+                    value = item["value"].strip()
                 value = convertToNumber(item["value"])  # if possible
 
             new_entry.append({"order_id": item["item_id"], "value": value})
@@ -465,7 +467,7 @@ def sanitize_leads_data():
         new_entry_id = last_entry_id + 1 if last_entry_id else 1
         all_leads_items = lead_form[0]['data']
         scholarship_item_id = other_child_class_item_id = counseling_item_id = first_child_class_item_id = first_child_name_item_id = other_child_item_id = None
-        for idx,item in all_leads_items.iteritems():
+        for idx,item in all_leads_items.items():
             if "scholarship" in item['key_name'].lower():
                 if "test" in item['key_name'].lower():
                     scholarship_item_id = item['item_id']
@@ -546,7 +548,7 @@ def write_keys_to_file(keys_list):
             s3.put_object(Body=f, Bucket='leads-forms-templates', Key=filename)
             os.unlink(filepath)
         except Exception as ex:
-            print ex
+            print(ex)
     return filename
 
 class GenerateLeadForm(APIView):
@@ -859,11 +861,11 @@ def create_lead_hash(lead_dict):
 
     for item in lead_dict['data']:
         if item['value']:
-            if isinstance(item["value"], basestring):
-                lead_hash_string += str(item['value'].encode('utf-8').strip())
+            if isinstance(item["value"], (str,bytes)):
+                lead_hash_string += str(item['value'].strip())
             else:
                 lead_hash_string += str(item['value'])
-    return hashlib.sha256(lead_hash_string).hexdigest()
+    return hashlib.sha256(lead_hash_string.encode('utf-8')).hexdigest()
 
 
 class UpdateLeadsDataSHA256(APIView):
@@ -1233,7 +1235,7 @@ class GetLeadsEntry(APIView):
         # leads_form_items_map_by_item_id = {item['item_id']: item for item in lead_form_dict['leads_form_items']}
         lead_entry_map_by_item_id = {item['item_id']:item for item in data[0]['data']}
 
-        for key,value in lead_form_dict['leads_form_items'].iteritems():
+        for key,value in lead_form_dict['leads_form_items'].items():
             value['value'] = lead_entry_map_by_item_id[value['item_id']]['value']
 
         return handle_response('', data=lead_form_dict, success=True)
@@ -1248,7 +1250,7 @@ class UpdateLeadsEntry(APIView):
         if len(lead_dict) == 0:
             return handle_response('', data={"error_msg": "lead_not_present"}, success=False)
         lead_dict = lead_dict[0]
-        lead_entry_map_by_item_id = {item['item_id']: item for k, item in data.iteritems()}
+        lead_entry_map_by_item_id = {item['item_id']: item for k, item in data.items()}
         for lead_item in lead_dict['data']:
             lead_item['value'] = lead_entry_map_by_item_id[int(lead_item['item_id'])]['value']
 

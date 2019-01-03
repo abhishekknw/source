@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 from rest_framework.serializers import ModelSerializer
-from models import Events, SocietyMajorEvents
+from .models import Events, SocietyMajorEvents
 
 class EventsSerializer(ModelSerializer):
     class Meta:

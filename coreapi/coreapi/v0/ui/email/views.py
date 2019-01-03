@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from rest_framework.views import APIView
 from coreapi.settings import BASE_URL, BASE_DIR
 import v0.constants as v0_constants
@@ -6,7 +7,7 @@ import v0.ui.utils as ui_utils
 from smtplib import SMTPException
 from celery import shared_task
 from django.core.mail import EmailMessage
-from models import EmailSettings
+from .models import EmailSettings
 import os
 import magic
 from v0.ui.common.models import BaseUser

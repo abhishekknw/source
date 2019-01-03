@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from rest_framework import viewsets
-from serializers import (ObjectLevelPermissionSerializer, GeneralUserPermissionSerializer, RoleSerializer)
-from models import ObjectLevelPermission, GeneralUserPermission, Role, RoleHierarchy
+from .serializers import (ObjectLevelPermissionSerializer, GeneralUserPermissionSerializer, RoleSerializer)
+from .models import ObjectLevelPermission, GeneralUserPermission, Role, RoleHierarchy
 import v0.ui.utils as ui_utils
 import v0.ui.website.utils as website_utils
 from rest_framework.response import Response

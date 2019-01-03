@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 from rest_framework.serializers import ModelSerializer
-from models import (Campaign, CampaignSupplierTypes, CampaignTypeMapping, CampaignSocietyMapping, CampaignAssignment,
+from .models import (Campaign, CampaignSupplierTypes, CampaignTypeMapping, CampaignSocietyMapping, CampaignAssignment,
                     GenericExportFileName)
 from rest_framework import serializers
 from v0.ui.user.serializers import BaseUserSerializer

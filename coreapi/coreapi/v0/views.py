@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import random
 
 from django.contrib.contenttypes.models import ContentType
@@ -41,11 +43,11 @@ from v0.ui.components.models import CommunityHallInfo, LiftDetails, NoticeBoardD
 from v0.ui.components.serializers import LiftDetailsSerializer, CommunityHallInfoSerializer, FlatTypeSerializer, \
     NoticeBoardDetailsSerializer, SocietyFlatSerializer, SwimmingPoolInfoSerializer, MailboxInfoSerializer, \
     CommonAreaDetailsSerializer, SocietyTowerSerializer
-import utils as v0_utils
-from constants import model_names
+from . import utils as v0_utils
+from .constants import model_names
 import v0.ui.utils as ui_utils
-import errors
-import constants as v0_constants
+from . import errors
+from . import constants as v0_constants
 import v0.ui.website.utils as website_utils
 from v0.ui.supplier.models import SupplierInfo, SupplierTypeCorporate, SupplierAmenitiesMap
 
@@ -1083,7 +1085,7 @@ class CreateSocietyTestData(APIView):
 
             suppliers_dict = v0_utils.assign_supplier_ids(city_code, v0_constants.society, coordinates)
 
-            for society_id, detail in suppliers_dict.iteritems():
+            for society_id, detail in suppliers_dict.items():
                 detail['supplier_id'] = society_id
                 detail['society_latitude'] = detail['latitude']
                 detail['society_longitude'] = detail['longitude']
@@ -1126,7 +1128,7 @@ class CreateBusinessTypeSubType(APIView):
 
             business_type_code_list = []  # to store list of all codes of BusinessType. Later used to fetch objects of BusinessType
 
-            for business_type, detail in request.data.iteritems():
+            for business_type, detail in request.data.items():
 
                 business_type_code = detail['code']
                 business_type_code_list.append(business_type_code)
@@ -1235,7 +1237,7 @@ class PopulateAmenities(APIView):
                 amenity_data = request.data['amenity_data']
 
                 amenity_instances = []
-                for code, name in amenity_data.iteritems():
+                for code, name in amenity_data.items():
                     amenity_instances.append(Amenity(**{'code': code, 'name': name}))
 
                 Amenity.objects.all().delete()
@@ -1617,10 +1619,10 @@ class SetParams(APIView):
             # update the flat objects first
             bulk_update(flat_objects)
 
-            for supplier_id, flat_detail in result.iteritems():
+            for supplier_id, flat_detail in result.items():
                 total_rent = 0
                 total_area = 0.0
-                for flat_type, flat_detail in result[supplier_id].iteritems():
+                for flat_type, flat_detail in result[supplier_id].items():
                     total_rent += (int(flat_detail['flat_count']) * int(flat_detail['flat_rent']))
                     total_area += float(flat_detail['flat_area'])
                 if not total_area:
@@ -1670,5 +1672,5 @@ class CopyOrganisation(APIView):
             try:
                 organisation_model.objects.create(**data)
             except Exception as e:
-                print e
+                print(e)
         return ui_utils.handle_response(class_name, data='success', success=True)

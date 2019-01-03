@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
-from views import (SendMail, Mail, EmailSettingsView)
-from tasks import SendWeeklyLeadsMail, SendGraphPdf, SendBookingDetailMails, SendLeadsToSelf, SendPipelineDetailMails, SendAdvancedBookingDetailMails
+from .views import (SendMail, Mail, EmailSettingsView)
+from .tasks import SendWeeklyLeadsMail, SendGraphPdf, SendBookingDetailMails, SendLeadsToSelf, SendPipelineDetailMails, SendAdvancedBookingDetailMails
 urlpatterns = [
     url(r'^send-mail/$', SendMail.as_view()),
     url(r'^mail/$', Mail.as_view()),

@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 from rest_framework.serializers import ModelSerializer
-from models import CommunityHallInfo, LiftDetails, NoticeBoardDetails, SocietyFlat, FlatType, \
+from .models import CommunityHallInfo, LiftDetails, NoticeBoardDetails, SocietyFlat, FlatType, \
     SwimmingPoolInfo, MailboxInfo, SportsInfra, SocietyTower, CommonAreaDetails, CompanyFloor, \
     CorporateBuildingWing, Amenity
 from rest_framework import serializers

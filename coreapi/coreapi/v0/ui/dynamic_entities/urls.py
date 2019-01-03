@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
-from views import (EntityType, EntityTypeById, Entity, EntityById)
-from base_entity_type import BaseEntityType, BaseEntityTypeById
+from .views import (EntityType, EntityTypeById, Entity, EntityById)
+from .base_entity_type import BaseEntityType, BaseEntityTypeById
 
 urlpatterns = [
     url(r'^entity-type/$', EntityType.as_view()),

@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 from rest_framework.serializers import ModelSerializer
-from models import Organisation, OrganisationMap
+from .models import Organisation, OrganisationMap
 from v0.ui.base.serializers import BaseModelPermissionSerializer
 
 

@@ -15,7 +15,7 @@ USER_TYPES = (
 )
 
 class EmailSettings(BaseModel):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, blank=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, blank=False, on_delete=models.CASCADE)
     email_type = models.CharField(max_length=70, null=True, choices=EMAIL_TYPES)
     is_allowed = models.BooleanField(default=False)
     last_sent = models.DateTimeField(null=True)
