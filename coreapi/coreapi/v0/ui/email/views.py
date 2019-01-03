@@ -74,7 +74,7 @@ def send_mail_generic(subject, to, html_body, cc=None, attachment_filepath=None)
     if cc:
         email.cc = cc
     mime = magic.Magic(mime=True)
-
+    filepath = None
     if attachment_filepath:
         filepath = attachment_filepath
         file_to_send = open(filepath, 'r')
@@ -83,7 +83,8 @@ def send_mail_generic(subject, to, html_body, cc=None, attachment_filepath=None)
         file_to_send.close()
     email.content_subtype = 'html'
     email.send()
-    os.unlink(filepath)
+    if filepath:
+        os.unlink(filepath)
     return
 
 
