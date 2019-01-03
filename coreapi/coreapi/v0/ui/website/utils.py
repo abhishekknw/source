@@ -3361,7 +3361,7 @@ def get_file_name(user, proposal_id, is_exported=True):
         proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
         account = proposal.account
         organisation = account.organisation
-        if user.is_anonymous():
+        if user.is_anonymous:
             user_string = 'Anonymous'
             user = None
         else:

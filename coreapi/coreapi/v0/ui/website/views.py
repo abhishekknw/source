@@ -542,8 +542,7 @@ class AssignCampaign(APIView):
             assigned_by = request.user
 
             campaign_id = request.data['campaign_id']
-
-            if assigned_by.is_anonymous():
+            if assigned_by.is_anonymous:
                 return ui_utils.handle_response(class_name, data='A campaign cannot be assigned by an Anonymous user')
 
             if not request.data['to']:
@@ -572,11 +571,9 @@ class AssignCampaign(APIView):
             return ui_utils.handle_response(class_name, data='success', success=True)
 
         except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, data={"status": "failed", "error": e}, success=False)
-            # return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
         except Exception as e:
-            return ui_utils.handle_response(class_name, data={"status": "failed", "error": e}, success=False)
-            # return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def get(self, request):
         """
