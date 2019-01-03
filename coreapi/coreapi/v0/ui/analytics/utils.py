@@ -13,6 +13,12 @@ def get_metrics_from_code(code, raw_metrics, derived_metrics):
     return metric
 
 
+weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
+                 '4': 'Friday', '5': 'Saturday', '6': 'Sunday'}
+weekday_codes = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
+                 'Friday': 4, 'Saturday': 5, 'Sunday': 6}
+
+
 level_name_by_model_id = {
     "supplier_id": "supplier", "object_id": "supplier", "campaign_id": "campaign", "proposal_id": "campaign",
     "flat_count": "flat","total_negotiated_price":"cost", "created_at": "date"
@@ -48,14 +54,10 @@ count_details_parent_map = {
 }
 
 count_details_parent_map_time = {
-    'lead': {'parent': 'date', 'model_name': 'leads1', 'database_type': 'mongodb',
-             'self_name_model': 'entry_id', 'parent_name_model': 'created_at', 'storage_type': 'count'},
-    'hot_lead': {'parent': 'date', 'model_name': 'leads1', 'database_type': 'mongodb',
-                 'self_name_model': 'is_hot', 'parent_name_model': 'created_at', 'storage_type': 'condition'},
-    'lead_date_campaign': {'parent':'date,campaign', 'model_name': 'leads1', 'database_type': 'mongodb',
-                           'self_name_model': 'entry_id', 'parent_name_model': 'created_at,campaign_id',
-                           'storage_type': 'count'}
-
+    'lead': {'parent': 'date,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+             'self_name_model': 'entry_id', 'parent_name_model': 'created_at,campaign_id', 'storage_type': 'count'},
+    'hot_lead': {'parent': 'date,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+                 'self_name_model': 'is_hot', 'parent_name_model': 'created_at,campaign_id', 'storage_type': 'condition'},
     }
 
 geographical_parent_details = {
@@ -120,6 +122,10 @@ def sum_array_by_key(array, keys):
 def binary_operation(a, b, op):
     operator_map = {"/": round(float(a)/b,5), "*":a*b, "+":a+b, "-": a-b}
     return operator_map[op]
+
+
+def merge_dict_array_dict_multiple_keys(metric_dict, key_names):
+    return merge_dict_array_array_multiple_keys(list(metric_dict.values()),key_names)
 
 
 def merge_dict_array_dict_single(metric_dict, key_name):
@@ -203,34 +209,52 @@ def merge_dict_array_array_single(array, key_name):
     return final_array
 
 
-# def merge_dict_array_dict_single(metric_dict, key_name):
-#     key_values = []
-#     final_array = []
-#     metric_list = metric_dict.keys()
-#     first_array = metric_dict[metric_list[0]]
-#     local_key_names = {}
-#     for curr_metric in metric_dict:
-#         curr_array = metric_dict[curr_metric]
-#         if curr_array == []:
-#             continue
-#         local_key_name = find_key_alias_dict_array(curr_array, key_name)
-#         local_key_names[curr_metric] = local_key_name
-#         if curr_array==first_array:
-#             key_values = [x[local_key_name] for x in curr_array]
-#     for curr_value in key_values:
-#         curr_final_dict = {}
-#         missing_value = False
-#         for curr_metric in metric_list:
-#             local_key_name = local_key_names[curr_metric]
-#             curr_dict = [x for x in metric_dict[curr_metric] if x[local_key_name]==curr_value]
-#             if not curr_dict == []:
-#                 curr_final_dict.update(curr_dict[0])
-#             else:
-#                 missing_value = True
-#                 continue
-#         if missing_value == False:
-#             final_array.append(curr_final_dict)
-#     return final_array
+def merge_dict_array_array_multiple_keys(arrays, key_names):
+    print(arrays)
+    print(key_names)
+    final_array = []
+    if arrays==[]:
+        return arrays
+    first_array = arrays[0]
+    hybrid_keys = []
+    first_array_dict = {}
+    for curr_array in arrays:
+        for first_dict in first_array:
+            for curr_dict in curr_array:
+                match = True
+                for key in key_names:
+                    if not curr_dict[key]==first_dict[key]:
+                        match = False
+                if match:
+                    new_dict = curr_dict.copy()
+                    new_dict.update(first_dict)
+                    final_array.append(new_dict)
+    return final_array
+
+def sum_array_by_key(array, grouping_keys, sum_key):
+    new_array = []
+    required_keys = [sum_key] + grouping_keys
+    print(required_keys)
+    for curr_dict in array:
+        first_match = False
+        for curr_dict_new in new_array:
+            match = True
+            for key in grouping_keys:
+                curr_value = curr_dict[key]
+                curr_value_new = curr_dict_new[key]
+                if not curr_value_new == curr_value:
+                    match = False
+            if match:
+                curr_dict_new[sum_key] = curr_dict_new[sum_key] + curr_dict[sum_key]
+                first_match = True
+        if not first_match:
+            new_dict = {}
+            for required_key in required_keys:
+                new_dict[required_key] = curr_dict[required_key]
+            new_array.append(new_dict)
+            print(new_dict)
+    print("new_array", new_array)
+    return new_array
 
 
 # function to check whether a dict array key structure matches a desired key array
@@ -276,26 +300,27 @@ def find_level_sequence(highest_level, lowest_level, default_map = count_details
     return error_message
 
 
-def date_to_other_groups(dict_array, group_name, desired_metric):
+def date_to_other_groups(dict_array, group_name, desired_metric, lowest_level):
     sequential_time_metrics = ['day','month','year']
     new_dict = {}
     new_array = []
     all_keys_sequential = []
+
     for curr_dict in dict_array:
         all_keys = list(curr_dict.keys())
-        curr_date = curr_dict[group_name]
+        curr_date = curr_dict[group_name[0]]
         if desired_metric == 'date':
             new_date = curr_date.strftime('%d/%m/%y')
             if new_date in new_dict:
                 for curr_key in all_keys:
-                    if curr_key == group_name:
+                    if curr_key == group_name[0]:
                         new_dict[new_date][curr_key] = new_date
                     else:
                         new_dict[new_date][curr_key] = new_dict[new_date][curr_key]+curr_dict[curr_key]
             else:
                 new_dict[new_date] = {}
                 for curr_key in all_keys:
-                    if curr_key == group_name:
+                    if curr_key == group_name[0]:
                         new_dict[new_date][curr_key] = new_date
                     else:
                         new_dict[new_date][curr_key] = curr_dict[curr_key]
@@ -310,25 +335,22 @@ def date_to_other_groups(dict_array, group_name, desired_metric):
                     curr_key_sequential[curr_metric] = new_value
             if curr_key_sequential not in all_keys_sequential:
                 all_keys_sequential.append(curr_key_sequential)
-            # if curr_key_sequential in all_keys_sequential:
-            #     for curr_key in all_keys:
-            #         if curr_key == group_name:
-            #             new_dict[curr_key_sequential][curr_key] = curr_dict[curr_key]
-            #         else:
-            #             new_dict[curr_key_sequential][curr_key] = new_dict[curr_key_sequential][curr_key]\
-            #                                                       + curr_dict[curr_key]
-            # else:
-            #     all_keys_sequential.append(curr_key_sequential)
-            #     new_dict[curr_key_sequential] = {}
-            #     for curr_key in all_keys:
-            #         new_dict[curr_key_sequential][curr_key] = curr_dict[curr_key]
             curr_dict.update(curr_key_sequential)
-            curr_dict.pop(group_name)
+            curr_dict.pop(group_name[0])
+            new_array.append(curr_dict)
+        elif desired_metric == 'weekday':
+            curr_weekday = curr_date.weekday()
+            curr_dict['weekday'] = curr_weekday
             new_array.append(curr_dict)
         else:
             return dict_array
+    if desired_metric == 'weekday':
+        group_name.remove('date')
+        group_name.append(desired_metric)
+        new_array = sum_array_by_key(new_array,group_name, lowest_level)
     if new_array == []:
         new_array = list(new_dict.values())
+
     return new_array
 
 
