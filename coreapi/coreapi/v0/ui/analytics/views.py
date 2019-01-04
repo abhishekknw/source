@@ -26,7 +26,6 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
     data_scope_first = {}
     if not data_scope == {}:
         data_scope_keys = list(data_scope.keys()) if not data_scope == {} else []
-        print(data_scope_keys)
         for curr_key in data_scope_keys:
             if data_scope[curr_key]["category"] in unilevel_categories:
                 unilevel_constraints[curr_key] = data_scope[curr_key]
@@ -215,7 +214,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         query = []
 
         if next_level == lowest_level and not unilevel_constraints == {}:
-            first_constraint_index = unilevel_constraints.keys()[0]
+            first_constraint_index = list(unilevel_constraints.keys())[0]
             first_constraint = unilevel_constraints[first_constraint_index]
             add_category = first_constraint['category']
             add_map_name = add_category + '_parent_names'

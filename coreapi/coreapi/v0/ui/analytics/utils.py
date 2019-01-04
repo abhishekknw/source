@@ -210,15 +210,13 @@ def merge_dict_array_array_single(array, key_name):
 
 
 def merge_dict_array_array_multiple_keys(arrays, key_names):
-    print(arrays)
-    print(key_names)
     final_array = []
     if arrays==[]:
         return arrays
     first_array = arrays[0]
-    hybrid_keys = []
-    first_array_dict = {}
-    for curr_array in arrays:
+    second_array = []
+    for i in range(1,len(arrays)):
+        curr_array = arrays[i]
         for first_dict in first_array:
             for curr_dict in curr_array:
                 match = True
@@ -228,13 +226,14 @@ def merge_dict_array_array_multiple_keys(arrays, key_names):
                 if match:
                     new_dict = curr_dict.copy()
                     new_dict.update(first_dict)
-                    final_array.append(new_dict)
-    return final_array
+                    second_array.append(new_dict)
+        first_array = second_array
+        second_array = []
+    return first_array
 
 def sum_array_by_key(array, grouping_keys, sum_key):
     new_array = []
     required_keys = [sum_key] + grouping_keys
-    print(required_keys)
     for curr_dict in array:
         first_match = False
         for curr_dict_new in new_array:
