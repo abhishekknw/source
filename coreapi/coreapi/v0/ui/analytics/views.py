@@ -5,7 +5,7 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     count_details_parent_map, count_details_kids_map, find_level_sequence, binary_operation,
                     sum_array_by_key, z_calculator_array_multiple, get_metrics_from_code, time_parent_names,
                     count_details_parent_map_time, date_to_other_groups, merge_dict_array_array_multiple_keys,
-                    merge_dict_array_dict_multiple_keys)
+                    merge_dict_array_dict_multiple_keys, count_details_parent_map_multiple)
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -166,8 +166,13 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     if not type(grouping_level) == 'str':
         grouping_levels = grouping_level
         grouping_level = grouping_level[0]
+    else:
+        grouping_levels = [grouping_level]
     custom_level = lowest_level+'_'+grouping_level+'_'+highest_level
-    default_map = count_details_parent_map
+    if len(grouping_levels) > 1:
+        default_map = count_details_parent_map_multiple
+    else:
+        default_map = count_details_parent_map
     if highest_level == None:
         highest_level = grouping_level
     if grouping_category == 'time':
@@ -339,6 +344,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 all_values = parent_model_names
                 all_values.append(self_model_name)
                 query = list(eval(full_query).values(*all_values))
+                query_grouped = sum_array_by_key(query,["proposal_id"],"total_negotiated_price")
+                query=query_grouped
                 if not query==[]:
                     all_results.append(query)
                 next_level_match_array = [x[self_model_name] for x in query if x[self_model_name] is not None]

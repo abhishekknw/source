@@ -38,18 +38,29 @@ count_details_parent_map = {
                   'self_name_model': 'checklist_id', 'parent_name_model': 'campaign_id', 'storage_type': 'unique'},
     'flat': {'parent': 'supplier', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
              'self_name_model': 'flat_count', 'parent_name_model': 'supplier_id', 'storage_type': 'sum'},
+    'lead': {'parent': 'campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+             'self_name_model': 'entry_id', 'parent_name_model': 'campaign_id', 'storage_type': 'count'},
+    'hot_lead': {'parent': 'campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+                 'self_name_model': 'is_hot', 'parent_name_model': 'campaign_id',
+                 'storage_type': 'condition'},
+    'cost': {'parent': 'campaign', 'model_name':'ShortlistedSpaces', 'database_type': 'mysql',
+             'self_name_model': 'total_negotiated_price', 'parent_name_model': 'proposal_id',
+             'storage_type': 'sum'},
+    'phase': {'parent': 'campaign', 'model_name': 'SupplierPhase', 'database_type': 'mysql',
+              'self_model_name': 'phase_no', 'parent_name_model':'campaign_id', 'storage_type': 'unique'},
+}
+
+count_details_parent_map_multiple = {
     'lead': {'parent': 'supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
              'self_name_model': 'entry_id', 'parent_name_model': 'supplier_id,campaign_id', 'storage_type': 'count'},
     'hot_lead': {'parent': 'supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                  'self_name_model': 'is_hot', 'parent_name_model': 'supplier_id,campaign_id',
                  'storage_type': 'condition'},
-    'cost': {'parent': 'supplier,campaign', 'model_name':'ShortlistedSpaces', 'database_type': 'mysql',
+    'cost': {'parent': 'supplier,campaign', 'model_name': 'ShortlistedSpaces', 'database_type': 'mysql',
              'self_name_model': 'total_negotiated_price', 'parent_name_model': 'object_id,proposal_id',
              'storage_type': 'sum'},
-    'phase': {'parent': 'campaign', 'model_name': 'SupplierPhase', 'database_type': 'mysql',
-              'self_model_name': 'phase_no', 'parent_model_name':'campaign_id', 'storage_type': 'unique'},
     'date': {'parent': 'campaign,phase', 'model_name': 'SupplierPhase', 'database_type': 'mysql',
-             'self_model_name': 'start_date+end_date', 'parent_model_name': 'campaign_id, phase_no',
+             'self_model_name': 'start_date+end_date', 'parent_name_model': 'campaign_id, phase_no',
              'storage_type': 'range'}
 }
 
@@ -231,28 +242,29 @@ def merge_dict_array_array_multiple_keys(arrays, key_names):
         second_array = []
     return first_array
 
+
 def sum_array_by_key(array, grouping_keys, sum_key):
     new_array = []
     required_keys = [sum_key] + grouping_keys
     for curr_dict in array:
         first_match = False
+        curr_dict_sum = int(curr_dict[sum_key]) if curr_dict[sum_key] is not None else 0
         for curr_dict_new in new_array:
             match = True
+            curr_dict_new_sum = int(curr_dict_new[sum_key]) if curr_dict_new[sum_key] is not None else 0
             for key in grouping_keys:
                 curr_value = curr_dict[key]
                 curr_value_new = curr_dict_new[key]
                 if not curr_value_new == curr_value:
                     match = False
             if match:
-                curr_dict_new[sum_key] = curr_dict_new[sum_key] + curr_dict[sum_key]
+                curr_dict_new[sum_key] = curr_dict_sum + curr_dict_new_sum
                 first_match = True
         if not first_match:
             new_dict = {}
             for required_key in required_keys:
                 new_dict[required_key] = curr_dict[required_key]
             new_array.append(new_dict)
-            print(new_dict)
-    print("new_array", new_array)
     return new_array
 
 
