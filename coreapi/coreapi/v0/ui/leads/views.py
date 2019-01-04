@@ -126,6 +126,8 @@ def convertToNumber(str):
 def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **kwargs):
     leads_per_page = 25
     leads_forms = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)}, {"_id":0, "data":1})
+    if not leads_forms:
+        return None
     leads_forms_items = leads_forms["data"]
     if supplier_id == 'All':
         leads_data = mongo_client.leads.find({"$and": [{"leads_form_id": int(leads_form_id)}, {"status": {"$ne": "inactive"}}]},
