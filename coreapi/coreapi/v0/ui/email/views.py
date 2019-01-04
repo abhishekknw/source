@@ -77,7 +77,7 @@ def send_mail_generic(subject, to, html_body, cc=None, attachment_filepath=None)
     filepath = None
     if attachment_filepath:
         filepath = attachment_filepath
-        file_to_send = open(filepath, 'r')
+        file_to_send = open(filepath, 'rb')
         filename = filepath[filepath.rfind('/') + 1:]
         email.attach(filename, file_to_send.read(), mime.from_file(filepath))
         file_to_send.close()
