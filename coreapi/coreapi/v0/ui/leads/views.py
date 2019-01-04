@@ -319,128 +319,149 @@ class GetLeadsFormById(APIView):
 class LeadsFormBulkEntry(APIView):
     @staticmethod
     def post(request, leads_form_id):
-        is_permitted, validation_msg_dict = is_user_permitted("FILL", request.user, leads_form_id=leads_form_id)
-        if not is_permitted:
-            return handle_response('', data=validation_msg_dict, success=False)
-        source_file = request.data['file']
-        wb = load_workbook(source_file)
-        ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
-        lead_form = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)})
-        fields = len(lead_form['data'])
-        campaign_id = lead_form['campaign_id']
-        global_hot_lead_criteria = lead_form['global_hot_lead_criteria']
-        entry_id = lead_form['last_entry_id'] + 1 if 'last_entry_id' in lead_form else 1
+        try:
+            is_permitted, validation_msg_dict = is_user_permitted("FILL", request.user, leads_form_id=leads_form_id)
+            if not is_permitted:
+                return handle_response('', data=validation_msg_dict, success=False)
+            source_file = request.data['file']
+            wb = load_workbook(source_file)
+            ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+            lead_form = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)})
+            fields = len(lead_form['data'])
+            campaign_id = lead_form['campaign_id']
+            global_hot_lead_criteria = lead_form['global_hot_lead_criteria']
+            entry_id = lead_form['last_entry_id'] + 1 if 'last_entry_id' in lead_form else 1
 
-        missing_societies = []
-        inv_activity_assignment_missing_societies = []
-        inv_activity_assignment_activity_date_missing_societies = []
-        inv_activity_missing_societies = []
-        not_present_in_shortlisted_societies = []
-        more_than_ones_same_shortlisted_society = []
-        unresolved_societies = []
+            missing_societies = []
+            inv_activity_assignment_missing_societies = []
+            inv_activity_assignment_activity_date_missing_societies = []
+            inv_activity_missing_societies = []
+            not_present_in_shortlisted_societies = []
+            more_than_ones_same_shortlisted_society = []
+            unresolved_societies = []
 
-        leads_dict = []
-        all_sha256 = list(mongo_client.leads.find({"leads_form_id": int(leads_form_id)},{"lead_sha_256": 1, "_id": 0}))
-        all_sha256_list = [str(element['lead_sha_256']) for element in all_sha256]
-        for index, row in enumerate(ws.iter_rows()):
+            leads_dict = []
+            all_sha256 = list(mongo_client.leads.find({"leads_form_id": int(leads_form_id)},{"lead_sha_256": 1, "_id": 0}))
+            all_sha256_list = [str(element['lead_sha_256']) for element in all_sha256]
+            apartment_index = None
+            club_name_index = None
+            for index, row in enumerate(ws.iter_rows()):
+                if index == 0:
+                    for idx, i in enumerate(row):
+                        if i.value and 'apartment' in i.value.lower():
+                            apartment_index = idx
+                            break
+                    if not apartment_index:
+                        for idx, i in enumerate(row):
+                            if i.value and 'club name' in i.value.strip().lower():
+                                club_name_index = idx
+                                break
+                if apartment_index is None and club_name_index is None:
+                    return handle_response('', data="neither apartment nor club found in the sheet", success=False)
+                entity_index = apartment_index if apartment_index else club_name_index
+                if index > 0:
+                    society_name = row[entity_index].value
 
-            if index == 0:
-                for idx, i in enumerate(row):
-                    if 'apartment' in i.value.lower():
-                        apartment_index = idx
-                        break
-            if index > 0:
-                society_name = row[apartment_index].value
-                suppliers = SupplierTypeSociety.objects.filter(society_name=society_name).values('supplier_id',
-                                                                                                 'society_name').all()
-                if len(suppliers) == 0:
-                    if society_name not in missing_societies:
-                        missing_societies.append(society_name)
-                    continue
-                else:
-                    if len(suppliers) == 1:
-                        found_supplier_id = suppliers[0]['supplier_id']
+                    suppliers = SupplierTypeSociety.objects.filter(society_name=society_name).values('supplier_id',
+                                                                                                     'society_name').all()
+
+                    if len(suppliers) == 0:
+                        if society_name not in missing_societies:
+                            missing_societies.append(society_name)
+                        continue
                     else:
-                        supplier_ids = []
-                        for s in suppliers:
-                            supplier_ids.append(s['supplier_id'])
-                        shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id,
-                                                                              object_id__in=supplier_ids).values(
-                            'object_id', 'id').all()
-                        if len(shortlisted_spaces) > 1:
-                            more_than_ones_same_shortlisted_society.append(society_name)
-                            continue
-                        if len(shortlisted_spaces) == 0:
-                            not_present_in_shortlisted_societies.append(society_name)
-                            continue
+                        if len(suppliers) == 1:
+                            found_supplier_id = suppliers[0]['supplier_id']
                         else:
-                            found_supplier_id = shortlisted_spaces[0]['object_id']
-                shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=found_supplier_id).filter(
-                    proposal_id=campaign_id).all()
-                if len(shortlisted_spaces) == 0:
-                    not_present_in_shortlisted_societies.append(society_name)
-                    continue
-                inventory_list = ShortlistedInventoryPricingDetails.objects.filter(
-                    shortlisted_spaces_id=shortlisted_spaces[0].id).all()
-                stall = None
-                for inventory in inventory_list:
-                    if inventory.ad_inventory_type_id >= 8 and inventory.ad_inventory_type_id <= 11:
-                        stall = inventory
-                        break
-                if not stall:
-                    continue
-                shortlisted_inventory_details_id = stall.id
-                inventory_list = InventoryActivity.objects.filter(
-                    shortlisted_inventory_details_id=shortlisted_inventory_details_id, activity_type='RELEASE').all()
-                if len(inventory_list) == 0:
-                    inv_activity_missing_societies.append(society_name)
-                    continue
-                inventory_activity_id = inventory_list[0].id
-                inventory_activity_list = InventoryActivityAssignment.objects.filter(
-                    inventory_activity_id=inventory_activity_id).all()
-                if len(inventory_activity_list) == 0:
-                    inv_activity_assignment_missing_societies.append(society_name)
-                    continue
+                            supplier_ids = []
+                            for s in suppliers:
+                                supplier_ids.append(s['supplier_id'])
+                            shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id,
+                                                                                  object_id__in=supplier_ids).values(
+                                'object_id', 'id').all()
+                            if len(shortlisted_spaces) > 1:
+                                more_than_ones_same_shortlisted_society.append(society_name)
+                                continue
+                            if len(shortlisted_spaces) == 0:
+                                not_present_in_shortlisted_societies.append(society_name)
+                                continue
+                            else:
+                                found_supplier_id = shortlisted_spaces[0]['object_id']
 
-                created_at = inventory_activity_list[0].activity_date if inventory_activity_list[0].activity_date else None
-                if not created_at:
-                    inv_activity_assignment_activity_date_missing_societies.append(society_name)
-                    continue
-                lead_dict = {"data": [], "is_hot": False, "created_at": created_at, "supplier_id": found_supplier_id,
-                             "campaign_id": campaign_id, "leads_form_id": int(leads_form_id), "entry_id": entry_id}
-                for item_id in range(0, fields):
-                    curr_item_id = item_id + 1
-                    curr_form_item_dict = lead_form['data'][str(curr_item_id)]
-                    key_name = curr_form_item_dict['key_name']
-                    value = row[item_id].value if row[item_id].value else None
-                    if isinstance(value, datetime.datetime) or isinstance(value, datetime.time):
-                        value = str(value)
-                    item_dict = {
-                        'key_name': key_name,
-                        'value': value,
-                        'item_id': curr_item_id
-                    }
-                    lead_dict["data"].append(item_dict)
-                lead_sha_256 = create_lead_hash(lead_dict)
-                lead_dict["lead_sha_256"] = lead_sha_256
-                lead_dict["is_hot"] = calculate_is_hot(lead_dict, global_hot_lead_criteria)
-                lead_already_exist = True if lead_sha_256 in all_sha256_list else False
-                if not lead_already_exist:
-                    mongo_client.leads.insert_one(lead_dict)
-                    entry_id = entry_id + 1  # will be saved in the end
-        mongo_client.leads_forms.update_one({"leads_form_id": leads_form_id}, {"$set": {"last_entry_id": entry_id}})
-        missing_societies.sort()
-        missing_dict = {
-            "missing societies": missing_societies,
-            "unresolved_societies": list(set(unresolved_societies)),
-            "more_than_ones_same_shortlisted_society": list(set(more_than_ones_same_shortlisted_society)),
-            "inv_activity_assignment_missing_societies": list(set(inv_activity_assignment_missing_societies)),
-            "inv_activity_assignment_activity_date_missing_societies": list(
-                set(inv_activity_assignment_activity_date_missing_societies)),
-            "inv_activit_missing_societies": list(set(inv_activity_missing_societies)),
-            "not_present_in_shortlisted_societies": list(set(not_present_in_shortlisted_societies))
-        }
-        return handle_response({}, data=missing_dict, success=True)
+                    shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=found_supplier_id).filter(
+                        proposal_id=campaign_id).all()
+                    if len(shortlisted_spaces) == 0:
+                        not_present_in_shortlisted_societies.append(society_name)
+                        continue
+                    inventory_list = ShortlistedInventoryPricingDetails.objects.filter(
+                        shortlisted_spaces_id=shortlisted_spaces[0].id).all()
+                    stall = None
+
+                    for inventory in inventory_list:
+                        if inventory.ad_inventory_type_id >= 8 and inventory.ad_inventory_type_id <= 11:
+                            stall = inventory
+                            break
+                    if not stall:
+                        continue
+                    shortlisted_inventory_details_id = stall.id
+                    inventory_list = InventoryActivity.objects.filter(
+                        shortlisted_inventory_details_id=shortlisted_inventory_details_id, activity_type='RELEASE').all()
+
+                    if len(inventory_list) == 0:
+                        inv_activity_missing_societies.append(society_name)
+                        continue
+                    inventory_activity_id = inventory_list[0].id
+                    inventory_activity_list = InventoryActivityAssignment.objects.filter(
+                        inventory_activity_id=inventory_activity_id).all()
+                    if len(inventory_activity_list) == 0:
+                        inv_activity_assignment_missing_societies.append(society_name)
+                        continue
+
+                    created_at = inventory_activity_list[0].activity_date if inventory_activity_list[0].activity_date else None
+                    if not created_at:
+                        inv_activity_assignment_activity_date_missing_societies.append(society_name)
+                        continue
+                    lead_dict = {"data": [], "is_hot": False, "created_at": created_at, "supplier_id": found_supplier_id,
+                                 "campaign_id": campaign_id, "leads_form_id": int(leads_form_id), "entry_id": entry_id}
+                    for item_id in range(0, fields):
+                        curr_item_id = item_id + 1
+                        curr_form_item_dict = lead_form['data'][str(curr_item_id)]
+                        key_name = curr_form_item_dict['key_name']
+                        value = row[item_id].value if row[item_id].value else None
+                        if isinstance(value, datetime.datetime) or isinstance(value, datetime.time):
+                            value = str(value)
+                        item_dict = {
+                            'key_name': key_name,
+                            'value': value,
+                            'item_id': curr_item_id
+                        }
+                        lead_dict["data"].append(item_dict)
+
+                    lead_sha_256 = create_lead_hash(lead_dict)
+                    lead_dict["lead_sha_256"] = lead_sha_256
+                    lead_dict["is_hot"] = calculate_is_hot(lead_dict, global_hot_lead_criteria)
+                    lead_already_exist = True if lead_sha_256 in all_sha256_list else False
+                    if not lead_already_exist:
+                        mongo_client.leads.insert_one(lead_dict)
+                        entry_id = entry_id + 1  # will be saved in the end
+
+            mongo_client.leads_forms.update_one({"leads_form_id": leads_form_id}, {"$set": {"last_entry_id": entry_id}})
+            missing_societies.sort()
+
+            missing_dict = {
+                "missing societies": missing_societies,
+                "unresolved_societies": list(set(unresolved_societies)),
+                "more_than_ones_same_shortlisted_society": list(set(more_than_ones_same_shortlisted_society)),
+                "inv_activity_assignment_missing_societies": list(set(inv_activity_assignment_missing_societies)),
+                "inv_activity_assignment_activity_date_missing_societies": list(
+                    set(inv_activity_assignment_activity_date_missing_societies)),
+                "inv_activit_missing_societies": list(set(inv_activity_missing_societies)),
+                "not_present_in_shortlisted_societies": list(set(not_present_in_shortlisted_societies))
+            }
+            return handle_response({}, data=missing_dict, success=True)
+        except Exception as ex:
+            return handle_response({}, data="failed", success=False)
+
 
 
 class LeadsFormEntry(APIView):
