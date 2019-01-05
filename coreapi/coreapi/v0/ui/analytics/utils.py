@@ -1,4 +1,7 @@
 import numpy as np
+from v0.ui.supplier.models import SupplierPhase
+from datetime import datetime
+import pytz, copy
 
 
 def get_metrics_from_code(code, raw_metrics, derived_metrics):
@@ -21,7 +24,7 @@ weekday_codes = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
 
 level_name_by_model_id = {
     "supplier_id": "supplier", "object_id": "supplier", "campaign_id": "campaign", "proposal_id": "campaign",
-    "flat_count": "flat","total_negotiated_price":"cost", "created_at": "date"
+    "flat_count": "flat","total_negotiated_price":"cost", "created_at": "date", "phase_no": "phase"
 }
 
 
@@ -76,6 +79,11 @@ geographical_parent_details = {
     'base_model_name':'supplier_id', 'storage_type': 'name',
     'member_names': {'locality': 'society_locality', 'city': 'society_city', 'state': 'society_state',
                      'supplier': 'supplier_id'}
+}
+
+date_to_others = {
+    'phase': {'model_name': 'SupplierPhase', 'variables':{'date':['start_date','end_date'],'campaign':['campaign_id'],},
+              'self_name_model': 'phase_no'}
 }
 
 
@@ -196,6 +204,38 @@ def convert_dict_arrays_keys_to_standard_names(dict_arrays):
     return final_array
 
 
+def ranged_data_to_other_groups(base_array, range_array, start_field, end_field,
+                                base_value_field, assigned_value_field, other_fields):
+    if len(other_fields)>1:
+        return "this part is not developed yet"
+    else:
+        other_field = other_fields[0]
+    if assigned_value_field in level_name_by_model_id:
+        assigned_value_field_standard = level_name_by_model_id[assigned_value_field]
+    else:
+        assigned_value_field_standard = assigned_value_field
+    new_array = []
+    # first_dict = base_array[0]
+    # if other_field not in first_dict:
+    #     other_field = level_name_by_model_id[other_field]
+    for curr_dict in base_array:
+        curr_value = curr_dict[base_value_field]
+        other_value = curr_dict[other_field] if other_field in curr_dict else \
+            curr_dict[level_name_by_model_id[other_field]]
+        if isinstance(curr_value, datetime):
+            curr_value = pytz.utc.localize(curr_value)
+        assigned_value_array = [x[assigned_value_field] for x in range_array if x[other_field] == other_value and
+                          x[end_field] > curr_value > x[start_field]]
+        if assigned_value_array == []:
+            assigned_value_array = [0]
+        if len(assigned_value_array) > 1:
+            continue
+        curr_dict[assigned_value_field_standard] = assigned_value_array[0]
+        curr_dict.pop(base_value_field)
+        new_array.append(curr_dict)
+    return new_array
+
+
 def merge_dict_array_array_single(array, key_name):
     final_array=[]
     if array==[]:
@@ -311,7 +351,7 @@ def find_level_sequence(highest_level, lowest_level, default_map = count_details
     return error_message
 
 
-def date_to_other_groups(dict_array, group_name, desired_metric, lowest_level):
+def date_to_other_groups(dict_array, group_name, desired_metric, lowest_level, highest_level_values):
     sequential_time_metrics = ['day','month','year']
     new_dict = {}
     new_array = []
@@ -353,9 +393,26 @@ def date_to_other_groups(dict_array, group_name, desired_metric, lowest_level):
             curr_weekday = curr_date.weekday()
             curr_dict['weekday'] = curr_weekday
             new_array.append(curr_dict)
+        elif desired_metric == 'phase':
+            model_details = date_to_others[desired_metric]
+            model_name = model_details['model_name']
+            variables = model_details['variables']
+            variables_list = list(variables.keys())
+            start_field = variables[variables_list[0]][0]
+            end_field = variables[variables_list[0]][1]
+            assigned_field = model_details['self_name_model']
+            other_fields = variables[variables_list[1]]
+            first_part_query = model_name + '.objects.filter('
+            full_query = first_part_query + other_fields[0] + '__in=highest_level_values)'
+            query_results = list(eval(full_query).values(start_field,end_field,other_fields[0], assigned_field))
+            phase_adjusted_results = ranged_data_to_other_groups(copy.deepcopy(dict_array),query_results,start_field, end_field,
+                                                                 group_name[0], assigned_field, other_fields)
+            new_array = phase_adjusted_results
         else:
             return dict_array
-    if desired_metric == 'weekday':
+    if desired_metric == 'weekday' or desired_metric == 'phase':
+        if desired_metric in date_to_others:
+            group_name = list(date_to_others[desired_metric]['variables'].keys())
         group_name.remove('date')
         group_name.append(desired_metric)
         new_array = sum_array_by_key(new_array,group_name, lowest_level)
