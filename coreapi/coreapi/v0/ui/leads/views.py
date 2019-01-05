@@ -956,7 +956,7 @@ def calculate_is_hot(curr_lead, global_hot_lead_criteria):
     curr_lead_data_dict = {str(item['item_id']):item for item in curr_lead['data']}
     for item_id in global_hot_lead_criteria['or']:
         if item_id in curr_lead_data_dict and curr_lead_data_dict[item_id]['value'] is not None:
-            if str(curr_lead_data_dict[item_id]['value']).lower() in global_hot_lead_criteria['or'][item_id]:
+            if str(curr_lead_data_dict[item_id]['value']) in global_hot_lead_criteria['or'][item_id]:
                 return True
             if "AnyValue" in global_hot_lead_criteria['or'][item_id] and str(curr_lead_data_dict[item_id]['value']).lower() != 'na':
                 return True
