@@ -181,6 +181,9 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     if custom_level in default_map:
         lowest_level_original = lowest_level
         lowest_level = custom_level
+    if '^' in lowest_level:
+        incrementing_value = int(lowest_level[-1])
+        lowest_level = lowest_level[:-1]
     second_lowest_parent = default_map[lowest_level]['parent']
     second_lowest_parent_name_model = default_map[lowest_level]['parent_name_model']
     parent_type = 'single'
@@ -305,6 +308,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
 
         elif storage_type == 'count' or storage_type == 'sum' or storage_type == 'condition':
             if database_type == 'mongodb':
+                if next_level[-1] == '^':
+                    next_level = next_level + str(incrementing_value)
                 if next_level == custom_level:
                     project_dict.update({lowest_level_original:1, "_id":0})
                 else:
@@ -319,6 +324,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 else:
                     if 'incrementing_value' in entity_details:
                         incrementing_value = entity_details['incrementing_value']
+                    if incrementing_value is not None:
                         group_dict.update({'_id': {}, next_level: {"$sum":
                         {"$cond":[{"$eq": ["$"+self_model_name,incrementing_value]}, 1, 0]}}})
                     else:

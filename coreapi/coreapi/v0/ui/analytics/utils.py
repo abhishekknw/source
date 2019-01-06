@@ -51,6 +51,9 @@ count_details_parent_map = {
              'storage_type': 'sum'},
     'phase': {'parent': 'campaign', 'model_name': 'SupplierPhase', 'database_type': 'mysql',
               'self_model_name': 'phase_no', 'parent_name_model':'campaign_id', 'storage_type': 'unique'},
+    'hot_lead^': {'parent': 'campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+                  'self_name_model': 'hotness_level', 'parent_name_model': 'campaign_id',
+                  'storage_type': 'condition'}
 }
 
 count_details_parent_map_multiple = {
@@ -72,6 +75,9 @@ count_details_parent_map_time = {
              'self_name_model': 'entry_id', 'parent_name_model': 'created_at,campaign_id', 'storage_type': 'count'},
     'hot_lead': {'parent': 'date,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                  'self_name_model': 'is_hot', 'parent_name_model': 'created_at,campaign_id', 'storage_type': 'condition'},
+    'hot_lead^': {'parent': 'date, campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+                  'self_name_model': 'hotness_level', 'parent_name_model': 'created_at,campaign_id',
+                  'storage_type': 'condition'}
     }
 
 geographical_parent_details = {
