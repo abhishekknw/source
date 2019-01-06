@@ -707,14 +707,16 @@ class EditLeadsForm(APIView):
         if not is_permitted:
             return handle_response('', data=validation_msg_dict, success=False)
         leads_form_items = request.data['leads_form_items'] if 'leads_form_items' in request.data.keys() else None
+        global_hot_lead_criteria = request.data[
+            'global_hot_lead_criteria'] if 'global_hot_lead_criteria' in request.data.keys() else None
         name = request.data['name'] if 'name' in request.data.keys() else None
-        if not name and not leads_form_items:
-            return handle_response({}, data='success', success=True)
         set_dict = {}
         if name:
             set_dict["leads_form_name"] = name
         if leads_form_items:
             set_dict["data"] = leads_form_items
+        if global_hot_lead_criteria:
+            set_dict["global_hot_lead_criteria"] = global_hot_lead_criteria
         mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": set_dict})
         return handle_response({}, data='success', success=True)
 
