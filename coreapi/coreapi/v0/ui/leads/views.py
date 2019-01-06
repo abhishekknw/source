@@ -105,7 +105,7 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
             'item_id': item_id,
             'key_type': key_type
         })
-    lead_dict["is_hot"] = calculate_is_hot(lead_dict, lead_form['global_hot_lead_criteria'])
+    lead_dict["is_hot"], lead_dict["multi_level_is_hot"] = calculate_is_hot(lead_dict, lead_form['global_hot_lead_criteria'])
     lead_sha_256 = create_lead_hash(lead_dict)
     lead_dict["lead_sha_256"] = lead_sha_256
     lead_already_exist = True if len(list(mongo_client.leads.find({"lead_sha_256": lead_sha_256}))) > 0 else False
@@ -439,7 +439,7 @@ class LeadsFormBulkEntry(APIView):
 
                     lead_sha_256 = create_lead_hash(lead_dict)
                     lead_dict["lead_sha_256"] = lead_sha_256
-                    lead_dict["is_hot"] = calculate_is_hot(lead_dict, global_hot_lead_criteria)
+                    lead_dict["is_hot"], lead_dict["multi_level_is_hot"] = calculate_is_hot(lead_dict, global_hot_lead_criteria)
                     lead_already_exist = True if lead_sha_256 in all_sha256_list else False
                     if not lead_already_exist:
                         mongo_client.leads.insert_one(lead_dict)
@@ -518,11 +518,12 @@ def sanitize_leads_data():
                 leads_data_dict[other_child_item_id]['value'] = None
                 leads_data_dict[other_child_class_item_id]['value'] = None
             new_data = [leads_data_dict[single_item_id] for single_item_id in leads_data_dict]
-            is_hot = calculate_is_hot({'data':new_data}, lead_form[0]['global_hot_lead_criteria'])
+            is_hot, multi_level_is_hot = calculate_is_hot({'data':new_data}, lead_form[0]['global_hot_lead_criteria'])
             mongo_client.leads.update_one({"leads_form_id": int(lead_data['leads_form_id']), "entry_id": int(lead_data['entry_id'])},
                                           {"$set": {"data": new_data, "is_hot": is_hot}})
             if create_other_child_lead:
-                new_lead_dict = {"is_hot": False, "created_at": lead_data['created_at'],
+                new_lead_dict = {"is_hot": False, "multi_level_is_hot": multi_level_is_hot,
+                                 "created_at": lead_data['created_at'],
                                  "supplier_id": lead_data['supplier_id'],
                                  "campaign_id": lead_data['campaign_id'],
                                  "leads_form_id": lead_data['leads_form_id'], "entry_id": new_entry_id, "status": "active",
@@ -532,7 +533,8 @@ def sanitize_leads_data():
                 leads_data_dict[other_child_item_id]["value"] = None
                 leads_data_dict[other_child_class_item_id]["value"] = None
                 new_lead_dict["data"] = [leads_data_dict[single_item_id] for single_item_id in leads_data_dict]
-                new_lead_dict["is_hot"] = calculate_is_hot(new_lead_dict, lead_form[0]['global_hot_lead_criteria'])
+                new_lead_dict["is_hot"], new_lead_dict["multi_level_is_hot"] = calculate_is_hot(new_lead_dict,
+                                                                                                lead_form[0]['global_hot_lead_criteria'])
                 lead_sha_256 = create_lead_hash(new_lead_dict)
                 new_lead_dict["lead_sha_256"] = lead_sha_256
                 lead_already_exist = True if len(
@@ -915,17 +917,19 @@ class UpdateLeadsDataSHA256(APIView):
 
 def create_global_hot_lead_criteria(curr_lead_form):
     global_hot_lead_criteria = {
-        'or':{},
+        'is_hot': {
+            'or': {},
+        }
     }
     items_dict = curr_lead_form['data']
     for item in items_dict:
         key_name = items_dict[item]['key_name'].lower()
         if 'hot_lead_criteria' in items_dict[item] and items_dict[item]['hot_lead_criteria']:
-            global_hot_lead_criteria['or'][item] = [items_dict[item]['hot_lead_criteria']]
+            global_hot_lead_criteria['is_hot']['or'][item] = [items_dict[item]['hot_lead_criteria']]
             if items_dict[item]['hot_lead_criteria'] == 'Y':
-                global_hot_lead_criteria['or'][item] += ['y','Yes', 'yes', 'YES']
+                global_hot_lead_criteria['is_hot']['or'][item] += ['y','Yes', 'yes', 'YES']
         if "counseling" in key_name or "counselling" in key_name or "counceling" in key_name:
-            global_hot_lead_criteria['or'][item] = ['AnyValue']
+            global_hot_lead_criteria['is_hot']['or'][item] = ['AnyValue']
     return global_hot_lead_criteria
 
 
@@ -945,7 +949,7 @@ class UpdateGlobalHotLeadCriteria(APIView):
             counter += 1
             if counter % 500 == 0:
                 bulk.execute()
-                bulk = mongo_client.leads.initialize_unordered_bulk_op()
+                bulk = mongo_client.leads_forms.initialize_unordered_bulk_op()
         if counter > 0:
             bulk.execute()
         return handle_response({}, data='success', success=True)
@@ -953,14 +957,17 @@ class UpdateGlobalHotLeadCriteria(APIView):
 
 def calculate_is_hot(curr_lead, global_hot_lead_criteria):
     # checking 'or' global_hot_lead_criteria
-    curr_lead_data_dict = {str(item['item_id']):item for item in curr_lead['data']}
-    for item_id in global_hot_lead_criteria['or']:
-        if item_id in curr_lead_data_dict and curr_lead_data_dict[item_id]['value'] is not None:
-            if str(curr_lead_data_dict[item_id]['value']) in global_hot_lead_criteria['or'][item_id]:
-                return True
-            if "AnyValue" in global_hot_lead_criteria['or'][item_id] and str(curr_lead_data_dict[item_id]['value']).lower() != 'na':
-                return True
-    return False
+    multi_level_is_hot = {is_hot_level: False for is_hot_level in global_hot_lead_criteria}
+    curr_lead_data_dict = {str(item['item_id']): item for item in curr_lead['data']}
+    for is_hot_level in global_hot_lead_criteria:
+        for item_id in global_hot_lead_criteria[is_hot_level]['or']:
+            if item_id in curr_lead_data_dict and curr_lead_data_dict[item_id]['value'] is not None:
+                if str(curr_lead_data_dict[item_id]['value']) in global_hot_lead_criteria[is_hot_level]['or'][item_id]:
+                    multi_level_is_hot[is_hot_level] = True
+                if "AnyValue" in global_hot_lead_criteria[is_hot_level]['or'][item_id] and str(
+                        curr_lead_data_dict[item_id]['value']).lower() != 'na':
+                    multi_level_is_hot[is_hot_level] = True
+    return multi_level_is_hot['is_hot'], multi_level_is_hot
 
 
 @shared_task()
@@ -974,8 +981,8 @@ def update_leads_data_is_hot():
         counter = 0
         for curr_lead in leads_data_all:
             entry_id = curr_lead['entry_id']
-            is_hot = calculate_is_hot(curr_lead, global_hot_lead_criteria)
-            bulk.find({"entry_id": int(entry_id)}).update({"$set": {"is_hot": is_hot}})
+            is_hot, multi_level_is_hot = calculate_is_hot(curr_lead, global_hot_lead_criteria)
+            bulk.find({"entry_id": int(entry_id)}).update({"$set": {"is_hot": is_hot, "multi_level_is_hot":multi_level_is_hot}})
             counter += 1
             if counter % 500 == 0:
                 bulk.execute()
@@ -1277,14 +1284,15 @@ class UpdateLeadsEntry(APIView):
         for lead_item in lead_dict['data']:
             lead_item['value'] = lead_entry_map_by_item_id[int(lead_item['item_id'])]['value']
 
-        lead_dict["is_hot"] = calculate_is_hot(lead_dict, lead_form['global_hot_lead_criteria'])
+        lead_dict["is_hot"], lead_dict["multi_level_is_hot"] = calculate_is_hot(lead_dict, lead_form['global_hot_lead_criteria'])
         lead_sha_256 = create_lead_hash(lead_dict)
         lead_dict["lead_sha_256"] = lead_sha_256
         lead_already_exist = True if len(list(mongo_client.leads.find({"lead_sha_256": lead_sha_256}))) > 0 else False
         if not lead_already_exist:
             mongo_client.leads.update_one(
                 {"leads_form_id": int(form_id), "entry_id": int(entry_id), "supplier_id": supplier_id},
-                {"$set": {"data": lead_dict["data"], "lead_sha_256": lead_sha_256, "is_hot": lead_dict["is_hot"]}})
+                {"$set": {"data": lead_dict["data"], "lead_sha_256": lead_sha_256, "is_hot": lead_dict["is_hot"],
+                          "multi_level_is_hot": lead_dict["multi_level_is_hot"]}})
         return handle_response('', data={"success": True}, success=True)
 
 
