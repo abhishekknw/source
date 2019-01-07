@@ -581,7 +581,7 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id, user):
     function = populate_shortlisted_inventory_pricing_details.__name__
     try:
 
-        center_ids = result.keys()
+        center_ids = list(result.keys())
         # this creates a mapping like { 1: 'center_object_1', 2: 'center_object_2' } etc
         center_objects = ProposalCenterMapping.objects.in_bulk(center_ids)
         proposal_object = ProposalInfo.objects.get_permission(user=user, proposal_id=proposal_id)
@@ -1033,7 +1033,7 @@ def insert_into_master_data(data, master_data, model_name):
     """
     try:
         # append the data to list
-        if type(master_data[model_name]) == ListType:
+        if type(master_data[model_name]) == list:
             master_data[model_name].append(data)
         else:
             # update the existing dict with new data
@@ -1505,7 +1505,7 @@ def save_filter_data(suppliers_meta, fixed_data):
         # creating filter objects for each filter value selected
         selected_filters_list = []
         for filter_name in v0_constants.filter_type[code]:
-            if suppliers_meta.get(code) and filter_name in suppliers_meta[code].keys():
+            if suppliers_meta.get(code) and filter_name in list(suppliers_meta[code].keys()):
                 for inventory_code in suppliers_meta[code][filter_name]:
                     # TO store employee_count by codes so easy to fetch
                     if filter_name == 'employee_count':
@@ -1644,7 +1644,7 @@ def get_suppliers(query, supplier_type_code, coordinates):
         for supplier in serializer.data:
             # replace all society specific keys with common supplier keys
             for society_key, actual_key in v0_constants.society_common_keys.items():
-                if society_key in supplier.keys():
+                if society_key in list(supplier.keys()):
                     value = supplier[society_key]
                     del supplier[society_key]
                     supplier[actual_key] = value
@@ -1758,7 +1758,7 @@ def merge_two_dicts(x, y):
     try:
         # update x with keys which are not in x.
         x = x.copy()
-        x_keys = x.keys()
+        x_keys = list(x.keys())
         for key, value in y.items():
             if key not in x_keys:
                 x[key] = value
@@ -1988,7 +1988,7 @@ def set_inventory_pricing(supplier_ids, supplier_type_code, inventory_summary_ma
                     error_key = (inventory_name, inventory_type, duration_name, supplier_id)
                     raise Exception(
                         'The price mapping default instance does not exist for this supplier. key {0} is not in the pmd map.  detail is {1}.   \n valid keys are {2}. '.format(
-                            key, error_key, price_mapping_default_map.keys()))
+                            key, error_key, list(price_mapping_default_map.keys())))
                 suppliers_per_supplier_type_code[supplier_id][inv_code]['price'] = price
 
         return suppliers_per_supplier_type_code
@@ -2353,7 +2353,7 @@ def unique_supplier_type_codes(data):
     try:
         supplier_type_codes = []
         for center in data:
-            codes = center['suppliers'].keys()
+            codes = list(center['suppliers'].keys())
             supplier_type_codes.extend(codes)
         return list(set(supplier_type_codes))
     except Exception as e:
@@ -2614,9 +2614,9 @@ def handle_common_filters(common_filters, supplier_type_code):
             query['longitude__lt'] = max_longitude
             query['longitude__gt'] = min_longitude
         # the keys like 'locality', 'quantity', 'quality' we receive from front end are already defined in constants
-        predefined_common_filter_keys = v0_constants.query_dict[supplier_type_code].keys()
+        predefined_common_filter_keys = list(v0_constants.query_dict[supplier_type_code].keys())
         # we may receive a subset of already defined keys. obtain that subset
-        received_common_filter_keys = common_filters.keys()
+        received_common_filter_keys = list(common_filters.keys())
         # iterate over each predefined key and check if it is what we have received.
         for filter_term in predefined_common_filter_keys:
             if filter_term in received_common_filter_keys:
@@ -2689,7 +2689,7 @@ def handle_inventory_filters(inventory_list):
         # final Q object to be returned
         inventory_query = Q()
         # atomic inventories means 'PO', 'ST' etc.
-        valid_atomic_inventories = v0_constants.inventory_dict.keys()
+        valid_atomic_inventories = list(v0_constants.inventory_dict.keys())
         # iterate through all the inventory list
         for inventory in inventory_list:
             # if it is atomic, that means you only need to fetch it's db field and set it to Q object
@@ -2888,7 +2888,7 @@ def handle_priority_index_filters(supplier_type_code, pi_filters_map, final_supp
                         for flat_code, detail in pi_filters_map['flat_type'].items():
                             flat_code_value = v0_constants.flat_type_dict[flat_code]
                             single_flat_detail = flat_details.get(flat_code_value)
-                            if flat_code_value in flat_details.keys():
+                            if flat_code_value in list(flat_details.keys()):
                                 pi_index_map[supplier_id]['detail'][filter_name]['assigned_pi'] += 1
                             if single_flat_detail and detail.get('count') and int(detail['count']['min']) <= \
                                     single_flat_detail['flat_count'] <= int(detail['count']['max']):
@@ -3733,7 +3733,7 @@ def manipulate_object_key_values(suppliers, supplier_type_code=v0_constants.soci
             # replace all society specific keys with common supplier keys
             if supplier_type_code == v0_constants.society:
                 for society_key, actual_key in v0_constants.society_common_keys.items():
-                    if society_key in supplier.keys():
+                    if society_key in list(supplier.keys()):
                         value = supplier[society_key]
                         del supplier[society_key]
                         supplier[actual_key] = value
@@ -4173,7 +4173,7 @@ def update_campaign_inventories(data):
         # mapping from id to object instance. used later to fetch objects directly from id
         inventory_activity_object_map = InventoryActivity.objects.in_bulk(inventory_activity_ids)
 
-        shortlisted_spaces_ids = shortlisted_spaces.keys()
+        shortlisted_spaces_ids = list(shortlisted_spaces.keys())
         ss_objects = ShortlistedSpaces.objects.filter(id__in=shortlisted_spaces_ids)
 
         for obj in ss_objects:
@@ -4192,7 +4192,7 @@ def update_campaign_inventories(data):
             obj.booking_priority = shortlisted_spaces[ss_global_id]['booking_priority']
             obj.sunboard_location = shortlisted_spaces[ss_global_id]['sunboard_location']
 
-        sid_ids = shortlisted_inventory_details.keys()
+        sid_ids = list(shortlisted_inventory_details.keys())
         sid_objects = ShortlistedInventoryPricingDetails.objects.filter(id__in=sid_ids)
 
         for obj in sid_objects:
@@ -4207,7 +4207,7 @@ def update_campaign_inventories(data):
             del obj_dict['inventory_activity_id']
             new_inventory_activity_assignment_objects.append(InventoryActivityAssignment(**obj_dict))
 
-        old_inventory_assignment_ids = old_inventory_activity_assignments.keys()
+        old_inventory_assignment_ids = list(old_inventory_activity_assignments.keys())
         old_inventory_activity_assignment_objects = InventoryActivityAssignment.objects.filter(
             id__in=old_inventory_assignment_ids)
 
@@ -4361,7 +4361,7 @@ def get_contact_information(content_type_id_set, supplier_id_set):
         for contact in contacts:
             object_id = contact.object_id
             content_type_object = contact.content_type_id
-            if (content_type_object, object_id) not in contact_object_per_content_type_per_supplier.keys():
+            if (content_type_object, object_id) not in list(contact_object_per_content_type_per_supplier.keys()):
                 contact_object_per_content_type_per_supplier[content_type_object, object_id] = []
             contact_object_per_content_type_per_supplier[content_type_object, object_id].append(model_to_dict(contact))
         return ui_utils.handle_response(function, data=contact_object_per_content_type_per_supplier, success=True)
@@ -4382,7 +4382,7 @@ def map_objects_ids_to_objects(mapping):
     try:
         result = {}
         # fetch all content_type_ids
-        content_type_ids = ContentType.objects.filter(id__in=mapping.keys())
+        content_type_ids = ContentType.objects.filter(id__in=list(mapping.keys()))
         # prepare a mapping like { id: content_type_object } for each  of the ids  involved.
         content_type_ids = [content_type.id for content_type in content_type_ids]
         content_type_object_mapping = ContentType.objects.in_bulk(content_type_ids)
@@ -4635,9 +4635,9 @@ def prepare_bucket(inventory_name, master_sorted_list_inventories, supplier_ids)
             bucket_key = (inv.content_type, inv.object_id, inventory_name)
             bucket_number = inventory_ids_to_tower_id_map[inv_id]
 
-            if bucket_key not in bucket.keys():
+            if bucket_key not in list(bucket.keys()):
                 # this is a list of bucket_ids or tower ids for this supplier
-                list_of_bucket_ids = inventory_count_per_bucket_per_supplier[inv.content_type, inv.object_id].keys()
+                list_of_bucket_ids = list(inventory_count_per_bucket_per_supplier[inv.content_type, inv.object_id].keys())
                 bucket_id_to_max_frequency = inventory_count_per_bucket_per_supplier[inv.content_type, inv.object_id]
                 # this prepares the bucket based on the above mentioned list
                 response = prepare_bucket_per_inventory(inventory_content_type, inventory_name, list_of_bucket_ids,
@@ -5005,7 +5005,7 @@ def make_inventory_assignments(proposal_id, sheet_data, supplier_type_codes):
 
                     if (supplier_tuple[0], supplier_tuple[1]) in valid_suppliers:
 
-                        if supplier_tuple not in shortlisted_suppliers_mapping.keys():
+                        if supplier_tuple not in list(shortlisted_suppliers_mapping.keys()):
                             return ui_utils.handle_response(function,
                                                             data='This supplier is not shortlisted yet {0}'.format(
                                                                 supplier_tuple[1]))
@@ -5203,7 +5203,7 @@ def get_amenities_suppliers(supplier_type_code, amenities):
     function = get_amenities_suppliers.__name__
     try:
         for amenity in amenities:
-            if amenity not in v0_constants.valid_amenities.keys():
+            if amenity not in list(v0_constants.valid_amenities.keys()):
                 return ui_utils.handle_response(function, data=errors.INVALID_AMENITY_CODE_ERROR.format(amenity))
 
         response = ui_utils.get_content_type(supplier_type_code)
@@ -5687,7 +5687,7 @@ def collect_amenity_data(result, supplier_id, row_dict):
     """
     function = collect_amenity_data.__name__
     try:
-        valid_amenities = v0_constants.valid_amenities.keys()
+        valid_amenities = list(v0_constants.valid_amenities.keys())
         positive_amenities_list = []
         negative_amenity_list = []
         for amenity in valid_amenities:
@@ -5816,7 +5816,7 @@ def handle_supplier_data_from_sheet(result, supplier_instance_map, content_type,
 
         amenities = Amenity.objects.all()
         amenity_map = {amenity.name: amenity for amenity in amenities}
-        supplier_ids = result.keys()
+        supplier_ids = list(result.keys())
 
         # prepare a map of key --> instance. This is required to fetch the instance once we know the key. key is different for
         # different types of instance.
@@ -6026,7 +6026,7 @@ def handle_flats(supplier_id, result, flat_map, content_type):
                     FlatType(flat_type=flat_type, flat_count=detail['count'], flat_rent=detail['rent'],
                              size_builtup_area=detail['size'], object_id=supplier_id, content_type=content_type))
 
-        for flat_type in negative_flat_dict.keys():
+        for flat_type in list(negative_flat_dict.keys()):
             try:
                 instance = flat_map[flat_type, supplier_id, content_type]
                 negative_flat_instances.append(instance)

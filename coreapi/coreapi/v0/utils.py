@@ -194,7 +194,7 @@ def handle_society_flat_detail(flat_detail, suppliers_dict, content_type):
     """
     function = handle_society_flat_detail.__name__
     try:
-        supplier_ids = suppliers_dict.keys()
+        supplier_ids = list(suppliers_dict.keys())
         flat_type_dict = v0_constants.flat_type_dict
         flat_instances = []
         for society_id in supplier_ids:
@@ -237,7 +237,7 @@ def handle_tower_details(tower_detail, suppliers_dict, content_type):
             return False
         tower_range = tower_detail['count'] if tower_detail.get('count') else [1, v0_constants.default_tower_range]
         assert tower_range[0] <= tower_range[1], "Invalid Tower Range"
-        supplier_ids = suppliers_dict.keys()
+        supplier_ids = list(suppliers_dict.keys())
         tower_instances = []
         for supplier_id, detail in suppliers_dict.items():
             total_tower_count = random.randint(int(tower_range[0]), int(tower_range[1]))
@@ -271,7 +271,7 @@ def handle_supplier_amenities(amenities, suppliers_dict, content_type):
     try:
         if not amenities or (not suppliers_dict) or (not content_type):
             return False
-        supplier_ids = suppliers_dict.keys()
+        supplier_ids = list(suppliers_dict.keys())
         SupplierAmenitiesMap.objects.all().delete()
         amenities = Amenity.objects.filter(code__in=amenities)
         if not amenities:
@@ -427,7 +427,7 @@ def handle_society_detail(suppliers_dict, society_detail):
         if not suppliers_dict or (not society_detail):
             return False
 
-        supplier_ids = suppliers_dict.keys()
+        supplier_ids = list(suppliers_dict.keys())
         societies = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
         response = ui_utils.get_content_type(v0_constants.society)
         if not response.data['status']:
@@ -455,9 +455,9 @@ def handle_society_detail(suppliers_dict, society_detail):
         if society_detail.get('direct_society_details'):
 
             direct_society_detail_key = 'direct_society_details'
-            society_type_list = society_detail[direct_society_detail_key]['society_type'] if society_detail[direct_society_detail_key].get('society_type') else v0_constants.quality_dict.keys()
-            society_location_type_list = society_detail[direct_society_detail_key]['society_location'] if society_detail[direct_society_detail_key].get('society_location') else v0_constants.locality_dict.keys()
-            society_size_list = society_detail[direct_society_detail_key]['society_size'] if society_detail[direct_society_detail_key].get('society_size') else v0_constants.quantity_dict.keys()
+            society_type_list = society_detail[direct_society_detail_key]['society_type'] if society_detail[direct_society_detail_key].get('society_type') else list(v0_constants.quality_dict.keys())
+            society_location_type_list = society_detail[direct_society_detail_key]['society_location'] if society_detail[direct_society_detail_key].get('society_location') else list(v0_constants.locality_dict.keys())
+            society_size_list = society_detail[direct_society_detail_key]['society_size'] if society_detail[direct_society_detail_key].get('society_size') else list(v0_constants.quantity_dict.keys())
             possession_year_range = society_detail[direct_society_detail_key]['possession_year'] if society_detail[direct_society_detail_key].get('possession_year') else v0_constants.default_possession_year_range
             flat_avg_rental_persqft_range = society_detail[direct_society_detail_key]['flat_avg_rental_persqft'] if society_detail[direct_society_detail_key].get('flat_avg_rental_persqft') else v0_constants.default_flat_avg_rental_persqft_range
             flat_sale_cost_persqft_range = society_detail[direct_society_detail_key]['flat_sale_cost_persqft'] if society_detail[direct_society_detail_key].get('flat_sale_cost_persqft') else v0_constants.default_flat_sale_cost_persqft_range

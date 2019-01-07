@@ -864,7 +864,7 @@ class ProposalViewSet(viewsets.ViewSet):
                 'center': center_id,
                 'proposal': proposal,
             }
-            unique_supplier_codes = request.data['suppliers'].keys()
+            unique_supplier_codes = list(request.data['suppliers'].keys())
             for code in unique_supplier_codes:
                 # get the right model and content_type
                 response = ui_utils.get_content_type(code)

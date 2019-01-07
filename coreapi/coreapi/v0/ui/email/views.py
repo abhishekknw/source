@@ -23,7 +23,7 @@ def send_email(email_data, attachment=None):
     """
     function = send_email.__name__
     try:
-        email_keys = email_data.keys()
+        email_keys = list(email_data.keys())
         for key in v0_constants.valid_email_keys:
             if key not in email_keys:
                 raise Exception(function, 'key {0} not found in the recieved structure'.format(key))

@@ -2071,7 +2071,7 @@ class FilteredSuppliers(APIView):
 
             # because some suppliers can be outside the given radius, we need to recalculate list of
             # supplier_id's.
-            final_suppliers_id_list = total_suppliers.keys()
+            final_suppliers_id_list = list(total_suppliers.keys())
 
             # cache_key = create_cache_key(class_name, proposal_id, supplier_type_code, priority_index_filters, final_suppliers_id_list)
             # cache_key = None

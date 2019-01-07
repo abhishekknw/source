@@ -73,7 +73,7 @@ def is_user_permitted(permission_type, user, **kwargs):
 def insert_static_cols(row_dict_original,static_column_values, static_column_names, static_column_types, lower_level_checklists):
     #lower_level_rows = list(set([x["parent_row_id"] for x in lower_level_checklists]))
     if isinstance(static_column_values, dict):
-        static_column_ids = [int(x) for x in static_column_values.keys()]
+        static_column_ids = [int(x) for x in list(static_column_values.keys())]
     else:
         static_column_ids = [1]
         static_column_values = {"1": static_column_values}
@@ -112,7 +112,7 @@ def insert_static_cols(row_dict_original,static_column_values, static_column_nam
                 "column_type": static_column_types[static_column_str],
                 "column_name": static_column_names[static_column_str]
             }
-            if static_column_str in lower_level_static_column_values.keys():
+            if static_column_str in list(lower_level_static_column_values.keys()):
                 lower_level_row_values = lower_level_static_column_values[static_column_str]
                 lower_level_row_values_2 = []
                 for lower_level_row in lower_level_row_values:
@@ -128,10 +128,10 @@ def insert_static_cols(row_dict_original,static_column_values, static_column_nam
 
 def sort_dict(random_dict):
     sorted_dict = collections.OrderedDict()
-    random_keys = random_dict.keys()
-    keys = sorted([int(x) for x in random_dict.keys()])
+    random_keys = list(random_dict.keys())
+    keys = sorted([int(x) for x in list(random_dict.keys())])
     for key in keys:
-        if isinstance(random_keys[0], unicode) or isinstance(random_keys[0], str):
+        if isinstance(random_keys[0], bytes) or isinstance(random_keys[0], str):
             key = str(key)
         sorted_dict[key] = random_dict[key]
     return sorted_dict
@@ -164,7 +164,7 @@ class CreateChecklistTemplate(APIView):
             lower_level_checklists = request.data['lower_level_checklists']
 
         if isinstance(static_column_values, dict):
-            static_column_indices = static_column_values.keys()
+            static_column_indices = list(static_column_values.keys())
             static_column_ids = [int(x) for x in static_column_values.keys()]
             static_column_number = len(static_column_ids)
         else:
@@ -216,7 +216,7 @@ class CreateChecklistTemplate(APIView):
         # sorting data
         form_data = mongo_form['data']
         form_data_sorted = collections.OrderedDict()
-        for key in sorted(form_data.keys()):
+        for key in sorted(list(form_data.keys())):
             form_data_sorted[key] = form_data[key]
         mongo_form['data'] = form_data_sorted
 
@@ -238,7 +238,7 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
     deleted_columns = checklist['deleted_columns'] if 'deleted_columns' in checklist else []
     static_columns = checklist['static_columns'] if 'static_columns' in checklist else ["1"]
     timestamp = datetime.datetime.utcnow()
-    total_rows = checklist_data.keys()
+    total_rows = list(checklist_data.keys())
     exist_rows_query = mongo_client.checklist_data.find({"checklist_id": checklist_id})
     exist_rows_list = list(exist_rows_query)
     exist_rows = exist_rows_query.distinct("rowid")
@@ -276,7 +276,7 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
             if static_column in deleted_columns:
                 break
             row_dict['data'][static_column] = exist_row_data[static_column]
-        columns = new_row_data.keys()
+        columns = list(new_row_data.keys())
         for column in range(1, n_cols+1):
             if str(column) in deleted_columns:
                 print('already deleted column id: ', column)
@@ -321,7 +321,7 @@ def enter_row_to_mongo(checklist_data, supplier_id, campaign_id, checklist):
             x = mongo_client.checklist_data.delete_many({'checklist_id': int(checklist_id), 'rowid': rowid}).deleted_count
         row_dict_all[order_id] = row_dict.copy()
     row_dict_all_sorted = sort_dict(row_dict_all)
-    for curr_row_order_id in row_dict_all_sorted.keys():
+    for curr_row_order_id in list(row_dict_all_sorted.keys()):
         curr_row_dict = row_dict_all_sorted[curr_row_order_id]
         mongo_client.checklist_data.insert_one(curr_row_dict)
     return [True,'']
@@ -399,7 +399,7 @@ class ChecklistEdit(APIView):
         exist_static_column_indices = checklist_column_all['static_columns'] \
             if 'static_columns' in checklist_column_all else []
 
-        if not new_static_column_values.keys() == exist_static_column_indices:
+        if not list(new_static_column_values.keys()) == exist_static_column_indices:
             return handle_response(class_name, data='improper static column info in new rows', success=False)
 
         checklist_status = checklist_column_all['status']
@@ -544,7 +544,7 @@ class ChecklistEdit(APIView):
             row_dict["data"] = row_data.copy()
             all_rows_dict[order_id] = row_dict.copy()
         all_rows_dict = sort_dict(all_rows_dict)
-        for curr_row_key in all_rows_dict.keys():
+        for curr_row_key in list(all_rows_dict.keys()):
             curr_row_dict = all_rows_dict[curr_row_key]
             mongo_client.checklist_data.insert_one(curr_row_dict)
 
@@ -721,7 +721,7 @@ def get_checklist_by_id(checklist_id):
     checklist_info_columns_unsorted = checklist_info['data']
     checklist_info_deleted_columns = checklist_info['deleted_columns'] if 'deleted_columns' in checklist_info else []
     checklist_info_columns = sort_dict(checklist_info_columns_unsorted)
-    columns_list = checklist_info_columns.keys()
+    columns_list = list(checklist_info_columns.keys())
     checklist_info_static_columns = checklist_info['static_columns'] if 'static_columns' in checklist_info else []
     for column in checklist_info_static_columns:
         row_headers[column] = []
@@ -734,7 +734,7 @@ def get_checklist_by_id(checklist_id):
             print(("# row already deleted: ", row_id))
             continue
         curr_row_data = checklist['data']
-        curr_row_columns = curr_row_data.keys()
+        curr_row_columns = list(curr_row_data.keys())
         curr_row_columns.sort()
         for column in curr_row_columns:
             value = curr_row_data[column]["cell_value"]
@@ -936,13 +936,13 @@ class ChecklistPermissionsByProfileIdAPI(APIView):
 
 def get_numeric_in_array_dict(curr_dict):
     new_dict = {}
-    for key in curr_dict.keys():
+    for key in list(curr_dict.keys()):
         curr_array = curr_dict[key]
         new_array = []
         for x in curr_array:
-            if isinstance(x,(int,long,float)):
+            if isinstance(x, (int, float)):
                 new_array.append(x)
-        new_dict[key]=new_array
+        new_dict[key] = new_array
     return new_dict
 
 
