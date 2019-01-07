@@ -51,7 +51,7 @@ count_details_parent_map = {
              'storage_type': 'sum'},
     'phase': {'parent': 'campaign', 'model_name': 'SupplierPhase', 'database_type': 'mysql',
               'self_model_name': 'phase_no', 'parent_name_model':'campaign_id', 'storage_type': 'unique'},
-    'hot_lead^': {'parent': 'campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+    'hotness_level_': {'parent': 'campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                   'self_name_model': 'hotness_level', 'parent_name_model': 'campaign_id',
                   'storage_type': 'condition'}
 }
@@ -75,7 +75,7 @@ count_details_parent_map_time = {
              'self_name_model': 'entry_id', 'parent_name_model': 'created_at,campaign_id', 'storage_type': 'count'},
     'hot_lead': {'parent': 'date,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                  'self_name_model': 'is_hot', 'parent_name_model': 'created_at,campaign_id', 'storage_type': 'condition'},
-    'hot_lead^': {'parent': 'date, campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+    'hotness_level_': {'parent': 'date, campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                   'self_name_model': 'hotness_level', 'parent_name_model': 'created_at,campaign_id',
                   'storage_type': 'condition'}
     }
@@ -312,6 +312,21 @@ def sum_array_by_key(array, grouping_keys, sum_key):
                 new_dict[required_key] = curr_dict[required_key]
             new_array.append(new_dict)
     return new_array
+
+
+def sum_array_by_keys(array, grouping_keys, sum_keys):
+    new_array = []
+    required_keys = sum_keys + grouping_keys
+    ref_sum_key = sum_keys[0]
+    for curr_dict in array:
+        first_match = False
+        curr_dict_sum = {}
+        for sum_key in sum_keys:
+            curr_dict_sum[sum_key] = int(curr_dict[sum_key]) if curr_dict[sum_key] is not None else 0
+        for curr_dict_new in new_array:
+            match = True
+            curr_dict_new_sum = []
+
 
 
 # function to check whether a dict array key structure matches a desired key array
