@@ -164,7 +164,7 @@ class CreateChecklistTemplate(APIView):
             lower_level_checklists = request.data['lower_level_checklists']
 
         if isinstance(static_column_values, dict):
-            static_column_indices = static_column_values.keys()
+            static_column_indices = list(static_column_values.keys())
             static_column_ids = [int(x) for x in static_column_values.keys()]
             static_column_number = len(static_column_ids)
         else:
