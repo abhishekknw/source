@@ -267,6 +267,7 @@ def merge_dict_array_array_single(array, key_name):
 
 
 def merge_dict_array_array_multiple_keys(arrays, key_names):
+    #key_names = ['date','campaign']
     final_array = []
     if arrays==[]:
         return arrays
@@ -325,8 +326,25 @@ def sum_array_by_keys(array, grouping_keys, sum_keys):
             curr_dict_sum[sum_key] = int(curr_dict[sum_key]) if curr_dict[sum_key] is not None else 0
         for curr_dict_new in new_array:
             match = True
-            curr_dict_new_sum = []
-
+            curr_dict_new_sum = {}
+            for sum_key in sum_keys:
+                curr_dict_new_sum[sum_key] = int(curr_dict_new[sum_key]) if curr_dict_new[sum_key] is not None else 0
+            # check if grouping keys are matching
+            for key in grouping_keys:
+                curr_value = curr_dict[key]
+                curr_value_new = curr_dict_new[key]
+                if not curr_value_new == curr_value:
+                    match = False
+            if match:
+                for sum_key in sum_keys:
+                    curr_dict_new[sum_key] = curr_dict_sum[sum_key] + curr_dict_new_sum[sum_key]
+                first_match = True
+        if not first_match:
+            new_dict = {}
+            for required_key in required_keys:
+                new_dict[required_key] = curr_dict[required_key]
+            new_array.append(new_dict)
+    return new_array
 
 
 # function to check whether a dict array key structure matches a desired key array
@@ -372,7 +390,7 @@ def find_level_sequence(highest_level, lowest_level, default_map = count_details
     return error_message
 
 
-def date_to_other_groups(dict_array, group_name, desired_metric, lowest_level, highest_level_values):
+def date_to_other_groups(dict_array, group_name, desired_metric, raw_data, highest_level_values):
     sequential_time_metrics = ['day','month','year']
     new_dict = {}
     new_array = []
@@ -414,29 +432,28 @@ def date_to_other_groups(dict_array, group_name, desired_metric, lowest_level, h
             curr_weekday = curr_date.weekday()
             curr_dict['weekday'] = curr_weekday
             new_array.append(curr_dict)
-        elif desired_metric == 'phase':
-            model_details = date_to_others[desired_metric]
-            model_name = model_details['model_name']
-            variables = model_details['variables']
-            variables_list = list(variables.keys())
-            start_field = variables[variables_list[0]][0]
-            end_field = variables[variables_list[0]][1]
-            assigned_field = model_details['self_name_model']
-            other_fields = variables[variables_list[1]]
-            first_part_query = model_name + '.objects.filter('
-            full_query = first_part_query + other_fields[0] + '__in=highest_level_values)'
-            query_results = list(eval(full_query).values(start_field,end_field,other_fields[0], assigned_field))
-            phase_adjusted_results = ranged_data_to_other_groups(copy.deepcopy(dict_array),query_results,start_field, end_field,
-                                                                 group_name[0], assigned_field, other_fields)
-            new_array = phase_adjusted_results
-        else:
-            return dict_array
+    if desired_metric == 'phase':
+        model_details = date_to_others[desired_metric]
+        model_name = model_details['model_name']
+        variables = model_details['variables']
+        variables_list = list(variables.keys())
+        start_field = variables[variables_list[0]][0]
+        end_field = variables[variables_list[0]][1]
+        assigned_field = model_details['self_name_model']
+        other_fields = variables[variables_list[1]]
+        first_part_query = model_name + '.objects.filter('
+        full_query = first_part_query + other_fields[0] + '__in=highest_level_values)'
+        query_results = list(eval(full_query).values(start_field,end_field,other_fields[0], assigned_field))
+        phase_adjusted_results = ranged_data_to_other_groups(copy.deepcopy(dict_array),query_results,start_field, end_field,
+                                                             group_name[0], assigned_field, other_fields)
+        new_array = phase_adjusted_results
+
     if desired_metric == 'weekday' or desired_metric == 'phase':
         if desired_metric in date_to_others:
             group_name = list(date_to_others[desired_metric]['variables'].keys())
         group_name.remove('date')
         group_name.append(desired_metric)
-        new_array = sum_array_by_key(new_array,group_name, lowest_level)
+        new_array = sum_array_by_keys(new_array,group_name, raw_data)
     if new_array == []:
         new_array = list(new_dict.values())
 

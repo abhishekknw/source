@@ -1010,7 +1010,7 @@ def update_leads_data_is_hot():
 
 class UpdateLeadsDataIsHot(APIView):
     def put(self, request):
-        update_leads_data_is_hot.delay()
+        update_leads_data_is_hot()
         return handle_response({}, data='success', success=True)
 
 

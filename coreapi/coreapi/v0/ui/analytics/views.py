@@ -86,10 +86,9 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
         reverse_key = level_name_by_model_id[key] if key in level_name_by_model_id else None
         if reverse_key in raw_data:
             reverse_map[reverse_key] = key
-    print(single_array)
     if "sublevel" in data_point:
         single_array = date_to_other_groups(single_array,grouping_level, data_point["sublevel"],
-                                            curr_metric, highest_level_values)
+                                            raw_data, highest_level_values)
     derived_array = copy.deepcopy(single_array)
     metric_names = []
     metric_processed = []
