@@ -581,7 +581,7 @@ def populate_shortlisted_inventory_pricing_details(result, proposal_id, user):
     function = populate_shortlisted_inventory_pricing_details.__name__
     try:
 
-        center_ids = result.keys()
+        center_ids = list(result.keys())
         # this creates a mapping like { 1: 'center_object_1', 2: 'center_object_2' } etc
         center_objects = ProposalCenterMapping.objects.in_bulk(center_ids)
         proposal_object = ProposalInfo.objects.get_permission(user=user, proposal_id=proposal_id)
@@ -1505,7 +1505,7 @@ def save_filter_data(suppliers_meta, fixed_data):
         # creating filter objects for each filter value selected
         selected_filters_list = []
         for filter_name in v0_constants.filter_type[code]:
-            if suppliers_meta.get(code) and filter_name in suppliers_meta[code].keys():
+            if suppliers_meta.get(code) and filter_name in list(suppliers_meta[code].keys()):
                 for inventory_code in suppliers_meta[code][filter_name]:
                     # TO store employee_count by codes so easy to fetch
                     if filter_name == 'employee_count':
@@ -1644,7 +1644,7 @@ def get_suppliers(query, supplier_type_code, coordinates):
         for supplier in serializer.data:
             # replace all society specific keys with common supplier keys
             for society_key, actual_key in v0_constants.society_common_keys.items():
-                if society_key in supplier.keys():
+                if society_key in list(supplier.keys()):
                     value = supplier[society_key]
                     del supplier[society_key]
                     supplier[actual_key] = value
@@ -1758,7 +1758,7 @@ def merge_two_dicts(x, y):
     try:
         # update x with keys which are not in x.
         x = x.copy()
-        x_keys = x.keys()
+        x_keys = list(x.keys())
         for key, value in y.items():
             if key not in x_keys:
                 x[key] = value
@@ -1988,7 +1988,7 @@ def set_inventory_pricing(supplier_ids, supplier_type_code, inventory_summary_ma
                     error_key = (inventory_name, inventory_type, duration_name, supplier_id)
                     raise Exception(
                         'The price mapping default instance does not exist for this supplier. key {0} is not in the pmd map.  detail is {1}.   \n valid keys are {2}. '.format(
-                            key, error_key, price_mapping_default_map.keys()))
+                            key, error_key, list(price_mapping_default_map.keys())))
                 suppliers_per_supplier_type_code[supplier_id][inv_code]['price'] = price
 
         return suppliers_per_supplier_type_code
@@ -2353,7 +2353,7 @@ def unique_supplier_type_codes(data):
     try:
         supplier_type_codes = []
         for center in data:
-            codes = center['suppliers'].keys()
+            codes = list(center['suppliers'].keys())
             supplier_type_codes.extend(codes)
         return list(set(supplier_type_codes))
     except Exception as e:
@@ -2614,9 +2614,9 @@ def handle_common_filters(common_filters, supplier_type_code):
             query['longitude__lt'] = max_longitude
             query['longitude__gt'] = min_longitude
         # the keys like 'locality', 'quantity', 'quality' we receive from front end are already defined in constants
-        predefined_common_filter_keys = v0_constants.query_dict[supplier_type_code].keys()
+        predefined_common_filter_keys = list(v0_constants.query_dict[supplier_type_code].keys())
         # we may receive a subset of already defined keys. obtain that subset
-        received_common_filter_keys = common_filters.keys()
+        received_common_filter_keys = list(common_filters.keys())
         # iterate over each predefined key and check if it is what we have received.
         for filter_term in predefined_common_filter_keys:
             if filter_term in received_common_filter_keys:
@@ -2689,7 +2689,7 @@ def handle_inventory_filters(inventory_list):
         # final Q object to be returned
         inventory_query = Q()
         # atomic inventories means 'PO', 'ST' etc.
-        valid_atomic_inventories = v0_constants.inventory_dict.keys()
+        valid_atomic_inventories = list(v0_constants.inventory_dict.keys())
         # iterate through all the inventory list
         for inventory in inventory_list:
             # if it is atomic, that means you only need to fetch it's db field and set it to Q object
