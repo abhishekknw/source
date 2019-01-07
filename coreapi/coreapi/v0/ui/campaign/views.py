@@ -135,7 +135,7 @@ class campaignListAPIVIew(APIView):
 
 
 def get_sorted_value_keys(main_dict,sub_key):
-    keys_list = main_dict.keys()
+    keys_list = list(main_dict.keys())
     sub_array = []
     for curr_key in keys_list:
         curr_data = dict_array[curr_key]
@@ -151,7 +151,7 @@ def get_sorted_value_keys(main_dict,sub_key):
 
 def z_calculator_dict(dict_data, variable):
     z_array = []
-    keys = dict_data.keys()
+    keys = list(dict_data.keys())
     for key in keys:
         z_array.append(dict_data[key][variable])
     if len(z_array)>0:
@@ -782,7 +782,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             completed_objects_map = {supplier['supplier_id']: supplier for supplier in completed_objects}
 
             # need to do by different supplier wise
-            suppliers = SupplierTypeSociety.objects.filter(supplier_id__in=assigned_objects_map.keys()).values()
+            suppliers = SupplierTypeSociety.objects.filter(supplier_id__in=list(assigned_objects_map.keys())).values()
             suppliers_map = {supplier['supplier_id']:supplier for supplier in suppliers}
             result = {}
             for supplier in assigned_objects:
@@ -939,7 +939,7 @@ def get_leads_data_for_multiple_campaigns(campaign_list):
     multi_campaign_return_data = {}
     campaign_objects = ProposalInfo.objects.filter(proposal_id__in=campaign_list).values()
     campaign_objects_list = {campaign['proposal_id']: campaign for campaign in campaign_objects}
-    valid_campaign_list = campaign_objects_list.keys()
+    valid_campaign_list = list(campaign_objects_list.keys())
     for campaign_id in valid_campaign_list:
         shortlisted_supplier_ids = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values_list(
             'object_id')
@@ -1405,7 +1405,7 @@ def get_campaign_leads_custom(campaign_id, query_type, user_start_str, user_end_
         all_suppliers_list = z_calculator_dict(all_suppliers_list_non_analytics, "hot_leads_percentage")
         all_localities_data_hot_ratio = hot_lead_ratio_calculator(all_localities_data_non_analytics)
 
-        localities = all_localities_data_non_analytics.keys()
+        localities = list(all_localities_data_non_analytics.keys())
         for locality in localities:
             hot_leads_percentage = all_localities_data_hot_ratio[locality]['hot_leads_percentage']
             flat_count = all_localities_data_hot_ratio[locality]['flat_count']
