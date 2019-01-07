@@ -86,6 +86,7 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
         reverse_key = level_name_by_model_id[key] if key in level_name_by_model_id else None
         if reverse_key in raw_data:
             reverse_map[reverse_key] = key
+    print(single_array)
     if "sublevel" in data_point:
         single_array = date_to_other_groups(single_array,grouping_level, data_point["sublevel"],
                                             curr_metric, highest_level_values)
@@ -164,6 +165,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
                                 grouping_category = ""):
     # check for custom sequence
+    incrementing_value = None
     if not type(grouping_level) == 'str':
         grouping_levels = grouping_level
         grouping_level = grouping_level[0]
@@ -181,7 +183,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     if custom_level in default_map:
         lowest_level_original = lowest_level
         lowest_level = custom_level
-    if '^' in lowest_level:
+    if 'hotness_level' in lowest_level:
         incrementing_value = int(lowest_level[-1])
         lowest_level = lowest_level[:-1]
     second_lowest_parent = default_map[lowest_level]['parent']
@@ -308,7 +310,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
 
         elif storage_type == 'count' or storage_type == 'sum' or storage_type == 'condition':
             if database_type == 'mongodb':
-                if next_level[-1] == '^':
+                if 'hotness_level' in next_level:
                     next_level = next_level + str(incrementing_value)
                 if next_level == custom_level:
                     project_dict.update({lowest_level_original:1, "_id":0})
