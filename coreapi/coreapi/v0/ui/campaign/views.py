@@ -970,10 +970,10 @@ def calculate_mode(num_list,window_size=3):
         return None
     if len(num_list) == 1:
         return num_list[0]
-    freq_by_windows = [0 for i in range(0,(num_list[-1] - num_list[0])/2 + 1)]
+    freq_by_windows = [0 for i in range(0,(num_list[-1] - num_list[0])//2 + 1)]
     for num in num_list:
-        window_index = (num - num_list[0])/window_size
-        freq_by_windows[window_index] +=1
+        window_index = (num - num_list[0])//window_size
+        freq_by_windows[window_index] += 1
     max_freq_index = 0
     max_freq_value = 0
 
@@ -1882,7 +1882,7 @@ def get_campaign_wise_summary_by_user(user_id, user_start_datetime=None):
     all_campaign_ids = [campaign.campaign_id for campaign in all_campaigns]
     all_campaign_objects = ProposalInfo.objects.filter(proposal_id__in=all_campaign_ids).all()
     all_campaign_id_name_map = {campaign.proposal_id: campaign.name for campaign in all_campaign_objects}
-    leads_summary_by_supplier = get_leads_summary(all_campaign_ids,user_start_datetime=user_start_datetime)
+    leads_summary_by_supplier = get_leads_summary(campaign_list=all_campaign_ids,user_start_datetime=user_start_datetime)
     campaign_supplier_map = {}
     reverse_campaign_supplier_map = {}
     all_supplier_ids = []
@@ -1923,7 +1923,6 @@ def get_campaign_wise_summary_by_user(user_id, user_start_datetime=None):
         else:
             summary_point["flat_count"] = 0
         leads_summary_by_supplier_dict[summary_point["campaign_id"]][summary_point["supplier_id"]] = summary_point
-
     for campaign_id in campaign_wise_leads:
         if campaign_id not in campaign_flat_count_map:
             continue
