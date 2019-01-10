@@ -41,6 +41,8 @@ count_details_parent_map = {
                   'self_name_model': 'checklist_id', 'parent_name_model': 'campaign_id', 'storage_type': 'unique'},
     'flat': {'parent': 'supplier', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
              'self_name_model': 'flat_count', 'parent_name_model': 'supplier_id', 'storage_type': 'sum'},
+    # 'flat_type': {'parent': 'supplier', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+    #          'self_name_model': 'flat_count_type', 'parent_name_model': 'supplier_id', 'storage_type': 'count'},
     'lead': {'parent': 'campaign', 'model_name': 'leads', 'database_type': 'mongodb',
              'self_name_model': 'entry_id', 'parent_name_model': 'campaign_id', 'storage_type': 'count'},
     'hot_lead': {'parent': 'campaign', 'model_name': 'leads', 'database_type': 'mongodb',

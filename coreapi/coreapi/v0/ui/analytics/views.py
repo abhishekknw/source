@@ -67,6 +67,7 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
                         default_value_type, grouping_level, [],unilevel_constraints, grouping_category)
             curr_output_keys = curr_output[0].keys()
             allowed_keys = set([highest_level] + grouping_level + [curr_metric])
+            print(curr_output)
             if not curr_output_keys<=allowed_keys:
                 curr_output = sum_array_by_keys(curr_output, [highest_level]+grouping_level,[curr_metric])
         individual_metric_output[lowest_level] = curr_output

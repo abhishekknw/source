@@ -125,6 +125,17 @@ def create_price_mapping_default(days_count, adinventory_name, adinventory_type,
                                                           object_id=supplier_id)
 
 
+def get_flat_count_type(flat_count):
+    if flat_count is None:
+        return None
+    if flat_count<150:
+        flat_type = 1
+    elif flat_count<400:
+        flat_type = 2
+    else:
+        flat_type = 3
+    return flat_type
+
 @method_decorator(csrf_exempt, name='dispatch')
 class SocietyDataImport(APIView):
     """
@@ -140,6 +151,8 @@ class SocietyDataImport(APIView):
         for index, row in enumerate(ws.iter_rows()):
             if index > 0:
                 print(index)
+                flat_count = int(row[17].value) if row[17].value else None
+                flat_count_type = get_flat_count_type(flat_count)
                 society_data_list.append({
                     'society_name': row[0].value if row[0].value else None,
                     'society_city': str(row[1].value) if row[1].value else None,
@@ -159,6 +172,7 @@ class SocietyDataImport(APIView):
                     'society_longitude': float(row[15].value) if row[15].value else None,
                     'tower_count': int(row[16].value) if row[16].value else None,
                     'flat_count': int(row[17].value) if row[17].value else None,
+                    'flat_count_type': flat_count_type,
                     'vacant_flat_count' : int(row[18].value) if row[18].value else None,
                     'bachelor_tenants_allowed': row[19].value if row[19].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
                     'designation': row[20].value if row[20].value else None,
@@ -2968,3 +2982,26 @@ class deleteShortlistedSpaces(APIView):
             return ui_utils.handle_response({}, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response({}, exception_object=e, request=request)
+
+
+class insertFlatCountType(APIView):
+    # inserts flat count type to society on the basis of number of flats it has
+    @staticmethod
+    def post(request):
+        existing_data = SupplierTypeSociety.objects.all()
+        n = 0
+        for curr_data in existing_data:
+            flat_count = curr_data.flat_count
+            if flat_count is None:
+                continue
+            if flat_count<150:
+                flat_type = 1
+            elif flat_count<400:
+                flat_type = 2
+            else:
+                flat_type = 3
+            curr_data.flat_count_type = flat_type
+            curr_data.save()
+            n=n+1
+            print("saved: ", n)
+        return ui_utils.handle_response({}, data='success', success=True)
