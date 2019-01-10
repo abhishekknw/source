@@ -24,7 +24,7 @@ weekday_codes = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
 
 level_name_by_model_id = {
     "supplier_id": "supplier", "object_id": "supplier", "campaign_id": "campaign", "proposal_id": "campaign",
-    "flat_count": "flat","total_negotiated_price":"cost", "created_at": "date", "phase_no": "phase"
+    "flat_count": "flat","total_negotiated_price": "cost", "created_at": "date", "phase_no": "phase"
 }
 
 
@@ -317,7 +317,7 @@ def sum_array_by_key(array, grouping_keys, sum_key):
 
 def sum_array_by_keys(array, grouping_keys, sum_keys):
     new_array = []
-    required_keys = sum_keys + grouping_keys
+    required_keys = list(set(sum_keys + grouping_keys))
     ref_sum_key = sum_keys[0]
     for curr_dict in array:
         first_match = False

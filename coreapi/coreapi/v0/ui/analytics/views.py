@@ -5,7 +5,7 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     count_details_parent_map, count_details_kids_map, find_level_sequence, binary_operation,
                     sum_array_by_key, z_calculator_array_multiple, get_metrics_from_code, time_parent_names,
                     count_details_parent_map_time, date_to_other_groups, merge_dict_array_array_multiple_keys,
-                    merge_dict_array_dict_multiple_keys, count_details_parent_map_multiple)
+                    merge_dict_array_dict_multiple_keys, count_details_parent_map_multiple, sum_array_by_keys)
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -65,6 +65,10 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
         else:
             curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
                         default_value_type, grouping_level, [],unilevel_constraints, grouping_category)
+            curr_output_keys = curr_output[0].keys()
+            allowed_keys = set([highest_level] + grouping_level + [curr_metric])
+            if not curr_output_keys<=allowed_keys:
+                curr_output = sum_array_by_keys(curr_output, [highest_level]+grouping_level,[curr_metric])
         individual_metric_output[lowest_level] = curr_output
 
     matching_format_metrics = get_similar_structure_keys(individual_metric_output, grouping_level)
@@ -185,6 +189,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     if 'hotness_level' in lowest_level:
         incrementing_value = int(lowest_level[-1])
         lowest_level = lowest_level[:-1]
+    if lowest_level not in default_map:
+        default_map = count_details_parent_map
     second_lowest_parent = default_map[lowest_level]['parent']
     second_lowest_parent_name_model = default_map[lowest_level]['parent_name_model']
     parent_type = 'single'
@@ -202,9 +208,12 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         parents = [second_lowest_parent]
     curr_level_id = 0
     last_level_id = len(desc_sequence) - 1
+    common_keys = []
     while curr_level_id < last_level_id:
         curr_level = desc_sequence[curr_level_id]
         next_level = desc_sequence[curr_level_id+1]
+        if curr_level not in grouping_levels:
+            common_keys.append(curr_level)
         entity_details = default_map[next_level]
         (model_name, database_type, self_model_name, parent_model_name, storage_type) = (
             entity_details['model_name'], entity_details['database_type'], entity_details['self_name_model'],
@@ -301,8 +310,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 query = list(query)
                 next_level_match_list = [x[self_model_name] for x in query]
             elif database_type == 'mysql':
-                if grouping_level in parents:
-                    all_results.append(query)
+                all_results.append(query)
                 next_level_match_list = list(set([x[self_model_name] for x in query]))
             else:
                 print("database does not exist")
@@ -349,13 +357,14 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 if not query==[]:
                     all_results.append(query)
             elif database_type == 'mysql':
-                all_values = parent_model_names
+                all_values = parent_model_names.copy()
                 all_values.append(self_model_name)
                 query = list(eval(full_query).values(*all_values))
-                query_grouped = sum_array_by_key(query,["proposal_id"],"total_negotiated_price")
+                query_grouped = sum_array_by_key(query,parent_model_names, self_model_name)
                 query=query_grouped
                 if not query==[]:
                     all_results.append(query)
+                #query2 = merge_dict_array_array_multiple_keys(all_results,parent_model_names)
                 next_level_match_array = [x[self_model_name] for x in query if x[self_model_name] is not None]
                 if storage_type == 'count':
                     next_level_match_list = len(next_level_match_array)
@@ -371,7 +380,10 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             all_results = [all_results]
     if not len(all_results)==[]:
         new_results = convert_dict_arrays_keys_to_standard_names(all_results)
-        single_array_results = merge_dict_array_array_multiple_keys(new_results, grouping_levels)
+        try:
+            single_array_results = merge_dict_array_array_multiple_keys(new_results, grouping_levels)
+        except:
+            single_array_results = merge_dict_array_array_multiple_keys(new_results, ['supplier'])
     else:
         single_array_results = []
     return single_array_results

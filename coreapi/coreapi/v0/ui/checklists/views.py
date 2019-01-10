@@ -1097,6 +1097,7 @@ class ChecklistSavedOperatorsResult(APIView):
                                              'result_operations':result_operations}
         return handle_response('', data=result_dict, success=True)
 
+
 class ChecklistPermissionsSelfAPI(APIView):
     @staticmethod
     def get(request):
