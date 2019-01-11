@@ -2,8 +2,8 @@ from __future__ import print_function
 from __future__ import absolute_import
 from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge_dict_array_dict_single,
                     convert_dict_arrays_keys_to_standard_names, get_similar_structure_keys, geographical_parent_details,
-                    count_details_parent_map, count_details_kids_map, find_level_sequence, binary_operation,
-                    sum_array_by_key, z_calculator_array_multiple, get_metrics_from_code, time_parent_names,
+                    count_details_parent_map, find_level_sequence, binary_operation, count_details_direct_match_multiple,
+                    sum_array_by_key, z_calculator_array_multiple, get_metrics_from_code, reverse_direct_match,
                     count_details_parent_map_time, date_to_other_groups, merge_dict_array_array_multiple_keys,
                     merge_dict_array_dict_multiple_keys, count_details_parent_map_multiple, sum_array_by_keys)
 from v0.ui.common.models import mongo_client
@@ -64,10 +64,10 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
                                                       [],unilevel_constraints, grouping_category)
         else:
             curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
-                        default_value_type, grouping_level, [],unilevel_constraints, grouping_category)
+                        default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category)
             curr_output_keys = curr_output[0].keys()
             allowed_keys = set([highest_level] + grouping_level + [curr_metric])
-            print(curr_output)
+            #curr_output = key_replace_group(curr_output,'supplier','flattype')
             if not curr_output_keys<=allowed_keys:
                 curr_output = sum_array_by_keys(curr_output, [highest_level]+grouping_level,[curr_metric])
         individual_metric_output[lowest_level] = curr_output
@@ -176,7 +176,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     else:
         grouping_levels = [grouping_level]
     custom_level = lowest_level+'_'+grouping_level+'_'+highest_level
-    if len(grouping_levels) > 1:
+    if len(grouping_levels) > 1 or grouping_levels[0] in reverse_direct_match:
         default_map = count_details_parent_map_multiple
     else:
         default_map = count_details_parent_map
@@ -197,6 +197,10 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     parent_type = 'single'
     if ',' in second_lowest_parent or ',' in second_lowest_parent_name_model:
         parents = [x.strip() for x in second_lowest_parent.split(',')]
+        original_grouping_levels = grouping_levels.copy()
+        for i in range(0,len(grouping_levels)):
+            if grouping_levels[i] in reverse_direct_match and reverse_direct_match[grouping_levels[i]] in parents:
+                grouping_levels[i] = reverse_direct_match[grouping_levels[i]]
         desc_sequence = [parents, lowest_level]
         parent_model_names = second_lowest_parent_name_model.split(',')
         if not parents[0] == highest_level:
@@ -385,6 +389,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             single_array_results = merge_dict_array_array_multiple_keys(new_results, grouping_levels)
         except:
             single_array_results = merge_dict_array_array_multiple_keys(new_results, ['supplier'])
+        single_array_results = key_replace_group(single_array_results, grouping_levels[0],
+                                                 original_grouping_levels[0], lowest_level)
     else:
         single_array_results = []
     return single_array_results
@@ -436,6 +442,32 @@ def get_details_by_date(lowest_level, highest_level, highest_level_list):
                 }
         }
     ])
+
+
+def key_replace_group(dict_array, existing_key, required_key, sum_key):
+    key_details = count_details_direct_match_multiple[existing_key]
+    model_name = key_details['model_name']
+    database_type = key_details['database_type']
+    self_name_model = key_details['self_name_model']
+    parent_name_model = key_details['parent_name_model']
+    match_list = [x[existing_key] for x in dict_array]
+    new_array = []
+    if database_type == 'mysql':
+        first_part_query = model_name + '.objects.filter('
+        full_query = first_part_query + self_name_model + '__in=match_list)'
+        query = list(eval(full_query).values_list(self_name_model, parent_name_model))
+        query_dict = dict(query)
+        for curr_dict in dict_array:
+            curr_dict[required_key] = query_dict[curr_dict[existing_key]]
+            curr_dict.pop(existing_key)
+            new_array.append(curr_dict)
+        all_keys = list(curr_dict.keys())
+        grouping_keys = all_keys
+        grouping_keys.remove(sum_key)
+        new_array = sum_array_by_key(new_array,grouping_keys, sum_key)
+    else:
+        new_array = dict_array
+    return new_array
 
 
 class GetLeadsDataGeneric(APIView):
