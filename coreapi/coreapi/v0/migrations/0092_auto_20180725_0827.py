@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='suppliertypesociety',
             name='supplier_status',
-            field=models.CharField(choices=[(b'Tapped', b'Tapped'), (b'LetterGiven', b'LetterGiven'), (b'MeetingRequired', b'MeetingRequired'), (b'Other', b'Other')], max_length=80, null=True),
+            field=models.CharField(choices=[('Tapped', 'Tapped'), ('LetterGiven', 'LetterGiven'), ('MeetingRequired', 'MeetingRequired'), ('Other', 'Other')], max_length=80, null=True),
         ),
         migrations.AlterField(
             model_name='baseuser',
@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='corporateparkcompanylist',
             name='name',
-            field=models.CharField(blank=True, db_column=b'COMPANY_NAME', max_length=50, null=True),
+            field=models.CharField(blank=True, db_column='COMPANY_NAME', max_length=50, null=True),
         ),
         migrations.AlterModelTable(
             name='shortlistedspaces',

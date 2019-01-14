@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(default=datetime.datetime(2016, 12, 1, 0, 0, tzinfo=utc), editable=False)),
                 ('updated_at', models.DateTimeField(default=datetime.datetime(2016, 12, 1, 0, 0, tzinfo=utc), editable=False)),
-                ('phase_no', models.CharField(blank=True, default=b'', max_length=10, null=True)),
+                ('phase_no', models.CharField(blank=True, default='', max_length=10, null=True)),
                 ('start_date', models.DateTimeField(null=True)),
                 ('end_date', models.DateTimeField(null=True)),
                 ('comments', models.CharField(blank=True, max_length=255, null=True)),

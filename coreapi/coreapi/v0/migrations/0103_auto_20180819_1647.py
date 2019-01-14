@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 ('item_value', models.CharField(blank=True, max_length=200, null=True)),
                 ('entry_id', models.IntegerField(null=True)),
                 ('item_id', models.IntegerField(null=True)),
-                ('status', models.CharField(choices=[(b'ACTIVE', b'ACTIVE'), (b'INACTIVE', b'INACTIVE')], max_length=70, null=True)),
+                ('status', models.CharField(choices=[('ACTIVE', 'ACTIVE'), ('INACTIVE', 'INACTIVE')], max_length=70, null=True)),
             ],
             options={
                 'db_table': 'checklist_data',
@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='checklist',
             name='checklist_type',
-            field=models.CharField(choices=[(b'CAMPAIGN', b'CAMPAIGN'), (b'SUPPLIER', b'SUPPLIER')], max_length=70, null=True),
+            field=models.CharField(choices=[('CAMPAIGN', 'CAMPAIGN'), ('SUPPLIER', 'SUPPLIER')], max_length=70, null=True),
         ),
         migrations.AddField(
             model_name='checklist',

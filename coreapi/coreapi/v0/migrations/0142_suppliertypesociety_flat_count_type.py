@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='suppliertypesociety',
             name='flat_count_type',
-            field=models.IntegerField(blank=True, choices=[(1, b'0-149'), (2, b'150-399'), (3, b'400+')], null=True),
+            field=models.IntegerField(blank=True, choices=[(1, '0-149'), (2, '150-399'), (3, '400+')], null=True),
         ),
     ]

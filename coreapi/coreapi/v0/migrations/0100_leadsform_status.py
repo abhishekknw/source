@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='leadsform',
             name='status',
-            field=models.CharField(choices=[(b'ACTIVE', b'ACTIVE'), (b'INACTIVE', b'INACTIVE')], max_length=70, null=True),
+            field=models.CharField(choices=[('ACTIVE', 'ACTIVE'), ('INACTIVE', 'INACTIVE')], max_length=70, null=True),
         ),
     ]
