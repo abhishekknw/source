@@ -18,3 +18,14 @@ class AnalyticOperators(MongoModel):
         connection_alias = 'mongo_app'
 
 
+# class AnalyticSets(MongoModel):
+#     set_id = fields.IntegerField()
+#     owner_type = fields.Charfield()
+#     owner_id = fields.CharField()
+#     set_name = fields.Charfield()
+#     set_value = fields.CharField()
+#     status = fields.CharField()
+#
+#     class Meta:
+#         write_concern = WriteConcern(j=True)
+#         connection_alias = 'mongo_app'

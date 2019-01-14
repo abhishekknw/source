@@ -13,6 +13,9 @@ import copy
 from rest_framework.views import APIView
 from v0.ui.utils import handle_response, get_user_organisation_id
 from datetime import datetime
+from unittest import TestCase
+from unittest.mock import patch
+import unittest
 
 statistics_map = {"z_score": z_calculator_array_multiple}
 
@@ -485,6 +488,57 @@ class GetLeadsDataGeneric(APIView):
         return handle_response('', data=mongo_query, success=True)
 
 
+# class AnalyticSavedSets(APIView):
+#     @staticmethod
+#     def post(request):
+#         set_value = request.data['set_value']
+#         owner_type = request.data['owner_type']
+#         set_name = request.data['set_name'] if 'set_name' in request.data else None
+#         user = request.user
+#         user_id = user.id
+#         organisation_id = get_user_organisation_id(user)
+#         owner_id = user_id if owner_type == 'user' else organisation_id
+#         final_set_data = {}
+#         last_set_list = mongo_client.analytic_sets.find_one(sort=[("set_id", -1)])
+#         set_id = 1
+#         if last_set_list is not None:
+#             set_id = last_set_list["set_id"] + 1
+#         final_set_data = {
+#             "set_id": set_id,
+#             "owner_type": owner_type,
+#             "owner_id": str(owner_id),
+#             "set_value": set_value,
+#             "set_name": set_name
+#         }
+#         mongo_client.analytic_sets.insert_one(final_set_data)
+#         return handle_response('', data="success", success=True)
+#
+#     @staticmethod
+#     def get(request):
+#         query_type = request.query_params.get('type')
+#         query_value = request.query_params.get('value')
+#         query_value = int(query_value) if query_type == 'set_id' else str(query_value)
+#         query_dict = mongo_client.analytic_sets.find_one({query_type: query_value})
+#         set_data = query_dict["set_value"] if query_dict is not None else {}
+#         return handle_response('', data=set_data, success=True)
+#
+#     @staticmethod
+#     def put(request):
+#         query_type = request.data['type']
+#         query_value = request.data['value']
+#         query_value = int(query_value) if query_type == 'set_id' else str(query_value)
+#         query_dict = mongo_client.analytic_sets.find_one({query_type: query_value})
+#         set_data = query_dict["set_value"] if query_dict is not None else {}
+#         if set_data == {}:
+#             return handle_response('', data=set_data, success=True)
+#         data_scope = request.data['data_scope'] if 'data_scope' in request.data else set_data['data_scope']
+#         data_point = request.data['data_point'] if 'data_point' in request.data else set_data['data_point']
+#         raw_data = request.data['raw_data'] if 'raw_data' in request.data else set_data['raw_data']
+#         metrics = operator_data['metrics']
+#         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics)
+#         return handle_response('', data=mongo_query, success=True)
+
+
 class AnalyticSavedOperators(APIView):
     @staticmethod
     def post(request):
@@ -499,7 +553,7 @@ class AnalyticSavedOperators(APIView):
         last_operator_list = mongo_client.analytic_operators.find_one(sort=[("operator_id", -1)])
         operator_id = 1
         if last_operator_list is not None:
-            operator_id = last_operator_list["operator_id"]
+            operator_id = last_operator_list["operator_id"] + 1
         final_operator_data ={
             "operator_id": operator_id,
             "owner_type": owner_type,
@@ -538,3 +592,14 @@ class AnalyticSavedOperators(APIView):
         metrics = operator_data['metrics']
         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics)
         return handle_response('', data=mongo_query, success=True)
+
+
+class Calculator:
+    def sum(self, a, b):
+        return a + b
+
+
+class TestCalculator(TestCase):
+    @patch('Calculator.sum', return_value = 9)
+    def test_sum(self, sum):
+        self.assertEqual(sum(2, 3), 9)
