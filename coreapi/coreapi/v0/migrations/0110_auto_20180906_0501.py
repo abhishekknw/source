@@ -15,11 +15,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='checklistcolumns',
             name='key_type',
-            field=models.CharField(choices=[(b'STRING', b'STRING'), (b'BOOLEAN', b'BOOLEAN'), (b'INT', b'INT'), (b'EMAIL', b'EMAIL'), (b'PASSWORD', b'PASSWORD'), (b'PHONE', b'PHONE'), (b'RADIO', b'RADIO'), (b'DROPDOWN', b'DROPDOWN'), (b'CHECKBOX', b'CHECKBOX'), (b'TEXTAREA', b'TEXTAREA'), (b'FLOAT', b'FLOAT'), (b'DATE', b'DATE')], max_length=70, null=True),
+            field=models.CharField(choices=[('STRING', 'STRING'), ('BOOLEAN', 'BOOLEAN'), ('INT', 'INT'), ('EMAIL', 'EMAIL'), ('PASSWORD', 'PASSWORD'), ('PHONE', 'PHONE'), ('RADIO', 'RADIO'), ('DROPDOWN', 'DROPDOWN'), ('CHECKBOX', 'CHECKBOX'), ('TEXTAREA', 'TEXTAREA'), ('FLOAT', 'FLOAT'), ('DATE', 'DATE')], max_length=70, null=True),
         ),
         migrations.AlterField(
             model_name='leadsformitems',
             name='key_type',
-            field=models.CharField(choices=[(b'STRING', b'STRING'), (b'BOOLEAN', b'BOOLEAN'), (b'INT', b'INT'), (b'EMAIL', b'EMAIL'), (b'PASSWORD', b'PASSWORD'), (b'PHONE', b'PHONE'), (b'RADIO', b'RADIO'), (b'DROPDOWN', b'DROPDOWN'), (b'CHECKBOX', b'CHECKBOX'), (b'TEXTAREA', b'TEXTAREA'), (b'FLOAT', b'FLOAT'), (b'DATE', b'DATE')], max_length=70, null=True),
+            field=models.CharField(choices=[('STRING', 'STRING'), ('BOOLEAN', 'BOOLEAN'), ('INT', 'INT'), ('EMAIL', 'EMAIL'), ('PASSWORD', 'PASSWORD'), ('PHONE', 'PHONE'), ('RADIO', 'RADIO'), ('DROPDOWN', 'DROPDOWN'), ('CHECKBOX', 'CHECKBOX'), ('TEXTAREA', 'TEXTAREA'), ('FLOAT', 'FLOAT'), ('DATE', 'DATE')], max_length=70, null=True),
         ),
     ]

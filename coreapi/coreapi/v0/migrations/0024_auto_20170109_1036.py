@@ -14,11 +14,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='stallinventory',
             name='status',
-            field=models.CharField(default=b'F', max_length=10),
+            field=models.CharField(default='F', max_length=10),
         ),
         migrations.AddField(
             model_name='standeeinventory',
             name='status',
-            field=models.CharField(default=b'F', max_length=10),
+            field=models.CharField(default='F', max_length=10),
         ),
     ]

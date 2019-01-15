@@ -2,8 +2,8 @@ from __future__ import print_function
 from __future__ import absolute_import
 from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge_dict_array_dict_single,
                     convert_dict_arrays_keys_to_standard_names, get_similar_structure_keys, geographical_parent_details,
-                    count_details_parent_map, count_details_kids_map, find_level_sequence, binary_operation,
-                    sum_array_by_key, z_calculator_array_multiple, get_metrics_from_code, time_parent_names,
+                    count_details_parent_map, find_level_sequence, binary_operation, count_details_direct_match_multiple,
+                    sum_array_by_key, z_calculator_array_multiple, get_metrics_from_code, reverse_direct_match,
                     count_details_parent_map_time, date_to_other_groups, merge_dict_array_array_multiple_keys,
                     merge_dict_array_dict_multiple_keys, count_details_parent_map_multiple, sum_array_by_keys)
 from v0.ui.common.models import mongo_client
@@ -13,6 +13,9 @@ import copy
 from rest_framework.views import APIView
 from v0.ui.utils import handle_response, get_user_organisation_id
 from datetime import datetime
+from unittest import TestCase
+from unittest.mock import patch
+import unittest
 
 statistics_map = {"z_score": z_calculator_array_multiple}
 
@@ -64,9 +67,10 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
                                                       [],unilevel_constraints, grouping_category)
         else:
             curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
-                        default_value_type, grouping_level, [],unilevel_constraints, grouping_category)
+                        default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category)
             curr_output_keys = curr_output[0].keys()
             allowed_keys = set([highest_level] + grouping_level + [curr_metric])
+            #curr_output = key_replace_group(curr_output,'supplier','flattype')
             if not curr_output_keys<=allowed_keys:
                 curr_output = sum_array_by_keys(curr_output, [highest_level]+grouping_level,[curr_metric])
         individual_metric_output[lowest_level] = curr_output
@@ -175,7 +179,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     else:
         grouping_levels = [grouping_level]
     custom_level = lowest_level+'_'+grouping_level+'_'+highest_level
-    if len(grouping_levels) > 1:
+    if len(grouping_levels) > 1 or grouping_levels[0] in reverse_direct_match:
         default_map = count_details_parent_map_multiple
     else:
         default_map = count_details_parent_map
@@ -196,6 +200,10 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     parent_type = 'single'
     if ',' in second_lowest_parent or ',' in second_lowest_parent_name_model:
         parents = [x.strip() for x in second_lowest_parent.split(',')]
+        original_grouping_levels = grouping_levels.copy()
+        for i in range(0,len(grouping_levels)):
+            if grouping_levels[i] in reverse_direct_match and reverse_direct_match[grouping_levels[i]] in parents:
+                grouping_levels[i] = reverse_direct_match[grouping_levels[i]]
         desc_sequence = [parents, lowest_level]
         parent_model_names = second_lowest_parent_name_model.split(',')
         if not parents[0] == highest_level:
@@ -384,6 +392,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             single_array_results = merge_dict_array_array_multiple_keys(new_results, grouping_levels)
         except:
             single_array_results = merge_dict_array_array_multiple_keys(new_results, ['supplier'])
+        single_array_results = key_replace_group(single_array_results, grouping_levels[0],
+                                                 original_grouping_levels[0], lowest_level)
     else:
         single_array_results = []
     return single_array_results
@@ -437,6 +447,32 @@ def get_details_by_date(lowest_level, highest_level, highest_level_list):
     ])
 
 
+def key_replace_group(dict_array, existing_key, required_key, sum_key):
+    key_details = count_details_direct_match_multiple[existing_key]
+    model_name = key_details['model_name']
+    database_type = key_details['database_type']
+    self_name_model = key_details['self_name_model']
+    parent_name_model = key_details['parent_name_model']
+    match_list = [x[existing_key] for x in dict_array]
+    new_array = []
+    if database_type == 'mysql':
+        first_part_query = model_name + '.objects.filter('
+        full_query = first_part_query + self_name_model + '__in=match_list)'
+        query = list(eval(full_query).values_list(self_name_model, parent_name_model))
+        query_dict = dict(query)
+        for curr_dict in dict_array:
+            curr_dict[required_key] = query_dict[curr_dict[existing_key]]
+            curr_dict.pop(existing_key)
+            new_array.append(curr_dict)
+        all_keys = list(curr_dict.keys())
+        grouping_keys = all_keys
+        grouping_keys.remove(sum_key)
+        new_array = sum_array_by_key(new_array,grouping_keys, sum_key)
+    else:
+        new_array = dict_array
+    return new_array
+
+
 class GetLeadsDataGeneric(APIView):
     @staticmethod
     def put(request):
@@ -450,6 +486,57 @@ class GetLeadsDataGeneric(APIView):
         statistical_information = all_data['statistical_information'] if 'statistical_information' in all_data else None
         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information)
         return handle_response('', data=mongo_query, success=True)
+
+
+# class AnalyticSavedSets(APIView):
+#     @staticmethod
+#     def post(request):
+#         set_value = request.data['set_value']
+#         owner_type = request.data['owner_type']
+#         set_name = request.data['set_name'] if 'set_name' in request.data else None
+#         user = request.user
+#         user_id = user.id
+#         organisation_id = get_user_organisation_id(user)
+#         owner_id = user_id if owner_type == 'user' else organisation_id
+#         final_set_data = {}
+#         last_set_list = mongo_client.analytic_sets.find_one(sort=[("set_id", -1)])
+#         set_id = 1
+#         if last_set_list is not None:
+#             set_id = last_set_list["set_id"] + 1
+#         final_set_data = {
+#             "set_id": set_id,
+#             "owner_type": owner_type,
+#             "owner_id": str(owner_id),
+#             "set_value": set_value,
+#             "set_name": set_name
+#         }
+#         mongo_client.analytic_sets.insert_one(final_set_data)
+#         return handle_response('', data="success", success=True)
+#
+#     @staticmethod
+#     def get(request):
+#         query_type = request.query_params.get('type')
+#         query_value = request.query_params.get('value')
+#         query_value = int(query_value) if query_type == 'set_id' else str(query_value)
+#         query_dict = mongo_client.analytic_sets.find_one({query_type: query_value})
+#         set_data = query_dict["set_value"] if query_dict is not None else {}
+#         return handle_response('', data=set_data, success=True)
+#
+#     @staticmethod
+#     def put(request):
+#         query_type = request.data['type']
+#         query_value = request.data['value']
+#         query_value = int(query_value) if query_type == 'set_id' else str(query_value)
+#         query_dict = mongo_client.analytic_sets.find_one({query_type: query_value})
+#         set_data = query_dict["set_value"] if query_dict is not None else {}
+#         if set_data == {}:
+#             return handle_response('', data=set_data, success=True)
+#         data_scope = request.data['data_scope'] if 'data_scope' in request.data else set_data['data_scope']
+#         data_point = request.data['data_point'] if 'data_point' in request.data else set_data['data_point']
+#         raw_data = request.data['raw_data'] if 'raw_data' in request.data else set_data['raw_data']
+#         metrics = operator_data['metrics']
+#         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics)
+#         return handle_response('', data=mongo_query, success=True)
 
 
 class AnalyticSavedOperators(APIView):
@@ -466,7 +553,7 @@ class AnalyticSavedOperators(APIView):
         last_operator_list = mongo_client.analytic_operators.find_one(sort=[("operator_id", -1)])
         operator_id = 1
         if last_operator_list is not None:
-            operator_id = last_operator_list["operator_id"]
+            operator_id = last_operator_list["operator_id"] + 1
         final_operator_data ={
             "operator_id": operator_id,
             "owner_type": owner_type,
@@ -505,3 +592,14 @@ class AnalyticSavedOperators(APIView):
         metrics = operator_data['metrics']
         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics)
         return handle_response('', data=mongo_query, success=True)
+
+
+class Calculator:
+    def sum(self, a, b):
+        return a + b
+
+
+class TestCalculator(TestCase):
+    @patch('Calculator.sum', return_value = 9)
+    def test_sum(self, sum):
+        self.assertEqual(sum(2, 3), 9)
