@@ -15,7 +15,12 @@ from __future__ import absolute_import
 import os
 import datetime
 from django.utils import timezone
-from .config import Config
+Config = None
+try:
+    from .config import Config
+except ImportError:
+    print("config not found")
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -23,7 +28,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'ewis(omy!u-rgpf%9hp1^3@8ivz!upuwc&tp!0trx%#vjqs!&2'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = Config.DEBUG if hasattr(Config, 'DEBUG') else True
+if Config:
+    DEBUG = Config.DEBUG if hasattr(Config, 'DEBUG') else True
 
 ALLOWED_HOSTS = ['13.232.210.224', 'localhost','13.127.154.33', 'api.machadalo.com', 'platform.machadalo.com',
                  '127.0.0.1', 'devapi.machadalo.com']
@@ -82,17 +88,26 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'coreapi.wsgi.application'
 
-
-DATABASES = {
+if Config:
+    DATABASES = {
+            'default': {
+                'NAME': Config.DATABASE['NAME'],
+                'ENGINE': Config.DATABASE['ENGINE'],
+                'HOST': Config.DATABASE['HOST'],
+                'USER': Config.DATABASE['USER'],
+                'PASSWORD': Config.DATABASE['PASSWORD'],
+            }
+    }
+else:
+    DATABASES = {
         'default': {
-            'NAME': Config.DATABASE['NAME'],
-            'ENGINE': Config.DATABASE['ENGINE'],
-            'HOST': Config.DATABASE['HOST'],
-            'USER': Config.DATABASE['USER'],
-            'PASSWORD': Config.DATABASE['PASSWORD'],
+                'NAME': 'machadaloTech',
+                'ENGINE': 'django.db.backends.mysql',
+                'HOST': 'localhost',
+                'USER': 'root',
+                'PASSWORD': 'password',
+            }
         }
-}
-
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
@@ -170,11 +185,15 @@ JWT_AUTH = {
       }
 
 
-BASE_URL = Config.BASE_URL
-
-MONGO_DB = Config.MONGO_DB if hasattr(Config, 'MONGO_DB') else 'machadalo'
-MONGO_DB_TEST = Config.MONGO_DB_TEST if hasattr(Config,'MONGO_DB_TEST') else 'mdtest'
-DEFAULT_CC_EMAILS = Config.DEFAULT_CC_EMAILS if hasattr(Config,'DEFAULT_CC_EMAILS') else []
+BASE_URL = Config.BASE_URL if Config else "http://localhost:8000/"
+if Config:
+    MONGO_DB = Config.MONGO_DB if hasattr(Config, 'MONGO_DB') else 'machadalo'
+    MONGO_DB_TEST = Config.MONGO_DB_TEST if hasattr(Config,'MONGO_DB_TEST') else 'mdtest'
+    DEFAULT_CC_EMAILS = Config.DEFAULT_CC_EMAILS if hasattr(Config,'DEFAULT_CC_EMAILS') else []
+else:
+    MONGO_DB = 'machadalo'
+    MONGO_DB_TEST = 'mdtest'
+    DEFAULT_CC_EMAILS = []
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
