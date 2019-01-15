@@ -1,6 +1,8 @@
 amqp==1.4.9
 anyjson==0.3.3
+atomicwrites==1.2.1
 attrdict==2.0.0
+attrs==18.2.0
 billiard==3.3.0.23
 boto==2.49.0
 boto3==1.9.71
@@ -38,15 +40,20 @@ Jinja2==2.10
 jmespath==0.9.3
 kombu==3.0.37
 MarkupSafe==1.1.0
+more-itertools==5.0.0
 mysqlclient==1.3.14
 numpy==1.15.4
 openapi-codec==1.3.2
 openpyxl==2.5.12
 pathlib==1.0.1
+pluggy==0.8.1
+py==1.7.0
 pygeocoder==1.2.5
 PyJWT==1.7.1
 pymodm==0.4.1
 pymongo==3.7.2
+pytest==4.1.1
+pytest-django==3.4.5
 python-dateutil==2.7.5
 python-magic==0.4.15
 pytz==2018.7
@@ -61,6 +68,5 @@ six==1.12.0
 sqlparse==0.2.4
 uritemplate==3.0.0
 urllib3==1.24.1
-uWSGI==2.0.17.1
 validate-email==1.3
 vine==1.1.4
