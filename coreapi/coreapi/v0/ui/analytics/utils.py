@@ -2,6 +2,7 @@ import numpy as np
 from v0.ui.supplier.models import SupplierPhase
 from datetime import datetime
 import pytz, copy
+from v0.ui.campaign.views import calculate_mode
 
 
 def get_metrics_from_code(code, raw_metrics, derived_metrics):
@@ -133,7 +134,7 @@ def z_calculator_array_multiple(data_array, metrics_array_dict):
 
 
 # redundant
-def sum_array_by_key(array, keys):
+def sum_array_by_single_key(array, keys):
     count_dict = {}
     # valid_array =[]
     # for curr_dict in array:
@@ -320,6 +321,39 @@ def sum_array_by_key(array, grouping_keys, sum_key):
     return new_array
 
 
+def append_array_by_keys(array, grouping_keys, append_keys):
+    new_array = []
+    required_keys = list(set(append_keys + grouping_keys))
+    for curr_dict in array:
+        first_match = False
+        curr_dict_lists = {}
+        for curr_dict_new in new_array:
+            match = True
+            curr_dict_new_lists = {}
+            for key in grouping_keys:
+                curr_value = curr_dict[key]
+                curr_value_new = curr_dict_new[key]
+                if not curr_value_new == curr_value:
+                    match = False
+            if match:
+                for append_key in append_keys:
+                    prev_list = [curr_dict[append_key]] if curr_dict[append_key] is not None else []
+                    new_list = curr_dict_new[append_key] if curr_dict_new[append_key] is not None else []
+                    if not type(new_list) == list:
+                        new_list = [new_list]
+                    # curr_dict_lists[append_key] = [int(curr_dict[append_key])] if curr_dict[append_key] is not None else []
+                    # curr_dict_new_lists[append_key] = curr_dict_new[append_key] if curr_dict_new[
+                    #                                 append_key] is not None else []
+                    curr_dict_new[append_key] = prev_list + new_list
+                first_match = True
+        if not first_match:
+            new_dict = {}
+            for required_key in required_keys:
+                new_dict[required_key] = curr_dict[required_key]
+            new_array.append(new_dict)
+    return new_array
+
+
 def sum_array_by_keys(array, grouping_keys, sum_keys):
     new_array = []
     required_keys = list(set(sum_keys + grouping_keys))
@@ -327,13 +361,9 @@ def sum_array_by_keys(array, grouping_keys, sum_keys):
     for curr_dict in array:
         first_match = False
         curr_dict_sum = {}
-        for sum_key in sum_keys:
-            curr_dict_sum[sum_key] = int(curr_dict[sum_key]) if curr_dict[sum_key] is not None else 0
         for curr_dict_new in new_array:
             match = True
             curr_dict_new_sum = {}
-            for sum_key in sum_keys:
-                curr_dict_new_sum[sum_key] = int(curr_dict_new[sum_key]) if curr_dict_new[sum_key] is not None else 0
             # check if grouping keys are matching
             for key in grouping_keys:
                 curr_value = curr_dict[key]
@@ -342,6 +372,9 @@ def sum_array_by_keys(array, grouping_keys, sum_keys):
                     match = False
             if match:
                 for sum_key in sum_keys:
+                    curr_dict_sum[sum_key] = int(curr_dict[sum_key]) if curr_dict[sum_key] is not None else 0
+                    curr_dict_new_sum[sum_key] = int(curr_dict_new[sum_key]) if curr_dict_new[
+                                                 sum_key] is not None else 0
                     curr_dict_new[sum_key] = curr_dict_sum[sum_key] + curr_dict_new_sum[sum_key]
                 first_match = True
         if not first_match:
@@ -463,5 +496,53 @@ def date_to_other_groups(dict_array, group_name, desired_metric, raw_data, highe
         new_array = list(new_dict.values())
 
     return new_array
+
+def frequency_mode_calculator(dict_array, frequency_keys, window_size=5):
+    new_array= []
+    for curr_dict in dict_array:
+        for key in frequency_keys:
+            curr_dist = calculate_freqdist_mode_from_list(curr_dict[key],window_size)
+            if curr_dist == {}:
+                continue
+            new_key = 'freq_dist_'+ key
+            curr_dict[new_key] = curr_dist
+        new_array.append(curr_dict)
+    return new_array
+
+
+def calculate_freqdist_mode_from_list(num_list,window_size=5):
+    if not type(num_list) == list:
+        return {}
+    if len(num_list) == 0:
+        return None
+    if len(num_list) == 1:
+        return [num_list, num_list[0]]
+    num_list = sorted(num_list)
+    min_max = [num_list[0],num_list[-1]]
+    last_window_size = (min_max[1]-min_max[0])%window_size
+    last_window_start = min_max[1]-last_window_size
+    freq_dist = {}
+    num_list_copy = num_list.copy()
+    lower_limit = min_max[0] - 0.0001
+    actual_length = len(num_list)
+    counter = 0
+    while lower_limit < min_max[1]:
+        upper_limit = lower_limit + window_size
+        if upper_limit>min_max[1]:
+            upper_limit = min_max[1]
+        new_list = [round(x,4) for x in num_list_copy if x> lower_limit and x<=upper_limit]
+        if new_list == []:
+            lower_limit = upper_limit
+            continue
+        freq = len(new_list)
+        counter = counter+freq
+        group_name = str(round(lower_limit,4)) + ' to ' + str(round(upper_limit,4))
+        freq_dist[group_name] = {}
+        freq_dist[group_name]['values'] = new_list
+        freq_dist[group_name]['mode'] = freq
+        lower_limit = upper_limit
+    return freq_dist
+
+
 
 

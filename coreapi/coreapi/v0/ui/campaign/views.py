@@ -970,6 +970,7 @@ def calculate_mode(num_list,window_size=3):
         return None
     if len(num_list) == 1:
         return num_list[0]
+    print(num_list)
     freq_by_windows = [0 for i in range(0,(num_list[-1] - num_list[0])//2 + 1)]
     for num in num_list:
         window_index = (num - num_list[0])//window_size

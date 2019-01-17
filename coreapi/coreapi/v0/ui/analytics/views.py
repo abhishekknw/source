@@ -5,7 +5,9 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     count_details_parent_map, find_level_sequence, binary_operation, count_details_direct_match_multiple,
                     sum_array_by_key, z_calculator_array_multiple, get_metrics_from_code, reverse_direct_match,
                     count_details_parent_map_time, date_to_other_groups, merge_dict_array_array_multiple_keys,
-                    merge_dict_array_dict_multiple_keys, count_details_parent_map_multiple, sum_array_by_keys)
+                    merge_dict_array_dict_multiple_keys, count_details_parent_map_multiple, sum_array_by_keys,
+                    sum_array_by_single_key, append_array_by_keys, frequency_mode_calculator)
+from v0.ui.campaign.views import calculate_mode
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -13,18 +15,19 @@ import copy
 from rest_framework.views import APIView
 from v0.ui.utils import handle_response, get_user_organisation_id
 from datetime import datetime
-from unittest import TestCase
-from unittest.mock import patch
-import unittest
+# from unittest import TestCase
+# from unittest.mock import patch
+# import unittest
 
-statistics_map = {"z_score": z_calculator_array_multiple}
+statistics_map = {"z_score": z_calculator_array_multiple, "frequency_distribution": frequency_mode_calculator}
 
 unilevel_categories = ['time']
 
 
 # currently working with the following constraints:
 # exactly one scope restrictor with exact match, one type of data point
-def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metrics = [], statistical_information = None):
+def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metrics = [], statistical_information = None,
+                       higher_level_statistical_information = None):
     unilevel_constraints = {}
     data_scope_first = {}
     if not data_scope == {}:
@@ -35,9 +38,12 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
                 data_scope.pop(curr_key)
         data_scope_first = data_scope[data_scope_keys[0]] if data_scope_keys is not [] else {}
     highest_level = data_scope_first['value_type'] if 'value_type' in data_scope_first else None
-    grouping_level = data_point['level']
-    grouping_level_first = grouping_level[0]
-    grouping_category = data_point["category"]
+    if 'category' not in data_point or 'level' not in data_point:
+        print('here')
+        return []
+    grouping_level = data_point['level'] if 'level' in data_point else None
+    grouping_level_first = grouping_level[0] if grouping_level is not None else None
+    grouping_category = data_point["category"] if 'category' in data_point else None
     # if highest_level == grouping_level:
     #     return "lowest level should be lower than highest level"
     individual_metric_output = {}
@@ -159,13 +165,27 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
         stat_metrics = []
         for curr_index in stat_metrics_indices:
             stat_metrics.append(get_metrics_from_code(curr_index,raw_data,metric_names))
-        metrics_array_dict = sum_array_by_key(derived_array, stat_metrics)
+        metrics_array_dict = sum_array_by_single_key(derived_array, stat_metrics)
 
     for curr_stat in stats:
         statistics_array = statistics_map[curr_stat](derived_array, metrics_array_dict)
         derived_array = statistics_array
 
-    return [individual_metric_output, derived_array]
+    if higher_level_statistical_information is not None:
+        stats = higher_level_statistical_information['stats']
+        stat_metrics_indices = higher_level_statistical_information['metrics']
+        grouping_level = higher_level_statistical_information['level']
+        stat_metrics = []
+        for curr_index in stat_metrics_indices:
+            stat_metrics.append(get_metrics_from_code(curr_index,raw_data,metric_names))
+        higher_level_list = append_array_by_keys(derived_array,grouping_level,stat_metrics)
+
+    for curr_stat in stats:
+        higher_level_list = statistics_map[curr_stat](higher_level_list,stat_metrics)
+
+
+    return {"individual metrics":individual_metric_output, "lower_group_data": derived_array,
+            "higher_group_data":higher_level_list}
 
 
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
@@ -198,6 +218,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     second_lowest_parent = default_map[lowest_level]['parent']
     second_lowest_parent_name_model = default_map[lowest_level]['parent_name_model']
     parent_type = 'single'
+    original_grouping_levels = None
     if ',' in second_lowest_parent or ',' in second_lowest_parent_name_model:
         parents = [x.strip() for x in second_lowest_parent.split(',')]
         original_grouping_levels = grouping_levels.copy()
@@ -392,8 +413,9 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             single_array_results = merge_dict_array_array_multiple_keys(new_results, grouping_levels)
         except:
             single_array_results = merge_dict_array_array_multiple_keys(new_results, ['supplier'])
-        single_array_results = key_replace_group(single_array_results, grouping_levels[0],
-                                                 original_grouping_levels[0], lowest_level)
+        if original_grouping_levels is not None:
+            single_array_results = key_replace_group(single_array_results, grouping_levels[0],
+                                                     original_grouping_levels[0], lowest_level)
     else:
         single_array_results = []
     return single_array_results
@@ -448,6 +470,8 @@ def get_details_by_date(lowest_level, highest_level, highest_level_list):
 
 
 def key_replace_group(dict_array, existing_key, required_key, sum_key):
+    if existing_key == required_key:
+        return dict_array
     key_details = count_details_direct_match_multiple[existing_key]
     model_name = key_details['model_name']
     database_type = key_details['database_type']
@@ -484,7 +508,10 @@ class GetLeadsDataGeneric(APIView):
         raw_data = all_data['raw_data'] if 'raw_data' in all_data else default_raw_data
         metrics = all_data['metrics'] if 'metrics' in all_data else default_metrics
         statistical_information = all_data['statistical_information'] if 'statistical_information' in all_data else None
-        mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information)
+        higher_level_statistical_information = all_data['higher_level_statistical_information'] if \
+            'higher_level_statistical_information' in all_data else None
+        mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
+                                         higher_level_statistical_information)
         return handle_response('', data=mongo_query, success=True)
 
 
@@ -594,12 +621,12 @@ class AnalyticSavedOperators(APIView):
         return handle_response('', data=mongo_query, success=True)
 
 
-class Calculator:
-    def sum(self, a, b):
-        return a + b
-
-
-class TestCalculator(TestCase):
-    @patch('Calculator.sum', return_value = 9)
-    def test_sum(self, sum):
-        self.assertEqual(sum(2, 3), 9)
+# class Calculator:
+#     def sum(self, a, b):
+#         return a + b
+#
+#
+# class TestCalculator(TestCase):
+#     @patch('Calculator.sum', return_value = 9)
+#     def test_sum(self, sum):
+#         self.assertEqual(sum(2, 3), 9)
