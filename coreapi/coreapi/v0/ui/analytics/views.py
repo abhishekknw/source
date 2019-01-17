@@ -26,8 +26,8 @@ unilevel_categories = ['time']
 
 # currently working with the following constraints:
 # exactly one scope restrictor with exact match, one type of data point
-def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metrics = [], statistical_information = None,
-                       higher_level_statistical_information = None):
+def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
+                       higher_level_statistical_information):
     unilevel_constraints = {}
     data_scope_first = {}
     if not data_scope == {}:
@@ -39,7 +39,6 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
         data_scope_first = data_scope[data_scope_keys[0]] if data_scope_keys is not [] else {}
     highest_level = data_scope_first['value_type'] if 'value_type' in data_scope_first else None
     if 'category' not in data_point or 'level' not in data_point:
-        print('here')
         return []
     grouping_level = data_point['level'] if 'level' in data_point else None
     grouping_level_first = grouping_level[0] if grouping_level is not None else None
@@ -65,7 +64,7 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
             else:
                 lowest_geographical_level = geographical_parent_details['base']
                 result_dict = get_details_by_higher_level_geographical(
-                    highest_level, highest_level_values, lowest_geographical_level)
+                    highest_level, highest_level_values, lowest_geographical_level, 0)
                 curr_dict = result_dict['final_dict']
                 curr_highest_level_values = result_dict['single_list']
             lgl = lowest_geographical_level
@@ -159,7 +158,7 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
 
     stats = []
     statistics_array = []
-    if statistical_information is not None:
+    if statistical_information is not {}:
         stats = statistical_information['stats']
         stat_metrics_indices = statistical_information['metrics']
         stat_metrics = []
@@ -171,7 +170,7 @@ def get_data_analytics(data_scope = {}, data_point = None, raw_data = [], metric
         statistics_array = statistics_map[curr_stat](derived_array, metrics_array_dict)
         derived_array = statistics_array
 
-    if higher_level_statistical_information is not None:
+    if higher_level_statistical_information is not {}:
         stats = higher_level_statistical_information['stats']
         stat_metrics_indices = higher_level_statistical_information['metrics']
         grouping_level = higher_level_statistical_information['level']
@@ -193,6 +192,10 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                                 grouping_category = ""):
     # check for custom sequence
     incrementing_value = None
+    if lowest_level == None:
+        return []
+    if grouping_level == None:
+        grouping_level = highest_level
     if not type(grouping_level) == 'str':
         grouping_levels = grouping_level
         grouping_level = grouping_level[0]
@@ -503,67 +506,16 @@ class GetLeadsDataGeneric(APIView):
         all_data = request.data
         default_raw_data = ['total_leads', 'hot_leads']
         default_metrics = []
-        data_scope = all_data['data_scope'] if 'data_scope' in all_data else None
-        data_point = all_data['data_point'] if 'data_point' in all_data else None
+        data_scope = all_data['data_scope'] if 'data_scope' in all_data else {}
+        data_point = all_data['data_point'] if 'data_point' in all_data else {}
         raw_data = all_data['raw_data'] if 'raw_data' in all_data else default_raw_data
         metrics = all_data['metrics'] if 'metrics' in all_data else default_metrics
-        statistical_information = all_data['statistical_information'] if 'statistical_information' in all_data else None
+        statistical_information = all_data['statistical_information'] if 'statistical_information' in all_data else {}
         higher_level_statistical_information = all_data['higher_level_statistical_information'] if \
-            'higher_level_statistical_information' in all_data else None
+            'higher_level_statistical_information' in all_data else {}
         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
                                          higher_level_statistical_information)
         return handle_response('', data=mongo_query, success=True)
-
-
-# class AnalyticSavedSets(APIView):
-#     @staticmethod
-#     def post(request):
-#         set_value = request.data['set_value']
-#         owner_type = request.data['owner_type']
-#         set_name = request.data['set_name'] if 'set_name' in request.data else None
-#         user = request.user
-#         user_id = user.id
-#         organisation_id = get_user_organisation_id(user)
-#         owner_id = user_id if owner_type == 'user' else organisation_id
-#         final_set_data = {}
-#         last_set_list = mongo_client.analytic_sets.find_one(sort=[("set_id", -1)])
-#         set_id = 1
-#         if last_set_list is not None:
-#             set_id = last_set_list["set_id"] + 1
-#         final_set_data = {
-#             "set_id": set_id,
-#             "owner_type": owner_type,
-#             "owner_id": str(owner_id),
-#             "set_value": set_value,
-#             "set_name": set_name
-#         }
-#         mongo_client.analytic_sets.insert_one(final_set_data)
-#         return handle_response('', data="success", success=True)
-#
-#     @staticmethod
-#     def get(request):
-#         query_type = request.query_params.get('type')
-#         query_value = request.query_params.get('value')
-#         query_value = int(query_value) if query_type == 'set_id' else str(query_value)
-#         query_dict = mongo_client.analytic_sets.find_one({query_type: query_value})
-#         set_data = query_dict["set_value"] if query_dict is not None else {}
-#         return handle_response('', data=set_data, success=True)
-#
-#     @staticmethod
-#     def put(request):
-#         query_type = request.data['type']
-#         query_value = request.data['value']
-#         query_value = int(query_value) if query_type == 'set_id' else str(query_value)
-#         query_dict = mongo_client.analytic_sets.find_one({query_type: query_value})
-#         set_data = query_dict["set_value"] if query_dict is not None else {}
-#         if set_data == {}:
-#             return handle_response('', data=set_data, success=True)
-#         data_scope = request.data['data_scope'] if 'data_scope' in request.data else set_data['data_scope']
-#         data_point = request.data['data_point'] if 'data_point' in request.data else set_data['data_point']
-#         raw_data = request.data['raw_data'] if 'raw_data' in request.data else set_data['raw_data']
-#         metrics = operator_data['metrics']
-#         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics)
-#         return handle_response('', data=mongo_query, success=True)
 
 
 class AnalyticSavedOperators(APIView):
