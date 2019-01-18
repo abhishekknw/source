@@ -133,6 +133,71 @@ def z_calculator_array_multiple(data_array, metrics_array_dict):
     return data_array
 
 
+def calculate_freqdist_mode_from_list(num_list,window_size=5):
+    if not type(num_list) == list:
+        return {}
+    if len(num_list) == 0:
+        return None
+    if len(num_list) == 1:
+        return [num_list, num_list[0]]
+    num_list = sorted(num_list)
+    min_max = [num_list[0],num_list[-1]]
+    last_window_size = (min_max[1]-min_max[0])%window_size
+    last_window_start = min_max[1]-last_window_size
+    freq_dist = {}
+    num_list_copy = num_list.copy()
+    lower_limit = min_max[0] - 0.0001
+    actual_length = len(num_list)
+    counter = 0
+    while lower_limit < min_max[1]:
+        upper_limit = lower_limit + window_size
+        if upper_limit>min_max[1]:
+            upper_limit = min_max[1]
+        new_list = [round(x,4) for x in num_list_copy if x> lower_limit and x<=upper_limit]
+        if new_list == []:
+            lower_limit = upper_limit
+            continue
+        freq = len(new_list)
+        counter = counter+freq
+        group_name = str(round(lower_limit,4)) + ' to ' + str(round(upper_limit,4))
+        freq_dist[group_name] = {}
+        freq_dist[group_name]['values'] = new_list
+        freq_dist[group_name]['mode'] = freq
+        lower_limit = upper_limit
+    return freq_dist
+
+
+def var_stdev_calculator(dict_array, keys):
+    new_array = []
+    for curr_dict in dict_array:
+        for key in keys:
+            num_list = curr_dict[key]
+            if num_list == []:
+                continue
+            stdev_key = 'stdev_' + key
+            var_key = 'variance_' + key
+            curr_stdev = np.std(num_list)
+            curr_var = curr_stdev**2
+            curr_dict[stdev_key] = curr_stdev
+            curr_dict[var_key] = curr_var
+        new_array.append(curr_dict)
+    return new_array
+
+
+def mean_calculator(dict_array, keys):
+    new_array = []
+    for curr_dict in dict_array:
+        for key in keys:
+            num_list = curr_dict[key]
+            if num_list == []:
+                continue
+            mean_key = 'mean_' + key
+            curr_mean = np.mean(num_list)
+            curr_dict[mean_key] = curr_mean
+        new_array.append(curr_dict)
+    return new_array
+
+
 # redundant
 def sum_array_by_single_key(array, keys):
     count_dict = {}
@@ -510,38 +575,6 @@ def frequency_mode_calculator(dict_array, frequency_keys, window_size=5):
     return new_array
 
 
-def calculate_freqdist_mode_from_list(num_list,window_size=5):
-    if not type(num_list) == list:
-        return {}
-    if len(num_list) == 0:
-        return None
-    if len(num_list) == 1:
-        return [num_list, num_list[0]]
-    num_list = sorted(num_list)
-    min_max = [num_list[0],num_list[-1]]
-    last_window_size = (min_max[1]-min_max[0])%window_size
-    last_window_start = min_max[1]-last_window_size
-    freq_dist = {}
-    num_list_copy = num_list.copy()
-    lower_limit = min_max[0] - 0.0001
-    actual_length = len(num_list)
-    counter = 0
-    while lower_limit < min_max[1]:
-        upper_limit = lower_limit + window_size
-        if upper_limit>min_max[1]:
-            upper_limit = min_max[1]
-        new_list = [round(x,4) for x in num_list_copy if x> lower_limit and x<=upper_limit]
-        if new_list == []:
-            lower_limit = upper_limit
-            continue
-        freq = len(new_list)
-        counter = counter+freq
-        group_name = str(round(lower_limit,4)) + ' to ' + str(round(upper_limit,4))
-        freq_dist[group_name] = {}
-        freq_dist[group_name]['values'] = new_list
-        freq_dist[group_name]['mode'] = freq
-        lower_limit = upper_limit
-    return freq_dist
 
 
 
