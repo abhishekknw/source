@@ -25,7 +25,8 @@ weekday_codes = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
 
 level_name_by_model_id = {
     "supplier_id": "supplier", "object_id": "supplier", "campaign_id": "campaign", "proposal_id": "campaign",
-    "flat_count": "flat","total_negotiated_price": "cost", "created_at": "date", "phase_no": "phase"
+    "flat_count": "flat","total_negotiated_price": "cost", "created_at": "date", "phase_no": "phase",
+    "society_city": "city"
 }
 
 

@@ -64,14 +64,19 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 curr_dict = result_dict['final_dict']
                 curr_highest_level_values = result_dict['single_list']
             else:
+                value_type = 'supplier'
                 lowest_geographical_level = geographical_parent_details['base']
                 result_dict = get_details_by_higher_level_geographical(
                     highest_level, highest_level_values, lowest_geographical_level, 0)
                 curr_dict = result_dict['final_dict']
                 curr_highest_level_values = result_dict['single_list']
             lgl = lowest_geographical_level
-            curr_output = get_details_by_higher_level(lgl, lowest_level, curr_highest_level_values, lgl, lgl, curr_dict,
-                                                      [],unilevel_constraints, grouping_category)
+            hl = lgl
+            if len(grouping_level) > 1:
+                hl = grouping_level[-1]
+            #lgl = ["supplier","campaign"]
+            curr_output = get_details_by_higher_level(hl, lowest_level, curr_highest_level_values, lgl, grouping_level,
+                                                      curr_dict, unilevel_constraints, grouping_category)
         else:
             curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
                         default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category)
@@ -84,6 +89,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 
     matching_format_metrics = get_similar_structure_keys(individual_metric_output, grouping_level)
     combined_array = []
+
 
     first_metric_array = individual_metric_output[matching_format_metrics[0]] if len(
         matching_format_metrics) > 0 else []
@@ -160,7 +166,9 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 
     stats = []
     statistics_array = []
-    if statistical_information is not {}:
+    print(statistical_information)
+    higher_level_list = []
+    if not statistical_information == {}:
         stats = statistical_information['stats']
         stat_metrics_indices = statistical_information['metrics']
         stat_metrics = []
@@ -168,11 +176,11 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             stat_metrics.append(get_metrics_from_code(curr_index,raw_data,metric_names))
         metrics_array_dict = sum_array_by_single_key(derived_array, stat_metrics)
 
-    for curr_stat in stats:
-        statistics_array = statistics_map[curr_stat](derived_array, metrics_array_dict)
-        derived_array = statistics_array
+        for curr_stat in stats:
+            statistics_array = statistics_map[curr_stat](derived_array, metrics_array_dict)
+            derived_array = statistics_array
 
-    if higher_level_statistical_information is not {}:
+    if not higher_level_statistical_information == {}:
         stats = higher_level_statistical_information['stats']
         stat_metrics_indices = higher_level_statistical_information['metrics']
         grouping_level = higher_level_statistical_information['level']
@@ -181,8 +189,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             stat_metrics.append(get_metrics_from_code(curr_index,raw_data,metric_names))
         higher_level_list = append_array_by_keys(derived_array,grouping_level,stat_metrics)
 
-    for curr_stat in stats:
-        higher_level_list = statistics_map[curr_stat](higher_level_list,stat_metrics)
+        for curr_stat in stats:
+            higher_level_list = statistics_map[curr_stat](higher_level_list,stat_metrics)
 
 
     return {"individual metrics":individual_metric_output, "lower_group_data": derived_array,
@@ -192,18 +200,28 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
                                 grouping_category = ""):
+    # # test only
+    # default_value_type = 'supplier'
+    # grouping_level = ['supplier','campaign']
+    # highest_level = 'campaign'
+    #
+    # # test ends
+
     # check for custom sequence
     incrementing_value = None
     if lowest_level == None:
         return []
     if grouping_level == None:
         grouping_level = highest_level
-    if not type(grouping_level) == 'str':
+    if not isinstance(grouping_level,str):
         grouping_levels = grouping_level
         grouping_level = grouping_level[0]
     else:
         grouping_levels = [grouping_level]
-    custom_level = lowest_level+'_'+grouping_level+'_'+highest_level
+    try:
+        custom_level = lowest_level+'_'+grouping_level+'_'+highest_level
+    except:
+        custom_level = ''
     if len(grouping_levels) > 1 or grouping_levels[0] in reverse_direct_match:
         default_map = count_details_parent_map_multiple
     else:
@@ -389,6 +407,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 )
                 query = list(query)
                 if not query==[]:
+                    if not all_results == [] and isinstance(all_results[0], dict) == True:
+                        all_results = [all_results]
                     all_results.append(query)
             elif database_type == 'mysql':
                 all_values = parent_model_names.copy()
@@ -412,7 +432,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         curr_level_id = curr_level_id+1
         if not len(all_results) == 0 and isinstance(all_results[0], dict):
             all_results = [all_results]
-    if not len(all_results)==[]:
+    if not len(all_results)==0:
         new_results = convert_dict_arrays_keys_to_standard_names(all_results)
         try:
             single_array_results = merge_dict_array_array_multiple_keys(new_results, grouping_levels)
@@ -430,8 +450,6 @@ def get_details_by_higher_level_geographical(highest_level, highest_level_list, 
                                              results_by_lowest_level=0):
     # highest_level = request.data['highest_level']
     # lowest_level = request.data['lowest_level'] if 'lowest_level' in request.data else 'supplier'
-    print(highest_level)
-    print(highest_level_list)
     if highest_level_list == [] or highest_level is None or highest_level == '':
         return {'final_dict':{}, 'single_list':[]}
     model_name = geographical_parent_details['model_name']
