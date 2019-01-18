@@ -285,8 +285,10 @@ def ranged_data_to_other_groups(base_array, range_array, start_field, end_field,
                                 base_value_field, assigned_value_field, other_fields):
     if len(other_fields)>1:
         return "this part is not developed yet"
-    else:
+    elif len(other_fields)==1:
         other_field = other_fields[0]
+    else:
+        return []
     if assigned_value_field in level_name_by_model_id:
         assigned_value_field_standard = level_name_by_model_id[assigned_value_field]
     else:

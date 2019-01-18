@@ -430,7 +430,10 @@ def get_details_by_higher_level_geographical(highest_level, highest_level_list, 
                                              results_by_lowest_level=0):
     # highest_level = request.data['highest_level']
     # lowest_level = request.data['lowest_level'] if 'lowest_level' in request.data else 'supplier'
-    # highest_level_list = request.data['highest_level_list']
+    print(highest_level)
+    print(highest_level_list)
+    if highest_level_list == [] or highest_level is None or highest_level == '':
+        return {'final_dict':{}, 'single_list':[]}
     model_name = geographical_parent_details['model_name']
     parent_name_model = geographical_parent_details['member_names'][highest_level]
     self_name_model = geographical_parent_details['member_names'][lowest_level]

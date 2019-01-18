@@ -6,7 +6,8 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 from nose.tools import assert_true
 from unittest.mock import create_autospec
-from v0.ui.analytics.views import GetLeadsDataGeneric, get_data_analytics, get_details_by_higher_level
+from v0.ui.analytics.views import (GetLeadsDataGeneric, get_data_analytics, get_details_by_higher_level,
+                                   get_details_by_higher_level_geographical)
 from v0.ui.analytics.utils import ranged_data_to_other_groups
 import requests, functools
 
@@ -126,31 +127,41 @@ class TestAnalytics(TestCase):
 
     # test on sample function for failing if system upgrades result in change in functioning of commands
     # if there are problems with function(s) only, this test will always pass
+
     def test_samples(self):
         add_test(0, 0)
-        self.assertEqual(add_test(2,3), 5)
+        self.assertEqual(add_test(2, 3), 5)
 
     # generally, a function has the following tests:
     # 1. Returns expected output if all inputs are blank
     # 2. Number of arguments should match the original signature
-    # 3. Type of arguments should also match
-    # 2 & 3 apply for functions without default values
+    # 3. Type of arguments should also match (for functions without default values only)
     # arguments may be replaced by actual values in validate_* functions for testing
 
     def test_get_data_analytics(self):
-        self.assertEqual(get_data_analytics({},{},[],[],{},{}), [])
-        validate_get_data_analytics({"data_scope": "mock"}, {"data_point": "mock"}, ['test_raw_data'], ['test_metrics'],
+        x = get_details_by_higher_level_geographical('city',['Bengaluru'])
+        print(x)
+        self.assertEqual(get_data_analytics({}, {}, [], [], {}, {}), [])
+        sample_args = ({"data_scope": "mock"}, {"data_point": "mock"}, ['test_raw_data'], ['test_metrics'],
                                     {"stat_info": "mock"}, {"high_level_stat_info": "mock"})
-        self.assertEqual(get_details_by_higher_level(None, None, []),[])
+        mock_get_data_analytics = create_autospec(get_data_analytics, return_value='# args matched')
+        mock_get_data_analytics(*sample_args)
+        validate_get_data_analytics(*sample_args)
 
     def test_get_details_by_higher_level(self):
         self.assertEqual(get_details_by_higher_level(None, None, []), [])
+        sample_args = ('highest_level', 'lowest_level', ['element 1', 'element 2'])
+        mock_get_details_by_higher_level = create_autospec(get_details_by_higher_level, return_value='# args matched')
+        mock_get_details_by_higher_level(*sample_args)
 
     def test_ranged_data_to_other_groups(self):
         self.assertEqual(ranged_data_to_other_groups([], [], '', '', '', '', []),[])
-        validate_ranged_data_to_other_groups({"base_array": "mock"}, {"range_array": "mock"}, 'test_start', 'test_end',
-                                             'test_base_value', 'test_assigned_value', ['test_others'])
+        sample_args = (["base_array"], ["range_array"], 'test_start', 'test_end',
+                       'test_base_value', 'test_assigned_value', ['test_others'])
+        validate_ranged_data_to_other_groups(*sample_args)
 
+    # def get_details_by_higher_level_geographical(self):
+    #     #self.assertEqual(get_details_by_higher_level_geographical('',))
 
 
 
