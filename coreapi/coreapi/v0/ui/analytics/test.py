@@ -8,7 +8,8 @@ from nose.tools import assert_true
 from unittest.mock import create_autospec
 from v0.ui.analytics.views import (GetLeadsDataGeneric, get_data_analytics, get_details_by_higher_level,
                                    get_details_by_higher_level_geographical)
-from v0.ui.analytics.utils import ranged_data_to_other_groups
+from v0.ui.analytics.utils import ranged_data_to_other_groups, z_calculator_array_multiple, \
+    calculate_freqdist_mode_from_list
 import requests, functools
 
 
@@ -104,8 +105,51 @@ def accepts(*accepted_arg_types):
     return accept_decorator
 
 
+def returns(*accepted_return_type_tuple):
+    '''
+    Validates the return type. Since there's only ever one
+    return type, this makes life simpler. Along with the
+    accepts() decorator, this also only does a check for
+    the top argument. For example you couldn't check
+    (<type 'tuple'>, <type 'int'>, <type 'str'>).
+    In that case you could only check if it was a tuple.
+    '''
+
+    def return_decorator(validate_function):
+        # No return type has been specified.
+        if len(accepted_return_type_tuple) == 0:
+            raise TypeError('You must specify a return type.')
+
+        @functools.wraps(validate_function)
+        def decorator_wrapper(*function_args):
+            # More than one return type has been specified.
+            if len(accepted_return_type_tuple) > 1:
+                raise TypeError('You must specify one return type.')
+
+            # Since the decorator receives a tuple of arguments
+            # and the is only ever one object returned, we'll just
+            # grab the first parameter.
+            accepted_return_type = accepted_return_type_tuple[0]
+
+            # We'll execute the function, and
+            # take a look at the return type.
+            return_value = validate_function(*function_args)
+            return_value_type = type(return_value)
+
+            if return_value_type is not accepted_return_type:
+                raise InvalidReturnType(return_value_type,
+                                        validate_function.__name__)
+
+            return return_value
+
+        return decorator_wrapper
+
+    return return_decorator
+
+
 @accepts(int, int)
-def add_test(a, b):
+@returns(int)
+def add_ints_test(a, b):
     '''
     Adds two numbers. It accepts two
     integers, and returns an integer.
@@ -129,8 +173,8 @@ class TestAnalytics(TestCase):
     # if there are problems with function(s) only, this test will always pass
 
     def test_samples(self):
-        add_test(0, 0)
-        self.assertEqual(add_test(2, 3), 5)
+        add_ints_test(0, 0)
+        self.assertEqual(add_ints_test(2, 3), 5)
 
     # generally, a function has the following tests:
     # 1. Returns expected output if all inputs are blank
@@ -139,8 +183,6 @@ class TestAnalytics(TestCase):
     # arguments may be replaced by actual values in validate_* functions for testing
 
     def test_get_data_analytics(self):
-        x = get_details_by_higher_level_geographical('city',['Bengaluru'])
-        print(x)
         self.assertEqual(get_data_analytics({}, {}, [], [], {}, {}), [])
         sample_args = ({"data_scope": "mock"}, {"data_point": "mock"}, ['test_raw_data'], ['test_metrics'],
                                     {"stat_info": "mock"}, {"high_level_stat_info": "mock"})
@@ -160,8 +202,26 @@ class TestAnalytics(TestCase):
                        'test_base_value', 'test_assigned_value', ['test_others'])
         validate_ranged_data_to_other_groups(*sample_args)
 
-    # def get_details_by_higher_level_geographical(self):
-    #     #self.assertEqual(get_details_by_higher_level_geographical('',))
+    def test_get_details_by_higher_level_geographical(self):
+        self.assertEqual(get_details_by_higher_level_geographical('', []),{'final_dict':{}, 'single_list':[]})
+        sample_args = ('city',["Bengaluru", "Chandigarh"])
+        mock_get_details_by_higher_level_geographical = create_autospec(get_details_by_higher_level_geographical,
+                                                                        return_value='# args matched')
+        mock_get_details_by_higher_level_geographical(*sample_args)
 
 
+class TestUtils(TestCase):
+
+    def test_z_calculator_array_multiple(self):
+        self.assertEqual(z_calculator_array_multiple([],{}),[])
+        sample_args = (['sample_array'],{'sample_array_dict':['sample_element']})
+        mock_z_calculator_array_multiple = create_autospec(z_calculator_array_multiple, return_value = 'success')
+        mock_z_calculator_array_multiple(*sample_args)
+
+    def test_calculate_freqdist_mode_from_list(self):
+        self.assertEqual(calculate_freqdist_mode_from_list([]),{})
+        sample_args = (['sample_list'])
+        mock_calculate_freqdist_mode_from_list = create_autospec(calculate_freqdist_mode_from_list,
+                                                                 return_value = 'success')
+        mock_calculate_freqdist_mode_from_list(*sample_args)
 

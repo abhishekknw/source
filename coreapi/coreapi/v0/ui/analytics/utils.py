@@ -138,7 +138,7 @@ def calculate_freqdist_mode_from_list(num_list,window_size=5):
     if not type(num_list) == list:
         return {}
     if len(num_list) == 0:
-        return None
+        return {}
     if len(num_list) == 1:
         return [num_list, num_list[0]]
     num_list = sorted(num_list)
