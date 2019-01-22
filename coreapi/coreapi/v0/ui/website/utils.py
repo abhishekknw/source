@@ -6281,7 +6281,7 @@ def get_campaigns_with_status(category, user):
         return Exception(function, ui_utils.get_system_error(e))
 
 
-def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map):
+def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map, format):
     """
 
     :param inv_act_assignment_objects:
@@ -6432,8 +6432,9 @@ def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map):
                 except KeyError:
                     detail['supplier_detail']['contacts'] = []
             result['images'] = images
-        new_result = restructure_supplier_inv_images_data(result)
-        return new_result
+        if format == "new":
+            result = restructure_supplier_inv_images_data(result)
+        return result
     except Exception as e:
         return Exception(function, ui_utils.get_system_error(e))
 
