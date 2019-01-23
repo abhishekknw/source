@@ -952,30 +952,66 @@ def binary_operation(a, b, op):
 
 
 def process_metrics(operations_array, raw_map):
+    valid_codes = list(raw_map.keys())
     final_array = []
     for metric_array in operations_array:
         a_code = metric_array[0]
         b_code = metric_array[1]
         op = metric_array[2]
-        if type(a_code) is unicode:
+        if type(a_code) is str:
             if a_code[0] == 'm':
                 a_code = a_code[1:]
                 a = final_array[int(a_code) - 1]
             else:
+                if a_code not in raw_map:
+                    print("index points to invalid result operation")
+                    return[]
                 a = raw_map[a_code]
         else:
             a = a_code
-        if type(b_code) is unicode:
+        if type(b_code) is str:
             if b_code[0] == 'm':
                 b_code = b_code[1:]
                 b = final_array[int(b_code) - 1]
             else:
+                if b_code not in raw_map:
+                    print("index points to invalid result operation")
+                    return[]
                 b = raw_map[b_code]
         else:
             b = b_code
         curr_result = binary_operation(a, b, op)
         final_array.append(curr_result)
     return final_array
+
+
+# def process_metrics_checklist(operations_array, raw_map):
+#     final_array = []
+#     for metric_array in operations_array:
+#         a_code = metric_array[0]
+#         b_code = metric_array[1]
+#         op = metric_array[2]
+#         if type(a_code) is str:
+#             if a_code[0] == 'm':
+#                 a_code = a_code[1:]
+#                 a = final_array[int(a_code) - 1]
+#             else:
+#                 a_code = a_code[1:]
+#                 a = raw_map[a_code]
+#         else:
+#             a = a_code
+#         if type(b_code) is str:
+#             if b_code[0] == 'm':
+#                 b_code = b_code[1:]
+#                 b = final_array[int(b_code) - 1]
+#             else:
+#                 b_code = b_code[1:]
+#                 b = raw_map[b_code]
+#         else:
+#             b = b_code
+#         curr_result = binary_operation(a, b, op)
+#         final_array.append(curr_result)
+#     return final_array
 
 
 class ChecklistUnsavedOperators(APIView):
@@ -996,14 +1032,20 @@ class ChecklistUnsavedOperators(APIView):
                 if curr_column not in column_value_dict:
                     column_value_dict[curr_column] = []
                 column_value_dict[curr_column].append(curr_column_value)
+        if column_value_dict == {}:
+            return handle_response('', data=column_value_dict, success=True)
         numeric_dict = get_numeric_in_array_dict(column_value_dict)
         result_map = {}
-        for column_id in column_ids:
-            curr_column_operations_array = column_operations[column_id]
-            result_index = curr_column_operations_array[0]
-            curr_operation = curr_column_operations_array[1]
-            curr_col_values = numeric_dict[column_id]
-            curr_result_str = 'np.'+curr_operation+'(numeric_dict["'+column_id+'"])'
+        for op_id in column_operations:
+            curr_operation_dict = column_operations[op_id]
+            result_index = op_id
+            column_id = str(curr_operation_dict['column_id'])
+            if column_id not in numeric_dict:
+                print("column id missing from checklist: ", column_id)
+                continue
+            curr_operation = curr_operation_dict['operator']
+            corr_col_values = numeric_dict[column_id]
+            curr_result_str = 'np.' + curr_operation + '(numeric_dict["' + column_id + '"])'
             curr_result = eval(curr_result_str)
             result_map[result_index] = curr_result
         final_result = process_metrics(result_operations,result_map)[-1]
@@ -1081,20 +1123,32 @@ class ChecklistSavedOperatorsResult(APIView):
                         column_value_dict[curr_column] = []
                     column_value_dict[curr_column].append(curr_column_value)
             if column_value_dict == {}:
-                return handle_response('', data=column_value_dict, success=True)
+                result_dict[str(operator_id)] = {'operator_definition': curr_response, 'final_value': 'operator error',
+                                                 'column_values': {}, 'column_operations': {},
+                                                 'result_operations': []}
+                continue
+                #return handle_response('', data=column_value_dict, success=True)
             numeric_dict = get_numeric_in_array_dict(column_value_dict)
             result_map = {}
-            for column_id in column_ids:
-                curr_column_operations_array = column_operations[column_id]
-                result_index = curr_column_operations_array[0]
-                curr_operation = curr_column_operations_array[1]
-                curr_col_values = numeric_dict[column_id]
+            for op_id in column_operations:
+                curr_operation_dict = column_operations[op_id]
+                result_index = op_id
+                column_id = str(curr_operation_dict['column_id'])
+                if column_id not in numeric_dict:
+                    print("column id missing from checklist: ", column_id)
+                    continue
+                curr_operation = curr_operation_dict['operator']
+                corr_col_values = numeric_dict[column_id]
                 curr_result_str = 'np.' + curr_operation + '(numeric_dict["' + column_id + '"])'
                 curr_result = eval(curr_result_str)
                 result_map[result_index] = curr_result
-            curr_result = process_metrics(result_operations, result_map)[-1]
-            result_dict[str(operator_id)] = {'result': curr_result, 'column_operations': column_operations,
-                                             'result_operations':result_operations}
+
+            all_results = process_metrics(result_operations, result_map)
+            curr_result = all_results[-1] if not all_results == [] else "operator error"
+            if '_cls' in curr_response: curr_response.pop("_cls")
+            result_dict[str(operator_id)] = {'operator_definition': curr_response,'final_value': curr_result,
+                                             'column_values': numeric_dict, 'column_operations': result_map,
+                                             'result_operations': all_results}
         return handle_response('', data=result_dict, success=True)
 
 
