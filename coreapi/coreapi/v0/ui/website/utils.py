@@ -6407,6 +6407,7 @@ def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map, form
         # information for that supplier
         supplier_detail = response.data['data']
 
+
         response = get_contact_information(content_type_set, supplier_id_set)
         if not response.data['status']:
             return response
@@ -6417,7 +6418,22 @@ def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map, form
             for shortlisted_space_id, detail in result['all_suppliers'].items():
                 key = (detail['content_type_id'], detail['supplier_id'])
                 try:
-                    detail['supplier_detail'] = supplier_detail[key]
+                    raw_supplier_data = supplier_detail[key]
+                    detail['supplier_detail'] = {
+                        'name': raw_supplier_data['name'],
+                        'address1': raw_supplier_data['address1'],
+                        'address2': raw_supplier_data['address2'],
+                        'area': raw_supplier_data['area'],
+                        'subarea': raw_supplier_data['subarea'],
+                        'city': raw_supplier_data['city'],
+                        'state': raw_supplier_data['state'],
+                        'zipcode': raw_supplier_data['zipcode'],
+                        'latitude': raw_supplier_data['latitude'],
+                        'longitude': raw_supplier_data['longitude'],
+                        'flat_count': raw_supplier_data['flat_count'],
+                        'user_id': raw_supplier_data['user_id'],
+                        'created_by_id': raw_supplier_data['created_by_id'],
+                    }
                 except KeyError:
                     # ideally every supplier in ss table must also be in the corresponding supplier table. But
                     # because current data is corrupt as i have manually added suppliers, i have to set this to
@@ -6454,9 +6470,13 @@ def restructure_supplier_inv_images_data(prev_dict):
         inventory_data = all_inventory_data[shortlisted_inventory_id]
         shortlisted_spaces_id = inventory_data['shortlisted_spaces_id']
         supplier_data = all_supplier_data[shortlisted_spaces_id]
+        due_date = assignment_data['activity_date']
+        if assignment_data['reassigned_activity_date']:
+            due_date = assignment_data['reassigned_activity_date']
         if 'activities' not in supplier_data:
             supplier_data['activities'] = {}
         supplier_data['activities'][curr_activity_id] = {
+            'activity_id': curr_activity_id,
             'activity_type':activity_data['activity_type'],
             'inventory_id': inventory_data['inventory_id'],
             'comment': inventory_data['comment'],
@@ -6464,7 +6484,9 @@ def restructure_supplier_inv_images_data(prev_dict):
             'inventory_duration': inventory_data['inventory_duration'],
             'activity_date': assignment_data['activity_date'],
             'reassigned_activity_date': assignment_data['reassigned_activity_date'],
-            'actual_activity_date': None
+            'actual_activity_date': None,
+            'due_date': due_date,
+            'status': 'pending'
         }
 
     for curr_image_id in all_image_data:
@@ -6474,8 +6496,11 @@ def restructure_supplier_inv_images_data(prev_dict):
         shortlisted_inventory_id = all_activity_data[activity_id]['shortlisted_inventory_id']
         shortlisted_spaces_id = all_inventory_data[shortlisted_inventory_id]['shortlisted_spaces_id']
         supplier_data = all_supplier_data[shortlisted_spaces_id]
-        supplier_data['activities'][activity_id]['actual_activity_date'] = image_data['actual_activity_date']
-
+        if image_data['actual_activity_date']:
+            supplier_data['activities'][activity_id]['actual_activity_date'] = image_data['actual_activity_date']
+            supplier_data['activities'][activity_id]['status'] = 'complete'
+    for ss in prev_dict['all_suppliers']:
+        prev_dict['all_suppliers'][ss]['activities'] = list(prev_dict['all_suppliers'][ss]['activities'].values())
     new_dict['all_suppliers'] = list(prev_dict['all_suppliers'].values())
 
     return new_dict
