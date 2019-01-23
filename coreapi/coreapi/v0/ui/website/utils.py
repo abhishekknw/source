@@ -6265,17 +6265,25 @@ def get_campaigns_with_status(category, user):
                                                                 user)
         campaign_data['completed_campaigns'] = CampaignAssignment.objects. \
             filter(campaign_query, campaign__tentative_end_date__lt=current_date, campaign__campaign_state='PTC'). \
-            annotate(name=F('campaign__name')).values('campaign', 'name').distinct()
+            annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
+                     organisation=F('campaign__account__organisation__name')). \
+            values('campaign', 'name', 'principal_vendor', 'organisation').distinct()
         campaign_data['upcoming_campaigns'] = CampaignAssignment.objects. \
             filter(campaign_query, campaign__tentative_start_date__gt=current_date, campaign__campaign_state='PTC'). \
-            annotate(name=F('campaign__name')).values('campaign', 'name').distinct()
+            annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
+                     organisation=F('campaign__account__organisation__name')). \
+            values('campaign', 'name', 'principal_vendor', 'organisation').distinct()
         campaign_data['ongoing_campaigns'] = CampaignAssignment.objects. \
             filter(campaign_query, Q(campaign__tentative_start_date__lte=current_date) & Q(
             campaign__tentative_end_date__gte=current_date), campaign__campaign_state='PTC'). \
-            annotate(name=F('campaign__name')).values('campaign', 'name').distinct()
+            annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
+                     organisation=F('campaign__account__organisation__name')). \
+            values('campaign', 'name', 'principal_vendor', 'organisation').distinct()
         campaign_data['onhold_campaigns'] = CampaignAssignment.objects. \
             filter(campaign_query, campaign__campaign_state='POH'). \
-            annotate(name=F('campaign__name')).values('campaign', 'name').distinct()
+            annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
+                     organisation=F('campaign__account__organisation__name')). \
+            values('campaign', 'name', 'principal_vendor', 'organisation').distinct()
         return campaign_data
     except Exception as e:
         return Exception(function, ui_utils.get_system_error(e))
