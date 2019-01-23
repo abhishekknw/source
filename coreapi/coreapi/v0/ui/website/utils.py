@@ -6297,8 +6297,8 @@ def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map, form
         inv_act_assignment_ids = set()  # this is required to fetch images data later
         # the idea of this loop is to separate different table data in different keys.
         for content in inv_act_assignment_objects:
-            if not result.get('all_suppliers'):
-                result['all_suppliers'] = {}
+            if not result.get('shortlisted_suppliers'):
+                result['shortlisted_suppliers'] = {}
 
             # fetch data fro shortlisted_suppliers key
             shortlisted_space_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces']
@@ -6310,7 +6310,7 @@ def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map, form
                 'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type']
             assigned_to = content['assigned_to']
 
-            result['all_suppliers'][shortlisted_space_id] = {
+            result['shortlisted_suppliers'][shortlisted_space_id] = {
                 'shortlisted_space_id': shortlisted_space_id,
                 'proposal_id': proposal_id,
                 'proposal_name': proposal_name,
@@ -6415,7 +6415,7 @@ def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map, form
 
         # add the key 'supplier_detail' which holds all sorts of information for that supplier to final result.
         if result:
-            for shortlisted_space_id, detail in result['all_suppliers'].items():
+            for shortlisted_space_id, detail in result['shortlisted_suppliers'].items():
                 key = (detail['content_type_id'], detail['supplier_id'])
                 try:
                     raw_supplier_data = supplier_detail[key]
@@ -6460,9 +6460,9 @@ def restructure_supplier_inv_images_data(prev_dict):
     all_assignment_data = prev_dict['inventory_activity_assignment']
     all_activity_data = prev_dict['inventory_activities']
     all_inventory_data = prev_dict['shortlisted_inventories']
-    all_supplier_data = prev_dict['all_suppliers']
+    all_supplier_data = prev_dict['shortlisted_suppliers']
     all_image_data = prev_dict['images']
-    new_dict = {"all_suppliers":[]}
+    new_dict = {"shortlisted_suppliers":[]}
     for curr_assignment_id in all_assignment_data:
         assignment_data = all_assignment_data[curr_assignment_id]
         curr_activity_id = assignment_data['inventory_activity_id']
@@ -6500,9 +6500,9 @@ def restructure_supplier_inv_images_data(prev_dict):
         if image_data['actual_activity_date']:
             supplier_data['activities'][activity_id]['actual_activity_date'] = image_data['actual_activity_date']
             supplier_data['activities'][activity_id]['status'] = 'complete'
-    for ss in prev_dict['all_suppliers']:
-        prev_dict['all_suppliers'][ss]['activities'] = list(prev_dict['all_suppliers'][ss]['activities'].values())
-    new_dict['all_suppliers'] = list(prev_dict['all_suppliers'].values())
+    for ss in prev_dict['shortlisted_suppliers']:
+        prev_dict['shortlisted_suppliers'][ss]['activities'] = list(prev_dict['shortlisted_suppliers'][ss]['activities'].values())
+    new_dict['shortlisted_suppliers'] = list(prev_dict['shortlisted_suppliers'].values())
 
     return new_dict
 
