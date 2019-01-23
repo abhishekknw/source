@@ -6419,21 +6419,22 @@ def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map, form
                 key = (detail['content_type_id'], detail['supplier_id'])
                 try:
                     raw_supplier_data = supplier_detail[key]
-                    detail['supplier_detail'] = {
-                        'name': raw_supplier_data['name'],
-                        'address1': raw_supplier_data['address1'],
-                        'address2': raw_supplier_data['address2'],
-                        'area': raw_supplier_data['area'],
-                        'subarea': raw_supplier_data['subarea'],
-                        'city': raw_supplier_data['city'],
-                        'state': raw_supplier_data['state'],
-                        'zipcode': raw_supplier_data['zipcode'],
-                        'latitude': raw_supplier_data['latitude'],
-                        'longitude': raw_supplier_data['longitude'],
-                        'flat_count': raw_supplier_data['flat_count'],
-                        'user_id': raw_supplier_data['user_id'],
-                        'created_by_id': raw_supplier_data['created_by_id'],
-                    }
+                    detail['supplier_detail'] = raw_supplier_data
+                    # detail['supplier_detail'] = {
+                    #     'name': raw_supplier_data['name'],
+                    #     'address1': raw_supplier_data['address1'],
+                    #     'address2': raw_supplier_data['address2'],
+                    #     'area': raw_supplier_data['area'],
+                    #     'subarea': raw_supplier_data['subarea'],
+                    #     'city': raw_supplier_data['city'],
+                    #     'state': raw_supplier_data['state'],
+                    #     'zipcode': raw_supplier_data['zipcode'],
+                    #     'latitude': raw_supplier_data['latitude'],
+                    #     'longitude': raw_supplier_data['longitude'],
+                    #     'flat_count': raw_supplier_data['flat_count'],
+                    #     'user_id': raw_supplier_data['user_id'],
+                    #     'created_by_id': raw_supplier_data['created_by_id'],
+                    # }
                 except KeyError:
                     # ideally every supplier in ss table must also be in the corresponding supplier table. But
                     # because current data is corrupt as i have manually added suppliers, i have to set this to
