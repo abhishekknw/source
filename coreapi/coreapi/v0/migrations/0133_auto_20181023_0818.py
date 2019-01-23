@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='emailsettings',
             name='user_type',
-            field=models.CharField(choices=[(b'NORMAL', b'NORMAL'), (b'ADMIN', b'ADMIN')], default=b'NORMAL', max_length=70, null=True),
+            field=models.CharField(choices=[('NORMAL', 'NORMAL'), ('ADMIN', 'ADMIN')], default='NORMAL', max_length=70, null=True),
         )
     ]

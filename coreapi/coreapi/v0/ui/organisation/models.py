@@ -4,7 +4,6 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from v0 import managers
 from v0.ui.account.models import BusinessAccountContact
-
 # five possible organization types
 ORGANIZATION_CATEGORY = (
     ('MACHADALO', 'MACHADALO'),

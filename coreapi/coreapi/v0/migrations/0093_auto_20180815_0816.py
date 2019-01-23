@@ -51,10 +51,10 @@ class Migration(migrations.Migration):
                 ('updated_at', models.DateTimeField(default=datetime.datetime(2016, 12, 1, 0, 0, tzinfo=utc), editable=False)),
                 ('key_name', models.CharField(blank=True, max_length=70, null=True)),
                 ('key_options', models.CharField(blank=True, max_length=200, null=True)),
-                ('key_type', models.CharField(choices=[(b'STRING', b'STRING'), (b'BOOLEAN', b'BOOLEAN'), (b'INT', b'INT'), (b'EMAIL', b'EMAIL'), (b'PASSWORD', b'PASSWORD'), (b'PHONE', b'PHONE'), (b'RADIO', b'RADIO'), (b'DROPDOWN', b'DROPDOWN'), (b'CHECKBOX', b'CHECKBOX'), (b'TEXTAREA', b'TEXTAREA')], max_length=70, null=True)),
+                ('key_type', models.CharField(choices=[('STRING', 'STRING'), ('BOOLEAN', 'BOOLEAN'), ('INT', 'INT'), ('EMAIL', 'EMAIL'), ('PASSWORD', 'PASSWORD'), ('PHONE', 'PHONE'), ('RADIO', 'RADIO'), ('DROPDOWN', 'DROPDOWN'), ('CHECKBOX', 'CHECKBOX'), ('TEXTAREA', 'TEXTAREA')], max_length=70, null=True)),
                 ('order_id', models.IntegerField(null=True)),
                 ('item_id', models.IntegerField(null=True)),
-                ('status', models.CharField(choices=[(b'ACTIVE', b'ACTIVE'), (b'INACTIVE', b'INACTIVE')], max_length=70, null=True)),
+                ('status', models.CharField(choices=[('ACTIVE', 'ACTIVE'), ('INACTIVE', 'INACTIVE')], max_length=70, null=True)),
                 ('leads_form_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='v0.LeadsForm')),
             ],
             options={

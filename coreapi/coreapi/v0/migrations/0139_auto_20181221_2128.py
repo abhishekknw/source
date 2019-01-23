@@ -21,8 +21,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('created_at', models.DateTimeField(default=datetime.datetime(2016, 12, 1, 0, 0, tzinfo=utc), editable=False)),
                 ('updated_at', models.DateTimeField(default=datetime.datetime(2016, 12, 1, 0, 0, tzinfo=utc), editable=False)),
-                ('id', models.AutoField(db_column=b'ID', primary_key=True, serialize=False)),
-                ('adinventory_id', models.CharField(db_column=b'ADINVENTORY_ID', max_length=22, unique=True)),
+                ('id', models.AutoField(db_column='ID', primary_key=True, serialize=False)),
+                ('adinventory_id', models.CharField(db_column='ADINVENTORY_ID', max_length=22, unique=True)),
                 ('object_id', models.CharField(max_length=20, null=True)),
                 ('content_type', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='contenttypes.ContentType')),
             ],
@@ -53,16 +53,16 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='adinventorylocationmapping',
             name='adinventory_name',
-            field=models.CharField(choices=[(b'POSTER', b'Poster'), (b'STANDEE', b'Standee'), (b'STALL', b'Stall'), (b'CAR DISPLAY', b'Car Display'), (b'FLIER', b'Flier'), (b'BANNER', b'Banner'), (b'POSTER LIFT', b'Poster Lift'), (b'GLASS_FACADE', b'GLASS_FACADE'), (b'HOARDING', b'HOARDING'), (b'DROPDOWN', b'DROPDOWN'), (b'STANDEE', b'STANDEE'), (b'PROMOTION_DESK', b'PROMOTION_DESK'), (b'PILLAR', b'PILLAR'), (b'TROLLEY', b'TROLLEY'), (b'WALL_INVENTORY', b'WALL_INVENTORY'), (b'FLOOR_INVENTORY', b'FLOOR_INVENTORY'), (b'GATEWAY ARCH', b'GATEWAY ARCH'), (b'SUNBOARD', b'SUNBOARD'), (b'BANNER', b'BANNER')], db_column=b'ADINVENTORY_NAME', default=b'POSTER', max_length=10),
+            field=models.CharField(choices=[('POSTER', 'Poster'), ('STANDEE', 'Standee'), ('STALL', 'Stall'), ('CAR DISPLAY', 'Car Display'), ('FLIER', 'Flier'), ('BANNER', 'Banner'), ('POSTER LIFT', 'Poster Lift'), ('GLASS_FACADE', 'GLASS_FACADE'), ('HOARDING', 'HOARDING'), ('DROPDOWN', 'DROPDOWN'), ('STANDEE', 'STANDEE'), ('PROMOTION_DESK', 'PROMOTION_DESK'), ('PILLAR', 'PILLAR'), ('TROLLEY', 'TROLLEY'), ('WALL_INVENTORY', 'WALL_INVENTORY'), ('FLOOR_INVENTORY', 'FLOOR_INVENTORY'), ('GATEWAY ARCH', 'GATEWAY ARCH'), ('SUNBOARD', 'SUNBOARD'), ('BANNER', 'BANNER')], db_column='ADINVENTORY_NAME', default='POSTER', max_length=10),
         ),
         migrations.AlterField(
             model_name='adinventorytype',
             name='adinventory_name',
-            field=models.CharField(choices=[(b'POSTER', b'Poster'), (b'STANDEE', b'Standee'), (b'STALL', b'Stall'), (b'CAR DISPLAY', b'Car Display'), (b'FLIER', b'Flier'), (b'BANNER', b'Banner'), (b'POSTER LIFT', b'Poster Lift'), (b'GLASS_FACADE', b'GLASS_FACADE'), (b'HOARDING', b'HOARDING'), (b'DROPDOWN', b'DROPDOWN'), (b'STANDEE', b'STANDEE'), (b'PROMOTION_DESK', b'PROMOTION_DESK'), (b'PILLAR', b'PILLAR'), (b'TROLLEY', b'TROLLEY'), (b'WALL_INVENTORY', b'WALL_INVENTORY'), (b'FLOOR_INVENTORY', b'FLOOR_INVENTORY'), (b'GATEWAY ARCH', b'GATEWAY ARCH'), (b'SUNBOARD', b'SUNBOARD'), (b'BANNER', b'BANNER')], db_column=b'ADINVENTORY_NAME', default=b'POSTER', max_length=20),
+            field=models.CharField(choices=[('POSTER', 'Poster'), ('STANDEE', 'Standee'), ('STALL', 'Stall'), ('CAR DISPLAY', 'Car Display'), ('FLIER', 'Flier'), ('BANNER', 'Banner'), ('POSTER LIFT', 'Poster Lift'), ('GLASS_FACADE', 'GLASS_FACADE'), ('HOARDING', 'HOARDING'), ('DROPDOWN', 'DROPDOWN'), ('STANDEE', 'STANDEE'), ('PROMOTION_DESK', 'PROMOTION_DESK'), ('PILLAR', 'PILLAR'), ('TROLLEY', 'TROLLEY'), ('WALL_INVENTORY', 'WALL_INVENTORY'), ('FLOOR_INVENTORY', 'FLOOR_INVENTORY'), ('GATEWAY ARCH', 'GATEWAY ARCH'), ('SUNBOARD', 'SUNBOARD'), ('BANNER', 'BANNER')], db_column='ADINVENTORY_NAME', default='POSTER', max_length=20),
         ),
         migrations.AlterField(
             model_name='campaigncomments',
             name='inventory_type',
-            field=models.CharField(blank=True, choices=[(b'POSTER', b'Poster'), (b'STANDEE', b'Standee'), (b'STALL', b'Stall'), (b'CAR DISPLAY', b'Car Display'), (b'FLIER', b'Flier'), (b'BANNER', b'Banner'), (b'POSTER LIFT', b'Poster Lift'), (b'GLASS_FACADE', b'GLASS_FACADE'), (b'HOARDING', b'HOARDING'), (b'DROPDOWN', b'DROPDOWN'), (b'STANDEE', b'STANDEE'), (b'PROMOTION_DESK', b'PROMOTION_DESK'), (b'PILLAR', b'PILLAR'), (b'TROLLEY', b'TROLLEY'), (b'WALL_INVENTORY', b'WALL_INVENTORY'), (b'FLOOR_INVENTORY', b'FLOOR_INVENTORY'), (b'GATEWAY ARCH', b'GATEWAY ARCH'), (b'SUNBOARD', b'SUNBOARD'), (b'BANNER', b'BANNER')], db_column=b'inventory_type', max_length=20, null=True),
+            field=models.CharField(blank=True, choices=[('POSTER', 'Poster'), ('STANDEE', 'Standee'), ('STALL', 'Stall'), ('CAR DISPLAY', 'Car Display'), ('FLIER', 'Flier'), ('BANNER', 'Banner'), ('POSTER LIFT', 'Poster Lift'), ('GLASS_FACADE', 'GLASS_FACADE'), ('HOARDING', 'HOARDING'), ('DROPDOWN', 'DROPDOWN'), ('STANDEE', 'STANDEE'), ('PROMOTION_DESK', 'PROMOTION_DESK'), ('PILLAR', 'PILLAR'), ('TROLLEY', 'TROLLEY'), ('WALL_INVENTORY', 'WALL_INVENTORY'), ('FLOOR_INVENTORY', 'FLOOR_INVENTORY'), ('GATEWAY ARCH', 'GATEWAY ARCH'), ('SUNBOARD', 'SUNBOARD'), ('BANNER', 'BANNER')], db_column='inventory_type', max_length=20, null=True),
         ),
     ]

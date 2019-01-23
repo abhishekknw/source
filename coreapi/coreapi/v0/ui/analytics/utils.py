@@ -28,12 +28,6 @@ level_name_by_model_id = {
 }
 
 
-count_details_kids_map = {
-    'campaign': {'supplier', 'checklist'},
-    'supplier': {'flat'}
-}
-
-
 count_details_parent_map = {
     'supplier':{'parent': 'campaign', 'model_name': 'ShortlistedSpaces', 'database_type': 'mysql',
                 'self_name_model': 'object_id', 'parent_name_model': 'proposal_id', 'storage_type': 'name'},
@@ -52,8 +46,11 @@ count_details_parent_map = {
     'phase': {'parent': 'campaign', 'model_name': 'SupplierPhase', 'database_type': 'mysql',
               'self_model_name': 'phase_no', 'parent_name_model':'campaign_id', 'storage_type': 'unique'},
     'hotness_level_': {'parent': 'campaign', 'model_name': 'leads', 'database_type': 'mongodb',
-                  'self_name_model': 'hotness_level', 'parent_name_model': 'campaign_id',
-                  'storage_type': 'condition'}
+                       'self_name_model': 'hotness_level', 'parent_name_model': 'campaign_id',
+                       'storage_type': 'condition'},
+    'supplier,flattype': {'parent': 'flattype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                          'self_name_model': 'supplier_id', 'parent_name_model': 'flat_count_type',
+                          'storage_type': 'name'}
 }
 
 count_details_parent_map_multiple = {
@@ -69,6 +66,14 @@ count_details_parent_map_multiple = {
              'self_model_name': 'start_date+end_date', 'parent_name_model': 'campaign_id, phase_no',
              'storage_type': 'range'}
 }
+
+reverse_direct_match = {'flattype':'supplier'}
+
+count_details_direct_match_multiple = {
+    'supplier': {'parent': 'flattype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                 'self_name_model': 'supplier_id', 'parent_name_model': 'flat_count_type', 'storage_type': 'name'}
+}
+
 
 count_details_parent_map_time = {
     'lead': {'parent': 'date,campaign', 'model_name': 'leads', 'database_type': 'mongodb',

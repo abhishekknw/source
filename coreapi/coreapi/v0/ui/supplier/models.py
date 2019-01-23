@@ -15,6 +15,12 @@ RETAIL_SHOP_TYPE = (
     ('STATIONARY_STORE', 'STATIONARY_STORE')
 )
 
+FLAT_COUNT_TYPE = (
+    (1, '0-149'),
+    (2, '150-399'),
+    (3, '400+')
+)
+
 class CorporateCompanyDetails(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     company_id = models.ForeignKey('CorporateParkCompanyList', db_column='COMPANY_ID', related_name='companydetails', blank=True, null=True, on_delete=models.CASCADE)
@@ -113,6 +119,7 @@ class SupplierTypeSociety(BaseModel):
     society_count = models.BooleanField(db_column='SOCIETY_COUNT', default=True)
     society_ratings = models.BooleanField(db_column='SOCIETY_RATINGS', default=True)
     flat_count = models.IntegerField(db_column='FLAT_COUNT', blank=True, null=True)
+    flat_count_type = models.IntegerField(blank=True, null=True, choices=FLAT_COUNT_TYPE)
     resident_count = models.IntegerField(db_column='RESIDENT_COUNT', blank=True, null=True)
     vacant_flat_count = models.IntegerField(db_column='VACANT_FLAT_COUNT', null=True)
     avg_household_occupants = models.IntegerField(db_column='AVG_HOUSEHOLD_OCCUPANTS', null=True)
