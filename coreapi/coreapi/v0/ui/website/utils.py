@@ -6287,6 +6287,8 @@ def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map):
     :param inv_act_assignment_objects:
     :return:
     """
+
+
     function = organise_supplier_inv_images_data.__name__
     try:
         result = {}
@@ -6295,8 +6297,8 @@ def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map):
         inv_act_assignment_ids = set()  # this is required to fetch images data later
         # the idea of this loop is to separate different table data in different keys.
         for content in inv_act_assignment_objects:
-            if not result.get('shortlisted_suppliers'):
-                result['shortlisted_suppliers'] = {}
+            if not result.get('all_suppliers'):
+                result['all_suppliers'] = {}
 
             # fetch data fro shortlisted_suppliers key
             shortlisted_space_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces']
@@ -6308,7 +6310,8 @@ def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map):
                 'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type']
             assigned_to = content['assigned_to']
 
-            result['shortlisted_suppliers'][shortlisted_space_id] = {
+            result['all_suppliers'][shortlisted_space_id] = {
+                'shortlisted_space_id': shortlisted_space_id,
                 'proposal_id': proposal_id,
                 'proposal_name': proposal_name,
                 'supplier_id': supplier_id,
@@ -6411,7 +6414,7 @@ def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map):
 
         # add the key 'supplier_detail' which holds all sorts of information for that supplier to final result.
         if result:
-            for shortlisted_space_id, detail in result['shortlisted_suppliers'].items():
+            for shortlisted_space_id, detail in result['all_suppliers'].items():
                 key = (detail['content_type_id'], detail['supplier_id'])
                 try:
                     detail['supplier_detail'] = supplier_detail[key]
@@ -6429,9 +6432,52 @@ def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map):
                 except KeyError:
                     detail['supplier_detail']['contacts'] = []
             result['images'] = images
-        return result
+        new_result = restructure_supplier_inv_images_data(result)
+        return new_result
     except Exception as e:
         return Exception(function, ui_utils.get_system_error(e))
+
+
+def restructure_supplier_inv_images_data(prev_dict):
+    all_assignment_data = prev_dict['inventory_activity_assignment']
+    all_activity_data = prev_dict['inventory_activities']
+    all_inventory_data = prev_dict['shortlisted_inventories']
+    all_supplier_data = prev_dict['all_suppliers']
+    all_image_data = prev_dict['images']
+    new_dict = {"all_suppliers":[]}
+    for curr_assignment_id in all_assignment_data:
+        assignment_data = all_assignment_data[curr_assignment_id]
+        curr_activity_id = assignment_data['inventory_activity_id']
+        activity_data = all_activity_data[curr_activity_id]
+        shortlisted_inventory_id = activity_data['shortlisted_inventory_id']
+        inventory_data = all_inventory_data[shortlisted_inventory_id]
+        shortlisted_spaces_id = inventory_data['shortlisted_spaces_id']
+        supplier_data = all_supplier_data[shortlisted_spaces_id]
+        if 'activities' not in supplier_data:
+            supplier_data['activities'] = {}
+        supplier_data['activities'][curr_activity_id] = {
+            'activity_type':activity_data['activity_type'],
+            'inventory_id': inventory_data['inventory_id'],
+            'comment': inventory_data['comment'],
+            'inventory_name': inventory_data['inventory_name'],
+            'inventory_duration': inventory_data['inventory_duration'],
+            'activity_date': assignment_data['activity_date'],
+            'reassigned_activity_date': assignment_data['reassigned_activity_date'],
+            'actual_activity_date': None
+        }
+
+    for curr_image_id in all_image_data:
+        image_data = all_image_data[curr_image_id]
+        assignment_id = image_data['inventory_activity_assignment_id']
+        activity_id = all_assignment_data[assignment_id]['inventory_activity_id']
+        shortlisted_inventory_id = all_activity_data[activity_id]['shortlisted_inventory_id']
+        shortlisted_spaces_id = all_inventory_data[shortlisted_inventory_id]['shortlisted_spaces_id']
+        supplier_data = all_supplier_data[shortlisted_spaces_id]
+        supplier_data['activities'][activity_id]['actual_activity_date'] = image_data['actual_activity_date']
+
+    new_dict['all_suppliers'] = list(prev_dict['all_suppliers'].values())
+
+    return new_dict
 
 
 def save_filters(center, supplier_code, proposal_data, proposal):
