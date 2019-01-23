@@ -154,6 +154,7 @@ class ProposalInfo(BaseModel):
     objects = managers.GeneralManager()
     is_disabled = models.BooleanField(default=False)
     invoice_number = models.CharField(max_length=1000, null=True, blank=True)
+    principal_vendor = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
 
     def get_centers(self):
         try:
