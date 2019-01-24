@@ -61,7 +61,7 @@ class BasicSupplierDetails(BaseModel):
 
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, on_delete=models.CASCADE)
-    supplier_id = models.CharField(max_length=20, primary_key=True)
+    supplier_id = models.CharField(db_index=True, max_length=20, primary_key=True)
     supplier_code = models.CharField(max_length=3, null=True)
     name = models.CharField(max_length=70, null=True, blank=True)
     address1 = models.CharField(max_length=250, null=True, blank=True)
@@ -99,7 +99,7 @@ class SupplierTypeSociety(BaseModel):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, on_delete=models.CASCADE)
     objects = managers.GeneralManager()
-    supplier_id = models.CharField(db_column='SUPPLIER_ID', primary_key=True, max_length=20)  # Field name made lowercase.
+    supplier_id = models.CharField(db_index=True, db_column='SUPPLIER_ID', primary_key=True, max_length=20)  # Field name made lowercase.
     supplier_code = models.CharField(db_column='SUPPLIER_CODE', max_length=3, null=True)
     society_name = models.CharField(db_column='SOCIETY_NAME', max_length=70, blank=True, null=True)  # Field name made lowercase.
     society_address1 = models.CharField(db_column='SOCIETY_ADDRESS1', max_length=250, blank=True, null=True)  # Field name made lowercase.
@@ -346,7 +346,7 @@ class SupplierTypeGym(BasicSupplierDetails):
 
 #Check whether this model is being used or not
 class SupplierInfo(models.Model):
-    supplier_id = models.CharField(db_column='SUPPLIER_ID', primary_key=True, max_length=20)  # Field name made lowercase.
+    supplier_id = models.CharField(db_index=True, db_column='SUPPLIER_ID', primary_key=True, max_length=20)  # Field name made lowercase.
     supplier_name = models.CharField(db_column='SUPPLIER_NAME', max_length=30, blank=True, null=True)  # Field name made lowercase.
     supplier_emailid = models.CharField(db_column='SUPPLIER_EMAILID', max_length=100, blank=True, null=True)  # Field name made lowercase.
     supplier_phone_no = models.CharField(db_column='SUPPLIER_PHONE_NO', max_length=15, blank=True, null=True)  # Field name made lowercase.
