@@ -92,6 +92,11 @@ def convert_date_format(date):
     except Exception as ex:
         print(ex)
     try:
+        date = datetime.datetime.strptime(str(date), '%d %b %Y')
+        return date
+    except Exception as ex:
+        print(ex)
+    try:
         date = datetime.datetime.strptime(str(date), '%Y-%d-%m %H:%M:%S')
         print(date)
         return date
@@ -2613,9 +2618,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     pipeline['total_booked']['supplier_data'] += pipeline['not_initiated']['supplier_data']
     pipeline['total_booked']['flat_count'] += sum(supplier['flat_count'] for supplier in pipeline['not_initiated']['supplier_data'] if supplier['flat_count'])
     pipeline['total_booked']['supplier_count'] += len(pipeline['not_initiated']['supplier_data'])
-
     if len(completed_phases) > 0:
-        last_completed_phase = sorted(completed_phases, key=lambda k: k['end_date'])[-1]
+        last_completed_phase = sorted(completed_phases, key=lambda k: convert_date_format(k['end_date']))[-1]
     shortlisted_spaces_by_phase_dict = {
         'all_phases': shortlisted_spaces_by_phase_list,
         'last_completed_phase': last_completed_phase,
