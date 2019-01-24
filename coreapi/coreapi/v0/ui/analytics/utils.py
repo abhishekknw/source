@@ -71,6 +71,17 @@ count_details_parent_map_multiple = {
 
 reverse_direct_match = {'flattype':'supplier'}
 
+
+count_details_parent_map_custom = {
+    'lead': {'parent': 'date,supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+             'self_name_model': 'entry_id', 'parent_name_model': 'created_at,supplier_id,campaign_id',
+             'storage_type': 'count'},
+    'hot_lead': {'parent': 'date,supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+                 'self_name_model': 'is_hot', 'parent_name_model': 'created_at,supplier_id,campaign_id',
+                 'storage_type': 'condition'},
+}
+
+
 count_details_direct_match_multiple = {
     'supplier': {'parent': 'flattype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
                  'self_name_model': 'supplier_id', 'parent_name_model': 'flat_count_type', 'storage_type': 'name'}
@@ -84,7 +95,7 @@ count_details_parent_map_time = {
                  'self_name_model': 'is_hot', 'parent_name_model': 'created_at,campaign_id', 'storage_type': 'condition'},
     'hotness_level_': {'parent': 'date, campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                   'self_name_model': 'hotness_level', 'parent_name_model': 'created_at,campaign_id',
-                  'storage_type': 'condition'}
+                  'storage_type': 'condition'},
     }
 
 geographical_parent_details = {
@@ -353,8 +364,9 @@ def merge_dict_array_array_multiple_keys(arrays, key_names):
             for curr_dict in curr_array:
                 match = True
                 for key in key_names:
-                    if not curr_dict[key]==first_dict[key]:
-                        match = False
+                    if key in curr_dict:
+                        if not curr_dict[key]==first_dict[key]:
+                            match = False
                 if match:
                     new_dict = curr_dict.copy()
                     new_dict.update(first_dict)
@@ -504,7 +516,7 @@ def date_to_other_groups(dict_array, group_name, desired_metric, raw_data, highe
 
     for curr_dict in dict_array:
         all_keys = list(curr_dict.keys())
-        curr_date = curr_dict[group_name[0]]
+        curr_date = curr_dict['date'] if 'date' in curr_dict else curr_dict[group_name[0]]
         if desired_metric == 'date':
             new_date = curr_date.strftime('%d/%m/%y')
             if new_date in new_dict:
@@ -550,16 +562,18 @@ def date_to_other_groups(dict_array, group_name, desired_metric, raw_data, highe
         first_part_query = model_name + '.objects.filter('
         full_query = first_part_query + other_fields[0] + '__in=highest_level_values)'
         query_results = list(eval(full_query).values(start_field,end_field,other_fields[0], assigned_field))
-        phase_adjusted_results = ranged_data_to_other_groups(copy.deepcopy(dict_array),query_results,start_field, end_field,
-                                                             group_name[0], assigned_field, other_fields)
+        phase_adjusted_results = ranged_data_to_other_groups(copy.deepcopy(dict_array),query_results,start_field,
+                                                             end_field, group_name[0], assigned_field, other_fields)
         new_array = phase_adjusted_results
 
+    if len(group_name)>2:
+        return new_array
     if desired_metric == 'weekday' or desired_metric == 'phase':
         if desired_metric in date_to_others:
-            group_name = list(date_to_others[desired_metric]['variables'].keys())
-        group_name.remove('date')
-        group_name.append(desired_metric)
-        new_array = sum_array_by_keys(new_array,group_name, raw_data)
+            new_group_name = list(date_to_others[desired_metric]['variables'].keys())
+        new_group_name.remove('date')
+        new_group_name.append(desired_metric)
+        new_array = sum_array_by_keys(new_array,new_group_name, raw_data)
     if new_array == []:
         new_array = list(new_dict.values())
 

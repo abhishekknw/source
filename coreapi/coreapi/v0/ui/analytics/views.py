@@ -7,7 +7,7 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     count_details_parent_map_time, date_to_other_groups, merge_dict_array_array_multiple_keys,
                     merge_dict_array_dict_multiple_keys, count_details_parent_map_multiple, sum_array_by_keys,
                     sum_array_by_single_key, append_array_by_keys, frequency_mode_calculator, var_stdev_calculator,
-                    mean_calculator)
+                    mean_calculator, count_details_parent_map_custom)
 from v0.ui.campaign.views import calculate_mode
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces
@@ -162,11 +162,10 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 dr_value = curr_dict[b] if b in curr_dict else curr_dict[reverse_map[b]]
             result_value = binary_operation(float(nr_value), float(dr_value), curr_metric['op']) if \
                 not dr_value == 0 and nr_value is not None and dr_value is not None else None
-            curr_dict[curr_metric['name']] = round(result_value, 4)
+            curr_dict[curr_metric['name']] = round(result_value, 4) if result_value is not None else result_value
 
     stats = []
     statistics_array = []
-    print(statistical_information)
     higher_level_list = []
     if not statistical_information == {}:
         stats = statistical_information['stats']
@@ -236,8 +235,13 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     if 'hotness_level' in lowest_level:
         incrementing_value = int(lowest_level[-1])
         lowest_level = lowest_level[:-1]
+
     if lowest_level not in default_map:
         default_map = count_details_parent_map
+    if len(grouping_levels)==3:
+        trial_map = count_details_parent_map_custom
+        if lowest_level in trial_map:
+            default_map = trial_map
     second_lowest_parent = default_map[lowest_level]['parent']
     second_lowest_parent_name_model = default_map[lowest_level]['parent_name_model']
     parent_type = 'single'
@@ -284,6 +288,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             match_list = next_level_match_list
         query = []
 
+        # so far, only for restricting date in data scope
         if next_level == lowest_level and not unilevel_constraints == {}:
             first_constraint_index = list(unilevel_constraints.keys())[0]
             first_constraint = unilevel_constraints[first_constraint_index]
