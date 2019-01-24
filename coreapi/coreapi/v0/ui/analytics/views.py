@@ -7,7 +7,7 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     count_details_parent_map_time, date_to_other_groups, merge_dict_array_array_multiple_keys,
                     merge_dict_array_dict_multiple_keys, count_details_parent_map_multiple, sum_array_by_keys,
                     sum_array_by_single_key, append_array_by_keys, frequency_mode_calculator, var_stdev_calculator,
-                    mean_calculator, count_details_parent_map_custom)
+                    mean_calculator, count_details_parent_map_custom, add_supplier_name)
 from v0.ui.campaign.views import calculate_mode
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces
@@ -110,9 +110,12 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     if "sublevel" in data_point:
         single_array = date_to_other_groups(single_array,grouping_level, data_point["sublevel"],
                                             raw_data, highest_level_values)
-    derived_array = copy.deepcopy(single_array)
+    single_array_subleveled = copy.deepcopy(single_array)
     metric_names = []
     metric_processed = []
+
+    derived_array_original = single_array_subleveled
+    derived_array = add_supplier_name(derived_array_original)
 
     for curr_metric in metrics:
         a_code = curr_metric[0]

@@ -1,5 +1,5 @@
 import numpy as np
-from v0.ui.supplier.models import SupplierPhase
+from v0.ui.supplier.models import SupplierPhase, SupplierTypeSociety
 from datetime import datetime
 import pytz, copy
 from v0.ui.campaign.views import calculate_mode
@@ -26,7 +26,7 @@ weekday_codes = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
 level_name_by_model_id = {
     "supplier_id": "supplier", "object_id": "supplier", "campaign_id": "campaign", "proposal_id": "campaign",
     "flat_count": "flat","total_negotiated_price": "cost", "created_at": "date", "phase_no": "phase",
-    "society_city": "city"
+    "society_city": "city", "society_name":"supplier_name"
 }
 
 
@@ -590,6 +590,22 @@ def frequency_mode_calculator(dict_array, frequency_keys, window_size=5):
             curr_dict[new_key] = curr_dist
         new_array.append(curr_dict)
     return new_array
+
+
+def add_supplier_name(dict_array):
+    if 'supplier' not in dict_array[0]:
+        return dict_array
+    supplier_ids = [x["supplier"] for x in dict_array]
+    model_data = SupplierTypeSociety.objects.filter(supplier_id__in = supplier_ids).\
+        values_list('supplier_id','society_name')
+    new_col_name = level_name_by_model_id['society_name']
+    model_data_dict = dict(model_data)
+    new_dict_array = []
+    for curr_dict in dict_array:
+        col_value = curr_dict['supplier']
+        curr_dict[new_col_name] = model_data_dict[col_value]
+        new_dict_array.append(curr_dict)
+    return new_dict_array
 
 
 
