@@ -612,6 +612,8 @@ def get_leads_excel_sheet(leads_form_id, supplier_id,**kwargs):
 
 
 class GenerateLeadDataExcel(APIView):
+    permission_classes = ()
+    authentication_classes = ()
     @staticmethod
     def get(request, leads_form_id):
         supplier_id = request.GET.get('supplier_id', 'ALL')
