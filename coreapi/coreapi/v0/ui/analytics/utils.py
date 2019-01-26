@@ -122,7 +122,7 @@ time_parent_names = {
 }
 
 
-def z_calculator_array_multiple(data_array, metrics_array_dict):
+def z_calculator_array_multiple(data_array, metrics_array_dict, weighted=0):
     result_array = []
     global_data = {}
     for curr_metric in metrics_array_dict:
@@ -185,7 +185,7 @@ def calculate_freqdist_mode_from_list(num_list,window_size=5):
     return freq_dist
 
 
-def var_stdev_calculator(dict_array, keys):
+def var_stdev_calculator(dict_array, keys, weighted=0):
     new_array = []
     for curr_dict in dict_array:
         for key in keys:
@@ -202,18 +202,27 @@ def var_stdev_calculator(dict_array, keys):
     return new_array
 
 
-def mean_calculator(dict_array, keys):
-    print(dict_array[0], keys)
+def mean_calculator(dict_array, keys, weighted=0):
     new_array = []
-    for curr_dict in dict_array:
-        for key in keys:
-            num_list = curr_dict[key]
-            if num_list == []:
-                continue
-            mean_key = 'mean_' + key
-            curr_mean = np.mean(num_list)
-            curr_dict[mean_key] = curr_mean
-        new_array.append(curr_dict)
+    if weighted == 1:
+        for curr_dict in dict_array:
+            new_keys = []
+            for curr_key in keys:
+                new_name = curr_key + '_total'
+                new_keys.append(new_name)
+                mean_key = 'mean_' + new_name
+                curr_dict[mean_key] = curr_dict[new_name]
+            new_array.append(curr_dict)
+    else:
+        for curr_dict in dict_array:
+            for key in keys:
+                num_list = curr_dict[key]
+                if num_list == []:
+                    continue
+                mean_key = 'mean_' + key
+                curr_mean = np.mean(num_list)
+                curr_dict[mean_key] = curr_mean
+            new_array.append(curr_dict)
     return new_array
 
 
@@ -409,7 +418,6 @@ def sum_array_by_key(array, grouping_keys, sum_key):
 
 
 def append_array_by_keys(array, grouping_keys, append_keys):
-    print(array[0],grouping_keys, append_keys)
     new_array = []
     required_keys = list(set(append_keys + grouping_keys))
     for curr_dict in array:
@@ -587,7 +595,7 @@ def date_to_other_groups(dict_array, group_name, desired_metric, raw_data, highe
 
     return new_array
 
-def frequency_mode_calculator(dict_array, frequency_keys, window_size=5):
+def frequency_mode_calculator(dict_array, frequency_keys, weighted=0, window_size=5):
     new_array= []
     for curr_dict in dict_array:
         for key in frequency_keys:

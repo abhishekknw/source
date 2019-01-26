@@ -117,7 +117,9 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     derived_array_original = single_array_subleveled
     derived_array = add_supplier_name(derived_array_original)
 
+    metric_parents = {}
     for curr_metric in metrics:
+        curr_metric_parents = []
         a_code = curr_metric[0]
         b_code = curr_metric[1]
         op = curr_metric[2]
@@ -126,18 +128,22 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             if a_code[0] == 'm':
                 a_code = a_code[1:]
                 a = metric_names[int(a_code) - 1]
+                curr_metric_parents.append(metric_parents[a])
                 a_source = metric_names
             else:
                 a = raw_data[int(a_code) - 1]
+                curr_metric_parents.append(a)
         else:
             a = a_code
         if type(b_code) is str:
             if b_code[0] == 'm':
                 b_code = b_code[1:]
                 b = metric_names[int(b_code) - 1]
+                curr_metric_parents.append(metric_parents[b])
                 b_source = metric_names
             else:
                 b = raw_data[int(b_code) - 1]
+                curr_metric_parents.append(b)
         else:
             b = b_code
 
@@ -152,6 +158,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             "op": op,
             "name": metric_name
         })
+        metric_parents[metric_name] = curr_metric_parents
 
     for curr_dict in derived_array:
         for curr_metric in metric_processed:
@@ -189,10 +196,63 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         stat_metrics = []
         for curr_index in stat_metrics_indices:
             stat_metrics.append(get_metrics_from_code(curr_index,raw_data,metric_names))
-        higher_level_list = append_array_by_keys(derived_array,grouping_level,stat_metrics)
+        raw_data_list = []
+        for prev_data in raw_data:
+            curr_data = prev_data + '_total'
+            raw_data_list.append(curr_data)
+        higher_level_list_old = append_array_by_keys(derived_array,grouping_level,stat_metrics+raw_data)
+
+        higher_level_list = []
+        higher_level_raw_data = []
+        for curr_dict in higher_level_list_old:
+            for curr_metric in raw_data:
+                curr_name = curr_metric+'_total'
+                curr_value = sum(curr_dict[curr_metric])
+                curr_dict[curr_name] = curr_value
+                if len(higher_level_raw_data) < len(raw_data):
+                    higher_level_raw_data.append(curr_name)
+            higher_level_list.append(curr_dict)
+
+        new_metric_processed = {}
+        new_metric_names = []
+        for curr_dict in higher_level_list:
+            for curr_metric in metric_processed:
+                a = curr_metric["a"]
+                b = curr_metric["b"]
+                try:
+                    nr = a + '_total'
+                except:
+                    nr=a
+                try:
+                    dr = b+'_total'
+                except:
+                    dr=b
+                if isinstance(nr, str):
+                    nr_value = curr_dict[nr] if nr in curr_dict else curr_dict[reverse_map[nr]]
+                else:
+                    nr_value = nr
+                if isinstance(dr, str):
+                    dr_value = curr_dict[dr] if dr in curr_dict else curr_dict[reverse_map[dr]]
+                else:
+                    dr_value = dr
+                result_value = binary_operation(float(nr_value), float(dr_value), curr_metric['op']) if \
+                    not dr_value == 0 and nr_value is not None and dr_value is not None else None
+                new_name = curr_metric['name'] + '_total'
+                new_metric_names.append(new_name)
+                curr_dict[new_name] = round(result_value, 4) if result_value is not None else result_value
+
+        new_stat_metrics = []
+        for curr_stat in stat_metrics:
+            new_name = curr_stat + '_total'
+            new_stat_metrics.append(new_name)
 
         for curr_stat in stats:
-            higher_level_list = statistics_map[curr_stat](higher_level_list,stat_metrics)
+            weighted = 0
+            pfix = 'weighted_'
+            if curr_stat[:len(pfix)] == pfix:
+                curr_stat = curr_stat[len(pfix):]
+                weighted = 1
+            higher_level_list = statistics_map[curr_stat](higher_level_list,stat_metrics, weighted)
 
 
     return {"individual metrics":individual_metric_output, "lower_group_data": derived_array,
