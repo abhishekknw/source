@@ -202,12 +202,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
                                 grouping_category = ""):
-    # # test only
-    # default_value_type = 'supplier'
-    # grouping_level = ['supplier','campaign']
-    # highest_level = 'campaign'
-    #
-    # # test ends
 
     # check for custom sequence
     incrementing_value = None
@@ -506,7 +500,8 @@ def get_details_by_date(lowest_level, highest_level, highest_level_list):
 def key_replace_group(dict_array, existing_key, required_key, sum_key):
     if existing_key == required_key:
         return dict_array
-    key_details = count_details_direct_match_multiple[existing_key]
+    search_key = str(existing_key)+'_'+str(required_key)
+    key_details = count_details_direct_match_multiple[search_key]
     model_name = key_details['model_name']
     database_type = key_details['database_type']
     self_name_model = key_details['self_name_model']

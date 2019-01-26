@@ -69,7 +69,7 @@ count_details_parent_map_multiple = {
              'storage_type': 'range'}
 }
 
-reverse_direct_match = {'flattype':'supplier'}
+reverse_direct_match = {'flattype':'supplier', 'qualitytype':'supplier'}
 
 
 count_details_parent_map_custom = {
@@ -82,9 +82,15 @@ count_details_parent_map_custom = {
 }
 
 
+# format: a_b
 count_details_direct_match_multiple = {
-    'supplier': {'parent': 'flattype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
-                 'self_name_model': 'supplier_id', 'parent_name_model': 'flat_count_type', 'storage_type': 'name'}
+    'supplier_flattype': {'parent': 'flattype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                          'self_name_model': 'supplier_id', 'parent_name_model': 'flat_count_type',
+                          'storage_type': 'name'},
+    'supplier_qualitytype': {'parent': 'qualitytype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                             'self_name_model': 'supplier_id', 'parent_name_model': 'society_type_quality',
+                             'storage_type': 'name'
+    }
 }
 
 
@@ -197,6 +203,7 @@ def var_stdev_calculator(dict_array, keys):
 
 
 def mean_calculator(dict_array, keys):
+    print(dict_array[0], keys)
     new_array = []
     for curr_dict in dict_array:
         for key in keys:
@@ -402,6 +409,7 @@ def sum_array_by_key(array, grouping_keys, sum_key):
 
 
 def append_array_by_keys(array, grouping_keys, append_keys):
+    print(array[0],grouping_keys, append_keys)
     new_array = []
     required_keys = list(set(append_keys + grouping_keys))
     for curr_dict in array:
