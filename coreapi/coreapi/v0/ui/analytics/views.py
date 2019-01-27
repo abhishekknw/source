@@ -7,7 +7,7 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     count_details_parent_map_time, date_to_other_groups, merge_dict_array_array_multiple_keys,
                     merge_dict_array_dict_multiple_keys, count_details_parent_map_multiple, sum_array_by_keys,
                     sum_array_by_single_key, append_array_by_keys, frequency_mode_calculator, var_stdev_calculator,
-                    mean_calculator)
+                    mean_calculator, count_details_parent_map_custom, add_supplier_name)
 from v0.ui.campaign.views import calculate_mode
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces
@@ -110,11 +110,16 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     if "sublevel" in data_point:
         single_array = date_to_other_groups(single_array,grouping_level, data_point["sublevel"],
                                             raw_data, highest_level_values)
-    derived_array = copy.deepcopy(single_array)
+    single_array_subleveled = copy.deepcopy(single_array)
     metric_names = []
     metric_processed = []
 
+    derived_array_original = single_array_subleveled
+    derived_array = add_supplier_name(derived_array_original)
+
+    metric_parents = {}
     for curr_metric in metrics:
+        curr_metric_parents = []
         a_code = curr_metric[0]
         b_code = curr_metric[1]
         op = curr_metric[2]
@@ -123,18 +128,22 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             if a_code[0] == 'm':
                 a_code = a_code[1:]
                 a = metric_names[int(a_code) - 1]
+                curr_metric_parents.append(metric_parents[a])
                 a_source = metric_names
             else:
                 a = raw_data[int(a_code) - 1]
+                curr_metric_parents.append(a)
         else:
             a = a_code
         if type(b_code) is str:
             if b_code[0] == 'm':
                 b_code = b_code[1:]
                 b = metric_names[int(b_code) - 1]
+                curr_metric_parents.append(metric_parents[b])
                 b_source = metric_names
             else:
                 b = raw_data[int(b_code) - 1]
+                curr_metric_parents.append(b)
         else:
             b = b_code
 
@@ -149,6 +158,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             "op": op,
             "name": metric_name
         })
+        metric_parents[metric_name] = curr_metric_parents
 
     for curr_dict in derived_array:
         for curr_metric in metric_processed:
@@ -162,11 +172,10 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 dr_value = curr_dict[b] if b in curr_dict else curr_dict[reverse_map[b]]
             result_value = binary_operation(float(nr_value), float(dr_value), curr_metric['op']) if \
                 not dr_value == 0 and nr_value is not None and dr_value is not None else None
-            curr_dict[curr_metric['name']] = round(result_value, 4)
+            curr_dict[curr_metric['name']] = round(result_value, 4) if result_value is not None else result_value
 
     stats = []
     statistics_array = []
-    print(statistical_information)
     higher_level_list = []
     if not statistical_information == {}:
         stats = statistical_information['stats']
@@ -187,10 +196,63 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         stat_metrics = []
         for curr_index in stat_metrics_indices:
             stat_metrics.append(get_metrics_from_code(curr_index,raw_data,metric_names))
-        higher_level_list = append_array_by_keys(derived_array,grouping_level,stat_metrics)
+        raw_data_list = []
+        for prev_data in raw_data:
+            curr_data = prev_data + '_total'
+            raw_data_list.append(curr_data)
+        higher_level_list_old = append_array_by_keys(derived_array,grouping_level,stat_metrics+raw_data)
+
+        higher_level_list = []
+        higher_level_raw_data = []
+        for curr_dict in higher_level_list_old:
+            for curr_metric in raw_data:
+                curr_name = curr_metric+'_total'
+                curr_value = sum(curr_dict[curr_metric])
+                curr_dict[curr_name] = curr_value
+                if len(higher_level_raw_data) < len(raw_data):
+                    higher_level_raw_data.append(curr_name)
+            higher_level_list.append(curr_dict)
+
+        new_metric_processed = {}
+        new_metric_names = []
+        for curr_dict in higher_level_list:
+            for curr_metric in metric_processed:
+                a = curr_metric["a"]
+                b = curr_metric["b"]
+                try:
+                    nr = a + '_total'
+                except:
+                    nr=a
+                try:
+                    dr = b+'_total'
+                except:
+                    dr=b
+                if isinstance(nr, str):
+                    nr_value = curr_dict[nr] if nr in curr_dict else curr_dict[reverse_map[nr]]
+                else:
+                    nr_value = nr
+                if isinstance(dr, str):
+                    dr_value = curr_dict[dr] if dr in curr_dict else curr_dict[reverse_map[dr]]
+                else:
+                    dr_value = dr
+                result_value = binary_operation(float(nr_value), float(dr_value), curr_metric['op']) if \
+                    not dr_value == 0 and nr_value is not None and dr_value is not None else None
+                new_name = curr_metric['name'] + '_total'
+                new_metric_names.append(new_name)
+                curr_dict[new_name] = round(result_value, 4) if result_value is not None else result_value
+
+        new_stat_metrics = []
+        for curr_stat in stat_metrics:
+            new_name = curr_stat + '_total'
+            new_stat_metrics.append(new_name)
 
         for curr_stat in stats:
-            higher_level_list = statistics_map[curr_stat](higher_level_list,stat_metrics)
+            weighted = 0
+            pfix = 'weighted_'
+            if curr_stat[:len(pfix)] == pfix:
+                curr_stat = curr_stat[len(pfix):]
+                weighted = 1
+            higher_level_list = statistics_map[curr_stat](higher_level_list,stat_metrics, weighted)
 
 
     return {"individual metrics":individual_metric_output, "lower_group_data": derived_array,
@@ -200,12 +262,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
                                 grouping_category = ""):
-    # # test only
-    # default_value_type = 'supplier'
-    # grouping_level = ['supplier','campaign']
-    # highest_level = 'campaign'
-    #
-    # # test ends
 
     # check for custom sequence
     incrementing_value = None
@@ -236,8 +292,13 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     if 'hotness_level' in lowest_level:
         incrementing_value = int(lowest_level[-1])
         lowest_level = lowest_level[:-1]
+
     if lowest_level not in default_map:
         default_map = count_details_parent_map
+    if len(grouping_levels)==3:
+        trial_map = count_details_parent_map_custom
+        if lowest_level in trial_map:
+            default_map = trial_map
     second_lowest_parent = default_map[lowest_level]['parent']
     second_lowest_parent_name_model = default_map[lowest_level]['parent_name_model']
     parent_type = 'single'
@@ -284,6 +345,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             match_list = next_level_match_list
         query = []
 
+        # so far, only for restricting date in data scope
         if next_level == lowest_level and not unilevel_constraints == {}:
             first_constraint_index = list(unilevel_constraints.keys())[0]
             first_constraint = unilevel_constraints[first_constraint_index]
@@ -498,7 +560,8 @@ def get_details_by_date(lowest_level, highest_level, highest_level_list):
 def key_replace_group(dict_array, existing_key, required_key, sum_key):
     if existing_key == required_key:
         return dict_array
-    key_details = count_details_direct_match_multiple[existing_key]
+    search_key = str(existing_key)+'_'+str(required_key)
+    key_details = count_details_direct_match_multiple[search_key]
     model_name = key_details['model_name']
     database_type = key_details['database_type']
     self_name_model = key_details['self_name_model']

@@ -1,5 +1,5 @@
 import numpy as np
-from v0.ui.supplier.models import SupplierPhase
+from v0.ui.supplier.models import SupplierPhase, SupplierTypeSociety
 from datetime import datetime
 import pytz, copy
 from v0.ui.campaign.views import calculate_mode
@@ -26,7 +26,7 @@ weekday_codes = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
 level_name_by_model_id = {
     "supplier_id": "supplier", "object_id": "supplier", "campaign_id": "campaign", "proposal_id": "campaign",
     "flat_count": "flat","total_negotiated_price": "cost", "created_at": "date", "phase_no": "phase",
-    "society_city": "city"
+    "society_city": "city", "society_name":"supplier_name"
 }
 
 
@@ -69,11 +69,28 @@ count_details_parent_map_multiple = {
              'storage_type': 'range'}
 }
 
-reverse_direct_match = {'flattype':'supplier'}
+reverse_direct_match = {'flattype':'supplier', 'qualitytype':'supplier'}
 
+
+count_details_parent_map_custom = {
+    'lead': {'parent': 'date,supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+             'self_name_model': 'entry_id', 'parent_name_model': 'created_at,supplier_id,campaign_id',
+             'storage_type': 'count'},
+    'hot_lead': {'parent': 'date,supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+                 'self_name_model': 'is_hot', 'parent_name_model': 'created_at,supplier_id,campaign_id',
+                 'storage_type': 'condition'},
+}
+
+
+# format: a_b
 count_details_direct_match_multiple = {
-    'supplier': {'parent': 'flattype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
-                 'self_name_model': 'supplier_id', 'parent_name_model': 'flat_count_type', 'storage_type': 'name'}
+    'supplier_flattype': {'parent': 'flattype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                          'self_name_model': 'supplier_id', 'parent_name_model': 'flat_count_type',
+                          'storage_type': 'name'},
+    'supplier_qualitytype': {'parent': 'qualitytype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                             'self_name_model': 'supplier_id', 'parent_name_model': 'society_type_quality',
+                             'storage_type': 'name'
+    }
 }
 
 
@@ -84,7 +101,7 @@ count_details_parent_map_time = {
                  'self_name_model': 'is_hot', 'parent_name_model': 'created_at,campaign_id', 'storage_type': 'condition'},
     'hotness_level_': {'parent': 'date, campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                   'self_name_model': 'hotness_level', 'parent_name_model': 'created_at,campaign_id',
-                  'storage_type': 'condition'}
+                  'storage_type': 'condition'},
     }
 
 geographical_parent_details = {
@@ -105,7 +122,7 @@ time_parent_names = {
 }
 
 
-def z_calculator_array_multiple(data_array, metrics_array_dict):
+def z_calculator_array_multiple(data_array, metrics_array_dict, weighted=0):
     result_array = []
     global_data = {}
     for curr_metric in metrics_array_dict:
@@ -168,7 +185,7 @@ def calculate_freqdist_mode_from_list(num_list,window_size=5):
     return freq_dist
 
 
-def var_stdev_calculator(dict_array, keys):
+def var_stdev_calculator(dict_array, keys, weighted=0):
     new_array = []
     for curr_dict in dict_array:
         for key in keys:
@@ -185,17 +202,27 @@ def var_stdev_calculator(dict_array, keys):
     return new_array
 
 
-def mean_calculator(dict_array, keys):
+def mean_calculator(dict_array, keys, weighted=0):
     new_array = []
-    for curr_dict in dict_array:
-        for key in keys:
-            num_list = curr_dict[key]
-            if num_list == []:
-                continue
-            mean_key = 'mean_' + key
-            curr_mean = np.mean(num_list)
-            curr_dict[mean_key] = curr_mean
-        new_array.append(curr_dict)
+    if weighted == 1:
+        for curr_dict in dict_array:
+            new_keys = []
+            for curr_key in keys:
+                new_name = curr_key + '_total'
+                new_keys.append(new_name)
+                mean_key = 'mean_' + new_name
+                curr_dict[mean_key] = curr_dict[new_name]
+            new_array.append(curr_dict)
+    else:
+        for curr_dict in dict_array:
+            for key in keys:
+                num_list = curr_dict[key]
+                if num_list == []:
+                    continue
+                mean_key = 'mean_' + key
+                curr_mean = np.mean(num_list)
+                curr_dict[mean_key] = curr_mean
+            new_array.append(curr_dict)
     return new_array
 
 
@@ -353,8 +380,9 @@ def merge_dict_array_array_multiple_keys(arrays, key_names):
             for curr_dict in curr_array:
                 match = True
                 for key in key_names:
-                    if not curr_dict[key]==first_dict[key]:
-                        match = False
+                    if key in curr_dict:
+                        if not curr_dict[key]==first_dict[key]:
+                            match = False
                 if match:
                     new_dict = curr_dict.copy()
                     new_dict.update(first_dict)
@@ -504,7 +532,7 @@ def date_to_other_groups(dict_array, group_name, desired_metric, raw_data, highe
 
     for curr_dict in dict_array:
         all_keys = list(curr_dict.keys())
-        curr_date = curr_dict[group_name[0]]
+        curr_date = curr_dict['date'] if 'date' in curr_dict else curr_dict[group_name[0]]
         if desired_metric == 'date':
             new_date = curr_date.strftime('%d/%m/%y')
             if new_date in new_dict:
@@ -550,22 +578,24 @@ def date_to_other_groups(dict_array, group_name, desired_metric, raw_data, highe
         first_part_query = model_name + '.objects.filter('
         full_query = first_part_query + other_fields[0] + '__in=highest_level_values)'
         query_results = list(eval(full_query).values(start_field,end_field,other_fields[0], assigned_field))
-        phase_adjusted_results = ranged_data_to_other_groups(copy.deepcopy(dict_array),query_results,start_field, end_field,
-                                                             group_name[0], assigned_field, other_fields)
+        phase_adjusted_results = ranged_data_to_other_groups(copy.deepcopy(dict_array),query_results,start_field,
+                                                             end_field, group_name[0], assigned_field, other_fields)
         new_array = phase_adjusted_results
 
+    if len(group_name)>2:
+        return new_array
     if desired_metric == 'weekday' or desired_metric == 'phase':
         if desired_metric in date_to_others:
-            group_name = list(date_to_others[desired_metric]['variables'].keys())
-        group_name.remove('date')
-        group_name.append(desired_metric)
-        new_array = sum_array_by_keys(new_array,group_name, raw_data)
+            new_group_name = list(date_to_others[desired_metric]['variables'].keys())
+        new_group_name.remove('date')
+        new_group_name.append(desired_metric)
+        new_array = sum_array_by_keys(new_array,new_group_name, raw_data)
     if new_array == []:
         new_array = list(new_dict.values())
 
     return new_array
 
-def frequency_mode_calculator(dict_array, frequency_keys, window_size=5):
+def frequency_mode_calculator(dict_array, frequency_keys, weighted=0, window_size=5):
     new_array= []
     for curr_dict in dict_array:
         for key in frequency_keys:
@@ -576,6 +606,22 @@ def frequency_mode_calculator(dict_array, frequency_keys, window_size=5):
             curr_dict[new_key] = curr_dist
         new_array.append(curr_dict)
     return new_array
+
+
+def add_supplier_name(dict_array):
+    if 'supplier' not in dict_array[0]:
+        return dict_array
+    supplier_ids = [x["supplier"] for x in dict_array]
+    model_data = SupplierTypeSociety.objects.filter(supplier_id__in = supplier_ids).\
+        values_list('supplier_id','society_name')
+    new_col_name = level_name_by_model_id['society_name']
+    model_data_dict = dict(model_data)
+    new_dict_array = []
+    for curr_dict in dict_array:
+        col_value = curr_dict['supplier']
+        curr_dict[new_col_name] = model_data_dict[col_value]
+        new_dict_array.append(curr_dict)
+    return new_dict_array
 
 
 
