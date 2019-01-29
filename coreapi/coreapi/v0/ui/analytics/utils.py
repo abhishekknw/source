@@ -3,6 +3,17 @@ from v0.ui.supplier.models import SupplierPhase, SupplierTypeSociety
 from datetime import datetime
 import pytz, copy
 from v0.ui.campaign.views import calculate_mode
+from collections import Iterable
+
+
+def flatten(items):
+    """Yield items from any nested iterable; see Reference."""
+    for x in items:
+        if isinstance(x, Iterable) and not isinstance(x, (str, bytes)):
+            for sub_x in flatten(x):
+                yield sub_x
+        else:
+            yield x
 
 
 def get_metrics_from_code(code, raw_metrics, derived_metrics):
@@ -190,8 +201,9 @@ def var_stdev_calculator(dict_array, keys, weighted=0):
     for curr_dict in dict_array:
         for key in keys:
             num_list = curr_dict[key]
-            if num_list == []:
+            if num_list == [] or num_list == None:
                 continue
+            num_list = [x for x in num_list if x is not None]
             stdev_key = 'stdev_' + key
             var_key = 'variance_' + key
             curr_stdev = np.std(num_list)
@@ -244,7 +256,7 @@ def sum_array_by_single_key(array, keys):
 
 
 def binary_operation(a, b, op):
-    operator_map = {"/": round(float(a)/b,5), "*":a*b, "+":a+b, "-": a-b}
+    operator_map = {"/": round(float(a)/b,5) if not b==0 else None, "*":a*b, "+":a+b, "-": a-b}
     return operator_map[op]
 
 
@@ -290,6 +302,16 @@ def find_key_alias_dict_array(dict_array, key_name):
         if key in level_name_by_model_id and level_name_by_model_id[key]==key_name:
             return key
     return key_name
+
+
+def flatten_dict_array(dict_array):
+    new_array = []
+    for curr_dict in dict_array:
+        if isinstance(curr_dict, list) and curr_dict == [curr_dict[0]]:
+            new_array = new_array + curr_dict
+        else:
+            new_array.append(curr_dict)
+    return new_array
 
 
 # Input: dict array: [{"supplier_id":"S1","campaign_id":"C1"},{"supplier_id":"S2","campaign_id":"C2"}]
