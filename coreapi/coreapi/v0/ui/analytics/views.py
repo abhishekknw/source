@@ -207,7 +207,10 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         for curr_dict in higher_level_list_old:
             for curr_metric in raw_data:
                 curr_name = curr_metric+'_total'
-                curr_value = sum(curr_dict[curr_metric])
+                curr_list = curr_dict[curr_metric]
+                if type(curr_list[0]) == str:
+                    curr_list = [int(x) for x in curr_list]
+                curr_value = sum(curr_list)
                 curr_dict[curr_name] = curr_value
                 if len(higher_level_raw_data) < len(raw_data):
                     higher_level_raw_data.append(curr_name)
