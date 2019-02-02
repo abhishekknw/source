@@ -798,7 +798,15 @@ class LeadsSummary(APIView):
     def get(self, request):
         class_name = self.__class__.__name__
         user_id = request.user.id
-        campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id).values_list('campaign_id', flat=True).distinct()
+        vendor = request.query_params.get('vendor',None)
+        if vendor:
+            campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
+                                                              campaign__principal_vendor=vendor).values_list(
+                'campaign_id', flat=True).distinct()
+        else:
+            campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
+                                                              ).values_list('campaign_id', flat=True).distinct()
+        campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,campaign__principal_vendor=vendor).values_list('campaign_id', flat=True).distinct()
         campaign_list = [campaign_id for campaign_id in campaign_list]
         all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).\
             values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name', 'proposal__tentative_start_date',
