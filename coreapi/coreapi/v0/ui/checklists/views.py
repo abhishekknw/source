@@ -612,7 +612,11 @@ class GetCampaignChecklists(APIView):
                                                              checklist_id=checklist['checklist_id'])
             if is_permitted:
                 checklist_id_list.append(checklist['checklist_id'])
-        checklists = [get_checklist_by_id(checklist_id) for checklist_id in checklist_id_list]
+        checklists = []
+        for checklist_id in checklist_id_list:
+            new_checklist = get_checklist_by_id(checklist_id)
+            if new_checklist:
+                checklists.append(new_checklist)
         return handle_response(class_name, data=checklists, success=True)
 
 
@@ -629,7 +633,11 @@ class GetAllChecklistsTemplates(APIView):
         checklist_id_list = []
         for checklist in all_campaign_checklists:
             checklist_id_list.append(checklist['checklist_id'])
-        checklists = [get_checklist_by_id(checklist_id) for checklist_id in checklist_id_list]
+        checklists = []
+        for checklist_id in checklist_id_list:
+            new_checklist = get_checklist_by_id(checklist_id)
+            if new_checklist:
+                checklists.append(new_checklist)
         return handle_response(class_name, data=checklists, success=True)
 
 
@@ -649,7 +657,11 @@ class GetSupplierChecklists(APIView):
             is_permitted, validation_msg = is_user_permitted("VIEW", request.user, checklist_id=checklist['checklist_id'])
             if is_permitted:
                 checklist_id_list.append(checklist['checklist_id'])
-        checklists = [get_checklist_by_id(checklist_id) for checklist_id in checklist_id_list]
+        checklists = []
+        for checklist_id in checklist_id_list:
+            new_checklist = get_checklist_by_id(checklist_id)
+            if new_checklist:
+                checklists.append(new_checklist)
         return handle_response(class_name, data=checklists, success=True)
 
 
@@ -693,9 +705,9 @@ def get_checklist_by_id(checklist_id):
     checklist_id = int(checklist_id)
     checklist_info = mongo_client.checklists.find_one({"checklist_id": checklist_id})
     if checklist_info is None:
-        return handle_response({}, data="incorrect checklist id", success=False)
+        return None
     elif checklist_info['status'] == 'inactive':
-        return handle_response({}, data="checklist already deleted", success=False)
+        return None
     checklist_dict = {
         "checklist_type": checklist_info['checklist_type'] if 'checklist_type' in checklist_info else "campaign",
         "campaign_id": checklist_info['campaign_id'],
