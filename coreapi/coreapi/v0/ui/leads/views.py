@@ -806,7 +806,6 @@ class LeadsSummary(APIView):
         else:
             campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
                                                               ).values_list('campaign_id', flat=True).distinct()
-        campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,campaign__principal_vendor=vendor).values_list('campaign_id', flat=True).distinct()
         campaign_list = [campaign_id for campaign_id in campaign_list]
         all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).\
             values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name', 'proposal__tentative_start_date',
