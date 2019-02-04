@@ -628,10 +628,7 @@ class GetAllChecklistsTemplates(APIView):
                                                                               {"is_template": True}]}))
         checklist_id_list = []
         for checklist in all_campaign_checklists:
-            is_permitted, validation_msg = is_user_permitted("VIEW", request.user,
-                                                             checklist_id=checklist['checklist_id'])
-            if is_permitted:
-                checklist_id_list.append(checklist['checklist_id'])
+            checklist_id_list.append(checklist['checklist_id'])
         checklists = [get_checklist_by_id(checklist_id) for checklist_id in checklist_id_list]
         return handle_response(class_name, data=checklists, success=True)
 
