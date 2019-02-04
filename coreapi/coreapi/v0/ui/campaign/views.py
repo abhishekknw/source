@@ -123,12 +123,13 @@ class campaignListAPIVIew(APIView):
         try:
             user = request.user
             date = request.query_params['date']
+            vendor = request.query_params.get('vendor',None)
             result = []
             category = request.query_params['category']
             if user.is_superuser:
-                result = website_utils.get_campaigns_with_status(category, user)
+                result = website_utils.get_campaigns_with_status(category, user, vendor)
             else:
-                result = website_utils.get_campaigns_with_status(category, user)
+                result = website_utils.get_campaigns_with_status(category, user, vendor)
             return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
