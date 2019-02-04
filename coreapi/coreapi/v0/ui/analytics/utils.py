@@ -37,7 +37,7 @@ weekday_codes = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
 level_name_by_model_id = {
     "supplier_id": "supplier", "object_id": "supplier", "campaign_id": "campaign", "proposal_id": "campaign",
     "flat_count": "flat","total_negotiated_price": "cost", "created_at": "date", "phase_no": "phase",
-    "society_city": "city", "society_name":"supplier_name"
+    "society_city": "city", "society_name":"supplier_name", "cost_per_flat":"cost_flat"
 }
 
 
@@ -63,7 +63,10 @@ count_details_parent_map = {
                        'storage_type': 'condition'},
     'supplier,flattype': {'parent': 'flattype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
                           'self_name_model': 'supplier_id', 'parent_name_model': 'flat_count_type',
-                          'storage_type': 'name'}
+                          'storage_type': 'name'},
+    'cost_flat': {'parent': 'campaign', 'model_name':'ShortlistedSpaces', 'database_type': 'mysql',
+                  'self_name_model': 'cost_per_flat', 'parent_name_model': 'proposal_id',
+                  'storage_type': 'sum'}
 }
 
 count_details_parent_map_multiple = {
