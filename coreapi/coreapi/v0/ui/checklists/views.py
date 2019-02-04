@@ -1058,8 +1058,9 @@ class ChecklistSavedOperators(APIView):
     @staticmethod
     def post(request):
         metrics_data = request.data
-        existing_data_count = len(list(ChecklistOperators.objects.raw({})))
-        operator_id = existing_data_count+1
+        last_operator_id =  mongo_client.checklist_operators.find_one(sort=[('operator_id', -1)])["operator_id"]
+        print(last_operator_id)
+        operator_id = last_operator_id+1
         metrics_data["operator_id"]=operator_id
         ChecklistOperators(**metrics_data).save()
         return handle_response('', data="success", success=True)
@@ -1085,6 +1086,18 @@ class ChecklistSavedOperators(APIView):
             }
             counter = counter + 1
         return handle_response('',data=final_response, success=True)
+
+    @staticmethod
+    def put(request):
+        operator_data = request.data
+        if 'operator_id' not in operator_data:
+            return handle_response('', data='operator id missing', success=True)
+        else:
+            operator_id = operator_data['operator_id']
+        operator_data.pop('operator_id')
+        operator_response = mongo_client.checklist_operators.update_one({"operator_id": int(operator_id)}, {
+            "$set":operator_data})
+        return handle_response('', data="success", success=True)
 
     @staticmethod
     def delete(request):
