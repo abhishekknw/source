@@ -1657,7 +1657,7 @@ def get_suppliers(query, supplier_type_code, coordinates):
                 supplier['shortlisted'] = True
                 # set status= 'S' as suppliers are shortlisted initially.
                 supplier['status'] = v0_constants.status
-                result.append(supplier)
+                result.append(dict(supplier))
         return ui_utils.handle_response(function_name, data=result, success=True)
 
     except Exception as e:
@@ -1740,7 +1740,6 @@ def handle_single_center(center, result):
             if not response.data['status']:
                 return response
             suppliers_data = response.data['data']
-
             # set in the result
             center_data['suppliers'][supplier_type_code] = suppliers_data
 
@@ -1840,8 +1839,7 @@ def suppliers_within_radius(data):
             supplier_codes_dict[center_id].add(code)
 
         for center in serializer.data:
-            center['codes'] = supplier_codes_dict[center['id']]
-
+            center['codes'] = list(supplier_codes_dict[center['id']])
         # collect suppliers_meta information
         response = add_filters(proposal_id, center_id_list)
         if not response.data['status']:
@@ -1851,18 +1849,17 @@ def suppliers_within_radius(data):
         # prepare result dict
         result = {center_id: {} for center_id in center_id_list}
         for center in serializer.data:
+            center = dict(center)
             response = handle_single_center(center, result)
             if not response.data['status']:
                 return response
             result = response.data['data']
-
             # get filter data per center from previous result
             filter_data_per_center = filters_data[center_id]['suppliers_meta']
             # assign it back to right center information
             result[center_id]['suppliers_meta'] = filter_data_per_center
 
-        master_result['suppliers'] = result.values()
-
+        master_result['suppliers'] = list(result.values())
         return ui_utils.handle_response(function_name, data=master_result, success=True)
     except KeyError as e:
         return ui_utils.handle_response(function_name, data='Key Error occurred', exception_object=e)
@@ -3744,7 +3741,6 @@ def manipulate_object_key_values(suppliers, supplier_type_code=v0_constants.soci
                     supplier[key] = item
         return suppliers
     except Exception as e:
-        print("e2", e)
         raise Exception(function, ui_utils.get_system_error(e))
 
 
