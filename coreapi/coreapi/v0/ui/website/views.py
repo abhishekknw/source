@@ -1303,6 +1303,7 @@ class OrganisationViewSet(viewsets.ViewSet):
             data = request.data.copy()
             data['user'] = request.user.pk
             data['organisation_id'] = website_utils.get_generic_id([data['category'], data['name']])
+            data['created_by_org'] = request.user.profile.organisation.organisation_id
             serializer = OrganisationSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
