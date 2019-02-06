@@ -34,6 +34,7 @@ class Organisation(BaseModel):
     contacts = GenericRelation(BusinessAccountContact)
     category = models.CharField(max_length=30, choices=ORGANIZATION_CATEGORY, default=ORGANIZATION_CATEGORY[1][0])
     objects = managers.GeneralManager()
+    created_by_org = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'organisation'
