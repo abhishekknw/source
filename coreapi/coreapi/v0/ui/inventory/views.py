@@ -662,6 +662,7 @@ class CampaignSuppliersInventoryList(APIView):
         class_name = self.__class__.__name__
 
         try:
+            format = request.query_params.get('return_format', 'old')
             result = {}
             # both are optional. generally the 'assigned_to' query is given by android, and 'proposal_id' query is given
             # by website
@@ -709,7 +710,7 @@ class CampaignSuppliersInventoryList(APIView):
                 'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__name',
             )
 
-            result = website_utils.organise_supplier_inv_images_data(inv_act_assignment_objects, user_map)
+            result = website_utils.organise_supplier_inv_images_data(inv_act_assignment_objects, user_map, format)
             return ui_utils.handle_response(class_name, data=result, success=True)
 
         except Exception as e:

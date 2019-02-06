@@ -189,7 +189,7 @@ class CampaignComments(BaseModel):
     )
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, on_delete=models.CASCADE)
     comment = models.CharField(max_length=500, null=True, blank=True)
-    campaign_id = models.CharField(max_length=70, null=True, blank=True)
+    campaign_id = models.CharField(db_index=True, max_length=70, null=True, blank=True)
     shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=False, blank=False, on_delete=models.CASCADE)
     inventory_type = models.CharField(db_column='inventory_type', max_length=20,
                                         choices=AD_INVENTORY_CHOICES, null=True, blank=True)

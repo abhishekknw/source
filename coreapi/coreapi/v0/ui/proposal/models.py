@@ -138,7 +138,7 @@ class ProposalInfo(BaseModel):
     is_campaign determines weather this proposal is a campaign or not.
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, on_delete=models.CASCADE)
-    proposal_id = models.CharField(max_length=255, primary_key=True)
+    proposal_id = models.CharField(db_index=True, max_length=255, primary_key=True)
     account = models.ForeignKey('AccountInfo', related_name='proposals', on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=50, blank=True, null=True)
     payment_status = models.BooleanField(default=False, )
@@ -154,6 +154,7 @@ class ProposalInfo(BaseModel):
     objects = managers.GeneralManager()
     is_disabled = models.BooleanField(default=False)
     invoice_number = models.CharField(max_length=1000, null=True, blank=True)
+    principal_vendor = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
 
     def get_centers(self):
         try:
@@ -269,7 +270,7 @@ class ShortlistedSpaces(BaseModel):
     proposal = models.ForeignKey('ProposalInfo', null=True, blank=True, on_delete=models.CASCADE)
     supplier_code = models.CharField(max_length=4, null=True, blank=True)
     content_type = models.ForeignKey(ContentType, related_name='spaces', on_delete=models.CASCADE)
-    object_id = models.CharField(max_length=supplier_id_max_length)
+    object_id = models.CharField(db_index=True, max_length=supplier_id_max_length)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     buffer_status = models.BooleanField(default=False)
     status = models.CharField(max_length=10, null=True, blank=True)
@@ -298,7 +299,7 @@ class HashTagImages(BaseModel):
     This model stores campaign images which is hashtagged by BANNER,RECEIPT...etc
     """
     campaign = models.ForeignKey('ProposalInfo', null=False, blank=False, on_delete=models.CASCADE)
-    object_id = models.CharField(max_length=supplier_id_max_length)
+    object_id = models.CharField(db_index=True, max_length=supplier_id_max_length)
     content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     image_path = models.CharField(max_length=1000, null=True, blank=True)
     hashtag = models.CharField(max_length=255)

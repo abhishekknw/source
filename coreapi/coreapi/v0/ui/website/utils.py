@@ -6265,23 +6265,31 @@ def get_campaigns_with_status(category, user):
                                                                 user)
         campaign_data['completed_campaigns'] = CampaignAssignment.objects. \
             filter(campaign_query, campaign__tentative_end_date__lt=current_date, campaign__campaign_state='PTC'). \
-            annotate(name=F('campaign__name')).values('campaign', 'name').distinct()
+            annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
+                     organisation=F('campaign__account__organisation__name')). \
+            values('campaign', 'name', 'principal_vendor', 'organisation').distinct()
         campaign_data['upcoming_campaigns'] = CampaignAssignment.objects. \
             filter(campaign_query, campaign__tentative_start_date__gt=current_date, campaign__campaign_state='PTC'). \
-            annotate(name=F('campaign__name')).values('campaign', 'name').distinct()
+            annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
+                     organisation=F('campaign__account__organisation__name')). \
+            values('campaign', 'name', 'principal_vendor', 'organisation').distinct()
         campaign_data['ongoing_campaigns'] = CampaignAssignment.objects. \
             filter(campaign_query, Q(campaign__tentative_start_date__lte=current_date) & Q(
             campaign__tentative_end_date__gte=current_date), campaign__campaign_state='PTC'). \
-            annotate(name=F('campaign__name')).values('campaign', 'name').distinct()
+            annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
+                     organisation=F('campaign__account__organisation__name')). \
+            values('campaign', 'name', 'principal_vendor', 'organisation').distinct()
         campaign_data['onhold_campaigns'] = CampaignAssignment.objects. \
             filter(campaign_query, campaign__campaign_state='POH'). \
-            annotate(name=F('campaign__name')).values('campaign', 'name').distinct()
+            annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
+                     organisation=F('campaign__account__organisation__name')). \
+            values('campaign', 'name', 'principal_vendor', 'organisation').distinct()
         return campaign_data
     except Exception as e:
         return Exception(function, ui_utils.get_system_error(e))
 
 
-def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map):
+def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map, format):
     """
 
     :param inv_act_assignment_objects:
@@ -6297,8 +6305,8 @@ def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map):
         inv_act_assignment_ids = set()  # this is required to fetch images data later
         # the idea of this loop is to separate different table data in different keys.
         for content in inv_act_assignment_objects:
-            if not result.get('all_suppliers'):
-                result['all_suppliers'] = {}
+            if not result.get('shortlisted_suppliers'):
+                result['shortlisted_suppliers'] = {}
 
             # fetch data fro shortlisted_suppliers key
             shortlisted_space_id = content['inventory_activity__shortlisted_inventory_details__shortlisted_spaces']
@@ -6310,7 +6318,7 @@ def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map):
                 'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__content_type']
             assigned_to = content['assigned_to']
 
-            result['all_suppliers'][shortlisted_space_id] = {
+            result['shortlisted_suppliers'][shortlisted_space_id] = {
                 'shortlisted_space_id': shortlisted_space_id,
                 'proposal_id': proposal_id,
                 'proposal_name': proposal_name,
@@ -6407,6 +6415,7 @@ def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map):
         # information for that supplier
         supplier_detail = response.data['data']
 
+
         response = get_contact_information(content_type_set, supplier_id_set)
         if not response.data['status']:
             return response
@@ -6414,10 +6423,26 @@ def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map):
 
         # add the key 'supplier_detail' which holds all sorts of information for that supplier to final result.
         if result:
-            for shortlisted_space_id, detail in result['all_suppliers'].items():
+            for shortlisted_space_id, detail in result['shortlisted_suppliers'].items():
                 key = (detail['content_type_id'], detail['supplier_id'])
                 try:
-                    detail['supplier_detail'] = supplier_detail[key]
+                    raw_supplier_data = supplier_detail[key]
+                    detail['supplier_detail'] = raw_supplier_data
+                    # detail['supplier_detail'] = {
+                    #     'name': raw_supplier_data['name'],
+                    #     'address1': raw_supplier_data['address1'],
+                    #     'address2': raw_supplier_data['address2'],
+                    #     'area': raw_supplier_data['area'],
+                    #     'subarea': raw_supplier_data['subarea'],
+                    #     'city': raw_supplier_data['city'],
+                    #     'state': raw_supplier_data['state'],
+                    #     'zipcode': raw_supplier_data['zipcode'],
+                    #     'latitude': raw_supplier_data['latitude'],
+                    #     'longitude': raw_supplier_data['longitude'],
+                    #     'flat_count': raw_supplier_data['flat_count'],
+                    #     'user_id': raw_supplier_data['user_id'],
+                    #     'created_by_id': raw_supplier_data['created_by_id'],
+                    # }
                 except KeyError:
                     # ideally every supplier in ss table must also be in the corresponding supplier table. But
                     # because current data is corrupt as i have manually added suppliers, i have to set this to
@@ -6432,8 +6457,9 @@ def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map):
                 except KeyError:
                     detail['supplier_detail']['contacts'] = []
             result['images'] = images
-        new_result = restructure_supplier_inv_images_data(result)
-        return new_result
+        if format == "new":
+            result = restructure_supplier_inv_images_data(result)
+        return result
     except Exception as e:
         return Exception(function, ui_utils.get_system_error(e))
 
@@ -6442,9 +6468,9 @@ def restructure_supplier_inv_images_data(prev_dict):
     all_assignment_data = prev_dict['inventory_activity_assignment']
     all_activity_data = prev_dict['inventory_activities']
     all_inventory_data = prev_dict['shortlisted_inventories']
-    all_supplier_data = prev_dict['all_suppliers']
+    all_supplier_data = prev_dict['shortlisted_suppliers']
     all_image_data = prev_dict['images']
-    new_dict = {"all_suppliers":[]}
+    new_dict = {"shortlisted_suppliers":[]}
     for curr_assignment_id in all_assignment_data:
         assignment_data = all_assignment_data[curr_assignment_id]
         curr_activity_id = assignment_data['inventory_activity_id']
@@ -6453,9 +6479,13 @@ def restructure_supplier_inv_images_data(prev_dict):
         inventory_data = all_inventory_data[shortlisted_inventory_id]
         shortlisted_spaces_id = inventory_data['shortlisted_spaces_id']
         supplier_data = all_supplier_data[shortlisted_spaces_id]
+        due_date = assignment_data['activity_date']
+        if assignment_data['reassigned_activity_date']:
+            due_date = assignment_data['reassigned_activity_date']
         if 'activities' not in supplier_data:
             supplier_data['activities'] = {}
         supplier_data['activities'][curr_activity_id] = {
+            'activity_id': curr_activity_id,
             'activity_type':activity_data['activity_type'],
             'inventory_id': inventory_data['inventory_id'],
             'comment': inventory_data['comment'],
@@ -6463,7 +6493,9 @@ def restructure_supplier_inv_images_data(prev_dict):
             'inventory_duration': inventory_data['inventory_duration'],
             'activity_date': assignment_data['activity_date'],
             'reassigned_activity_date': assignment_data['reassigned_activity_date'],
-            'actual_activity_date': None
+            'actual_activity_date': None,
+            'due_date': due_date,
+            'status': 'pending'
         }
 
     for curr_image_id in all_image_data:
@@ -6473,9 +6505,12 @@ def restructure_supplier_inv_images_data(prev_dict):
         shortlisted_inventory_id = all_activity_data[activity_id]['shortlisted_inventory_id']
         shortlisted_spaces_id = all_inventory_data[shortlisted_inventory_id]['shortlisted_spaces_id']
         supplier_data = all_supplier_data[shortlisted_spaces_id]
-        supplier_data['activities'][activity_id]['actual_activity_date'] = image_data['actual_activity_date']
-
-    new_dict['all_suppliers'] = list(prev_dict['all_suppliers'].values())
+        if image_data['actual_activity_date']:
+            supplier_data['activities'][activity_id]['actual_activity_date'] = image_data['actual_activity_date']
+            supplier_data['activities'][activity_id]['status'] = 'complete'
+    for ss in prev_dict['shortlisted_suppliers']:
+        prev_dict['shortlisted_suppliers'][ss]['activities'] = list(prev_dict['shortlisted_suppliers'][ss]['activities'].values())
+    new_dict['shortlisted_suppliers'] = list(prev_dict['shortlisted_suppliers'].values())
 
     return new_dict
 
