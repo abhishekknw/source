@@ -646,13 +646,19 @@ class SocietyList(APIView):
         class_name = self.__class__.__name__
         try:
             user = request.user
-
+            vendor = request.user.profile.organisation.created_by_org
+            org_id = request.user.profile.organisation.organisation_id
+            society_objects = []
             if user.is_superuser:
                 society_objects = SupplierTypeSociety.objects.all().order_by('society_name')
             else:
-                city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
-                                                             v0_constants.society)
-                society_objects = SupplierTypeSociety.objects.filter(city_query)
+                # city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
+                #                                              v0_constants.society)
+                society_objects = SupplierTypeSociety.objects.filter((Q(representative=vendor) | Q(representative=org_id))
+                                                                     & Q(representative__isnull=False))
+
+            if not society_objects:
+                return handle_response(class_name, data={}, success=True)
 
             serializer = SupplierTypeSocietySerializer(society_objects, many=True)
             suppliers = manipulate_object_key_values(serializer.data)
@@ -1865,13 +1871,19 @@ class SuppliersMeta(APIView):
         try:
             valid_supplier_type_code_instances = SupplierTypeCode.objects.all()
             data = {}
+            vendor = request.user.profile.organisation.created_by_org
+            org_id= request.user.profile.organisation.organisation_id
 
             for instance in valid_supplier_type_code_instances:
                 supplier_type_code = instance.supplier_type_code
                 error = False
                 try:
                     model_name = get_model(supplier_type_code)
-                    count = model_name.objects.all().count()
+                    if request.user.is_superuser:
+                        count = model_name.objects.all().count()
+                    else:
+                        count = model_name.objects.all().filter((Q(representative=vendor) | Q(representative=org_id))
+                                                            & Q(representative__isnull=False)).count()
                 except Exception:
                     count = 0
                     error = True

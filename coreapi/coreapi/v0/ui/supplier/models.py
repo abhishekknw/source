@@ -288,6 +288,7 @@ class SupplierTypeSalon(BasicSupplierDetails):
     mirrorstrip_price_week = models.IntegerField(db_column='MS_PRICE_WEEK', blank=True, null=True)
     mirrorstrip_price_month = models.IntegerField(db_column='MS_PRICE_MONTH', blank=True, null=True)
     fields.GenericRelation(ContactDetailsGeneric)
+    representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'supplier_salon'
@@ -340,6 +341,7 @@ class SupplierTypeGym(BasicSupplierDetails):
     wall_price_month = models.IntegerField(blank=True, null=True)
     wall_price_three_month = models.IntegerField(blank=True, null=True)
     fields.GenericRelation(ContactDetailsGeneric)
+    representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'supplier_gym'
@@ -395,6 +397,7 @@ class SupplierTypeCorporate(BasicSupplierDetails):
     averagerent = models.FloatField(blank=True, null=True, default=0.0)
     fields.GenericRelation(ContactDetailsGeneric)
     is_common_cafeteria_available = models.BooleanField(default=False)
+    representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
 
     def get_buildings(self):
         return self.corporatebuilding.all()
@@ -437,6 +440,7 @@ class SupplierTypeRetailShop(BasicSupplierDetails):
     is_modern_trade = models.BooleanField(default=False)
     is_traditional = models.BooleanField(default=False)
     category_name = models.CharField(max_length=255, null=True, blank=True)
+    representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
 
@@ -450,6 +454,7 @@ class SupplierTypeBusDepot(BasicSupplierDetails):
     route_count_originate = models.IntegerField(null=True, blank=True)
     route_count_terminate = models.IntegerField(null=True, blank=True)
     bus_types = models.CharField(max_length=20, null=True, blank=True)
+    representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'supplier_type_bus_depot'
