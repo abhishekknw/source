@@ -10,7 +10,7 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     mean_calculator, count_details_parent_map_custom, add_supplier_name, flatten, flatten_dict_array)
 from v0.ui.campaign.views import calculate_mode
 from v0.ui.common.models import mongo_client
-from v0.ui.proposal.models import ShortlistedSpaces
+from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo
 from v0.ui.supplier.models import SupplierTypeSociety
 import copy
 from rest_framework.views import APIView
@@ -26,6 +26,36 @@ statistics_map = {"z_score": z_calculator_array_multiple, "frequency_distributio
 unilevel_categories = ['time']
 
 
+def get_reverse_dict(original_dict):
+    keys = original_dict.keys()
+    reverse_dict = {}
+    for curr_key in keys:
+        curr_values = original_dict[curr_key]
+        if isinstance(curr_values, list) == False:
+            curr_values = [curr_values]
+        for value in curr_values:
+            reverse_dict[value] = curr_key
+    return reverse_dict
+
+
+# first_part_query = model_name + '.objects.filter('
+# full_query = first_part_query + parent_model_name + '__in=match_list)'
+# add_query = '.filter(' + add_variable_name + '__in=add_match_list)'
+# add_match_list = add_match_list["exact"]
+def get_campaigns_from_vendors(vendor_list):
+    model_name = 'ProposalInfo'
+    parent_name_model = 'principal_vendor_id'
+    self_name_model = 'proposal_id'
+    match_list = vendor_list
+    full_query = model_name + '.objects.filter(' + parent_name_model + '__in=match_list)'
+    #ProposalInfo.objects.filter(principal_vendor_id__in=['1', 'v2'])
+    final_query = eval(full_query)
+    final_dict = dict(final_query.values_list(self_name_model, parent_name_model))
+    next_level_array = list(final_dict.keys())
+    final_result = [final_dict, next_level_array]
+    return final_result
+
+
 # currently working with the following constraints:
 # exactly one scope restrictor with exact match, one type of data point
 def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
@@ -39,7 +69,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 unilevel_constraints[curr_key] = data_scope[curr_key]
                 data_scope.pop(curr_key)
         data_scope_first = data_scope[data_scope_keys[0]] if data_scope_keys is not [] else {}
-    highest_level = data_scope_first['value_type'] if 'value_type' in data_scope_first else None
+    highest_level = data_scope_first['value_type'] if 'value_type' in data_scope_first else data_scope_first['level']
+
     if 'category' not in data_point or 'level' not in data_point:
         return []
     grouping_level = data_point['level'] if 'level' in data_point else None
@@ -53,6 +84,15 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     default_value_type = data_scope_first['value_type'] if not data_scope_first == {} else None
     data_point_category = data_point['category']
     data_scope_category = data_scope_first['category'] if not data_scope_first == {} else data_point_category
+    highest_level_original = ''
+    if highest_level == 'vendor':
+        highest_level_original = 'vendor'
+        values = data_scope_first['values']['exact'] if 'values' in data_scope_first \
+                                                        and 'exact' in data_scope_first['values'] else []
+        [values_dict, vendor_level_values_list] = get_campaigns_from_vendors(values)
+        highest_level_values = vendor_level_values_list
+        highest_level = 'campaign'
+        default_value_type = 'campaign'
     for curr_metric in raw_data:
         lowest_level = curr_metric
         if data_scope_category == 'geographical':
@@ -115,7 +155,15 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     metric_processed = []
 
     derived_array_original = single_array_subleveled
-    derived_array = add_supplier_name(derived_array_original)
+    derived_array_1 = add_supplier_name(derived_array_original)
+    derived_array = []
+
+    if highest_level_original == 'vendor':
+        for curr_dict in derived_array_1:
+            curr_key = curr_dict[default_value_type]
+            curr_value = values_dict[curr_key]
+            curr_dict[highest_level_original] = curr_value
+            derived_array.append(curr_dict)
 
     metric_parents = {}
     for curr_metric in metrics:
@@ -607,6 +655,7 @@ class GetLeadsDataGeneric(APIView):
             'higher_level_statistical_information' in all_data else {}
         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
                                          higher_level_statistical_information)
+        print(mongo_query)
         return handle_response('', data=mongo_query, success=True)
 
 
@@ -664,13 +713,3 @@ class AnalyticSavedOperators(APIView):
         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics)
         return handle_response('', data=mongo_query, success=True)
 
-
-# class Calculator:
-#     def sum(self, a, b):
-#         return a + b
-#
-#
-# class TestCalculator(TestCase):
-#     @patch('Calculator.sum', return_value = 9)
-#     def test_sum(self, sum):
-#         self.assertEqual(sum(2, 3), 9)
