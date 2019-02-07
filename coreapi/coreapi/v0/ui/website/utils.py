@@ -6457,6 +6457,8 @@ def organise_supplier_inv_images_data(inv_act_assignment_objects, user_map, form
                 except KeyError:
                     detail['supplier_detail']['contacts'] = []
             result['images'] = images
+        if result == {}:
+            return result
         if format == "new":
             result = restructure_supplier_inv_images_data(result)
         return result
