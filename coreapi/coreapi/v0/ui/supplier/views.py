@@ -2020,7 +2020,7 @@ class FilteredSuppliers(APIView):
 
             # first fetch common query which is applicable to all suppliers. The results of this query will form
             # our master supplier list.
-            response = website_utils.handle_common_filters(common_filters, supplier_type_code)
+            response = website_utils.handle_common_filters(common_filters, supplier_type_code, proposal)
             if not response.data['status']:
                 return response
             common_filters_query = response.data['data']
@@ -2070,13 +2070,14 @@ class FilteredSuppliers(APIView):
             result = {}
 
             # query now for real objects for supplier_id in the list
-            cache_key = create_cache_key(class_name, final_suppliers_id_list)
+            # cache_key = create_cache_key(class_name, final_suppliers_id_list)
             # if cache.get(cache_key):
             #     import pdb
             #     pdb.set_trace()
             #     filtered_suppliers = cache.get(cache_key)
             #
-            filtered_suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_id_list)
+            filtered_suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_id_list,
+                                                               representative=proposal.principal_vendor)
 
             # cache.set(cache_key, filtered_suppliers)
             supplier_serializer = ui_utils.get_serializer(supplier_type_code)
@@ -2116,7 +2117,7 @@ class FilteredSuppliers(APIView):
                 supplier_id_to_pi_map = {supplier_id: detail['total_priority_index'] for supplier_id, detail in pi_index_map.items()}
 
             # the following function sets the pricing as before and it's temprorary.
-            total_suppliers, suppliers_inventory_count = website_utils.set_pricing_temproray(total_suppliers.values(), final_suppliers_id_list, supplier_type_code, coordinates, supplier_id_to_pi_map)
+            total_suppliers, suppliers_inventory_count = website_utils.set_pricing_temproray(list(total_suppliers.values()), final_suppliers_id_list, supplier_type_code, coordinates, supplier_id_to_pi_map)
 
             # before returning final result. change some keys of society to common keys we have defined.
             total_suppliers = website_utils.manipulate_object_key_values(total_suppliers, supplier_type_code=supplier_type_code)

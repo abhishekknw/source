@@ -1553,7 +1553,6 @@ class CreateFinalProposal(APIView):
         """
         class_name = self.__class__.__name__
         try:
-
             supplier_type_code = request.data['supplier_type_code']
 
             content_type_response = ui_utils.get_content_type(supplier_type_code)
