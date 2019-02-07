@@ -37,6 +37,7 @@ from v0.ui.account.models import ContactDetailsGeneric
 from v0.ui.components.models import (SocietyTower, CorporateBuildingWing, CompanyFloor, FlatType, LiftDetails)
 from v0.ui.components.serializers import CorporateBuildingWingSerializer
 from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping)
+from v0.ui.organisation.models import (Organisation)
 import v0.constants as v0_constants
 from rest_framework.response import Response
 from django.contrib.contenttypes.models import ContentType
@@ -646,7 +647,6 @@ class SocietyList(APIView):
         class_name = self.__class__.__name__
         try:
             user = request.user
-            vendor = request.user.profile.organisation.created_by_org
             org_id = request.user.profile.organisation.organisation_id
             society_objects = []
             if user.is_superuser:
@@ -654,7 +654,8 @@ class SocietyList(APIView):
             else:
                 # city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
                 #                                              v0_constants.society)
-                society_objects = SupplierTypeSociety.objects.filter((Q(representative=vendor) | Q(representative=org_id))
+                vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
+                society_objects = SupplierTypeSociety.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
                                                                      & Q(representative__isnull=False))
 
             if not society_objects:
@@ -1871,7 +1872,6 @@ class SuppliersMeta(APIView):
         try:
             valid_supplier_type_code_instances = SupplierTypeCode.objects.all()
             data = {}
-            vendor = request.user.profile.organisation.created_by_org
             org_id= request.user.profile.organisation.organisation_id
 
             for instance in valid_supplier_type_code_instances:
@@ -1882,7 +1882,8 @@ class SuppliersMeta(APIView):
                     if request.user.is_superuser:
                         count = model_name.objects.all().count()
                     else:
-                        count = model_name.objects.all().filter((Q(representative=vendor) | Q(representative=org_id))
+                        vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
+                        count = model_name.objects.all().filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
                                                             & Q(representative__isnull=False)).count()
                 except Exception:
                     count = 0
