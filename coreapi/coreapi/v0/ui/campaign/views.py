@@ -30,6 +30,7 @@ import gpxpy.geo
 from v0.ui.leads.models import get_leads_summary, get_leads_summary_by_campaign, get_extra_leads_dict
 from v0.ui.base.models import DurationType
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
+from v0.ui.proposal.serializers import ProposalInfoSerializer
 from django.core.cache import cache
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.conf import settings
@@ -1998,3 +1999,21 @@ class CampaignWiseSummary(APIView):
         campaign_summary['last_three_weeks'] = get_campaign_wise_summary_by_user(user_id, start_date)
         campaign_summary['overall'] = get_campaign_wise_summary_by_user(user_id)
         return ui_utils.handle_response({}, data=campaign_summary, success=True)
+
+
+class AssignedCampaigns(APIView):
+    @staticmethod
+    def get(request):
+        user_id = request.user.id
+        vendor = request.query_params.get('vendor',None)
+        if vendor:
+            campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
+                                                              campaign__principal_vendor=vendor).values_list(
+                'campaign_id', flat=True).distinct()
+        else:
+            campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
+                                                              ).values_list('campaign_id', flat=True).distinct()
+        campaign_list = [campaign_id for campaign_id in campaign_list]
+        all_campaigns = ProposalInfo.objects.filter(proposal_id__in=campaign_list)
+        serialized_proposals = ProposalInfoSerializer(all_campaigns, many=True).data
+        return ui_utils.handle_response({}, data=serialized_proposals, success=True)

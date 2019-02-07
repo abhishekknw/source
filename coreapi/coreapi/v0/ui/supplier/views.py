@@ -3018,3 +3018,19 @@ class insertFlatCountType(APIView):
             n=n+1
             print("saved: ", n)
         return ui_utils.handle_response({}, data='success', success=True)
+
+
+class listCampaignSuppliers(APIView):
+    # inserts flat count type to society on the basis of number of flats it has
+    @staticmethod
+    def get(request, campaign_id):
+        all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
+            values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name',
+                   'proposal__tentative_start_date',
+                   'proposal__tentative_end_date', 'proposal__campaign_state')
+        all_supplier_ids = [supplier['object_id'] for supplier in all_shortlisted_supplier]
+        all_campaign_societies = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).all()
+        serializer = SupplierTypeSocietySerializer(all_campaign_societies, many=True)
+        all_societies = manipulate_object_key_values(serializer.data)
+        all_societies = [dict(society) for society in all_societies]
+        return ui_utils.handle_response({}, data=all_societies, success=True)

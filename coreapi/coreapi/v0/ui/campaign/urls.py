@@ -7,7 +7,7 @@ from .views import (ShortlistSocietyCountAPIView, BookCampaignAPIView,
                    DeleteInventoryActivityAssignment, GetCampaignAssignments, DeleteCampaignAssignments,
                    GetAdInventoryTypeAndDurationTypeData, AddDynamicInventoryIds, DeleteAdInventoryIds,
                    CampaignLeads, CityWiseMultipleCampaignLeads, PhaseWiseMultipleCampaignLeads, CampaignLeadsCustom,
-                   Comment, CampaignLeadsMultiple, GetPermissionBoxImages, CampaignWiseSummary)
+                   Comment, CampaignLeadsMultiple, GetPermissionBoxImages, CampaignWiseSummary, AssignedCampaigns)
 from v0.ui.website.views import (GetAssignedIdImagesListApiView)
 
 urlpatterns = [
@@ -33,6 +33,7 @@ urlpatterns = [
     url(r'get-permission-box-images/(?P<campaign_id>[A-Z_a-z0-9]+)/(?P<supplier_id>[A-Z_a-z0-9]+)/$', GetPermissionBoxImages.as_view()),
     #url(r'^fix-invalid-dates/$', FixInvalidDates.as_view()),
     url(r'^campaign-wise-summary/$', CampaignWiseSummary.as_view()),
+    url(r'^assigned-campaigns/$', AssignedCampaigns.as_view()),
 ]
 
 router = DefaultRouter()

@@ -608,7 +608,6 @@ class BasicPricingAPIView(APIView):
             selected_prices = PriceMappingDefault.objects.select_related('supplier', 'adinventory_type',
                                                                          'duration_type').filter(object_id=id,
                                                                                                  content_type=content_type)
-
             supplier_object = ui_utils.get_model(supplier_type_code).objects.get(pk=id)
             towercount_response = ui_utils.get_tower_count(supplier_object, supplier_type_code)
             if not towercount_response.data['status']:
@@ -616,17 +615,18 @@ class BasicPricingAPIView(APIView):
             tower_count = towercount_response.data['data']
 
             for basic_item, basic_select_item in zip(basic_prices, selected_prices):
-
-                basic_item['supplier'] = basic_select_item.__dict__['_supplier_cache'].__dict__ if \
-                basic_select_item.__dict__['_supplier_cache'] else None
-                basic_item['adinventory_type'] = basic_select_item.__dict__['_adinventory_type_cache'].__dict__
-                basic_item['duration_type'] = basic_select_item.__dict__['_duration_type_cache'].__dict__
+                if basic_select_item.supplier:
+                    basic_item['supplier'] = basic_select_item.supplier.__dict__
+                else:
+                    None
+                basic_item['adinventory_type'] = basic_select_item.adinventory_type.__dict__
+                basic_item['duration_type'] = basic_select_item.duration_type.__dict__
 
                 if basic_item['adinventory_type']:
                     basic_item['adinventory_type'].pop("_state", None)
                 if basic_item['duration_type']:
                     basic_item['duration_type'].pop("_state", None)
-                if basic_item['supplier']:
+                if 'supplier' in basic_item and basic_item['supplier']:
                     basic_item['supplier'].pop("_state", None)
 
             response['tower_count'] = tower_count
@@ -639,7 +639,8 @@ class BasicPricingAPIView(APIView):
         except PriceMappingDefault.DoesNotExist:
             return Response(status=404)
         except Exception as e:
-            return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+            print("ex", e)
+            return Response({'status': False, 'error': e}, status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request, id, format=None):
 
