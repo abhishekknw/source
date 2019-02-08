@@ -83,6 +83,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         and 'exact' in data_scope_first['values'] else []
     default_value_type = data_scope_first['value_type'] if not data_scope_first == {} else None
     data_point_category = data_point['category']
+    value_ranges = data_point['value_ranges'] if 'value_ranges' in data_point else {}
     data_scope_category = data_scope_first['category'] if not data_scope_first == {} else data_point_category
     highest_level_original = ''
     if highest_level == 'vendor':
@@ -116,10 +117,11 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 hl = grouping_level[-1]
             #lgl = ["supplier","campaign"]
             curr_output = get_details_by_higher_level(hl, lowest_level, curr_highest_level_values, lgl, grouping_level,
-                                                      curr_dict, unilevel_constraints, grouping_category)
+                                                      curr_dict, unilevel_constraints, grouping_category, value_ranges)
         else:
             curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
-                        default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category)
+                          default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category,
+                          value_ranges)
             curr_output_keys = curr_output[0].keys()
             allowed_keys = set([highest_level] + grouping_level + [curr_metric])
             #curr_output = key_replace_group(curr_output,'supplier','flattype')
@@ -130,7 +132,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     matching_format_metrics = get_similar_structure_keys(individual_metric_output, grouping_level)
     combined_array = []
 
-
     first_metric_array = individual_metric_output[matching_format_metrics[0]] if len(
         matching_format_metrics) > 0 else []
     for ele_id in range(0, len(first_metric_array)):
@@ -140,7 +141,10 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             new_dict[metric] = individual_metric_output[metric][ele_id][metric]
         combined_array.append(new_dict)
 
-    single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, grouping_level)
+    if grouping_level[0] in reverse_direct_match.keys():
+        single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, [highest_level]+grouping_level)
+    else:
+        single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, grouping_level)
     single_array_keys = single_array[0].keys() if len(single_array) > 0 else []
     reverse_map = {}
     for key in single_array_keys:
@@ -164,6 +168,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_value = values_dict[curr_key]
             curr_dict[highest_level_original] = curr_value
             derived_array.append(curr_dict)
+    else:
+        derived_array = derived_array_original
 
     metric_parents = {}
     for curr_metric in metrics:
@@ -313,7 +319,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
-                                grouping_category = ""):
+                                grouping_category = "", value_ranges = {}):
 
     # check for custom sequence
     incrementing_value = None
@@ -556,7 +562,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             single_array_results = merge_dict_array_array_multiple_keys(new_results, ['supplier'])
         if original_grouping_levels is not None:
             single_array_results = key_replace_group(single_array_results, grouping_levels[0],
-                                                     original_grouping_levels[0], lowest_level)
+                                                     original_grouping_levels[0], lowest_level, value_ranges)
     else:
         single_array_results = []
     return single_array_results
@@ -611,9 +617,10 @@ def get_details_by_date(lowest_level, highest_level, highest_level_list):
     ])
 
 
-def key_replace_group(dict_array, existing_key, required_key, sum_key):
+def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ranges = {}):
     if existing_key == required_key:
         return dict_array
+    allowed_values = value_ranges[required_key] if required_key in value_ranges else None
     search_key = str(existing_key)+'_'+str(required_key)
     key_details = count_details_direct_match_multiple[search_key]
     model_name = key_details['model_name']
@@ -628,8 +635,11 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key):
         query = list(eval(full_query).values_list(self_name_model, parent_name_model))
         query_dict = dict(query)
         for curr_dict in dict_array:
-            curr_dict[required_key] = query_dict[curr_dict[existing_key]]
+            curr_value = query_dict[curr_dict[existing_key]]
+            curr_dict[required_key] = curr_value
             curr_dict.pop(existing_key)
+            if allowed_values is not None and str(curr_value) not in allowed_values:
+                continue
             new_array.append(curr_dict)
         all_keys = list(curr_dict.keys())
         grouping_keys = all_keys
@@ -655,7 +665,6 @@ class GetLeadsDataGeneric(APIView):
             'higher_level_statistical_information' in all_data else {}
         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
                                          higher_level_statistical_information)
-        print(mongo_query)
         return handle_response('', data=mongo_query, success=True)
 
 
