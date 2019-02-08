@@ -1270,10 +1270,13 @@ class OrganisationViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             category = request.query_params.get('category')
-            if category:
-                instances = Organisation.objects.filter_permission(user=request.user, category=category)
+            organisation_id = request.user.profile.organisation.organisation_id
+            if request.user.is_superuser:
+                instances = Organisation.objects.all()
+            elif category:
+                instances = Organisation.objects.filter_permission(user=request.user, category=category, created_by_org=organisation_id)
             else:
-                instances = Organisation.objects.filter_permission(user=request.user)
+                instances = Organisation.objects.filter_permission(user=request.user, created_by_org=organisation_id)
             serializer = OrganisationSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
