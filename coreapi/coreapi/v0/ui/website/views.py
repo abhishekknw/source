@@ -1166,12 +1166,12 @@ class ProfileViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            organisation_id = request.query_params.get('organisation_id')
-            if organisation_id:
+            organisation_id = request.user.profile.organisation.organisation_id
+            if request.user.is_superuser:
+                instances = Profile.objects.all()
+            else:
                 org = Organisation.objects.get(organisation_id=organisation_id)
                 instances = Profile.objects.filter(organisation=org)
-            else:
-                instances = Profile.objects.all()
             serializer = ProfileNestedSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
