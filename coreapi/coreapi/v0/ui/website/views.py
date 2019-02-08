@@ -1272,7 +1272,10 @@ class OrganisationViewSet(viewsets.ViewSet):
             category = request.query_params.get('category')
             organisation_id = request.user.profile.organisation.organisation_id
             if request.user.is_superuser:
-                instances = Organisation.objects.all()
+                if category:
+                    instances = Organisation.objects.filter(category=category)
+                else:
+                    instances = Organisation.objects.all()
             elif category:
                 instances = Organisation.objects.filter_permission(user=request.user, category=category, created_by_org=organisation_id)
             else:
