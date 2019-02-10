@@ -4,6 +4,7 @@ from datetime import datetime
 import pytz, copy
 from v0.ui.campaign.views import calculate_mode
 from collections import Iterable
+import math
 
 
 def flatten(items):
@@ -136,7 +137,18 @@ time_parent_names = {
 }
 
 
-def z_calculator_array_multiple(data_array, metrics_array_dict, weighted=0):
+# rounds to sig places with minimum sig significant digits
+# if sig = 2. round_sig_min(1547.128) = 1547.12, round_sig_min(0.000313) = 0.00031
+def round_sig_min(x,sig=2):
+    if x>=1:
+        return round(x,2)
+    elif x==0:
+        return x
+    else:
+        return round(x, sig-int(math.floor(math.log10(abs(x))))-1)
+
+
+def z_calculator_array_multiple(data_array, metrics_array_dict, weighted=0, sig=2):
     result_array = []
     global_data = {}
     for curr_metric in metrics_array_dict:
@@ -153,7 +165,7 @@ def z_calculator_array_multiple(data_array, metrics_array_dict, weighted=0):
             z_value = (curr_mean - global_mean) / stdev if not stdev == 0 else 0
             z_score_name = curr_metric+' z_score'
             z_color_name = curr_metric+' z_category'
-            curr_data[z_score_name] = z_value
+            curr_data[z_score_name] = round_sig_min(z_value,sig)
             if z_value > 1:
                 color = 'Green'
             elif z_value < -1:
@@ -211,8 +223,8 @@ def var_stdev_calculator(dict_array, keys, weighted=0):
             var_key = 'variance_' + key
             curr_stdev = np.std(num_list)
             curr_var = curr_stdev**2
-            curr_dict[stdev_key] = curr_stdev
-            curr_dict[var_key] = curr_var
+            curr_dict[stdev_key] = round_sig_min(curr_stdev)
+            curr_dict[var_key] = round_sig_min(curr_var)
         new_array.append(curr_dict)
     return new_array
 

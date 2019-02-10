@@ -7,7 +7,8 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     count_details_parent_map_time, date_to_other_groups, merge_dict_array_array_multiple_keys,
                     merge_dict_array_dict_multiple_keys, count_details_parent_map_multiple, sum_array_by_keys,
                     sum_array_by_single_key, append_array_by_keys, frequency_mode_calculator, var_stdev_calculator,
-                    mean_calculator, count_details_parent_map_custom, add_supplier_name, flatten, flatten_dict_array)
+                    mean_calculator, count_details_parent_map_custom, add_supplier_name, flatten, flatten_dict_array,
+                    round_sig_min)
 from v0.ui.campaign.views import calculate_mode
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo
@@ -230,7 +231,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 dr_value = curr_dict[b] if b in curr_dict else curr_dict[reverse_map[b]]
             result_value = binary_operation(float(nr_value), float(dr_value), curr_metric['op']) if \
                 not dr_value == 0 and nr_value is not None and dr_value is not None else None
-            curr_dict[curr_metric['name']] = round(result_value, 4) if result_value is not None else result_value
+            curr_dict[curr_metric['name']] = round_sig_min(result_value) if result_value is not None else result_value
 
     stats = []
     statistics_array = []
