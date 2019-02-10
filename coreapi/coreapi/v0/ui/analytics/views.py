@@ -50,6 +50,8 @@ def get_campaigns_from_vendors(vendor_list):
     full_query = model_name + '.objects.filter(' + parent_name_model + '__in=match_list)'
     #ProposalInfo.objects.filter(principal_vendor_id__in=['1', 'v2'])
     final_query = eval(full_query)
+    if not final_query:
+        return [{},[]]
     final_dict = dict(final_query.values_list(self_name_model, parent_name_model))
     next_level_array = list(final_dict.keys())
     final_result = [final_dict, next_level_array]
@@ -91,6 +93,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         values = data_scope_first['values']['exact'] if 'values' in data_scope_first \
                                                         and 'exact' in data_scope_first['values'] else []
         [values_dict, vendor_level_values_list] = get_campaigns_from_vendors(values)
+        if values_dict == {}:
+            return "vendors do not exist"
         highest_level_values = vendor_level_values_list
         highest_level = 'campaign'
         default_value_type = 'campaign'
@@ -653,6 +657,7 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ran
 class GetLeadsDataGeneric(APIView):
     @staticmethod
     def put(request):
+        success = True
         all_data = request.data
         default_raw_data = ['total_leads', 'hot_leads']
         default_metrics = []
@@ -665,7 +670,9 @@ class GetLeadsDataGeneric(APIView):
             'higher_level_statistical_information' in all_data else {}
         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
                                          higher_level_statistical_information)
-        return handle_response('', data=mongo_query, success=True)
+        if type(mongo_query) == str:
+            success = False
+        return handle_response('', data=mongo_query, success=success)
 
 
 class AnalyticSavedOperators(APIView):
