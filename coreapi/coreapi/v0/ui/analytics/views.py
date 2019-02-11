@@ -315,7 +315,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             if curr_stat[:len(pfix)] == pfix:
                 curr_stat = curr_stat[len(pfix):]
                 weighted = 1
-            higher_level_list = statistics_map[curr_stat](higher_level_list,stat_metrics, weighted)
+            higher_level_list = statistics_map[curr_stat](higher_level_list,stat_metrics, weighted=weighted)
 
 
     return {"individual metrics":individual_metric_output, "lower_group_data": derived_array,

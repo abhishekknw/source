@@ -148,7 +148,7 @@ def round_sig_min(x,sig=2):
         return round(x, sig-int(math.floor(math.log10(abs(x))))-1)
 
 
-def z_calculator_array_multiple(data_array, metrics_array_dict, weighted=0, sig=2):
+def z_calculator_array_multiple(data_array, metrics_array_dict, weighted=0):
     result_array = []
     global_data = {}
     for curr_metric in metrics_array_dict:
@@ -177,7 +177,7 @@ def z_calculator_array_multiple(data_array, metrics_array_dict, weighted=0, sig=
     return data_array
 
 
-def calculate_freqdist_mode_from_list(num_list,window_size=5):
+def calculate_freqdist_mode_from_list_floating(num_list, window_size=5):
     if not type(num_list) == list:
         return {}
     if len(num_list) == 0:
@@ -204,6 +204,38 @@ def calculate_freqdist_mode_from_list(num_list,window_size=5):
         freq = len(new_list)
         counter = counter+freq
         group_name = str(round(lower_limit,4)) + ' to ' + str(round(upper_limit,4))
+        freq_dist[group_name] = {}
+        freq_dist[group_name]['values'] = new_list
+        freq_dist[group_name]['mode'] = freq
+        lower_limit = upper_limit
+    return freq_dist
+
+
+def calculate_freqdist_mode_from_list(num_list, window_size=5):
+    if not type(num_list) == list:
+        return {}
+    if len(num_list) == 0:
+        return {}
+    if len(num_list) == 1:
+        return [num_list, num_list[0]]
+    num_list = sorted(num_list)
+    min_max = [num_list[0],num_list[-1]]
+    max = min_max[1]
+    last_window_start = max-max%window_size
+    freq_dist = {}
+    num_list_copy = num_list.copy()
+    lower_limit = 0
+    actual_length = len(num_list)
+    counter = 0
+    while lower_limit <= last_window_start:
+        upper_limit = lower_limit + window_size
+        new_list = [round(x,4) for x in num_list_copy if lower_limit <= x < upper_limit]
+        if new_list == []:
+            lower_limit = upper_limit
+            continue
+        freq = len(new_list)
+        counter = counter+freq
+        group_name = str(lower_limit) + ' to ' + str(upper_limit)
         freq_dist[group_name] = {}
         freq_dist[group_name]['values'] = new_list
         freq_dist[group_name]['mode'] = freq
@@ -256,14 +288,6 @@ def mean_calculator(dict_array, keys, weighted=0):
 # redundant
 def sum_array_by_single_key(array, keys):
     count_dict = {}
-    # valid_array =[]
-    # for curr_dict in array:
-    #     append = True
-    #     for curr_key in keys:
-    #         if curr_dict[curr_key] is None:
-    #             append = False
-    #     if append:
-    #         valid_array.append(curr_dict)
     for curr_key in keys:
         values = [x[curr_key] for x in array if x[curr_key] is not None]
         count_dict[curr_key]=values
@@ -632,16 +656,36 @@ def date_to_other_groups(dict_array, group_name, desired_metric, raw_data, highe
 
     return new_array
 
+
+def add_missing_keys(main_dict, main_keys):
+    key_set_list = []
+    for curr_main_key in main_keys:
+        sub_dict = main_dict[curr_main_key]
+        sub_keys = sub_dict.keys()
+        key_set_list.append(set(sub_keys))
+    all_keys = set.union(*key_set_list)
+    for curr_main_key in main_keys:
+        sub_dict = main_dict[curr_main_key]
+        sub_keys = sub_dict.keys()
+        missing_keys = all_keys - sub_keys
+        for missing_key in missing_keys:
+            main_dict[curr_main_key][missing_key] = {}
+    return main_dict
+
+
 def frequency_mode_calculator(dict_array, frequency_keys, weighted=0, window_size=5):
     new_array= []
     for curr_dict in dict_array:
+        freq_keys = []
         for key in frequency_keys:
             curr_dist = calculate_freqdist_mode_from_list(curr_dict[key],window_size)
             if curr_dist == {}:
                 continue
             new_key = 'freq_dist_'+ key
+            freq_keys.append(new_key)
             curr_dict[new_key] = curr_dist
         new_array.append(curr_dict)
+        x = add_missing_keys(curr_dict,freq_keys)
     return new_array
 
 
