@@ -165,7 +165,7 @@ def z_calculator_array_multiple(data_array, metrics_array_dict, weighted=0):
             z_value = (curr_mean - global_mean) / stdev if not stdev == 0 else 0
             z_score_name = curr_metric+' z_score'
             z_color_name = curr_metric+' z_category'
-            curr_data[z_score_name] = round_sig_min(z_value,sig)
+            curr_data[z_score_name] = round_sig_min(z_value)
             if z_value > 1:
                 color = 'Green'
             elif z_value < -1:
