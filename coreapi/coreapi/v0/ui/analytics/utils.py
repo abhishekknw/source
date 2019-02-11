@@ -230,13 +230,13 @@ def calculate_freqdist_mode_from_list(num_list, window_size=5):
     while lower_limit <= last_window_start:
         upper_limit = lower_limit + window_size
         new_list = [round(x,4) for x in num_list_copy if lower_limit <= x < upper_limit]
-        if new_list == []:
-            lower_limit = upper_limit
-            continue
         freq = len(new_list)
         counter = counter+freq
         group_name = str(lower_limit) + ' to ' + str(upper_limit)
         freq_dist[group_name] = {}
+        if new_list == []:
+            lower_limit = upper_limit
+            continue
         freq_dist[group_name]['values'] = new_list
         freq_dist[group_name]['mode'] = freq
         lower_limit = upper_limit
