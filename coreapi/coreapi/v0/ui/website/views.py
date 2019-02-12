@@ -838,7 +838,11 @@ class UserList(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            users = BaseUser.objects.all()
+            organisation_id = request.query_params.get('org_id',None)
+            if organisation_id:
+                users = BaseUser.objects.filter(profile__organisation=organisation_id)
+            else:
+                users = BaseUser.objects.all()
             user_serializer = BaseUserSerializer(users, many=True)
 
             return ui_utils.handle_response(class_name, data=user_serializer.data, success=True)
