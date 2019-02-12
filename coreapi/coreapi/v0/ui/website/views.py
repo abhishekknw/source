@@ -614,11 +614,14 @@ class AssignCampaign(APIView):
 
         try:
             user = request.user
+            username_list = BaseUser.objects.filter(profile__organisation=user.profile.organisation.organisation_id). \
+                            values_list('username')
 
             if user.is_superuser:
                 assigned_objects = CampaignAssignment.objects.all()
             else:
-                    assigned_objects = CampaignAssignment.objects.filter(Q(assigned_to=user) | Q(assigned_by=user) | Q(campaign__created_by=user.username))
+                # assigned_objects = CampaignAssignment.objects.filter(Q(assigned_to=user) | Q(assigned_by=user) | Q(campaign__created_by=user.username))
+                assigned_objects = CampaignAssignment.objects.filter(campaign__created_by__in=username_list)
             campaigns = []
             all_proposal_ids = []
             # check each one of them weather they are campaign or not
