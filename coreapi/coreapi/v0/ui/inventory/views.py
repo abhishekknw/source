@@ -595,7 +595,8 @@ class CampaignInventory(APIView):
         # todo: reduce the time taken for this API. currently it takes 15ms to fetch data which is too much.
         try:
             user = request.user
-            username_list = BaseUser.objects.filter(profile__organisation=user.profile.organisation.organisation_id)
+            username_list = BaseUser.objects.filter(profile__organisation=user.profile.organisation.organisation_id). \
+                values_list('username')
             proposal_list = ProposalInfo.objects.filter(created_by__in=username_list, proposal_id=campaign_id)
             if not proposal_list:
                 return Response(data="You do not have access to Proposal", status=201)
@@ -684,7 +685,8 @@ class CampaignSuppliersInventoryList(APIView):
                 assigned_date_range_query = website_utils.construct_date_range_query('activity_date')
             else:
                 user = request.user
-                username_list = BaseUser.objects.filter(profile__organisation=user.profile.organisation.organisation_id)
+                username_list = BaseUser.objects.filter(profile__organisation=user.profile.organisation.organisation_id). \
+                    values_list('username')
                 proposal_list = ProposalInfo.objects.filter(created_by__in=username_list, proposal_id=proposal_id)
                 if not proposal_list:
                     return Response(data="You do not have access to Proposal", status=201)
