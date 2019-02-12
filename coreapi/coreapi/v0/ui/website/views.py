@@ -1298,6 +1298,23 @@ class OrganisationViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name,exception_object=e, request=request)
 
+    @list_route(methods=['GET'])
+    def get_organisations_for_assignment(self, request):
+        class_name = self.__class__.__name__
+        try:
+            organisation_id = request.user.profile.organisation.organisation_id
+            if organisation_id == v0_constants.MACHADALO_ORG_ID:
+                data = Organisation.objects.all()
+            else:
+                instance = Organisation.objects.filter(organisation_id=organisation_id)
+                created_by_org = Organisation.objects.filter(organisation_id=instance[0].created_by_org.organisation_id)
+                data = instance.union(created_by_org)
+            serializer = OrganisationSerializer(data, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
     def create(self, request):
         """
         :param request:
