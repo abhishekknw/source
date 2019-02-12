@@ -715,8 +715,12 @@ class ProposalViewSet(viewsets.ViewSet):
         try:
             # can't use distinct() to return only unique proposal_id's because .distinct('proposal') is not supported
             # for MySql
+
+            organisation_id = request.user.profile.organisation.organisation_id
+            username_list = BaseUser.objects.filter(profile__organisation=organisation_id).values_list('username')
             file_objects = GenericExportFileName.objects.select_related('proposal', 'user').filter(
-                proposal__invoice_number__isnull=False, is_exported=False).order_by('-proposal__created_on')
+                proposal__invoice_number__isnull=False, is_exported=False,
+                proposal__created_by__in=username_list).order_by('-proposal__created_on')
 
             # we need to make a unique list where proposal_id do not repeat.
             seen = set()
