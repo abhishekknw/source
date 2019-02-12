@@ -433,6 +433,8 @@ def merge_dict_array_array_multiple_keys(arrays, key_names):
     final_array = []
     if arrays==[]:
         return arrays
+    if len(key_names) == 1:
+        return merge_dict_array_array_single(arrays, key_names[0])
     first_array = arrays[0]
     second_array = []
     for i in range(1,len(arrays)):
