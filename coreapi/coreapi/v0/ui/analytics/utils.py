@@ -360,6 +360,8 @@ def convert_dict_arrays_keys_to_standard_names(dict_arrays):
     for curr_array in dict_arrays:
         new_array = []
         for curr_dict in curr_array:
+            if curr_dict == []:
+                continue
             keys = list(curr_dict.keys())
             for curr_key in keys:
                 new_key = level_name_by_model_id[curr_key] if curr_key in level_name_by_model_id else curr_key
@@ -428,13 +430,27 @@ def merge_dict_array_array_single(array, key_name):
     return final_array
 
 
+# get names of keys common to one or more dict arrays in array of arrays
+def get_common_keys(arrays):
+    key_set_list = []
+    for dict_array in arrays:
+        first_dict = dict_array[0]
+        first_dict_keyset = set(first_dict.keys())
+        key_set_list.append(first_dict_keyset)
+    all_keys = set.intersection(*key_set_list)
+    return all_keys
+
+
 def merge_dict_array_array_multiple_keys(arrays, key_names):
     #key_names = ['date','campaign']
     final_array = []
     if arrays==[]:
         return arrays
-    if len(key_names) == 1:
-        return merge_dict_array_array_single(arrays, key_names[0])
+    # if len(key_names) == 1:
+    #     return merge_dict_array_array_single(arrays, key_names[0])
+    common_keys_set = get_common_keys(arrays)
+    if len(set.intersection(set(key_names),common_keys_set)) == 0:
+        key_names = list(common_keys_set)
     first_array = arrays[0]
     second_array = []
     for i in range(1,len(arrays)):

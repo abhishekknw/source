@@ -8,7 +8,7 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     merge_dict_array_dict_multiple_keys, count_details_parent_map_multiple, sum_array_by_keys,
                     sum_array_by_single_key, append_array_by_keys, frequency_mode_calculator, var_stdev_calculator,
                     mean_calculator, count_details_parent_map_custom, add_supplier_name, flatten, flatten_dict_array,
-                    round_sig_min)
+                    round_sig_min, time_parent_names)
 from v0.ui.campaign.views import calculate_mode
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo
@@ -118,11 +118,19 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 curr_highest_level_values = result_dict['single_list']
             lgl = lowest_geographical_level
             hl = lgl
+            #lgl = ["supplier","campaign"]
+            grouping_level_original = None
+            if lgl not in grouping_level:
+                grouping_level_original = grouping_level.copy()
+                grouping_level = [lgl] + grouping_level
             if len(grouping_level) > 1:
                 hl = grouping_level[-1]
-            #lgl = ["supplier","campaign"]
+
             curr_output = get_details_by_higher_level(hl, lowest_level, curr_highest_level_values, lgl, grouping_level,
                                                       curr_dict, unilevel_constraints, grouping_category, value_ranges)
+            if grouping_level_original is not None:
+                curr_output = sum_array_by_keys(curr_output, [highest_level]+grouping_level_original,[curr_metric])
+                grouping_level = grouping_level_original
         else:
             curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
                           default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category,
@@ -146,6 +154,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             new_dict[metric] = individual_metric_output[metric][ele_id][metric]
         combined_array.append(new_dict)
 
+    print(individual_metric_output)
     if grouping_level[0] in reverse_direct_match.keys():
         single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, [highest_level]+grouping_level)
     else:
@@ -385,6 +394,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     curr_level_id = 0
     last_level_id = len(desc_sequence) - 1
     common_keys = []
+    print(desc_sequence)
     while curr_level_id < last_level_id:
         curr_level = desc_sequence[curr_level_id]
         next_level = desc_sequence[curr_level_id+1]
@@ -538,6 +548,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             elif database_type == 'mysql':
                 all_values = parent_model_names.copy()
                 all_values.append(self_model_name)
+                print(match_list)
+                print(full_query)
                 query = list(eval(full_query).values(*all_values))
                 query_grouped = sum_array_by_key(query,parent_model_names, self_model_name)
                 query=query_grouped
