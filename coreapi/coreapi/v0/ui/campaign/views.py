@@ -972,7 +972,6 @@ def calculate_mode(num_list,window_size=3):
         return None
     if len(num_list) == 1:
         return num_list[0]
-    print(num_list)
     freq_by_windows = [0 for i in range(0,(num_list[-1] - num_list[0])//2 + 1)]
     for num in num_list:
         window_index = (num - num_list[0])//window_size
@@ -996,6 +995,10 @@ def get_mean_median_mode(object_list, list_of_attributes):
     all_attribute_item_list = {}
     percentage_by_flat_of_attribute = {}
     return_dict = {}
+    for attribute in list_of_attributes:
+        if attribute != 'flat_count':
+            return_dict[attribute] = {'percentage_by_flat': 0, 'mean_by_society': 0, 'median_by_society': 0,
+                                      'mode_percent_by_flat': 0, 'median_percent_by_flat': 0, 'mean_percent_by_flat': 0}
     for object in object_list:
         for attribute in list_of_attributes:
             if attribute not in object_list[object]:
@@ -1021,6 +1024,9 @@ def get_mean_median_mode(object_list, list_of_attributes):
                 'percentage_by_flat':  percentage_by_flat,
                 'mean_by_society': 0 if math.isnan(mean_by_society) else mean_by_society,
                 'median_by_society': 0 if math.isnan(median_by_society) else median_by_society,
+                'mode_percent_by_flat': 0,
+                'median_percent_by_flat': 0,
+                'mean_percent_by_flat': 0
             }
     for attribute in percentage_by_flat_of_attribute:
         if attribute != 'flat_count':
@@ -1880,9 +1886,7 @@ class GetPermissionBoxImages(APIView):
 #         return ui_utils.handle_response(class_name, data={}, success=True)
 
 
-def get_campaign_wise_summary_by_user(user_id, user_start_datetime=None):
-    all_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id).all()
-    all_campaign_ids = [campaign.campaign_id for campaign in all_campaigns]
+def get_campaign_wise_summary(all_campaign_ids, user_start_datetime=None):
     all_campaign_objects = ProposalInfo.objects.filter(proposal_id__in=all_campaign_ids).all()
     all_campaign_id_name_map = {campaign.proposal_id: campaign.name for campaign in all_campaign_objects}
     leads_summary_by_supplier = get_leads_summary(campaign_list=all_campaign_ids,user_start_datetime=user_start_datetime)
@@ -1986,6 +1990,13 @@ def get_campaign_wise_summary_by_user(user_id, user_start_datetime=None):
     return campaign_summary
 
 
+def get_campaign_wise_summary_by_user(user_id, user_start_datetime=None):
+    all_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id).all()
+    all_campaign_ids = [campaign.campaign_id for campaign in all_campaigns]
+    campaign_wise_summary = get_campaign_wise_summary(all_campaign_ids, user_start_datetime)
+    return campaign_wise_summary
+
+
 class CampaignWiseSummary(APIView):
     @staticmethod
     def get(request):
@@ -2001,19 +2012,57 @@ class CampaignWiseSummary(APIView):
         return ui_utils.handle_response({}, data=campaign_summary, success=True)
 
 
+def get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, days):
+    start_date = None
+    if days:
+        start_date = datetime.now() - timedelta(days=days)
+    campaign_summary_map = {}
+    for vendor in vendor_campaign_map:
+        campaign_summary_map[vendor] = get_campaign_wise_summary(vendor_campaign_map[vendor], start_date)[
+            "all_campaigns"]
+    campaign_summary_map['overall'] = get_campaign_wise_summary(all_campaign_ids, start_date)["all_campaigns"]
+    return campaign_summary_map
+
+
+class VendorWiseSummary(APIView):
+    @staticmethod
+    def get(request):
+        user_id = request.user.id
+        all_assigned_campaigns = get_all_assigned_campaigns(user_id, None)
+        vendor_campaign_map = {}
+        all_campaign_ids = []
+        for campaign in all_assigned_campaigns:
+            if campaign['principal_vendor']:
+                if campaign['principal_vendor'] not in vendor_campaign_map:
+                    vendor_campaign_map[campaign['principal_vendor']] = []
+                vendor_campaign_map[campaign['principal_vendor']].append(campaign["proposal_id"])
+                all_campaign_ids.append(campaign["proposal_id"])
+        campaign_summary = {}
+        campaign_summary['last_week'] = get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, 7)
+        campaign_summary['last_two_week'] = get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, 14)
+        campaign_summary['last_three_week'] = get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, 21)
+        campaign_summary['overall'] = get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, None)
+        return ui_utils.handle_response({}, data=campaign_summary, success=True)
+
+
+def get_all_assigned_campaigns(user_id, vendor):
+    if vendor:
+        campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
+                                                          campaign__principal_vendor=vendor).values_list(
+            'campaign_id', flat=True).distinct()
+    else:
+        campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
+                                                          ).values_list('campaign_id', flat=True).distinct()
+    campaign_list = [campaign_id for campaign_id in campaign_list]
+    all_campaigns = ProposalInfo.objects.filter(proposal_id__in=campaign_list)
+    serialized_proposals = ProposalInfoSerializer(all_campaigns, many=True).data
+    return serialized_proposals
+
+
 class AssignedCampaigns(APIView):
     @staticmethod
     def get(request):
         user_id = request.user.id
-        vendor = request.query_params.get('vendor',None)
-        if vendor:
-            campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
-                                                              campaign__principal_vendor=vendor).values_list(
-                'campaign_id', flat=True).distinct()
-        else:
-            campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
-                                                              ).values_list('campaign_id', flat=True).distinct()
-        campaign_list = [campaign_id for campaign_id in campaign_list]
-        all_campaigns = ProposalInfo.objects.filter(proposal_id__in=campaign_list)
-        serialized_proposals = ProposalInfoSerializer(all_campaigns, many=True).data
-        return ui_utils.handle_response({}, data=serialized_proposals, success=True)
+        vendor = request.query_params.get('vendor', None)
+        all_assigned_campaigns = get_all_assigned_campaigns(user_id, vendor)
+        return ui_utils.handle_response({}, data=all_assigned_campaigns, success=True)
