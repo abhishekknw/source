@@ -1,10 +1,12 @@
 import numpy as np
 from v0.ui.supplier.models import SupplierPhase, SupplierTypeSociety
+from v0.ui.proposal.models import ProposalInfo
 from datetime import datetime
 import pytz, copy
 from v0.ui.campaign.views import calculate_mode
 from collections import Iterable
 import math
+from v0.ui.organisation.models import Organisation
 
 
 def flatten(items):
@@ -29,6 +31,9 @@ def get_metrics_from_code(code, raw_metrics, derived_metrics):
     return metric
 
 
+alternate_name_keys = {"supplier": "supplier_name", "campaign":"campaign_name"}
+
+
 weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
                  '4': 'Friday', '5': 'Saturday', '6': 'Sunday'}
 weekday_codes = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
@@ -41,7 +46,7 @@ raw_data_unrestricted = ['flat']
 level_name_by_model_id = {
     "supplier_id": "supplier", "object_id": "supplier", "campaign_id": "campaign", "proposal_id": "campaign",
     "flat_count": "flat","total_negotiated_price": "cost", "created_at": "date", "phase_no": "phase",
-    "society_city": "city", "society_name":"supplier_name", "cost_per_flat":"cost_flat"
+    "society_city": "city", "society_name":"supplier_name", "cost_per_flat":"cost_flat", "name":"campaign_name"
 }
 
 
@@ -445,7 +450,6 @@ def get_common_keys(arrays):
 
 
 def merge_dict_array_array_multiple_keys(arrays, key_names):
-    print("a:", arrays)
     #key_names = ['date','campaign']
     final_array = []
     if arrays==[]:
@@ -455,7 +459,6 @@ def merge_dict_array_array_multiple_keys(arrays, key_names):
     common_keys_set = get_common_keys(arrays)
     if len(set.intersection(set(key_names),common_keys_set)) == 0:
         key_names = list(common_keys_set)
-    print(key_names)
     first_array = arrays[0]
     second_array = []
     for i in range(1,len(arrays)):
@@ -473,7 +476,6 @@ def merge_dict_array_array_multiple_keys(arrays, key_names):
                     second_array.append(new_dict)
         first_array = second_array
         second_array = []
-        print(first_array)
     return first_array
 
 
@@ -548,7 +550,6 @@ def sum_array_by_keys(array, grouping_keys, sum_keys):
         print("keys missing, ignored")
         required_keys = list(required_keys - missing_keys)
         grouping_keys = list(set(grouping_keys)-missing_keys)
-        print(required_keys)
     for curr_dict in array:
         first_match = False
         curr_dict_sum = {}
@@ -723,6 +724,22 @@ def frequency_mode_calculator(dict_array, frequency_keys, weighted=0, window_siz
     return new_array
 
 
+def add_campaign_name(dict_array):
+    if 'campaign' not in dict_array[0]:
+        return dict_array
+    campaign_ids = [x["campaign"] for x in dict_array]
+    model_data = ProposalInfo.objects.filter(proposal_id__in = campaign_ids).\
+        values_list('proposal_id','name')
+    new_col_name = level_name_by_model_id['name']
+    model_data_dict = dict(model_data)
+    new_dict_array = []
+    for curr_dict in dict_array:
+        col_value = curr_dict['campaign']
+        curr_dict[new_col_name] = model_data_dict[col_value]
+        new_dict_array.append(curr_dict)
+    return new_dict_array
+
+
 def add_supplier_name(dict_array):
     if 'supplier' not in dict_array[0]:
         return dict_array
@@ -737,6 +754,24 @@ def add_supplier_name(dict_array):
         curr_dict[new_col_name] = model_data_dict[col_value]
         new_dict_array.append(curr_dict)
     return new_dict_array
+
+
+def add_vendor_name(dict_array):
+    if 'vendor' not in dict_array[0]:
+        return dict_array
+    vendor_ids = [x["vendor"] for x in dict_array]
+    model_data = Organisation.objects.filter(organisation_id__in = vendor_ids).\
+        values_list('organisation_id','name')
+    new_col_name = 'vendor_name'
+    model_data_dict = dict(model_data)
+    new_dict_array = []
+    for curr_dict in dict_array:
+        col_value = curr_dict['vendor']
+        if col_value in model_data_dict:
+            curr_dict[new_col_name] = model_data_dict[col_value]
+        new_dict_array.append(curr_dict)
+    return new_dict_array
+
 
 # [[{'lead': 66, 'supplier': 'MUMTWVVRSLOP', 'campaign': 'BYJMAC472C', 'city': 'Mumbai'},
 # {'lead': 68, 'supplier': 'MUMGELBRSPRT', 'campaign': 'BYJMAC9E18', 'city': 'Mumbai'}],

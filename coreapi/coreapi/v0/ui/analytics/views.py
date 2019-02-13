@@ -8,7 +8,7 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     merge_dict_array_dict_multiple_keys, count_details_parent_map_multiple, sum_array_by_keys,
                     sum_array_by_single_key, append_array_by_keys, frequency_mode_calculator, var_stdev_calculator,
                     mean_calculator, count_details_parent_map_custom, add_supplier_name, flatten, flatten_dict_array,
-                    round_sig_min, time_parent_names, raw_data_unrestricted)
+                    round_sig_min, time_parent_names, raw_data_unrestricted, add_campaign_name, add_vendor_name)
 from v0.ui.campaign.views import calculate_mode
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo
@@ -174,13 +174,9 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             new_dict[metric] = individual_metric_output[metric][ele_id][metric]
         combined_array.append(new_dict)
 
-    print(grouping_level)
-    print(reverse_direct_match)
     if grouping_level[0] in reverse_direct_match.keys() or data_scope_category == 'geographical':
-        print("1")
         single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, [highest_level]+grouping_level)
     else:
-        print("2")
         single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, grouping_level)
     single_array_keys = single_array[0].keys() if len(single_array) > 0 else []
     reverse_map = {}
@@ -197,6 +193,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 
     derived_array_original = single_array_subleveled
     derived_array_1 = add_supplier_name(derived_array_original)
+    derived_array_1 = add_campaign_name(derived_array_1)
+    derived_array_1 = add_vendor_name(derived_array_1)
     derived_array = []
 
     if highest_level_original == 'vendor':
