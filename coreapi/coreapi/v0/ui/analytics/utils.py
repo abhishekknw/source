@@ -35,6 +35,9 @@ weekday_codes = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
                  'Friday': 4, 'Saturday': 5, 'Sunday': 6}
 
 
+# list of raw data points which cannot be restricted
+raw_data_unrestricted = ['flat']
+
 level_name_by_model_id = {
     "supplier_id": "supplier", "object_id": "supplier", "campaign_id": "campaign", "proposal_id": "campaign",
     "flat_count": "flat","total_negotiated_price": "cost", "created_at": "date", "phase_no": "phase",
@@ -531,8 +534,15 @@ def append_array_by_keys(array, grouping_keys, append_keys):
 
 def sum_array_by_keys(array, grouping_keys, sum_keys):
     new_array = []
-    required_keys = list(set(sum_keys + grouping_keys))
+    required_keys = set(sum_keys + grouping_keys)
     ref_sum_key = sum_keys[0]
+    array_keys = array[0].keys()
+    missing_keys = required_keys-set(array_keys)
+    if len(missing_keys)>0:
+        print("keys missing, ignored")
+        required_keys = list(required_keys - missing_keys)
+        grouping_keys = list(set(grouping_keys)-missing_keys)
+        print(required_keys)
     for curr_dict in array:
         first_match = False
         curr_dict_sum = {}
@@ -721,6 +731,30 @@ def add_supplier_name(dict_array):
         curr_dict[new_col_name] = model_data_dict[col_value]
         new_dict_array.append(curr_dict)
     return new_dict_array
+
+# [[{'lead': 66, 'supplier': 'MUMTWVVRSLOP', 'campaign': 'BYJMAC472C', 'city': 'Mumbai'},
+# {'lead': 68, 'supplier': 'MUMGELBRSPRT', 'campaign': 'BYJMAC9E18', 'city': 'Mumbai'}],
+# [{'hot_lead': 64, 'supplier': 'MUMTWVVRSLOP', 'campaign': 'BYJMAC472C', 'city': 'Mumbai'},
+# {'hot_lead': 54, 'supplier': 'MUMGELBRSPRT', 'campaign': 'BYJMAC9E18', 'city': 'Mumbai'}]
+# [{'flat': 78, 'supplier': 'MUMTWVVRSLOP', 'city': 'Mumbai'}, {'flat': 150, 'supplier': 'MUMMUGWRSAEC', 'city': 'Mumbai'}]
+# Result: [ ... [{'flat': 78, 'supplier': 'MUMAMENNRSSRR', 'city': 'Mumbai','campaign': 'BYJMAC472C'}]
+def append_higher_key_dict_array(array,key):
+    key_set_list = []
+    for array in arrays:
+        curr_keys = array[0].keys()
+        key_set_list.append(set(curr_keys))
+    all_keys = set.union(*key_set_list)
+    ref_array = None
+    missing_array = None
+    new_array = []
+    for array in arrays:
+        curr_keys = array[0].keys()
+        missing_keys = all_keys-curr_keys
+        if len(missing_keys) == 0:
+            ref_array = array
+        else:
+            missing_array = array
+    new_array
 
 
 
