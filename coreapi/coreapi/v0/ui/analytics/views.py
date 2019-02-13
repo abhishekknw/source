@@ -7,10 +7,11 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     count_details_parent_map_time, date_to_other_groups, merge_dict_array_array_multiple_keys,
                     merge_dict_array_dict_multiple_keys, count_details_parent_map_multiple, sum_array_by_keys,
                     sum_array_by_single_key, append_array_by_keys, frequency_mode_calculator, var_stdev_calculator,
-                    mean_calculator, count_details_parent_map_custom, add_supplier_name)
+                    mean_calculator, count_details_parent_map_custom, add_supplier_name, flatten, flatten_dict_array,
+                    round_sig_min)
 from v0.ui.campaign.views import calculate_mode
 from v0.ui.common.models import mongo_client
-from v0.ui.proposal.models import ShortlistedSpaces
+from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo
 from v0.ui.supplier.models import SupplierTypeSociety
 import copy
 from rest_framework.views import APIView
@@ -26,6 +27,38 @@ statistics_map = {"z_score": z_calculator_array_multiple, "frequency_distributio
 unilevel_categories = ['time']
 
 
+def get_reverse_dict(original_dict):
+    keys = original_dict.keys()
+    reverse_dict = {}
+    for curr_key in keys:
+        curr_values = original_dict[curr_key]
+        if isinstance(curr_values, list) == False:
+            curr_values = [curr_values]
+        for value in curr_values:
+            reverse_dict[value] = curr_key
+    return reverse_dict
+
+
+# first_part_query = model_name + '.objects.filter('
+# full_query = first_part_query + parent_model_name + '__in=match_list)'
+# add_query = '.filter(' + add_variable_name + '__in=add_match_list)'
+# add_match_list = add_match_list["exact"]
+def get_campaigns_from_vendors(vendor_list):
+    model_name = 'ProposalInfo'
+    parent_name_model = 'principal_vendor_id'
+    self_name_model = 'proposal_id'
+    match_list = vendor_list
+    full_query = model_name + '.objects.filter(' + parent_name_model + '__in=match_list)'
+    #ProposalInfo.objects.filter(principal_vendor_id__in=['1', 'v2'])
+    final_query = eval(full_query)
+    if not final_query:
+        return [{},[]]
+    final_dict = dict(final_query.values_list(self_name_model, parent_name_model))
+    next_level_array = list(final_dict.keys())
+    final_result = [final_dict, next_level_array]
+    return final_result
+
+
 # currently working with the following constraints:
 # exactly one scope restrictor with exact match, one type of data point
 def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
@@ -39,7 +72,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 unilevel_constraints[curr_key] = data_scope[curr_key]
                 data_scope.pop(curr_key)
         data_scope_first = data_scope[data_scope_keys[0]] if data_scope_keys is not [] else {}
-    highest_level = data_scope_first['value_type'] if 'value_type' in data_scope_first else None
+    highest_level = data_scope_first['value_type'] if 'value_type' in data_scope_first else data_scope_first['level']
+
     if 'category' not in data_point or 'level' not in data_point:
         return []
     grouping_level = data_point['level'] if 'level' in data_point else None
@@ -52,7 +86,19 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         and 'exact' in data_scope_first['values'] else []
     default_value_type = data_scope_first['value_type'] if not data_scope_first == {} else None
     data_point_category = data_point['category']
+    value_ranges = data_point['value_ranges'] if 'value_ranges' in data_point else {}
     data_scope_category = data_scope_first['category'] if not data_scope_first == {} else data_point_category
+    highest_level_original = ''
+    if highest_level == 'vendor':
+        highest_level_original = 'vendor'
+        values = data_scope_first['values']['exact'] if 'values' in data_scope_first \
+                                                        and 'exact' in data_scope_first['values'] else []
+        [values_dict, vendor_level_values_list] = get_campaigns_from_vendors(values)
+        if values_dict == {}:
+            return "vendors do not exist"
+        highest_level_values = vendor_level_values_list
+        highest_level = 'campaign'
+        default_value_type = 'campaign'
     for curr_metric in raw_data:
         lowest_level = curr_metric
         if data_scope_category == 'geographical':
@@ -76,10 +122,11 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 hl = grouping_level[-1]
             #lgl = ["supplier","campaign"]
             curr_output = get_details_by_higher_level(hl, lowest_level, curr_highest_level_values, lgl, grouping_level,
-                                                      curr_dict, unilevel_constraints, grouping_category)
+                                                      curr_dict, unilevel_constraints, grouping_category, value_ranges)
         else:
             curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
-                        default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category)
+                          default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category,
+                          value_ranges)
             curr_output_keys = curr_output[0].keys()
             allowed_keys = set([highest_level] + grouping_level + [curr_metric])
             #curr_output = key_replace_group(curr_output,'supplier','flattype')
@@ -90,7 +137,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     matching_format_metrics = get_similar_structure_keys(individual_metric_output, grouping_level)
     combined_array = []
 
-
     first_metric_array = individual_metric_output[matching_format_metrics[0]] if len(
         matching_format_metrics) > 0 else []
     for ele_id in range(0, len(first_metric_array)):
@@ -100,7 +146,10 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             new_dict[metric] = individual_metric_output[metric][ele_id][metric]
         combined_array.append(new_dict)
 
-    single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, grouping_level)
+    if grouping_level[0] in reverse_direct_match.keys():
+        single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, [highest_level]+grouping_level)
+    else:
+        single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, grouping_level)
     single_array_keys = single_array[0].keys() if len(single_array) > 0 else []
     reverse_map = {}
     for key in single_array_keys:
@@ -115,7 +164,17 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     metric_processed = []
 
     derived_array_original = single_array_subleveled
-    derived_array = add_supplier_name(derived_array_original)
+    derived_array_1 = add_supplier_name(derived_array_original)
+    derived_array = []
+
+    if highest_level_original == 'vendor':
+        for curr_dict in derived_array_1:
+            curr_key = curr_dict[default_value_type]
+            curr_value = values_dict[curr_key]
+            curr_dict[highest_level_original] = curr_value
+            derived_array.append(curr_dict)
+    else:
+        derived_array = derived_array_original
 
     metric_parents = {}
     for curr_metric in metrics:
@@ -172,7 +231,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 dr_value = curr_dict[b] if b in curr_dict else curr_dict[reverse_map[b]]
             result_value = binary_operation(float(nr_value), float(dr_value), curr_metric['op']) if \
                 not dr_value == 0 and nr_value is not None and dr_value is not None else None
-            curr_dict[curr_metric['name']] = round(result_value, 4) if result_value is not None else result_value
+            curr_dict[curr_metric['name']] = round_sig_min(result_value) if result_value is not None else result_value
 
     stats = []
     statistics_array = []
@@ -207,7 +266,11 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         for curr_dict in higher_level_list_old:
             for curr_metric in raw_data:
                 curr_name = curr_metric+'_total'
-                curr_value = sum(curr_dict[curr_metric])
+                curr_list = curr_dict[curr_metric]
+                if not type(curr_list)==list:
+                    curr_list = [curr_list]
+                curr_list = [int(y) for y in curr_list if y is not None]
+                curr_value = sum(curr_list)
                 curr_dict[curr_name] = curr_value
                 if len(higher_level_raw_data) < len(raw_data):
                     higher_level_raw_data.append(curr_name)
@@ -252,7 +315,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             if curr_stat[:len(pfix)] == pfix:
                 curr_stat = curr_stat[len(pfix):]
                 weighted = 1
-            higher_level_list = statistics_map[curr_stat](higher_level_list,stat_metrics, weighted)
+            higher_level_list = statistics_map[curr_stat](higher_level_list,stat_metrics, weighted=weighted)
 
 
     return {"individual metrics":individual_metric_output, "lower_group_data": derived_array,
@@ -261,7 +324,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
-                                grouping_category = ""):
+                                grouping_category = "", value_ranges = {}):
 
     # check for custom sequence
     incrementing_value = None
@@ -479,6 +542,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 query_grouped = sum_array_by_key(query,parent_model_names, self_model_name)
                 query=query_grouped
                 if not query==[]:
+                    if not all_results == [] and isinstance(all_results[0], dict) == True:
+                        all_results = [all_results]
                     all_results.append(query)
                 #query2 = merge_dict_array_array_multiple_keys(all_results,parent_model_names)
                 next_level_match_array = [x[self_model_name] for x in query if x[self_model_name] is not None]
@@ -502,7 +567,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             single_array_results = merge_dict_array_array_multiple_keys(new_results, ['supplier'])
         if original_grouping_levels is not None:
             single_array_results = key_replace_group(single_array_results, grouping_levels[0],
-                                                     original_grouping_levels[0], lowest_level)
+                                                     original_grouping_levels[0], lowest_level, value_ranges)
     else:
         single_array_results = []
     return single_array_results
@@ -557,9 +622,10 @@ def get_details_by_date(lowest_level, highest_level, highest_level_list):
     ])
 
 
-def key_replace_group(dict_array, existing_key, required_key, sum_key):
+def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ranges = {}):
     if existing_key == required_key:
         return dict_array
+    allowed_values = value_ranges[required_key] if required_key in value_ranges else None
     search_key = str(existing_key)+'_'+str(required_key)
     key_details = count_details_direct_match_multiple[search_key]
     model_name = key_details['model_name']
@@ -574,8 +640,11 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key):
         query = list(eval(full_query).values_list(self_name_model, parent_name_model))
         query_dict = dict(query)
         for curr_dict in dict_array:
-            curr_dict[required_key] = query_dict[curr_dict[existing_key]]
+            curr_value = query_dict[curr_dict[existing_key]]
+            curr_dict[required_key] = curr_value
             curr_dict.pop(existing_key)
+            if allowed_values is not None and str(curr_value) not in allowed_values:
+                continue
             new_array.append(curr_dict)
         all_keys = list(curr_dict.keys())
         grouping_keys = all_keys
@@ -589,6 +658,7 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key):
 class GetLeadsDataGeneric(APIView):
     @staticmethod
     def put(request):
+        success = True
         all_data = request.data
         default_raw_data = ['total_leads', 'hot_leads']
         default_metrics = []
@@ -601,7 +671,9 @@ class GetLeadsDataGeneric(APIView):
             'higher_level_statistical_information' in all_data else {}
         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
                                          higher_level_statistical_information)
-        return handle_response('', data=mongo_query, success=True)
+        if type(mongo_query) == str:
+            success = False
+        return handle_response('', data=mongo_query, success=success)
 
 
 class AnalyticSavedOperators(APIView):
@@ -658,13 +730,3 @@ class AnalyticSavedOperators(APIView):
         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics)
         return handle_response('', data=mongo_query, success=True)
 
-
-# class Calculator:
-#     def sum(self, a, b):
-#         return a + b
-#
-#
-# class TestCalculator(TestCase):
-#     @patch('Calculator.sum', return_value = 9)
-#     def test_sum(self, sum):
-#         self.assertEqual(sum(2, 3), 9)
