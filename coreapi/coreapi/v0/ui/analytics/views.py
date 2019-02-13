@@ -174,9 +174,13 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             new_dict[metric] = individual_metric_output[metric][ele_id][metric]
         combined_array.append(new_dict)
 
-    if grouping_level[0] in reverse_direct_match.keys():
+    print(grouping_level)
+    print(reverse_direct_match)
+    if grouping_level[0] in reverse_direct_match.keys() or data_scope_category == 'geographical':
+        print("1")
         single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, [highest_level]+grouping_level)
     else:
+        print("2")
         single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, grouping_level)
     single_array_keys = single_array[0].keys() if len(single_array) > 0 else []
     reverse_map = {}
