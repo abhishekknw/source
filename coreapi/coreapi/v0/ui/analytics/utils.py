@@ -256,7 +256,7 @@ def var_stdev_calculator(dict_array, keys, weighted=0):
     for curr_dict in dict_array:
         for key in keys:
             num_list = curr_dict[key]
-            if num_list == [] or num_list == None:
+            if num_list == [] or num_list == None or not isinstance(num_list,list):
                 continue
             num_list = [x for x in num_list if x is not None]
             stdev_key = 'stdev_' + key
@@ -693,12 +693,15 @@ def date_to_other_groups(dict_array, group_name, desired_metric, raw_data, highe
 
 
 def add_missing_keys(main_dict, main_keys):
+    if main_keys == []:
+        return main_dict
     key_set_list = []
     for curr_main_key in main_keys:
         sub_dict = main_dict[curr_main_key]
         sub_keys = sub_dict.keys()
         key_set_list.append(set(sub_keys))
-    all_keys = set.union(*key_set_list)
+    if len(key_set_list)>0:
+        all_keys = set.union(*key_set_list)
     for curr_main_key in main_keys:
         sub_dict = main_dict[curr_main_key]
         sub_keys = sub_dict.keys()
