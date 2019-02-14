@@ -239,6 +239,7 @@ def calculate_freqdist_mode_from_list(num_list, window_size=5):
         upper_limit = lower_limit + window_size
         new_list = [round(x,4) for x in num_list_copy if lower_limit <= x < upper_limit]
         freq = len(new_list)
+        mean = np.mean(new_list) if len(new_list)>0 else None
         counter = counter+freq
         group_name = str(lower_limit) + ' to ' + str(upper_limit)
         freq_dist[group_name] = {}
@@ -247,6 +248,7 @@ def calculate_freqdist_mode_from_list(num_list, window_size=5):
             continue
         freq_dist[group_name]['values'] = new_list
         freq_dist[group_name]['mode'] = freq
+        freq_dist[group_name]['mean'] = mean
         lower_limit = upper_limit
     return freq_dist
 
