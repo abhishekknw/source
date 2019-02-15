@@ -166,7 +166,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                     curr_output_new.append(curr_dict)
                 curr_output = curr_output_new
 
-
             curr_output_keys = curr_output[0].keys()
             allowed_keys = set([highest_level_original] + grouping_level + [curr_metric])
             #curr_output = key_replace_group(curr_output,'supplier','flattype')
@@ -219,6 +218,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     derived_array = derived_array_1
 
     metric_parents = {}
+    remaining_metrics = individual_metric_output.keys()
     for curr_metric in metrics:
         curr_metric_parents = []
         a_code = curr_metric[0]
@@ -248,6 +248,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         else:
             b = b_code
 
+        # giving custom names to metrics
         metric_name_a = curr_metric[3]['nr'] if len(curr_metric) > 3 and 'nr' in curr_metric[3] else a
         metric_name_b = curr_metric[3]['dr'] if len(curr_metric) > 3 and 'dr' in curr_metric[3] else b
         metric_name_op = curr_metric[3]['op'] if len(curr_metric) > 3 and 'op' in curr_metric[3] else op
@@ -265,6 +266,11 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         for curr_metric in metric_processed:
             a = curr_metric["a"]
             b = curr_metric["b"]
+            if (a in raw_data and a not in remaining_metrics) or (b in raw_data and b not in remaining_metrics):
+                return {"individual metrics": individual_metric_output,
+                        "lower_group_data": "missing data for some metrics",
+                        "higher_group_data": "missing data for some metrics"}
+
             nr_value = a
             dr_value = b
             if type(nr_value) is str:
@@ -490,6 +496,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                         end_value = datetime.strptime(end_value, "%Y-%m-%d")
                     add_constraint = [{add_variable_name:{"$gte": start_value, "$lte": end_value}}]
                 match_constraint = match_constraint + add_constraint
+                match_dict = {"$and": match_constraint}
         elif database_type == 'mysql':
             add_query = ''
             if next_level == lowest_level and not unilevel_constraints == {} and \
@@ -609,7 +616,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             all_results = [all_results]
     if not len(all_results)==0:
         new_results = convert_dict_arrays_keys_to_standard_names(all_results)
-        print(new_results)
         try:
             single_array_results = merge_dict_array_array_multiple_keys(new_results, grouping_levels)
         except:

@@ -41,7 +41,7 @@ weekday_codes = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
 
 
 # list of raw data points which cannot be restricted
-raw_data_unrestricted = ['flat']
+raw_data_unrestricted = ['flat','cost']
 
 level_name_by_model_id = {
     "supplier_id": "supplier", "object_id": "supplier", "campaign_id": "campaign", "proposal_id": "campaign",
