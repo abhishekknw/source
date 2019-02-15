@@ -793,12 +793,12 @@ class ProposalViewSet(viewsets.ViewSet):
             response = website_utils.suppliers_within_radius(data)
             if not response.data['status']:
                 return response
-
             response = website_utils.add_shortlisted_suppliers_get_spaces(pk, request.user, response.data['data'])
             if not response.data['status']:
                 return response
-
-            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
+            result = response.data['data']
+            result["suppliers"] = list(result["suppliers"])
+            return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 

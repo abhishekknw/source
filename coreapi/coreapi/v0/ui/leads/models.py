@@ -177,3 +177,14 @@ class LeadsPermissions(MongoModel):
     class Meta:
         write_concern = WriteConcern(j=True)
         connection_alias = 'mongo_app'
+
+
+class ExcelDownloadHash(MongoModel):
+    leads_form_id = fields.IntegerField()
+    supplier_id = fields.CharField()
+    one_time_hash = fields.ListField()  # CREATE, UPDATE, READ, DELETE, FILL
+    created_at = fields.DateTimeField()
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'mongo_app'
