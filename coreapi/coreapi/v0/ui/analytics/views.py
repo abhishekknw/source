@@ -88,13 +88,13 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     data_point_category = data_point['category']
     value_ranges = data_point['value_ranges'] if 'value_ranges' in data_point else {}
     data_scope_category = data_scope_first['category'] if not data_scope_first == {} else data_point_category
-    highest_level_original = ''
+    highest_level_original = highest_level
     if highest_level == 'vendor':
         highest_level_original = 'vendor'
         values = data_scope_first['values']['exact'] if 'values' in data_scope_first \
                                                         and 'exact' in data_scope_first['values'] else []
-        [values_dict, vendor_level_values_list] = get_campaigns_from_vendors(values)
-        if values_dict == {}:
+        [vendor_values_dict, vendor_level_values_list] = get_campaigns_from_vendors(values)
+        if vendor_values_dict == {}:
             return "vendors do not exist"
         highest_level_values = vendor_level_values_list
         highest_level = 'campaign'
@@ -155,11 +155,23 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
                           default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category,
                           value_ranges)
+            if curr_output == []:
+                continue
+            if highest_level_original == 'vendor':
+                curr_output_new = []
+                for curr_dict in curr_output:
+                    curr_key = curr_dict[default_value_type]
+                    curr_value = vendor_values_dict[curr_key]
+                    curr_dict[highest_level_original] = curr_value
+                    curr_output_new.append(curr_dict)
+                curr_output = curr_output_new
+
+
             curr_output_keys = curr_output[0].keys()
-            allowed_keys = set([highest_level] + grouping_level + [curr_metric])
+            allowed_keys = set([highest_level_original] + grouping_level + [curr_metric])
             #curr_output = key_replace_group(curr_output,'supplier','flattype')
             if not curr_output_keys<=allowed_keys:
-                curr_output = sum_array_by_keys(curr_output, [highest_level]+grouping_level,[curr_metric])
+                curr_output = sum_array_by_keys(curr_output, [highest_level_original]+grouping_level,[curr_metric])
         individual_metric_output[lowest_level] = curr_output
 
     matching_format_metrics = get_similar_structure_keys(individual_metric_output, grouping_level)
@@ -197,14 +209,14 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     derived_array_1 = add_vendor_name(derived_array_1)
     derived_array = []
 
-    if highest_level_original == 'vendor':
-        for curr_dict in derived_array_1:
-            curr_key = curr_dict[default_value_type]
-            curr_value = values_dict[curr_key]
-            curr_dict[highest_level_original] = curr_value
-            derived_array.append(curr_dict)
-    else:
-        derived_array = derived_array_original
+    # if highest_level_original == 'vendor':
+    #     for curr_dict in derived_array_1:
+    #         curr_key = curr_dict[default_value_type]
+    #         curr_value = vendor_values_dict[curr_key]
+    #         curr_dict[highest_level_original] = curr_value
+    #         derived_array.append(curr_dict)
+    # else:
+    derived_array = derived_array_1
 
     metric_parents = {}
     for curr_metric in metrics:
@@ -597,18 +609,17 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             all_results = [all_results]
     if not len(all_results)==0:
         new_results = convert_dict_arrays_keys_to_standard_names(all_results)
+        print(new_results)
         try:
             single_array_results = merge_dict_array_array_multiple_keys(new_results, grouping_levels)
         except:
             single_array_results = merge_dict_array_array_multiple_keys(new_results, ['supplier'])
 
         if original_grouping_levels is not None:
-            print(grouping_levels, original_grouping_levels)
             single_array_results = key_replace_group(single_array_results, grouping_levels[0],
                                                      original_grouping_levels[0], lowest_level, value_ranges)
             # single_array_results = sum_array_by_keys(single_array_results,
             #                                              [highest_level]+original_grouping_levels,[lowest_level])
-        print(single_array_results)
 
     else:
         single_array_results = []
