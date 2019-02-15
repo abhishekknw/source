@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 import jwt
 from . import utils
+import datetime
+import logging
 from django.utils.encoding import smart_text
 from django.utils.translation import ugettext as _
 from rest_framework import exceptions
@@ -11,6 +13,15 @@ from rest_jwt.settings import api_settings
 
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
 jwt_get_user_id_from_payload = api_settings.JWT_PAYLOAD_GET_USER_ID_HANDLER
+logger = logging.getLogger(__name__)
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
 
 
 class BaseJSONWebTokenAuthentication(BaseAuthentication):
@@ -23,6 +34,10 @@ class BaseJSONWebTokenAuthentication(BaseAuthentication):
         Returns a two-tuple of `User` and token if a valid signature has been
         supplied using JWT-based authentication.  Otherwise returns `None`.
         """
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        url = request.build_absolute_uri()
+        ip = get_client_ip(request)
+        logger.info('ACCESS || {0} || IP: {1}'.format(url, ip))
         jwt_value = self.get_jwt_value(request)
         if jwt_value is None:
             return None

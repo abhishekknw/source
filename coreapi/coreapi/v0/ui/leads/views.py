@@ -2,7 +2,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
-from .models import (get_leads_summary, LeadsPermissions)
+from .models import (get_leads_summary, LeadsPermissions, ExcelDownloadHash)
 from v0.ui.analytics.views import (get_data_analytics, get_details_by_higher_level,
                                    get_details_by_higher_level_geographical, geographical_parent_details)
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -612,17 +612,35 @@ def get_leads_excel_sheet(leads_form_id, supplier_id,**kwargs):
 
 
 class GenerateLeadDataExcel(APIView):
-    permission_classes = ()
-    authentication_classes = ()
     @staticmethod
     def get(request, leads_form_id):
         supplier_id = request.GET.get('supplier_id', 'ALL')
-        (excel_book, total_leads_count) = get_leads_excel_sheet(leads_form_id, supplier_id)
-        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
+        excel_download_hash_dict = {"leads_form_id": int(leads_form_id), "supplier_id": supplier_id}
+        now = datetime.datetime.now()
+        excel_download_hash_dict["created_at"] = now
+        one_time_hash = hashlib.sha256(str(now).encode('utf-8')).hexdigest()
+        excel_download_hash_dict["one_time_hash"] = one_time_hash
+        ExcelDownloadHash(**excel_download_hash_dict).save()
+        return handle_response({}, data={"one_time_hash": one_time_hash}, success=True)
 
-        excel_book.save(response)
-        return response
+
+class DownloadLeadDataExcel(APIView):
+    permission_classes = ()
+    authentication_classes = ()
+    @staticmethod
+    def get(request, one_time_hash):
+        excel_download_hash = list(ExcelDownloadHash.objects.raw({"one_time_hash": one_time_hash}))
+        if len(excel_download_hash) > 0:
+            supplier_id = excel_download_hash[0].supplier_id
+            leads_form_id = excel_download_hash[0].leads_form_id
+            (excel_book, total_leads_count) = get_leads_excel_sheet(leads_form_id, supplier_id)
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
+            excel_book.save(response)
+            ExcelDownloadHash.objects.raw({'one_time_hash': one_time_hash}).delete()
+            return response
+        return handle_response({}, data='success', success=True)
+
 
 class DeleteLeadForm(APIView):
     # Entire form is deactivated
@@ -798,7 +816,14 @@ class LeadsSummary(APIView):
     def get(self, request):
         class_name = self.__class__.__name__
         user_id = request.user.id
-        campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id).values_list('campaign_id', flat=True).distinct()
+        vendor = request.query_params.get('vendor',None)
+        if vendor:
+            campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
+                                                              campaign__principal_vendor=vendor).values_list(
+                'campaign_id', flat=True).distinct()
+        else:
+            campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
+                                                              ).values_list('campaign_id', flat=True).distinct()
         campaign_list = [campaign_id for campaign_id in campaign_list]
         all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).\
             values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name', 'proposal__tentative_start_date',

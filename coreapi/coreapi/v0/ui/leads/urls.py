@@ -9,7 +9,7 @@ from .views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntri
                    UpdateLeadsDataIsHot, InsertExtraLeads, LeadsPermissionsAPI, LeadsPermissionsSelfAPI,
                    LeadsPermissionsByProfileIdAPI, GetLeadsFormById,GetAllLeadFormsByCampaigns,
                    DeleteExtraLeadEntry, DeleteLeadItem, GetLeadsEntry, UpdateLeadsEntry, GeographicalLevelsTest,
-                   GetListsCounts)
+                   GetListsCounts, DownloadLeadDataExcel)
 
 from .one_time_scripts import UpdateLeadsMissingItems, UpdateLeadsEntryIds
 
@@ -25,6 +25,7 @@ urlpatterns = [
     url(r'^(?P<leads_form_id>[A-Z_a-z0-9]+)/import_lead$', LeadsFormBulkEntry.as_view()),
     url(r'^(?P<leads_form_id>[A-Z_a-z0-9]+)/generate_lead_form$', GenerateLeadForm.as_view()),
     url(r'^(?P<leads_form_id>[A-Z_a-z0-9]+)/generate_lead_data_excel', GenerateLeadDataExcel.as_view()),
+    url(r'^(?P<one_time_hash>[A-Z_a-z0-9]+)/download_lead_data_excel', DownloadLeadDataExcel.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_form$', DeleteLeadForm.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_entry/(?P<entry_id>[A-Z_a-z0-9]+)$', DeleteLeadEntry.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_form_element/(?P<item_id>[A-Z_a-z0-9]+)$', DeleteLeadItem.as_view()),
