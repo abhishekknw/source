@@ -1,8 +1,22 @@
 import numpy as np
 from v0.ui.supplier.models import SupplierPhase, SupplierTypeSociety
+from v0.ui.proposal.models import ProposalInfo
 from datetime import datetime
 import pytz, copy
 from v0.ui.campaign.views import calculate_mode
+from collections import Iterable
+import math
+from v0.ui.organisation.models import Organisation
+
+
+def flatten(items):
+    """Yield items from any nested iterable; see Reference."""
+    for x in items:
+        if isinstance(x, Iterable) and not isinstance(x, (str, bytes)):
+            for sub_x in flatten(x):
+                yield sub_x
+        else:
+            yield x
 
 
 def get_metrics_from_code(code, raw_metrics, derived_metrics):
@@ -17,16 +31,22 @@ def get_metrics_from_code(code, raw_metrics, derived_metrics):
     return metric
 
 
+alternate_name_keys = {"supplier": "supplier_name", "campaign":"campaign_name"}
+
+
 weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
                  '4': 'Friday', '5': 'Saturday', '6': 'Sunday'}
 weekday_codes = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
                  'Friday': 4, 'Saturday': 5, 'Sunday': 6}
 
 
+# list of raw data points which cannot be restricted
+raw_data_unrestricted = ['flat','cost']
+
 level_name_by_model_id = {
     "supplier_id": "supplier", "object_id": "supplier", "campaign_id": "campaign", "proposal_id": "campaign",
     "flat_count": "flat","total_negotiated_price": "cost", "created_at": "date", "phase_no": "phase",
-    "society_city": "city", "society_name":"supplier_name"
+    "society_city": "city", "society_name":"supplier_name", "cost_per_flat":"cost_flat", "name":"campaign_name"
 }
 
 
@@ -52,7 +72,10 @@ count_details_parent_map = {
                        'storage_type': 'condition'},
     'supplier,flattype': {'parent': 'flattype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
                           'self_name_model': 'supplier_id', 'parent_name_model': 'flat_count_type',
-                          'storage_type': 'name'}
+                          'storage_type': 'name'},
+    'cost_flat': {'parent': 'campaign', 'model_name':'ShortlistedSpaces', 'database_type': 'mysql',
+                  'self_name_model': 'cost_per_flat', 'parent_name_model': 'proposal_id',
+                  'storage_type': 'sum'}
 }
 
 count_details_parent_map_multiple = {
@@ -122,6 +145,17 @@ time_parent_names = {
 }
 
 
+# rounds to sig places with minimum sig significant digits
+# if sig = 2. round_sig_min(1547.128) = 1547.12, round_sig_min(0.000313) = 0.00031
+def round_sig_min(x,sig=2):
+    if x>=1:
+        return round(x,2)
+    elif x==0:
+        return x
+    else:
+        return round(x, sig-int(math.floor(math.log10(abs(x))))-1)
+
+
 def z_calculator_array_multiple(data_array, metrics_array_dict, weighted=0):
     result_array = []
     global_data = {}
@@ -139,7 +173,7 @@ def z_calculator_array_multiple(data_array, metrics_array_dict, weighted=0):
             z_value = (curr_mean - global_mean) / stdev if not stdev == 0 else 0
             z_score_name = curr_metric+' z_score'
             z_color_name = curr_metric+' z_category'
-            curr_data[z_score_name] = z_value
+            curr_data[z_score_name] = round_sig_min(z_value)
             if z_value > 1:
                 color = 'Green'
             elif z_value < -1:
@@ -151,7 +185,7 @@ def z_calculator_array_multiple(data_array, metrics_array_dict, weighted=0):
     return data_array
 
 
-def calculate_freqdist_mode_from_list(num_list,window_size=5):
+def calculate_freqdist_mode_from_list_floating(num_list, window_size=5):
     if not type(num_list) == list:
         return {}
     if len(num_list) == 0:
@@ -185,19 +219,54 @@ def calculate_freqdist_mode_from_list(num_list,window_size=5):
     return freq_dist
 
 
+def calculate_freqdist_mode_from_list(num_list, window_size=5):
+    if not type(num_list) == list:
+        return {}
+    if len(num_list) == 0:
+        return {}
+    if len(num_list) == 1:
+        return [num_list, num_list[0]]
+    num_list = sorted(num_list)
+    min_max = [num_list[0],num_list[-1]]
+    max = min_max[1]
+    last_window_start = max-max%window_size
+    freq_dist = {}
+    num_list_copy = num_list.copy()
+    lower_limit = 0
+    actual_length = len(num_list)
+    counter = 0
+    while lower_limit <= last_window_start:
+        upper_limit = lower_limit + window_size
+        new_list = [round(x,4) for x in num_list_copy if lower_limit <= x < upper_limit]
+        freq = len(new_list)
+        mean = np.mean(new_list) if len(new_list)>0 else None
+        counter = counter+freq
+        group_name = str(lower_limit) + ' to ' + str(upper_limit)
+        freq_dist[group_name] = {}
+        if new_list == []:
+            lower_limit = upper_limit
+            continue
+        freq_dist[group_name]['values'] = new_list
+        freq_dist[group_name]['mode'] = freq
+        freq_dist[group_name]['mean'] = mean
+        lower_limit = upper_limit
+    return freq_dist
+
+
 def var_stdev_calculator(dict_array, keys, weighted=0):
     new_array = []
     for curr_dict in dict_array:
         for key in keys:
             num_list = curr_dict[key]
-            if num_list == []:
+            if num_list == [] or num_list == None or not isinstance(num_list,list):
                 continue
+            num_list = [x for x in num_list if x is not None]
             stdev_key = 'stdev_' + key
             var_key = 'variance_' + key
             curr_stdev = np.std(num_list)
             curr_var = curr_stdev**2
-            curr_dict[stdev_key] = curr_stdev
-            curr_dict[var_key] = curr_var
+            curr_dict[stdev_key] = round_sig_min(curr_stdev)
+            curr_dict[var_key] = round_sig_min(curr_var)
         new_array.append(curr_dict)
     return new_array
 
@@ -229,14 +298,6 @@ def mean_calculator(dict_array, keys, weighted=0):
 # redundant
 def sum_array_by_single_key(array, keys):
     count_dict = {}
-    # valid_array =[]
-    # for curr_dict in array:
-    #     append = True
-    #     for curr_key in keys:
-    #         if curr_dict[curr_key] is None:
-    #             append = False
-    #     if append:
-    #         valid_array.append(curr_dict)
     for curr_key in keys:
         values = [x[curr_key] for x in array if x[curr_key] is not None]
         count_dict[curr_key]=values
@@ -244,7 +305,7 @@ def sum_array_by_single_key(array, keys):
 
 
 def binary_operation(a, b, op):
-    operator_map = {"/": round(float(a)/b,5), "*":a*b, "+":a+b, "-": a-b}
+    operator_map = {"/": round(float(a)/b,5) if not b==0 else None, "*":a*b, "+":a+b, "-": a-b}
     return operator_map[op]
 
 
@@ -292,6 +353,16 @@ def find_key_alias_dict_array(dict_array, key_name):
     return key_name
 
 
+def flatten_dict_array(dict_array):
+    new_array = []
+    for curr_dict in dict_array:
+        if isinstance(curr_dict, list) and curr_dict == [curr_dict[0]]:
+            new_array = new_array + curr_dict
+        else:
+            new_array.append(curr_dict)
+    return new_array
+
+
 # Input: dict array: [{"supplier_id":"S1","campaign_id":"C1"},{"supplier_id":"S2","campaign_id":"C2"}]
 # Output: [{"supplier":"S1","campaign":"C1"},{"supplier":"S2","campaign":"C2"}]
 def convert_dict_arrays_keys_to_standard_names(dict_arrays):
@@ -299,6 +370,8 @@ def convert_dict_arrays_keys_to_standard_names(dict_arrays):
     for curr_array in dict_arrays:
         new_array = []
         for curr_dict in curr_array:
+            if curr_dict == []:
+                continue
             keys = list(curr_dict.keys())
             for curr_key in keys:
                 new_key = level_name_by_model_id[curr_key] if curr_key in level_name_by_model_id else curr_key
@@ -367,11 +440,27 @@ def merge_dict_array_array_single(array, key_name):
     return final_array
 
 
+# get names of keys common to one or more dict arrays in array of arrays
+def get_common_keys(arrays):
+    key_set_list = []
+    for dict_array in arrays:
+        first_dict = dict_array[0]
+        first_dict_keyset = set(first_dict.keys())
+        key_set_list.append(first_dict_keyset)
+    all_keys = set.intersection(*key_set_list)
+    return all_keys
+
+
 def merge_dict_array_array_multiple_keys(arrays, key_names):
     #key_names = ['date','campaign']
     final_array = []
     if arrays==[]:
         return arrays
+    # if len(key_names) == 1:
+    #     return merge_dict_array_array_single(arrays, key_names[0])
+    common_keys_set = get_common_keys(arrays)
+    if len(set.intersection(set(key_names),common_keys_set)) == 0:
+        key_names = list(common_keys_set)
     first_array = arrays[0]
     second_array = []
     for i in range(1,len(arrays)):
@@ -390,6 +479,9 @@ def merge_dict_array_array_multiple_keys(arrays, key_names):
         first_array = second_array
         second_array = []
     return first_array
+
+
+#def merge_dict_array_array_multiple_keys_new
 
 
 def sum_array_by_key(array, grouping_keys, sum_key):
@@ -452,8 +544,14 @@ def append_array_by_keys(array, grouping_keys, append_keys):
 
 def sum_array_by_keys(array, grouping_keys, sum_keys):
     new_array = []
-    required_keys = list(set(sum_keys + grouping_keys))
+    required_keys = set(sum_keys + grouping_keys)
     ref_sum_key = sum_keys[0]
+    array_keys = array[0].keys()
+    missing_keys = required_keys-set(array_keys)
+    if len(missing_keys)>0:
+        print("keys missing, ignored")
+        required_keys = list(required_keys - missing_keys)
+        grouping_keys = list(set(grouping_keys)-missing_keys)
     for curr_dict in array:
         first_match = False
         curr_dict_sum = {}
@@ -595,17 +693,56 @@ def date_to_other_groups(dict_array, group_name, desired_metric, raw_data, highe
 
     return new_array
 
+
+def add_missing_keys(main_dict, main_keys):
+    if main_keys == []:
+        return main_dict
+    key_set_list = []
+    for curr_main_key in main_keys:
+        sub_dict = main_dict[curr_main_key]
+        sub_keys = sub_dict.keys()
+        key_set_list.append(set(sub_keys))
+    if len(key_set_list)>0:
+        all_keys = set.union(*key_set_list)
+    for curr_main_key in main_keys:
+        sub_dict = main_dict[curr_main_key]
+        sub_keys = sub_dict.keys()
+        missing_keys = all_keys - sub_keys
+        for missing_key in missing_keys:
+            main_dict[curr_main_key][missing_key] = {}
+    return main_dict
+
+
 def frequency_mode_calculator(dict_array, frequency_keys, weighted=0, window_size=5):
     new_array= []
     for curr_dict in dict_array:
+        freq_keys = []
         for key in frequency_keys:
             curr_dist = calculate_freqdist_mode_from_list(curr_dict[key],window_size)
             if curr_dist == {}:
                 continue
             new_key = 'freq_dist_'+ key
+            freq_keys.append(new_key)
             curr_dict[new_key] = curr_dist
         new_array.append(curr_dict)
+        x = add_missing_keys(curr_dict,freq_keys)
     return new_array
+
+
+def add_campaign_name(dict_array):
+    if 'campaign' not in dict_array[0]:
+        return dict_array
+    campaign_ids = [x["campaign"] for x in dict_array]
+    model_data = ProposalInfo.objects.filter(proposal_id__in = campaign_ids).\
+        values_list('proposal_id','name')
+    new_col_name = level_name_by_model_id['name']
+    model_data_dict = dict(model_data)
+    new_dict_array = []
+    for curr_dict in dict_array:
+        col_value = curr_dict['campaign']
+        curr_dict[new_col_name] = model_data_dict[col_value]
+        new_dict_array.append(curr_dict)
+    return new_dict_array
 
 
 def add_supplier_name(dict_array):
@@ -622,6 +759,48 @@ def add_supplier_name(dict_array):
         curr_dict[new_col_name] = model_data_dict[col_value]
         new_dict_array.append(curr_dict)
     return new_dict_array
+
+
+def add_vendor_name(dict_array):
+    if 'vendor' not in dict_array[0]:
+        return dict_array
+    vendor_ids = [x["vendor"] for x in dict_array]
+    model_data = Organisation.objects.filter(organisation_id__in = vendor_ids).\
+        values_list('organisation_id','name')
+    new_col_name = 'vendor_name'
+    model_data_dict = dict(model_data)
+    new_dict_array = []
+    for curr_dict in dict_array:
+        col_value = curr_dict['vendor']
+        if col_value in model_data_dict:
+            curr_dict[new_col_name] = model_data_dict[col_value]
+        new_dict_array.append(curr_dict)
+    return new_dict_array
+
+
+# [[{'lead': 66, 'supplier': 'MUMTWVVRSLOP', 'campaign': 'BYJMAC472C', 'city': 'Mumbai'},
+# {'lead': 68, 'supplier': 'MUMGELBRSPRT', 'campaign': 'BYJMAC9E18', 'city': 'Mumbai'}],
+# [{'hot_lead': 64, 'supplier': 'MUMTWVVRSLOP', 'campaign': 'BYJMAC472C', 'city': 'Mumbai'},
+# {'hot_lead': 54, 'supplier': 'MUMGELBRSPRT', 'campaign': 'BYJMAC9E18', 'city': 'Mumbai'}]
+# [{'flat': 78, 'supplier': 'MUMTWVVRSLOP', 'city': 'Mumbai'}, {'flat': 150, 'supplier': 'MUMMUGWRSAEC', 'city': 'Mumbai'}]
+# Result: [ ... [{'flat': 78, 'supplier': 'MUMAMENNRSSRR', 'city': 'Mumbai','campaign': 'BYJMAC472C'}]
+def append_higher_key_dict_array(array,key):
+    key_set_list = []
+    for array in arrays:
+        curr_keys = array[0].keys()
+        key_set_list.append(set(curr_keys))
+    all_keys = set.union(*key_set_list)
+    ref_array = None
+    missing_array = None
+    new_array = []
+    for array in arrays:
+        curr_keys = array[0].keys()
+        missing_keys = all_keys-curr_keys
+        if len(missing_keys) == 0:
+            ref_array = array
+        else:
+            missing_array = array
+    new_array
 
 
 

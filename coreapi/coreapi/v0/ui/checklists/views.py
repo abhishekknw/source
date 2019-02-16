@@ -963,6 +963,9 @@ def process_metrics(operations_array, raw_map):
     valid_codes = list(raw_map.keys())
     final_array = []
     for metric_array in operations_array:
+        if len(metric_array) == 1:
+            result = raw_map[metric_array[0]]
+            return [result]
         a_code = metric_array[0]
         b_code = metric_array[1]
         op = metric_array[2]
@@ -1066,8 +1069,9 @@ class ChecklistSavedOperators(APIView):
     @staticmethod
     def post(request):
         metrics_data = request.data
-        existing_data_count = len(list(ChecklistOperators.objects.raw({})))
-        operator_id = existing_data_count+1
+        last_operator_id =  mongo_client.checklist_operators.find_one(sort=[('operator_id', -1)])["operator_id"]
+        print(last_operator_id)
+        operator_id = last_operator_id+1
         metrics_data["operator_id"]=operator_id
         ChecklistOperators(**metrics_data).save()
         return handle_response('', data="success", success=True)
@@ -1093,6 +1097,18 @@ class ChecklistSavedOperators(APIView):
             }
             counter = counter + 1
         return handle_response('',data=final_response, success=True)
+
+    @staticmethod
+    def put(request):
+        operator_data = request.data
+        if 'operator_id' not in operator_data:
+            return handle_response('', data='operator id missing', success=True)
+        else:
+            operator_id = operator_data['operator_id']
+        operator_data.pop('operator_id')
+        operator_response = mongo_client.checklist_operators.update_one({"operator_id": int(operator_id)}, {
+            "$set":operator_data})
+        return handle_response('', data="success", success=True)
 
     @staticmethod
     def delete(request):
@@ -1124,12 +1140,12 @@ class ChecklistSavedOperatorsResult(APIView):
             column_value_dict = {}
             for curr_dict in checklist_data_list:
                 for curr_column in column_ids:
-                    if curr_column not in curr_dict['data']:
+                    if str(curr_column) not in curr_dict['data']:
                         continue
-                    curr_column_value = curr_dict['data'][curr_column]['cell_value']
-                    if curr_column not in column_value_dict:
-                        column_value_dict[curr_column] = []
-                    column_value_dict[curr_column].append(curr_column_value)
+                    curr_column_value = curr_dict['data'][str(curr_column)]['cell_value']
+                    if str(curr_column) not in column_value_dict:
+                        column_value_dict[str(curr_column)] = []
+                    column_value_dict[str(curr_column)].append(curr_column_value)
             if column_value_dict == {}:
                 result_dict[str(operator_id)] = {'operator_definition': curr_response, 'final_value': 'operator error',
                                                  'column_values': {}, 'column_operations': {},
