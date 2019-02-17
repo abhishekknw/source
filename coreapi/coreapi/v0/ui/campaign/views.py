@@ -8,6 +8,7 @@ from dateutil import tz
 from datetime import datetime
 from datetime import timedelta
 from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, SupplierPhase, HashTagImages
+from v0.ui.organisation.models import Organisation
 from v0.ui.utils import handle_response, calculate_percentage
 from django.utils import timezone
 from rest_framework.response import Response
@@ -17,6 +18,7 @@ import v0.ui.utils as ui_utils
 import v0.constants as v0_constants
 from v0.ui.supplier.models import (SupplierTypeSociety)
 import v0.ui.website.utils as website_utils
+
 from django.db.models import Q, F
 from .models import (CampaignSocietyMapping, Campaign, CampaignAssignment, CampaignComments)
 from .serializers import (CampaignListSerializer, CampaignSerializer, CampaignAssignmentSerializer)
@@ -2064,5 +2066,40 @@ class AssignedCampaigns(APIView):
     def get(request):
         user_id = request.user.id
         vendor = request.query_params.get('vendor', None)
+        print (vendor)
         all_assigned_campaigns = get_all_assigned_campaigns(user_id, vendor)
+        all_campaign_ids = []
+        for campaign in all_assigned_campaigns:
+            if campaign['proposal_id']:
+                if campaign['proposal_id'] not in all_campaign_ids:
+                    all_campaign_ids.append(campaign['proposal_id'])
+                    supplier_list = ShortlistedSpaces.objects.filter(proposal_id=campaign['proposal_id']).values_list(
+                        'object_id', flat=True).distinct()
+                    supplier_details = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_list).values_list('society_name',
+                                                                                                        flat=True).distinct()
+                    campaign['supplier_details']=supplier_details
+        print (all_campaign_ids)
+        supplier_list= ShortlistedSpaces.objects.filter(proposal_id__in=all_campaign_ids).values_list('object_id', flat=True).distinct()
+        print ('******************')
+        print (supplier_list)
+        sup=SupplierTypeSociety.objects.filter(supplier_id__in=supplier_list).values_list('society_name', flat=True).distinct()
+        print(sup)
         return ui_utils.handle_response({}, data=all_assigned_campaigns, success=True)
+
+
+class VendorDetails(APIView):
+    @staticmethod
+    def get(request):
+        user_id = request.user.id
+        all_assigned_campaigns = get_all_assigned_campaigns(user_id, None)
+        all_vendor_ids = []
+        for campaign in all_assigned_campaigns:
+            if campaign['principal_vendor']:
+                if campaign['principal_vendor'] not in all_vendor_ids:
+                    all_vendor_ids.append(campaign['principal_vendor'])
+        all_vendors = Organisation.objects.filter(organisation_id__in=all_vendor_ids).all()
+
+        all_vendors_dict = {}
+        for vendor in all_vendors:
+            all_vendors_dict[vendor.organisation_id] = {'name': vendor.name}
+        return ui_utils.handle_response({}, data=all_vendors_dict, success=True)
