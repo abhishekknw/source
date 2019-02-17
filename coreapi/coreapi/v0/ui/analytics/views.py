@@ -566,8 +566,12 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     if 'incrementing_value' in entity_details:
                         incrementing_value = entity_details['incrementing_value']
                     if incrementing_value is not None:
-                        group_dict.update({'_id': {}, next_level: {"$sum":
-                        {"$cond":[{"$eq": ["$"+self_model_name,incrementing_value]}, 1, 0]}}})
+                        if 'increment_type' in entity_details and entity_details['increment_type'] == 3:
+                            group_dict.update({'_id': {}, next_level: {"$sum":
+                            {"$cond": [{"$gte": ["$" + self_model_name,incrementing_value]}, 1, 0]}}})
+                        else:
+                            group_dict.update({'_id': {}, next_level: {"$sum":
+                            {"$cond":[{"$eq": ["$"+self_model_name,incrementing_value]}, 1, 0]}}})
                     else:
                         group_dict = {'_id': {}, next_level: {"$sum": {"$cond": ["$"+self_model_name, 1, 0]}}}
                 for curr_parent_model_name in parent_model_names:

@@ -50,6 +50,8 @@ level_name_by_model_id = {
 }
 
 
+# increment types: 0 - equal to, 1 - greater than, 2 - less than,
+# 3 - greater than or equal to, 4 - less than or equal to
 count_details_parent_map = {
     'supplier':{'parent': 'campaign', 'model_name': 'ShortlistedSpaces', 'database_type': 'mysql',
                 'self_name_model': 'object_id', 'parent_name_model': 'proposal_id', 'storage_type': 'name'},
@@ -69,7 +71,7 @@ count_details_parent_map = {
               'self_model_name': 'phase_no', 'parent_name_model':'campaign_id', 'storage_type': 'unique'},
     'hotness_level_': {'parent': 'campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                        'self_name_model': 'hotness_level', 'parent_name_model': 'campaign_id',
-                       'storage_type': 'condition'},
+                       'storage_type': 'condition', 'increment_type':3},
     'supplier,flattype': {'parent': 'flattype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
                           'self_name_model': 'supplier_id', 'parent_name_model': 'flat_count_type',
                           'storage_type': 'name'},
@@ -89,7 +91,10 @@ count_details_parent_map_multiple = {
              'storage_type': 'sum'},
     'date': {'parent': 'campaign,phase', 'model_name': 'SupplierPhase', 'database_type': 'mysql',
              'self_model_name': 'start_date+end_date', 'parent_name_model': 'campaign_id, phase_no',
-             'storage_type': 'range'}
+             'storage_type': 'range'},
+    'hotness_level_': {'parent': 'supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+                       'self_name_model': 'hotness_level', 'parent_name_model': 'supplier_id,campaign_id',
+                       'storage_type': 'condition', 'increment_type': 3},
 }
 
 reverse_direct_match = {'flattype':'supplier', 'qualitytype':'supplier'}
@@ -746,7 +751,7 @@ def add_campaign_name(dict_array):
 
 
 def add_supplier_name(dict_array):
-    if 'supplier' not in dict_array[0]:
+    if dict_array == [] or 'supplier' not in dict_array[0]:
         return dict_array
     supplier_ids = [x["supplier"] for x in dict_array]
     model_data = SupplierTypeSociety.objects.filter(supplier_id__in = supplier_ids).\
