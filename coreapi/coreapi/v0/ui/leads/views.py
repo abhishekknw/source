@@ -782,14 +782,49 @@ class GenerateDemoData(APIView):
         for curr_form in leads_form_all:
             curr_form['leads_form_name'] = "".join(random.choice(allchar) for x in range(randint(6, 10)))
             curr_form['leads_form_name'] = curr_form['leads_form_name'].title() + " Lead Form"
+            total_data_items = int(len(curr_form['data'].keys()))
+            if total_data_items > 0:
+                next_data_object = {**curr_form['data'][str(total_data_items)]}
+                next_data_object["key_name"] = "Is Meeting Fixed"
+                next_data_object["item_id"] = total_data_items + 1
+                curr_form['data'][str(total_data_items + 1)] = next_data_object
+                next_data_object2 = {**curr_form['data'][str(total_data_items)]}
+                next_data_object2["key_name"] = "Is Meeting Completed"
+                next_data_object2["item_id"] = total_data_items + 2
+                curr_form['data'][str(total_data_items + 2)] = next_data_object2
+                next_data_object3 = {**curr_form['data'][str(total_data_items)]}
+                next_data_object3["key_name"] = "Is Lead Converted"
+                next_data_object3["item_id"] = total_data_items + 3
+                curr_form['data'][str(total_data_items + 3)] = next_data_object3
+                curr_form['global_hot_lead_criteria']['is_hot_level_2'] = {
+                    'or': {str(total_data_items + 1): ['Y', 'y', 'Yes', 'yes', 'YES']}
+                }
+                curr_form['global_hot_lead_criteria']['is_hot_level_3'] = {
+                    'or': {str(total_data_items + 2): ['Y', 'y', 'Yes', 'yes', 'YES']}
+                }
+                curr_form['global_hot_lead_criteria']['is_hot_level_4'] = {
+                    'or': {str(total_data_items + 3): ['Y', 'y', 'Yes', 'yes', 'YES']}
+                }
             mongo_test.leads_forms.insert_one(curr_form)
         for curr_lead in leads_data_all:
             leads_form_id = curr_lead['leads_form_id']
             curr_leads_form = [x for x in leads_form_all if x['leads_form_id'] == leads_form_id]
+            if curr_lead['is_hot']:
+                if random.random() < .5:
+                    curr_lead['multi_level_is_hot']['is_hot_level_2'] = True
+                    curr_lead['hotness_level'] = 2
+                    if random.random() < .4:
+                        curr_lead['multi_level_is_hot']['is_hot_level_3'] = True
+                        curr_lead['hotness_level'] = 3
+                    if random.random() < .3:
+                        curr_lead['multi_level_is_hot']['is_hot_level_4'] = True
+                        curr_lead['hotness_level'] = 4
             curr_data = curr_lead['data']
             new_data = []
             for curr_data_item in curr_data:
                 item_id = curr_data_item['item_id']
+                if len(curr_leads_form) == 0:
+                    continue
                 curr_leads_form_items = curr_leads_form[0]['data']
                 curr_leads_form_item = curr_leads_form_items[str(item_id)]
                 key_name = curr_data_item['key_name']
@@ -805,6 +840,25 @@ class GenerateDemoData(APIView):
                         curr_data_item['value'] = "".join(random.choice(allchar) for x in range(randint(6, 10)))
                 curr_data_item['key_type'] = key_type
                 new_data.append(curr_data_item)
+            original_data_len = len(new_data)
+            new_data.append({
+                'item_id': original_data_len + 1,
+                'order_id': original_data_len + 1,
+                'key_name': "Is Meeting Fixed",
+                'value': 'Y' if curr_lead['hotness_level'] >= 2 else None
+            })
+            new_data.append({
+                'item_id': original_data_len + 2,
+                'order_id': original_data_len + 2,
+                'key_name': "Is Meeting Completed",
+                'value': 'Y' if curr_lead['hotness_level'] >= 3 else None
+            })
+            new_data.append({
+                'item_id': original_data_len + 3,
+                'order_id': original_data_len + 3,
+                'key_name': "Is Lead Converted",
+                'value': 'Y' if curr_lead['hotness_level'] >= 4 else None
+            })
             curr_lead['data'] = new_data
             mongo_test.leads.insert_one(curr_lead)
         return handle_response({}, data='success', success=True)
