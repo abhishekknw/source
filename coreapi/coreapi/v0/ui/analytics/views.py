@@ -597,8 +597,30 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             elif database_type == 'mysql':
                 all_values = parent_model_names.copy()
                 all_values.append(self_model_name)
+                if 'other_grouping_column' in entity_details:
+                    other_column = entity_details['other_grouping_column']
+                    all_values.append(other_column)
                 query = list(eval(full_query).values(*all_values))
+                if 'other_grouping_column' in entity_details:
+                    other_column_list = [x[other_column] for x in query]
+                if self_model_name == 'cost_per_flat' and grouping_levels == ['campaign']:
+                    model_name = 'SupplierTypeSociety'
+                    col_name = 'supplier_id'
+                    joining_data_query = model_name + '.objects.filter('+ col_name + '__in=other_column_list)'
+                    joining_data = dict(eval(joining_data_query).values_list(col_name, 'flat_count'))
+                    query_new = []
+                    for curr_dict in query:
+                        self_value = curr_dict[self_model_name]
+                        joining_value = joining_data[curr_dict[other_column]]
+                        if self_value is not None and joining_value is not None:
+                            new_dict = {}
+                            final_value = self_value*joining_value
+                            new_dict[parent_model_names[0]] = curr_dict[parent_model_names[0]]
+                            new_dict[self_model_name] = final_value
+                            query_new.append(new_dict)
+                    query = query_new
                 query_grouped = sum_array_by_key(query,parent_model_names, self_model_name)
+
                 query=query_grouped
                 if not query==[]:
                     if not all_results == [] and isinstance(all_results[0], dict) == True:
