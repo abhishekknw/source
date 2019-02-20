@@ -1,5 +1,6 @@
 from __future__ import print_function
 import boto3
+import os
 from django.forms import model_to_dict
 from django.conf import settings
 from rest_framework.response import Response
@@ -1245,7 +1246,6 @@ class UploadInventoryActivityImageAmazonNew(APIView):
             file_name = supplier_name + '_' + inventory_name + '_' + activity_name + '_' + activity_date.replace('-',
                                                                                                                  '_') + '_' + str(
                 time.time()).replace('.', '_') + '.' + extension
-            print(file_name)
             # image = open(file_address, 'r+')
             # website_utils.upload_to_amazon(file_name, file_content=image, bucket_name=settings.ANDROID_BUCKET_NAME)
             s3 = boto3.client(
@@ -1258,13 +1258,14 @@ class UploadInventoryActivityImageAmazonNew(APIView):
                 contents = f.read()
                 try:
                     s3.put_object(Body=contents, Bucket=settings.ANDROID_BUCKET_NAME, Key=file_name)
+                    os.unlink(file_address)
                 except Exception as ex:
                     print(ex)
             # # Now save the path
-            # instance, is_created = InventoryActivityImage.objects.get_or_create(image_path=file_name)
-            # instance.inventory_activity_assignment = inventory_activity_assignment_instance
-            # instance.actual_activity_date = activity_date
-            # instance.save()
+            instance, is_created = InventoryActivityImage.objects.get_or_create(image_path=file_name)
+            instance.inventory_activity_assignment = inventory_activity_assignment_instance
+            instance.actual_activity_date = activity_date
+            instance.save()
 
             return ui_utils.handle_response(class_name, data=file_name, success=True)
         except Exception as e:
