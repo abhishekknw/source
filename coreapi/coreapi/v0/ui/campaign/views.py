@@ -2066,7 +2066,6 @@ class AssignedCampaigns(APIView):
     def get(request):
         user_id = request.user.id
         vendor = request.query_params.get('vendor', None)
-        print (vendor)
         all_assigned_campaigns = get_all_assigned_campaigns(user_id, vendor)
         all_campaign_ids = []
         for campaign in all_assigned_campaigns:
@@ -2075,15 +2074,10 @@ class AssignedCampaigns(APIView):
                     all_campaign_ids.append(campaign['proposal_id'])
                     supplier_list = ShortlistedSpaces.objects.filter(proposal_id=campaign['proposal_id']).values_list(
                         'object_id', flat=True).distinct()
-                    supplier_details = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_list).values_list('society_name',
-                                                                                                        flat=True).distinct()
+                    supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_list)
+                    serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
+                    supplier_details = serializer.data
                     campaign['supplier_details']=supplier_details
-        print (all_campaign_ids)
-        supplier_list= ShortlistedSpaces.objects.filter(proposal_id__in=all_campaign_ids).values_list('object_id', flat=True).distinct()
-        print ('******************')
-        print (supplier_list)
-        sup=SupplierTypeSociety.objects.filter(supplier_id__in=supplier_list).values_list('society_name', flat=True).distinct()
-        print(sup)
         return ui_utils.handle_response({}, data=all_assigned_campaigns, success=True)
 
 
