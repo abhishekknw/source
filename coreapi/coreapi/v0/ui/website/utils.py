@@ -77,6 +77,7 @@ from v0.ui.campaign.serializers import GenericExportFileSerializer
 from v0.ui.inventory.models import Filters
 from v0.ui.inventory.serializers import FiltersSerializer
 
+fonts_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fonts')
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
     """
@@ -7290,10 +7291,10 @@ def add_string_to_image(image,message):
             destination.write(chunk)
         im = Image.open(destination)
         draw = ImageDraw.Draw(im)
-        # font = ImageFont.load("arial.pil")
+        font = ImageFont.truetype(os.path.join(fonts_path, "Roboto-Bold.ttf"), 40)
         (x, y) = (5, 5)
         color = 'rgb(0, 0, 0)'
-        draw.text((x, y), message, fill=color)
+        draw.text((x, y), message, fill=color, font=font)
         im.save(str(destination))
         return str(destination)
 
