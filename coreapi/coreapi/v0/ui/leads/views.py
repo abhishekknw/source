@@ -463,7 +463,6 @@ class LeadsFormBulkEntry(APIView):
             return handle_response({}, data="failed", success=False)
 
 
-
 class LeadsFormEntry(APIView):
     @staticmethod
     def post(request, leads_form_id):

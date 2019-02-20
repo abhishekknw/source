@@ -77,7 +77,7 @@ count_details_parent_map = {
                           'storage_type': 'name'},
     'cost_flat': {'parent': 'campaign', 'model_name':'ShortlistedSpaces', 'database_type': 'mysql',
                   'self_name_model': 'cost_per_flat', 'parent_name_model': 'proposal_id',
-                  'storage_type': 'sum'}
+                  'storage_type': 'sum', 'other_grouping_column':'object_id'}
 }
 
 count_details_parent_map_multiple = {
@@ -95,6 +95,9 @@ count_details_parent_map_multiple = {
     'hotness_level_': {'parent': 'supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                        'self_name_model': 'hotness_level', 'parent_name_model': 'supplier_id,campaign_id',
                        'storage_type': 'condition', 'increment_type': 3},
+    'cost_flat': {'parent': 'supplier,campaign', 'model_name': 'ShortlistedSpaces', 'database_type': 'mysql',
+                  'self_name_model': 'cost_per_flat', 'parent_name_model': 'object_id,proposal_id',
+                  'storage_type': 'sum'}
 }
 
 reverse_direct_match = {'flattype':'supplier', 'qualitytype':'supplier'}
