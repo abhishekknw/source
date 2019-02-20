@@ -12,6 +12,9 @@ import json
 import shutil
 import string
 import random
+from PIL import Image, ImageDraw, ImageFont
+from django.core.files.storage import default_storage
+from geopy.geocoders import GoogleV3
 
 from django.db import transaction
 from django.db.models import Q, F, ExpressionWrapper, FloatField
@@ -74,6 +77,7 @@ from v0.ui.campaign.serializers import GenericExportFileSerializer
 from v0.ui.inventory.models import Filters
 from v0.ui.inventory.serializers import FiltersSerializer
 
+fonts_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fonts')
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
     """
@@ -6491,6 +6495,8 @@ def restructure_supplier_inv_images_data(prev_dict):
         if 'activities' not in supplier_data:
             supplier_data['activities'] = {}
         supplier_data['activities'][curr_activity_id] = {
+            'inventory_activity_assignment_id': curr_assignment_id,
+            'shortlisted_inventory_details_id': shortlisted_inventory_id,
             'activity_id': curr_activity_id,
             'activity_type':activity_data['activity_type'],
             'inventory_id': inventory_data['inventory_id'],
@@ -6514,12 +6520,15 @@ def restructure_supplier_inv_images_data(prev_dict):
         if image_data['actual_activity_date']:
             supplier_data['activities'][activity_id]['actual_activity_date'] = image_data['actual_activity_date']
             supplier_data['activities'][activity_id]['status'] = 'complete'
+            supplier_data['activities'][activity_id]['images'] = {
+                'image_path': image_data["image_path"],
+                'comment': image_data["comment"],
+            }
     for ss in prev_dict['shortlisted_suppliers']:
         prev_dict['shortlisted_suppliers'][ss]['activities'] = list(prev_dict['shortlisted_suppliers'][ss]['activities'].values())
     new_dict['shortlisted_suppliers'] = list(prev_dict['shortlisted_suppliers'].values())
 
     return new_dict
-
 
 def save_filters(center, supplier_code, proposal_data, proposal):
     """
@@ -7271,3 +7280,25 @@ def organise_data_by_activity_and_inventory_type(data):
         return result
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
+
+
+def get_address_from_lat_long(lat, long):
+    geolocator = GoogleV3(api_key="AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY")
+    location = geolocator.reverse("{0}, {1}".format(lat, long),  exactly_one=True)
+    return location.address
+
+
+def add_string_to_image(image,message):
+    filename = str(image)
+    with default_storage.open("./" + filename, 'wb+') as destination:
+        for chunk in image.chunks():
+            destination.write(chunk)
+        im = Image.open(destination)
+        draw = ImageDraw.Draw(im)
+        font = ImageFont.truetype(os.path.join(fonts_path, "Roboto-Bold.ttf"), 40)
+        (x, y) = (5, 5)
+        color = 'rgb(0, 0, 0)'
+        draw.text((x, y), message, fill=color, font=font)
+        im.save(str(destination))
+        return str(destination)
+
