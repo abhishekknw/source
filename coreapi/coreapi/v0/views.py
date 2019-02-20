@@ -1371,7 +1371,13 @@ class UserViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            users = BaseUser.objects.all()
+            if request.user.is_superuser:
+                users = BaseUser.objects.all()
+            else:
+                organisation_id = request.query_params.get('organisation_id',None)
+                users = []
+                if organisation_id:
+                    users = BaseUser.objects.filter(profile__organisation=organisation_id)
             serializer = BaseUserSerializer(users, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:

@@ -32,6 +32,7 @@ import gpxpy.geo
 from v0.ui.leads.models import get_leads_summary, get_leads_summary_by_campaign, get_extra_leads_dict
 from v0.ui.base.models import DurationType
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
+from v0.ui.organisation.models import Organisation
 from v0.ui.proposal.serializers import ProposalInfoSerializer
 from django.core.cache import cache
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
@@ -2033,17 +2034,24 @@ class VendorWiseSummary(APIView):
         all_assigned_campaigns = get_all_assigned_campaigns(user_id, None)
         vendor_campaign_map = {}
         all_campaign_ids = []
+        all_vendor_ids = []
         for campaign in all_assigned_campaigns:
             if campaign['principal_vendor']:
                 if campaign['principal_vendor'] not in vendor_campaign_map:
                     vendor_campaign_map[campaign['principal_vendor']] = []
                 vendor_campaign_map[campaign['principal_vendor']].append(campaign["proposal_id"])
                 all_campaign_ids.append(campaign["proposal_id"])
+                if campaign['principal_vendor'] not in all_campaign_ids:
+                    all_vendor_ids.append(campaign['principal_vendor'])
+        all_vendors = Organisation.objects.filter(organisation_id__in=all_vendor_ids).all()
         campaign_summary = {}
         campaign_summary['last_week'] = get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, 7)
         campaign_summary['last_two_week'] = get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, 14)
         campaign_summary['last_three_week'] = get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, 21)
         campaign_summary['overall'] = get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, None)
+        campaign_summary['vendor_details'] = {}
+        for vendor in all_vendors:
+            campaign_summary['vendor_details'][vendor.organisation_id] = {'name': vendor.name}
         return ui_utils.handle_response({}, data=campaign_summary, success=True)
 
 

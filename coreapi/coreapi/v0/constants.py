@@ -623,7 +623,7 @@ query_dict = {
 # searching fields per supplier
 search_fields = {
     society_code: ['supplier_id__icontains', 'society_name__icontains', 'society_address1__icontains',
-           'society_city__icontains',
+           'society_city__icontains', 'society_locality__icontains',
            'society_state__icontains'
            ],
     corporate_code: ['supplier_id__icontains', 'name__icontains', 'address1__icontains', 'address2__icontains', 'area__icontains',
@@ -1309,3 +1309,4 @@ perf_metrics_param = {
     'inv' : 'inv'
 }
 
+MACHADALO_ORG_ID = 'MAC1421'
