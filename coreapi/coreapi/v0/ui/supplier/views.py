@@ -129,11 +129,11 @@ def get_flat_count_type(flat_count):
     if flat_count is None:
         return None
     if flat_count<150:
-        flat_type = 1
+        flat_type = '1-150'
     elif flat_count<400:
-        flat_type = 2
+        flat_type = '151-400'
     else:
-        flat_type = 3
+        flat_type = '401+'
     return flat_type
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -2995,12 +2995,13 @@ class insertFlatCountType(APIView):
             if flat_count is None:
                 continue
             if flat_count<150:
-                flat_type = 1
+                flat_type = '1-150'
             elif flat_count<400:
-                flat_type = 2
+                flat_type = '151-400'
             else:
-                flat_type = 3
+                flat_type = '401+'
             curr_data.flat_count_type = flat_type
+            print(curr_data)
             curr_data.save()
             n=n+1
             print("saved: ", n)
