@@ -377,7 +377,10 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                                 grouping_category = "", value_ranges = {}):
 
     if highest_level == 'city':
+        highest_level_original = 'city'
         highest_level = 'campaign'
+    else:
+        highest_level_original = highest_level
     # check for custom sequence
     incrementing_value = None
     if lowest_level == None:
@@ -421,6 +424,10 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     if ',' in second_lowest_parent or ',' in second_lowest_parent_name_model:
         parents = [x.strip() for x in second_lowest_parent.split(',')]
         original_grouping_levels = grouping_levels.copy()
+
+        if (highest_level_original == 'city' or highest_level_original in reverse_direct_match) \
+                and len(grouping_levels)>1 and grouping_levels[1] in reverse_direct_match:
+            original_grouping_levels = [grouping_levels[1]]
         for i in range(0,len(grouping_levels)):
             if grouping_levels[i] in reverse_direct_match and reverse_direct_match[grouping_levels[i]] in parents:
                 grouping_levels[i] = reverse_direct_match[grouping_levels[i]]

@@ -551,6 +551,7 @@ def append_array_by_keys(array, grouping_keys, append_keys):
 
 
 def sum_array_by_keys(array, grouping_keys, sum_keys):
+    print(array, grouping_keys)
     new_array = []
     required_keys = set(sum_keys + grouping_keys)
     ref_sum_key = sum_keys[0]
