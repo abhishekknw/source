@@ -18,3 +18,19 @@ class BaseBookingTemplate(MongoModel):
     class Meta:
         write_concern = WriteConcern(j=True)
         connection_alias = 'mongo_app'
+
+
+class BookingTemplate(MongoModel):
+    name = fields.CharField()
+    base_booking_template_id = fields.CharField()
+    entity_type_id = fields.CharField()
+    organisation_id = fields.CharField()
+    booking_attributes = fields.ListField()
+    entity_attributes = fields.ListField()
+    created_by = fields.CharField()
+    created_at = fields.DateTimeField()
+    updated_at = fields.DateTimeField()
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'mongo_app'
