@@ -376,7 +376,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
                                 grouping_category = "", value_ranges = {}):
 
-    highest_level = "campaign"
+    if highest_level == 'city':
+        highest_level = 'campaign'
     # check for custom sequence
     incrementing_value = None
     if lowest_level == None:
@@ -434,8 +435,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         #parent_type = 'single'
         parents = [second_lowest_parent]
     curr_level_id = 0
-    print(highest_level, lowest_level, highest_level_list)
-    print(desc_sequence, default_value_type)
     if not default_value_type == desc_sequence[0] and not default_value_type in desc_sequence[0]:
         desc_sequence_original = desc_sequence.copy()
         desc_sequence = desc_sequence[1:]
