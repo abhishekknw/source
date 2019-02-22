@@ -1,4 +1,6 @@
 from __future__ import print_function
+import boto3
+import os
 from django.forms import model_to_dict
 from django.conf import settings
 from rest_framework.response import Response
@@ -1215,6 +1217,64 @@ class UploadInventoryActivityImageAmazon(APIView):
             website_utils.upload_to_amazon(file_name, file_content=file, bucket_name=settings.ANDROID_BUCKET_NAME)
 
             # Now save the path
+            instance, is_created = InventoryActivityImage.objects.get_or_create(image_path=file_name)
+            instance.inventory_activity_assignment = inventory_activity_assignment_instance
+            instance.actual_activity_date = activity_date
+            instance.save()
+
+            return ui_utils.handle_response(class_name, data=file_name, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class UploadInventoryActivityImageAmazonNew(APIView):
+    """
+    This API first attempts to upload the given image to amazon and saves path in inventory activity image table.
+    """
+
+    def post(self, request):
+        """
+        API to upload inventory activity image amazon
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            file = request.data['file']
+            extension = file.name.split('.')[-1]
+            supplier_name = request.data['supplier_name'].replace(' ', '_')
+            activity_name = request.data['activity_name']
+            activity_date = request.data['activity_date']
+            inventory_name = request.data['inventory_name']
+            actual_activity_date = request.data['actual_activity_date']
+            lat = request.data['lat']
+            long = request.data['long']
+            inventory_activity_assignment_id = request.data['inventory_activity_assignment_id']
+
+            inventory_activity_assignment_instance = InventoryActivityAssignment.objects.get(
+                pk=inventory_activity_assignment_id)
+            address = website_utils.get_address_from_lat_long(lat, long)
+            image_string = lat + ", " +long + " " + address + " " + actual_activity_date
+            file_address = website_utils.add_string_to_image(file, image_string)
+            file_name = supplier_name + '_' + inventory_name + '_' + activity_name + '_' + activity_date.replace('-',
+                                                                                                                 '_') + '_' + str(
+                time.time()).replace('.', '_') + '.' + extension
+            # image = open(file_address, 'r+')
+            # website_utils.upload_to_amazon(file_name, file_content=image, bucket_name=settings.ANDROID_BUCKET_NAME)
+            s3 = boto3.client(
+                's3',
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
+            )
+            print(file_address)
+            with open(file_address, 'rb') as f:
+                contents = f.read()
+                try:
+                    s3.put_object(Body=contents, Bucket=settings.ANDROID_BUCKET_NAME, Key=file_name)
+                    os.unlink(file_address)
+                except Exception as ex:
+                    print(ex)
+            # # Now save the path
             instance, is_created = InventoryActivityImage.objects.get_or_create(image_path=file_name)
             instance.inventory_activity_assignment = inventory_activity_assignment_instance
             instance.actual_activity_date = activity_date
