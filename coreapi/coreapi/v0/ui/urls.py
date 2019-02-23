@@ -30,6 +30,7 @@ urlpatterns = [
     url(r'^website/', include('v0.ui.inventory.urls')),
     url(r'^website/', include('v0.ui.permissions.urls')),
     url(r'^website/', include('v0.ui.proposal.urls')),
+    url(r'^proposal/', include('v0.ui.proposal.urls')),
     url(r'^website/', include('v0.ui.supplier.urls')),
     url(r'^website/', include('v0.ui.email.urls')),
     url(r'^website/', include('v0.ui.website.urls')),

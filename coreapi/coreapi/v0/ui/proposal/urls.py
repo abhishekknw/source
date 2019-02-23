@@ -6,7 +6,7 @@ from .views import (CreateInitialProposalBulkBasic, HashtagImagesViewSet, Initia
                    CreateInitialProposal, ProposalViewSet, CreateFinalProposal, ProposalVersion, ProposalToCampaign,
                    FinalProposalAPIView, CreateProposalAPIView, ProposalImagesPath, convertDirectProposalToCampaign,
                    CampaignToProposal, SupplierPhaseViewSet, getSupplierListByStatus, ImportSheetInExistingCampaign,
-                   GetOngoingSuppliersOfCampaign, GetExtraLead)
+                   GetOngoingSuppliersOfCampaign, GetExtraLead, HashtagImagesNewViewSet)
 
 urlpatterns = [
     url(r'^create-initial-proposal-basic/$', CreateInitialProposalBulkBasic.as_view()),
@@ -32,6 +32,7 @@ urlpatterns = [
     url(r'^import-sheet-in-existing-campaign/$', ImportSheetInExistingCampaign.as_view()),
     url(r'^get-ongoing-suppliers/(?P<campaign_id>[A-Z_a-z0-9-]+)/$', GetOngoingSuppliersOfCampaign.as_view()),
     url(r'^get-extra-leads/(?P<campaign_id>[A-Z_a-z0-9-]+)/(?P<form_id>[A-Z_a-z0-9-]+)/(?P<supplier_id>[A-Z_a-z0-9-]+)/$', GetExtraLead.as_view()),
+    url(r'^hashtag-images-new/$', HashtagImagesNewViewSet.as_view()),
 
 ]
 
