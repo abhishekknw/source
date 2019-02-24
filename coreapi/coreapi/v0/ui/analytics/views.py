@@ -8,7 +8,8 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     merge_dict_array_dict_multiple_keys, count_details_parent_map_multiple, sum_array_by_keys,
                     sum_array_by_single_key, append_array_by_keys, frequency_mode_calculator, var_stdev_calculator,
                     mean_calculator, count_details_parent_map_custom, add_supplier_name, flatten, flatten_dict_array,
-                    round_sig_min, time_parent_names, raw_data_unrestricted, add_campaign_name, add_vendor_name)
+                    round_sig_min, time_parent_names, raw_data_unrestricted, add_campaign_name, add_vendor_name,
+                    key_replace_group_multiple)
 from v0.ui.campaign.views import calculate_mode
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo
@@ -657,8 +658,14 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             single_array_results = merge_dict_array_array_multiple_keys(new_results, ['supplier'])
 
         if original_grouping_levels is not None:
-            single_array_results = key_replace_group(single_array_results, grouping_levels[0],
-                                                     original_grouping_levels[0], lowest_level, value_ranges)
+            superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
+            if len(superlevels)>1:
+                single_array_results = key_replace_group_multiple(single_array_results, grouping_levels[0],
+                                                                  superlevels, lowest_level, value_ranges)
+            else:
+                single_array_results = key_replace_group(single_array_results, grouping_levels[0],
+                                                                  original_grouping_levels[0], lowest_level,
+                                                                  value_ranges)
             # single_array_results = sum_array_by_keys(single_array_results,
             #                                              [highest_level]+original_grouping_levels,[lowest_level])
 

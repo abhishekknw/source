@@ -10,7 +10,7 @@ from v0.ui.organisation.models import Organisation
 
 
 def flatten(items):
-    """Yield items from any nested iterable; see Reference."""
+    """Yield items from any nested iterable"""
     for x in items:
         if isinstance(x, Iterable) and not isinstance(x, (str, bytes)):
             for sub_x in flatten(x):
@@ -489,9 +489,6 @@ def merge_dict_array_array_multiple_keys(arrays, key_names):
     return first_array
 
 
-#def merge_dict_array_array_multiple_keys_new
-
-
 def sum_array_by_key(array, grouping_keys, sum_key):
     new_array = []
     required_keys = [sum_key] + grouping_keys
@@ -551,7 +548,6 @@ def append_array_by_keys(array, grouping_keys, append_keys):
 
 
 def sum_array_by_keys(array, grouping_keys, sum_keys):
-    print(array, grouping_keys)
     new_array = []
     required_keys = set(sum_keys + grouping_keys)
     ref_sum_key = sum_keys[0]
@@ -793,7 +789,7 @@ def add_vendor_name(dict_array):
 # {'hot_lead': 54, 'supplier': 'MUMGELBRSPRT', 'campaign': 'BYJMAC9E18', 'city': 'Mumbai'}]
 # [{'flat': 78, 'supplier': 'MUMTWVVRSLOP', 'city': 'Mumbai'}, {'flat': 150, 'supplier': 'MUMMUGWRSAEC', 'city': 'Mumbai'}]
 # Result: [ ... [{'flat': 78, 'supplier': 'MUMAMENNRSSRR', 'city': 'Mumbai','campaign': 'BYJMAC472C'}]
-def append_higher_key_dict_array(array,key):
+def append_higher_key_dict_array(arrays,key):
     key_set_list = []
     for array in arrays:
         curr_keys = array[0].keys()
@@ -812,6 +808,74 @@ def append_higher_key_dict_array(array,key):
     new_array
 
 
+def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ranges = {}):
+    if existing_key == required_key:
+        return dict_array
+    allowed_values = value_ranges[required_key] if required_key in value_ranges else None
+    search_key = str(existing_key)+'_'+str(required_key)
+    key_details = count_details_direct_match_multiple[search_key]
+    model_name = key_details['model_name']
+    database_type = key_details['database_type']
+    self_name_model = key_details['self_name_model']
+    parent_name_model = key_details['parent_name_model']
+    match_list = [x[existing_key] for x in dict_array]
+    new_array = []
+    if database_type == 'mysql':
+        first_part_query = model_name + '.objects.filter('
+        full_query = first_part_query + self_name_model + '__in=match_list)'
+        query = list(eval(full_query).values_list(self_name_model, parent_name_model))
+        query_dict = dict(query)
+        for curr_dict in dict_array:
+            curr_value = query_dict[curr_dict[existing_key]]
+            curr_dict[required_key] = curr_value
+            curr_dict.pop(existing_key)
+            if allowed_values is not None and str(curr_value) not in allowed_values:
+                continue
+            new_array.append(curr_dict)
+        all_keys = list(curr_dict.keys())
+        grouping_keys = all_keys
+        grouping_keys.remove(sum_key)
+        new_array = sum_array_by_key(new_array,grouping_keys, sum_key)
+    else:
+        new_array = dict_array
+    return new_array
+
+
+def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key, value_ranges = {}):
+    # if existing_key == required_key:
+    #     return dict_array
+    for required_key in required_keys:
+        print(dict_array[0])
+        allowed_values = value_ranges[required_key] if required_key in value_ranges else None
+        search_key = str(existing_key) + '_' + str(required_key)
+        key_details = count_details_direct_match_multiple[search_key]
+        model_name = key_details['model_name']
+        database_type = key_details['database_type']
+        self_name_model = key_details['self_name_model']
+        parent_name_model = key_details['parent_name_model']
+        match_list = [x[existing_key] for x in dict_array]
+        new_array = []
+        if database_type == 'mysql':
+            first_part_query = model_name + '.objects.filter('
+            full_query = first_part_query + self_name_model + '__in=match_list)'
+            query = list(eval(full_query).values_list(self_name_model, parent_name_model))
+            query_dict = dict(query)
+            for curr_dict in dict_array:
+                curr_value = query_dict[curr_dict[existing_key]]
+                curr_dict[required_key] = curr_value
+                if allowed_values is not None and str(curr_value) not in allowed_values:
+                    continue
+                new_array.append(curr_dict)
+
+        else:
+            new_array = dict_array
+        dict_array = new_array
+    all_keys = list(curr_dict.keys())
+    grouping_keys = all_keys
+    grouping_keys.remove(sum_key)
+    new_array = sum_array_by_key(new_array, grouping_keys, sum_key)
+    print(new_array[0])
+    return(new_array)
 
 
 
