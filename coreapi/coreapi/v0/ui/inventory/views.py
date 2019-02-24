@@ -1243,10 +1243,11 @@ class UploadInventoryActivityImageAmazonNew(APIView):
             file = request.data['file']
             extension = file.name.split('.')[-1]
             supplier_name = request.data['supplier_name'].replace(' ', '_')
-            activity_name = request.data['activity_name']
+            activity_type = request.data['activity_type']
             activity_date = request.data['activity_date']
             inventory_name = request.data['inventory_name']
             actual_activity_date = request.data['actual_activity_date']
+            comment = request.data['comment']
             lat = request.data['lat']
             long = request.data['long']
             inventory_activity_assignment_id = request.data['inventory_activity_assignment_id']
@@ -1256,7 +1257,7 @@ class UploadInventoryActivityImageAmazonNew(APIView):
             address = website_utils.get_address_from_lat_long(lat, long)
             image_string = lat + ", " +long + " " + address + " " + actual_activity_date
             file_address = website_utils.add_string_to_image(file, image_string)
-            file_name = supplier_name + '_' + inventory_name + '_' + activity_name + '_' + activity_date.replace('-',
+            file_name = supplier_name + '_' + inventory_name + '_' + activity_type + '_' + activity_date.replace('-',
                                                                                                                  '_') + '_' + str(
                 time.time()).replace('.', '_') + '.' + extension
             # image = open(file_address, 'r+')
@@ -1278,6 +1279,7 @@ class UploadInventoryActivityImageAmazonNew(APIView):
             instance, is_created = InventoryActivityImage.objects.get_or_create(image_path=file_name)
             instance.inventory_activity_assignment = inventory_activity_assignment_instance
             instance.actual_activity_date = activity_date
+            instance.comment = comment
             instance.save()
 
             return ui_utils.handle_response(class_name, data=file_name, success=True)
