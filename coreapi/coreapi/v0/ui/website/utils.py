@@ -6520,10 +6520,12 @@ def restructure_supplier_inv_images_data(prev_dict):
         if image_data['actual_activity_date']:
             supplier_data['activities'][activity_id]['actual_activity_date'] = image_data['actual_activity_date']
             supplier_data['activities'][activity_id]['status'] = 'complete'
-            supplier_data['activities'][activity_id]['images'] = {
+            if 'images' not in supplier_data['activities'][activity_id]:
+                supplier_data['activities'][activity_id]['images'] = []
+            supplier_data['activities'][activity_id]['images'].append({
                 'image_path': image_data["image_path"],
                 'comment': image_data["comment"],
-            }
+            })
     for ss in prev_dict['shortlisted_suppliers']:
         prev_dict['shortlisted_suppliers'][ss]['activities'] = list(prev_dict['shortlisted_suppliers'][ss]['activities'].values())
     new_dict['shortlisted_suppliers'] = list(prev_dict['shortlisted_suppliers'].values())
