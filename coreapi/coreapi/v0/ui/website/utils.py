@@ -6507,7 +6507,8 @@ def restructure_supplier_inv_images_data(prev_dict):
             'reassigned_activity_date': assignment_data['reassigned_activity_date'],
             'actual_activity_date': None,
             'due_date': due_date,
-            'status': 'pending'
+            'status': 'pending',
+            'images': []
         }
 
     for curr_image_id in all_image_data:
@@ -6520,8 +6521,6 @@ def restructure_supplier_inv_images_data(prev_dict):
         if image_data['actual_activity_date']:
             supplier_data['activities'][activity_id]['actual_activity_date'] = image_data['actual_activity_date']
             supplier_data['activities'][activity_id]['status'] = 'complete'
-            if 'images' not in supplier_data['activities'][activity_id]:
-                supplier_data['activities'][activity_id]['images'] = []
             supplier_data['activities'][activity_id]['images'].append({
                 'image_path': image_data["image_path"],
                 'comment': image_data["comment"],
