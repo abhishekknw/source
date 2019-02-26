@@ -9,7 +9,7 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     sum_array_by_single_key, append_array_by_keys, frequency_mode_calculator, var_stdev_calculator,
                     mean_calculator, count_details_parent_map_custom, add_supplier_name, flatten, flatten_dict_array,
                     round_sig_min, time_parent_names, raw_data_unrestricted, add_campaign_name, add_vendor_name,
-                    key_replace_group_multiple)
+                    key_replace_group_multiple, key_replace_group, truncate_by_value_ranges)
 from v0.ui.campaign.views import calculate_mode
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo
@@ -88,6 +88,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     default_value_type = data_scope_first['value_type'] if not data_scope_first == {} else None
     data_point_category = data_point['category']
     value_ranges = data_point['value_ranges'] if 'value_ranges' in data_point else {}
+    range_type = data_point.get('range_type',0)
     data_scope_category = data_scope_first['category'] if not data_scope_first == {} else data_point_category
     highest_level_original = highest_level
     if highest_level == 'vendor':
@@ -186,10 +187,12 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             new_dict[metric] = individual_metric_output[metric][ele_id][metric]
         combined_array.append(new_dict)
 
-    if grouping_level[0] in reverse_direct_match.keys() or data_scope_category == 'geographical':
+    if grouping_level[0] in reverse_direct_match.keys() or data_scope_category == 'geographical' \
+            or data_point["level"] == ["date"]:
         single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, [highest_level]+grouping_level)
     else:
         single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, grouping_level)
+    print("sa1:",single_array)
     single_array_keys = single_array[0].keys() if len(single_array) > 0 else []
     reverse_map = {}
     for key in single_array_keys:
@@ -200,10 +203,11 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         single_array = date_to_other_groups(single_array,grouping_level, data_point["sublevel"],
                                             raw_data, highest_level_values)
     single_array_subleveled = copy.deepcopy(single_array)
+    single_array_truncated = truncate_by_value_ranges(single_array_subleveled,value_ranges, range_type)
     metric_names = []
     metric_processed = []
 
-    derived_array_original = single_array_subleveled
+    derived_array_original = single_array_truncated
     derived_array_1 = add_supplier_name(derived_array_original)
     derived_array_1 = add_campaign_name(derived_array_1)
     derived_array_1 = add_vendor_name(derived_array_1)
@@ -723,37 +727,37 @@ def get_details_by_date(lowest_level, highest_level, highest_level_list):
     ])
 
 
-def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ranges = {}):
-    if existing_key == required_key:
-        return dict_array
-    allowed_values = value_ranges[required_key] if required_key in value_ranges else None
-    search_key = str(existing_key)+'_'+str(required_key)
-    key_details = count_details_direct_match_multiple[search_key]
-    model_name = key_details['model_name']
-    database_type = key_details['database_type']
-    self_name_model = key_details['self_name_model']
-    parent_name_model = key_details['parent_name_model']
-    match_list = [x[existing_key] for x in dict_array]
-    new_array = []
-    if database_type == 'mysql':
-        first_part_query = model_name + '.objects.filter('
-        full_query = first_part_query + self_name_model + '__in=match_list)'
-        query = list(eval(full_query).values_list(self_name_model, parent_name_model))
-        query_dict = dict(query)
-        for curr_dict in dict_array:
-            curr_value = query_dict[curr_dict[existing_key]]
-            curr_dict[required_key] = curr_value
-            curr_dict.pop(existing_key)
-            if allowed_values is not None and str(curr_value) not in allowed_values:
-                continue
-            new_array.append(curr_dict)
-        all_keys = list(curr_dict.keys())
-        grouping_keys = all_keys
-        grouping_keys.remove(sum_key)
-        new_array = sum_array_by_key(new_array,grouping_keys, sum_key)
-    else:
-        new_array = dict_array
-    return new_array
+# def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ranges = {}):
+#     if existing_key == required_key:
+#         return dict_array
+#     allowed_values = value_ranges[required_key] if required_key in value_ranges else None
+#     search_key = str(existing_key)+'_'+str(required_key)
+#     key_details = count_details_direct_match_multiple[search_key]
+#     model_name = key_details['model_name']
+#     database_type = key_details['database_type']
+#     self_name_model = key_details['self_name_model']
+#     parent_name_model = key_details['parent_name_model']
+#     match_list = [x[existing_key] for x in dict_array]
+#     new_array = []
+#     if database_type == 'mysql':
+#         first_part_query = model_name + '.objects.filter('
+#         full_query = first_part_query + self_name_model + '__in=match_list)'
+#         query = list(eval(full_query).values_list(self_name_model, parent_name_model))
+#         query_dict = dict(query)
+#         for curr_dict in dict_array:
+#             curr_value = query_dict[curr_dict[existing_key]]
+#             curr_dict[required_key] = curr_value
+#             curr_dict.pop(existing_key)
+#             if allowed_values is not None and str(curr_value) not in allowed_values:
+#                 continue
+#             new_array.append(curr_dict)
+#         all_keys = list(curr_dict.keys())
+#         grouping_keys = all_keys
+#         grouping_keys.remove(sum_key)
+#         new_array = sum_array_by_key(new_array,grouping_keys, sum_key)
+#     else:
+#         new_array = dict_array
+#     return new_array
 
 
 class GetLeadsDataGeneric(APIView):

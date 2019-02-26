@@ -460,6 +460,7 @@ def get_common_keys(arrays):
 
 
 def merge_dict_array_array_multiple_keys(arrays, key_names):
+    print("base_arrays:",arrays)
     #key_names = ['date','campaign']
     final_array = []
     if arrays==[]:
@@ -469,6 +470,7 @@ def merge_dict_array_array_multiple_keys(arrays, key_names):
     common_keys_set = get_common_keys(arrays)
     if len(set.intersection(set(key_names),common_keys_set)) == 0:
         key_names = list(common_keys_set)
+    print(key_names)
     first_array = arrays[0]
     second_array = []
     for i in range(1,len(arrays)):
@@ -481,6 +483,8 @@ def merge_dict_array_array_multiple_keys(arrays, key_names):
                         if not curr_dict[key]==first_dict[key]:
                             match = False
                 if match:
+                    print(curr_dict)
+                    print(first_dict)
                     new_dict = curr_dict.copy()
                     new_dict.update(first_dict)
                     second_array.append(new_dict)
@@ -845,7 +849,6 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
     # if existing_key == required_key:
     #     return dict_array
     for required_key in required_keys:
-        print(dict_array[0])
         allowed_values = value_ranges[required_key] if required_key in value_ranges else None
         search_key = str(existing_key) + '_' + str(required_key)
         key_details = count_details_direct_match_multiple[search_key]
@@ -874,9 +877,42 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
     grouping_keys = all_keys
     grouping_keys.remove(sum_key)
     new_array = sum_array_by_key(new_array, grouping_keys, sum_key)
-    print(new_array[0])
     return(new_array)
 
 
-
+def truncate_by_value_ranges(dict_array, value_ranges, range_type=0):
+    if value_ranges == None or value_ranges == {}:
+        return dict_array
+    new_array = []
+    if range_type == 1:
+        for curr_key in value_ranges:
+            curr_range = value_ranges[curr_key]
+            if not len(curr_range)==2:
+                print('incorrect range format, treating as exact')
+                continue
+            start_value = curr_range[0]
+            end_value = curr_range[1]
+            if start_value.isdigit() and end_value.isdigit():
+                start_value = int(start_value)
+                end_value = int(end_value)
+                if start_value>end_value or end_value>100:
+                    print('mathematically inconsistent range, treating as exact')
+                    continue
+            else:
+                print('no integers found, treating as exact')
+                continue
+            curr_range_array = []
+            curr_array = list(range(int(start_value),int(end_value)+1))
+            value_ranges[curr_key] = [str(x) for x in curr_array]
+    for curr_dict in dict_array:
+        match = 1
+        for curr_key in value_ranges:
+            curr_range = value_ranges[curr_key]
+            curr_dict_value = curr_dict[curr_key]
+            if str(curr_dict_value) not in curr_range:
+                match=0
+                break
+        if match==1:
+            new_array.append(curr_dict)
+    return new_array
 
