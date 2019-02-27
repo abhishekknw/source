@@ -5,6 +5,8 @@ from .models import SupplyEntityType, SupplyEntity
 from bson.objectid import ObjectId
 from datetime import datetime
 from .utils import validate_entity_type_data, validate_with_entity_type
+from v0.ui.supplier.models import (SupplierTypeSociety)
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2
 
 
 class EntityType(APIView):
@@ -169,3 +171,23 @@ class EntityById(APIView):
         return handle_response('', data="success", success=True)
 
 
+class EntityTypeSociety(APIView):
+    @staticmethod
+    def get(request):
+        supplier_objects = SupplierTypeSociety.objects.all()
+        print(supplier_objects)
+        serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
+        print(serializer.data)
+        society_list = serializer.data
+        for society in society_list:
+            name = 'Society'
+            is_global = True
+            entity_attributes = society
+            organisation_id = "MAC1421"
+            dict_of_req_attributes = {"name": name, "entity_attributes": entity_attributes,
+                                  "organisation_id": organisation_id}
+            entity_type_dict = dict_of_req_attributes
+            entity_type_dict["is_global"] = is_global
+            entity_type_dict["created_at"] = datetime.now()
+            SupplyEntityType(**entity_type_dict).save()
+        return handle_response('', data={"success": True}, success=True)
