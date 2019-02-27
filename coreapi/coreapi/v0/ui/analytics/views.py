@@ -192,7 +192,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, [highest_level]+grouping_level)
     else:
         single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, grouping_level)
-    print("sa1:",single_array)
     single_array_keys = single_array[0].keys() if len(single_array) > 0 else []
     reverse_map = {}
     for key in single_array_keys:
@@ -206,6 +205,11 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     single_array_truncated = truncate_by_value_ranges(single_array_subleveled,value_ranges, range_type)
     metric_names = []
     metric_processed = []
+
+    if single_array_truncated == []:
+        print("no data within the given range")
+        return {"individual metrics": individual_metric_output, "lower_group_data": [],
+                "higher_group_data": []}
 
     derived_array_original = single_array_truncated
     derived_array_1 = add_supplier_name(derived_array_original)
