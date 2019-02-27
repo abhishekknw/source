@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg
 from .models import BaseBookingTemplate, BookingTemplate
 from datetime import datetime
+from bson.objectid import ObjectId
 
 
 class BaseBookingTemplateView(APIView):
@@ -62,6 +63,23 @@ class BaseBookingTemplateView(APIView):
         final_data['id'] = str(data._id)
         return handle_response('', data=final_data, success=True)
 
+    @staticmethod
+    def put(request):
+        id = request.query_params.get('id', None)
+        data = request.data.copy()
+        data.pop('id')
+        data['updated_at'] = datetime.now()
+        BaseBookingTemplate.objects.raw({'_id': ObjectId(id)}).update({"$set": data})
+        return handle_response('', data={"success": True}, success=True)
+
+    @staticmethod
+    def delete(request):
+        id = request.query_params.get("id", None)
+        if not id:
+            return handle_response('', data="Id Not Provided", success=False)
+        exist_query = BaseBookingTemplate.objects.raw({'_id': ObjectId(id)})
+        exist_query.delete()
+        return handle_response('', data="success", success=True)
 
 class BookingTemplateView(APIView):
     @staticmethod
