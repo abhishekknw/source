@@ -30,38 +30,39 @@ class BaseBookingTemplateView(APIView):
     @staticmethod
     def get(request):
         organisation_id = request.user.profile.organisation.organisation_id
-        base_entity_type_id = request.query_params.get('base_entity_type_id',None)
         final_data = {}
-        data = BaseBookingTemplate.objects.raw({'organisation_id': organisation_id,
-                                                'base_entity_type_id': base_entity_type_id})[0]
-        final_data = {}
-        if 'booking_attributes' in data:
-            final_data['booking_attributes'] = []
-            for item in data.booking_attributes:
-                temp_data = {
-                    "name": item['name'] if item['name'] else None,
-                    "type": item['type'] if item['type'] else None,
-                    "is_required": item['is_required'] if item['is_required'] else None
-                }
-                if 'options' in item:
-                    temp_data['options'] = []
-                    for option in item['options']:
-                        temp_data['options'].append(option)
-                final_data['booking_attributes'].append(temp_data)
-        if 'entity_attributes' in data:
-            final_data['entity_attributes'] = []
-            for item in data.entity_attributes:
-                temp_data = {
-                    "name": item['name'] if item['name'] else None,
-                    "is_required": item['is_required'] if item['is_required'] else None
-                }
-                final_data['entity_attributes'].append(temp_data)
+        data_all = BaseBookingTemplate.objects.raw({})
+        final_data_list = []
+        for data in data_all:
+            final_data = {}
+            if 'booking_attributes' in data:
+                final_data['booking_attributes'] = []
+                for item in data.booking_attributes:
+                    temp_data = {
+                        "name": item['name'] if item['name'] else None,
+                        "type": item['type'] if item['type'] else None,
+                        "is_required": item['is_required'] if 'is_required' in item else None
+                    }
+                    if 'options' in item:
+                        temp_data['options'] = []
+                        for option in item['options']:
+                            temp_data['options'].append(option)
+                    final_data['booking_attributes'].append(temp_data)
+            if 'entity_attributes' in data:
+                final_data['entity_attributes'] = []
+                for item in data.entity_attributes:
+                    temp_data = {
+                        "name": item['name'] if item['name'] else None,
+                        "is_required": item['is_required'] if 'is_required' in item else None
+                    }
+                    final_data['entity_attributes'].append(temp_data)
 
-        final_data['name'] = data.name if 'name' in data else None
-        final_data['base_entity_type_id'] = data.base_entity_type_id
-        final_data['organisation_id'] = data.organisation_id
-        final_data['id'] = str(data._id)
-        return handle_response('', data=final_data, success=True)
+            final_data['name'] = data.name if 'name' in data else None
+            final_data['base_entity_type_id'] = data.base_entity_type_id
+            final_data['organisation_id'] = data.organisation_id
+            final_data['id'] = str(data._id)
+            final_data_list.append(final_data)
+        return handle_response('', data=final_data_list, success=True)
 
     @staticmethod
     def put(request):
