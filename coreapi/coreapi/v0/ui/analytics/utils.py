@@ -460,7 +460,6 @@ def get_common_keys(arrays):
 
 
 def merge_dict_array_array_multiple_keys(arrays, key_names):
-    print("base_arrays:",arrays)
     #key_names = ['date','campaign']
     final_array = []
     if arrays==[]:
@@ -470,7 +469,6 @@ def merge_dict_array_array_multiple_keys(arrays, key_names):
     common_keys_set = get_common_keys(arrays)
     if len(set.intersection(set(key_names),common_keys_set)) == 0:
         key_names = list(common_keys_set)
-    print(key_names)
     first_array = arrays[0]
     second_array = []
     for i in range(1,len(arrays)):
@@ -483,8 +481,6 @@ def merge_dict_array_array_multiple_keys(arrays, key_names):
                         if not curr_dict[key]==first_dict[key]:
                             match = False
                 if match:
-                    print(curr_dict)
-                    print(first_dict)
                     new_dict = curr_dict.copy()
                     new_dict.update(first_dict)
                     second_array.append(new_dict)

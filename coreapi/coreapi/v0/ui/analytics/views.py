@@ -157,6 +157,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
                           default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category,
                           value_ranges)
+            print("orig:",curr_output)
             if curr_output == []:
                 continue
             if highest_level_original == 'vendor':
@@ -217,13 +218,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     derived_array_1 = add_vendor_name(derived_array_1)
     derived_array = []
 
-    # if highest_level_original == 'vendor':
-    #     for curr_dict in derived_array_1:
-    #         curr_key = curr_dict[default_value_type]
-    #         curr_value = vendor_values_dict[curr_key]
-    #         curr_dict[highest_level_original] = curr_value
-    #         derived_array.append(curr_dict)
-    # else:
     derived_array = derived_array_1
 
     metric_parents = {}
@@ -405,7 +399,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         custom_level = lowest_level+'_'+grouping_level+'_'+highest_level
     except:
         custom_level = ''
-    if len(grouping_levels) > 1 or grouping_levels[0] in reverse_direct_match:
+    if (len(grouping_levels) > 1 or grouping_levels[0] in reverse_direct_match) and \
+            lowest_level in count_details_parent_map_multiple:
         default_map = count_details_parent_map_multiple
     else:
         default_map = count_details_parent_map
@@ -430,6 +425,13 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     second_lowest_parent_name_model = default_map[lowest_level]['parent_name_model']
     parent_type = 'single'
     original_grouping_levels = None
+    superlevels = [x for x in grouping_levels if x in reverse_direct_match]
+    if len(superlevels)>0:
+        original_grouping_levels = grouping_levels.copy()
+        for i in range(0,len(grouping_levels)):
+            if grouping_levels[i] in reverse_direct_match and \
+                    reverse_direct_match[grouping_levels[i]] == second_lowest_parent:
+                grouping_levels[i] = reverse_direct_match[grouping_levels[i]]
     if ',' in second_lowest_parent or ',' in second_lowest_parent_name_model:
         parents = [x.strip() for x in second_lowest_parent.split(',')]
         original_grouping_levels = grouping_levels.copy()
@@ -446,6 +448,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             parent_type = 'multiple'
         else:
             second_lowest_parent = parents[0]
+
     if parent_type == 'single':
         desc_sequence = find_level_sequence(highest_level, lowest_level, default_map)
         #parent_type = 'single'
@@ -619,6 +622,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     other_column = entity_details['other_grouping_column']
                     all_values.append(other_column)
                 query = list(eval(full_query).values(*all_values))
+
                 if 'other_grouping_column' in entity_details:
                     other_column_list = [x[other_column] for x in query]
                 if self_model_name == 'cost_per_flat' and grouping_levels == ['campaign']:
