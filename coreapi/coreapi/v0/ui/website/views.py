@@ -614,11 +614,14 @@ class AssignCampaign(APIView):
 
         try:
             user = request.user
+            username_list = BaseUser.objects.filter(profile__organisation=user.profile.organisation.organisation_id). \
+                            values_list('username')
 
             if user.is_superuser:
                 assigned_objects = CampaignAssignment.objects.all()
             else:
-                    assigned_objects = CampaignAssignment.objects.filter(Q(assigned_to=user) | Q(assigned_by=user) | Q(campaign__created_by=user.username))
+                # assigned_objects = CampaignAssignment.objects.filter(Q(assigned_to=user) | Q(assigned_by=user) | Q(campaign__created_by=user.username))
+                assigned_objects = CampaignAssignment.objects.filter(campaign__created_by__in=username_list)
             campaigns = []
             all_proposal_ids = []
             # check each one of them weather they are campaign or not
@@ -838,7 +841,11 @@ class UserList(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            users = BaseUser.objects.all()
+            organisation_id = request.query_params.get('org_id',None)
+            if organisation_id:
+                users = BaseUser.objects.filter(profile__organisation=organisation_id)
+            else:
+                users = BaseUser.objects.all()
             user_serializer = BaseUserSerializer(users, many=True)
 
             return ui_utils.handle_response(class_name, data=user_serializer.data, success=True)
@@ -1166,12 +1173,12 @@ class ProfileViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            organisation_id = request.query_params.get('organisation_id')
-            if organisation_id:
+            organisation_id = request.user.profile.organisation.organisation_id
+            if request.user.is_superuser:
+                instances = Profile.objects.all()
+            else:
                 org = Organisation.objects.get(organisation_id=organisation_id)
                 instances = Profile.objects.filter(organisation=org)
-            else:
-                instances = Profile.objects.all()
             serializer = ProfileNestedSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -1270,10 +1277,16 @@ class OrganisationViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             category = request.query_params.get('category')
-            if category:
-                instances = Organisation.objects.filter_permission(user=request.user, category=category)
+            organisation_id = request.user.profile.organisation.organisation_id
+            if request.user.is_superuser:
+                if category:
+                    instances = Organisation.objects.filter(category=category)
+                else:
+                    instances = Organisation.objects.all()
+            elif category:
+                instances = Organisation.objects.filter_permission(user=request.user, category=category, created_by_org=organisation_id)
             else:
-                instances = Organisation.objects.filter_permission(user=request.user)
+                instances = Organisation.objects.filter_permission(user=request.user, created_by_org=organisation_id)
             serializer = OrganisationSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
@@ -1292,6 +1305,23 @@ class OrganisationViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name,exception_object=e, request=request)
 
+    @list_route(methods=['GET'])
+    def get_organisations_for_assignment(self, request):
+        class_name = self.__class__.__name__
+        try:
+            organisation_id = request.user.profile.organisation.organisation_id
+            if organisation_id == v0_constants.MACHADALO_ORG_ID:
+                data = Organisation.objects.all()
+            else:
+                instance = Organisation.objects.filter(organisation_id=organisation_id)
+                created_by_org = Organisation.objects.filter(organisation_id=instance[0].created_by_org.organisation_id)
+                data = instance.union(created_by_org)
+            serializer = OrganisationSerializer(data, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
     def create(self, request):
         """
         :param request:
@@ -1303,6 +1333,7 @@ class OrganisationViewSet(viewsets.ViewSet):
             data = request.data.copy()
             data['user'] = request.user.pk
             data['organisation_id'] = website_utils.get_generic_id([data['category'], data['name']])
+            data['created_by_org'] = request.user.profile.organisation.organisation_id
             serializer = OrganisationSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
