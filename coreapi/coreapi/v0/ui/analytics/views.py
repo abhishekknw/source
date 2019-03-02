@@ -9,7 +9,7 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     sum_array_by_single_key, append_array_by_keys, frequency_mode_calculator, var_stdev_calculator,
                     mean_calculator, count_details_parent_map_custom, add_supplier_name, flatten, flatten_dict_array,
                     round_sig_min, time_parent_names, raw_data_unrestricted, add_campaign_name, add_vendor_name,
-                    key_replace_group_multiple, key_replace_group, truncate_by_value_ranges)
+                    key_replace_group_multiple, key_replace_group, truncate_by_value_ranges, linear_extrapolator)
 from v0.ui.campaign.views import calculate_mode
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo
@@ -23,7 +23,8 @@ from datetime import datetime
 # import unittest
 
 statistics_map = {"z_score": z_calculator_array_multiple, "frequency_distribution": frequency_mode_calculator,
-                  "variance_stdev": var_stdev_calculator, "mean": mean_calculator}
+                  "variance_stdev": var_stdev_calculator, "mean": mean_calculator,
+                  "basic_forecasting": linear_extrapolator}
 
 unilevel_categories = ['time']
 
@@ -63,7 +64,7 @@ def get_campaigns_from_vendors(vendor_list):
 # currently working with the following constraints:
 # exactly one scope restrictor with exact match, one type of data point
 def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
-                       higher_level_statistical_information):
+                       higher_level_statistical_information, bivariate_statistical_information):
     unilevel_constraints = {}
     data_scope_first = {}
     if not data_scope == {}:
@@ -157,7 +158,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
                           default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category,
                           value_ranges)
-            print("orig:",curr_output)
             if curr_output == []:
                 continue
             if highest_level_original == 'vendor':
@@ -299,6 +299,20 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             statistics_array = statistics_map[curr_stat](derived_array, metrics_array_dict)
             derived_array = statistics_array
 
+    if not bivariate_statistical_information == {}:
+        stats = list(bivariate_statistical_information.keys())
+        bsi = []
+        for curr_stat in stats:
+            stat_array = bivariate_statistical_information[curr_stat]
+            y_stat = get_metrics_from_code(stat_array[0], raw_data,metric_names) # dependent metrics
+            x_stat = get_metrics_from_code(stat_array[1], raw_data,metric_names) # independent metrics
+            n_pts = stat_array[2] if len(stat_array)>2 else 100 # no. of points to extrapolate
+            diff = stat_array[3] if len(stat_array)>3 else 0.01 # fraction of range per point
+            curr_dict = statistics_map[curr_stat](derived_array, y_stat, x_stat, n_pts, diff)
+            if curr_dict is not None:
+                bsi.append(curr_dict)
+        print(bsi)
+
     if not higher_level_statistical_information == {}:
         stats = higher_level_statistical_information['stats']
         stat_metrics_indices = higher_level_statistical_information['metrics']
@@ -370,7 +384,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 
 
     return {"individual metrics":individual_metric_output, "lower_group_data": derived_array,
-            "higher_group_data":higher_level_list}
+            "higher_group_data":higher_level_list, "bivariate_statistical_information": bsi}
 
 
 #def get_details_by_lower_level(higher_level, lower_level, lower_level_list)
@@ -782,8 +796,9 @@ class GetLeadsDataGeneric(APIView):
         statistical_information = all_data['statistical_information'] if 'statistical_information' in all_data else {}
         higher_level_statistical_information = all_data['higher_level_statistical_information'] if \
             'higher_level_statistical_information' in all_data else {}
+        bivariate_statistical_information = all_data.get('bivariate_statistical_information',{})
         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
-                                         higher_level_statistical_information)
+                                         higher_level_statistical_information, bivariate_statistical_information)
         if type(mongo_query) == str:
             success = False
         return handle_response('', data=mongo_query, success=success)

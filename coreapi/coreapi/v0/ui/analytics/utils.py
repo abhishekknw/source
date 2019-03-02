@@ -7,6 +7,8 @@ from v0.ui.campaign.views import calculate_mode
 from collections import Iterable
 import math
 from v0.ui.organisation.models import Organisation
+from scipy import interpolate
+from scipy import stats
 
 
 def flatten(items):
@@ -302,6 +304,30 @@ def mean_calculator(dict_array, keys, weighted=0):
             new_array.append(curr_dict)
     return new_array
 
+
+def linear_extrapolator(dict_array, y_stat, x_stat, n_pts = 100, diff = 0.01):
+    y = [z[y_stat] for z in dict_array]
+    x = [z[x_stat] for z in dict_array]
+    if len(x)<2 or len(y)<2:
+        return None
+
+    #f = interpolate.interp1d(x, y, fill_value='extrapolate',kind='linear')
+    [slope, intercept, r_value, p_value, std_err] = stats.linregress(x, y)
+    print(slope, intercept)
+    x_range = max(x)-min(x)
+    dx = x_range*diff
+    ep_min = max(x)+dx
+    ep_max = max(x)+n_pts*dx
+    xnew = np.arange(min(x), ep_max, dx)
+    ynew = [(intercept+slope*x) for x in xnew]
+    final_output = {}
+    final_output[x_stat] = x
+    final_output[y_stat] = y
+    xnew_name = x_stat+'_new'
+    ynew_name = y_stat+'_new'
+    final_output[xnew_name] = [round(x,4) for x in xnew]
+    final_output[ynew_name] = [round(y,4) for y in ynew]
+    return final_output
 
 # redundant
 def sum_array_by_single_key(array, keys):
