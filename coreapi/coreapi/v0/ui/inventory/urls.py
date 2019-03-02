@@ -5,7 +5,8 @@ from .views import (CampaignInventory, CampaignSuppliersInventoryList, Inventory
                    BulkInsertInventoryActivityImage, GenerateInventoryActivitySummary,
                    InventoryActivityAssignmentAPIView, AssignInventoryActivityDateUsers,
                    ReassignInventoryActivityDateUsers, CampaignsAssignedInventoryCountApiView,
-                   CampaignInventoryAPIView, UploadInventoryActivityImageAmazon)
+                   CampaignInventoryAPIView, UploadInventoryActivityImageAmazon,
+                    UploadInventoryActivityImageAmazonNew)
 
 urlpatterns = [
     url(r'^(?P<campaign_id>[A-Z_a-z0-9-]+)/campaign-inventories/$', CampaignInventory.as_view()),
@@ -17,6 +18,7 @@ urlpatterns = [
     url(r'^inventory-activity-date-user-assignment/$', AssignInventoryActivityDateUsers.as_view()),
     url(r'^inventory-activity-date-user-reassignment/$', ReassignInventoryActivityDateUsers.as_view()),
     url(r'^upload-inventory-activity-image-amazon/$', UploadInventoryActivityImageAmazon.as_view()),
+    url(r'^upload-inventory-activity-image-amazon-new/$', UploadInventoryActivityImageAmazonNew.as_view()),
     url(r'^campaign/(?P<id>[A-Z_a-z0-9]+)/inventories/$', CampaignInventoryAPIView.as_view()),
     url(r'^campaigns-assigned-inventory-counts/(?P<organisation_id>[A-Z_a-z0-9-]+)/$',CampaignsAssignedInventoryCountApiView.as_view()),
 

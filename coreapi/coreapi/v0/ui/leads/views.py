@@ -1389,7 +1389,8 @@ class UpdateLeadsEntry(APIView):
             mongo_client.leads.update_one(
                 {"leads_form_id": int(form_id), "entry_id": int(entry_id), "supplier_id": supplier_id},
                 {"$set": {"data": lead_dict["data"], "lead_sha_256": lead_sha_256, "is_hot": lead_dict["is_hot"],
-                          "multi_level_is_hot": lead_dict["multi_level_is_hot"]}})
+                          "multi_level_is_hot": lead_dict["multi_level_is_hot"],
+                          "hotness_level": lead_dict["hotness_level"]}})
         return handle_response('', data={"success": True}, success=True)
 
 

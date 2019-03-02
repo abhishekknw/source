@@ -1,0 +1,1638 @@
+{
+	"info": {
+		"_postman_id": "ff30dec7-39fa-4235-930e-b2d870bb82f4",
+		"name": "localhost.machaldalo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "analytics",
+			"item": [
+				{
+					"name": "Data point value range",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzM3MjMyOTMsIm5hbWUiOiIiLCJleHAiOjE1MzM3MjM1OTMsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.f3qbNVnV5PN-27e7eTzR8tW8AcKap6QSCLlMC9NpSvg"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"data_scope\": {\"1\":{\"category\": \"unordered\", \"level\": \"campaign\", \"match_type\": 0, \n\t\t\"values\": {\"exact\": [\"BYJMACC9CA\", \"TESYOG06F2\"]}, \"value_type\": \"campaign\"}},\n    \"data_point\": {\n        \"category\": \"unordered\",\n        \"level\": [\"flattype\"],\n        \"value_ranges\": {\"flattype\":[\"1\",\"2\"]}\n    },\n    \"raw_data\": [\n        \"lead\", \"hot_lead\"\n    ],\n    \"metrics\": [[\"2\",\"1\",\"/\"]]\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/v0/ui/analytics/get-leads-data-generic/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"analytics",
+								"get-leads-data-generic",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Leads Data Generic City-Supplier-Campaign",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzM3MjMyOTMsIm5hbWUiOiIiLCJleHAiOjE1MzM3MjM1OTMsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.f3qbNVnV5PN-27e7eTzR8tW8AcKap6QSCLlMC9NpSvg"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"data_scope\": {\"1\":{\"category\": \"unordered\", \"level\": \"campaign\", \"match_type\": 0,\n        \"values\": {\"exact\": [\"BYJMACC9CA\", \"TESYOG06F2\"]}, \"value_type\": \"campaign\"}},\n    \"data_point\": {\n        \"category\": \"time\",\n        \"level\": [\"date\"],\n        \"sublevel\": \"phase\"\n    },\n    \"raw_data\": [\n        \"lead\",\"hotness_level_2\",\"flat\",\"cost_flat\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/v0/ui/analytics/get-leads-data-generic/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"analytics",
+								"get-leads-data-generic",
+								""
+							]
+						},
+						"description": "City, supplier, campaign, six keys"
+					},
+					"response": []
+				},
+				{
+					"name": "Freqdist, mean",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzM3MjMyOTMsIm5hbWUiOiIiLCJleHAiOjE1MzM3MjM1OTMsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.f3qbNVnV5PN-27e7eTzR8tW8AcKap6QSCLlMC9NpSvg"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"data_scope\": {\n        \"1\": {\n            \"category\": \"unordered\",\n            \"level\": \"campaign\",\n            \"match_type\": 0,\n            \"values\": {\n                \"exact\": [\n                    \"BYJMAC214B\"\n                ]\n            },\n            \"value_type\": \"campaign\"\n        }\n    },\n    \"data_point\": {\n        \"category\": \"unordered\",\n        \"level\": [\n            \"campaign\"\n        ]\n    },\n    \"raw_data\": [\n        \"lead\",\n        \"hot_lead\",\n        \"flat\"\n    ],\n    \"metrics\": [\n        [\n            \"1\",\n            \"3\",\n            \"/\"\n        ],\n        [\n            \"m1\",\n            100,\n            \"*\"\n        ],\n        [\n            \"2\",\n            \"3\",\n            \"/\"\n        ],\n        [\n            \"m3\",\n            100,\n            \"*\"\n        ]\n    ],\n    \"statistical_information\": {\n        \"stats\": [\n            \"z_score\"\n        ],\n        \"metrics\": [\n            \"m1\",\n            \"m3\"\n        ]\n    },\n    \"higher_level_statistical_information\": {\n        \"level\": [\n            \"campaign\"\n        ],\n        \"stats\": [\n            \"frequency_distribution\",\n            \"weighted_mean\",\n            \"variance_stdev\"\n        ],\n        \"metrics\": [\n            \"m2\",\n            \"m4\"\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/v0/ui/analytics/get-leads-data-generic/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"analytics",
+								"get-leads-data-generic",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "date_phase_hotness_level",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzM3MjMyOTMsIm5hbWUiOiIiLCJleHAiOjE1MzM3MjM1OTMsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.f3qbNVnV5PN-27e7eTzR8tW8AcKap6QSCLlMC9NpSvg"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"data_scope\": {\"1\":{\"category\": \"unordered\", \"level\": \"campaign\", \"match_type\": 0,\n        \"values\": {\"exact\": [\"BYJMACC9CA\", \"TESYOG06F2\"]}, \"value_type\": \"campaign\"}},\n    \"data_point\": {\n        \"category\": \"time\",\n        \"level\": [\"date\"],\n        \"sublevel\": \"phase\"\n    },\n    \"raw_data\": [\n        \"lead\",\"hotness_level_2\",\"flat\",\"cost_flat\"\n    ]\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/v0/ui/analytics/get-leads-data-generic/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"analytics",
+								"get-leads-data-generic",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "leads",
+			"item": [
+				{
+					"name": "localhost:8000/v0/ui/leads/4/entry_list/",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "localhost:8000/v0/ui/leads/4/entry_list/",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"leads",
+								"4",
+								"entry_list",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/leads/update_all_is_hot/",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzMzMjM5NjYsIm5hbWUiOiIiLCJleHAiOjE1MzMzMjQyNjYsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.OzOrVMzbP-9kUUM1XauMItGsdHZgS5WgRl2HOTi_9C8"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_sp_website",
+								"value": "True",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "localhost:8000/v0/ui/leads/update_all_is_hot/",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"leads",
+								"update_all_is_hot",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/leads/generate_demo_data/",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzMzMjM5NjYsIm5hbWUiOiIiLCJleHAiOjE1MzMzMjQyNjYsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.OzOrVMzbP-9kUUM1XauMItGsdHZgS5WgRl2HOTi_9C8"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_sp_website",
+								"value": "True",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://13.232.210.224:8002/v0/ui/leads/generate_demo_data/",
+							"protocol": "http",
+							"host": [
+								"13",
+								"232",
+								"210",
+								"224"
+							],
+							"port": "8002",
+							"path": [
+								"v0",
+								"ui",
+								"leads",
+								"generate_demo_data",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/leads/13/generate_lead_data_excel?supplier_id=DNINSNRSSUG",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "localhost:8001/v0/ui/leads/13/generate_lead_data_excel?supplier_id=DNINSNRSSUG",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"leads",
+								"13",
+								"generate_lead_data_excel"
+							],
+							"query": [
+								{
+									"key": "supplier_id",
+									"value": "DNINSNRSSUG"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/leads/update_global_hot_lead_criteria/?",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzMzMjM5NjYsIm5hbWUiOiIiLCJleHAiOjE1MzMzMjQyNjYsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.OzOrVMzbP-9kUUM1XauMItGsdHZgS5WgRl2HOTi_9C8"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_sp_website",
+								"value": "True",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"refresh_all\":true}"
+						},
+						"url": {
+							"raw": "localhost:8000/v0/ui/leads/update_global_hot_lead_criteria/",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"leads",
+								"update_global_hot_lead_criteria",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/leads/1/entry_list/BYJMAC1394",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzM3MjMyOTMsIm5hbWUiOiIiLCJleHAiOjE1MzM3MjM1OTMsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.f3qbNVnV5PN-27e7eTzR8tW8AcKap6QSCLlMC9NpSvg"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:8000/v0/ui/leads/1/entry_list/BYJMAC1394",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"leads",
+								"1",
+								"entry_list",
+								"BYJMAC1394"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/leads/2/entry_list/",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "localhost:8000/v0/ui/leads/2/entry_list/",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"leads",
+								"2",
+								"entry_list",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/leads/1/edit_form",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzY3NjA4MzQsIm5hbWUiOiIiLCJleHAiOjE1MzY3NjExMzQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.gq00d6IC47sVkMoYYrXj12slWIac1qT7_0KDA9W6bmY"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_sp_website",
+								"value": "True",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"global_hot_lead_criteria\":{ \n\t\t\"is_hot\": {\n            \"or\": {\"11\":[\"AnyValue\"], \"5\": [\"Y\",\"y\",\"Yes\",\"yes\",\"YES\"]}\n        },\n        \"is_hot_level_2\": {\n            \"or\": {\"11\":[\"AnyValue\"]}\n        }\n\t}\n}"
+						},
+						"url": {
+							"raw": "localhost:8000/v0/ui/leads/1/edit_form",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"leads",
+								"1",
+								"edit_form"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/leads/update_global_hot_lead_criteria/",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzMzMjM5NjYsIm5hbWUiOiIiLCJleHAiOjE1MzMzMjQyNjYsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.OzOrVMzbP-9kUUM1XauMItGsdHZgS5WgRl2HOTi_9C8"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_sp_website",
+								"value": "True",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"refresh_all\":true}"
+						},
+						"url": {
+							"raw": "localhost:8000/v0/ui/leads/update_global_hot_lead_criteria/",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"leads",
+								"update_global_hot_lead_criteria",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/leads/1/add_field",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzM3MjMyOTMsIm5hbWUiOiIiLCJleHAiOjE1MzM3MjM1OTMsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.f3qbNVnV5PN-27e7eTzR8tW8AcKap6QSCLlMC9NpSvg"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"key_name\":\"available\",\"key_type\":\"string\", \"order_id\":6, \"is_required\":0}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/v0/ui/leads/1/add_field",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"leads",
+								"1",
+								"add_field"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/leads/1/delete_entry/2",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzM3MjMyOTMsIm5hbWUiOiIiLCJleHAiOjE1MzM3MjM1OTMsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.f3qbNVnV5PN-27e7eTzR8tW8AcKap6QSCLlMC9NpSvg"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:8000/v0/ui/leads/1/delete_entry/2",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"leads",
+								"1",
+								"delete_entry",
+								"2"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "checklists",
+			"item": [
+				{
+					"name": "http://localhost:8000/v0/ui/checklists/list_all_checklists/",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzY3NjA4MzQsIm5hbWUiOiIiLCJleHAiOjE1MzY3NjExMzQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.gq00d6IC47sVkMoYYrXj12slWIac1qT7_0KDA9W6bmY"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_sp_website",
+								"value": "True",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:8001/v0/ui/checklists/list_all_checklists/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"checklists",
+								"list_all_checklists",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/checklists/1/delete_entry/1",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzM3MjMyOTMsIm5hbWUiOiIiLCJleHAiOjE1MzM3MjM1OTMsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.f3qbNVnV5PN-27e7eTzR8tW8AcKap6QSCLlMC9NpSvg"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8000/v0/ui/checklists/1/delete_entry/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"checklists",
+								"1",
+								"delete_entry",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "dynamic_machadalo",
+			"item": [
+				{
+					"name": "http://localhost:8000/v0/ui/dynamic-inventory/inventory",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:8001/v0/ui/dynamic-inventory/inventory/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"dynamic-inventory",
+								"inventory",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/dynamic-inventory/inventory/",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"name\":\"Poster\", \"supplier_id\":\"MUMAECKRSHD3\", \"campaign_id\":\"HDFHDF0789\",\"base_inventory\": \"5c420f119cb7fca8add1c5bd\",\n\"inventory_attributes\":[{\"name\":\"latitude\",\"type\": \"FLOAT\"}, {\"name\":\"longitude\",\"type\": \"FLOAT\"},{\"name\":\"height\",\"type\":\"FLOAT\"}, {\"name\":\"width\",\"type\":\"FLOAT\"}], \"inventory_type\": \"space_based\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/v0/ui/dynamic-inventory/inventory/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"dynamic-inventory",
+								"inventory",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"name\":\"Society Booking\", \n\"booking_attributes\":[{\"name\":\"Price Per Flat\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"is_poster_allowed\",\"type\":\"BOOLEAN\", \"is_required\":true}, {\"name\": \"mode of payment\", \"type\":\"DROPDOWN\", \"options\":[\"NEFT\",\"CASH\",\"ONLINE\"]}],\n\"entity_attributes\":[{\"name\":\"Latitude\",\"is_required\":true},{\"name\":\"Longitude\",\"is_required\":true}, {\"name\": \"Sub Area\"}],\"base_entity_type_id\": \"5c66829e2f2bc6117aac7c75\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/v0/ui/dynamic-booking/base-booking-template/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"dynamic-booking",
+								"base-booking-template",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"name\":\"Society Booking\", \n\"booking_attributes\":[{\"name\":\"Price Per Flat\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"is_poster_allowed\",\"type\":\"BOOLEAN\", \"is_required\":true}, {\"name\": \"mode of payment\", \"type\":\"DROPDOWN\", \"options\":[\"NEFT\",\"CASH\",\"ONLINE\"]}],\n\"entity_attributes\":[{\"name\":\"Latitude\",\"is_required\":true},{\"name\":\"Longitude\",\"is_required\":true}, {\"name\": \"Sub Area\"}],\"entity_type_id\": \"5c66858c2f2bc66625d229fa\", \"base_booking_template_id\": \"5c66829e2f2bc6117aac7c75\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/v0/ui/dynamic-booking/booking-template/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"dynamic-booking",
+								"booking-template",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/dynamic-entities/entity-type/",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"name\":\"Poster\", \n\"entity_attributes\":[{\"name\":\"latitude\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"longitude\",\"type\":\"FLOAT\", \"is_required\":true}, {\"name\":\"area\", \"type\":\"STRING\"}, {\"name\": \"locality\", \"type\":\"STRING\"},{\"name\":\"inventories\", \"type\":\"INVENTORYLIST\"}, {\"name\": \"footprint\", \"type\":\"DROPDOWN\", \"options\":[\"low\",\"medium\",\"high\"]}], \"is_global\":true\n}"
+						},
+						"url": {
+							"raw": "localhost:8001/v0/ui/dynamic-entities/entity-type/",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"dynamic-entities",
+								"entity-type",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/dynamic-inventory/inventory/5c420f639cb7fca8add1c5be/",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:8001/v0/ui/dynamic-inventory/inventory/5c420f639cb7fca8add1c5be/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"dynamic-inventory",
+								"inventory",
+								"5c420f639cb7fca8add1c5be",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/dynamic-inventory/inventory/5c420f639cb7fca8add1c5be/",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"name\":\"Poster New\", \"supplier_id\":\"MUMAECKRSHD3\", \"campaign_id\":\"HDFHDF0789\",\"base_inventory\": \"5c420f119cb7fca8add1c5bd\",\n\"inventory_attributes\":[{\"name\":\"latitude\",\"type\": \"FLOAT\"}, {\"name\":\"longitude\",\"type\": \"FLOAT\"},{\"name\":\"height\",\"type\":\"FLOAT\"}, {\"name\":\"width\",\"type\":\"FLOAT\"}], \"inventory_type\": \"space_based\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/v0/ui/dynamic-inventory/inventory/5c420f639cb7fca8add1c5be/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"dynamic-inventory",
+								"inventory",
+								"5c420f639cb7fca8add1c5be",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/dynamic-inventory/inventory/",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:8001/v0/ui/dynamic-inventory/inventory/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"dynamic-inventory",
+								"inventory",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8001/v0/ui/dynamic-inventory/inventory/",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"name\":\"Poster\", \"supplier_id\":\"MUMAECKRSHD3\", \"campaign_id\":\"HDFHDF0789\",\"base_inventory\": \"5c420f119cb7fca8add1c5bd\",\n\"inventory_attributes\":[{\"name\":\"latitude\",\"type\": \"FLOAT\"}, {\"name\":\"longitude\",\"type\": \"FLOAT\"},{\"name\":\"height\",\"type\":\"FLOAT\"}, {\"name\":\"width\",\"type\":\"FLOAT\"}], \"inventory_type\": \"space_based\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/v0/ui/dynamic-inventory/inventory/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"dynamic-inventory",
+								"inventory",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8001/v0/ui/dynamic-inventory/base-inventory/",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"name\":\"Poster\", \"supplier_id\":\"MUMAECKRSHD3\", \"campaign_id\":\"HDFHDF0789\",\"base_inventory\": \"5c420f119cb7fca8add1c5bd\",\n\"inventory_attributes\":[{\"name\":\"latitude\",\"type\": \"FLOAT\"}, {\"name\":\"longitude\",\"type\": \"FLOAT\"},{\"name\":\"height\",\"type\":\"FLOAT\"}, {\"name\":\"width\",\"type\":\"FLOAT\"}], \"inventory_type\": \"space_based\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/v0/ui/dynamic-inventory/base-inventory/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"dynamic-inventory",
+								"base-inventory",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/dynamic-inventory/inventory/",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:8000/v0/ui/dynamic-inventory/inventory/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"dynamic-inventory",
+								"inventory",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "campaign_and_suppliers",
+			"item": [
+				{
+					"name": "http://localhost:8000/v0/ui/website/campaigns-suppliers-inventory-list/?assigned_to=67",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://api.machadalo.com/v0/ui/website/campaigns-suppliers-inventory-list/?assigned_to=67",
+							"protocol": "https",
+							"host": [
+								"api",
+								"machadalo",
+								"com"
+							],
+							"path": [
+								"v0",
+								"ui",
+								"website",
+								"campaigns-suppliers-inventory-list",
+								""
+							],
+							"query": [
+								{
+									"key": "assigned_to",
+									"value": "67"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/website/campaigns-suppliers-inventory-list/?assigned_to=67&return_format=new",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:8001/v0/ui/website/campaigns-suppliers-inventory-list/?assigned_to=67&return_format=new",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"website",
+								"campaigns-suppliers-inventory-list",
+								""
+							],
+							"query": [
+								{
+									"key": "assigned_to",
+									"value": "67"
+								},
+								{
+									"key": "return_format",
+									"value": "new"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/website/vendor-wise-summary/",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6InlvZ2VzaC5taGV0cmVAbWFjaGFkYWxvLmNvbSIsInVzZXJuYW1lIjoidmlkaGlkZXZlbG9wbWVudCIsIm5hbWUiOiJBZG1pbiIsImV4cCI6MTU0OTQ1ODMxOCwib3JpZ19pYXQiOjE1NDk0NTgwMTh9.gJkpdKpK8hefSh1H17MdoTjO3ABzzq07Z0X2BCgznx4"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:8001/v0/ui/website/vendor-wise-summary/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"website",
+								"vendor-wise-summary",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/website/campaign-assignment/",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"campaign_id\": \"TESSMA45DA\",\n\t\"to\": \"1\"\n}"
+						},
+						"url": {
+							"raw": "localhost:8001/v0/ui/website/campaign-assignment/",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"website",
+								"campaign-assignment",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/website/BYJMACCB20/list_suppliers/",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:8001/v0/ui/website/BYJMACCB20/list_suppliers/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"website",
+								"BYJMACCB20",
+								"list_suppliers",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/website/assigned-campaigns/",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6InlvZ2VzaC5taGV0cmVAbWFjaGFkYWxvLmNvbSIsInVzZXJuYW1lIjoidmlkaGlkZXZlbG9wbWVudCIsIm5hbWUiOiJBZG1pbiIsImV4cCI6MTU0OTQ1ODMxOCwib3JpZ19pYXQiOjE1NDk0NTgwMTh9.gJkpdKpK8hefSh1H17MdoTjO3ABzzq07Z0X2BCgznx4"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "http://localhost:8001/v0/ui/website/assigned-campaigns/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"website",
+								"assigned-campaigns",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/website/BYJMACBB24/comment/",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"comment\": \"This is some other comment.\", \"shortlisted_spaces_id\": 10790, \"inventory_type\": \"Stall\", \"related_to\": \"EXECUTION\"}"
+						},
+						"url": {
+							"raw": "localhost:8000/v0/ui/website/BYJMACBB24/comment/",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"website",
+								"BYJMACBB24",
+								"comment",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/website/send-weekly-leads-mail/",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "localhost:8001/v0/ui/website/send-weekly-leads-mail/",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"website",
+								"send-weekly-leads-mail",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/campaign/campaign-wise-summary/",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "localhost:8000/v0/ui/campaign/campaign-wise-summary/",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"campaign",
+								"campaign-wise-summary",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/website/upload-inventory-activity-image-amazon-new/",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+								"disabled": false
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"type": "text"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": ""
+								},
+								{
+									"key": "supplier_name",
+									"value": "United Cooperative Society",
+									"type": "text"
+								},
+								{
+									"key": "activity_type",
+									"value": "RELEASE",
+									"type": "text"
+								},
+								{
+									"key": "actual_activity_date",
+									"value": "2019-02-14 12:15:18 PM",
+									"type": "text"
+								},
+								{
+									"key": "inventory_name",
+									"value": "BANNER",
+									"type": "text"
+								},
+								{
+									"key": "inventory_activity_assignment_id",
+									"value": "76547",
+									"type": "text"
+								},
+								{
+									"key": "lat",
+									"value": "52.509669",
+									"type": "text"
+								},
+								{
+									"key": "long",
+									"value": "13.376294",
+									"type": "text"
+								},
+								{
+									"key": "activity_date",
+									"value": "2019-02-14",
+									"type": "text"
+								},
+								{
+									"key": "comment",
+									"value": "testing 1..2..3.. haalo haaloo",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8000/v0/ui/website/upload-inventory-activity-image-amazon-new/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"website",
+								"upload-inventory-activity-image-amazon-new",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

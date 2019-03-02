@@ -17,6 +17,7 @@ import copy
 from rest_framework.views import APIView
 from v0.ui.utils import handle_response, get_user_organisation_id
 from datetime import datetime
+from bson.objectid import ObjectId
 # from unittest import TestCase
 # from unittest.mock import patch
 # import unittest
@@ -376,6 +377,11 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
                                 grouping_category = "", value_ranges = {}):
 
+    if highest_level == 'city':
+        highest_level_original = 'city'
+        highest_level = 'campaign'
+    else:
+        highest_level_original = highest_level
     # check for custom sequence
     incrementing_value = None
     if lowest_level == None:
@@ -419,6 +425,10 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     if ',' in second_lowest_parent or ',' in second_lowest_parent_name_model:
         parents = [x.strip() for x in second_lowest_parent.split(',')]
         original_grouping_levels = grouping_levels.copy()
+
+        if (highest_level_original == 'city' or highest_level_original in reverse_direct_match) \
+                and len(grouping_levels)>1 and grouping_levels[1] in reverse_direct_match:
+            original_grouping_levels = [grouping_levels[1]]
         for i in range(0,len(grouping_levels)):
             if grouping_levels[i] in reverse_direct_match and reverse_direct_match[grouping_levels[i]] in parents:
                 grouping_levels[i] = reverse_direct_match[grouping_levels[i]]
@@ -814,4 +824,61 @@ class AnalyticSavedOperators(APIView):
         metrics = operator_data['metrics']
         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics)
         return handle_response('', data=mongo_query, success=True)
+
+class RangeAPIView(APIView):
+    @staticmethod
+    def post(request):
+        data = request.data
+        range_data = []
+        for range in data['range_data']:
+            range_data.append({
+                'range_starts_at': range['starts_at'],
+                'range_ends_at': range['ends_at'],
+            })
+        final_data_dict = {
+            "attribute_name": data['attribute_name'],
+            "organisation_id": data['organisation_id'],
+            "range_data": range_data
+
+        }
+        mongo_client.ranges.insert_one(final_data_dict)
+        return handle_response('', data={}, success=True)
+
+    @staticmethod
+    def get(request):
+        organisation_id = request.query_params.get('organisation_id',None)
+        data = mongo_client.ranges.find({"organisation_id": organisation_id})
+        final_data = []
+        for item in data:
+            temp_data = {
+                "id": str(item['_id']),
+                "attribute_name": item['attribute_name'],
+                "organisation_id": item['organisation_id'],
+                "range_data": []
+            }
+            for range in item['range_data']:
+                temp_data['range_data'].append({
+                    "starts_at": range['range_starts_at'],
+                    "ends_at": range['range_ends_at']
+                })
+            final_data.append(temp_data)
+
+        return handle_response('', data=final_data, success=True)
+
+    @staticmethod
+    def put(request):
+        data = request.data
+        id = request.query_params.get('id', None)
+        range_data = []
+        for range in data['range_data']:
+            range_data.append({
+                'range_starts_at': range['starts_at'],
+                'range_ends_at': range['ends_at'],
+            })
+
+        mongo_client.ranges.update_one({"_id": ObjectId(id)},
+                                            {"$set": {"attribute_name": data['attribute_name'],
+                                                      "organisation_id": data['organisation_id'],
+                                                      "range_data": range_data}})
+        return handle_response('', data={}, success=True)
 

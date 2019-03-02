@@ -16,9 +16,9 @@ RETAIL_SHOP_TYPE = (
 )
 
 FLAT_COUNT_TYPE = (
-    (1, '0-149'),
-    (2, '150-399'),
-    (3, '400+')
+    ('1-150', '1-150'),
+    ('151-400', '151-400'),
+    ('401+', '401+')
 )
 
 class CorporateCompanyDetails(models.Model):
@@ -119,7 +119,7 @@ class SupplierTypeSociety(BaseModel):
     society_count = models.BooleanField(db_column='SOCIETY_COUNT', default=True)
     society_ratings = models.BooleanField(db_column='SOCIETY_RATINGS', default=True)
     flat_count = models.IntegerField(db_column='FLAT_COUNT', blank=True, null=True)
-    flat_count_type = models.IntegerField(blank=True, null=True, choices=FLAT_COUNT_TYPE)
+    flat_count_type = models.CharField(blank=True, null=True, choices=FLAT_COUNT_TYPE, max_length=55)
     resident_count = models.IntegerField(db_column='RESIDENT_COUNT', blank=True, null=True)
     vacant_flat_count = models.IntegerField(db_column='VACANT_FLAT_COUNT', null=True)
     avg_household_occupants = models.IntegerField(db_column='AVG_HOUSEHOLD_OCCUPANTS', null=True)

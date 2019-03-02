@@ -1506,6 +1506,45 @@ class HashtagImagesViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+
+class HashtagImagesNewViewSet(APIView):
+    """
+    This class is arround hashtagged images by audit app
+    """
+
+    def post(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        file = request.data['file']
+        data = request.data
+        data_dict = {}
+        data_dict['content_type'] = 46
+        data_dict['object_id'] = data['supplier_id']
+        data_dict['hashtag'] = data['hashtag']
+        data_dict['comment'] = data['comment']
+        data_dict['latitude'] = data['lat']
+        data_dict['longitude'] = data['long']
+        data_dict['campaign'] = data['campaign_id']
+        campaign_name = data['campaign_name'].replace(" ", "_")
+        supplier_name = data['supplier_name'].replace(" ", "_")
+        extension = file.name.split('.')[-1]
+        image_path = campaign_name + '_' + supplier_name + '_' + data_dict['hashtag'] + str(
+            time.time()).replace('.', '_') + "_" + ''.join(
+            random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in
+            range(6)) + '.' + extension
+        website_utils.upload_to_amazon(image_path, file_content=file, bucket_name=settings.ANDROID_BUCKET_NAME)
+        data_dict['image_path'] = image_path
+        serializer = HashtagImagesSerializer(data=data_dict)
+        if serializer.is_valid():
+            serializer.save()
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        return ui_utils.handle_response(class_name, data=serializer.errors)
+
+
 class CreateFinalProposal(APIView):
     """
     The request is in form:

@@ -1936,6 +1936,8 @@ def get_campaign_wise_summary(all_campaign_ids, user_start_datetime=None):
     for campaign_id in campaign_wise_leads:
         if campaign_id not in campaign_flat_count_map:
             continue
+        if campaign_id not in all_campaign_id_name_map:
+            continue
         flat_count = campaign_flat_count_map[campaign_id]
         analytics = get_mean_median_mode(leads_summary_by_supplier_dict[campaign_id],
                                          ["total_leads_count", "hot_leads_count"])
