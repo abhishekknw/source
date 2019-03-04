@@ -210,7 +210,7 @@ class SupplierTypeSociety(BaseModel):
 
     def get_contact_list(self):
         try:
-            return ContactDetails.objects.filter(object_id = self.supplier_id, content_type = ContentType.objects.get_for_models(SupplierTypeSociety).values()[0].id)
+            return ContactDetails.objects.filter(object_id = self.supplier_id)
         except:
             return None
 
