@@ -102,7 +102,8 @@ count_details_parent_map_multiple = {
                   'storage_type': 'sum'}
 }
 
-reverse_direct_match = {'flattype':'supplier', 'qualitytype':'supplier'}
+reverse_direct_match = {'flattype':'supplier', 'qualitytype':'supplier','standeetype':'supplier',
+                        'fliertype':'supplier','stalltype':'supplier'}
 
 
 count_details_parent_map_custom = {
@@ -122,8 +123,16 @@ count_details_direct_match_multiple = {
                           'storage_type': 'name'},
     'supplier_qualitytype': {'parent': 'qualitytype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
                              'self_name_model': 'supplier_id', 'parent_name_model': 'society_type_quality',
-                             'storage_type': 'name'
-    }
+                             'storage_type': 'name'},
+    'supplier_standeetype': {'parent': 'standeetype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                             'self_name_model': 'supplier_id', 'parent_name_model': 'standee_allowed',
+                             'storage_type': 'name'},
+    'supplier_fliertype': {'parent': 'fliertype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                           'self_name_model': 'supplier_id', 'parent_name_model': 'flier_allowed',
+                           'storage_type': 'name'},
+    'supplier_stalltype': {'parent': 'stalltype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                       'self_name_model': 'supplier_id', 'parent_name_model': 'stall_allowed',
+                       'storage_type': 'name'}
 }
 
 
@@ -313,7 +322,6 @@ def linear_extrapolator(dict_array, y_stat, x_stat, n_pts = 100, diff = 0.01):
 
     #f = interpolate.interp1d(x, y, fill_value='extrapolate',kind='linear')
     [slope, intercept, r_value, p_value, std_err] = stats.linregress(x, y)
-    print(slope, intercept)
     x_range = max(x)-min(x)
     dx = x_range*diff
     ep_min = max(x)+dx
@@ -575,6 +583,7 @@ def append_array_by_keys(array, grouping_keys, append_keys):
 
 def sum_array_by_keys(array, grouping_keys, sum_keys):
     new_array = []
+    print(array[0],grouping_keys,sum_keys)
     required_keys = set(sum_keys + grouping_keys)
     ref_sum_key = sum_keys[0]
     array_keys = array[0].keys()
@@ -902,6 +911,7 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
     return(new_array)
 
 
+# used to truncate a regular dict array using range of values possible on specific keys
 def truncate_by_value_ranges(dict_array, value_ranges, range_type=0):
     if value_ranges == None or value_ranges == {}:
         return dict_array
@@ -937,4 +947,16 @@ def truncate_by_value_ranges(dict_array, value_ranges, range_type=0):
         if match==1:
             new_array.append(curr_dict)
     return new_array
+
+
+# this function is used to get selected value of a chosen field on the basis of match from another field
+def get_constrained_values(model_name, grouping_field, constraining_dict):
+    basic_query = model_name +'.objects'
+    for curr_field in constraining_dict.keys():
+        curr_value = constraining_dict[curr_field]
+        curr_query = basic_query + '.filter('+ curr_field + '=curr_value)'
+    print(curr_query)
+    field_list = list(constraining_dict.keys())
+    final_dict = list(eval(curr_query).values_list(grouping_field,flat=True))
+    return final_dict
 

@@ -9,7 +9,8 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     sum_array_by_single_key, append_array_by_keys, frequency_mode_calculator, var_stdev_calculator,
                     mean_calculator, count_details_parent_map_custom, add_supplier_name, flatten, flatten_dict_array,
                     round_sig_min, time_parent_names, raw_data_unrestricted, add_campaign_name, add_vendor_name,
-                    key_replace_group_multiple, key_replace_group, truncate_by_value_ranges, linear_extrapolator)
+                    key_replace_group_multiple, key_replace_group, truncate_by_value_ranges, linear_extrapolator,
+                    get_constrained_values)
 from v0.ui.campaign.views import calculate_mode
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo
@@ -24,7 +25,7 @@ from datetime import datetime
 
 statistics_map = {"z_score": z_calculator_array_multiple, "frequency_distribution": frequency_mode_calculator,
                   "variance_stdev": var_stdev_calculator, "mean": mean_calculator,
-                  "basic_forecasting": linear_extrapolator}
+                  "straight_line_forecasting": linear_extrapolator}
 
 unilevel_categories = ['time']
 
@@ -66,12 +67,16 @@ def get_campaigns_from_vendors(vendor_list):
 def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
                        higher_level_statistical_information, bivariate_statistical_information):
     unilevel_constraints = {}
+    supplier_constraints = {}
     data_scope_first = {}
     if not data_scope == {}:
         data_scope_keys = list(data_scope.keys()) if not data_scope == {} else []
         for curr_key in data_scope_keys:
             if data_scope[curr_key]["category"] in unilevel_categories:
                 unilevel_constraints[curr_key] = data_scope[curr_key]
+                data_scope.pop(curr_key)
+            if data_scope[curr_key]["category"] == 'supplier':
+                supplier_constraints = data_scope[curr_key]["values"]
                 data_scope.pop(curr_key)
         data_scope_first = data_scope[data_scope_keys[0]] if data_scope_keys is not [] else {}
     highest_level = data_scope_first['value_type'] if 'value_type' in data_scope_first else data_scope_first['level']
@@ -157,7 +162,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         else:
             curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
                           default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category,
-                          value_ranges)
+                          value_ranges, supplier_constraints)
             if curr_output == []:
                 continue
             if highest_level_original == 'vendor':
@@ -299,9 +304,9 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             statistics_array = statistics_map[curr_stat](derived_array, metrics_array_dict)
             derived_array = statistics_array
 
+    bsi = []
     if not bivariate_statistical_information == {}:
         stats = list(bivariate_statistical_information.keys())
-        bsi = []
         for curr_stat in stats:
             stat_array = bivariate_statistical_information[curr_stat]
             y_stat = get_metrics_from_code(stat_array[0], raw_data,metric_names) # dependent metrics
@@ -311,7 +316,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_dict = statistics_map[curr_stat](derived_array, y_stat, x_stat, n_pts, diff)
             if curr_dict is not None:
                 bsi.append(curr_dict)
-        print(bsi)
 
     if not higher_level_statistical_information == {}:
         stats = higher_level_statistical_information['stats']
@@ -391,7 +395,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
-                                grouping_category = "", value_ranges = {}):
+                                grouping_category = "", value_ranges = {}, supplier_constraints = {}):
 
     if highest_level == 'city':
         highest_level_original = 'city'
@@ -505,6 +509,13 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             add_variable_name = eval(add_map_name)['default']
             add_match_type = first_constraint["match_type"]
             add_match_list = first_constraint["values"]
+
+        # now restricting by supplier
+        if (curr_level=='supplier' or 'supplier' in curr_level) and not supplier_constraints == {}:
+            supplier_category = "supplier"
+            supplier_match_type = 0
+            supplier_model_name = SupplierTypeSociety
+            supplier_match_list = get_constrained_values('SupplierTypeSociety','supplier_id',supplier_constraints)
 
         # general queries common to all storage types
         if database_type == 'mongodb':
@@ -683,6 +694,9 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         except:
             single_array_results = merge_dict_array_array_multiple_keys(new_results, ['supplier'])
 
+        #test
+        supp = [x['supplier'] for x in single_array_results]
+        print(supp)
         if original_grouping_levels is not None:
             superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
             if len(superlevels)>1:
