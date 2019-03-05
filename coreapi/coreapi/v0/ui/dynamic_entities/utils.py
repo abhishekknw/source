@@ -7,7 +7,7 @@ from bson.objectid import ObjectId
 
 def validate_entity_type_data(entity_type_dict):
     possible_attribute_types = ['FLOAT', 'INT', 'STRING', 'BOOLEAN', 'EMAIL', 'PASSWORD', 'PHONE', 'DROPDOWN', 'RADIO',
-                                'CHECKBOX', 'TEXTAREA', 'DATE', 'DATETIME', 'INVENTORY_TYPE', "ENTITY_TYPE", "BASE_ENTITY_TYPE"]
+                                'CHECKBOX', 'TEXTAREA', 'DATE', 'DATETIME', 'INVENTORY_TYPE','INVENTORY', "ENTITY_TYPE", "BASE_ENTITY_TYPE"]
     validation_msg_dict = {'repeating_name_field': [], "type_mismatch": [], "other_errors": [],
                            "base_entity_fields_mismatch": []}
     is_valid = True
@@ -57,15 +57,15 @@ def validate_attribute_with_type(entity_type_attribute_dict, attribute_value):
         return False
     if attribute_type == 'INT' and isinstance(attribute_value,int) is False:
         return False
-    if attribute_type == 'STRING' and isinstance(attribute_value,basestring) is False:
+    if attribute_type == 'STRING' and isinstance(attribute_value,str) is False:
         return False
     if attribute_type == 'BOOLEAN' and isinstance(attribute_value,bool) is False:
         return False
     if attribute_type == 'EMAIL':
         return validate_email(attribute_value)
-    if attribute_type == 'PASSWORD' and isinstance(attribute_value,basestring) is False:
+    if attribute_type == 'PASSWORD' and isinstance(attribute_value,str) is False:
         return False
-    if attribute_type == 'TEXTAREA' and isinstance(attribute_value,basestring) is False:
+    if attribute_type == 'TEXTAREA' and isinstance(attribute_value,str) is False:
         return False
     if attribute_type == 'DATE' and isinstance(attribute_value,datetime.date) is False:
         return False
@@ -91,9 +91,9 @@ def validate_with_entity_type(entity_dict,entity_type_id):
                 validation_msg_dict['missing_data'].append(key)
         if key in new_entity_attribute_dict:
             attribute_dict = entity_type_attribute_dict[key]
-            attribute_value = new_entity_attribute_dict[key]['value']
-            attribute_is_valid = validate_attribute_with_type(attribute_dict, attribute_value)
-            if not attribute_is_valid:
-                is_valid = False
-                validation_msg_dict['data_mismatch'].append(key)
+            attribute_value = new_entity_attribute_dict[key]['value'] if 'value' in new_entity_attribute_dict[key] else None
+            # attribute_is_valid = validate_attribute_with_type(attribute_dict, attribute_value)
+            # if not attribute_is_valid:
+            #     is_valid = False
+            #     validation_msg_dict['data_mismatch'].append(key)
     return is_valid, validation_msg_dict

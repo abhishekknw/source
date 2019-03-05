@@ -119,7 +119,7 @@ class SupplierTypeSociety(BaseModel):
     society_count = models.BooleanField(db_column='SOCIETY_COUNT', default=True)
     society_ratings = models.BooleanField(db_column='SOCIETY_RATINGS', default=True)
     flat_count = models.IntegerField(db_column='FLAT_COUNT', blank=True, null=True)
-    flat_count_type = models.CharField(blank=True, null=True, choices=FLAT_COUNT_TYPE, max_length=50)
+    flat_count_type = models.CharField(blank=True, null=True, choices=FLAT_COUNT_TYPE, max_length=55)
     resident_count = models.IntegerField(db_column='RESIDENT_COUNT', blank=True, null=True)
     vacant_flat_count = models.IntegerField(db_column='VACANT_FLAT_COUNT', null=True)
     avg_household_occupants = models.IntegerField(db_column='AVG_HOUSEHOLD_OCCUPANTS', null=True)
@@ -210,7 +210,7 @@ class SupplierTypeSociety(BaseModel):
 
     def get_contact_list(self):
         try:
-            return ContactDetails.objects.filter(object_id = self.supplier_id, content_type = ContentType.objects.get_for_models(SupplierTypeSociety).values()[0].id)
+            return ContactDetails.objects.filter(object_id = self.supplier_id)
         except:
             return None
 
@@ -288,6 +288,7 @@ class SupplierTypeSalon(BasicSupplierDetails):
     mirrorstrip_price_week = models.IntegerField(db_column='MS_PRICE_WEEK', blank=True, null=True)
     mirrorstrip_price_month = models.IntegerField(db_column='MS_PRICE_MONTH', blank=True, null=True)
     fields.GenericRelation(ContactDetailsGeneric)
+    representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'supplier_salon'
@@ -340,6 +341,7 @@ class SupplierTypeGym(BasicSupplierDetails):
     wall_price_month = models.IntegerField(blank=True, null=True)
     wall_price_three_month = models.IntegerField(blank=True, null=True)
     fields.GenericRelation(ContactDetailsGeneric)
+    representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'supplier_gym'
@@ -395,6 +397,7 @@ class SupplierTypeCorporate(BasicSupplierDetails):
     averagerent = models.FloatField(blank=True, null=True, default=0.0)
     fields.GenericRelation(ContactDetailsGeneric)
     is_common_cafeteria_available = models.BooleanField(default=False)
+    representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
 
     def get_buildings(self):
         return self.corporatebuilding.all()
@@ -437,6 +440,7 @@ class SupplierTypeRetailShop(BasicSupplierDetails):
     is_modern_trade = models.BooleanField(default=False)
     is_traditional = models.BooleanField(default=False)
     category_name = models.CharField(max_length=255, null=True, blank=True)
+    representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
 
@@ -450,6 +454,7 @@ class SupplierTypeBusDepot(BasicSupplierDetails):
     route_count_originate = models.IntegerField(null=True, blank=True)
     route_count_terminate = models.IntegerField(null=True, blank=True)
     bus_types = models.CharField(max_length=20, null=True, blank=True)
+    representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'supplier_type_bus_depot'

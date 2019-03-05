@@ -12,6 +12,9 @@ import json
 import shutil
 import string
 import random
+from PIL import Image, ImageDraw, ImageFont
+from django.core.files.storage import default_storage
+from geopy.geocoders import GoogleV3
 
 from django.db import transaction
 from django.db.models import Q, F, ExpressionWrapper, FloatField
@@ -74,6 +77,7 @@ from v0.ui.campaign.serializers import GenericExportFileSerializer
 from v0.ui.inventory.models import Filters
 from v0.ui.inventory.serializers import FiltersSerializer
 
+fonts_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fonts')
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
     """
@@ -1591,7 +1595,7 @@ def get_coordinates(radius, latitude, longitude):
         return ui_utils.handle_response(function_name, exception_object=e)
 
 
-def build_query(min_max_data, supplier_type_code):
+def build_query(min_max_data, supplier_type_code, proposal):
     """
 
     Args:
@@ -1604,13 +1608,14 @@ def build_query(min_max_data, supplier_type_code):
     function_name = build_query.__name__
 
     try:
-
         if supplier_type_code == 'RS':
             q = Q(society_latitude__lt=min_max_data['max_lat']) & Q(society_latitude__gt=min_max_data['min_lat']) & Q(
-                society_longitude__lt=min_max_data['max_long']) & Q(society_longitude__gt=min_max_data['min_long'])
+                society_longitude__lt=min_max_data['max_long']) & Q(society_longitude__gt=min_max_data['min_long']) & Q(
+                representative=proposal.principal_vendor)
         else:
             q = Q(latitude__lt=min_max_data['max_lat']) & Q(latitude__gt=min_max_data['min_lat']) & Q(
-                longitude__lt=min_max_data['max_long']) & Q(longitude__gt=min_max_data['min_long'])
+                longitude__lt=min_max_data['max_long']) & Q(longitude__gt=min_max_data['min_long']) & Q(
+                representative=proposal.principal_vendor)
 
         return ui_utils.handle_response(function_name, data=q, success=True)
     except Exception as e:
@@ -1690,7 +1695,7 @@ def get_filters(data):
         return ui_utils.handle_response(function_name, exception_object=e)
 
 
-def handle_single_center(center, result):
+def handle_single_center(center, result, proposal):
     """
     Args:
         center: One center data.
@@ -1723,7 +1728,7 @@ def handle_single_center(center, result):
             center_data['suppliers'][supplier_type_code] = {}
 
             # make a query
-            query_response = build_query(min_max_data, supplier_type_code)
+            query_response = build_query(min_max_data, supplier_type_code, proposal)
             if not query_response.data['status']:
                 return query_response
             query = query_response.data['data']
@@ -1850,7 +1855,7 @@ def suppliers_within_radius(data):
         result = {center_id: {} for center_id in center_id_list}
         for center in serializer.data:
             center = dict(center)
-            response = handle_single_center(center, result)
+            response = handle_single_center(center, result, proposal)
             if not response.data['status']:
                 return response
             result = response.data['data']
@@ -2564,7 +2569,7 @@ def set_supplier_inventory_keys(supplier_dict, inv_summary_instance, unique_inve
         raise Exception(function, ui_utils.get_system_error(e))
 
 
-def handle_common_filters(common_filters, supplier_type_code):
+def handle_common_filters(common_filters, supplier_type_code, proposal):
     """
     This function handles only common filters.
     Args:
@@ -2610,6 +2615,9 @@ def handle_common_filters(common_filters, supplier_type_code):
             query['latitude__gt'] = min_latitude
             query['longitude__lt'] = max_longitude
             query['longitude__gt'] = min_longitude
+
+        query['representative'] = proposal.principal_vendor
+
         # the keys like 'locality', 'quantity', 'quality' we receive from front end are already defined in constants
         predefined_common_filter_keys = list(v0_constants.query_dict[supplier_type_code].keys())
         # we may receive a subset of already defined keys. obtain that subset
@@ -6487,6 +6495,8 @@ def restructure_supplier_inv_images_data(prev_dict):
         if 'activities' not in supplier_data:
             supplier_data['activities'] = {}
         supplier_data['activities'][curr_activity_id] = {
+            'inventory_activity_assignment_id': curr_assignment_id,
+            'shortlisted_inventory_details_id': shortlisted_inventory_id,
             'activity_id': curr_activity_id,
             'activity_type':activity_data['activity_type'],
             'inventory_id': inventory_data['inventory_id'],
@@ -6497,7 +6507,8 @@ def restructure_supplier_inv_images_data(prev_dict):
             'reassigned_activity_date': assignment_data['reassigned_activity_date'],
             'actual_activity_date': None,
             'due_date': due_date,
-            'status': 'pending'
+            'status': 'pending',
+            'images': []
         }
 
     for curr_image_id in all_image_data:
@@ -6510,12 +6521,15 @@ def restructure_supplier_inv_images_data(prev_dict):
         if image_data['actual_activity_date']:
             supplier_data['activities'][activity_id]['actual_activity_date'] = image_data['actual_activity_date']
             supplier_data['activities'][activity_id]['status'] = 'complete'
+            supplier_data['activities'][activity_id]['images'].append({
+                'image_path': image_data["image_path"],
+                'comment': image_data["comment"],
+            })
     for ss in prev_dict['shortlisted_suppliers']:
         prev_dict['shortlisted_suppliers'][ss]['activities'] = list(prev_dict['shortlisted_suppliers'][ss]['activities'].values())
     new_dict['shortlisted_suppliers'] = list(prev_dict['shortlisted_suppliers'].values())
 
     return new_dict
-
 
 def save_filters(center, supplier_code, proposal_data, proposal):
     """
@@ -7267,3 +7281,25 @@ def organise_data_by_activity_and_inventory_type(data):
         return result
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
+
+
+def get_address_from_lat_long(lat, long):
+    geolocator = GoogleV3(api_key="AIzaSyCy_uR_SVnzgxCQTw1TS6CYbBTQEbf6jOY")
+    location = geolocator.reverse("{0}, {1}".format(lat, long),  exactly_one=True)
+    return location.address
+
+
+def add_string_to_image(image,message):
+    filename = str(image)
+    with default_storage.open("./" + filename, 'wb+') as destination:
+        for chunk in image.chunks():
+            destination.write(chunk)
+        im = Image.open(destination)
+        draw = ImageDraw.Draw(im)
+        font = ImageFont.truetype(os.path.join(fonts_path, "Roboto-Bold.ttf"), 40)
+        (x, y) = (5, 5)
+        color = 'rgb(0, 0, 0)'
+        draw.text((x, y), message, fill=color, font=font)
+        im.save(str(destination))
+        return str(destination)
+
