@@ -103,7 +103,8 @@ count_details_parent_map_multiple = {
 }
 
 reverse_direct_match = {'flattype':'supplier', 'qualitytype':'supplier','standeetype':'supplier',
-                        'fliertype':'supplier','stalltype':'supplier'}
+                        'fliertype':'supplier','stalltype':'supplier','liftpostertype':'supplier',
+                        'nbpostertype':'supplier','bannertype':'supplier', 'bachelortype':'supplier'}
 
 
 count_details_parent_map_custom = {
@@ -117,6 +118,8 @@ count_details_parent_map_custom = {
 
 
 # format: a_b
+# list: (a) flat,(b)quality, (c) standee, (d) flier, (e) stall
+# (f) poster in lift, (g) poster on notice board, (h) banner, (i)
 count_details_direct_match_multiple = {
     'supplier_flattype': {'parent': 'flattype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
                           'self_name_model': 'supplier_id', 'parent_name_model': 'flat_count_type',
@@ -131,8 +134,20 @@ count_details_direct_match_multiple = {
                            'self_name_model': 'supplier_id', 'parent_name_model': 'flier_allowed',
                            'storage_type': 'name'},
     'supplier_stalltype': {'parent': 'stalltype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
-                       'self_name_model': 'supplier_id', 'parent_name_model': 'stall_allowed',
-                       'storage_type': 'name'}
+                           'self_name_model': 'supplier_id', 'parent_name_model': 'stall_allowed',
+                           'storage_type': 'name'},
+    'supplier_liftpostertype': {'parent': 'liftpostertype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                                'self_name_model': 'supplier_id', 'parent_name_model': 'poster_allowed_lift',
+                                'storage_type': 'name'},
+    'supplier_nbpostertype': {'parent': 'nbpostertype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                              'self_name_model': 'supplier_id', 'parent_name_model': 'poster_allowed_nb',
+                              'storage_type': 'name'},
+    'supplier_bannertype': {'parent': 'bannertype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                            'self_name_model': 'supplier_id', 'parent_name_model': 'banner_allowed',
+                            'storage_type': 'name'},
+    'supplier_bachelortype': {'parent': 'bachelortype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                              'self_name_model': 'supplier_id', 'parent_name_model': 'bachelor_tenants_allowed',
+                              'storage_type': 'name'}
 }
 
 
@@ -843,9 +858,11 @@ def append_higher_key_dict_array(arrays,key):
     new_array
 
 
-def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ranges = {}):
+def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ranges = {}, incrementing_value=None):
     if existing_key == required_key:
         return dict_array
+    if incrementing_value is not None:
+        sum_key = sum_key + str(incrementing_value)
     allowed_values = value_ranges[required_key] if required_key in value_ranges else None
     search_key = str(existing_key)+'_'+str(required_key)
     key_details = count_details_direct_match_multiple[search_key]
@@ -876,9 +893,12 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ran
     return new_array
 
 
-def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key, value_ranges = {}):
+def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key, value_ranges = {},
+                               incrementing_value = None):
     # if existing_key == required_key:
     #     return dict_array
+    if incrementing_value is not None:
+        sum_key = sum_key + str(incrementing_value)
     for required_key in required_keys:
         allowed_values = value_ranges[required_key] if required_key in value_ranges else None
         search_key = str(existing_key) + '_' + str(required_key)

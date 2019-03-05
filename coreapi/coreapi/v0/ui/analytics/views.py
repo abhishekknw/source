@@ -397,16 +397,18 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
                                 grouping_category = "", value_ranges = {}, supplier_constraints = {}):
-
+    incrementing_value = None
+    if lowest_level == None:
+        return []
+    if 'hotness_level' in lowest_level:
+        incrementing_value = int(lowest_level[-1])
+        lowest_level = lowest_level[:-1]
     if highest_level == 'city':
         highest_level_original = 'city'
         highest_level = 'campaign'
     else:
         highest_level_original = highest_level
     # check for custom sequence
-    incrementing_value = None
-    if lowest_level == None:
-        return []
     if grouping_level == None:
         grouping_level = highest_level
     if not isinstance(grouping_level,str):
@@ -430,9 +432,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     if custom_level in default_map:
         lowest_level_original = lowest_level
         lowest_level = custom_level
-    if 'hotness_level' in lowest_level:
-        incrementing_value = int(lowest_level[-1])
-        lowest_level = lowest_level[:-1]
 
     if lowest_level not in default_map:
         default_map = count_details_parent_map
@@ -695,18 +694,14 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         except:
             single_array_results = merge_dict_array_array_multiple_keys(new_results, ['supplier'])
 
-        #test
-        supp = [x['supplier'] for x in single_array_results]
-        print(supp)
         if original_grouping_levels is not None:
             superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
             if len(superlevels)>1:
                 single_array_results = key_replace_group_multiple(single_array_results, grouping_levels[0],
-                                                                  superlevels, lowest_level, value_ranges)
+                                        superlevels, lowest_level, value_ranges, incrementing_value)
             else:
                 single_array_results = key_replace_group(single_array_results, grouping_levels[0],
-                                                                  original_grouping_levels[0], lowest_level,
-                                                                  value_ranges)
+                                        original_grouping_levels[0], lowest_level, value_ranges, incrementing_value)
             # single_array_results = sum_array_by_keys(single_array_results,
             #                                              [highest_level]+original_grouping_levels,[lowest_level])
 
