@@ -76,6 +76,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             if data_scope[curr_key]["category"] in unilevel_categories:
                 unilevel_constraints[curr_key] = data_scope[curr_key]
                 data_scope.pop(curr_key)
+                continue
             if data_scope[curr_key]["category"] == 'supplier':
                 supplier_constraints = data_scope[curr_key]["values"]
                 data_scope.pop(curr_key)

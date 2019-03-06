@@ -598,7 +598,6 @@ def append_array_by_keys(array, grouping_keys, append_keys):
 
 def sum_array_by_keys(array, grouping_keys, sum_keys):
     new_array = []
-    print(array[0],grouping_keys,sum_keys)
     required_keys = set(sum_keys + grouping_keys)
     ref_sum_key = sum_keys[0]
     array_keys = array[0].keys()
@@ -975,7 +974,6 @@ def get_constrained_values(model_name, grouping_field, constraining_dict):
     for curr_field in constraining_dict.keys():
         curr_value = constraining_dict[curr_field]
         curr_query = basic_query + '.filter('+ curr_field + '=curr_value)'
-    print(curr_query)
     field_list = list(constraining_dict.keys())
     final_dict = list(eval(curr_query).values_list(grouping_field,flat=True))
     return final_dict
