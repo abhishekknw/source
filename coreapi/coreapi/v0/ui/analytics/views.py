@@ -10,7 +10,7 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     mean_calculator, count_details_parent_map_custom, add_supplier_name, flatten, flatten_dict_array,
                     round_sig_min, time_parent_names, raw_data_unrestricted, add_campaign_name, add_vendor_name,
                     key_replace_group_multiple, key_replace_group, truncate_by_value_ranges, linear_extrapolator,
-                    get_constrained_values)
+                    get_constrained_values, add_related_field, related_fields_dict)
 from v0.ui.campaign.views import calculate_mode
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo
@@ -220,12 +220,10 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 "higher_group_data": []}
 
     derived_array_original = single_array_truncated
-    derived_array_1 = add_supplier_name(derived_array_original)
-    derived_array_1 = add_campaign_name(derived_array_1)
-    derived_array_1 = add_vendor_name(derived_array_1)
-    derived_array = []
-
-    derived_array = derived_array_1
+    derived_array = derived_array_original
+    additional_fields_list = list(related_fields_dict.keys())
+    for curr_field in additional_fields_list:
+        derived_array = add_related_field(derived_array,*(related_fields_dict[curr_field]))
 
     metric_parents = {}
     remaining_metrics = individual_metric_output.keys()
