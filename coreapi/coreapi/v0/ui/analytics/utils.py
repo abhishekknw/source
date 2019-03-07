@@ -52,6 +52,11 @@ level_name_by_model_id = {
 }
 
 
+related_fields_dict = {"campaign": ['ProposalInfo', 'proposal_id', 'campaign', 'name', 'campaign_name'],
+                       "supplier": ['SupplierTypeSociety', 'supplier_id', 'supplier', 'society_name', 'supplier_name'],
+                       "vendor": ['Organisation', 'organisation_id', 'vendor', 'name', 'vendor_name']
+                       }
+
 # increment types: 0 - equal to, 1 - greater than, 2 - less than,
 # 3 - greater than or equal to, 4 - less than or equal to
 count_details_parent_map = {
@@ -781,6 +786,28 @@ def frequency_mode_calculator(dict_array, frequency_keys, weighted=0, window_siz
         new_array.append(curr_dict)
         x = add_missing_keys(curr_dict,freq_keys)
     return new_array
+
+
+# this function is used to add fields linked by 1-1 relationship to related fields in the same model, such as names
+def add_related_field(dict_array, model_name, self_name_model, self_name,
+                      related_name_model,related_name = None, database_type='mysql'):
+    if related_name == None:
+        related_name = self_name + '_name'
+    if not database_type == 'mysql':
+        print("this function is currently not developed for non-mysql database")
+        return dict_array
+    if self_name not in dict_array[0]:
+        return dict_array
+    self_values = [x[self_name] for x in dict_array]
+    model_data_query = model_name+'.objects.filter('+self_name_model+'__in=self_values)'
+    model_data = eval(model_data_query).values_list(self_name_model,related_name_model)
+    model_data_dict = dict(model_data)
+    new_dict_array = []
+    for curr_dict in dict_array:
+        col_value = curr_dict[self_name]
+        curr_dict[related_name] = model_data_dict[col_value]
+        new_dict_array.append(curr_dict)
+    return new_dict_array
 
 
 def add_campaign_name(dict_array):
