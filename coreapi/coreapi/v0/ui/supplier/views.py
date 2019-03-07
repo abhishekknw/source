@@ -2820,8 +2820,8 @@ class SupplierSearch(APIView):
             search_txt = request.query_params.get('search')
             supplier_type_code = request.query_params.get('supplier_type_code')
             vendor = request.query_params.get('vendor', None)
-            if not supplier_type_code or not vendor:
-                return ui_utils.handle_response(class_name, data='provide supplier type code or Principal vendor is not present')
+            if not supplier_type_code :
+                return ui_utils.handle_response(class_name, data='provide supplier type code')
 
             if not search_txt:
                 return ui_utils.handle_response(class_name, data=[], success=True)
@@ -2833,8 +2833,10 @@ class SupplierSearch(APIView):
                     search_query |= Q(**{search_field: search_txt})
                 else:
                     search_query = Q(**{search_field: search_txt})
-
-            suppliers = model.objects.filter(search_query, representative=vendor)
+            if vendor:
+                suppliers = model.objects.filter(search_query, representative=vendor)
+            else:
+                suppliers = model.objects.filter(search_query)
             serializer_class = ui_utils.get_serializer(supplier_type_code)
             serializer = serializer_class(suppliers, many=True)
             suppliers = website_utils.manipulate_object_key_values(serializer.data,
