@@ -74,6 +74,10 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         data_scope_keys = list(data_scope.keys()) if not data_scope == {} else []
         for curr_key in data_scope_keys:
             if data_scope[curr_key]["category"] in unilevel_categories:
+                if "range" in data_scope[curr_key]["values"]:
+                    data_range = data_scope[curr_key]["values"]
+                    if not (len(data_range)) == 2:
+                        return "data scope range not defined properly"
                 unilevel_constraints[curr_key] = data_scope[curr_key]
                 data_scope.pop(curr_key)
                 continue
