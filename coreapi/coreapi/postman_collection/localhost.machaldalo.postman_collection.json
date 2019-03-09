@@ -777,92 +777,6 @@
 					"response": []
 				},
 				{
-					"name": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
-							},
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							},
-							{
-								"key": "is_import_sheet",
-								"value": "true",
-								"disabled": true
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\"name\":\"Society Booking\", \n\"booking_attributes\":[{\"name\":\"Price Per Flat\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"is_poster_allowed\",\"type\":\"BOOLEAN\", \"is_required\":true}, {\"name\": \"mode of payment\", \"type\":\"DROPDOWN\", \"options\":[\"NEFT\",\"CASH\",\"ONLINE\"]}],\n\"entity_attributes\":[{\"name\":\"Latitude\",\"is_required\":true},{\"name\":\"Longitude\",\"is_required\":true}, {\"name\": \"Sub Area\"}],\"base_entity_type_id\": \"5c66829e2f2bc6117aac7c75\"\n}"
-						},
-						"url": {
-							"raw": "http://localhost:8001/v0/ui/dynamic-booking/base-booking-template/",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8001",
-							"path": [
-								"v0",
-								"ui",
-								"dynamic-booking",
-								"base-booking-template",
-								""
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
-							},
-							{
-								"key": "Content-Type",
-								"name": "Content-Type",
-								"type": "text",
-								"value": "application/json"
-							},
-							{
-								"key": "is_import_sheet",
-								"value": "true",
-								"disabled": true
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\"name\":\"Society Booking\", \n\"booking_attributes\":[{\"name\":\"Price Per Flat\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"is_poster_allowed\",\"type\":\"BOOLEAN\", \"is_required\":true}, {\"name\": \"mode of payment\", \"type\":\"DROPDOWN\", \"options\":[\"NEFT\",\"CASH\",\"ONLINE\"]}],\n\"entity_attributes\":[{\"name\":\"Latitude\",\"is_required\":true},{\"name\":\"Longitude\",\"is_required\":true}, {\"name\": \"Sub Area\"}],\"entity_type_id\": \"5c66858c2f2bc66625d229fa\", \"base_booking_template_id\": \"5c66829e2f2bc6117aac7c75\"\n}"
-						},
-						"url": {
-							"raw": "http://localhost:8001/v0/ui/dynamic-booking/booking-template/",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8001",
-							"path": [
-								"v0",
-								"ui",
-								"dynamic-booking",
-								"booking-template",
-								""
-							]
-						}
-					},
-					"response": []
-				},
-				{
 					"name": "localhost:8000/v0/ui/dynamic-entities/entity-type/",
 					"request": {
 						"method": "POST",
@@ -1538,6 +1452,185 @@
 					"response": []
 				},
 				{
+					"name": "http://localhost:8000/v0/ui/proposal/hashtag-images-new",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"disabled": false,
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"disabled": true,
+								"key": "is_import_sheet",
+								"value": "true"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": ""
+								},
+								{
+									"key": "supplier_name",
+									"value": "United Cooperative Society",
+									"type": "text"
+								},
+								{
+									"key": "campaign_name",
+									"value": "Byju's Andaman Test",
+									"type": "text"
+								},
+								{
+									"key": "hashtag",
+									"value": "BANDAR",
+									"type": "text"
+								},
+								{
+									"key": "campaign_id",
+									"value": "BYJMACB64A",
+									"type": "text"
+								},
+								{
+									"key": "lat",
+									"value": "52.509669",
+									"type": "text"
+								},
+								{
+									"key": "long",
+									"value": "13.376294",
+									"type": "text"
+								},
+								{
+									"key": "supplier_id",
+									"value": "CHAPA20RSCIH",
+									"type": "text"
+								},
+								{
+									"key": "comment",
+									"value": "arre bhai idhar suniye.. Halloo",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8000/v0/ui/proposal/hashtag-images-new",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"proposal",
+								"hashtag-images-new"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/proposal/hashtag-images-new/",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+								"disabled": false
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"type": "text"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": ""
+								},
+								{
+									"key": "supplier_name",
+									"value": "United Cooperative Society",
+									"type": "text"
+								},
+								{
+									"key": "campaign_name",
+									"value": "Byju's Andaman Test",
+									"type": "text"
+								},
+								{
+									"key": "hashtag",
+									"value": "BANDAR",
+									"type": "text"
+								},
+								{
+									"key": "campaign_id",
+									"value": "BYJMACB64A",
+									"type": "text"
+								},
+								{
+									"key": "lat",
+									"value": "52.509669",
+									"type": "text"
+								},
+								{
+									"key": "long",
+									"value": "13.376294",
+									"type": "text"
+								},
+								{
+									"key": "supplier_id",
+									"value": "CHAPA20RSCIH",
+									"type": "text"
+								},
+								{
+									"key": "comment",
+									"value": "arre bhai idhar suniye.. Halloo",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8000/v0/ui/proposal/hashtag-images-new/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"proposal",
+								"hashtag-images-new",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "http://localhost:8000/v0/ui/website/upload-inventory-activity-image-amazon-new/",
 					"request": {
 						"method": "POST",
@@ -1631,6 +1724,471 @@
 						}
 					},
 					"response": []
+				}
+			]
+		},
+		{
+			"name": "dynamic_booking",
+			"item": [
+				{
+					"name": "base_booking_template",
+					"item": [
+						{
+							"name": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"name\":\"Society Booking\", \n\"booking_attributes\":[{\"name\":\"Price Per Flat\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"is_poster_allowed\",\"type\":\"BOOLEAN\", \"is_required\":true}, {\"name\": \"mode of payment\", \"type\":\"DROPDOWN\", \"options\":[\"NEFT\",\"CASH\",\"ONLINE\"]}],\n\"entity_attributes\":[{\"name\":\"Latitude\",\"is_required\":true},{\"name\":\"Longitude\",\"is_required\":true}, {\"name\": \"Sub Area\"}],\"base_entity_type_id\": \"5c66829e2f2bc6117aac7c75\"\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"v0",
+										"ui",
+										"dynamic-booking",
+										"base-booking-template",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"v0",
+										"ui",
+										"dynamic-booking",
+										"base-booking-template",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/5c77adb19cb7fc73ac9badea/",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/5c77adb19cb7fc73ac9badea/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"v0",
+										"ui",
+										"dynamic-booking",
+										"base-booking-template",
+										"5c77adb19cb7fc73ac9badea",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/5c77adb19cb7fc73ac9badea/",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/5c77adb19cb7fc73ac9badea/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"v0",
+										"ui",
+										"dynamic-booking",
+										"base-booking-template",
+										"5c77adb19cb7fc73ac9badea",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/5c77adb19cb7fc73ac9badea/",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"name\":\"Society Booking modified\", \n\"booking_attributes\":[{\"name\":\"Price Per Flat\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"is_poster_allowed\",\"type\":\"BOOLEAN\", \"is_required\":true}, {\"name\": \"mode of payment\", \"type\":\"DROPDOWN\", \"options\":[\"NEFT\",\"CASH\",\"ONLINE\"]}],\n\"entity_attributes\":[{\"name\":\"Latitude\",\"is_required\":true},{\"name\":\"Longitude\",\"is_required\":true}, {\"name\": \"Sub Area\"}],\"base_entity_type_id\": \"5c66829e2f2bc6117aac7c75\"\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/5c77adb19cb7fc73ac9badea/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"v0",
+										"ui",
+										"dynamic-booking",
+										"base-booking-template",
+										"5c77adb19cb7fc73ac9badea",
+										""
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "booking_template",
+					"item": [
+						{
+							"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"name\":\"Society Booking\", \n\"booking_attributes\":[{\"name\":\"Price Per Flat\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"is_poster_allowed\",\"type\":\"BOOLEAN\", \"is_required\":true}, {\"name\": \"mode of payment\", \"type\":\"DROPDOWN\", \"options\":[\"NEFT\",\"CASH\",\"ONLINE\"]}],\n\"entity_attributes\":[{\"name\":\"Latitude\",\"is_required\":true},{\"name\":\"Longitude\",\"is_required\":true}, {\"name\": \"Sub Area\"}],\"entity_type_id\": \"5c66858c2f2bc66625d229fa\", \"base_booking_template_id\": \"5c66829e2f2bc6117aac7c75\"\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8001/v0/ui/dynamic-booking/booking-template/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8001",
+									"path": [
+										"v0",
+										"ui",
+										"dynamic-booking",
+										"booking-template",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"v0",
+										"ui",
+										"dynamic-booking",
+										"base-booking-template",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/5c769e269cb7fca7bb2b2a8a/",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/5c769e269cb7fca7bb2b2a8a/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"v0",
+										"ui",
+										"dynamic-booking",
+										"booking-template",
+										"5c769e269cb7fca7bb2b2a8a",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/5c77adb19cb7fc73ac9badea/",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"name\":\"Society Booking updated\", \n\"booking_attributes\":[{\"name\":\"Price Per Flat updated\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"is_poster_allowed\",\"type\":\"BOOLEAN\", \"is_required\":true}, {\"name\": \"mode of payment\", \"type\":\"DROPDOWN\", \"options\":[\"NEFT\",\"CASH\",\"ONLINE\"]}],\n\"entity_attributes\":[{\"name\":\"Latitude\",\"is_required\":true},{\"name\":\"Longitude\",\"is_required\":true}, {\"name\": \"Sub Area\"}],\"entity_type_id\": \"5c66858c2f2bc66625d229fa\", \"base_booking_template_id\": \"5c66829e2f2bc6117aac7c75\"\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/5c769e269cb7fca7bb2b2a8a/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"v0",
+										"ui",
+										"dynamic-booking",
+										"booking-template",
+										"5c769e269cb7fca7bb2b2a8a",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/5c769e269cb7fca7bb2b2a8a/",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/5c769e269cb7fca7bb2b2a8a/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"v0",
+										"ui",
+										"dynamic-booking",
+										"booking-template",
+										"5c769e269cb7fca7bb2b2a8a",
+										""
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
 				}
 			]
 		}
