@@ -6,7 +6,7 @@ from .views import (BaseBookingTemplateView, BookingTemplateView, BookingTemplat
 urlpatterns = [
     url(r'^base-booking-template/$', BaseBookingTemplateView.as_view()),
     url(r'^booking-template/$', BookingTemplateView.as_view()),
-    url(r'^booking-template/(?P<entity_type_id>[A-Z_a-z0-9]+)/$', BookingTemplateTypeById.as_view())
+    url(r'^booking-template/(?P<booking_template_type_id>[A-Z_a-z0-9]+)/$', BookingTemplateTypeById.as_view())
 ]
 
 router = DefaultRouter()

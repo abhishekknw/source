@@ -99,8 +99,8 @@ class BookingTemplateView(APIView):
 
 class BookingTemplateTypeById(APIView):
     @staticmethod
-    def get(request, entity_type_id):
-        booking_entity_type = BookingTemplate.objects.raw({'_id': ObjectId(entity_type_id)})[0]
+    def get(request, booking_template_type_id):
+        booking_entity_type = BookingTemplate.objects.raw({'_id': ObjectId(booking_template_type_id)})[0]
         booking_entity_type = {
             "id": str(booking_entity_type._id),
             "base_entity_type_id": str(booking_entity_type.entity_type_id),
@@ -110,16 +110,16 @@ class BookingTemplateTypeById(APIView):
         return handle_response('', data=booking_entity_type, success=True)
 
     @staticmethod
-    def put(request, entity_type_id):
-        id = entity_type_id
+    def put(request, booking_template_type_id):
+        id = booking_template_type_id
         data = request.data.copy()
         data['updated_at'] = datetime.now()
         BookingTemplate.objects.raw({'_id': ObjectId(id)}).update({"$set": data})
         return handle_response('', data={"success": True}, success=True)
 
     @staticmethod
-    def delete(request, entity_type_id):
-        id = entity_type_id
+    def delete(request, booking_template_type_id):
+        id = booking_template_type_id
         if not id:
             return handle_response('', data="Id Not Provided", success=False)
         exist_query = BookingTemplate.objects.raw({'_id': ObjectId(id)})
