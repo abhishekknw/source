@@ -7,10 +7,12 @@ from v0.ui.campaign.views import calculate_mode
 from collections import Iterable
 import math
 from v0.ui.organisation.models import Organisation
+from scipy import interpolate
+from scipy import stats
 
 
 def flatten(items):
-    """Yield items from any nested iterable; see Reference."""
+    """Yield items from any nested iterable"""
     for x in items:
         if isinstance(x, Iterable) and not isinstance(x, (str, bytes)):
             for sub_x in flatten(x):
@@ -49,6 +51,11 @@ level_name_by_model_id = {
     "society_city": "city", "society_name":"supplier_name", "cost_per_flat":"cost_flat", "name":"campaign_name"
 }
 
+
+related_fields_dict = {"campaign": ['ProposalInfo', 'proposal_id', 'campaign', 'name', 'campaign_name'],
+                       "supplier": ['SupplierTypeSociety', 'supplier_id', 'supplier', 'society_name', 'supplier_name'],
+                       "vendor": ['Organisation', 'organisation_id', 'vendor', 'name', 'vendor_name']
+                       }
 
 # increment types: 0 - equal to, 1 - greater than, 2 - less than,
 # 3 - greater than or equal to, 4 - less than or equal to
@@ -100,7 +107,9 @@ count_details_parent_map_multiple = {
                   'storage_type': 'sum'}
 }
 
-reverse_direct_match = {'flattype':'supplier', 'qualitytype':'supplier'}
+reverse_direct_match = {'flattype':'supplier', 'qualitytype':'supplier','standeetype':'supplier',
+                        'fliertype':'supplier','stalltype':'supplier','liftpostertype':'supplier',
+                        'nbpostertype':'supplier','bannertype':'supplier', 'bachelortype':'supplier'}
 
 
 count_details_parent_map_custom = {
@@ -114,14 +123,36 @@ count_details_parent_map_custom = {
 
 
 # format: a_b
+# list: (a) flat,(b)quality, (c) standee, (d) flier, (e) stall
+# (f) poster in lift, (g) poster on notice board, (h) banner, (i)
 count_details_direct_match_multiple = {
     'supplier_flattype': {'parent': 'flattype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
                           'self_name_model': 'supplier_id', 'parent_name_model': 'flat_count_type',
                           'storage_type': 'name'},
     'supplier_qualitytype': {'parent': 'qualitytype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
                              'self_name_model': 'supplier_id', 'parent_name_model': 'society_type_quality',
-                             'storage_type': 'name'
-    }
+                             'storage_type': 'name'},
+    'supplier_standeetype': {'parent': 'standeetype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                             'self_name_model': 'supplier_id', 'parent_name_model': 'standee_allowed',
+                             'storage_type': 'name'},
+    'supplier_fliertype': {'parent': 'fliertype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                           'self_name_model': 'supplier_id', 'parent_name_model': 'flier_allowed',
+                           'storage_type': 'name'},
+    'supplier_stalltype': {'parent': 'stalltype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                           'self_name_model': 'supplier_id', 'parent_name_model': 'stall_allowed',
+                           'storage_type': 'name'},
+    'supplier_liftpostertype': {'parent': 'liftpostertype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                                'self_name_model': 'supplier_id', 'parent_name_model': 'poster_allowed_lift',
+                                'storage_type': 'name'},
+    'supplier_nbpostertype': {'parent': 'nbpostertype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                              'self_name_model': 'supplier_id', 'parent_name_model': 'poster_allowed_nb',
+                              'storage_type': 'name'},
+    'supplier_bannertype': {'parent': 'bannertype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                            'self_name_model': 'supplier_id', 'parent_name_model': 'banner_allowed',
+                            'storage_type': 'name'},
+    'supplier_bachelortype': {'parent': 'bachelortype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                              'self_name_model': 'supplier_id', 'parent_name_model': 'bachelor_tenants_allowed',
+                              'storage_type': 'name'}
 }
 
 
@@ -302,6 +333,29 @@ def mean_calculator(dict_array, keys, weighted=0):
             new_array.append(curr_dict)
     return new_array
 
+
+def linear_extrapolator(dict_array, y_stat, x_stat, n_pts = 100, diff = 0.01):
+    y = [z[y_stat] for z in dict_array]
+    x = [z[x_stat] for z in dict_array]
+    if len(x)<2 or len(y)<2:
+        return None
+
+    #f = interpolate.interp1d(x, y, fill_value='extrapolate',kind='linear')
+    [slope, intercept, r_value, p_value, std_err] = stats.linregress(x, y)
+    x_range = max(x)-min(x)
+    dx = x_range*diff
+    ep_min = max(x)+dx
+    ep_max = max(x)+n_pts*dx
+    xnew = np.arange(min(x), ep_max, dx)
+    ynew = [(intercept+slope*x) for x in xnew]
+    final_output = {}
+    final_output[x_stat] = x
+    final_output[y_stat] = y
+    xnew_name = x_stat+'_new'
+    ynew_name = y_stat+'_new'
+    final_output[xnew_name] = [round(x,4) for x in xnew]
+    final_output[ynew_name] = [round(y,4) for y in ynew]
+    return final_output
 
 # redundant
 def sum_array_by_single_key(array, keys):
@@ -489,9 +543,6 @@ def merge_dict_array_array_multiple_keys(arrays, key_names):
     return first_array
 
 
-#def merge_dict_array_array_multiple_keys_new
-
-
 def sum_array_by_key(array, grouping_keys, sum_key):
     new_array = []
     required_keys = [sum_key] + grouping_keys
@@ -551,7 +602,6 @@ def append_array_by_keys(array, grouping_keys, append_keys):
 
 
 def sum_array_by_keys(array, grouping_keys, sum_keys):
-    print(array, grouping_keys)
     new_array = []
     required_keys = set(sum_keys + grouping_keys)
     ref_sum_key = sum_keys[0]
@@ -738,6 +788,28 @@ def frequency_mode_calculator(dict_array, frequency_keys, weighted=0, window_siz
     return new_array
 
 
+# this function is used to add fields linked by 1-1 relationship to related fields in the same model, such as names
+def add_related_field(dict_array, model_name, self_name_model, self_name,
+                      related_name_model,related_name = None, database_type='mysql'):
+    if related_name == None:
+        related_name = self_name + '_name'
+    if not database_type == 'mysql':
+        print("this function is currently not developed for non-mysql database")
+        return dict_array
+    if self_name not in dict_array[0]:
+        return dict_array
+    self_values = [x[self_name] for x in dict_array]
+    model_data_query = model_name+'.objects.filter('+self_name_model+'__in=self_values)'
+    model_data = eval(model_data_query).values_list(self_name_model,related_name_model)
+    model_data_dict = dict(model_data)
+    new_dict_array = []
+    for curr_dict in dict_array:
+        col_value = curr_dict[self_name]
+        curr_dict[related_name] = model_data_dict[col_value]
+        new_dict_array.append(curr_dict)
+    return new_dict_array
+
+
 def add_campaign_name(dict_array):
     if 'campaign' not in dict_array[0]:
         return dict_array
@@ -793,7 +865,7 @@ def add_vendor_name(dict_array):
 # {'hot_lead': 54, 'supplier': 'MUMGELBRSPRT', 'campaign': 'BYJMAC9E18', 'city': 'Mumbai'}]
 # [{'flat': 78, 'supplier': 'MUMTWVVRSLOP', 'city': 'Mumbai'}, {'flat': 150, 'supplier': 'MUMMUGWRSAEC', 'city': 'Mumbai'}]
 # Result: [ ... [{'flat': 78, 'supplier': 'MUMAMENNRSSRR', 'city': 'Mumbai','campaign': 'BYJMAC472C'}]
-def append_higher_key_dict_array(array,key):
+def append_higher_key_dict_array(arrays,key):
     key_set_list = []
     for array in arrays:
         curr_keys = array[0].keys()
@@ -812,7 +884,124 @@ def append_higher_key_dict_array(array,key):
     new_array
 
 
+def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ranges = {}, incrementing_value=None):
+    if existing_key == required_key:
+        return dict_array
+    if incrementing_value is not None:
+        sum_key = sum_key + str(incrementing_value)
+    allowed_values = value_ranges[required_key] if required_key in value_ranges else None
+    search_key = str(existing_key)+'_'+str(required_key)
+    key_details = count_details_direct_match_multiple[search_key]
+    model_name = key_details['model_name']
+    database_type = key_details['database_type']
+    self_name_model = key_details['self_name_model']
+    parent_name_model = key_details['parent_name_model']
+    match_list = [x[existing_key] for x in dict_array]
+    new_array = []
+    if database_type == 'mysql':
+        first_part_query = model_name + '.objects.filter('
+        full_query = first_part_query + self_name_model + '__in=match_list)'
+        query = list(eval(full_query).values_list(self_name_model, parent_name_model))
+        query_dict = dict(query)
+        for curr_dict in dict_array:
+            curr_value = query_dict[curr_dict[existing_key]]
+            curr_dict[required_key] = curr_value
+            curr_dict.pop(existing_key)
+            if allowed_values is not None and str(curr_value) not in allowed_values:
+                continue
+            new_array.append(curr_dict)
+        all_keys = list(curr_dict.keys())
+        grouping_keys = all_keys
+        grouping_keys.remove(sum_key)
+        new_array = sum_array_by_key(new_array,grouping_keys, sum_key)
+    else:
+        new_array = dict_array
+    return new_array
 
 
+def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key, value_ranges = {},
+                               incrementing_value = None):
+    # if existing_key == required_key:
+    #     return dict_array
+    if incrementing_value is not None:
+        sum_key = sum_key + str(incrementing_value)
+    for required_key in required_keys:
+        allowed_values = value_ranges[required_key] if required_key in value_ranges else None
+        search_key = str(existing_key) + '_' + str(required_key)
+        key_details = count_details_direct_match_multiple[search_key]
+        model_name = key_details['model_name']
+        database_type = key_details['database_type']
+        self_name_model = key_details['self_name_model']
+        parent_name_model = key_details['parent_name_model']
+        match_list = [x[existing_key] for x in dict_array]
+        new_array = []
+        if database_type == 'mysql':
+            first_part_query = model_name + '.objects.filter('
+            full_query = first_part_query + self_name_model + '__in=match_list)'
+            query = list(eval(full_query).values_list(self_name_model, parent_name_model))
+            query_dict = dict(query)
+            for curr_dict in dict_array:
+                curr_value = query_dict[curr_dict[existing_key]]
+                curr_dict[required_key] = curr_value
+                if allowed_values is not None and str(curr_value) not in allowed_values:
+                    continue
+                new_array.append(curr_dict)
 
+        else:
+            new_array = dict_array
+        dict_array = new_array
+    all_keys = list(curr_dict.keys())
+    grouping_keys = all_keys
+    grouping_keys.remove(sum_key)
+    new_array = sum_array_by_key(new_array, grouping_keys, sum_key)
+    return(new_array)
+
+
+# used to truncate a regular dict array using range of values possible on specific keys
+def truncate_by_value_ranges(dict_array, value_ranges, range_type=0):
+    if value_ranges == None or value_ranges == {}:
+        return dict_array
+    new_array = []
+    if range_type == 1:
+        for curr_key in value_ranges:
+            curr_range = value_ranges[curr_key]
+            if not len(curr_range)==2:
+                print('incorrect range format, treating as exact')
+                continue
+            start_value = curr_range[0]
+            end_value = curr_range[1]
+            if start_value.isdigit() and end_value.isdigit():
+                start_value = int(start_value)
+                end_value = int(end_value)
+                if start_value>end_value or end_value>100:
+                    print('mathematically inconsistent range, treating as exact')
+                    continue
+            else:
+                print('no integers found, treating as exact')
+                continue
+            curr_range_array = []
+            curr_array = list(range(int(start_value),int(end_value)+1))
+            value_ranges[curr_key] = [str(x) for x in curr_array]
+    for curr_dict in dict_array:
+        match = 1
+        for curr_key in value_ranges:
+            curr_range = value_ranges[curr_key]
+            curr_dict_value = curr_dict[curr_key]
+            if str(curr_dict_value) not in curr_range:
+                match=0
+                break
+        if match==1:
+            new_array.append(curr_dict)
+    return new_array
+
+
+# this function is used to get selected value of a chosen field on the basis of match from another field
+def get_constrained_values(model_name, grouping_field, constraining_dict):
+    basic_query = model_name +'.objects'
+    for curr_field in constraining_dict.keys():
+        curr_value = constraining_dict[curr_field]
+        curr_query = basic_query + '.filter('+ curr_field + '=curr_value)'
+    field_list = list(constraining_dict.keys())
+    final_dict = list(eval(curr_query).values_list(grouping_field,flat=True))
+    return final_dict
 

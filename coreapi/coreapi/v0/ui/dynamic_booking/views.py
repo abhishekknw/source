@@ -42,23 +42,34 @@ class BaseBookingTemplateView(APIView):
             final_data_list.append(final_data)
         return handle_response('', data=final_data_list, success=True)
 
+
+class BaseBookingTemplateById(APIView):
     @staticmethod
-    def put(request):
-        id = request.query_params.get('id', None)
+    def get(request, base_booking_template_id):
+        base_booking_entity_type = BaseBookingTemplate.objects.raw({'_id': ObjectId(base_booking_template_id)})[0]
+        base_booking_entity_type = {
+            "id": str(base_booking_entity_type._id),
+            "base_entity_type_id": str(base_booking_entity_type.base_entity_type_id),
+            "name": base_booking_entity_type.name,
+            "entity_attributes": base_booking_entity_type.entity_attributes,
+            "booking_attributes": base_booking_entity_type.booking_attributes,
+            "organisation_id": base_booking_entity_type.organisation_id
+        }
+        return handle_response('', data=base_booking_entity_type, success=True)
+
+    @staticmethod
+    def put(request, base_booking_template_id):
         data = request.data.copy()
-        data.pop('id')
         data['updated_at'] = datetime.now()
-        BaseBookingTemplate.objects.raw({'_id': ObjectId(id)}).update({"$set": data})
+        BaseBookingTemplate.objects.raw({'_id': ObjectId(base_booking_template_id)}).update({"$set": data})
         return handle_response('', data={"success": True}, success=True)
 
     @staticmethod
-    def delete(request):
-        id = request.query_params.get("id", None)
-        if not id:
-            return handle_response('', data="Id Not Provided", success=False)
-        exist_query = BaseBookingTemplate.objects.raw({'_id': ObjectId(id)})
+    def delete(request, base_booking_template_id):
+        exist_query = BaseBookingTemplate.objects.raw({'_id': ObjectId(base_booking_template_id)})
         exist_query.delete()
         return handle_response('', data="success", success=True)
+
 
 class BookingTemplateView(APIView):
     @staticmethod
@@ -97,31 +108,36 @@ class BookingTemplateView(APIView):
             final_data_list.append(final_data)
         return handle_response('', data=final_data_list, success=True)
 
-class BookingTemplateTypeById(APIView):
+<<<<<<< HEAD
+======
+
+class BookingTemplateById(APIView):
     @staticmethod
-    def get(request, booking_template_type_id):
-        booking_entity_type = BookingTemplate.objects.raw({'_id': ObjectId(booking_template_type_id)})[0]
+    def get(request, booking_template_id):
+        booking_entity_type = BookingTemplate.objects.raw({'_id': ObjectId(booking_template_id)})[0]
         booking_entity_type = {
             "id": str(booking_entity_type._id),
-            "base_entity_type_id": str(booking_entity_type.entity_type_id),
+            "entity_type_id": str(booking_entity_type.entity_type_id),
             "name": booking_entity_type.name,
-            "entity_attributes": booking_entity_type.entity_attributes
+            "entity_attributes": booking_entity_type.entity_attributes,
+            "booking_attributes": booking_entity_type.booking_attributes,
+            "organisation_id": booking_entity_type.organisation_id
+>>>>>>> dev-server
         }
         return handle_response('', data=booking_entity_type, success=True)
 
     @staticmethod
-    def put(request, booking_template_type_id):
-        id = booking_template_type_id
+<<<<<<< HEAD
+=======
+    def put(request, booking_template_id):
         data = request.data.copy()
         data['updated_at'] = datetime.now()
-        BookingTemplate.objects.raw({'_id': ObjectId(id)}).update({"$set": data})
+        BookingTemplate.objects.raw({'_id': ObjectId(booking_template_id)}).update({"$set": data})
         return handle_response('', data={"success": True}, success=True)
 
     @staticmethod
-    def delete(request, booking_template_type_id):
-        id = booking_template_type_id
-        if not id:
-            return handle_response('', data="Id Not Provided", success=False)
-        exist_query = BookingTemplate.objects.raw({'_id': ObjectId(id)})
+    def delete(request, booking_template_id):
+        exist_query = BookingTemplate.objects.raw({'_id': ObjectId(booking_template_id)})
+>>>>>>> dev-server
         exist_query.delete()
         return handle_response('', data="success", success=True)
