@@ -81,3 +81,47 @@ class BookingTemplateView(APIView):
         booking_template["created_at"] = datetime.now()
         BookingTemplate(**booking_template).save()
         return handle_response('', data={"success": True}, success=True)
+
+    @staticmethod
+    def get(request):
+        data_all = BookingTemplate.objects.raw({})
+        final_data_list = []
+        for data in data_all:
+            final_data = {}
+            final_data['booking_attributes'] = data.booking_attributes
+            final_data['entity_attributes'] = data.entity_attributes
+            final_data['name'] = data.name if 'name' in data else None
+            final_data['entity_type_id'] = data.entity_type_id
+            final_data['organisation_id'] = data.organisation_id
+            final_data['id'] = str(data._id)
+            final_data_list.append(final_data)
+        return handle_response('', data=final_data_list, success=True)
+
+class BookingTemplateTypeById(APIView):
+    @staticmethod
+    def get(request, entity_type_id):
+        booking_entity_type = BookingTemplate.objects.raw({'_id': ObjectId(entity_type_id)})[0]
+        booking_entity_type = {
+            "id": str(booking_entity_type._id),
+            "base_entity_type_id": str(booking_entity_type.entity_type_id),
+            "name": booking_entity_type.name,
+            "entity_attributes": booking_entity_type.entity_attributes
+        }
+        return handle_response('', data=booking_entity_type, success=True)
+
+    @staticmethod
+    def put(request, entity_type_id):
+        id = entity_type_id
+        data = request.data.copy()
+        data['updated_at'] = datetime.now()
+        BookingTemplate.objects.raw({'_id': ObjectId(id)}).update({"$set": data})
+        return handle_response('', data={"success": True}, success=True)
+
+    @staticmethod
+    def delete(request, entity_type_id):
+        id = entity_type_id
+        if not id:
+            return handle_response('', data="Id Not Provided", success=False)
+        exist_query = BookingTemplate.objects.raw({'_id': ObjectId(id)})
+        exist_query.delete()
+        return handle_response('', data="success", success=True)
