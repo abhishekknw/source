@@ -406,7 +406,7 @@ class CreateInitialProposal(APIView):
                 proposal_data = request.data
                 user = request.user
                 organisation_id = proposal_data['organisation_id']
-                account_id = account_id
+                
 
                 # create a unique proposal id
                 proposal_data['proposal_id'] = website_utils.get_generic_id(
@@ -428,6 +428,7 @@ class CreateInitialProposal(APIView):
 
                 # call the function that saves basic proposal information
                 proposal_data['created_by'] = user.username
+                proposal_data['updated_by'] = user.username
                 response = website_utils.create_basic_proposal(proposal_data)
                 if not response.data['status']:
                     return response

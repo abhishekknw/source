@@ -1280,11 +1280,11 @@ class OrganisationViewSet(viewsets.ViewSet):
             organisation_id = request.user.profile.organisation.organisation_id
             if request.user.is_superuser:
                 if category:
-                    instances = Organisation.objects.filter(category=category)
+                    instances = Organisation.objects.filter(category__in=[category,"MACHADALO"])
                 else:
                     instances = Organisation.objects.all()
             elif category:
-                instances = Organisation.objects.filter_permission(user=request.user, category=category, created_by_org=organisation_id)
+                instances = Organisation.objects.filter_permission(user=request.user, category__in=[category,"MACHADALO"], created_by_org=organisation_id)
             else:
                 instances = Organisation.objects.filter_permission(user=request.user, created_by_org=organisation_id)
             serializer = OrganisationSerializer(instances, many=True)
