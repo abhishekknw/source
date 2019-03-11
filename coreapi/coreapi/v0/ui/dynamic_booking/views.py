@@ -4,7 +4,7 @@ from v0.ui.utils import handle_response, get_user_organisation_id, create_valida
 from .models import BaseBookingTemplate, BookingTemplate
 from datetime import datetime
 from bson.objectid import ObjectId
-
+from .utils import validate_booking
 
 class BaseBookingTemplateView(APIView):
     @staticmethod
@@ -22,6 +22,7 @@ class BaseBookingTemplateView(APIView):
         if not is_valid:
 
             return handle_response('', data=validation_msg_dict, success=None)
+
         base_booking_template = dict_of_req_attributes
         base_booking_template["created_at"] = datetime.now()
         BaseBookingTemplate(**base_booking_template).save()
@@ -90,12 +91,16 @@ class BookingTemplateView(APIView):
             return handle_response('', data=validation_msg_dict, success=False)
         booking_template = dict_of_req_attributes
         booking_template["created_at"] = datetime.now()
+        is_valid_adv, validation_msg_dict_adv = validate_booking(booking_template)
+        if not is_valid_adv:
+            return handle_response('', data=validation_msg_dict_adv, success=False)
         BookingTemplate(**booking_template).save()
         return handle_response('', data={"success": True}, success=True)
 
     @staticmethod
     def get(request):
-        data_all = BookingTemplate.objects.raw({})
+        organisation_id = get_user_organisation_id(request.user)
+        data_all = BookingTemplate.objects.raw({'organisation_id':organisation_id})
         final_data_list = []
         for data in data_all:
             final_data = {}
@@ -108,8 +113,6 @@ class BookingTemplateView(APIView):
             final_data_list.append(final_data)
         return handle_response('', data=final_data_list, success=True)
 
-<<<<<<< HEAD
-======
 
 class BookingTemplateById(APIView):
     @staticmethod
@@ -122,13 +125,11 @@ class BookingTemplateById(APIView):
             "entity_attributes": booking_entity_type.entity_attributes,
             "booking_attributes": booking_entity_type.booking_attributes,
             "organisation_id": booking_entity_type.organisation_id
->>>>>>> dev-server
+
         }
         return handle_response('', data=booking_entity_type, success=True)
 
     @staticmethod
-<<<<<<< HEAD
-=======
     def put(request, booking_template_id):
         data = request.data.copy()
         data['updated_at'] = datetime.now()
@@ -138,6 +139,5 @@ class BookingTemplateById(APIView):
     @staticmethod
     def delete(request, booking_template_id):
         exist_query = BookingTemplate.objects.raw({'_id': ObjectId(booking_template_id)})
->>>>>>> dev-server
         exist_query.delete()
         return handle_response('', data="success", success=True)
