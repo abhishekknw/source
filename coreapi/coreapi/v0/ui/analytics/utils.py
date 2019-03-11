@@ -84,7 +84,7 @@ count_details_parent_map = {
                           'storage_type': 'name'},
     'cost_flat': {'parent': 'campaign', 'model_name':'ShortlistedSpaces', 'database_type': 'mysql',
                   'self_name_model': 'cost_per_flat', 'parent_name_model': 'proposal_id',
-                  'storage_type': 'sum', 'other_grouping_column':'object_id'}
+                  'storage_type': 'append', 'other_grouping_column':'object_id'}
 }
 
 count_details_parent_map_multiple = {
@@ -104,7 +104,7 @@ count_details_parent_map_multiple = {
                        'storage_type': 'condition', 'increment_type': 3},
     'cost_flat': {'parent': 'supplier,campaign', 'model_name': 'ShortlistedSpaces', 'database_type': 'mysql',
                   'self_name_model': 'cost_per_flat', 'parent_name_model': 'object_id,proposal_id',
-                  'storage_type': 'sum'}
+                  'storage_type': 'append'}
 }
 
 reverse_direct_match = {'flattype':'supplier', 'qualitytype':'supplier','standeetype':'supplier',
@@ -884,7 +884,8 @@ def append_higher_key_dict_array(arrays,key):
     new_array
 
 
-def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ranges = {}, incrementing_value=None):
+def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ranges = {}, incrementing_value=None,
+                      operation_type = 'sum'):
     if existing_key == required_key:
         return dict_array
     if incrementing_value is not None:
@@ -913,14 +914,18 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ran
         all_keys = list(curr_dict.keys())
         grouping_keys = all_keys
         grouping_keys.remove(sum_key)
-        new_array = sum_array_by_key(new_array,grouping_keys, sum_key)
+        grouping_keys.remove(existing_key)
+        if operation_type == 'append':
+            new_array = append_array_by_keys(new_array, grouping_keys, [sum_key])
+        else:
+            new_array = sum_array_by_key(new_array, grouping_keys, sum_key)
     else:
         new_array = dict_array
     return new_array
 
 
 def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key, value_ranges = {},
-                               incrementing_value = None):
+                               incrementing_value = None, operation_type = 'sum'):
     # if existing_key == required_key:
     #     return dict_array
     if incrementing_value is not None:
@@ -953,8 +958,12 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
     all_keys = list(curr_dict.keys())
     grouping_keys = all_keys
     grouping_keys.remove(sum_key)
-    new_array = sum_array_by_key(new_array, grouping_keys, sum_key)
-    return(new_array)
+    grouping_keys.remove(existing_key)
+    if operation_type == 'append':
+        new_array = append_array_by_keys(new_array, grouping_keys, [sum_key])
+    else:
+        new_array = sum_array_by_key(new_array, grouping_keys, sum_key)
+    return new_array
 
 
 # used to truncate a regular dict array using range of values possible on specific keys

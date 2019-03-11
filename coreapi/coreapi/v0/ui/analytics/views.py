@@ -23,6 +23,7 @@ from bson.objectid import ObjectId
 # from unittest import TestCase
 # from unittest.mock import patch
 # import unittest
+import numpy as np
 
 statistics_map = {"z_score": z_calculator_array_multiple, "frequency_distribution": frequency_mode_calculator,
                   "variance_stdev": var_stdev_calculator, "mean": mean_calculator,
@@ -194,17 +195,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_output = final_value
         individual_metric_output[lowest_level] = curr_output
 
-    # matching_format_metrics = get_similar_structure_keys(individual_metric_output, grouping_level)
-    # combined_array = []
-    #
-    # first_metric_array = individual_metric_output[matching_format_metrics[0]] if len(
-    #     matching_format_metrics) > 0 else []
-    # for ele_id in range(0, len(first_metric_array)):
-    #     curr_dict = first_metric_array[ele_id]
-    #     new_dict = curr_dict.copy()
-    #     for metric in matching_format_metrics[1:len(matching_format_metrics)]:
-    #         new_dict[metric] = individual_metric_output[metric][ele_id][metric]
-    #     combined_array.append(new_dict)
 
     reverse_map = {}
     if data_summary == 0:
@@ -613,7 +603,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             else:
                 print("database does not exist")
 
-        elif storage_type == 'count' or storage_type == 'sum' or storage_type == 'condition':
+        elif storage_type == 'count' or storage_type == 'sum' or storage_type == 'condition' or \
+                storage_type == 'append':
             if database_type == 'mongodb':
                 if 'hotness_level' in next_level:
                     next_level = next_level + str(incrementing_value)
@@ -628,6 +619,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                         group_dict.update({'_id': {}, next_level: {"$sum": 1}})
                 elif storage_type == 'sum':
                     group_dict.update({'_id': {}, next_level: {"$sum": self_model_name}})
+                elif storage_type == 'mean':
+                    group_dict.update({'_id': {}, next_level: {"$avg": self_model_name}})
                 else:
                     if 'incrementing_value' in entity_details:
                         incrementing_value = entity_details['incrementing_value']
@@ -697,6 +690,9 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 next_level_match_array = [x[self_model_name] for x in query if x[self_model_name] is not None]
                 if storage_type == 'count':
                     next_level_match_list = len(next_level_match_array)
+                elif storage_type == 'mean':
+                    next_level_match_array = [int(x) for x in next_level_match_array]
+                    next_level_match_list = [np.mean(next_level_match_array)]
                 else:
                     next_level_match_array=[int(x) for x in next_level_match_array]
                     next_level_match_list = [sum(next_level_match_array)]
@@ -716,12 +712,14 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
 
         if original_grouping_levels is not None:
             superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
+            print("krg1:",single_array_results)
             if len(superlevels)>1:
                 single_array_results = key_replace_group_multiple(single_array_results, grouping_levels[0],
-                                        superlevels, lowest_level, value_ranges, incrementing_value)
+                                superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
             else:
                 single_array_results = key_replace_group(single_array_results, grouping_levels[0],
-                                        original_grouping_levels[0], lowest_level, value_ranges, incrementing_value)
+                            original_grouping_levels[0], lowest_level, value_ranges, incrementing_value, storage_type)
+            print("krg2:", single_array_results)
             # single_array_results = sum_array_by_keys(single_array_results,
             #                                              [highest_level]+original_grouping_levels,[lowest_level])
 
