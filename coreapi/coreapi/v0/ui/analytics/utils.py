@@ -961,7 +961,6 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ran
 
 def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key, value_ranges = {},
                                incrementing_value = None, operation_type = 'sum'):
-    print(operation_type)
     # if existing_key == required_key:
     #     return dict_array
     if incrementing_value is not None:

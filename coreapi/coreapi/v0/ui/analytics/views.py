@@ -460,6 +460,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             if grouping_levels[i] in reverse_direct_match and \
                     reverse_direct_match[grouping_levels[i]] == second_lowest_parent:
                 grouping_levels[i] = reverse_direct_match[grouping_levels[i]]
+
     if ',' in second_lowest_parent or ',' in second_lowest_parent_name_model:
         parents = [x.strip() for x in second_lowest_parent.split(',')]
         original_grouping_levels = grouping_levels.copy()
@@ -467,9 +468,11 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         if (highest_level_original == 'city' or highest_level_original in reverse_direct_match) \
                 and len(grouping_levels)>1 and grouping_levels[1] in reverse_direct_match:
             original_grouping_levels = [grouping_levels[1]]
+        superlevels_base = []
         for i in range(0,len(grouping_levels)):
             if grouping_levels[i] in reverse_direct_match and reverse_direct_match[grouping_levels[i]] in parents:
                 grouping_levels[i] = reverse_direct_match[grouping_levels[i]]
+                superlevels_base.append(grouping_levels[i])
         desc_sequence = [parents, lowest_level]
         parent_model_names = second_lowest_parent_name_model.split(',')
         if not parents[0] == highest_level:
@@ -712,15 +715,16 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
 
         if original_grouping_levels is not None:
             superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
-            if len(superlevels)>1:
-                single_array_results = key_replace_group_multiple(single_array_results, grouping_levels[0],
-                                superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
+            superlevels_base_set = list(set(superlevels_base))
+            if len(superlevels_base_set)>1:
+                print("this is not developed yet")
             else:
-                single_array_results = key_replace_group(single_array_results, grouping_levels[0],
-                            original_grouping_levels[0], lowest_level, value_ranges, incrementing_value, storage_type)
-            # single_array_results = sum_array_by_keys(single_array_results,
-            #                                              [highest_level]+original_grouping_levels,[lowest_level])
-
+                if len(superlevels)>1:
+                    single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
+                                    superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
+                else:
+                    single_array_results = key_replace_group(single_array_results, superlevels_base_set[0],
+                                superlevels[0], lowest_level, value_ranges, incrementing_value, storage_type)
     else:
         single_array_results = []
     return single_array_results
