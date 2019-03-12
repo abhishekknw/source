@@ -604,7 +604,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 print("database does not exist")
 
         elif storage_type == 'count' or storage_type == 'sum' or storage_type == 'condition' or \
-                storage_type == 'append':
+                storage_type == 'append' or storage_type == 'mean':
             if database_type == 'mongodb':
                 if 'hotness_level' in next_level:
                     next_level = next_level + str(incrementing_value)
@@ -712,14 +712,12 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
 
         if original_grouping_levels is not None:
             superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
-            print("krg1:",single_array_results)
             if len(superlevels)>1:
                 single_array_results = key_replace_group_multiple(single_array_results, grouping_levels[0],
                                 superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
             else:
                 single_array_results = key_replace_group(single_array_results, grouping_levels[0],
                             original_grouping_levels[0], lowest_level, value_ranges, incrementing_value, storage_type)
-            print("krg2:", single_array_results)
             # single_array_results = sum_array_by_keys(single_array_results,
             #                                              [highest_level]+original_grouping_levels,[lowest_level])
 

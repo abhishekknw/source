@@ -84,7 +84,7 @@ count_details_parent_map = {
                           'storage_type': 'name'},
     'cost_flat': {'parent': 'campaign', 'model_name':'ShortlistedSpaces', 'database_type': 'mysql',
                   'self_name_model': 'cost_per_flat', 'parent_name_model': 'proposal_id',
-                  'storage_type': 'append', 'other_grouping_column':'object_id'}
+                  'storage_type': 'mean', 'other_grouping_column':'object_id'}
 }
 
 count_details_parent_map_multiple = {
@@ -104,7 +104,7 @@ count_details_parent_map_multiple = {
                        'storage_type': 'condition', 'increment_type': 3},
     'cost_flat': {'parent': 'supplier,campaign', 'model_name': 'ShortlistedSpaces', 'database_type': 'mysql',
                   'self_name_model': 'cost_per_flat', 'parent_name_model': 'object_id,proposal_id',
-                  'storage_type': 'append'}
+                  'storage_type': 'mean'}
 }
 
 reverse_direct_match = {'flattype':'supplier', 'qualitytype':'supplier','standeetype':'supplier',
@@ -543,6 +543,39 @@ def merge_dict_array_array_multiple_keys(arrays, key_names):
     return first_array
 
 
+def operate_array_by_key(array, grouping_keys, operate_key, operation_type='sum'):
+    new_array = []
+    required_keys = [operate_key] + grouping_keys
+    for curr_dict in array:
+        first_match = False
+        curr_dict_sum = int(curr_dict[operate_key]) if curr_dict[operate_key] is not None else 0
+        for curr_dict_new in new_array:
+            match = True
+            curr_dict_new_sum = int(curr_dict_new[operate_key]) if curr_dict_new[operate_key] is not None else 0
+            for key in grouping_keys:
+                curr_value = curr_dict[key]
+                curr_value_new = curr_dict_new[key]
+                if not curr_value_new == curr_value:
+                    match = False
+            if match:
+                curr_dict_new[operate_key] = curr_dict_sum + curr_dict_new_sum
+                if operation_type == 'mean':
+                    curr_dict_new['count'] = curr_dict_new['count']+1 if 'count' in curr_dict_new else 1
+
+                first_match = True
+        if not first_match:
+            new_dict = {}
+            for required_key in required_keys:
+                new_dict[required_key] = curr_dict[required_key]
+                new_dict['count'] = 1
+            new_array.append(new_dict)
+    if operation_type == 'mean':
+        for curr_dict in new_array:
+            curr_dict[operate_key] = round(curr_dict[operate_key]/curr_dict['count'],4)
+            curr_dict.pop('count', None)
+    return new_array
+
+
 def sum_array_by_key(array, grouping_keys, sum_key):
     new_array = []
     required_keys = [sum_key] + grouping_keys
@@ -917,6 +950,8 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ran
         grouping_keys.remove(existing_key)
         if operation_type == 'append':
             new_array = append_array_by_keys(new_array, grouping_keys, [sum_key])
+        elif operation_type == 'mean':
+            new_array = operate_array_by_key(new_array, grouping_keys, sum_key,'mean')
         else:
             new_array = sum_array_by_key(new_array, grouping_keys, sum_key)
     else:
@@ -926,6 +961,7 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ran
 
 def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key, value_ranges = {},
                                incrementing_value = None, operation_type = 'sum'):
+    print(operation_type)
     # if existing_key == required_key:
     #     return dict_array
     if incrementing_value is not None:
@@ -961,6 +997,8 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
     grouping_keys.remove(existing_key)
     if operation_type == 'append':
         new_array = append_array_by_keys(new_array, grouping_keys, [sum_key])
+    elif operation_type == 'mean':
+        new_array = operate_array_by_key(new_array, grouping_keys, sum_key, 'mean')
     else:
         new_array = sum_array_by_key(new_array, grouping_keys, sum_key)
     return new_array
