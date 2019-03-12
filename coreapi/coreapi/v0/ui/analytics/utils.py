@@ -571,7 +571,8 @@ def operate_array_by_key(array, grouping_keys, operate_key, operation_type='sum'
             new_array.append(new_dict)
     if operation_type == 'mean':
         for curr_dict in new_array:
-            curr_dict[operate_key] = round(curr_dict[operate_key]/curr_dict['count'],4)
+            curr_dict[operate_key] = round(curr_dict[operate_key]/curr_dict['count'],4) if \
+                curr_dict[operate_key] is not None else None
             curr_dict.pop('count', None)
     return new_array
 
