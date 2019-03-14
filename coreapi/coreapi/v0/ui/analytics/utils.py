@@ -832,14 +832,22 @@ def add_related_field(dict_array, model_name, self_name_model, self_name,
         return dict_array
     if self_name not in dict_array[0]:
         return dict_array
-    self_values = [x[self_name] for x in dict_array]
+    self_values = list(flatten([x[self_name] for x in dict_array]))
+    print(self_values)
     model_data_query = model_name+'.objects.filter('+self_name_model+'__in=self_values)'
     model_data = eval(model_data_query).values_list(self_name_model,related_name_model)
     model_data_dict = dict(model_data)
     new_dict_array = []
+    print("mdd:",model_data_dict)
     for curr_dict in dict_array:
         col_value = curr_dict[self_name]
-        curr_dict[related_name] = model_data_dict[col_value]
+        if isinstance(col_value,list):
+            new_list = []
+            for curr_name in col_value:
+                new_list.append(model_data_dict[curr_name])
+            curr_dict[related_name] = new_list
+        else:
+            curr_dict[related_name] = model_data_dict[col_value]
         new_dict_array.append(curr_dict)
     return new_dict_array
 
@@ -925,6 +933,8 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ran
     if incrementing_value is not None:
         sum_key = sum_key + str(incrementing_value)
     allowed_values = value_ranges[required_key] if required_key in value_ranges else None
+    if allowed_values is not None:
+        allowed_values = [str(x) for x in allowed_values]
     search_key = str(existing_key)+'_'+str(required_key)
     key_details = count_details_direct_match_multiple[search_key]
     model_name = key_details['model_name']
@@ -941,15 +951,17 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ran
         for curr_dict in dict_array:
             curr_value = query_dict[curr_dict[existing_key]]
             curr_dict[required_key] = curr_value
-            curr_dict.pop(existing_key)
+            if not existing_key == sum_key:
+                curr_dict.pop(existing_key)
             if allowed_values is not None and str(curr_value) not in allowed_values:
                 continue
             new_array.append(curr_dict)
         all_keys = list(curr_dict.keys())
         grouping_keys = all_keys
         grouping_keys.remove(sum_key)
-        grouping_keys.remove(existing_key)
-        if operation_type == 'append':
+        if existing_key in grouping_keys:
+            grouping_keys.remove(existing_key)
+        if operation_type == 'append' or operation_type == 'name':
             new_array = append_array_by_keys(new_array, grouping_keys, [sum_key])
         elif operation_type == 'mean':
             new_array = operate_array_by_key(new_array, grouping_keys, sum_key,'mean')
@@ -968,6 +980,8 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
         sum_key = sum_key + str(incrementing_value)
     for required_key in required_keys:
         allowed_values = value_ranges[required_key] if required_key in value_ranges else None
+        if allowed_values is not None:
+            allowed_values = [str(x) for x in allowed_values]
         search_key = str(existing_key) + '_' + str(required_key)
         key_details = count_details_direct_match_multiple[search_key]
         model_name = key_details['model_name']
@@ -994,7 +1008,8 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
     all_keys = list(curr_dict.keys())
     grouping_keys = all_keys
     grouping_keys.remove(sum_key)
-    grouping_keys.remove(existing_key)
+    if existing_key in grouping_keys:
+        grouping_keys.remove(existing_key)
     if operation_type == 'append':
         new_array = append_array_by_keys(new_array, grouping_keys, [sum_key])
     elif operation_type == 'mean':
@@ -1034,6 +1049,7 @@ def truncate_by_value_ranges(dict_array, value_ranges, range_type=0):
         for curr_key in value_ranges:
             curr_range = value_ranges[curr_key]
             curr_dict_value = curr_dict[curr_key]
+            curr_range = [str(x) for x in curr_range]
             if str(curr_dict_value) not in curr_range:
                 match=0
                 break
@@ -1043,6 +1059,7 @@ def truncate_by_value_ranges(dict_array, value_ranges, range_type=0):
 
 
 # this function is used to get selected value of a chosen field on the basis of match from another field
+# in the database
 def get_constrained_values(model_name, grouping_field, constraining_dict):
     basic_query = model_name +'.objects'
     for curr_field in constraining_dict.keys():

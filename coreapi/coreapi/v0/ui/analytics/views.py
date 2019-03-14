@@ -454,32 +454,32 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     parent_type = 'single'
     original_grouping_levels = None
     superlevels = [x for x in grouping_levels if x in reverse_direct_match]
+    superlevels_base = []
     if len(superlevels)>0:
         original_grouping_levels = grouping_levels.copy()
         for i in range(0,len(grouping_levels)):
             if grouping_levels[i] in reverse_direct_match and \
-                    reverse_direct_match[grouping_levels[i]] == second_lowest_parent:
+                    (reverse_direct_match[grouping_levels[i]] in second_lowest_parent or
+                     reverse_direct_match[grouping_levels[i]] == lowest_level):
                 grouping_levels[i] = reverse_direct_match[grouping_levels[i]]
-
+                superlevels_base.append(grouping_levels[i])
     if ',' in second_lowest_parent or ',' in second_lowest_parent_name_model:
         parents = [x.strip() for x in second_lowest_parent.split(',')]
-        original_grouping_levels = grouping_levels.copy()
+        original_grouping_levels = grouping_levels.copy() if original_grouping_levels is None \
+            else original_grouping_levels
 
         if (highest_level_original == 'city' or highest_level_original in reverse_direct_match) \
                 and len(grouping_levels)>1 and grouping_levels[1] in reverse_direct_match:
             original_grouping_levels = [grouping_levels[1]]
-        superlevels_base = []
         for i in range(0,len(grouping_levels)):
             if grouping_levels[i] in reverse_direct_match and reverse_direct_match[grouping_levels[i]] in parents:
                 grouping_levels[i] = reverse_direct_match[grouping_levels[i]]
-                superlevels_base.append(grouping_levels[i])
         desc_sequence = [parents, lowest_level]
         parent_model_names = second_lowest_parent_name_model.split(',')
         if not parents[0] == highest_level:
             parent_type = 'multiple'
         else:
             second_lowest_parent = parents[0]
-
     if parent_type == 'single':
         desc_sequence = find_level_sequence(highest_level, lowest_level, default_map)
         #parent_type = 'single'
