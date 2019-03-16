@@ -7,11 +7,10 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     count_details_parent_map_time, date_to_other_groups, merge_dict_array_array_multiple_keys,
                     merge_dict_array_dict_multiple_keys, count_details_parent_map_multiple, sum_array_by_keys,
                     sum_array_by_single_key, append_array_by_keys, frequency_mode_calculator, var_stdev_calculator,
-                    mean_calculator, count_details_parent_map_custom, add_supplier_name, flatten, flatten_dict_array,
-                    round_sig_min, time_parent_names, raw_data_unrestricted, add_campaign_name, add_vendor_name,
+                    mean_calculator, count_details_parent_map_custom, flatten, flatten_dict_array,
+                    round_sig_min, time_parent_names, raw_data_unrestricted,
                     key_replace_group_multiple, key_replace_group, truncate_by_value_ranges, linear_extrapolator,
-                    get_constrained_values, add_related_field, related_fields_dict)
-from v0.ui.campaign.views import calculate_mode
+                    get_constrained_values, add_related_field, related_fields_dict, calculate_mode)
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -24,6 +23,7 @@ from bson.objectid import ObjectId
 # from unittest.mock import patch
 # import unittest
 import numpy as np
+from v0.ui.campaign.models import CampaignAssignment
 
 statistics_map = {"z_score": z_calculator_array_multiple, "frequency_distribution": frequency_mode_calculator,
                   "variance_stdev": var_stdev_calculator, "mean": mean_calculator,
@@ -911,4 +911,35 @@ class RangeAPIView(APIView):
                                                       "organisation_id": data['organisation_id'],
                                                       "range_data": range_data}})
         return handle_response('', data={}, success=True)
+
+
+def get_all_assigned_campaigns_vendor_city(user_id, city_list = None, vendor_list = None):
+    if vendor_list is not None:
+        vendor_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id,
+                        campaign__principal_vendor__in=vendor_list).values_list('campaign_id', flat=True).distinct()
+        final_result = vendor_campaigns
+    else:
+        final_result = []
+    if city_list is not None:
+        city_suppliers_result = get_details_by_higher_level_geographical('city',city_list)
+        city_suppliers_list = city_suppliers_result['single_list']
+        print(city_suppliers_list)
+        city_campaigns = ShortlistedSpaces.objects.filter(object_id__in=city_suppliers_list).values_list\
+            ('proposal_id', flat=True).distinct()
+        final_result = city_campaigns
+        if vendor_list is not None:
+            final_result = list(set(vendor_campaigns).intersection(set(city_campaigns)))
+    return final_result
+
+
+class CityVendorCampaigns(APIView):
+    @staticmethod
+    def put(request):
+        user_id = request.user.id
+        print(user_id)
+        user_data = request.data
+        city_list = user_data.get('cities', None)
+        vendor_list = user_data.get('vendors', None)
+        all_assigned_campaigns = get_all_assigned_campaigns_vendor_city(user_id, city_list, vendor_list)
+        return handle_response({}, data=all_assigned_campaigns, success=True)
 

@@ -833,12 +833,10 @@ def add_related_field(dict_array, model_name, self_name_model, self_name,
     if self_name not in dict_array[0]:
         return dict_array
     self_values = list(flatten([x[self_name] for x in dict_array]))
-    print(self_values)
     model_data_query = model_name+'.objects.filter('+self_name_model+'__in=self_values)'
     model_data = eval(model_data_query).values_list(self_name_model,related_name_model)
     model_data_dict = dict(model_data)
     new_dict_array = []
-    print("mdd:",model_data_dict)
     for curr_dict in dict_array:
         col_value = curr_dict[self_name]
         if isinstance(col_value,list):
@@ -1069,3 +1067,24 @@ def get_constrained_values(model_name, grouping_field, constraining_dict):
     final_dict = list(eval(curr_query).values_list(grouping_field,flat=True))
     return final_dict
 
+
+def calculate_mode(num_list,window_size=3):
+    if len(num_list) == 0:
+        return None
+    if len(num_list) == 1:
+        return num_list[0]
+    freq_by_windows = [0 for i in range(0,(num_list[-1] - num_list[0])//2 + 1)]
+    for num in num_list:
+        window_index = (num - num_list[0])//window_size
+        freq_by_windows[window_index] += 1
+    max_freq_index = 0
+    max_freq_value = 0
+
+    for idx,freq in enumerate(freq_by_windows):
+        if freq >= max_freq_value:
+            max_freq_index = idx
+            max_freq_value = freq
+    max_index_lower = num_list[0] + window_size * max_freq_index
+    max_index_upper = max_index_lower + window_size - 1
+    mode = float((max_index_upper + max_index_lower))/2.0
+    return mode
