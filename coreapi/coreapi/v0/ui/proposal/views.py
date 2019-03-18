@@ -2423,7 +2423,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     shortlisted_spaces_list = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
     shortlisted_spaces_by_phase_dict = {}
     all_phases = SupplierPhase.objects.filter(campaign_id=campaign_id).all()
-    all_ss_comments = CampaignComments.objects.filter(campaign_id=campaign_id).all()
+    all_ss_comments = CampaignComments.objects.filter(campaign_id=campaign_id, related_to='EXTERNAL').all()
     all_ss_comments_dict = {}
     for single_ss_comment in all_ss_comments:
         if single_ss_comment.shortlisted_spaces_id not in all_ss_comments_dict:

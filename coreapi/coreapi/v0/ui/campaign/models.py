@@ -184,8 +184,8 @@ class GenericExportFileName(BaseModel):
 
 class CampaignComments(BaseModel):
     RELATED_TO_CHOICES = (
-        ('BOOKING', 'BOOKING'),
-        ('EXECUTION', 'EXECUTION')
+        ('INTERNAL', 'INTERNAL'),
+        ('EXTERNAL', 'EXTERNAL')
     )
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, on_delete=models.CASCADE)
     comment = models.CharField(max_length=500, null=True, blank=True)
