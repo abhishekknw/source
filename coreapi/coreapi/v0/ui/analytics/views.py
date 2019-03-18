@@ -916,19 +916,21 @@ class RangeAPIView(APIView):
 def get_all_assigned_campaigns_vendor_city(user_id, city_list = None, vendor_list = None):
     if vendor_list is not None:
         vendor_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id,
-                        campaign__principal_vendor__in=vendor_list).values_list('campaign_id', flat=True).distinct()
-        final_result = vendor_campaigns
+                                                             campaign__principal_vendor__in=vendor_list).values_list(
+            'campaign_id', flat=True).distinct()
+        final_list = vendor_campaigns
     else:
-        final_result = []
+        final_list = []
     if city_list is not None:
         city_suppliers_result = get_details_by_higher_level_geographical('city',city_list)
         city_suppliers_list = city_suppliers_result['single_list']
-        print(city_suppliers_list)
         city_campaigns = ShortlistedSpaces.objects.filter(object_id__in=city_suppliers_list).values_list\
             ('proposal_id', flat=True).distinct()
-        final_result = city_campaigns
+        final_list = city_campaigns
         if vendor_list is not None:
-            final_result = list(set(vendor_campaigns).intersection(set(city_campaigns)))
+            final_list = list(set(vendor_campaigns).intersection(set(city_campaigns)))
+    final_result = dict(ProposalInfo.objects.filter(proposal_id__in=final_list).values_list('proposal_id','name'))
+    print(final_result)
     return final_result
 
 
@@ -936,10 +938,10 @@ class CityVendorCampaigns(APIView):
     @staticmethod
     def put(request):
         user_id = request.user.id
-        print(user_id)
         user_data = request.data
         city_list = user_data.get('cities', None)
         vendor_list = user_data.get('vendors', None)
         all_assigned_campaigns = get_all_assigned_campaigns_vendor_city(user_id, city_list, vendor_list)
+
         return handle_response({}, data=all_assigned_campaigns, success=True)
 
