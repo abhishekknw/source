@@ -929,7 +929,8 @@ def get_all_assigned_campaigns_vendor_city(user_id, city_list = None, vendor_lis
         final_list = city_campaigns
         if vendor_list is not None:
             final_list = list(set(vendor_campaigns).intersection(set(city_campaigns)))
-    final_result = ProposalInfo.objects.filter(proposal_id__in=final_list).values_list('proposal_id','name')
+    final_result = ProposalInfo.objects.filter(proposal_id__in=final_list).extra(select={
+                    'campaign_id': 'proposal_id', 'campaign_name':'name'}).values('campaign_id','campaign_name')
     return final_result
 
 
