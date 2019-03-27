@@ -36,7 +36,7 @@ urlpatterns = [
     url(r'^campaign-wise-summary/$', CampaignWiseSummary.as_view()),
     url(r'^vendor-wise-summary/$', VendorWiseSummary.as_view()),
     url(r'^assigned-campaigns/$', AssignedCampaigns.as_view()),
-    url(r'^vendors-details/$', VendorDetails.as_view()),
+    url(r'^vendors-details/$', VendorDetails.as_view())
 ]
 
 router = DefaultRouter()

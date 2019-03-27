@@ -2107,3 +2107,4 @@ class VendorDetails(APIView):
         for vendor in all_vendors:
             all_vendors_dict[vendor.organisation_id] = {'name': vendor.name}
         return ui_utils.handle_response({}, data=all_vendors_dict, success=True)
+
