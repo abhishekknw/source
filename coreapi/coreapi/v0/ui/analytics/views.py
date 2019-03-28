@@ -195,7 +195,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_output = final_value
         individual_metric_output[lowest_level] = curr_output
 
-
     reverse_map = {}
     if data_summary == 0:
         if grouping_level[0] in reverse_direct_match.keys() or data_scope_category == 'geographical' \
@@ -722,7 +721,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 if len(superlevels)>1:
                     single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
                                     superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
-                else:
+                elif len(superlevels)==1:
                     single_array_results = key_replace_group(single_array_results, superlevels_base_set[0],
                                 superlevels[0], lowest_level, value_ranges, incrementing_value, storage_type)
     else:
@@ -929,7 +928,8 @@ def get_all_assigned_campaigns_vendor_city(user_id, city_list = None, vendor_lis
         final_list = city_campaigns
         if vendor_list is not None:
             final_list = list(set(vendor_campaigns).intersection(set(city_campaigns)))
-    final_result = ProposalInfo.objects.filter(proposal_id__in=final_list).values_list('proposal_id','name')
+    final_result = ProposalInfo.objects.filter(proposal_id__in=final_list).extra(select={
+                    'campaign_id': 'proposal_id', 'campaign_name':'name'}).values('campaign_id','campaign_name')
     return final_result
 
 
