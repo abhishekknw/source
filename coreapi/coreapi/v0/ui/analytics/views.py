@@ -925,11 +925,13 @@ def get_all_assigned_campaigns_vendor_city(user_id, city_list = None, vendor_lis
         city_suppliers_list = city_suppliers_result['single_list']
         city_campaigns = ShortlistedSpaces.objects.filter(object_id__in=city_suppliers_list).values_list\
             ('proposal_id', flat=True).distinct()
-        final_list = city_campaigns
+        city_assigned_campaigns = CampaignAssignment.objects.filter(
+            assigned_to_id=user_id, campaign_id__in=city_campaigns).values_list('campaign_id', flat=True).distinct()
+        final_list = city_assigned_campaigns
         if vendor_list is not None:
-            final_list = list(set(vendor_campaigns).intersection(set(city_campaigns)))
+            final_list = list(set(vendor_campaigns).intersection(set(city_assigned_campaigns)))
     final_result = ProposalInfo.objects.filter(proposal_id__in=final_list).extra(select={
-                    'campaign_id': 'proposal_id', 'campaign_name':'name'}).values('campaign_id','campaign_name')
+                    'campaign_id': 'proposal_id', 'campaign_name': 'name'}).values('campaign_id', 'campaign_name')
     return final_result
 
 
