@@ -2118,14 +2118,4 @@ class UserCities(APIView):
         campaign_cities = ProposalCenterMapping.objects.filter(proposal_id__in=all_campaign_ids).values_list(
             "city", flat=True)
         campaign_cities_distinct = list(set(campaign_cities))
-        # for campaign in all_assigned_campaigns:
-        #     if campaign['proposal_id']:
-        #         if campaign['proposal_id'] not in all_campaign_ids:
-        #             all_campaign_ids.append(campaign['proposal_id'])
-        #             supplier_list = ShortlistedSpaces.objects.filter(proposal_id=campaign['proposal_id']).values_list(
-        #                 'object_id', flat=True).distinct()
-        #             campaign_cities = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_list).values_list(
-        #                 "society_city", flat=True)
-        #             city_list = city_list + list(campaign_cities)
-        # city_list = list(set(city_list))
         return ui_utils.handle_response({}, data={"list_of_cities": campaign_cities_distinct}, success=True)
