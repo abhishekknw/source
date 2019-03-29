@@ -7,7 +7,7 @@ from django.db.models import Count, Sum
 from dateutil import tz
 from datetime import datetime
 from datetime import timedelta
-from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, SupplierPhase, HashTagImages
+from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, SupplierPhase, HashTagImages, ProposalCenterMapping
 from v0.ui.organisation.models import Organisation
 from v0.ui.utils import handle_response, calculate_percentage
 from django.utils import timezone
@@ -2108,3 +2108,24 @@ class VendorDetails(APIView):
             all_vendors_dict[vendor.organisation_id] = {'name': vendor.name}
         return ui_utils.handle_response({}, data=all_vendors_dict, success=True)
 
+
+class UserCities(APIView):
+    @staticmethod
+    def get(request):
+        user_id = request.user.id
+        all_assigned_campaigns = get_all_assigned_campaigns(user_id, None)
+        all_campaign_ids = [campaign['proposal_id'] for campaign in all_assigned_campaigns]
+        campaign_cities = ProposalCenterMapping.objects.filter(proposal_id__in=all_campaign_ids).values_list(
+            "city", flat=True)
+        campaign_cities_distinct = list(set(campaign_cities))
+        # for campaign in all_assigned_campaigns:
+        #     if campaign['proposal_id']:
+        #         if campaign['proposal_id'] not in all_campaign_ids:
+        #             all_campaign_ids.append(campaign['proposal_id'])
+        #             supplier_list = ShortlistedSpaces.objects.filter(proposal_id=campaign['proposal_id']).values_list(
+        #                 'object_id', flat=True).distinct()
+        #             campaign_cities = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_list).values_list(
+        #                 "society_city", flat=True)
+        #             city_list = city_list + list(campaign_cities)
+        # city_list = list(set(city_list))
+        return ui_utils.handle_response({}, data={"list_of_cities": campaign_cities_distinct}, success=True)
