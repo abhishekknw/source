@@ -548,31 +548,52 @@ def on_login(sender, user, request, **kwargs):
 
 class LoginLog(APIView):
     def get(self, request):
-        page_no = int(request.GET.get('page', 1))
+        page_no = int(request.GET.get('page', 1git pull origin dev-server))
         total_logs = 25
         user = request.user
         user_id = user.id
         profile_id = user.profile_id
         profile = Profile.objects.filter(id=profile_id).all()
+        print(profile[0].name)
         if len(profile) == 0:
             return
-        organisation_id = profile[0].organisation_id
-        organisation = Organisation.objects.get(organisation_id=organisation_id)
-        activity_log = ActivityLog.objects.filter(organisation_id=organisation_id).order_by('-created_at')[total_logs * (page_no-1):total_logs * (page_no)].all()
-        log_data = []
-        for activity in activity_log:
-            curr_activity = {}
-            curr_activity['organisation_name'] = organisation.name
-            curr_activity['organisation_id'] = organisation.organisation_id
-            curr_activity['user_id'] = activity.user.id
-            curr_activity['username'] = activity.user.username
-            curr_activity['first_name'] = activity.user.first_name
-            curr_activity['last_name'] = activity.user.last_name
-            curr_activity['email'] = activity.user.email
-            from_zone = tz.gettz('UTC')
-            to_zone = tz.gettz('Asia/Kolkata')
-            curr_activity['login_timestamp'] = activity.created_at.replace(tzinfo=from_zone).astimezone(to_zone)
-            log_data.append(curr_activity)
+        if profile[0].name == "machadalo admin":
+            activity_log = ActivityLog.objects.order_by('-created_at')[
+                           total_logs * (page_no - 1):total_logs * (page_no)].all()
+            log_data = []
+            print(activity_log)
+            for activity in activity_log:
+                print(activity)
+                curr_activity = {}
+                curr_activity['organisation_name'] = activity.organisation.name
+                curr_activity['organisation_id'] = activity.organisation_id
+                curr_activity['user_id'] = activity.user.id
+                curr_activity['username'] = activity.user.username
+                curr_activity['first_name'] = activity.user.first_name
+                curr_activity['last_name'] = activity.user.last_name
+                curr_activity['email'] = activity.user.email
+                from_zone = tz.gettz('UTC')
+                to_zone = tz.gettz('Asia/Kolkata')
+                curr_activity['login_timestamp'] = activity.created_at.replace(tzinfo=from_zone).astimezone(to_zone)
+                log_data.append(curr_activity)
+        else:
+            organisation_id = profile[0].organisation_id
+            organisation = Organisation.objects.get(organisation_id=organisation_id)
+            activity_log = ActivityLog.objects.filter(organisation_id=organisation_id).order_by('-created_at')[total_logs * (page_no-1):total_logs * (page_no)].all()
+            log_data = []
+            for activity in activity_log:
+                curr_activity = {}
+                curr_activity['organisation_name'] = organisation.name
+                curr_activity['organisation_id'] = organisation.organisation_id
+                curr_activity['user_id'] = activity.user.id
+                curr_activity['username'] = activity.user.username
+                curr_activity['first_name'] = activity.user.first_name
+                curr_activity['last_name'] = activity.user.last_name
+                curr_activity['email'] = activity.user.email
+                from_zone = tz.gettz('UTC')
+                to_zone = tz.gettz('Asia/Kolkata')
+                curr_activity['login_timestamp'] = activity.created_at.replace(tzinfo=from_zone).astimezone(to_zone)
+                log_data.append(curr_activity)
         return ui_utils.handle_response({}, data=log_data, success=True)
 
 
