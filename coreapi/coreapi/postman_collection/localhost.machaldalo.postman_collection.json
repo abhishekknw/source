@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "ff30dec7-39fa-4235-930e-b2d870bb82f4",
+		"_postman_id": "ba41592e-c8a6-4247-b882-a447e51a356b",
 		"name": "localhost.machaldalo",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -1457,7 +1457,6 @@
 						"method": "POST",
 						"header": [
 							{
-								"disabled": false,
 								"key": "Authorization",
 								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
 							},
@@ -1468,9 +1467,9 @@
 								"value": "application/x-www-form-urlencoded"
 							},
 							{
-								"disabled": true,
 								"key": "is_import_sheet",
-								"value": "true"
+								"value": "true",
+								"disabled": true
 							}
 						],
 						"body": {
@@ -1547,8 +1546,7 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
-								"disabled": false
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
 							},
 							{
 								"key": "Content-Type",
@@ -1637,8 +1635,7 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
-								"disabled": false
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
 							},
 							{
 								"key": "Content-Type",
@@ -2189,8 +2186,453 @@
 						}
 					],
 					"_postman_isSubFolder": true
+				},
+				{
+					"name": "booking_data",
+					"item": [
+						{
+							"name": "save booking",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http:localhost:8000/v0/ui/dynamic-booking/booking-data/",
+									"host": [
+										"http:localhost"
+									],
+									"port": "8000",
+									"path": [
+										"v0",
+										"ui",
+										"dynamic-booking",
+										"booking-data",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "fetch bookings in campaign",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://localhost:8001/v0/ui/dynamic-booking/booking-data/<campaign-id>",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8001",
+									"path": [
+										"v0",
+										"ui",
+										"dynamic-booking",
+										"booking-data",
+										"<campaign-id>"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "edit booking with id",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/<booking-id>",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"v0",
+										"ui",
+										"dynamic-booking",
+										"booking-data",
+										"<booking-id>"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "fetch booking using booking-id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/<booking-id>",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"v0",
+										"ui",
+										"dynamic-booking",
+										"booking-data",
+										"<booking-id>"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete camapaign ",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/campaign/<campaign-id>",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"v0",
+										"ui",
+										"dynamic-booking",
+										"booking-data",
+										"campaign",
+										"<campaign-id>"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "delete booking using booking id",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/<booking-id>",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"v0",
+										"ui",
+										"dynamic-booking",
+										"booking-data",
+										"<booking-id>"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "a29f469a-9d0f-4ffd-91a4-8853c69d5058",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "a8b780b3-fba8-43c7-b928-399d6b178a8d",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
 				}
 			]
+		},
+		{
+			"name": "localhost:8001/v0/ui/analytics/city-vendor-campaigns/",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "is_import_sheet",
+						"value": "true",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n \"vendors\":[\"MAC1421\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:8000/v0/ui/analytics/city-vendor-campaigns/",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"v0",
+						"ui",
+						"analytics",
+						"city-vendor-campaigns",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8000/v0/ui/campaign/user-cities/",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "is_import_sheet",
+						"value": "true",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n \"vendors\":[\"MAC1421\"]\n}"
+				},
+				"url": {
+					"raw": "localhost:8000/v0/ui/campaign/user-cities/",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"v0",
+						"ui",
+						"campaign",
+						"user-cities",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8000/v0/ui/users/",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "is_import_sheet",
+						"value": "true",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost:8000/v0/ui/campaign/user-cities/",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"v0",
+						"ui",
+						"campaign",
+						"user-cities",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8000/api-token-auth/",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjgxYjVhODRjLTNiYjktNDRiMy04Yzc3LTNkY2ZiMGI3MTRiYiJ9.-ZfKEAOaYio_mn2pHjAe1SvlsPOqrExdvZ_OZPPdCEQ",
+						"disabled": true
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"disabled": false
+					},
+					{
+						"key": "is_sp_website",
+						"value": "True",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\": \"admin\",\n\t\"password\": \"admin\"\n}"
+				},
+				"url": {
+					"raw": "http://13.232.210.224:8000/api-token-auth/",
+					"protocol": "http",
+					"host": [
+						"13",
+						"232",
+						"210",
+						"224"
+					],
+					"port": "8000",
+					"path": [
+						"api-token-auth",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8000/v0/ui/users/",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6InlvZ2VzaC5taGV0cmVAbWFjaGFkYWxvLmNvbSIsInVzZXJuYW1lIjoidmlkaGlkZXZlbG9wbWVudCIsIm5hbWUiOiJBZG1pbiIsImV4cCI6MTU1Mzg2NTA2Niwib3JpZ19pYXQiOjE1NTM4NjQ3NjZ9.hsnAaPAzvi-nNt2sq7e4Lqsd-94xODcP5FeAGcaHz8w"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "is_import_sheet",
+						"value": "true",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "http://localhost:8000/v0/ui/users/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"v0",
+						"ui",
+						"users",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8000/v0/ui/website/organisation/",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6InlvZ2VzaC5taGV0cmVAbWFjaGFkYWxvLmNvbSIsInVzZXJuYW1lIjoidmlkaGlkZXZlbG9wbWVudCIsIm5hbWUiOiJBZG1pbiIsImV4cCI6MTU1Mzg2NTA2Niwib3JpZ19pYXQiOjE1NTM4NjQ3NjZ9.hsnAaPAzvi-nNt2sq7e4Lqsd-94xODcP5FeAGcaHz8w"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "is_import_sheet",
+						"value": "true",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "localhost:8000/v0/ui/website/organisation/",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"v0",
+						"ui",
+						"website",
+						"organisation",
+						""
+					]
+				}
+			},
+			"response": []
 		}
 	]
 }
