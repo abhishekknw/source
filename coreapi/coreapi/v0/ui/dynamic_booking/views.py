@@ -5,6 +5,8 @@ from .models import BaseBookingTemplate, BookingTemplate, BookingData
 from datetime import datetime
 from bson.objectid import ObjectId
 from .utils import validate_booking
+from v0.ui.dynamic_entities.models import SupplyEntity
+
 
 class BaseBookingTemplateView(APIView):
     @staticmethod
@@ -150,9 +152,10 @@ class BookingDataView(APIView):
         booking_attributes = request.data['booking_attributes'] if 'booking_attributes' in request.data else None
         organisation_id = get_user_organisation_id(request.user)
         entity_id = request.data['entity_id'] if 'entity_id' in request.data else None
+        booking_template_id = request.data['booking_template_id'] if 'booking_template_id' in request.data else None
 
         dict_of_req_attributes = {"booking_attributes": booking_attributes, "organisation_id": organisation_id,
-                                  "entity_id": entity_id, "campaign_id": campaign_id}
+                                  "entity_id": entity_id, "campaign_id": campaign_id, "booking_template_id": booking_template_id}
 
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
@@ -192,20 +195,32 @@ class BookingDataById(APIView):
         return handle_response('', data="success", success=True)
 
 
+def get_entity_attributes(entity_id, entity_attributes):
+    all_entity_attribute_names = [entity['name'] for entity in entity_attributes]
+    entity_object = SupplyEntity.objects.raw({"_id": ObjectId(entity_id)})[0]
+    final_attributes = []
+    for entity in entity_object.entity_attributes:
+        if entity['name'] in all_entity_attribute_names:
+            final_attributes.append(entity)
+    return final_attributes
+
+
 class BookingDataByCampaignId(APIView):
     @staticmethod
     def get(request, campaign_id):
-        data_all = BookingData.objects.raw({'_campaign_id': ObjectId(campaign_id)})
+        data_all = list(BookingData.objects.raw({'campaign_id': campaign_id}))
+        all_entity_ids = [data.entity_id for data in data_all]
+        booking_template_id = data_all[0].booking_template_id
+        booking_template = BookingTemplate.objects.raw({"_id": ObjectId(booking_template_id)})[0]
         final_data_list = []
         for data in data_all:
             final_data = {}
             final_data['booking_attributes'] = data.booking_attributes
-            final_data['entity_attributes'] = data.entity_attributes
-            final_data['name'] = data.name if 'name' in data else None
+            final_data['entity_attributes'] = get_entity_attributes(data.entity_id, booking_template.entity_attributes)
             final_data['entity_id'] = data.entity_id
             final_data['organisation_id'] = data.organisation_id
             final_data['campaign_id'] = data.campaign_id
-            final_data['booking_id'] = data.booking_id
+            final_data['booking_template_id'] = data.booking_template_id
             final_data_list.append(final_data)
         return handle_response('', data=final_data_list, success=True)
 

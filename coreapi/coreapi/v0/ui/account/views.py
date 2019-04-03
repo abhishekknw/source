@@ -548,7 +548,7 @@ def on_login(sender, user, request, **kwargs):
 
 class LoginLog(APIView):
     def get(self, request):
-        page_no = int(request.GET.get('page', 1git pull origin dev-server))
+        page_no = int(request.GET.get('page', 1))
         total_logs = 25
         user = request.user
         user_id = user.id
