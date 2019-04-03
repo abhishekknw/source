@@ -146,17 +146,13 @@ class BookingTemplateById(APIView):
 class BookingDataView(APIView):
     @staticmethod
     def post(request):
-        name = request.data['name'] if 'name' in request.data else None
-        booking_id = request.data['booking_id'] if 'booking_id' in request.data else None
         campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data else None
         booking_attributes = request.data['booking_attributes'] if 'booking_attributes' in request.data else None
-        entity_attributes = request.data['entity_attributes'] if 'entity_attributes' in request.data else None
         organisation_id = get_user_organisation_id(request.user)
         entity_id = request.data['entity_id'] if 'entity_id' in request.data else None
 
-        dict_of_req_attributes = {"name": name, "entity_attributes": entity_attributes,
-                                  "booking_attributes": booking_attributes, "organisation_id": organisation_id,
-                                  "entity_id": entity_id, "booking_id": booking_id, "campaign_id": campaign_id}
+        dict_of_req_attributes = {"booking_attributes": booking_attributes, "organisation_id": organisation_id,
+                                  "entity_id": entity_id, "campaign_id": campaign_id}
 
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
