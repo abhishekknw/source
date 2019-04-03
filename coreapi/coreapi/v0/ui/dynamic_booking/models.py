@@ -34,3 +34,18 @@ class BookingTemplate(MongoModel):
     class Meta:
         write_concern = WriteConcern(j=True)
         connection_alias = 'mongo_app'
+
+
+class BookingData(MongoModel):
+    booking_template_id = fields.CharField()
+    campaign_id = fields.CharField()
+    entity_id = fields.CharField()
+    organisation_id = fields.CharField()
+    booking_attributes = fields.ListField()
+    created_by = fields.CharField()
+    created_at = fields.DateTimeField()
+    updated_at = fields.DateTimeField()
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'mongo_app'
