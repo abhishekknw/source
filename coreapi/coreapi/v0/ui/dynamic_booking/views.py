@@ -187,15 +187,14 @@ class BookingDataById(APIView):
     @staticmethod
     def put(request, booking_data_id):
         booking_attributes = request.data['booking_attributes'] if 'booking_attributes' in request.data else None
-        print(booking_data_id)
         if booking_attributes:
             BookingData.objects.raw({'_id': ObjectId(booking_data_id)}).update(
                 {"$set": {"booking_attributes": booking_attributes, "updated_at": datetime.now()}})
         return handle_response('', data={"success": True}, success=True)
 
     @staticmethod
-    def delete(request, booking_id):
-        exist_query = BookingData.objects.raw({'_booking_id': ObjectId(booking_id)})
+    def delete(request, booking_data_id):
+        exist_query = BookingData.objects.raw({'_id': ObjectId(booking_data_id)})
         exist_query.delete()
         return handle_response('', data="success", success=True)
 
@@ -232,7 +231,7 @@ class BookingDataByCampaignId(APIView):
 
     @staticmethod
     def delete(request, campaign_id):
-        exist_query = BookingData.objects.raw({'_campaign_id': ObjectId(campaign_id)})
+        exist_query = BookingData.objects.raw({'campaign_id': campaign_id})
         exist_query.delete()
         return handle_response('', data="success", success=True)
 
