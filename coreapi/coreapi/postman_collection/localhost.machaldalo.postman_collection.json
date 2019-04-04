@@ -1983,15 +1983,15 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\"name\":\"Society Booking\", \n\"booking_attributes\":[{\"name\":\"Price Per Flat\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"is_poster_allowed\",\"type\":\"BOOLEAN\", \"is_required\":true}, {\"name\": \"mode of payment\", \"type\":\"DROPDOWN\", \"options\":[\"NEFT\",\"CASH\",\"ONLINE\"]}],\n\"entity_attributes\":[{\"name\":\"Latitude\",\"is_required\":true},{\"name\":\"Longitude\",\"is_required\":true}, {\"name\": \"Sub Area\"}],\"entity_type_id\": \"5c66858c2f2bc66625d229fa\", \"base_booking_template_id\": \"5c66829e2f2bc6117aac7c75\"\n}"
+									"raw": "{\"name\":\"Society Booking\", \n\"booking_attributes\":[{\"name\":\"Price Per Flat\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"is_poster_allowed\",\"type\":\"BOOLEAN\", \"is_required\":true}, {\"name\": \"mode of payment\", \"type\":\"DROPDOWN\", \"options\":[\"NEFT\",\"CASH\",\"ONLINE\"]}],\n\"entity_attributes\":[{\"name\":\"Latitude\",\"is_required\":true},{\"name\":\"Longitude\",\"is_required\":true}, {\"name\": \"Sub Area\"}],\"entity_type_id\": \"5ca4ad779cb7fc6da6d92797\", \"base_booking_template_id\": \"5ca4adc39cb7fc6da6d92798\"\n}"
 								},
 								"url": {
-									"raw": "http://localhost:8001/v0/ui/dynamic-booking/booking-template/",
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/",
 									"protocol": "http",
 									"host": [
 										"localhost"
 									],
-									"port": "8001",
+									"port": "8000",
 									"path": [
 										"v0",
 										"ui",
@@ -2194,15 +2194,28 @@
 							"name": "save booking",
 							"request": {
 								"method": "POST",
-								"header": [],
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+										"type": "text"
+									}
+								],
 								"body": {
 									"mode": "raw",
-									"raw": ""
+									"raw": "{\n\"booking_template_id\": \"5ca4ae3e9cb7fc6da6d92799\",\n\"entity_id\": \"5ca4afad9cb7fc6da6d9279a\",\n\"booking_attributes\": [{\"name\":\"Price Per Flat\",\"type\":\"FLOAT\", \"is_required\":true, \"value\": 200.5},{\"name\":\"is_poster_allowed\",\"type\":\"BOOLEAN\", \"is_required\":true, \"value\": true}, {\"name\": \"mode of payment\", \"type\":\"DROPDOWN\", \"options\":[\"NEFT\",\"CASH\",\"ONLINE\"], \"value\": \"CASH\"}], \n\"organisation_id\": \"someid\", \"campaign_id\": \"BYJMACBB24\"}"
 								},
 								"url": {
-									"raw": "http:localhost:8000/v0/ui/dynamic-booking/booking-data/",
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/",
+									"protocol": "http",
 									"host": [
-										"http:localhost"
+										"localhost"
 									],
 									"port": "8000",
 									"path": [
@@ -2220,94 +2233,24 @@
 							"name": "fetch bookings in campaign",
 							"request": {
 								"method": "GET",
-								"header": [],
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
 								"body": {
 									"mode": "raw",
 									"raw": ""
 								},
 								"url": {
-									"raw": "http://localhost:8001/v0/ui/dynamic-booking/booking-data/<campaign-id>",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "8001",
-									"path": [
-										"v0",
-										"ui",
-										"dynamic-booking",
-										"booking-data",
-										"<campaign-id>"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "edit booking with id",
-							"request": {
-								"method": "PUT",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": ""
-								},
-								"url": {
-									"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/<booking-id>",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "8000",
-									"path": [
-										"v0",
-										"ui",
-										"dynamic-booking",
-										"booking-data",
-										"<booking-id>"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "fetch booking using booking-id",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": ""
-								},
-								"url": {
-									"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/<booking-id>",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "8000",
-									"path": [
-										"v0",
-										"ui",
-										"dynamic-booking",
-										"booking-data",
-										"<booking-id>"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "delete camapaign ",
-							"request": {
-								"method": "DELETE",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": ""
-								},
-								"url": {
-									"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/campaign/<campaign-id>",
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/campaign/BYJMACBB24/",
 									"protocol": "http",
 									"host": [
 										"localhost"
@@ -2319,23 +2262,35 @@
 										"dynamic-booking",
 										"booking-data",
 										"campaign",
-										"<campaign-id>"
+										"BYJMACBB24",
+										""
 									]
 								}
 							},
 							"response": []
 						},
 						{
-							"name": "delete booking using booking id",
+							"name": "fetch booking using booking-id",
 							"request": {
-								"method": "DELETE",
-								"header": [],
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
 								"body": {
 									"mode": "raw",
 									"raw": ""
 								},
 								"url": {
-									"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/<booking-id>",
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/5ca4e8889cb7fcc9538e2987/",
 									"protocol": "http",
 									"host": [
 										"localhost"
@@ -2346,7 +2301,174 @@
 										"ui",
 										"dynamic-booking",
 										"booking-data",
-										"<booking-id>"
+										"5ca4e8889cb7fcc9538e2987",
+										""
+									],
+									"query": [
+										{
+											"key": "",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "",
+											"value": "",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/5ca4e8889cb7fcc9538e2987/",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\"booking_attributes\": [{\"name\":\"Price Per Flat\",\"type\":\"FLOAT\", \"is_required\":true, \"value\": 100.5},{\"name\":\"is_poster_allowed\",\"type\":\"BOOLEAN\", \"is_required\":true, \"value\": true}, {\"name\": \"mode of payment\", \"type\":\"DROPDOWN\", \"options\":[\"NEFT\",\"CASH\",\"ONLINE\"], \"value\": \"NEFT\"}]}"
+								},
+								"url": {
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/5ca4e8889cb7fcc9538e2987/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"v0",
+										"ui",
+										"dynamic-booking",
+										"booking-data",
+										"5ca4e8889cb7fcc9538e2987",
+										""
+									],
+									"query": [
+										{
+											"key": "",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "",
+											"value": "",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/5ca4e8889cb7fcc9538e2987/",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/5ca4e8889cb7fcc9538e2987/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"v0",
+										"ui",
+										"dynamic-booking",
+										"booking-data",
+										"5ca4e8889cb7fcc9538e2987",
+										""
+									],
+									"query": [
+										{
+											"key": "",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "",
+											"value": "",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/5ca4e8889cb7fcc9538e2987/",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/campaign/BYJMACBB24/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8000",
+									"path": [
+										"v0",
+										"ui",
+										"dynamic-booking",
+										"booking-data",
+										"campaign",
+										"BYJMACBB24",
+										""
+									],
+									"query": [
+										{
+											"key": "",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "",
+											"value": "",
+											"disabled": true
+										}
 									]
 								}
 							},
