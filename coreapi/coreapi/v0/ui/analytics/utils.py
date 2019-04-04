@@ -971,7 +971,7 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ran
 
 
 def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key, value_ranges = {},
-                               incrementing_value = None, operation_type = 'sum'):
+                               incrementing_value = None, operation_type = 'sum', base = 0):
     # if existing_key == required_key:
     #     return dict_array
     if incrementing_value is not None:
@@ -1008,6 +1008,10 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
     grouping_keys.remove(sum_key)
     if existing_key in grouping_keys:
         grouping_keys.remove(existing_key)
+    print("na:",new_array)
+    print("base = ",base)
+    if base == 1:
+        grouping_keys = grouping_keys + [existing_key]
     if operation_type == 'append':
         new_array = append_array_by_keys(new_array, grouping_keys, [sum_key])
     elif operation_type == 'mean':

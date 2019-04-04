@@ -64,8 +64,6 @@ def get_campaigns_from_vendors(vendor_list):
     return final_result
 
 
-# currently working with the following constraints:
-# exactly one scope restrictor with exact match, one type of data point
 def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
                        higher_level_statistical_information, bivariate_statistical_information):
     unilevel_constraints = {}
@@ -715,12 +713,14 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         if original_grouping_levels is not None:
             superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
             superlevels_base_set = list(set(superlevels_base))
+            base = len([x for x in original_grouping_levels if x == superlevels_base_set[0]])
             if len(superlevels_base_set)>1:
                 print("this is not developed yet")
             else:
-                if len(superlevels)>1:
+                if len(superlevels)>1 or base==1:
+                    print("sar:", single_array_results[0])
                     single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
-                                    superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
+                                    superlevels, lowest_level, value_ranges, incrementing_value, storage_type, base)
                 elif len(superlevels)==1:
                     single_array_results = key_replace_group(single_array_results, superlevels_base_set[0],
                                 superlevels[0], lowest_level, value_ranges, incrementing_value, storage_type)
