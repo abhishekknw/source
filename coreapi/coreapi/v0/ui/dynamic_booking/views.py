@@ -185,10 +185,12 @@ class BookingDataById(APIView):
         return handle_response('', data=final_data, success=True)
 
     @staticmethod
-    def put(request, booking_id):
-        data = request.data.copy()
-        data['updated_at'] = datetime.now()
-        BookingTemplate.objects.raw({'_id': ObjectId(booking_id)}).update({"$set": data})
+    def put(request, booking_data_id):
+        booking_attributes = request.data['booking_attributes'] if 'booking_attributes' in request.data else None
+        print(booking_data_id)
+        if booking_attributes:
+            BookingData.objects.raw({'_id': ObjectId(booking_data_id)}).update(
+                {"$set": {"booking_attributes": booking_attributes, "updated_at": datetime.now()}})
         return handle_response('', data={"success": True}, success=True)
 
     @staticmethod
