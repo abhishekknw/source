@@ -169,28 +169,32 @@ class BookingDataView(APIView):
 
 class BookingDataById(APIView):
     @staticmethod
-    def get(request, booking_id):
-        data = BookingData.objects.raw({'_booking_id': ObjectId(booking_id)})
+    def get(request, booking_data_id):
+        data = BookingData.objects.raw({'_id': ObjectId(booking_data_id)})[0]
+        booking_template_id = data.booking_template_id
+        booking_template = BookingTemplate.objects.raw({"_id": ObjectId(booking_template_id)})[0]
         final_data = dict()
         final_data['booking_attributes'] = data.booking_attributes
-        final_data['entity_attributes'] = data.entity_attributes
+        final_data['entity_attributes'] = get_entity_attributes(data.entity_id, booking_template.entity_attributes)
         final_data['name'] = data.name if 'name' in data else None
         final_data['entity_id'] = data.entity_id
         final_data['organisation_id'] = data.organisation_id
         final_data['campaign_id'] = data.campaign_id
-        final_data['booking_id'] = data.booking_id
+        final_data['booking_template_id'] = data.booking_template_id
+        final_data['id'] = str(data._id)
         return handle_response('', data=final_data, success=True)
 
     @staticmethod
-    def put(request, booking_id):
-        data = request.data.copy()
-        data['updated_at'] = datetime.now()
-        BookingTemplate.objects.raw({'_id': ObjectId(booking_id)}).update({"$set": data})
+    def put(request, booking_data_id):
+        booking_attributes = request.data['booking_attributes'] if 'booking_attributes' in request.data else None
+        if booking_attributes:
+            BookingData.objects.raw({'_id': ObjectId(booking_data_id)}).update(
+                {"$set": {"booking_attributes": booking_attributes, "updated_at": datetime.now()}})
         return handle_response('', data={"success": True}, success=True)
 
     @staticmethod
-    def delete(request, booking_id):
-        exist_query = BookingData.objects.raw({'_booking_id': ObjectId(booking_id)})
+    def delete(request, booking_data_id):
+        exist_query = BookingData.objects.raw({'_id': ObjectId(booking_data_id)})
         exist_query.delete()
         return handle_response('', data="success", success=True)
 
@@ -221,12 +225,13 @@ class BookingDataByCampaignId(APIView):
             final_data['organisation_id'] = data.organisation_id
             final_data['campaign_id'] = data.campaign_id
             final_data['booking_template_id'] = data.booking_template_id
+            final_data['id'] = str(data.booking_template_id)
             final_data_list.append(final_data)
         return handle_response('', data=final_data_list, success=True)
 
     @staticmethod
     def delete(request, campaign_id):
-        exist_query = BookingData.objects.raw({'_campaign_id': ObjectId(campaign_id)})
+        exist_query = BookingData.objects.raw({'campaign_id': campaign_id})
         exist_query.delete()
         return handle_response('', data="success", success=True)
 
