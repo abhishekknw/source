@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from rest_framework.views import APIView
 from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg
-from .models import SupplyEntityType, SupplyEntity
+from .models import BaseSupplyEntityType, SupplyEntityType, SupplyEntity
 from bson.objectid import ObjectId
 from datetime import datetime
 from .utils import validate_entity_type_data, validate_with_entity_type
@@ -175,19 +175,83 @@ class EntityTypeSociety(APIView):
     @staticmethod
     def get(request):
         supplier_objects = SupplierTypeSociety.objects.all()
-        print(supplier_objects)
         serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
-        print(serializer.data)
         society_list = serializer.data
+        new_base_entity_for_society = BaseSupplyEntityType(**{
+            "name": "Base Society",
+            "entity_attributes": [{"name":"supplier_id","type": "STRING"},
+                                  {"name":"society_name","type": "STRING"},
+                                  {"name":"society_address1","type": "STRING"},
+                                  {"name":"society_address2","type": "STRING"},
+                                  {"name":"society_zip","type": "STRING"},
+                                  {"name":"society_name","type": "STRING"},
+                                  {"name":"society_city","type": "STRING"},
+                                  {"name":"society_state", "type": "STRING"},
+                                  {"name":"society_longitude", "type": "STRING"},
+                                  {"name":"society_locality", "type": "STRING"},
+                                  {"name": "society_subarea", "type": "STRING"},
+                                  {"name": "society_latitude", "type": "STRING"},
+                                  {"name": "society_location_type", "type": "STRING"},
+                                  {"name": "society_type_quality", "type": "STRING"},
+                                  {"name": "society_type_quantity", "type": "STRING"},
+                                  {"name": "flat_count", "type": "STRING"},
+                                  {"name": "flat_avg_rental_persqft", "type": "STRING"},
+                                  {"name": "flat_sale_cost_persqft", "type": "STRING"},
+                                  {"name": "tower_count", "type": "INT"},
+                                  {"name": "payment_details_available", "type": "BOOLEAN"},
+                                  {"name": "age_of_society", "type": "INT"},
+                                  {"name": "total_tenant_flat_count", "type": "INT"},
+                                  {"name": "landmark", "type": "STRING"},
+                                  {"name": "name_for_payment", "type": "STRING"},
+                                  {"name": "bank_name", "type": "STRING  "},
+                                  {"name": "ifsc_code", "type": "STRING"},
+                                  {"name": "account_no", "type": "STRING"},
+                              {"name": "representative", "type": "STRING"}],
+        }).save()
+        base_entity_for_society_id = new_base_entity_for_society._id
+        new_entity_type_for_society = SupplyEntityType(**{
+            "name": "Base Society",
+            "base_entity_type_id": base_entity_for_society_id,
+            "entity_attributes": [{"name": "supplier_id", "type": "STRING"},
+                                  {"name": "society_name", "type": "STRING"},
+                                  {"name": "society_address1", "type": "STRING"},
+                                  {"name": "society_address2", "type": "STRING"},
+                                  {"name": "society_zip", "type": "STRING"},
+                                  {"name": "society_name", "type": "STRING"},
+                                  {"name": "society_city", "type": "STRING"},
+                                  {"name": "society_state", "type": "STRING"},
+                                  {"name": "society_longitude", "type": "STRING"},
+                                  {"name": "society_locality", "type": "STRING"},
+                                  {"name": "society_subarea", "type": "STRING"},
+                                  {"name": "society_latitude", "type": "STRING"},
+                                  {"name": "society_location_type", "type": "STRING"},
+                                  {"name": "society_type_quality", "type": "STRING"},
+                                  {"name": "society_type_quantity", "type": "STRING"},
+                                  {"name": "flat_count", "type": "STRING"},
+                                  {"name": "flat_avg_rental_persqft", "type": "STRING"},
+                                  {"name": "flat_sale_cost_persqft", "type": "STRING"},
+                                  {"name": "tower_count", "type": "INT"},
+                                  {"name": "payment_details_available", "type": "BOOLEAN"},
+                                  {"name": "age_of_society", "type": "INT"},
+                                  {"name": "total_tenant_flat_count", "type": "INT"},
+                                  {"name": "landmark", "type": "STRING"},
+                                  {"name": "name_for_payment", "type": "STRING"},
+                                  {"name": "bank_name", "type": "STRING  "},
+                                  {"name": "ifsc_code", "type": "STRING"},
+                                  {"name": "account_no", "type": "STRING"},
+                              {"name": "representative", "type": "STRING"}],
+            "organisation_id": "MAC1421"
+        }).save()
+        new_entity_type_id = new_entity_type_for_society._id
         for society in society_list:
             name = 'Society'
-            is_global = True
+            new_entity_type_id = new_entity_type_id
             entity_attributes = society
             organisation_id = "MAC1421"
             dict_of_req_attributes = {"name": name, "entity_attributes": entity_attributes,
-                                  "organisation_id": organisation_id}
-            entity_type_dict = dict_of_req_attributes
-            entity_type_dict["is_global"] = is_global
-            entity_type_dict["created_at"] = datetime.now()
-            SupplyEntityType(**entity_type_dict).save()
+                                      "organisation_id": organisation_id,
+                                      "entity_type_id": new_entity_type_id}
+            entity_dict = dict_of_req_attributes
+            entity_dict["created_at"] = datetime.now()
+            SupplyEntity(**entity_dict).save()
         return handle_response('', data={"success": True}, success=True)
