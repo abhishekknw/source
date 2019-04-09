@@ -1008,8 +1008,6 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
     grouping_keys.remove(sum_key)
     if existing_key in grouping_keys:
         grouping_keys.remove(existing_key)
-    print("na:",new_array)
-    print("base = ",base)
     if base == 1:
         grouping_keys = grouping_keys + [existing_key]
     if operation_type == 'append':
