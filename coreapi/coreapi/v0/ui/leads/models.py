@@ -20,13 +20,18 @@ connect("mongodb://localhost:27017/machadalo", alias="mongo_app")
 #     class Meta:
 #         db_table = 'leads_form_contacts'
 
-def get_extra_leads_dict(campaign_list=None, only_latest_count=False):
+def get_extra_leads_dict(campaign_list=None, only_latest_count=False, user_start_datetime=None):
+    match_constraints = []
     if campaign_list:
         if not isinstance(campaign_list, list):
             campaign_list = [campaign_list]
-        match_dict = {"campaign_id": {"$in": campaign_list}}
-    else:
+        match_constraints.append({"campaign_id": {"$in": campaign_list}})
+    if user_start_datetime:
+        match_constraints.append({"created_at": {"$gte": user_start_datetime}})
+    if len(match_constraints) == 0:
         match_dict = {}
+    else:
+        match_dict = {"$and": match_constraints}
     all_leads_count = get_leads_summary(campaign_list=campaign_list, user_start_datetime=None, user_end_datetime=None,
                                         with_extra=False)
     suppliers_with_data = [data_point["supplier_id"] for data_point in all_leads_count if data_point["total_leads_count"] > 0]
@@ -52,8 +57,8 @@ def get_extra_leads_dict(campaign_list=None, only_latest_count=False):
     return all_extra_leads_dict
 
 
-def add_extra_leads(leads_summary, campaign_list=None):
-    leads_extras_all_dict = get_extra_leads_dict()
+def add_extra_leads(leads_summary, campaign_list=None, user_start_datetime=None):
+    leads_extras_all_dict = get_extra_leads_dict(None, False, user_start_datetime)
     leads_extras_dict = {}
     leads_summary_dict = {}
     for single_summary in leads_summary:
@@ -125,7 +130,7 @@ def get_leads_summary(campaign_list=None, user_start_datetime=None,user_end_date
         )
     leads_summary = list(leads_summary)
     if with_extra:
-        leads_summary = add_extra_leads(leads_summary, campaign_list)
+        leads_summary = add_extra_leads(leads_summary, campaign_list, user_start_datetime)
     return leads_summary
 
 
