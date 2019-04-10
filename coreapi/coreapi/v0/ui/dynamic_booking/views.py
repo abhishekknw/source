@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from rest_framework.views import APIView
 from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg
-from .models import BaseBookingTemplate, BookingTemplate, BookingData
+from .models import BaseBookingTemplate, BookingTemplate, BookingData, BookingDetails
 from datetime import datetime
 from bson.objectid import ObjectId
 from .utils import validate_booking
@@ -234,4 +234,53 @@ class BookingDataByCampaignId(APIView):
         exist_query = BookingData.objects.raw({'campaign_id': campaign_id})
         exist_query.delete()
         return handle_response('', data="success", success=True)
+
+
+class BookingDetailsView(APIView):
+    @staticmethod
+    def post(request):
+        campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data else None
+        organisation_id = get_user_organisation_id(request.user)
+        booking_template_id = request.data['booking_template_id'] if 'booking_template_id' in request.data else None
+
+        dict_of_req_attributes = {"organisation_id": organisation_id, "campaign_id": campaign_id,
+                                  "booking_template_id": booking_template_id}
+
+        (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
+        if not is_valid:
+            return handle_response('', data=validation_msg_dict, success=None)
+        booking_data = dict_of_req_attributes
+        booking_data["created_at"] = datetime.now()
+        BookingDetails(**booking_data).save()
+        return handle_response('', data={"success": True}, success=True)
+
+
+class BookingDetailsById(APIView):
+    @staticmethod
+    def get(request, booking_details_id):
+        data = BookingDetails.objects.raw({'_id': ObjectId(booking_details_id)})[0]
+        final_data = dict()
+        final_data['organisation_id'] = data.organisation_id
+        final_data['campaign_id'] = data.campaign_id
+        final_data['booking_template_id'] = data.booking_template_id
+        final_data['id'] = str(data._id)
+        return handle_response('', data=final_data, success=True)
+
+    @staticmethod
+    def delete(request, booking_details_id):
+        exist_query = BookingDetails.objects.raw({'_id': ObjectId(booking_details_id)})
+        exist_query.delete()
+        return handle_response('', data="success", success=True)
+
+
+class BookingDetailsByCampaignId(APIView):
+    @staticmethod
+    def get(request, campaign_id):
+        data = BookingDetails.objects.raw({'campaign_id': campaign_id})[0]
+        final_data = dict()
+        final_data['organisation_id'] = data.organisation_id
+        final_data['campaign_id'] = data.campaign_id
+        final_data['booking_template_id'] = data.booking_template_id
+        final_data['id'] = str(data._id)
+        return handle_response('', data=final_data, success=True)
 
