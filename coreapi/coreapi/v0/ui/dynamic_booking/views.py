@@ -225,7 +225,7 @@ class BookingDataByCampaignId(APIView):
             final_data['organisation_id'] = data.organisation_id
             final_data['campaign_id'] = data.campaign_id
             final_data['booking_template_id'] = data.booking_template_id
-            final_data['id'] = str(data.booking_template_id)
+            final_data['id'] = str(data._id)
             final_data_list.append(final_data)
         return handle_response('', data=final_data_list, success=True)
 
