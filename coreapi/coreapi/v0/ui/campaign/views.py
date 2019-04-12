@@ -2057,6 +2057,39 @@ class VendorWiseSummary(APIView):
         return ui_utils.handle_response({}, data=campaign_summary, success=True)
 
 
+def get_duration_wise_summary_for_cities(all_city_campaign_mapping, all_campaign_ids, days):
+    start_date = None
+    if days:
+        start_date = datetime.now() - timedelta(days=days)
+    campaign_summary_map = {}
+    for city in all_city_campaign_mapping:
+        campaign_summary_map[city] = get_campaign_wise_summary(all_city_campaign_mapping[city], start_date)[
+            "all_campaigns"]
+    campaign_summary_map['overall'] = get_campaign_wise_summary(all_campaign_ids, start_date)["all_campaigns"]
+    return campaign_summary_map
+
+
+class CityWiseSummary(APIView):
+    @staticmethod
+    def get(request):
+        user_id = request.user.id
+        all_assigned_campaigns = get_all_assigned_campaigns(user_id, None)
+        vendor_campaign_map = {}
+        all_campaign_ids = [campaign["proposal_id"] for campaign in all_assigned_campaigns]
+        all_city_campaign = ProposalCenterMapping.objects.filter(proposal_id__in=all_campaign_ids).all()
+        all_city_campaign_mapping = {}
+        for obj in all_city_campaign:
+            if obj.city not in all_city_campaign_mapping:
+                all_city_campaign_mapping[obj.city] = []
+            all_city_campaign_mapping[obj.city].append(obj.proposal_id)
+        campaign_summary = {}
+        campaign_summary['last_week'] = get_duration_wise_summary_for_cities(all_city_campaign_mapping, all_campaign_ids, 7)
+        campaign_summary['last_two_week'] = get_duration_wise_summary_for_cities(all_city_campaign_mapping, all_campaign_ids, 14)
+        campaign_summary['last_three_week'] = get_duration_wise_summary_for_cities(all_city_campaign_mapping, all_campaign_ids, 21)
+        campaign_summary['overall'] = get_duration_wise_summary_for_cities(all_city_campaign_mapping, all_campaign_ids, None)
+        return ui_utils.handle_response({}, data=campaign_summary, success=True)
+
+
 def get_all_assigned_campaigns(user_id, vendor):
     if vendor:
         campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
