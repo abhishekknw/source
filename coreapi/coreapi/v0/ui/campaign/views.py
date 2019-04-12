@@ -2074,7 +2074,6 @@ class CityWiseSummary(APIView):
     def get(request):
         user_id = request.user.id
         all_assigned_campaigns = get_all_assigned_campaigns(user_id, None)
-        vendor_campaign_map = {}
         all_campaign_ids = [campaign["proposal_id"] for campaign in all_assigned_campaigns]
         all_city_campaign = ProposalCenterMapping.objects.filter(proposal_id__in=all_campaign_ids).all()
         all_city_campaign_mapping = {}
