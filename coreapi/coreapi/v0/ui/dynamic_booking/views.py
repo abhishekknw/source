@@ -150,6 +150,7 @@ class BookingDataView(APIView):
     def post(request):
         campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data else None
         booking_attributes = request.data['booking_attributes'] if 'booking_attributes' in request.data else None
+        comments = request.data['comments'] if 'comments' in request.data else None
         organisation_id = get_user_organisation_id(request.user)
         entity_id = request.data['entity_id'] if 'entity_id' in request.data else None
         booking_template_id = request.data['booking_template_id'] if 'booking_template_id' in request.data else None
@@ -162,9 +163,9 @@ class BookingDataView(APIView):
             return handle_response('', data=validation_msg_dict, success=None)
         booking_data = dict_of_req_attributes
         booking_data["created_at"] = datetime.now()
+        booking_data["comments"] = comments
         BookingData(**booking_data).save()
         return handle_response('', data={"success": True}, success=True)
-
 
 
 class BookingDataById(APIView):
@@ -175,6 +176,7 @@ class BookingDataById(APIView):
         booking_template = BookingTemplate.objects.raw({"_id": ObjectId(booking_template_id)})[0]
         final_data = dict()
         final_data['booking_attributes'] = data.booking_attributes
+        final_data['comments'] = data.comments
         final_data['entity_attributes'] = get_entity_attributes(data.entity_id, booking_template.entity_attributes)
         final_data['name'] = data.name if 'name' in data else None
         final_data['entity_id'] = data.entity_id
@@ -187,9 +189,14 @@ class BookingDataById(APIView):
     @staticmethod
     def put(request, booking_data_id):
         booking_attributes = request.data['booking_attributes'] if 'booking_attributes' in request.data else None
+        comments = request.data['comments'] if 'comments' in request.data else None
+        update_dict = {}
         if booking_attributes:
-            BookingData.objects.raw({'_id': ObjectId(booking_data_id)}).update(
-                {"$set": {"booking_attributes": booking_attributes, "updated_at": datetime.now()}})
+            update_dict["booking_attributes"] = booking_attributes
+        if comments:
+            update_dict["comments"] = comments
+        update_dict["updated_at"] = datetime.now()
+        BookingData.objects.raw({'_id': ObjectId(booking_data_id)}).update({"$set": update_dict})
         return handle_response('', data={"success": True}, success=True)
 
     @staticmethod
@@ -220,6 +227,7 @@ class BookingDataByCampaignId(APIView):
         for data in data_all:
             final_data = {}
             final_data['booking_attributes'] = data.booking_attributes
+            final_data['comments'] = data.comments
             final_data['entity_attributes'] = get_entity_attributes(data.entity_id, booking_template.entity_attributes)
             final_data['entity_id'] = data.entity_id
             final_data['organisation_id'] = data.organisation_id
