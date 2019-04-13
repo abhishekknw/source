@@ -630,7 +630,10 @@ search_fields = {
            'subarea__icontains',
            'city__icontains', 'state__icontains', 'zipcode__icontains'
            ],
-    bus_shelter: [],
+    bus_shelter: ['supplier_id__icontains', 'name__icontains', 'address1__icontains', 'address2__icontains', 'area__icontains',
+           'subarea__icontains',
+           'city__icontains', 'state__icontains', 'zipcode__icontains'
+           ],
     gym: [],
     salon: [],
     retail_shop_code:[]
