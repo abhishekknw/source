@@ -2,7 +2,7 @@ from rest_framework.serializers import ModelSerializer
 from v0.ui.base.serializers import BaseModelPermissionSerializer
 from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMappingVersion, ProposalMasterCost, ProposalInfoVersion,
     ProposalMetrics, ProposalCenterMapping, ImageMapping, SpaceMapping, SpaceMappingVersion, ShortlistedSpacesVersion,
-                                   HashTagImages, SupplierPhase)
+                                   HashTagImages, SupplierPhase, SupplierAssignment)
 from rest_framework import serializers
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeCorporate
 
@@ -148,4 +148,9 @@ simple serializer for HashtagImages
 class SupplierPhaseSerializer(ModelSerializer):
     class Meta:
         model = SupplierPhase
+        fields = '__all__'
+
+class SupplierAssignmentSerializer(ModelSerializer):
+    class Meta:
+        model = SupplierAssignment
         fields = '__all__'
