@@ -67,7 +67,24 @@ class BookingDetails(MongoModel):
         connection_alias = 'mongo_app'
 
 
+class BookingInventory(MongoModel):
+    entity_id = fields.CharField()
+    campaign_id = fields.CharField()
+    inventory_name = fields.CharField()  # POSTER or STALL or STANDEE
+    comments = fields.ListField()
+    inventory_images = fields.ListField()
+    organisation_id = fields.CharField()
+    created_by = fields.CharField()
+    created_at = fields.DateTimeField()
+    updated_at = fields.DateTimeField()
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'mongo_app'
+
+
 class BookingInventoryActivity(MongoModel):
+    booking_inventory_id = fields.CharField()
     entity_id = fields.CharField()
     campaign_id = fields.CharField()
     assigned_to_id = fields.CharField()

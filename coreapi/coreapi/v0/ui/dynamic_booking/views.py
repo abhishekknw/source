@@ -1,7 +1,8 @@
 from __future__ import absolute_import
 from rest_framework.views import APIView
 from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg
-from .models import BaseBookingTemplate, BookingTemplate, BookingData, BookingDetails
+from .models import (BaseBookingTemplate, BookingTemplate, BookingData, BookingDetails, BookingInventoryActivity,
+                     BookingInventory)
 from datetime import datetime
 from bson.objectid import ObjectId
 from .utils import validate_booking
@@ -145,17 +146,30 @@ class BookingTemplateById(APIView):
         return handle_response('', data="success", success=True)
 
 
+def create_inventories(inventory_counts, entity_id, campaign_id):
+    for inventory in inventory_counts:
+        for _ in range(inventory["count"]):
+            BookingInventory(**{
+                "entity_id": entity_id,
+                "inventory_name": inventory["name"],
+                "campaign_id": campaign_id,
+                "created_at": datetime.now()
+            }).save()
+
+
 class BookingDataView(APIView):
     @staticmethod
     def post(request):
         campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data else None
         booking_attributes = request.data['booking_attributes'] if 'booking_attributes' in request.data else None
         comments = request.data['comments'] if 'comments' in request.data else None
-        inventory_counts = request.data['inventory_counts'] if 'inventory_counts' in request.data else None
         phase_id = int(request.data['phase_id']) if 'phase_id' in request.data else None
         organisation_id = get_user_organisation_id(request.user)
         entity_id = request.data['entity_id'] if 'entity_id' in request.data else None
         booking_template_id = request.data['booking_template_id'] if 'booking_template_id' in request.data else None
+        inventory_counts = request.data['inventory_counts'] if 'inventory_counts' in request.data else None
+        if inventory_counts:
+            create_inventories(inventory_counts, entity_id, campaign_id)
 
         dict_of_req_attributes = {"booking_attributes": booking_attributes, "organisation_id": organisation_id,
                                   "entity_id": entity_id, "campaign_id": campaign_id, "booking_template_id": booking_template_id}
@@ -165,9 +179,12 @@ class BookingDataView(APIView):
             return handle_response('', data=validation_msg_dict, success=None)
         booking_data = dict_of_req_attributes
         booking_data["created_at"] = datetime.now()
-        booking_data["comments"] = comments
-        booking_data["inventory_counts"] = inventory_counts
-        booking_data["phase_id"] = phase_id
+        if comments:
+            booking_data["comments"] = comments
+        if inventory_counts:
+            booking_data["inventory_counts"] = inventory_counts
+        if phase_id:
+            booking_data["phase_id"] = phase_id
         BookingData(**booking_data).save()
         return handle_response('', data={"success": True}, success=True)
 
@@ -203,8 +220,6 @@ class BookingDataById(APIView):
             update_dict["booking_attributes"] = booking_attributes
         if comments:
             update_dict["comments"] = comments
-        if inventory_counts:
-            update_dict["inventory_counts"] = inventory_counts
         if phase_id:
             update_dict["phase_id"] = phase_id
         update_dict["updated_at"] = datetime.now()
