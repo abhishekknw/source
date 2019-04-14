@@ -634,9 +634,18 @@ search_fields = {
            'subarea__icontains',
            'city__icontains', 'state__icontains', 'zipcode__icontains'
            ],
-    gym: [],
-    salon: [],
-    retail_shop_code:[]
+    gym: ['supplier_id__icontains', 'name__icontains', 'address1__icontains', 'address2__icontains', 'area__icontains',
+           'subarea__icontains',
+           'city__icontains', 'state__icontains', 'zipcode__icontains'
+           ],
+    salon: ['supplier_id__icontains', 'name__icontains', 'address1__icontains', 'address2__icontains', 'area__icontains',
+           'subarea__icontains',
+           'city__icontains', 'state__icontains', 'zipcode__icontains'
+           ],
+    retail_shop_code:['supplier_id__icontains', 'name__icontains', 'address1__icontains', 'address2__icontains', 'area__icontains',
+           'subarea__icontains',
+           'city__icontains', 'state__icontains', 'zipcode__icontains'
+           ]
 }
 
 # to calculate what cost of each inventory. currently we are using only these. type and duration are used to fetch
