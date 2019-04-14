@@ -414,7 +414,7 @@ class SupplierTypeBusShelter(BasicSupplierDetails):
     """
     lit_status = models.CharField(max_length=255, null=True, blank=True)
     halt_buses_count = models.IntegerField(null=True, blank=True)
-
+    representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
     class Meta:
         db_table = 'supplier_bus_shelter'
 
