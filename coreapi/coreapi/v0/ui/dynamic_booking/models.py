@@ -43,6 +43,7 @@ class BookingData(MongoModel):
     organisation_id = fields.CharField()
     booking_attributes = fields.ListField()
     comments = fields.ListField()
+    phase_id = fields.IntegerField()
     created_by = fields.CharField()
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
