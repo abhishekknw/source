@@ -12,7 +12,7 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     key_replace_group_multiple, key_replace_group, truncate_by_value_ranges, linear_extrapolator,
                     get_constrained_values, add_related_field, related_fields_dict, calculate_mode)
 from v0.ui.common.models import mongo_client
-from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo
+from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo, ProposalCenterMapping
 from v0.ui.supplier.models import SupplierTypeSociety
 import copy
 from rest_framework.views import APIView
@@ -914,20 +914,16 @@ class RangeAPIView(APIView):
 
 def get_all_assigned_campaigns_vendor_city(user_id, city_list = None, vendor_list = None):
     if vendor_list is not None:
-        vendor_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id,
+        user_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id,
                                                              campaign__principal_vendor__in=vendor_list).values_list(
             'campaign_id', flat=True).distinct()
-        final_list = vendor_campaigns
     else:
-        final_list = []
+        user_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id).values_list(
+            'campaign_id', flat=True).distinct()
     if city_list is not None:
-        city_suppliers_result = get_details_by_higher_level_geographical('city',city_list)
-        city_suppliers_list = city_suppliers_result['single_list']
-        city_campaigns = ShortlistedSpaces.objects.filter(object_id__in=city_suppliers_list).values_list\
-            ('proposal_id', flat=True).distinct()
-        final_list = city_campaigns
-        if vendor_list is not None:
-            final_list = list(set(vendor_campaigns).intersection(set(city_campaigns)))
+        city_campaigns = ProposalCenterMapping.objects.filter(city__in=city_list).values('proposal_id').distinct()
+        city_campaigns = [obj['proposal_id'] for obj in city_campaigns]
+        final_list = list(set(user_campaigns).intersection(set(city_campaigns)))
     final_result = ProposalInfo.objects.filter(proposal_id__in=final_list).extra(select={
                     'campaign_id': 'proposal_id', 'campaign_name':'name'}).values('campaign_id','campaign_name')
     return final_result
