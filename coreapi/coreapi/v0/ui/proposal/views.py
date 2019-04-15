@@ -5,6 +5,7 @@ from rest_framework import viewsets, status
 from django.db.models import Count, Sum, F
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils import timezone
 from pygeocoder import Geocoder, GeocoderError
 from openpyxl import load_workbook
 from requests.exceptions import ConnectionError
@@ -31,12 +32,13 @@ from v0.ui.location.models import City, CityArea, CitySubArea
 from v0.ui.campaign.models import GenericExportFileName
 from v0.ui.website.views import GenericExportFileSerializerReadOnly
 from rest_framework.response import Response
-from v0.ui.proposal.models import HashTagImages
+from v0.ui.proposal.models import HashTagImages, SupplierAssignment
 from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer,
                                         ProposalCenterMappingVersionSerializer, ProposalInfoVersionSerializer,
                                         SpaceMappingSerializer, ProposalCenterMappingSpaceSerializer,
                                         ProposalCenterMappingVersionSpaceSerializer, SpaceMappingVersionSerializer,
-                                        ProposalSocietySerializer, ProposalCorporateSerializer, HashtagImagesSerializer)
+                                        ProposalSocietySerializer, ProposalCorporateSerializer, HashtagImagesSerializer,
+                                        SupplierAssignmentSerializer)
 from v0.ui.inventory.models import (SupplierTypeSociety, AdInventoryType, InventorySummary)
 from .models import (ProposalInfo, ProposalCenterMapping, ProposalCenterMappingVersion, SpaceMappingVersion,
                     SpaceMapping, ShortlistedSpacesVersion, ShortlistedSpaces, SupplierPhase)
@@ -2792,4 +2794,51 @@ class GetExtraLead(APIView):
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class SupplierAssignmentViewSet(viewsets.ViewSet):
+
+
+    def create(self, request):
+        class_name = self.__class__.__name__
+        try:
+            data = {}
+            campaign_id = request.data["campaign_id"]
+            supplier_id = request.data["supplier_id"]
+            user_ids = request.data["assigned_to_ids"]
+            user_ids_old = SupplierAssignment.objects.filter(campaign=campaign_id, supplier_id=supplier_id,
+                                                             assigned_to__in=user_ids).values()
+            user_ids_old = [user_id['assigned_to_id'] for user_id in user_ids_old]
+            assigned_by_user = BaseUser.objects.get(id=request.data["assigned_by"])
+            user_ids_new = list(set(user_ids) - set(user_ids_old))
+            user_ids_new_objects = BaseUser.objects.filter(id__in=user_ids_new)
+            data = []
+            now_time = timezone.now()
+            for user_id in user_ids_new_objects:
+                data.append(SupplierAssignment(**{
+                    "campaign_id": campaign_id,
+                    "supplier_id": supplier_id,
+                    "assigned_by": assigned_by_user,
+                    "assigned_to": user_id,
+                    "created_at": now_time,
+                    "updated_at": now_time
+                }))
+
+            SupplierAssignment.objects.bulk_create(data)
+                
+            return ui_utils.handle_response(class_name, data={}, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def list(self, request):
+        class_name = self.__class__.__name__
+        try:
+            user_id = request.query_params.get('id',None)
+            campaign_id = request.query_params.get('campaign_id',None)
+            suppliers = SupplierAssignment.objects.filter(campaign=campaign_id, assigned_to=user_id)
+            serializer = SupplierAssignmentSerializer(suppliers, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
 
