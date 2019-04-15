@@ -151,6 +151,7 @@ class BookingDataView(APIView):
         campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data else None
         booking_attributes = request.data['booking_attributes'] if 'booking_attributes' in request.data else None
         comments = request.data['comments'] if 'comments' in request.data else None
+        inventory_counts = request.data['inventory_counts'] if 'inventory_counts' in request.data else None
         phase_id = int(request.data['phase_id']) if 'phase_id' in request.data else None
         organisation_id = get_user_organisation_id(request.user)
         entity_id = request.data['entity_id'] if 'entity_id' in request.data else None
@@ -165,6 +166,7 @@ class BookingDataView(APIView):
         booking_data = dict_of_req_attributes
         booking_data["created_at"] = datetime.now()
         booking_data["comments"] = comments
+        booking_data["inventory_counts"] = inventory_counts
         booking_data["phase_id"] = phase_id
         BookingData(**booking_data).save()
         return handle_response('', data={"success": True}, success=True)
@@ -179,6 +181,7 @@ class BookingDataById(APIView):
         final_data = dict()
         final_data['booking_attributes'] = data.booking_attributes
         final_data['comments'] = data.comments
+        final_data['inventory_counts'] = data.inventory_counts
         final_data['phase_id'] = data.phase_id
         final_data['entity_attributes'] = get_entity_attributes(data.entity_id, booking_template.entity_attributes)
         final_data['name'] = data.name if 'name' in data else None
@@ -193,12 +196,15 @@ class BookingDataById(APIView):
     def put(request, booking_data_id):
         booking_attributes = request.data['booking_attributes'] if 'booking_attributes' in request.data else None
         comments = request.data['comments'] if 'comments' in request.data else None
+        inventory_counts = request.data['inventory_counts'] if 'inventory_counts' in request.data else None
         phase_id = request.data['phase_id'] if 'phase_id' in request.data else None
         update_dict = {}
         if booking_attributes:
             update_dict["booking_attributes"] = booking_attributes
         if comments:
             update_dict["comments"] = comments
+        if inventory_counts:
+            update_dict["inventory_counts"] = inventory_counts
         if phase_id:
             update_dict["phase_id"] = phase_id
         update_dict["updated_at"] = datetime.now()
@@ -234,6 +240,7 @@ class BookingDataByCampaignId(APIView):
             final_data = {}
             final_data['booking_attributes'] = data.booking_attributes
             final_data['comments'] = data.comments
+            final_data['inventory_counts'] = data.inventory_counts
             final_data['phase_id'] = data.phase_id
             final_data['entity_attributes'] = get_entity_attributes(data.entity_id, booking_template.entity_attributes)
             final_data['entity_id'] = data.entity_id
