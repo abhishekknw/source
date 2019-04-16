@@ -161,15 +161,25 @@ class BookingDataView(APIView):
     @staticmethod
     def post(request):
         campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data else None
+
+        data_old = BookingData.objects.raw({'campaign_id': campaign_id})[0]
+        old_entity_id = data_old.entity_id if 'entity_id' in data_old else None
+        old_booking_template_id= data_old.booking_template_id if 'booking_template_id' in data_old else None
+
         booking_attributes = request.data['booking_attributes'] if 'booking_attributes' in request.data else None
         comments = request.data['comments'] if 'comments' in request.data else None
         phase_id = int(request.data['phase_id']) if 'phase_id' in request.data else None
         organisation_id = get_user_organisation_id(request.user)
         entity_id = request.data['entity_id'] if 'entity_id' in request.data else None
-        booking_template_id = request.data['booking_template_id'] if 'booking_template_id' in request.data else None
         inventory_counts = request.data['inventory_counts'] if 'inventory_counts' in request.data else None
         if inventory_counts:
             create_inventories(inventory_counts, entity_id, campaign_id)
+        if old_entity_id == entity_id:
+            return handle_response('', data="entity_id already exist", success=None)
+
+        booking_template_id = request.data['booking_template_id'] if 'booking_template_id' in request.data else None
+        if old_booking_template_id != booking_template_id:
+            return handle_response('', data="booking_template_id must be same for same campaign_id", success=None)
 
         dict_of_req_attributes = {"booking_attributes": booking_attributes, "organisation_id": organisation_id,
                                   "entity_id": entity_id, "campaign_id": campaign_id, "booking_template_id": booking_template_id}
