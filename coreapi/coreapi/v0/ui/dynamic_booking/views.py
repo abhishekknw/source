@@ -331,3 +331,32 @@ class BookingDetailsByCampaignId(APIView):
         final_data['id'] = str(data._id)
         return handle_response('', data=final_data, success=True)
 
+
+class BookingAssignment(APIView):
+    @staticmethod
+    def post(request):
+        campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data else None
+        inventory_name = request.data['inventory_name'] if 'inventory_name' in request.data else None
+        all_booking_inventories = BookingInventory.objects.raw({"campaign_id": campaign_id,
+                                                                "inventory_name": inventory_name})
+        all_booking_inventory_ids = [booking_inventory._id for booking_inventory in all_booking_inventories]
+        for booking_inventory_id in all_booking_inventory_ids:
+            assigned_to_id = request.data['assigned_to_id'] if 'assigned_to_id' in request.data else None
+            activity_type = request.data['activity_type'] if 'activity_type' in request.data else None
+            activity_date = request.data['activity_date'] if 'activity_date' in request.data else None
+            status = request.data['status'] if 'status' in request.data else None
+            comments = request.data['comments'] if 'comments' in request.data else None
+            inventory_images = request.data['inventory_images'] if 'inventory_images' in request.data else None
+            dict_of_req_attributes = {"booking_inventory_id": booking_inventory_id, "assigned_to_id": assigned_to_id,
+                                      "activity_type": activity_type, "activity_date": activity_date}
+
+            (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
+            if not is_valid:
+                return handle_response('', data=validation_msg_dict, success=None)
+            booking_assignment = dict_of_req_attributes
+            booking_assignment["status"] = status
+            booking_assignment["comments"] = comments
+            booking_assignment["inventory_images"] = inventory_images
+            BookingInventoryActivity(**booking_assignment).save()
+        return handle_response('', data={"success": True}, success=True)
+

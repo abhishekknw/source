@@ -85,16 +85,13 @@ class BookingInventory(MongoModel):
 
 class BookingInventoryActivity(MongoModel):
     booking_inventory_id = fields.CharField()
-    entity_id = fields.CharField()
-    campaign_id = fields.CharField()
     assigned_to_id = fields.CharField()
     activity_type = fields.CharField()  # RELEASE or AUDIT or CLOSURE
-    inventory_name = fields.CharField()  # POSTER or STALL or STANDEE
     activity_date = fields.DateTimeField()
     actual_activity_date = fields.DateTimeField()
-    status = fields.CharField()
-    comments = fields.ListField()
-    inventory_images = fields.ListField()
+    status = fields.CharField(blank=True)
+    comments = fields.ListField(blank=True)
+    inventory_images = fields.ListField(blank=True)
     organisation_id = fields.CharField()
     created_by = fields.CharField()
     created_at = fields.DateTimeField()
