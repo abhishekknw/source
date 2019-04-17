@@ -366,7 +366,8 @@ class BookingAssignmentView(APIView):
             comments = request.data['comments'] if 'comments' in request.data else None
             inventory_images = request.data['inventory_images'] if 'inventory_images' in request.data else None
             dict_of_req_attributes = {"booking_inventory_id": booking_inventory_id, "assigned_to_id": assigned_to_id,
-                                      "activity_type": activity_type, "activity_date": activity_date}
+                                      "activity_type": activity_type, "activity_date": activity_date,
+                                      "campaign_id": campaign_id}
 
             (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
             if not is_valid:
@@ -378,3 +379,24 @@ class BookingAssignmentView(APIView):
             BookingInventoryActivity(**booking_assignment).save()
         return handle_response('', data={"success": True}, success=True)
 
+
+class BookingAssignmentByCampaignId(APIView):
+    @staticmethod
+    def get(request, campaign_id):
+        data_all = list(BookingInventoryActivity.objects.raw({'campaign_id': campaign_id}))
+        final_data_list = []
+        for data in data_all:
+            final_data = {}
+            final_data['booking_inventory_id'] = data.booking_inventory_id
+            final_data['assigned_to_id'] = data.assigned_to_id
+            final_data['activity_type'] = data.activity_type
+            final_data['activity_date'] = data.activity_date
+            final_data['actual_activity_date'] = data.actual_activity_date
+            final_data['status'] = data.status
+            final_data['comments'] = data.comments
+            final_data['inventory_images'] = data.inventory_images
+            final_data['organisation_id'] = data.organisation_id
+            final_data['created_at'] = data.created_at
+            final_data['id'] = str(data._id)
+            final_data_list.append(final_data)
+        return handle_response('', data=final_data_list, success=True)
