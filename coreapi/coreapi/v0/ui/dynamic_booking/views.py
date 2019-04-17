@@ -332,7 +332,25 @@ class BookingDetailsByCampaignId(APIView):
         return handle_response('', data=final_data, success=True)
 
 
-class BookingAssignment(APIView):
+class BookingInventoryView(APIView):
+    @staticmethod
+    def get(request, campaign_id):
+        all_inventories = BookingInventory.objects.raw({'campaign_id': campaign_id})
+        list_of_inventory_dicts = list()
+        for inventory in all_inventories:
+            final_data = dict()
+            final_data['entity_id'] = inventory.entity_id
+            final_data['campaign_id'] = inventory.campaign_id
+            final_data['inventory_name'] = inventory.inventory_name
+            final_data['comments'] = inventory.comments
+            final_data['inventory_images'] = inventory.inventory_images
+            final_data['created_at'] = inventory.created_at
+            final_data['id'] = str(inventory._id)
+            list_of_inventory_dicts.append(final_data)
+        return handle_response('', data=list_of_inventory_dicts, success=True)
+
+
+class BookingAssignmentView(APIView):
     @staticmethod
     def post(request):
         campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data else None
