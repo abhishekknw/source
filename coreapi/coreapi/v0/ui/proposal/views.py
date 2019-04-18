@@ -2424,15 +2424,18 @@ def flatten_list(list_of_lists):
 def get_supplier_list_by_status_ctrl(campaign_id):
     shortlisted_spaces_list = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
     shortlisted_spaces_by_phase_dict = {}
+
     all_phases = SupplierPhase.objects.filter(campaign_id=campaign_id).all()
     all_ss_comments = CampaignComments.objects.filter(campaign_id=campaign_id, related_to='EXTERNAL').all()
     all_ss_comments_dict = {}
+
     for single_ss_comment in all_ss_comments:
         if single_ss_comment.shortlisted_spaces_id not in all_ss_comments_dict:
             all_ss_comments_dict[single_ss_comment.shortlisted_spaces_id] = []
         if not single_ss_comment.inventory_type:
             all_ss_comments_dict[single_ss_comment.shortlisted_spaces_id].append(single_ss_comment.comment)
     all_phase_by_id = {}
+
     current_date = datetime.datetime.now().date()
     for phase in all_phases:
         all_phase_by_id[phase.id] = {'start_date': phase.start_date,
@@ -2440,12 +2443,16 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                                      'phase_no': phase.phase_no,
                                      'comments': phase.comments
                                      }
+
     overall_inventory_count_dict = {}
 
     no_phase_suppliers = []
     no_status_suppliers = []
+    all_supplier_ids = list(set([space.object_id for space in shortlisted_spaces_list]))
+    all_supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids)
+    all_supplier_dict = {supplier.supplier_id:supplier for supplier in all_supplier_objects}
     for space in shortlisted_spaces_list:
-        supplier_society = SupplierTypeSociety.objects.filter(supplier_id=space.object_id)
+        supplier_society = all_supplier_dict[space.object_id]
 
         supplier_inventories = ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces_id=space.id)
         inventory_activity_assignment = InventoryActivityAssignment.objects.filter(
@@ -2476,8 +2483,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     inventory_dates_dict[inventoy_name].append(activity_date)
         inventory_count_dict = {}
         
-        supplier_tower_count = supplier_society[0].tower_count if supplier_society[0].tower_count else 0
-        supplier_flat_count = supplier_society[0].flat_count if supplier_society[0].flat_count else 0
+        supplier_tower_count = supplier_society.tower_count if supplier_society.tower_count else 0
+        supplier_flat_count = supplier_society.flat_count if supplier_society.flat_count else 0
         for inventory in supplier_inventories:
             if inventory.ad_inventory_type.adinventory_name not in inventory_count_dict:
                 inventory_count_dict[inventory.ad_inventory_type.adinventory_name] = 0
@@ -2488,10 +2495,10 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
             if inventory.inventory_number_of_days:
                 inventory_days_dict[inventory.ad_inventory_type.adinventory_name] = inventory.inventory_number_of_days
-            inventory_count_dict['FLIER'] = supplier_society[0].flat_count if supplier_society[0].flat_count else 0
-            overall_inventory_count_dict['FLIER'] = supplier_society[0].flat_count if supplier_society[0].flat_count else 0
+            inventory_count_dict['FLIER'] = supplier_society.flat_count if supplier_society.flat_count else 0
+            overall_inventory_count_dict['FLIER'] = supplier_society.flat_count if supplier_society.flat_count else 0
 
-        supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society[0]).data
+        supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society).data
         supplier_society_serialized['booking_status'] = space.booking_status
         supplier_society_serialized['freebies'] = space.freebies.split(",") if space.freebies else None
         supplier_society_serialized['stall_locations'] = space.stall_locations.split(",") if space.stall_locations else None
