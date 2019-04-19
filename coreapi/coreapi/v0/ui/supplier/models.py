@@ -88,14 +88,16 @@ class BasicSupplierDetails(BaseModel):
         abstract = True
 
 
+SUPPLIER_STATUS = (
+    ('Tapped', 'Tapped'),
+    ('LetterGiven', 'LetterGiven'),
+    ('MeetingRequired', 'MeetingRequired'),
+    ('Other', 'Other')
+)
+
+
 class SupplierTypeSociety(BaseModel):
 
-    SUPPLIER_STATUS = (
-        ('Tapped', 'Tapped'),
-        ('LetterGiven', 'LetterGiven'),
-        ('MeetingRequired', 'MeetingRequired'),
-        ('Other', 'Other')
-    )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, on_delete=models.CASCADE)
     objects = managers.GeneralManager()
@@ -398,6 +400,18 @@ class SupplierTypeCorporate(BasicSupplierDetails):
     fields.GenericRelation(ContactDetailsGeneric)
     is_common_cafeteria_available = models.BooleanField(default=False)
     representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
+    name_for_payment = models.CharField(db_column='NAME_FOR_PAYMENT', max_length=100, blank=True,
+                                        null=True)
+    tower_count = models.IntegerField(db_column='TOWER_COUNT', blank=True, null=True)
+    poster_allowed_nb = models.BooleanField(db_column='POSTER_ALLOWED_NB', default=False)
+    poster_allowed_lift = models.BooleanField(db_column='POSTER_ALLOWED_LIFT', default=False)
+    standee_allowed = models.BooleanField(db_column='STANDEE_ALLOWED', default=False)
+    stall_allowed = models.BooleanField(db_column='STALL_ALLOWED', default=False)
+    banner_allowed = models.BooleanField(db_column='BANNER_ALLOWED', default=False)
+    supplier_status = models.CharField(max_length=80, null=True, choices=SUPPLIER_STATUS)
+    comments = models.CharField(max_length=255, null=True, blank=True)
+    relationship_manager = models.CharField(max_length=50, null=True, blank=True)
+    landmark = models.CharField(max_length=255, null=True, blank=True)
 
     def get_buildings(self):
         return self.corporatebuilding.all()
