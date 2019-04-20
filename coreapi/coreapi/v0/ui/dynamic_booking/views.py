@@ -367,7 +367,7 @@ class BookingAssignmentView(APIView):
             inventory_images = request.data['inventory_images'] if 'inventory_images' in request.data else None
             dict_of_req_attributes = {"booking_inventory_id": booking_inventory_id, "assigned_to_id": assigned_to_id,
                                       "activity_type": activity_type, "activity_date": activity_date,
-                                      "campaign_id": campaign_id}
+                                      "campaign_id": campaign_id, "inventory_name": inventory_name}
 
             (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
             if not is_valid:
@@ -400,3 +400,24 @@ class BookingAssignmentByCampaignId(APIView):
             final_data['id'] = str(data._id)
             final_data_list.append(final_data)
         return handle_response('', data=final_data_list, success=True)
+
+
+    @staticmethod
+    def put(request, campaign_id):
+        inventory_name = request.data['inventory_name'] if 'inventory_name' in request.data else None
+        assigned_to_id = request.data['assigned_to_id'] if 'assigned_to_id' in request.data else None
+        activity_type = request.data['activity_type'] if 'activity_type' in request.data else None
+        activity_date = request.data['activity_date'] if 'activity_date' in request.data else None
+        status = request.data['status'] if 'status' in request.data else None
+        update_dict = {}
+        if assigned_to_id:
+            update_dict["assigned_to_id"] = assigned_to_id
+        if activity_type:
+            update_dict["activity_type"] = activity_type
+        if activity_date:
+            update_dict["activity_date"] = activity_date
+        if status:
+            update_dict["status"] = status
+        update_dict["updated_at"] = datetime.now()
+        BookingInventoryActivity.objects.raw({"campaign_id": campaign_id,"inventory_name": inventory_name}).update({"$set": update_dict})
+        return handle_response('', data={"success": True}, success=True)
