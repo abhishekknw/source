@@ -6,7 +6,7 @@ from .models import (BaseBookingTemplate, BookingTemplate, BookingData, BookingD
 from datetime import datetime
 from bson.objectid import ObjectId
 from .utils import validate_booking
-from v0.ui.dynamic_entities.models import SupplyEntity
+from v0.ui.dynamic_suppliers.models import SupplySupplier
 
 
 class BaseBookingTemplateView(APIView):
@@ -15,12 +15,12 @@ class BaseBookingTemplateView(APIView):
 
         name = request.data['name'] if 'name' in request.data else None
         booking_attributes = request.data['booking_attributes'] if 'booking_attributes' in request.data else None
-        entity_attributes = request.data['entity_attributes'] if 'entity_attributes' in request.data else None
+        supplier_attributes = request.data['supplier_attributes'] if 'supplier_attributes' in request.data else None
         organisation_id = get_user_organisation_id(request.user)
-        base_entity_type_id = request.data['base_entity_type_id'] if 'base_entity_type_id' in request.data else None
-        dict_of_req_attributes = {"name": name, "entity_attributes": entity_attributes,
+        base_supplier_type_id = request.data['base_supplier_type_id'] if 'base_supplier_type_id' in request.data else None
+        dict_of_req_attributes = {"name": name, "supplier_attributes": supplier_attributes,
                                   "booking_attributes": booking_attributes, "organisation_id": organisation_id,
-                                  "base_entity_type_id": base_entity_type_id}
+                                  "base_supplier_type_id": base_supplier_type_id}
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
 
@@ -38,9 +38,9 @@ class BaseBookingTemplateView(APIView):
         for data in data_all:
             final_data = {}
             final_data['booking_attributes'] = data.booking_attributes
-            final_data['entity_attributes'] = data.entity_attributes
+            final_data['supplier_attributes'] = data.supplier_attributes
             final_data['name'] = data.name if 'name' in data else None
-            final_data['base_entity_type_id'] = data.base_entity_type_id
+            final_data['base_supplier_type_id'] = data.base_supplier_type_id
             final_data['organisation_id'] = data.organisation_id
             final_data['id'] = str(data._id)
             final_data_list.append(final_data)
@@ -50,16 +50,16 @@ class BaseBookingTemplateView(APIView):
 class BaseBookingTemplateById(APIView):
     @staticmethod
     def get(request, base_booking_template_id):
-        base_booking_entity_type = BaseBookingTemplate.objects.raw({'_id': ObjectId(base_booking_template_id)})[0]
-        base_booking_entity_type = {
-            "id": str(base_booking_entity_type._id),
-            "base_entity_type_id": str(base_booking_entity_type.base_entity_type_id),
-            "name": base_booking_entity_type.name,
-            "entity_attributes": base_booking_entity_type.entity_attributes,
-            "booking_attributes": base_booking_entity_type.booking_attributes,
-            "organisation_id": base_booking_entity_type.organisation_id
+        base_booking_supplier_type = BaseBookingTemplate.objects.raw({'_id': ObjectId(base_booking_template_id)})[0]
+        base_booking_supplier_type = {
+            "id": str(base_booking_supplier_type._id),
+            "base_supplier_type_id": str(base_booking_supplier_type.base_supplier_type_id),
+            "name": base_booking_supplier_type.name,
+            "supplier_attributes": base_booking_supplier_type.supplier_attributes,
+            "booking_attributes": base_booking_supplier_type.booking_attributes,
+            "organisation_id": base_booking_supplier_type.organisation_id
         }
-        return handle_response('', data=base_booking_entity_type, success=True)
+        return handle_response('', data=base_booking_supplier_type, success=True)
 
     @staticmethod
     def put(request, base_booking_template_id):
@@ -80,14 +80,14 @@ class BookingTemplateView(APIView):
     def post(request):
         name = request.data['name'] if 'name' in request.data else None
         booking_attributes = request.data['booking_attributes'] if 'booking_attributes' in request.data else None
-        entity_attributes = request.data['entity_attributes'] if 'entity_attributes' in request.data else None
+        supplier_attributes = request.data['supplier_attributes'] if 'supplier_attributes' in request.data else None
         organisation_id = get_user_organisation_id(request.user)
         base_booking_template_id = request.data['base_booking_template_id'] if 'base_booking_template_id' in request.data else None
-        entity_type_id = request.data['entity_type_id'] if 'entity_type_id' in request.data else None
-        dict_of_req_attributes = {"name": name, "entity_attributes": entity_attributes,
+        supplier_type_id = request.data['supplier_type_id'] if 'supplier_type_id' in request.data else None
+        dict_of_req_attributes = {"name": name, "supplier_attributes": supplier_attributes,
                                   "booking_attributes": booking_attributes, "organisation_id": organisation_id,
                                   "base_booking_template_id": base_booking_template_id,
-                                  "entity_type_id": entity_type_id}
+                                  "supplier_type_id": supplier_type_id}
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
 
@@ -108,9 +108,9 @@ class BookingTemplateView(APIView):
         for data in data_all:
             final_data = {}
             final_data['booking_attributes'] = data.booking_attributes
-            final_data['entity_attributes'] = data.entity_attributes
+            final_data['supplier_attributes'] = data.supplier_attributes
             final_data['name'] = data.name if 'name' in data else None
-            final_data['entity_type_id'] = data.entity_type_id
+            final_data['supplier_type_id'] = data.supplier_type_id
             final_data['organisation_id'] = data.organisation_id
             final_data['id'] = str(data._id)
             final_data_list.append(final_data)
@@ -120,17 +120,17 @@ class BookingTemplateView(APIView):
 class BookingTemplateById(APIView):
     @staticmethod
     def get(request, booking_template_id):
-        booking_entity_type = BookingTemplate.objects.raw({'_id': ObjectId(booking_template_id)})[0]
-        booking_entity_type = {
-            "id": str(booking_entity_type._id),
-            "entity_type_id": str(booking_entity_type.entity_type_id),
-            "name": booking_entity_type.name,
-            "entity_attributes": booking_entity_type.entity_attributes,
-            "booking_attributes": booking_entity_type.booking_attributes,
-            "organisation_id": booking_entity_type.organisation_id
+        booking_supplier_type = BookingTemplate.objects.raw({'_id': ObjectId(booking_template_id)})[0]
+        booking_supplier_type = {
+            "id": str(booking_supplier_type._id),
+            "supplier_type_id": str(booking_supplier_type.supplier_type_id),
+            "name": booking_supplier_type.name,
+            "supplier_attributes": booking_supplier_type.supplier_attributes,
+            "booking_attributes": booking_supplier_type.booking_attributes,
+            "organisation_id": booking_supplier_type.organisation_id
 
         }
-        return handle_response('', data=booking_entity_type, success=True)
+        return handle_response('', data=booking_supplier_type, success=True)
 
     @staticmethod
     def put(request, booking_template_id):
@@ -146,11 +146,11 @@ class BookingTemplateById(APIView):
         return handle_response('', data="success", success=True)
 
 
-def create_inventories(inventory_counts, entity_id, campaign_id):
+def create_inventories(inventory_counts, supplier_id, campaign_id):
     for inventory in inventory_counts:
         for _ in range(inventory["count"]):
             BookingInventory(**{
-                "entity_id": entity_id,
+                "supplier_id": supplier_id,
                 "inventory_name": inventory["name"],
                 "campaign_id": campaign_id,
                 "created_at": datetime.now()
@@ -163,26 +163,26 @@ class BookingDataView(APIView):
         campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data else None
 
         data_old = BookingData.objects.raw({'campaign_id': campaign_id})[0]
-        old_entity_id = data_old.entity_id if 'entity_id' in data_old else None
+        old_supplier_id = data_old.supplier_id if 'supplier_id' in data_old else None
         old_booking_template_id= data_old.booking_template_id if 'booking_template_id' in data_old else None
 
         booking_attributes = request.data['booking_attributes'] if 'booking_attributes' in request.data else None
         comments = request.data['comments'] if 'comments' in request.data else None
         phase_id = int(request.data['phase_id']) if 'phase_id' in request.data else None
         organisation_id = get_user_organisation_id(request.user)
-        entity_id = request.data['entity_id'] if 'entity_id' in request.data else None
+        supplier_id = request.data['supplier_id'] if 'supplier_id' in request.data else None
         inventory_counts = request.data['inventory_counts'] if 'inventory_counts' in request.data else None
         if inventory_counts:
-            create_inventories(inventory_counts, entity_id, campaign_id)
-        if old_entity_id == entity_id:
-            return handle_response('', data="entity_id already exist", success=None)
+            create_inventories(inventory_counts, supplier_id, campaign_id)
+        if old_supplier_id == supplier_id:
+            return handle_response('', data="supplier_id already exist", success=None)
 
         booking_template_id = request.data['booking_template_id'] if 'booking_template_id' in request.data else None
         if old_booking_template_id != booking_template_id:
             return handle_response('', data="booking_template_id must be same for same campaign_id", success=None)
 
         dict_of_req_attributes = {"booking_attributes": booking_attributes, "organisation_id": organisation_id,
-                                  "entity_id": entity_id, "campaign_id": campaign_id, "booking_template_id": booking_template_id}
+                                  "supplier_id": supplier_id, "campaign_id": campaign_id, "booking_template_id": booking_template_id}
 
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
@@ -210,9 +210,9 @@ class BookingDataById(APIView):
         final_data['comments'] = data.comments
         final_data['inventory_counts'] = data.inventory_counts
         final_data['phase_id'] = data.phase_id
-        final_data['entity_attributes'] = get_entity_attributes(data.entity_id, booking_template.entity_attributes)
+        final_data['supplier_attributes'] = get_supplier_attributes(data.supplier_id, booking_template.supplier_attributes)
         final_data['name'] = data.name if 'name' in data else None
-        final_data['entity_id'] = data.entity_id
+        final_data['supplier_id'] = data.supplier_id
         final_data['organisation_id'] = data.organisation_id
         final_data['campaign_id'] = data.campaign_id
         final_data['booking_template_id'] = data.booking_template_id
@@ -243,13 +243,13 @@ class BookingDataById(APIView):
         return handle_response('', data="success", success=True)
 
 
-def get_entity_attributes(entity_id, entity_attributes):
-    all_entity_attribute_names = [entity['name'] for entity in entity_attributes]
-    entity_object = SupplyEntity.objects.raw({"_id": ObjectId(entity_id)})[0]
+def get_supplier_attributes(supplier_id, supplier_attributes):
+    all_supplier_attribute_names = [supplier['name'] for supplier in supplier_attributes]
+    supplier_object = SupplySupplier.objects.raw({"_id": ObjectId(supplier_id)})[0]
     final_attributes = []
-    for entity in entity_object.entity_attributes:
-        if entity['name'] in all_entity_attribute_names:
-            final_attributes.append(entity)
+    for supplier in supplier_object.supplier_attributes:
+        if supplier['name'] in all_supplier_attribute_names:
+            final_attributes.append(supplier)
     return final_attributes
 
 
@@ -257,7 +257,7 @@ class BookingDataByCampaignId(APIView):
     @staticmethod
     def get(request, campaign_id):
         data_all = list(BookingData.objects.raw({'campaign_id': campaign_id}))
-        all_entity_ids = [data.entity_id for data in data_all]
+        all_supplier_ids = [data.supplier_id for data in data_all]
         booking_template_id = data_all[0].booking_template_id
         booking_template = BookingTemplate.objects.raw({"_id": ObjectId(booking_template_id)})[0]
         final_data_list = []
@@ -267,8 +267,8 @@ class BookingDataByCampaignId(APIView):
             final_data['comments'] = data.comments
             final_data['inventory_counts'] = data.inventory_counts
             final_data['phase_id'] = data.phase_id
-            final_data['entity_attributes'] = get_entity_attributes(data.entity_id, booking_template.entity_attributes)
-            final_data['entity_id'] = data.entity_id
+            final_data['supplier_attributes'] = get_supplier_attributes(data.supplier_id, booking_template.supplier_attributes)
+            final_data['supplier_id'] = data.supplier_id
             final_data['organisation_id'] = data.organisation_id
             final_data['campaign_id'] = data.campaign_id
             final_data['booking_template_id'] = data.booking_template_id
@@ -339,7 +339,7 @@ class BookingInventoryView(APIView):
         list_of_inventory_dicts = list()
         for inventory in all_inventories:
             final_data = dict()
-            final_data['entity_id'] = inventory.entity_id
+            final_data['supplier_id'] = inventory.supplier_id
             final_data['campaign_id'] = inventory.campaign_id
             final_data['inventory_name'] = inventory.inventory_name
             final_data['comments'] = inventory.comments
