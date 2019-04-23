@@ -85,6 +85,7 @@ class BookingInventory(MongoModel):
 
 class BookingInventoryActivity(MongoModel):
     booking_inventory_id = fields.CharField()
+    inventory_name = fields.CharField()
     campaign_id = fields.CharField()
     assigned_to_id = fields.CharField()
     activity_type = fields.CharField()  # RELEASE or AUDIT or CLOSURE
