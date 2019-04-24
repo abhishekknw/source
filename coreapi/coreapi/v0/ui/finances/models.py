@@ -84,8 +84,7 @@ class PriceMapping(models.Model):
 
 class PriceMappingDefault(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
-    supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='default_prices',
-                                 blank=True, null=True, on_delete=models.CASCADE)
+    supplier = models.CharField(db_index=True, max_length=50, null=True)
     adinventory_type = models.ForeignKey('AdInventoryType', db_column='ADINVENTORY_TYPE_ID', blank=True, null=True,
                                          on_delete=models.CASCADE)
     suggested_supplier_price = models.IntegerField(db_column='SUGGESTED_SOCIETY_PRICE', null=True, blank=True)

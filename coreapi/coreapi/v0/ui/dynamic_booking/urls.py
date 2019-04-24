@@ -2,8 +2,9 @@ from __future__ import absolute_import
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 from .views import (BaseBookingTemplateView, BookingTemplateView, BookingTemplateById, BaseBookingTemplateById,
-                     BookingDataView, BookingDataById, BookingDataByCampaignId, BookingDetailsView, BookingDetailsById,
-                    BookingDetailsByCampaignId)
+                    BookingDataView, BookingDataById, BookingDataByCampaignId, BookingDetailsView, BookingDetailsById,
+                    BookingDetailsByCampaignId, BookingInventoryView, BookingAssignmentView,
+                    BookingAssignmentByCampaignId)
 
 urlpatterns = [
     url(r'^base-booking-template/$', BaseBookingTemplateView.as_view()),
@@ -15,7 +16,11 @@ urlpatterns = [
     url(r'^booking-data/campaign/(?P<campaign_id>[A-Z_a-z0-9]+)/$', BookingDataByCampaignId.as_view()),
     url(r'^booking-details/$', BookingDetailsView.as_view()),
     url(r'^booking-details/(?P<booking_details_id>[A-Z_a-z0-9]+)/$', BookingDetailsById.as_view()),
-    url(r'^booking-details/campaign/(?P<campaign_id>[A-Z_a-z0-9]+)/$', BookingDetailsByCampaignId.as_view())
+    url(r'^booking-details/campaign/(?P<campaign_id>[A-Z_a-z0-9]+)/$', BookingDetailsByCampaignId.as_view()),
+    url(r'^booking-inventory/campaign/(?P<campaign_id>[A-Z_a-z0-9]+)/$', BookingInventoryView.as_view()),
+    url(r'^booking-assignment/$', BookingAssignmentView.as_view()),
+    url(r'^booking-assignment/campaign/(?P<campaign_id>[A-Z_a-z0-9]+)/$', BookingAssignmentByCampaignId.as_view()),
+
 ]
 
 router = DefaultRouter()

@@ -4,13 +4,13 @@ from rest_framework.routers import DefaultRouter
 
 from v0.ui import views
 
-from v0.ui.supplier.views import SocietyAPIView,SocietyAPIFiltersView, SocietyAPIFiltersListView, SocietyList, \
+from v0.ui.supplier.views import SocietyAPIView, SocietyAPIFiltersView, SocietyAPIFiltersListView, SocietyList, \
     SocietyAPISortedListView, SocietyAPISocietyIdsView, GenerateSupplierIdAPIView, checkSupplierCodeAPIView, \
     SupplierImageDetails, CorporateViewSet, GymViewSet, SalonViewSet, RetailShopViewSet, BusShelter, \
     BusShelterSearchView, SaveBasicCorporateDetailsAPIView, SaveBuildingDetailsAPIView, CompanyDetailsAPIView, \
     CorporateCompanyDetailsAPIView, saveBasicSalonDetailsAPIView, saveBasicGymDetailsAPIView, BusShelter, \
     SuppliersMeta, BusDepotViewSet, SocietyDataImport
-
+from v0.ui.supplier.supplier_uploads import CorporateParkDataImport
 
 # from v0.ui.website import views as web_views
 urlpatterns = [
@@ -100,6 +100,7 @@ urlpatterns = [
     url(r'^supplier/(?P<id>[A-Z_a-z0-9]+)/image_details/$', SupplierImageDetails.as_view()),
     url(r'^import_society_payment_details/$', views.ImportSocietyPaymentDetails.as_view()),
     url(r'^supplier/society-data-import-excel/$', SocietyDataImport.as_view()),
+    url(r'^supplier/corporate-park-data-import-excel/$', CorporateParkDataImport.as_view()),
 
 ]
 

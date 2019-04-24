@@ -3979,6 +3979,10 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
     """
     function = prepare_shortlisted_spaces_and_inventories.__name__
     try:
+        # if str(proposal_id) in cache:
+        #     result = cache.get(str(proposal_id))
+        #     return ui_utils.handle_response(function, data=result, success=True)
+
         # the result
         result = {}
 
@@ -4048,7 +4052,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
                 return response
             supplier['shortlisted_inventories'], total_inventory_supplier_price = response.data['data']
             supplier['total_inventory_supplier_price'] = total_inventory_supplier_price
-
+        # cache.set(str(proposal_id), result, timeout=60 * 100)
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
         print("e3",e)
