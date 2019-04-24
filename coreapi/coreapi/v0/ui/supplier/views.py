@@ -310,19 +310,38 @@ class SocietyDataImport(APIView):
                 # obj.save()
 
                 rs_content_type = get_content_type('RS').data['data']
-                create_price_mapping_default('7', "POSTER", "A4", new_society,
+                print(society['society_name'])
+                try:
+                    create_price_mapping_default('7', "POSTER", "A4", new_society,
                                              society['poster_price'], rs_content_type, supplier_id)
-                create_price_mapping_default('0', "POSTER LIFT", "A4", new_society,
+                except Exception as e:
+                    pass
+                try:
+                    create_price_mapping_default('0', "POSTER LIFT", "A4", new_society,
                                              0, rs_content_type, supplier_id)
-                create_price_mapping_default('0', "STANDEE", "Small", new_society,
+                except Exception as e:
+                    pass
+                try:
+                    create_price_mapping_default('0', "STANDEE", "Small", new_society,
                                              0, rs_content_type, supplier_id)
-                create_price_mapping_default('1', "STALL", "Small", new_society,
+                except Exception as e:
+                    pass
+                try:
+                    create_price_mapping_default('1', "STALL", "Small", new_society,
                                              society['stall_price'], rs_content_type, supplier_id)
-                create_price_mapping_default('0', "CAR DISPLAY", "A4", new_society,
+                except Exception as e:
+                    pass
+                try:
+                    create_price_mapping_default('0', "CAR DISPLAY", "A4", new_society,
                                              0, rs_content_type, supplier_id)
+                except Exception as e:
+                    pass
                 save_flyer_locations(0, 1, new_society, society['supplier_code'])
-                create_price_mapping_default('1', "FLIER", "Door-to-Door", new_society,
+                try:
+                    create_price_mapping_default('1', "FLIER", "Door-to-Door", new_society,
                                              society['flier_price'], rs_content_type, supplier_id)
+                except Exception as e:
+                    pass
 
                 inventory_obj = InventorySummary.objects.filter(object_id=supplier_id).first()
                 inventory_id = inventory_obj.id if inventory_obj else None
