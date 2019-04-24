@@ -162,9 +162,13 @@ class BookingDataView(APIView):
     def post(request):
         campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data else None
 
-        data_old = BookingData.objects.raw({'campaign_id': campaign_id})[0]
-        old_supplier_id = data_old.supplier_id if 'supplier_id' in data_old else None
-        old_booking_template_id= data_old.booking_template_id if 'booking_template_id' in data_old else None
+        data_old_all = BookingData.objects.raw({'campaign_id': campaign_id})
+        data_old = None
+        if data_old_all and len(list(data_old_all)) > 0:
+            data_old = data_old_all[0]
+        if data_old:
+            old_supplier_id = data_old.supplier_id if 'supplier_id' in data_old else None
+            old_booking_template_id= data_old.booking_template_id if 'booking_template_id' in data_old else None
 
         booking_attributes = request.data['booking_attributes'] if 'booking_attributes' in request.data else None
         comments = request.data['comments'] if 'comments' in request.data else None
@@ -174,12 +178,14 @@ class BookingDataView(APIView):
         inventory_counts = request.data['inventory_counts'] if 'inventory_counts' in request.data else None
         if inventory_counts:
             create_inventories(inventory_counts, supplier_id, campaign_id)
-        if old_supplier_id == supplier_id:
-            return handle_response('', data="supplier_id already exist", success=None)
+        if data_old:
+            if old_supplier_id == supplier_id:
+                return handle_response('', data="supplier_id already exist", success=None)
 
         booking_template_id = request.data['booking_template_id'] if 'booking_template_id' in request.data else None
-        if old_booking_template_id != booking_template_id:
-            return handle_response('', data="booking_template_id must be same for same campaign_id", success=None)
+        if data_old:
+            if old_booking_template_id != booking_template_id:
+                return handle_response('', data="booking_template_id must be same for same campaign_id", success=None)
 
         dict_of_req_attributes = {"booking_attributes": booking_attributes, "organisation_id": organisation_id,
                                   "supplier_id": supplier_id, "campaign_id": campaign_id, "booking_template_id": booking_template_id}
