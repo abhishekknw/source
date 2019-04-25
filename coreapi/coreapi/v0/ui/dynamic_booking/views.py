@@ -364,7 +364,8 @@ class BookingAssignmentView(APIView):
         supplier_id = request.data['supplier_id'] if 'supplier_id' in request.data else None
         activity_list = request.data['activity_list'] if 'activity_list' in request.data else None
         all_booking_inventories = BookingInventory.objects.raw({"campaign_id": campaign_id,
-                                                                "inventory_name": inventory_name})
+                                                                "inventory_name": inventory_name,
+                                                                "supplier_id": supplier_id})
         all_booking_inventory_ids = [booking_inventory._id for booking_inventory in all_booking_inventories]
         for booking_inventory_id in all_booking_inventory_ids:
             for activity in activity_list:
@@ -414,6 +415,7 @@ class BookingAssignmentByCampaignId(APIView):
 
     @staticmethod
     def put(request, campaign_id):
+        supplier_id = request.data['supplier_id'] if 'supplier_id' in request.data else None
         inventory_name = request.data['inventory_name'] if 'inventory_name' in request.data else None
         activity_list = request.data['activity_list'] if 'activity_list' in request.data else None
         for activity in activity_list:
@@ -434,5 +436,6 @@ class BookingAssignmentByCampaignId(APIView):
             if comments:
                 update_dict["comments"] = comments
             update_dict["updated_at"] = datetime.now()
-            BookingInventoryActivity.objects.raw({"campaign_id": campaign_id,"inventory_name": inventory_name}).update({"$set": update_dict})
+            BookingInventoryActivity.objects.raw({"campaign_id": campaign_id,"inventory_name": inventory_name,
+                                                  "supplier_id": supplier_id}).update({"$set": update_dict})
         return handle_response('', data={"success": True}, success=True)
