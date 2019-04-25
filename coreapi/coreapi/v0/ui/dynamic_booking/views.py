@@ -361,6 +361,7 @@ class BookingAssignmentView(APIView):
     def post(request):
         campaign_id = request.data['campaign_id'] if 'campaign_id' in request.data else None
         inventory_name = request.data['inventory_name'] if 'inventory_name' in request.data else None
+        supplier_id = request.data['supplier_id'] if 'supplier_id' in request.data else None
         activity_list = request.data['activity_list'] if 'activity_list' in request.data else None
         all_booking_inventories = BookingInventory.objects.raw({"campaign_id": campaign_id,
                                                                 "inventory_name": inventory_name})
@@ -374,7 +375,8 @@ class BookingAssignmentView(APIView):
                 inventory_images = request.data['inventory_images'] if 'inventory_images' in request.data else None
                 dict_of_req_attributes = {"booking_inventory_id": booking_inventory_id, "assigned_to_id": assigned_to_id,
                                           "activity_type": activity_type, "activity_date": activity_date,
-                                          "campaign_id": campaign_id, "inventory_name": inventory_name}
+                                          "campaign_id": campaign_id, "inventory_name": inventory_name,
+                                          "supplier_id": supplier_id}
 
                 (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
                 if not is_valid:
@@ -394,6 +396,8 @@ class BookingAssignmentByCampaignId(APIView):
         for data in data_all:
             final_data = {}
             final_data['booking_inventory_id'] = data.booking_inventory_id
+            final_data['inventory_name'] = data.inventory_name
+            final_data['supplier_id'] = data.supplier_id
             final_data['assigned_to_id'] = data.assigned_to_id
             final_data['activity_type'] = data.activity_type
             final_data['activity_date'] = data.activity_date
