@@ -1,4 +1,6 @@
 from __future__ import absolute_import
+import os
+import time
 from rest_framework.views import APIView
 from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg
 from .models import (BaseBookingTemplate, BookingTemplate, BookingData, BookingDetails, BookingInventoryActivity,
@@ -7,6 +9,11 @@ from datetime import datetime
 from bson.objectid import ObjectId
 from .utils import validate_booking
 from v0.ui.dynamic_suppliers.models import SupplySupplier
+import boto3
+import v0.ui.utils as ui_utils
+from django.conf import settings
+import v0.ui.website.utils as website_utils
+
 
 
 class BaseBookingTemplateView(APIView):
@@ -439,3 +446,75 @@ class BookingAssignmentByCampaignId(APIView):
             BookingInventoryActivity.objects.raw({"campaign_id": campaign_id,"inventory_name": inventory_name,
                                                   "supplier_id": supplier_id}).update({"$set": update_dict})
         return handle_response('', data={"success": True}, success=True)
+
+
+class UploadInventoryActivityImageGeneric(APIView):
+    """
+    This API first attempts to upload the given image to amazon and saves path in inventory activity image table.
+    """
+
+    def post(self, request):
+        """
+        API to upload inventory activity image amazon
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            file = request.data['file']
+            extension = file.name.split('.')[-1]
+            supplier_name = request.data['supplier_name'].replace(' ', '_')
+            activity_type = request.data['activity_type']
+            activity_date = request.data['activity_date']
+            inventory_name = request.data['inventory_name']
+            actual_activity_date = request.data['actual_activity_date']
+            new_comment = request.data['comment']
+            lat = None
+            long = None
+            address = None
+            if 'lat' in request.data:
+                lat = request.data['lat']
+                long = request.data['long']
+                address = website_utils.get_address_from_lat_long(lat, long)
+                image_string = lat + ", " +long + " " + address + " " + actual_activity_date
+                file_address = website_utils.add_string_to_image(file, image_string)
+            file_name = supplier_name + '_' + inventory_name + '_' + activity_type + '_' + activity_date.replace('-',
+                                                                                                                 '_') + '_' + str(
+                time.time()).replace('.', '_') + '.' + extension
+            booking_inventory_activity_id = request.data['booking_inventory_activity_id']
+            existing_booking_activity = list(BookingInventoryActivity.objects.raw({'_id': ObjectId(booking_inventory_activity_id)}))
+            s3 = boto3.client(
+                's3',
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
+            )
+            with open(file_address, 'rb') as f:
+                contents = f.read()
+                s3.put_object(Body=contents, Bucket=settings.ANDROID_BUCKET_NAME, Key=file_name)
+                os.unlink(file_address)
+                existing_images = existing_booking_activity[0].inventory_images
+                existing_comments = existing_booking_activity[0].comments
+                update_dict = {}
+                if not existing_images:
+                    existing_images = []
+                existing_images.append({
+                    "file_name": file_name,
+                    "bucket_name": settings.ANDROID_BUCKET_NAME,
+                    "lat": lat,
+                    "long": long,
+                    "address": address
+                })
+                update_dict["inventory_images"] = existing_images
+                if new_comment:
+                    if not existing_comments:
+                        existing_comments = []
+                    existing_comments.append({
+                        "comment": new_comment,
+                        "timestamp": datetime.now()
+                    })
+                    update_dict["comments"] = existing_comments
+                update_dict["actual_activity_date"] = actual_activity_date
+                BookingInventoryActivity.objects.raw({'_id': ObjectId(booking_inventory_activity_id)}).update({"$set": update_dict})
+            return ui_utils.handle_response(class_name, data=file_name, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)

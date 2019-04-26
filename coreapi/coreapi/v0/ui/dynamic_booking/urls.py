@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (BaseBookingTemplateView, BookingTemplateView, BookingTemplateById, BaseBookingTemplateById,
                     BookingDataView, BookingDataById, BookingDataByCampaignId, BookingDetailsView, BookingDetailsById,
                     BookingDetailsByCampaignId, BookingInventoryView, BookingAssignmentView,
-                    BookingAssignmentByCampaignId)
+                    BookingAssignmentByCampaignId, UploadInventoryActivityImageGeneric)
 
 urlpatterns = [
     url(r'^base-booking-template/$', BaseBookingTemplateView.as_view()),
@@ -20,6 +20,7 @@ urlpatterns = [
     url(r'^booking-inventory/campaign/(?P<campaign_id>[A-Z_a-z0-9]+)/$', BookingInventoryView.as_view()),
     url(r'^booking-assignment/$', BookingAssignmentView.as_view()),
     url(r'^booking-assignment/campaign/(?P<campaign_id>[A-Z_a-z0-9]+)/$', BookingAssignmentByCampaignId.as_view()),
+    url(r'^upload-inventory-image-generic/$', UploadInventoryActivityImageGeneric.as_view()),
 
 ]
 
