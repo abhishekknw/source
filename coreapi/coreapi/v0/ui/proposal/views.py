@@ -1548,7 +1548,7 @@ class HashtagImagesViewSet(viewsets.ViewSet):
         try:
             campaign_id = request.query_params.get("campaign_id")
             supplier_id = request.query_params.get("supplier_id")
-            images = HashTagImages.objects.filter(campaign_id=campaign_id, object_id=supplier_id, hashtag='Receipt')
+            images = HashTagImages.objects.filter(campaign_id=campaign_id, object_id=supplier_id, hashtag='RECEIPT')
             serializer = HashtagImagesSerializer(images, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
