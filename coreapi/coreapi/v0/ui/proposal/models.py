@@ -323,3 +323,16 @@ class SupplierPhase(BaseModel):
 
     class Meta:
         db_table = 'supplier_phase'
+
+class SupplierAssignment(BaseModel):
+    """
+    This model stores supplier assignment
+    """
+    campaign = models.ForeignKey('ProposalInfo', null=False, blank=False, on_delete=models.CASCADE)
+    supplier_id = models.CharField(db_index=True, max_length=supplier_id_max_length)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    assigned_by = models.ForeignKey('BaseUser', related_name="assigned_by_user", null=False, blank=False, on_delete=models.CASCADE)
+    assigned_to = models.ForeignKey('BaseUser', related_name="assigned_to_user", null=False, blank=False, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'supplier_assignment'

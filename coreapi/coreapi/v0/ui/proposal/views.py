@@ -5,6 +5,7 @@ from rest_framework import viewsets, status
 from django.db.models import Count, Sum, F
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils import timezone
 from pygeocoder import Geocoder, GeocoderError
 from openpyxl import load_workbook
 from requests.exceptions import ConnectionError
@@ -31,12 +32,13 @@ from v0.ui.location.models import City, CityArea, CitySubArea
 from v0.ui.campaign.models import GenericExportFileName
 from v0.ui.website.views import GenericExportFileSerializerReadOnly
 from rest_framework.response import Response
-from v0.ui.proposal.models import HashTagImages
+from v0.ui.proposal.models import HashTagImages, SupplierAssignment
 from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer,
                                         ProposalCenterMappingVersionSerializer, ProposalInfoVersionSerializer,
                                         SpaceMappingSerializer, ProposalCenterMappingSpaceSerializer,
                                         ProposalCenterMappingVersionSpaceSerializer, SpaceMappingVersionSerializer,
-                                        ProposalSocietySerializer, ProposalCorporateSerializer, HashtagImagesSerializer)
+                                        ProposalSocietySerializer, ProposalCorporateSerializer, HashtagImagesSerializer,
+                                        SupplierAssignmentSerializer)
 from v0.ui.inventory.models import (SupplierTypeSociety, AdInventoryType, InventorySummary)
 from .models import (ProposalInfo, ProposalCenterMapping, ProposalCenterMappingVersion, SpaceMappingVersion,
                     SpaceMapping, ShortlistedSpacesVersion, ShortlistedSpaces, SupplierPhase)
@@ -1508,6 +1510,51 @@ class HashtagImagesViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
+    @detail_route(methods=['POST'])
+    def upload_receipt_image(self, request, pk):
+        class_name = self.__class__.__name__
+        try:
+            file = request.data['file']
+            campaign_id = pk
+            extension = file.name.split('.')[-1]
+            campaign_name = request.data['campaign_name'].replace(' ', '_')
+            supplier_name = request.data['supplier_name'].replace(' ', '_')
+            response = ui_utils.get_content_type(request.data['supplier_type_code'])
+            if not response:
+                return response
+            content_type = response.data.get('data')
+
+            file_name = campaign_name + '_' + supplier_name + '_' + 'receipt_' + str(
+                time.time()).replace('.', '_') + "_" + ''.join(
+                random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(6)) + '.' + extension
+            website_utils.upload_to_amazon(file_name, file_content=file, bucket_name=settings.ANDROID_BUCKET_NAME)
+            data = HashTagImages(**{
+                "campaign_id": campaign_id,
+                "hashtag": request.data['hashtag'],
+                "object_id": request.data['object_id'],
+                "comment": request.data['comment'],
+                "content_type": content_type,
+                "image_path": file_name
+            })
+            data.save()
+            return ui_utils.handle_response(class_name, data={}, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+    @list_route(methods=['GET'])
+    def get_receipt_images(self, request):
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get("campaign_id")
+            supplier_id = request.query_params.get("supplier_id")
+            images = HashTagImages.objects.filter(campaign_id=campaign_id, object_id=supplier_id, hashtag='RECEIPT')
+            serializer = HashtagImagesSerializer(images, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
 class HashtagImagesNewViewSet(APIView):
     """
     This class is arround hashtagged images by audit app
@@ -2422,15 +2469,18 @@ def flatten_list(list_of_lists):
 def get_supplier_list_by_status_ctrl(campaign_id):
     shortlisted_spaces_list = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
     shortlisted_spaces_by_phase_dict = {}
+
     all_phases = SupplierPhase.objects.filter(campaign_id=campaign_id).all()
     all_ss_comments = CampaignComments.objects.filter(campaign_id=campaign_id, related_to='EXTERNAL').all()
     all_ss_comments_dict = {}
+
     for single_ss_comment in all_ss_comments:
         if single_ss_comment.shortlisted_spaces_id not in all_ss_comments_dict:
             all_ss_comments_dict[single_ss_comment.shortlisted_spaces_id] = []
         if not single_ss_comment.inventory_type:
             all_ss_comments_dict[single_ss_comment.shortlisted_spaces_id].append(single_ss_comment.comment)
     all_phase_by_id = {}
+
     current_date = datetime.datetime.now().date()
     for phase in all_phases:
         all_phase_by_id[phase.id] = {'start_date': phase.start_date,
@@ -2438,12 +2488,16 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                                      'phase_no': phase.phase_no,
                                      'comments': phase.comments
                                      }
+
     overall_inventory_count_dict = {}
 
     no_phase_suppliers = []
     no_status_suppliers = []
+    all_supplier_ids = list(set([space.object_id for space in shortlisted_spaces_list]))
+    all_supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids)
+    all_supplier_dict = {supplier.supplier_id:supplier for supplier in all_supplier_objects}
     for space in shortlisted_spaces_list:
-        supplier_society = SupplierTypeSociety.objects.filter(supplier_id=space.object_id)
+        supplier_society = all_supplier_dict[space.object_id]
 
         supplier_inventories = ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces_id=space.id)
         inventory_activity_assignment = InventoryActivityAssignment.objects.filter(
@@ -2474,8 +2528,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     inventory_dates_dict[inventoy_name].append(activity_date)
         inventory_count_dict = {}
         
-        supplier_tower_count = supplier_society[0].tower_count if supplier_society[0].tower_count else 0
-        supplier_flat_count = supplier_society[0].flat_count if supplier_society[0].flat_count else 0
+        supplier_tower_count = supplier_society.tower_count if supplier_society.tower_count else 0
+        supplier_flat_count = supplier_society.flat_count if supplier_society.flat_count else 0
         for inventory in supplier_inventories:
             if inventory.ad_inventory_type.adinventory_name not in inventory_count_dict:
                 inventory_count_dict[inventory.ad_inventory_type.adinventory_name] = 0
@@ -2486,10 +2540,10 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
             if inventory.inventory_number_of_days:
                 inventory_days_dict[inventory.ad_inventory_type.adinventory_name] = inventory.inventory_number_of_days
-            inventory_count_dict['FLIER'] = supplier_society[0].flat_count if supplier_society[0].flat_count else 0
-            overall_inventory_count_dict['FLIER'] = supplier_society[0].flat_count if supplier_society[0].flat_count else 0
+            inventory_count_dict['FLIER'] = supplier_society.flat_count if supplier_society.flat_count else 0
+            overall_inventory_count_dict['FLIER'] = supplier_society.flat_count if supplier_society.flat_count else 0
 
-        supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society[0]).data
+        supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society).data
         supplier_society_serialized['booking_status'] = space.booking_status
         supplier_society_serialized['freebies'] = space.freebies.split(",") if space.freebies else None
         supplier_society_serialized['stall_locations'] = space.stall_locations.split(",") if space.stall_locations else None
@@ -2792,4 +2846,51 @@ class GetExtraLead(APIView):
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class SupplierAssignmentViewSet(viewsets.ViewSet):
+
+
+    def create(self, request):
+        class_name = self.__class__.__name__
+        try:
+            data = {}
+            campaign_id = request.data["campaign_id"]
+            supplier_id = request.data["supplier_id"]
+            user_ids = request.data["assigned_to_ids"]
+            user_ids_old = SupplierAssignment.objects.filter(campaign=campaign_id, supplier_id=supplier_id,
+                                                             assigned_to__in=user_ids).values()
+            user_ids_old = [user_id['assigned_to_id'] for user_id in user_ids_old]
+            assigned_by_user = BaseUser.objects.get(id=request.data["assigned_by"])
+            user_ids_new = list(set(user_ids) - set(user_ids_old))
+            user_ids_new_objects = BaseUser.objects.filter(id__in=user_ids_new)
+            data = []
+            now_time = timezone.now()
+            for user_id in user_ids_new_objects:
+                data.append(SupplierAssignment(**{
+                    "campaign_id": campaign_id,
+                    "supplier_id": supplier_id,
+                    "assigned_by": assigned_by_user,
+                    "assigned_to": user_id,
+                    "created_at": now_time,
+                    "updated_at": now_time
+                }))
+
+            SupplierAssignment.objects.bulk_create(data)
+                
+            return ui_utils.handle_response(class_name, data={}, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def list(self, request):
+        class_name = self.__class__.__name__
+        try:
+            user_id = request.query_params.get('id',None)
+            campaign_id = request.query_params.get('campaign_id',None)
+            suppliers = SupplierAssignment.objects.filter(campaign=campaign_id, assigned_to=user_id)
+            serializer = SupplierAssignmentSerializer(suppliers, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
 

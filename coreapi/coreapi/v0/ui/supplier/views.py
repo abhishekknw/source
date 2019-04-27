@@ -63,6 +63,8 @@ from v0.utils import create_cache_key, get_values
 from django.conf import settings
 from django.apps import apps
 from django.db import IntegrityError
+from .supplier_uploads import create_price_mapping_default
+
 
 def get_values(list_name,key):
     values = []
@@ -102,30 +104,6 @@ def get_city_subarea_map():
     return city_subarea_map
 
 
-def create_price_mapping_default(days_count, adinventory_name, adinventory_type, new_society,
-                                 actual_supplier_price, content_type, supplier_id):
-    print(new_society.society_name)
-    duration_types = DurationType.objects.filter()
-    adinventory_types = AdInventoryType.objects.filter(adinventory_name=adinventory_name)
-    for adinv_type in adinventory_types:
-        for dur_type in duration_types:
-
-            if dur_type.days_count == days_count and adinv_type.adinventory_name == adinventory_name and adinv_type.adinventory_type == adinventory_type:
-                obj,created = PriceMappingDefault.objects.get_or_create(supplier=new_society, duration_type=dur_type,
-                                              adinventory_type=adinv_type,
-                                              content_type=content_type,
-                                              object_id=supplier_id)
-
-                obj.actual_supplier_price = actual_supplier_price
-                obj.save()
-            else:
-                if (adinv_type.adinventory_name == 'FLIER' and dur_type.duration_name == 'Unit Daily') or adinv_type.adinventory_name != 'FLIER':
-                    PriceMappingDefault.objects.get_or_create(supplier=new_society, duration_type=dur_type,
-                                                          adinventory_type=adinv_type,
-                                                          content_type=content_type,
-                                                          object_id=supplier_id)
-
-
 def get_flat_count_type(flat_count):
     if flat_count is None:
         return None
@@ -136,6 +114,7 @@ def get_flat_count_type(flat_count):
     else:
         flat_type = '401+'
     return flat_type
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class SocietyDataImport(APIView):
@@ -221,12 +200,10 @@ class SocietyDataImport(APIView):
                 if society['supplier_id']:
                     supplier_id = society['supplier_id']
                 else:
-                    supplier_id = get_supplier_id(data, state_name=all_states_map[society['society_city_code']]['state_name'],
-                                              state_code=all_states_map[society['society_city_code']]['state_code'])
+                    supplier_id = get_supplier_id(data)
 
                 supplier_length = len(SupplierTypeSociety.objects.filter(supplier_id=supplier_id))
                 if len(SupplierTypeSociety.objects.filter(society_name=society['society_name'])):
-                    print(society['society_name'])
                     # instance = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
                     instance = SupplierTypeSociety.objects.filter(society_name=society['society_name'])[0]
                     supplier_id = instance.supplier_id
@@ -333,19 +310,38 @@ class SocietyDataImport(APIView):
                 # obj.save()
 
                 rs_content_type = get_content_type('RS').data['data']
-                create_price_mapping_default('7', "POSTER", "A4", new_society,
+                print(society['society_name'])
+                try:
+                    create_price_mapping_default('7', "POSTER", "A4", new_society,
                                              society['poster_price'], rs_content_type, supplier_id)
-                create_price_mapping_default('0', "POSTER LIFT", "A4", new_society,
+                except Exception as e:
+                    pass
+                try:
+                    create_price_mapping_default('0', "POSTER LIFT", "A4", new_society,
                                              0, rs_content_type, supplier_id)
-                create_price_mapping_default('0', "STANDEE", "Small", new_society,
+                except Exception as e:
+                    pass
+                try:
+                    create_price_mapping_default('0', "STANDEE", "Small", new_society,
                                              0, rs_content_type, supplier_id)
-                create_price_mapping_default('1', "STALL", "Small", new_society,
+                except Exception as e:
+                    pass
+                try:
+                    create_price_mapping_default('1', "STALL", "Small", new_society,
                                              society['stall_price'], rs_content_type, supplier_id)
-                create_price_mapping_default('0', "CAR DISPLAY", "A4", new_society,
+                except Exception as e:
+                    pass
+                try:
+                    create_price_mapping_default('0', "CAR DISPLAY", "A4", new_society,
                                              0, rs_content_type, supplier_id)
+                except Exception as e:
+                    pass
                 save_flyer_locations(0, 1, new_society, society['supplier_code'])
-                create_price_mapping_default('1', "FLIER", "Door-to-Door", new_society,
+                try:
+                    create_price_mapping_default('1', "FLIER", "Door-to-Door", new_society,
                                              society['flier_price'], rs_content_type, supplier_id)
+                except Exception as e:
+                    pass
 
                 inventory_obj = InventorySummary.objects.filter(object_id=supplier_id).first()
                 inventory_id = inventory_obj.id if inventory_obj else None
