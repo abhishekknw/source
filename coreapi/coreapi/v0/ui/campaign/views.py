@@ -43,7 +43,7 @@ import requests
 from celery import shared_task
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 from v0.ui.common.models import mongo_client
-
+from django.db import connection, connections
 
 class CampaignAPIView(APIView):
 
@@ -2151,3 +2151,23 @@ class UserCities(APIView):
             "city", flat=True)
         campaign_cities_distinct = list(set(campaign_cities))
         return ui_utils.handle_response({}, data={"list_of_cities": campaign_cities_distinct}, success=True)
+
+class PermissionDetails(APIView):
+    @staticmethod
+    def get(request):
+            cursor = connection.cursor()
+            cursor.execute("SELECT DISTINCT e.society_name, d.proposal_id, r.hashtag, e.Society_City, e.SOCIETY_LOCALITY \
+            from shortlisted_inventory_pricing_details as c \
+            inner join inventory_activity_assignment as a \
+            inner join inventory_activity as b \
+            inner join shortlisted_spaces as d \
+            inner join supplier_society as e \
+            inner join hashtag_images as r \
+            on b.id = a.inventory_activity_id and b.shortlisted_inventory_details_id = c.id \
+            and c.shortlisted_spaces_id = d.id and d.object_id = e.SUPPLIER_ID and r.object_id = e.supplier_id \
+            where d.proposal_id in ('BYJMAC472C') and a.activity_date between '2018-11-01' and '2019-04-28' and r.hashtag \
+            like '%permission%'")
+            all_list = cursor.fetchall()
+            dict_details=['society_name', 'campaign_id', 'hashtag', 'society_city', 'society_locality']
+            all_details_dict=[dict(zip(dict_details,l)) for l in all_list]
+            return ui_utils.handle_response({}, data=all_details_dict, success=True)
