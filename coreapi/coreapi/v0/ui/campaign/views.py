@@ -34,6 +34,7 @@ from v0.ui.base.models import DurationType
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.organisation.models import Organisation
 from v0.ui.proposal.serializers import ProposalInfoSerializer
+from v0.ui.account.models import ContactDetails
 from django.core.cache import cache
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.conf import settings
@@ -2171,3 +2172,30 @@ class PermissionDetails(APIView):
             dict_details=['society_name', 'campaign_id', 'hashtag', 'society_city', 'society_locality']
             all_details_dict=[dict(zip(dict_details,l)) for l in all_list]
             return ui_utils.handle_response({}, data=all_details_dict, success=True)
+
+class MISReportContacts(APIView):
+    @staticmethod
+    def get(request):
+        user_id = request.user.id
+        start_date = request.query_params.get('start_date', None)
+        if start_date:
+            all_campaigns = ProposalInfo.objects.filter(tentative_start_date__gte=start_date).all()
+        else:
+            all_campaigns = ProposalInfo.objects.all()
+        return_list = []
+        for campaign in all_campaigns:
+            partial_dict = {"total_supplier_count": None,
+                                                    "total_contacts_with_name": 0, "total_contacts_with_number": 0,
+                            "campaign_name": campaign.name}
+            all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign.proposal_id).all()
+            all_supplier_ids = [ss.object_id for ss in all_shortlisted_spaces]
+            all_suppliers = ContactDetails.objects.filter(object_id__in=all_supplier_ids)
+            partial_dict["total_supplier_count"] = len(all_shortlisted_spaces)
+            for sc in all_suppliers:
+                if sc.mobile:
+                    partial_dict["total_contacts_with_number"] += 1
+                if sc.name:
+                    partial_dict["total_contacts_with_name"] += 1
+            return_list.append(partial_dict)
+        return handle_response('', data=return_list, success=True)
+
