@@ -2153,9 +2153,18 @@ class UserCities(APIView):
         campaign_cities_distinct = list(set(campaign_cities))
         return ui_utils.handle_response({}, data={"list_of_cities": campaign_cities_distinct}, success=True)
 
-class PermissionDetails(APIView):
+class MISReportReceipts(APIView):
     @staticmethod
     def get(request):
+        user_id = request.user.id
+        start_date = request.query_params.get('start_date', None)
+        end_date = request.query_params.get('end_date', None)
+        if start_date:
+            all_campaigns = ProposalInfo.objects.filter(tentative_start_date__gte=start_date).all()
+        else:
+            all_campaigns = ProposalInfo.objects.all()
+        return_list = []
+        for campaign in all_campaigns:
             cursor = connection.cursor()
             cursor.execute("SELECT DISTINCT e.society_name, d.proposal_id, r.hashtag, e.Society_City, e.SOCIETY_LOCALITY \
             from shortlisted_inventory_pricing_details as c \
@@ -2166,12 +2175,34 @@ class PermissionDetails(APIView):
             inner join hashtag_images as r \
             on b.id = a.inventory_activity_id and b.shortlisted_inventory_details_id = c.id \
             and c.shortlisted_spaces_id = d.id and d.object_id = e.SUPPLIER_ID and r.object_id = e.supplier_id \
-            where d.proposal_id in ('BYJMAC472C') and a.activity_date between '2018-11-01' and '2019-04-28' and r.hashtag \
-            like '%permission%'")
-            all_list = cursor.fetchall()
+            where d.proposal_id in (%s) and a.activity_date between %s and %s and r.hashtag \
+            = 'PERMISSION BOX'", [campaign.proposal_id,start_date, end_date])
+            all_list_pb = cursor.fetchall()
+
             dict_details=['society_name', 'campaign_id', 'hashtag', 'society_city', 'society_locality']
-            all_details_dict=[dict(zip(dict_details,l)) for l in all_list]
-            return ui_utils.handle_response({}, data=all_details_dict, success=True)
+            all_details_list_pb=[dict(zip(dict_details,l)) for l in all_list_pb]
+
+            cursor.execute("SELECT DISTINCT e.society_name, d.proposal_id, r.hashtag, e.Society_City, e.SOCIETY_LOCALITY \
+            from shortlisted_inventory_pricing_details as c \
+            inner join inventory_activity_assignment as a \
+            inner join inventory_activity as b \
+            inner join shortlisted_spaces as d \
+            inner join supplier_society as e \
+            inner join hashtag_images as r \
+            on b.id = a.inventory_activity_id and b.shortlisted_inventory_details_id = c.id \
+            and c.shortlisted_spaces_id = d.id and d.object_id = e.SUPPLIER_ID and r.object_id = e.supplier_id \
+            where d.proposal_id in (%s) and a.activity_date between %s and %s and r.hashtag \
+            = 'RECEIPT'", [campaign.proposal_id,start_date, end_date])
+            all_list_receipt = cursor.fetchall()
+            all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign.proposal_id).all()
+            all_supplier_ids = [ss.object_id for ss in all_shortlisted_spaces]
+            dict_details=['society_name', 'campaign_id', 'hashtag', 'society_city', 'society_locality']
+            all_details_list_receipt=[dict(zip(dict_details,l)) for l in all_list_receipt]
+            return_list.append({"campaign_name": campaign.name,
+                                "count_permission": len(all_details_list_pb),
+                                "count_receipt": len(all_details_list_receipt),
+                                "supplier_count": len(all_supplier_ids)})
+        return ui_utils.handle_response({}, data=return_list, success=True)
 
 class MISReportContacts(APIView):
     @staticmethod
