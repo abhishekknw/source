@@ -267,38 +267,38 @@ class ShortlistedSpacesTransfer(APIView):
         serializer = ShortlistedSpacesSerializer(shortlisted_spaces, many=True)
         shortlisted_spaces_list = serializer.data
         print(shortlisted_spaces_list[0])
-        new_base_booking_template = BaseBookingTemplate(**
-        {"name": "Society BaseBooking",
-         "booking_attributes": [{"name": "Price Per Flat", "type": "FLOAT", "is_required": true},
-                                {"name": "is_poster_allowed", "type": "BOOLEAN", "is_required": true},
-                                {"name": "mode of payment", "type": "DROPDOWN", "options": ["NEFT", "CASH", "ONLINE"]}],
-         "entity_attributes": [{"name": "Latitude", "is_required": true}, {"name": "Longitude", "is_required": true},
-                               {"name": "Sub Area"}],
-         "base_entity_type_id": "5c66829e2f2bc6117aac7c75"
-         }).save()
-        new_base_booking_template_id = new_base_booking_template.id
-        new_booking_template = Bookingtemplate(**
-        {"name":"Society Booking",
-        "booking_attributes":[{"name":"Price Per Flat","type":"FLOAT", "is_required":true},
-                              {"name":"is_poster_allowed","type":"BOOLEAN", "is_required":true},
-                              {"name": "mode of payment", "type":"DROPDOWN", "options":["NEFT","CASH","ONLINE"]}],
-        "entity_attributes":[{"name":"Latitude","is_required":true},
-                             {"name":"Longitude","is_required":true},
-                             {"name": "Sub Area"}],
-        "entity_type_id": "5ca4ad779cb7fc6da6d92797",
-        "base_booking_template_id": new_base_booking_template_id
-        }).save()
-        new_booking_template_id = new_booking_template._id
-        for booking in shortlisted_spaces_list:
-            name = 'Society'
-            new_booking_template_id = new_booking_template_id
-            booking_attributes = booking
-            organisation_id = "MAC1421"
-            dict_of_req_attributes = {"name": name, "booking_attributes": booking_attributes,
-                                      "organisation_id": organisation_id,
-                                      "booking_template_id": new_booking_template_id}
-            booking_dict = dict_of_req_attributes
-            booking_dict["created_at"] = datetime.now()
+        # new_base_booking_template = BaseBookingTemplate(**
+        # {"name": "Society BaseBooking",
+        #  "booking_attributes": [{"name": "Price Per Flat", "type": "FLOAT", "is_required": true},
+        #                         {"name": "is_poster_allowed", "type": "BOOLEAN", "is_required": true},
+        #                         {"name": "mode of payment", "type": "DROPDOWN", "options": ["NEFT", "CASH", "ONLINE"]}],
+        #  "entity_attributes": [{"name": "Latitude", "is_required": true}, {"name": "Longitude", "is_required": true},
+        #                        {"name": "Sub Area"}],
+        #  "base_entity_type_id": "5c66829e2f2bc6117aac7c75"
+        #  }).save()
+        # new_base_booking_template_id = new_base_booking_template.id
+        # new_booking_template = Bookingtemplate(**
+        # {"name":"Society Booking",
+        # "booking_attributes":[{"name":"Price Per Flat","type":"FLOAT", "is_required":true},
+        #                       {"name":"is_poster_allowed","type":"BOOLEAN", "is_required":true},
+        #                       {"name": "mode of payment", "type":"DROPDOWN", "options":["NEFT","CASH","ONLINE"]}],
+        # "entity_attributes":[{"name":"Latitude","is_required":true},
+        #                      {"name":"Longitude","is_required":true},
+        #                      {"name": "Sub Area"}],
+        # "entity_type_id": "5ca4ad779cb7fc6da6d92797",
+        # "base_booking_template_id": new_base_booking_template_id
+        # }).save()
+        # new_booking_template_id = new_booking_template._id
+        # for booking in shortlisted_spaces_list:
+        #     name = 'Society'
+        #     new_booking_template_id = new_booking_template_id
+        #     booking_attributes = booking
+        #     organisation_id = "MAC1421"
+        #     dict_of_req_attributes = {"name": name, "booking_attributes": booking_attributes,
+        #                               "organisation_id": organisation_id,
+        #                               "booking_template_id": new_booking_template_id}
+        #     booking_dict = dict_of_req_attributes
+        #     booking_dict["created_at"] = datetime.now()
 
         ## STEPS
         ## STEP 1 create base booking template
