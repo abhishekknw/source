@@ -109,7 +109,8 @@ count_details_parent_map_multiple = {
 
 reverse_direct_match = {'flattype':'supplier', 'qualitytype':'supplier','standeetype':'supplier',
                         'fliertype':'supplier','stalltype':'supplier','liftpostertype':'supplier',
-                        'nbpostertype':'supplier','bannertype':'supplier', 'bachelortype':'supplier'}
+                        'nbpostertype':'supplier','bannertype':'supplier', 'bachelortype':'supplier',
+                        'subarea': 'supplier', 'locality':'supplier'}
 
 
 count_details_parent_map_custom = {
@@ -152,7 +153,13 @@ count_details_direct_match_multiple = {
                             'storage_type': 'name'},
     'supplier_bachelortype': {'parent': 'bachelortype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
                               'self_name_model': 'supplier_id', 'parent_name_model': 'bachelor_tenants_allowed',
-                              'storage_type': 'name'}
+                              'storage_type': 'name'},
+    'supplier_subarea': {'parent': 'subarea', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                         'self_name_model': 'supplier_id', 'parent_name_model': 'society_subarea',
+                         'storage_type': 'name'},
+    'supplier_locality': {'parent': 'locality', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                          'self_name_model': 'supplier_id', 'parent_name_model': 'society_locality',
+                          'storage_type': 'name'},
 }
 
 
