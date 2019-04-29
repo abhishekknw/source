@@ -6,6 +6,9 @@ from bson.objectid import ObjectId
 from datetime import datetime
 from .utils import validate_supplier_type_data, validate_with_supplier_type
 from v0.ui.supplier.models import (SupplierTypeSociety)
+from v0.ui.proposal.models import (ShortlistedSpaces)
+from v0.ui.inventory.serializers import (ShortlistedSpacesSerializer)
+from v0.ui.dynamic_booking.models import BookingData
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2
 
 
@@ -254,4 +257,19 @@ class SupplierTypeSociety(APIView):
             supplier_dict = dict_of_req_attributes
             supplier_dict["created_at"] = datetime.now()
             SupplySupplier(**supplier_dict).save()
+        return handle_response('', data={"success": True}, success=True)
+
+
+class ShortlistedSpacesTransfer(APIView):
+    @staticmethod
+    def get(request):
+        shortlisted_spaces = ShortlistedSpaces.objects.all()
+        serializer = ShortlistedSpacesSerializer(shortlisted_spaces, many=True)
+        shortlisted_spaces_list = serializer.data
+        print(shortlisted_spaces_list[0])
+        ## STEPS
+        ## STEP 1 create base booking template
+        ## STEP 2 create booking template
+        ## STEP 3 Loop over shortlisted_spaces_list and get new supplier_id from shorlisted_space's object_id
+        ## STEP 4 create the object for booking_data (which was shortlisted_spaces in old version) and save it
         return handle_response('', data={"success": True}, success=True)
