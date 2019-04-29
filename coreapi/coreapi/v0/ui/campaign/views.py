@@ -2160,7 +2160,7 @@ class MISReportReceipts(APIView):
         start_date = request.query_params.get('start_date', None)
         end_date = request.query_params.get('end_date', None)
         if start_date:
-            all_campaigns = ProposalInfo.objects.filter(tentative_start_date__gte=start_date).all()
+            all_campaigns = ProposalInfo.objects.all()
         else:
             all_campaigns = ProposalInfo.objects.all()
         return_list = []
