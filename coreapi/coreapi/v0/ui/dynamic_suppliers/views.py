@@ -174,7 +174,7 @@ class SupplierById(APIView):
         return handle_response('', data="success", success=True)
 
 
-class SupplierTypeSociety(APIView):
+class SupplierTransfer(APIView):
     @staticmethod
     def get(request):
         supplier_objects = SupplierTypeSociety.objects.all()
