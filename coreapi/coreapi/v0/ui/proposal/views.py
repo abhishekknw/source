@@ -1510,6 +1510,51 @@ class HashtagImagesViewSet(viewsets.ViewSet):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
+    @detail_route(methods=['POST'])
+    def upload_receipt_image(self, request, pk):
+        class_name = self.__class__.__name__
+        try:
+            file = request.data['file']
+            campaign_id = pk
+            extension = file.name.split('.')[-1]
+            campaign_name = request.data['campaign_name'].replace(' ', '_')
+            supplier_name = request.data['supplier_name'].replace(' ', '_')
+            response = ui_utils.get_content_type(request.data['supplier_type_code'])
+            if not response:
+                return response
+            content_type = response.data.get('data')
+
+            file_name = campaign_name + '_' + supplier_name + '_' + 'receipt_' + str(
+                time.time()).replace('.', '_') + "_" + ''.join(
+                random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(6)) + '.' + extension
+            website_utils.upload_to_amazon(file_name, file_content=file, bucket_name=settings.ANDROID_BUCKET_NAME)
+            data = HashTagImages(**{
+                "campaign_id": campaign_id,
+                "hashtag": request.data['hashtag'],
+                "object_id": request.data['object_id'],
+                "comment": request.data['comment'],
+                "content_type": content_type,
+                "image_path": file_name
+            })
+            data.save()
+            return ui_utils.handle_response(class_name, data={}, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+    @list_route(methods=['GET'])
+    def get_receipt_images(self, request):
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get("campaign_id")
+            supplier_id = request.query_params.get("supplier_id")
+            images = HashTagImages.objects.filter(campaign_id=campaign_id, object_id=supplier_id, hashtag='RECEIPT')
+            serializer = HashtagImagesSerializer(images, many=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
 class HashtagImagesNewViewSet(APIView):
     """
     This class is arround hashtagged images by audit app

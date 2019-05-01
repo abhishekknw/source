@@ -77,9 +77,9 @@ class BaseInventoryAPIById(APIView):
 
     @staticmethod
     def delete(request, base_inventory_id):
-        exist_entity_query = list(BaseInventory.objects.raw({'_id': ObjectId(base_inventory_id)}))
-        if len(exist_entity_query) == 1:
-            exist_entity_query[0].delete()
+        exist_supplier_query = list(BaseInventory.objects.raw({'_id': ObjectId(base_inventory_id)}))
+        if len(exist_supplier_query) == 1:
+            exist_supplier_query[0].delete()
             return handle_response('', data="success", success=True)
         else:
             return handle_response('', data="id does not exist", success=False)
