@@ -10,7 +10,8 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     mean_calculator, count_details_parent_map_custom, flatten, flatten_dict_array,
                     round_sig_min, time_parent_names, raw_data_unrestricted,
                     key_replace_group_multiple, key_replace_group, truncate_by_value_ranges, linear_extrapolator,
-                    get_constrained_values, add_related_field, related_fields_dict, calculate_mode)
+                    get_constrained_values, add_related_field, related_fields_dict, calculate_mode,
+                    add_binary_field_status, binary_parameters_list)
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -200,6 +201,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, [highest_level]+grouping_level)
         else:
             single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, grouping_level)
+        # adding binary fields status, such as 'fliertype', 'postertype', etc.
+        single_array = add_binary_field_status(single_array,binary_parameters_list)
         single_array_keys = single_array[0].keys() if len(single_array) > 0 else []
         for key in single_array_keys:
             reverse_key = level_name_by_model_id[key] if key in level_name_by_model_id else None
