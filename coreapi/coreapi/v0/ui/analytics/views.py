@@ -116,7 +116,14 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         highest_level_values = vendor_level_values_list
         highest_level = 'campaign'
         default_value_type = 'campaign'
-    for curr_metric in raw_data:
+    supplier_list = []
+
+    raw_data_lf = raw_data.copy() # raw data with lead first
+    if 'lead' in raw_data_lf and not raw_data_lf[0]=='lead':
+        raw_data_lf.remove('lead')
+        raw_data_lf.insert(0,'lead')
+
+    for curr_metric in raw_data_lf:
         lowest_level = curr_metric
         if data_scope_category == 'geographical':
             lowest_geographical_level = geographical_parent_details['base']
@@ -143,8 +150,10 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             if len(grouping_level) > 1:
                 hl = grouping_level[-1]
 
-            curr_output = get_details_by_higher_level(hl, lowest_level, curr_highest_level_values, lgl, grouping_level,
+            curr_output_all = get_details_by_higher_level(hl, lowest_level, curr_highest_level_values, lgl, grouping_level,
                                                       curr_dict, unilevel_constraints, grouping_category, value_ranges)
+            curr_output = curr_output_all[0]
+            supplier_list = curr_output_all[1]
             # add missing key, if needed
             if len(individual_metric_output.keys())>0:
                 prev_raw_data = list(individual_metric_output.keys())
@@ -169,9 +178,11 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 curr_output = sum_array_by_keys(curr_output, [highest_level]+grouping_level_original,[curr_metric])
                 grouping_level = grouping_level_original
         else:
-            curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
+            curr_output_all = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
                           default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category,
-                          value_ranges, supplier_constraints)
+                          value_ranges, supplier_constraints, supplier_list = supplier_list)
+            curr_output = curr_output_all[0]
+            supplier_list = curr_output_all[1]
             if curr_output == []:
                 continue
             if highest_level_original == 'vendor':
@@ -229,7 +240,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     derived_array = derived_array_original
     additional_fields_list = list(related_fields_dict.keys())
     for curr_field in additional_fields_list:
-        derived_array = add_related_field(derived_array,*(related_fields_dict[curr_field]))
+        derived_array = add_related_field(derived_array, *(related_fields_dict[curr_field]))
 
     metric_parents = {}
     remaining_metrics = individual_metric_output.keys()
@@ -403,7 +414,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
-                                grouping_category = "", value_ranges = {}, supplier_constraints = {}):
+                                grouping_category = "", value_ranges = {}, supplier_constraints = {},
+                                supplier_list = []):
     incrementing_value = None
     if lowest_level == None:
         return []
@@ -713,6 +725,18 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         except:
             single_array_results = merge_dict_array_array_multiple_keys(new_results, ['supplier'])
 
+        result_keys = single_array_results[0].keys()
+        if "supplier" in result_keys:
+            if "lead" in result_keys:
+                supplier_list = [x['supplier'] for x in single_array_results]
+            else:
+                if len(single_array_results) > len (supplier_list):
+                    new_array_results = []
+                    for curr_array in single_array_results:
+                        if curr_array['supplier'] in supplier_list:
+                            new_array_results.append(curr_array)
+                    single_array_results = new_array_results
+
         if original_grouping_levels is not None:
             superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
             superlevels_base_set = list(set(superlevels_base))
@@ -728,7 +752,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                                 superlevels[0], lowest_level, value_ranges, incrementing_value, storage_type)
     else:
         single_array_results = []
-    return single_array_results
+    return [single_array_results, supplier_list]
 
 
 def get_details_by_higher_level_geographical(highest_level, highest_level_list, lowest_level='supplier',
