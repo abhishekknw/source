@@ -10,6 +10,7 @@ from v0.ui.proposal.models import (ShortlistedSpaces)
 from v0.ui.inventory.serializers import (ShortlistedSpacesSerializer)
 from v0.ui.dynamic_booking.models import BookingData
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2
+from v0.ui.dynamic_booking.models import BaseBookingTemplate, BookingTemplate, BookingData
 
 
 class SupplierType(APIView):
@@ -177,6 +178,8 @@ class SupplierById(APIView):
 class SupplierTransfer(APIView):
     @staticmethod
     def get(request):
+        import pdb
+        pdb.set_trace()
         supplier_objects = SupplierTypeSociety.objects.all()
         serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
         society_list = serializer.data
@@ -243,7 +246,8 @@ class SupplierTransfer(APIView):
                                   {"name": "ifsc_code", "type": "STRING"},
                                   {"name": "account_no", "type": "STRING"},
                               {"name": "representative", "type": "STRING"}],
-            "organisation_id": "MAC1421"
+            "organisation_id": "MAC1421",
+
         }).save()
         new_supplier_type_id = new_supplier_type_for_society._id
         for society in society_list:
@@ -253,7 +257,8 @@ class SupplierTransfer(APIView):
             organisation_id = "MAC1421"
             dict_of_req_attributes = {"name": name, "supplier_attributes": supplier_attributes,
                                       "organisation_id": organisation_id,
-                                      "supplier_type_id": new_supplier_type_id}
+                                      "supplier_type_id": new_supplier_type_id,
+                                      "old_supplier_id": society['supplier_id']}
             supplier_dict = dict_of_req_attributes
             supplier_dict["created_at"] = datetime.now()
             SupplySupplier(**supplier_dict).save()
@@ -267,42 +272,58 @@ class ShortlistedSpacesTransfer(APIView):
         serializer = ShortlistedSpacesSerializer(shortlisted_spaces, many=True)
         shortlisted_spaces_list = serializer.data
         print(shortlisted_spaces_list[0])
-        # new_base_booking_template = BaseBookingTemplate(**
-        # {"name": "Society BaseBooking",
-        #  "booking_attributes": [{"name": "Price Per Flat", "type": "FLOAT", "is_required": true},
-        #                         {"name": "is_poster_allowed", "type": "BOOLEAN", "is_required": true},
-        #                         {"name": "mode of payment", "type": "DROPDOWN", "options": ["NEFT", "CASH", "ONLINE"]}],
-        #  "entity_attributes": [{"name": "Latitude", "is_required": true}, {"name": "Longitude", "is_required": true},
-        #                        {"name": "Sub Area"}],
-        #  "base_entity_type_id": "5c66829e2f2bc6117aac7c75"
-        #  }).save()
-        # new_base_booking_template_id = new_base_booking_template.id
-        # new_booking_template = Bookingtemplate(**
-        # {"name":"Society Booking",
-        # "booking_attributes":[{"name":"Price Per Flat","type":"FLOAT", "is_required":true},
-        #                       {"name":"is_poster_allowed","type":"BOOLEAN", "is_required":true},
-        #                       {"name": "mode of payment", "type":"DROPDOWN", "options":["NEFT","CASH","ONLINE"]}],
-        # "entity_attributes":[{"name":"Latitude","is_required":true},
-        #                      {"name":"Longitude","is_required":true},
-        #                      {"name": "Sub Area"}],
-        # "entity_type_id": "5ca4ad779cb7fc6da6d92797",
-        # "base_booking_template_id": new_base_booking_template_id
-        # }).save()
-        # new_booking_template_id = new_booking_template._id
-        # for booking in shortlisted_spaces_list:
-        #     name = 'Society'
-        #     new_booking_template_id = new_booking_template_id
-        #     booking_attributes = booking
-        #     organisation_id = "MAC1421"
-        #     dict_of_req_attributes = {"name": name, "booking_attributes": booking_attributes,
-        #                               "organisation_id": organisation_id,
-        #                               "booking_template_id": new_booking_template_id}
-        #     booking_dict = dict_of_req_attributes
-        #     booking_dict["created_at"] = datetime.now()
+        booking_attributes_list = [
 
-        ## STEPS
-        ## STEP 1 create base booking template
-        ## STEP 2 create booking template
-        ## STEP 3 Loop over shortlisted_spaces_list and get new supplier_id from shorlisted_space's object_id
-        ## STEP 4 create the object for booking_data (which was shortlisted_spaces in old version) and save it
+                                {"name": "payment_method", "type": "DROPDOWN", "options": ["NEFT", "CASH", "ONLINE"]},
+                                {"name": "payment_status", "type": "DROPDOWN", "options": ["Not Initiated", "Pending", "Cheque Released",
+                                                                                           "Paid", "Rejected"]},
+                                {"name": "status", "type":"DROPDOWN", "options": ["BUFFER", "REMOVED", "FINALIZED"]},
+                                {"name": "total_negotiated_price", "type":"FLOAT"},
+                                {"name": "booking_status", "type": "DROPDOWN", "options": ["Undecided",
+                                    "Decision Pending", "Conformed Booking", "Tentative Booking", "Phone Booked", "Visit Booked",
+                                    "Rejected", "Send Email", "Visit Required", "Call Required"]},
+
+                                {"name": "is_completed", "type": "BOOLEAN"},
+                                {"name": "transaction_or_check_number", "type": "STRING"},
+                                {"name": "phase_no", "type": "INT"},
+                                {"name": "freebies", "type": "MULTISELECT", "options": ["Whatsapp Group","Email Group",
+                                                                                     "Building ERP", " Door to Door"]},
+                                {"name": "stall_locations", "type": "MULTISELECT", "options": ["Nea Entry Gate","Near Exit Gate",
+                                        "In Front Of Tower", "Near Garden", "Near Play Area", "Near Club House",
+                                        "Near Swimming Pool", "Near Parking Area", "Near Shopping Area"]},
+                                {"name": "cost_per_flat", "type": "FLOAT"},
+                                {"name": "booking_priority", "type": "DROPDOWN", "options": ["Very High", "High"]},
+                                {"name": "sunboard_location", "type": "MULTISELECT", "options": ["Nea Entry Gate","Near Exit Gate",
+                                        "In Front Of Tower", "Near Garden", "Near Play Area", "Near Club House",
+                                        "Near Swimming Pool", "Near Parking Area", "Near Shopping Area"]},
+
+                                ]
+        new_base_booking_template = BaseBookingTemplate(**
+        {
+            "name": "Society BaseBooking",
+            "booking_attributes": booking_attributes_list,
+            "base_supplier_type_id": "5c66829e2f2bc6117aac7c75"
+         }).save()
+        new_base_booking_template_id = new_base_booking_template._id
+        new_booking_template = BookingTemplate(**
+        {
+            "name":"Society Booking",
+            "booking_attributes": booking_attributes_list,
+            "supplier_type_id": "5ca4ad779cb7fc6da6d92797",
+            "base_booking_template_id": new_base_booking_template_id
+        }).save()
+        new_booking_template_id = new_booking_template._id
+        for booking in shortlisted_spaces_list:
+            data = {}
+            data['booking_template_id'] = new_booking_template_id,
+            data['campaign_id'] = booking['proposal']
+            data['user_id'] = booking['user']
+            data['center_id'] = booking['center']
+            data['supplier_id_old'] = booking['object_id']
+            data['supplier_id'] = SupplySupplier.objects.raw({'old_supplier_id':booking['object_id']})[0]._id
+
+            for item in booking_attributes_list:
+                item['value'] = booking[item['name']]
+            data['booking_attributes'] = booking_attributes_list
+            BookingData(**data).save()
         return handle_response('', data={"success": True}, success=True)
