@@ -10,7 +10,8 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     mean_calculator, count_details_parent_map_custom, flatten, flatten_dict_array,
                     round_sig_min, time_parent_names, raw_data_unrestricted,
                     key_replace_group_multiple, key_replace_group, truncate_by_value_ranges, linear_extrapolator,
-                    get_constrained_values, add_related_field, related_fields_dict, calculate_mode)
+                    get_constrained_values, add_related_field, related_fields_dict, calculate_mode,
+                    add_binary_field_status, binary_parameters_list)
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo, ProposalCenterMapping
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -64,8 +65,6 @@ def get_campaigns_from_vendors(vendor_list):
     return final_result
 
 
-# currently working with the following constraints:
-# exactly one scope restrictor with exact match, one type of data point
 def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
                        higher_level_statistical_information, bivariate_statistical_information):
     unilevel_constraints = {}
@@ -202,6 +201,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, [highest_level]+grouping_level)
         else:
             single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, grouping_level)
+        # adding binary fields status, such as 'fliertype', 'postertype', etc.
+        single_array = add_binary_field_status(single_array,binary_parameters_list)
         single_array_keys = single_array[0].keys() if len(single_array) > 0 else []
         for key in single_array_keys:
             reverse_key = level_name_by_model_id[key] if key in level_name_by_model_id else None
@@ -717,10 +718,11 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             superlevels_base_set = list(set(superlevels_base))
             if len(superlevels_base_set)>1:
                 print("this is not developed yet")
-            else:
-                if len(superlevels)>1:
+            elif len(superlevels_base_set) == 1:
+                base = len([x for x in original_grouping_levels if x == superlevels_base_set[0]])
+                if len(superlevels)>1 or base==1:
                     single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
-                                    superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
+                                    superlevels, lowest_level, value_ranges, incrementing_value, storage_type, base)
                 elif len(superlevels)==1:
                     single_array_results = key_replace_group(single_array_results, superlevels_base_set[0],
                                 superlevels[0], lowest_level, value_ranges, incrementing_value, storage_type)
@@ -921,11 +923,17 @@ def get_all_assigned_campaigns_vendor_city(user_id, city_list = None, vendor_lis
         user_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id).values_list(
             'campaign_id', flat=True).distinct()
     if city_list is not None:
-        city_campaigns = ProposalCenterMapping.objects.filter(city__in=city_list).values('proposal_id').distinct()
-        city_campaigns = [obj['proposal_id'] for obj in city_campaigns]
-        final_list = list(set(user_campaigns).intersection(set(city_campaigns)))
+        city_suppliers_result = get_details_by_higher_level_geographical('city',city_list)
+        city_suppliers_list = city_suppliers_result['single_list']
+        city_campaigns = ShortlistedSpaces.objects.filter(object_id__in=city_suppliers_list).values_list\
+            ('proposal_id', flat=True).distinct()
+        city_assigned_campaigns = CampaignAssignment.objects.filter(
+            assigned_to_id=user_id, campaign_id__in=city_campaigns).values_list('campaign_id', flat=True).distinct()
+        final_list = city_assigned_campaigns
+        if vendor_list is not None:
+            final_list = list(set(vendor_campaigns).intersection(set(city_assigned_campaigns)))
     final_result = ProposalInfo.objects.filter(proposal_id__in=final_list).extra(select={
-                    'campaign_id': 'proposal_id', 'campaign_name':'name'}).values('campaign_id','campaign_name')
+                    'campaign_id': 'proposal_id', 'campaign_name': 'name'}).values('campaign_id', 'campaign_name')
     return final_result
 
 
