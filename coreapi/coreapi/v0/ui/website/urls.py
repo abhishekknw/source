@@ -27,6 +27,7 @@ urlpatterns = [
     url(r'^amenity-list/$', views.GetAllAmenities.as_view()),
     url(r'^supplier-amenity/$', views.SupplierAmenity.as_view()),
     url(r'^get-users-list/$', views.UserList.as_view()),
+    url(r'^get-users-minimal-list/$', views.UserMinimalList.as_view()),
     url(r'^bulk-download-images-amazon/$', views.BulkDownloadImagesAmazon.as_view()),
     url(r'^task/is-group-task-successfull/(?P<task_id>.+)/$', views.IsGroupTaskSuccessFull.as_view()),
     url(r'^task/is-individual-task-successfull/(?P<task_id>.+)/$', views.IsIndividualTaskSuccessFull.as_view()),

@@ -828,6 +828,39 @@ class SupplierAmenity(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
+class UserMinimalList(APIView):
+    """
+        returns all users
+    """
+
+    def get(self, request):
+        """
+        Args:
+            request:
+        Returns: returns all users
+        """
+        class_name = self.__class__.__name__
+        try:
+            organisation_id = request.query_params.get('org_id',None)
+            if organisation_id:
+                users = BaseUser.objects.filter(profile__organisation=organisation_id)
+            else:
+                users = BaseUser.objects.all()
+            user_list = []
+            for user in users:
+                user_list.append({
+                    "id": user.id,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "email": user.email,
+                    "username": user.username,
+                    "profile_id": user.profile_id,
+                    "role_id": user.role_id,
+                })
+            return ui_utils.handle_response(class_name, data=user_list, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 class UserList(APIView):
     """
         returns all users
@@ -847,7 +880,6 @@ class UserList(APIView):
             else:
                 users = BaseUser.objects.all()
             user_serializer = BaseUserSerializer(users, many=True)
-
             return ui_utils.handle_response(class_name, data=user_serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
