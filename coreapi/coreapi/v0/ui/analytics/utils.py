@@ -109,8 +109,11 @@ count_details_parent_map_multiple = {
 
 reverse_direct_match = {'flattype':'supplier', 'qualitytype':'supplier','standeetype':'supplier',
                         'fliertype':'supplier','stalltype':'supplier','liftpostertype':'supplier',
-                        'nbpostertype':'supplier','bannertype':'supplier', 'bachelortype':'supplier'}
+                        'nbpostertype':'supplier','bannertype':'supplier', 'bachelortype':'supplier',
+                        'subarea': 'supplier', 'locality':'supplier'}
 
+binary_parameters_list = ['standeetype', 'fliertype', 'stalltype', 'liftpostertype', 'nbpostertype',
+                          'bannertype', 'bachelortype']
 
 count_details_parent_map_custom = {
     'lead': {'parent': 'date,supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
@@ -152,7 +155,13 @@ count_details_direct_match_multiple = {
                             'storage_type': 'name'},
     'supplier_bachelortype': {'parent': 'bachelortype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
                               'self_name_model': 'supplier_id', 'parent_name_model': 'bachelor_tenants_allowed',
-                              'storage_type': 'name'}
+                              'storage_type': 'name'},
+    'supplier_subarea': {'parent': 'subarea', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                         'self_name_model': 'supplier_id', 'parent_name_model': 'society_subarea',
+                         'storage_type': 'name'},
+    'supplier_locality': {'parent': 'locality', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                          'self_name_model': 'supplier_id', 'parent_name_model': 'society_locality',
+                          'storage_type': 'name'},
 }
 
 
@@ -514,7 +523,6 @@ def get_common_keys(arrays):
 
 
 def merge_dict_array_array_multiple_keys(arrays, key_names):
-    #key_names = ['date','campaign']
     final_array = []
     if arrays==[]:
         return arrays
@@ -971,7 +979,7 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ran
 
 
 def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key, value_ranges = {},
-                               incrementing_value = None, operation_type = 'sum'):
+                               incrementing_value = None, operation_type = 'sum', base = 0):
     # if existing_key == required_key:
     #     return dict_array
     if incrementing_value is not None:
@@ -1008,6 +1016,8 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
     grouping_keys.remove(sum_key)
     if existing_key in grouping_keys:
         grouping_keys.remove(existing_key)
+    if base == 1:
+        grouping_keys = grouping_keys + [existing_key]
     if operation_type == 'append':
         new_array = append_array_by_keys(new_array, grouping_keys, [sum_key])
     elif operation_type == 'mean':
@@ -1088,3 +1098,17 @@ def calculate_mode(num_list,window_size=3):
     max_index_upper = max_index_lower + window_size - 1
     mode = float((max_index_upper + max_index_lower))/2.0
     return mode
+
+
+def add_binary_field_status(dict_array, fields_list, false_prefix = 'no_',remove_suffix_len = 4):
+    dict_keys = dict_array[0].keys()
+    binary_keys_list = set(dict_keys).intersection(set(fields_list))
+    new_array = []
+    for curr_dict in dict_array:
+        binary_fields = []
+        for curr_key in binary_keys_list:
+            curr_field = curr_key if curr_dict[curr_key] is True else false_prefix + curr_key
+            binary_fields.append(curr_field[:-remove_suffix_len])
+        curr_dict["binary_fields"] = binary_fields
+        new_array.append(curr_dict)
+    return new_array

@@ -187,11 +187,11 @@ JWT_AUTH = {
 
 BASE_URL = Config.BASE_URL if Config else "http://localhost:8000/"
 if Config:
-    MONGO_DB = Config.MONGO_DB if hasattr(Config, 'MONGO_DB') else 'machadalo'
+    MONGO_DB = Config.MONGO_DB if hasattr(Config, 'MONGO_DB') else 'machadalo_2'
     MONGO_DB_TEST = Config.MONGO_DB_TEST if hasattr(Config,'MONGO_DB_TEST') else 'mdtest'
     DEFAULT_CC_EMAILS = Config.DEFAULT_CC_EMAILS if hasattr(Config,'DEFAULT_CC_EMAILS') else []
 else:
-    MONGO_DB = 'machadalo'
+    MONGO_DB = 'machadalo_2'
     MONGO_DB_TEST = 'mdtest'
     DEFAULT_CC_EMAILS = []
 # EMAIL SETTINGS

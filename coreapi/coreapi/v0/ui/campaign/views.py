@@ -1201,7 +1201,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
         time = curr_data['created_at']
         curr_date = str(time.date())
         curr_time = str(time)
-        curr_phase_int = 1 + (time - start_datetime_phase).days / 7
+        curr_phase_int = math.floor(1 + (time - start_datetime_phase).days / 7)
         curr_phase_start = time - timedelta(days = (time.weekday() - start_weekday_int)%7)
         curr_phase_end = curr_phase_start + timedelta(days=7)
         curr_phase = str(curr_phase_int)
