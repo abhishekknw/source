@@ -48,6 +48,9 @@ class BookingData(MongoModel):
     created_by = fields.CharField()
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
+    user_id = fields.IntegerField()
+    center_id = fields.IntegerField()
+    supplier_id_old = fields.CharField()
 
     class Meta:
         write_concern = WriteConcern(j=True)

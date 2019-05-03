@@ -30,6 +30,7 @@ class SupplySupplier(MongoModel):
     '''
     name = fields.CharField()
     supplier_type_id = fields.CharField()  # This should be present in supplier_type fields
+    old_supplier_id = fields.CharField(blank=True)
     is_custom = fields.BooleanField(default=False)  # are there any new attributes not present in SupplySupplierType?
     supplier_attributes = fields.ListField()
     organisation_id = fields.CharField()
