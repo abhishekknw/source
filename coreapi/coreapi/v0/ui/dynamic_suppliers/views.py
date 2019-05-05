@@ -178,8 +178,6 @@ class SupplierById(APIView):
 class SupplierTransfer(APIView):
     @staticmethod
     def get(request):
-        import pdb
-        pdb.set_trace()
         supplier_objects = SupplierTypeSociety.objects.all()
         serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
         society_list = serializer.data
