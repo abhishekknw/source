@@ -320,8 +320,10 @@ class ShortlistedSpacesTransfer(APIView):
             data['user_id'] = booking['user']
             data['center_id'] = booking['center']
             data['supplier_id_old'] = booking['object_id']
-            data['supplier_id'] = SupplySupplier.objects.raw({'old_supplier_id':booking['object_id']})[0]._id
-
+            if SupplySupplier.objects.raw({'old_supplier_id':booking['object_id']}).count() > 0:
+                data['supplier_id'] = SupplySupplier.objects.raw({'old_supplier_id':booking['object_id']})[0]._id
+            else:
+                continue
             for item in booking_attributes_list:
                 item['value'] = booking[item['name']]
             data['booking_attributes'] = booking_attributes_list
