@@ -249,3 +249,8 @@ class FiltersSerializer(ModelSerializer):
     class Meta:
         model = Filters
         fields = '__all__'
+
+class ShortlistedInventoryPricingDetailsSerializer(ModelSerializer):
+    class Meta:
+        model = ShortlistedInventoryPricingDetails
+        fields = '__all__'

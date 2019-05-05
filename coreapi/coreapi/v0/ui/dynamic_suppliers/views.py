@@ -7,10 +7,11 @@ from datetime import datetime
 from .utils import validate_supplier_type_data, validate_with_supplier_type
 from v0.ui.supplier.models import (SupplierTypeSociety)
 from v0.ui.proposal.models import (ShortlistedSpaces)
-from v0.ui.inventory.serializers import (ShortlistedSpacesSerializer)
+from v0.ui.inventory.serializers import (ShortlistedSpacesSerializer, ShortlistedInventoryPricingDetailsSerializer)
 from v0.ui.dynamic_booking.models import BookingData
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2
-from v0.ui.dynamic_booking.models import BaseBookingTemplate, BookingTemplate, BookingData
+from v0.ui.dynamic_booking.models import BaseBookingTemplate, BookingTemplate, BookingData, BookingInventory
+from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 
 
 class SupplierType(APIView):
@@ -326,4 +327,28 @@ class ShortlistedSpacesTransfer(APIView):
                 item['value'] = booking[item['name']]
             data['booking_attributes'] = booking_attributes_list
             BookingData(**data).save()
+        return handle_response('', data={"success": True}, success=True)
+
+class SupplierInventoryTransfer(APIView):
+    @staticmethod
+    def get(request):
+        supplier_inventories = ShortlistedInventoryPricingDetails.objects.all()
+        for inventory in supplier_inventories:
+            data = {}
+            if SupplySupplier.objects.raw({'old_supplier_id': inventory.shortlisted_spaces.object_id}).count() > 0:
+                data['supplier_id'] = SupplySupplier.objects.raw({'old_supplier_id': inventory.shortlisted_spaces.object_id})[0]._id
+            else:
+                continue
+            data['campaign_id'] = inventory.shortlisted_spaces.proposal.proposal_id
+            data['inventory_name'] = inventory.ad_inventory_type.adinventory_name
+            data['organisation_id'] = inventory.shortlisted_spaces.proposal.account.organisation.organisation_id
+            data['supplier_id_old'] = inventory.shortlisted_spaces.object_id
+            data['comments'] = []
+            data['inventory_images'] = []
+            data['created_by'] = inventory.user
+            data["created_at"] = datetime.now()
+            data["updated_at"] = datetime.now()
+
+            BookingInventory(**data).save()
+
         return handle_response('', data={"success": True}, success=True)
