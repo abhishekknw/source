@@ -941,7 +941,7 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ran
     allowed_values = value_ranges[required_key] if required_key in value_ranges else None
     if allowed_values is not None:
         allowed_values = [str(x) for x in allowed_values]
-    search_key = str(existing_key)+'_'+str(required_key)
+    search_key = str(existing_key)+'_'+str(rqequired_key)
     key_details = count_details_direct_match_multiple[search_key]
     model_name = key_details['model_name']
     database_type = key_details['database_type']
@@ -950,6 +950,7 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ran
     match_list = [x[existing_key] for x in dict_array]
     new_array = []
     if database_type == 'mysql':
+        curr_dict = None
         first_part_query = model_name + '.objects.filter('
         full_query = first_part_query + self_name_model + '__in=match_list)'
         query = list(eval(full_query).values_list(self_name_model, parent_name_model))
@@ -984,6 +985,7 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
                                incrementing_value = None, operation_type = 'sum', base = 0):
     # if existing_key == required_key:
     #     return dict_array
+    curr_dict = None
     if incrementing_value is not None:
         sum_key = sum_key + str(incrementing_value)
     for required_key in required_keys:
