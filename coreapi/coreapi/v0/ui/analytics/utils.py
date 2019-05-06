@@ -962,6 +962,8 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ran
             if allowed_values is not None and str(curr_value) not in allowed_values:
                 continue
             new_array.append(curr_dict)
+        if not curr_dict:
+            return []
         all_keys = list(curr_dict.keys())
         grouping_keys = all_keys
         grouping_keys.remove(sum_key)
@@ -1011,6 +1013,8 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
         else:
             new_array = dict_array
         dict_array = new_array
+    if not curr_dict:
+        return []
     all_keys = list(curr_dict.keys())
     grouping_keys = all_keys
     grouping_keys.remove(sum_key)

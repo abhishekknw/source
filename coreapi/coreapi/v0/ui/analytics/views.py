@@ -287,6 +287,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             "op": op,
             "name": metric_name
         })
+
         metric_parents[metric_name] = curr_metric_parents
 
     for curr_dict in derived_array:
