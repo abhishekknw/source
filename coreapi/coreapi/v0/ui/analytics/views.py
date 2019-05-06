@@ -394,7 +394,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                     not dr_value == 0 and nr_value is not None and dr_value is not None else None
                 new_name = curr_metric['name'] + '_total'
                 new_metric_names.append(new_name)
-                curr_dict[new_name] = round(result_value, 4) if result_value is not None else result_value
+                curr_dict[new_name] = round_sig_min(result_value, 7) if result_value is not None else result_value
 
         new_stat_metrics = []
         for curr_stat in stat_metrics:

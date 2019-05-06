@@ -195,9 +195,9 @@ time_parent_names = {
 
 # rounds to sig places with minimum sig significant digits
 # if sig = 2. round_sig_min(1547.128) = 1547.12, round_sig_min(0.000313) = 0.00031
-def round_sig_min(x,sig=2):
+def round_sig_min(x,sig=7):
     if x>=1:
-        return round(x,2)
+        return round(x,sig)
     elif x==0:
         return x
     else:
@@ -253,7 +253,7 @@ def calculate_freqdist_mode_from_list_floating(num_list, window_size=5):
         upper_limit = lower_limit + window_size
         if upper_limit>min_max[1]:
             upper_limit = min_max[1]
-        new_list = [round(x,4) for x in num_list_copy if x> lower_limit and x<=upper_limit]
+        new_list = [round_sig_min(x) for x in num_list_copy if x> lower_limit and x<=upper_limit]
         if new_list == []:
             lower_limit = upper_limit
             continue
@@ -285,7 +285,7 @@ def calculate_freqdist_mode_from_list(num_list, window_size=5):
     counter = 0
     while lower_limit <= last_window_start:
         upper_limit = lower_limit + window_size
-        new_list = [round(x,4) for x in num_list_copy if lower_limit <= x < upper_limit]
+        new_list = [round_sig_min(x) for x in num_list_copy if lower_limit <= x < upper_limit]
         freq = len(new_list)
         mean = np.mean(new_list) if len(new_list)>0 else None
         counter = counter+freq
@@ -376,7 +376,7 @@ def sum_array_by_single_key(array, keys):
 
 
 def binary_operation(a, b, op):
-    operator_map = {"/": round(float(a)/b,5) if not b==0 else None, "*":a*b, "+":a+b, "-": a-b}
+    operator_map = {"/": round_sig_min(float(a)/b) if not b==0 else None, "*":a*b, "+":a+b, "-": a-b}
     return operator_map[op]
 
 
