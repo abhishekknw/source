@@ -1106,15 +1106,23 @@ def calculate_mode(num_list,window_size=3):
     return mode
 
 
-def add_binary_field_status(dict_array, fields_list, false_prefix = 'no_',remove_suffix_len = 4):
+def add_binary_field_status(dict_array, fields_list, false_prefix = 'No ',remove_suffix_len = 4,
+                            custom_binary_field_labels = {}):
     dict_keys = dict_array[0].keys()
     binary_keys_list = set(dict_keys).intersection(set(fields_list))
     new_array = []
     for curr_dict in dict_array:
         binary_fields = []
         for curr_key in binary_keys_list:
-            curr_field = curr_key if curr_dict[curr_key] is True else false_prefix + curr_key
-            binary_fields.append(curr_field[:-remove_suffix_len])
+            curr_key_cap = curr_key.capitalize()
+            if curr_key in custom_binary_field_labels:
+                curr_conditions = custom_binary_field_labels[curr_key]
+                curr_field = curr_conditions["true"] if curr_dict[curr_key] is True else curr_conditions["false"]
+                binary_fields.append(curr_field)
+            else:
+                curr_field = curr_key_cap if curr_dict[curr_key] is True else false_prefix + curr_key_cap
+                binary_fields.append(curr_field[:-remove_suffix_len])
         curr_dict["binary_fields"] = binary_fields
         new_array.append(curr_dict)
     return new_array
+
