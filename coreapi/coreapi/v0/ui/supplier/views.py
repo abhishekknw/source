@@ -185,7 +185,6 @@ class SocietyDataImport(APIView):
         all_city_map = get_city_map()
         all_city_area_map = get_city_area_map()
         all_city_subarea_map = get_city_subarea_map()
-
         for society in society_data_list:
             if society['supplier_code'] is not None:
                 data = {
@@ -196,6 +195,7 @@ class SocietyDataImport(APIView):
                     'supplier_code': society['supplier_code'],
                     'supplier_name': society['society_name']
                 }
+
                 supplier_id = None
                 if society['supplier_id']:
                     supplier_id = society['supplier_id']
@@ -204,6 +204,7 @@ class SocietyDataImport(APIView):
 
                 supplier_length = len(SupplierTypeSociety.objects.filter(supplier_id=supplier_id))
                 if len(SupplierTypeSociety.objects.filter(society_name=society['society_name'])):
+
                     # instance = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
                     instance = SupplierTypeSociety.objects.filter(society_name=society['society_name'])[0]
                     supplier_id = instance.supplier_id
@@ -236,6 +237,7 @@ class SocietyDataImport(APIView):
                     new_society = instance
 
                 elif supplier_length:
+
                     instance = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
                     instance.society_name = society['society_name']
                     instance.society_locality = society['society_locality']
@@ -266,6 +268,7 @@ class SocietyDataImport(APIView):
                     new_society = instance
 
                 else:
+
                     new_society = SupplierTypeSociety(**{
                         'supplier_id': supplier_id,
                         'society_name': society['society_name'],
@@ -296,18 +299,18 @@ class SocietyDataImport(APIView):
                     })
                     new_society.save()
 
-                # new_contact_data = {
-                #     'name': society['contact_name'],
-                #     'email': society['email'],
-                #     'designation': society['designation'],
-                #     'salutation': society['salutation'],
-                #     'mobile': society['mobile'],
-                #     'landline': society['landline'],
-                #     'content_type': get_content_type('RS').data['data'],
-                #     'object_id': supplier_id
-                # }
-                # obj, is_created = ContactDetails.objects.get_or_create(**new_contact_data)
-                # obj.save()
+                new_contact_data = {
+                    'name': society['contact_name'],
+                    'email': society['email'],
+                    'designation': society['designation'],
+                    'salutation': society['salutation'],
+                    'mobile': society['mobile'],
+                    'landline': society['landline'],
+                    'content_type': get_content_type('RS').data['data'],
+                    'object_id': supplier_id
+                }
+                obj, is_created = ContactDetails.objects.get_or_create(**new_contact_data)
+                obj.save()
 
                 rs_content_type = get_content_type('RS').data['data']
                 print(society['society_name'])
