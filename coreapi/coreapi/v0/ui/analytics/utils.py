@@ -941,7 +941,7 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ran
     allowed_values = value_ranges[required_key] if required_key in value_ranges else None
     if allowed_values is not None:
         allowed_values = [str(x) for x in allowed_values]
-    search_key = str(existing_key)+'_'+str(rqequired_key)
+    search_key = str(existing_key)+'_'+str(required_key)
     key_details = count_details_direct_match_multiple[search_key]
     model_name = key_details['model_name']
     database_type = key_details['database_type']
