@@ -195,9 +195,9 @@ time_parent_names = {
 
 # rounds to sig places with minimum sig significant digits
 # if sig = 2. round_sig_min(1547.128) = 1547.12, round_sig_min(0.000313) = 0.00031
-def round_sig_min(x,sig=2):
+def round_sig_min(x,sig=7):
     if x>=1:
-        return round(x,2)
+        return round(x,sig)
     elif x==0:
         return x
     else:
@@ -253,7 +253,7 @@ def calculate_freqdist_mode_from_list_floating(num_list, window_size=5):
         upper_limit = lower_limit + window_size
         if upper_limit>min_max[1]:
             upper_limit = min_max[1]
-        new_list = [round(x,4) for x in num_list_copy if x> lower_limit and x<=upper_limit]
+        new_list = [round_sig_min(x) for x in num_list_copy if x> lower_limit and x<=upper_limit]
         if new_list == []:
             lower_limit = upper_limit
             continue
@@ -285,7 +285,7 @@ def calculate_freqdist_mode_from_list(num_list, window_size=5):
     counter = 0
     while lower_limit <= last_window_start:
         upper_limit = lower_limit + window_size
-        new_list = [round(x,4) for x in num_list_copy if lower_limit <= x < upper_limit]
+        new_list = [round_sig_min(x) for x in num_list_copy if lower_limit <= x < upper_limit]
         freq = len(new_list)
         mean = np.mean(new_list) if len(new_list)>0 else None
         counter = counter+freq
@@ -376,7 +376,7 @@ def sum_array_by_single_key(array, keys):
 
 
 def binary_operation(a, b, op):
-    operator_map = {"/": round(float(a)/b,5) if not b==0 else None, "*":a*b, "+":a+b, "-": a-b}
+    operator_map = {"/": round_sig_min(float(a)/b) if not b==0 else None, "*":a*b, "+":a+b, "-": a-b}
     return operator_map[op]
 
 
@@ -1106,15 +1106,23 @@ def calculate_mode(num_list,window_size=3):
     return mode
 
 
-def add_binary_field_status(dict_array, fields_list, false_prefix = 'no_',remove_suffix_len = 4):
+def add_binary_field_status(dict_array, fields_list, false_prefix = 'No ',remove_suffix_len = 4,
+                            custom_binary_field_labels = {}):
     dict_keys = dict_array[0].keys()
     binary_keys_list = set(dict_keys).intersection(set(fields_list))
     new_array = []
     for curr_dict in dict_array:
         binary_fields = []
         for curr_key in binary_keys_list:
-            curr_field = curr_key if curr_dict[curr_key] is True else false_prefix + curr_key
-            binary_fields.append(curr_field[:-remove_suffix_len])
+            curr_key_cap = curr_key.capitalize()
+            if curr_key in custom_binary_field_labels:
+                curr_conditions = custom_binary_field_labels[curr_key]
+                curr_field = curr_conditions["true"] if curr_dict[curr_key] is True else curr_conditions["false"]
+                binary_fields.append(curr_field)
+            else:
+                curr_field = curr_key_cap if curr_dict[curr_key] is True else false_prefix + curr_key_cap
+                binary_fields.append(curr_field[:-remove_suffix_len])
         curr_dict["binary_fields"] = binary_fields
         new_array.append(curr_dict)
     return new_array
+

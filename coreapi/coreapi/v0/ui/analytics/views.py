@@ -206,6 +206,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         individual_metric_output[lowest_level] = curr_output
 
     reverse_map = {}
+    custom_binary_field_labels = data_point["custom_binary_field_labels"] if "custom_binary_field_labels" in data_point\
+        else {}
     if data_summary == 0:
         if grouping_level[0] in reverse_direct_match.keys() or data_scope_category == 'geographical' \
                 or data_point["level"] == ["date"]:
@@ -213,7 +215,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         else:
             single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, grouping_level)
         # adding binary fields status, such as 'fliertype', 'postertype', etc.
-        single_array = add_binary_field_status(single_array,binary_parameters_list)
+        single_array = add_binary_field_status(single_array,binary_parameters_list,
+                                               custom_binary_field_labels = custom_binary_field_labels)
         single_array_keys = single_array[0].keys() if len(single_array) > 0 else []
         for key in single_array_keys:
             reverse_key = level_name_by_model_id[key] if key in level_name_by_model_id else None
@@ -391,7 +394,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                     not dr_value == 0 and nr_value is not None and dr_value is not None else None
                 new_name = curr_metric['name'] + '_total'
                 new_metric_names.append(new_name)
-                curr_dict[new_name] = round(result_value, 4) if result_value is not None else result_value
+                curr_dict[new_name] = round_sig_min(result_value, 7) if result_value is not None else result_value
 
         new_stat_metrics = []
         for curr_stat in stat_metrics:
