@@ -181,6 +181,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_output_all = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
                           default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category,
                           value_ranges, supplier_constraints, supplier_list = supplier_list)
+
             curr_output = curr_output_all[0]
             supplier_list = curr_output_all[1]
             if curr_output == []:
@@ -227,6 +228,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                                                 raw_data, highest_level_values)
         single_array_subleveled = copy.deepcopy(single_array)
         single_array_truncated = truncate_by_value_ranges(single_array_subleveled,value_ranges, range_type)
+
 
         if single_array_truncated == []:
             print("no data within the given range")
@@ -705,6 +707,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     if not all_results == [] and isinstance(all_results[0], dict) == True:
                         all_results = [all_results]
                     all_results.append(query)
+
                 #query2 = merge_dict_array_array_multiple_keys(all_results,parent_model_names)
                 next_level_match_array = [x[self_model_name] for x in query if x[self_model_name] is not None]
                 if storage_type == 'count':
@@ -734,7 +737,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             if "lead" in result_keys:
                 supplier_list = [x['supplier'] for x in single_array_results]
             else:
-                if len(single_array_results) > len (supplier_list):
+                if len(single_array_results) > len(supplier_list) and not supplier_list == []:
                     new_array_results = []
                     for curr_array in single_array_results:
                         if curr_array['supplier'] in supplier_list:
@@ -742,6 +745,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     single_array_results = new_array_results
 
         if original_grouping_levels is not None:
+
             superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
             superlevels_base_set = list(set(superlevels_base))
             if len(superlevels_base_set)>1:

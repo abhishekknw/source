@@ -60,6 +60,7 @@ related_fields_dict = {"campaign": ['ProposalInfo', 'proposal_id', 'campaign', '
 # increment types: 0 - equal to, 1 - greater than, 2 - less than,
 # 3 - greater than or equal to, 4 - less than or equal to
 count_details_parent_map = {
+    'map name': 'count_details_parent_map',
     'supplier':{'parent': 'campaign', 'model_name': 'ShortlistedSpaces', 'database_type': 'mysql',
                 'self_name_model': 'object_id', 'parent_name_model': 'proposal_id', 'storage_type': 'name'},
     'checklist': {'parent': 'campaign', 'model_name': 'checklists', 'database_type': 'mongodb',
@@ -643,7 +644,7 @@ def append_array_by_keys(array, grouping_keys, append_keys):
     return new_array
 
 
-def sum_array_by_keys(array, grouping_keys, sum_keys):
+def sum_array_by_keys(array, grouping_keys, sum_keys, constant_keys = []):
     new_array = []
     required_keys = set(sum_keys + grouping_keys)
     ref_sum_key = sum_keys[0]
@@ -667,10 +668,13 @@ def sum_array_by_keys(array, grouping_keys, sum_keys):
                     match = False
             if match:
                 for sum_key in sum_keys:
-                    curr_dict_sum[sum_key] = int(curr_dict[sum_key]) if curr_dict[sum_key] is not None else 0
-                    curr_dict_new_sum[sum_key] = int(curr_dict_new[sum_key]) if curr_dict_new[
-                                                 sum_key] is not None else 0
-                    curr_dict_new[sum_key] = curr_dict_sum[sum_key] + curr_dict_new_sum[sum_key]
+                    if sum_key in constant_keys:
+                        curr_dict_new[sum_key] = int(curr_dict[sum_key]) if curr_dict[sum_key] is not None else 0
+                    else:
+                        curr_dict_sum[sum_key] = int(curr_dict[sum_key]) if curr_dict[sum_key] is not None else 0
+                        curr_dict_new_sum[sum_key] = int(curr_dict_new[sum_key]) if curr_dict_new[
+                                                     sum_key] is not None else 0
+                        curr_dict_new[sum_key] = curr_dict_sum[sum_key] + curr_dict_new_sum[sum_key]
                 first_match = True
         if not first_match:
             new_dict = {}
@@ -788,7 +792,8 @@ def date_to_other_groups(dict_array, group_name, desired_metric, raw_data, highe
             new_group_name = list(date_to_others[desired_metric]['variables'].keys())
         new_group_name.remove('date')
         new_group_name.append(desired_metric)
-        new_array = sum_array_by_keys(new_array,new_group_name, raw_data)
+        constant_keys = ['flat','cost','cost_flat']
+        new_array = sum_array_by_keys(new_array,new_group_name, raw_data, constant_keys)
     if new_array == []:
         new_array = list(new_dict.values())
 
@@ -941,7 +946,7 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ran
     allowed_values = value_ranges[required_key] if required_key in value_ranges else None
     if allowed_values is not None:
         allowed_values = [str(x) for x in allowed_values]
-    search_key = str(existing_key)+'_'+str(rqequired_key)
+    search_key = str(existing_key)+'_'+str(required_key)
     key_details = count_details_direct_match_multiple[search_key]
     model_name = key_details['model_name']
     database_type = key_details['database_type']
