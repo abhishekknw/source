@@ -8,6 +8,7 @@ connect("mongodb://localhost:27017/machadalo", alias="mongo_app")
 class SupplySupplierType(MongoModel):
     name = fields.CharField()
     supplier_attributes = fields.ListField()
+    inventory_list = fields.ListField() # Inventory objects with pricing details
     is_global = fields.BooleanField()
     base_supplier_type_id = fields.CharField()  # id of the base supplier type
     organisation_id = fields.CharField()
@@ -33,6 +34,7 @@ class SupplySupplier(MongoModel):
     old_supplier_id = fields.CharField(blank=True)
     is_custom = fields.BooleanField(default=False)  # are there any new attributes not present in SupplySupplierType?
     supplier_attributes = fields.ListField()
+    inventory_list = fields.ListField() # Inventory objects with pricing details
     organisation_id = fields.CharField()
     created_by = fields.CharField()
     created_at = fields.DateTimeField()
@@ -46,6 +48,7 @@ class SupplySupplier(MongoModel):
 class BaseSupplySupplierType(MongoModel):
     name = fields.CharField()
     supplier_attributes = fields.ListField()
+    inventory_list = fields.ListField() # Inventory objects with pricing details
     created_by = fields.CharField()
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
