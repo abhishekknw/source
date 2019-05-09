@@ -45,6 +45,7 @@ from celery import shared_task
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 from v0.ui.common.models import mongo_client
 from django.db import connection, connections
+from v0.ui.dynamic_booking.views import (get_dynamic_booking_data_by_campaign)
 
 class CampaignAPIView(APIView):
 
@@ -2104,6 +2105,18 @@ def get_all_assigned_campaigns(user_id, vendor):
     return serialized_proposals
 
 
+def get_campaign_suppliers(campaign_id):
+    dynamic_supplier_data = get_dynamic_booking_data_by_campaign(campaign_id)
+    if len(dynamic_supplier_data):
+        return dynamic_supplier_data
+    supplier_list = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values_list(
+        'object_id', flat=True).distinct()
+    supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_list)
+    serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
+    supplier_details = serializer.data
+    return supplier_details
+
+
 class AssignedCampaigns(APIView):
     @staticmethod
     def get(request):
@@ -2115,11 +2128,7 @@ class AssignedCampaigns(APIView):
             if campaign['proposal_id']:
                 if campaign['proposal_id'] not in all_campaign_ids:
                     all_campaign_ids.append(campaign['proposal_id'])
-                    supplier_list = ShortlistedSpaces.objects.filter(proposal_id=campaign['proposal_id']).values_list(
-                        'object_id', flat=True).distinct()
-                    supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_list)
-                    serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
-                    supplier_details = serializer.data
+                    supplier_details = get_campaign_suppliers(campaign['proposal_id'])
                     campaign['supplier_details']=supplier_details
         return ui_utils.handle_response({}, data=all_assigned_campaigns, success=True)
 
