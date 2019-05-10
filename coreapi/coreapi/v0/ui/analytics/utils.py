@@ -167,7 +167,7 @@ count_details_direct_match_multiple = {
 
 
 count_details_parent_map_time = {
-    'lead': {'parent': 'date,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+    'lead': {'parent': 'date, campaign', 'model_name': 'leads', 'database_type': 'mongodb',
              'self_name_model': 'entry_id', 'parent_name_model': 'created_at,campaign_id', 'storage_type': 'count'},
     'hot_lead': {'parent': 'date,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                  'self_name_model': 'is_hot', 'parent_name_model': 'created_at,campaign_id', 'storage_type': 'condition'},
@@ -644,8 +644,21 @@ def append_array_by_keys(array, grouping_keys, append_keys):
     return new_array
 
 
-def sum_array_by_keys(array, grouping_keys, sum_keys, constant_keys = []):
+def get_superlevels(curr_dict):
+    superlevels = []
+    for curr_key in curr_dict.keys():
+        if curr_key in reverse_direct_match.keys():
+            superlevels.append(curr_key)
+    return superlevels
+
+
+def sum_array_by_keys(array, grouping_keys, sum_keys, constant_keys = [], superlevels = False):
     new_array = []
+    if array == []:
+        return []
+    superlevels = get_superlevels(array[0])
+    grouping_keys = grouping_keys + superlevels
+    constant_keys = constant_keys + superlevels
     required_keys = set(sum_keys + grouping_keys)
     ref_sum_key = sum_keys[0]
     array_keys = array[0].keys()
@@ -654,6 +667,7 @@ def sum_array_by_keys(array, grouping_keys, sum_keys, constant_keys = []):
         print("keys missing, ignored")
         required_keys = list(required_keys - missing_keys)
         grouping_keys = list(set(grouping_keys)-missing_keys)
+
     for curr_dict in array:
         first_match = False
         curr_dict_sum = {}
@@ -669,7 +683,7 @@ def sum_array_by_keys(array, grouping_keys, sum_keys, constant_keys = []):
             if match:
                 for sum_key in sum_keys:
                     if sum_key in constant_keys:
-                        curr_dict_new[sum_key] = int(curr_dict[sum_key]) if curr_dict[sum_key] is not None else 0
+                        curr_dict_new[sum_key] = curr_dict[sum_key] if curr_dict[sum_key] is not None else 0
                     else:
                         curr_dict_sum[sum_key] = int(curr_dict[sum_key]) if curr_dict[sum_key] is not None else 0
                         curr_dict_new_sum[sum_key] = int(curr_dict_new[sum_key]) if curr_dict_new[
@@ -793,7 +807,7 @@ def date_to_other_groups(dict_array, group_name, desired_metric, raw_data, highe
         new_group_name.remove('date')
         new_group_name.append(desired_metric)
         constant_keys = ['flat','cost','cost_flat']
-        new_array = sum_array_by_keys(new_array,new_group_name, raw_data, constant_keys)
+        new_array = sum_array_by_keys(new_array,new_group_name, raw_data, constant_keys, superlevels = True)
     if new_array == []:
         new_array = list(new_dict.values())
 

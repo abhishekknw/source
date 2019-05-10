@@ -223,12 +223,12 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             reverse_key = level_name_by_model_id[key] if key in level_name_by_model_id else None
             if reverse_key in raw_data:
                 reverse_map[reverse_key] = key
+        print(single_array)
         if "sublevel" in data_point:
-            single_array = date_to_other_groups(single_array,grouping_level, data_point["sublevel"],
+            single_array = date_to_other_groups(single_array,[grouping_level[0]], data_point["sublevel"],
                                                 raw_data, highest_level_values)
         single_array_subleveled = copy.deepcopy(single_array)
         single_array_truncated = truncate_by_value_ranges(single_array_subleveled,value_ranges, range_type)
-
 
         if single_array_truncated == []:
             print("no data within the given range")
@@ -463,7 +463,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         if lowest_level not in count_details_parent_map:
             print("incorrect raw data")
             return []
-    if len(grouping_levels)==3:
+    if len(grouping_levels)>=3:
         trial_map = count_details_parent_map_custom
         if lowest_level in trial_map:
             default_map = trial_map
@@ -745,7 +745,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     single_array_results = new_array_results
 
         if original_grouping_levels is not None:
-
             superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
             superlevels_base_set = list(set(superlevels_base))
             if len(superlevels_base_set)>1:
@@ -756,8 +755,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
                                     superlevels, lowest_level, value_ranges, incrementing_value, storage_type, base)
                 elif len(superlevels)==1:
-                    single_array_results = key_replace_group(single_array_results, superlevels_base_set[0],
-                                superlevels[0], lowest_level, value_ranges, incrementing_value, storage_type)
+                    single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
+                                superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
     else:
         single_array_results = []
     return [single_array_results, supplier_list]
