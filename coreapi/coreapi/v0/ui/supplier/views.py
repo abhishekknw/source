@@ -319,8 +319,9 @@ class SocietyDataImport(APIView):
                     'content_type': get_content_type('RS').data['data'],
                     'object_id': supplier_id
                 }
-                obj, is_created = ContactDetails.objects.get_or_create(**new_contact_data)
-                obj.save()
+                contacts = ContactDetails.objects.filter(mobile=society['mobile'])
+                if not len(contacts):
+                    ContactDetails.objects.create(**new_contact_data)
 
                 rs_content_type = get_content_type('RS').data['data']
                 print(society['society_name'])
