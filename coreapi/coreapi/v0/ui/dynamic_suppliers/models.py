@@ -48,7 +48,7 @@ class SupplySupplier(MongoModel):
 class BaseSupplySupplierType(MongoModel):
     name = fields.CharField()
     supplier_attributes = fields.ListField()
-    inventory_list = fields.ListField() # Inventory objects with pricing details
+    inventory_list = fields.ListField()  # Inventory objects with pricing details
     created_by = fields.CharField()
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
