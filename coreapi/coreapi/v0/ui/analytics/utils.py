@@ -188,7 +188,10 @@ date_to_others = {
               'self_name_model': 'phase_no'}
 }
 
-
+date_to_others = {
+    'phase': {'model_name': 'SupplierPhase', 'variables':{'date':['start_date','end_date'],'campaign':['campaign_id'],},
+              'self_name_model': 'phase_no'}
+}
 time_parent_names = {
     "default": "created_at"
 }
@@ -455,7 +458,7 @@ def convert_dict_arrays_keys_to_standard_names(dict_arrays):
 
 
 def ranged_data_to_other_groups(base_array, range_array, start_field, end_field,
-                                base_value_field, assigned_value_field, other_fields):
+                                base_value_field, assigned_value_field, other_fields, range_fields=False):
     if len(other_fields)>1:
         return "this part is not developed yet"
     elif len(other_fields)==1:
@@ -484,6 +487,17 @@ def ranged_data_to_other_groups(base_array, range_array, start_field, end_field,
             continue
         curr_dict[assigned_value_field_standard] = assigned_value_array[0]
         curr_dict.pop(base_value_field)
+        if range_fields == True:
+            base_value_field_range = [[x[start_field],x[end_field]] for x in range_array if x[assigned_value_field] ==
+                                      assigned_value_array[0] and x[other_field] == other_value]
+            if len(base_value_field_range) == 1:
+                start_value = str(base_value_field_range[0][0])
+                end_value = str(base_value_field_range[0][1])
+            else:
+                start_value = ''
+                end_value = ''
+            curr_dict[start_field] = start_value
+            curr_dict[end_field] = end_value
         new_array.append(curr_dict)
     return new_array
 
@@ -656,6 +670,7 @@ def sum_array_by_keys(array, grouping_keys, sum_keys, constant_keys = [], superl
     new_array = []
     if array == []:
         return []
+
     superlevels = get_superlevels(array[0])
     grouping_keys = grouping_keys + superlevels
     constant_keys = constant_keys + superlevels
@@ -796,7 +811,8 @@ def date_to_other_groups(dict_array, group_name, desired_metric, raw_data, highe
         full_query = first_part_query + other_fields[0] + '__in=highest_level_values)'
         query_results = list(eval(full_query).values(start_field,end_field,other_fields[0], assigned_field))
         phase_adjusted_results = ranged_data_to_other_groups(copy.deepcopy(dict_array),query_results,start_field,
-                                                             end_field, group_name[0], assigned_field, other_fields)
+                                                             end_field, group_name[0], assigned_field, other_fields,
+                                                             range_fields = True)
         new_array = phase_adjusted_results
 
     if len(group_name)>2:
@@ -806,7 +822,10 @@ def date_to_other_groups(dict_array, group_name, desired_metric, raw_data, highe
             new_group_name = list(date_to_others[desired_metric]['variables'].keys())
         new_group_name.remove('date')
         new_group_name.append(desired_metric)
+        new_group_name.append(start_field)
+        new_group_name.append(end_field)
         constant_keys = ['flat','cost','cost_flat']
+        constant_keys = constant_keys + [start_field, end_field]
         new_array = sum_array_by_keys(new_array,new_group_name, raw_data, constant_keys, superlevels = True)
     if new_array == []:
         new_array = list(new_dict.values())

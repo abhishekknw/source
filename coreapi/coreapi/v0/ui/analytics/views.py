@@ -223,7 +223,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             reverse_key = level_name_by_model_id[key] if key in level_name_by_model_id else None
             if reverse_key in raw_data:
                 reverse_map[reverse_key] = key
-        print(single_array)
         if "sublevel" in data_point:
             single_array = date_to_other_groups(single_array,[grouping_level[0]], data_point["sublevel"],
                                                 raw_data, highest_level_values)
