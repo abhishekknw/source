@@ -34,7 +34,6 @@ from django.db.models import Count
 from v0.ui.campaign.models import (CampaignSocietyMapping, Campaign)
 from v0.ui.campaign.serializers import (CampaignSocietyMappingSerializer, CampaignListSerializer)
 import datetime
-from v0.ui.decorators import timer
 
 
 class AssignInventories(APIView):
@@ -583,7 +582,6 @@ class CampaignInventory(APIView):
     """
 
     """
-    @timer
     def get(self, request, campaign_id):
         """
         The API fetches campaign data + SS  + SID
