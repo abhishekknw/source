@@ -3970,7 +3970,7 @@ def is_campaign(proposal):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned):
+def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned, search):
     """
 
     Args:
@@ -3995,6 +3995,9 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
                 values_list('supplier_id')
             shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id, object_id__in=assigned_suppliers_list). \
                 order_by('id')
+
+        elif search:
+            shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id, object_id=search).order_by('id')
         else:
             shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id).order_by('id')
 

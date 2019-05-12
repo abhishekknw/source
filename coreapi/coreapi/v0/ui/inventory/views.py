@@ -598,6 +598,7 @@ class CampaignInventory(APIView):
             user = request.user
             page = request.query_params.get("page", None)
             assigned = request.query_params.get("assigned", 0)
+            search = request.query_params.get("search", None)
             username_list = BaseUser.objects.filter(profile__organisation=user.profile.organisation.organisation_id). \
                 values_list('username')
             proposal_list = ProposalInfo.objects.filter(created_by__in=username_list, proposal_id=campaign_id)
@@ -611,7 +612,7 @@ class CampaignInventory(APIView):
             # cache_key = v0_utils.create_cache_key(class_name, campaign_id)
             # cache_value = cache.get(cache_key)
             # cache_value = None
-            response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id, page, user, int(assigned))
+            response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id, page, user, int(assigned), search)
             if not response.data['status']:
                 return response
             # cache.set(cache_key, response.data['data'])
