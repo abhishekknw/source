@@ -48,7 +48,7 @@ class BaseBookingTemplateView(APIView):
             final_data['supplier_attributes'] = data.supplier_attributes
             final_data['name'] = data.name if 'name' in data else None
             final_data['base_supplier_type_id'] = data.base_supplier_type_id
-            final_data['organisation_id'] = data.organisation_idg
+            final_data['organisation_id'] = data.organisation_id
             final_data['id'] = str(data._id)
             final_data_list.append(final_data)
         return handle_response('', data=final_data_list, success=True)
