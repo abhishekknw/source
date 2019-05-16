@@ -299,7 +299,7 @@ class HashTagImages(BaseModel):
     This model stores campaign images which is hashtagged by BANNER,RECEIPT...etc
     """
     campaign = models.ForeignKey('ProposalInfo', null=False, blank=False, on_delete=models.CASCADE)
-    object_id = models.CharField(db_index=True, max_length=supplier_id_max_length)
+    object_id = models.CharField(db_index=True, max_length=100)
     content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     image_path = models.CharField(max_length=1000, null=True, blank=True)
     hashtag = models.CharField(max_length=255)
