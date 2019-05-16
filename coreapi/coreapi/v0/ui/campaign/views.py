@@ -2218,7 +2218,7 @@ class MISReportReceipts(APIView):
             where d.proposal_id in (%s) and a.activity_date between %s and %s and r.hashtag \
             = 'RECEIPT'", [campaign.proposal_id,start_date, end_date])
             all_list_receipt = cursor.fetchall()
-            all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign.proposal_id).all()
+            all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign.proposal_id, is_completed=True).all()
             all_supplier_ids = [ss.object_id for ss in all_shortlisted_spaces]
             dict_details=['society_name', 'campaign_id', 'hashtag', 'society_city', 'society_locality']
             all_details_list_receipt=[dict(zip(dict_details,l)) for l in all_list_receipt]
