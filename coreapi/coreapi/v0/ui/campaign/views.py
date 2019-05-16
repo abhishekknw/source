@@ -2133,6 +2133,21 @@ class AssignedCampaigns(APIView):
         return ui_utils.handle_response({}, data=all_assigned_campaigns, success=True)
 
 
+class AllCampaigns(APIView):
+    @staticmethod
+    def get(request):
+        all_campaigns = ProposalInfo.objects.filter(campaign_state="PTC")
+        all_assigned_campaigns = ProposalInfoSerializer(all_campaigns, many=True).data
+        all_campaign_ids = []
+        for campaign in all_assigned_campaigns:
+            if campaign['proposal_id']:
+                if campaign['proposal_id'] not in all_campaign_ids:
+                    all_campaign_ids.append(campaign['proposal_id'])
+                    supplier_details = get_campaign_suppliers(campaign['proposal_id'])
+                    campaign['supplier_details']=supplier_details
+        return ui_utils.handle_response({}, data=all_assigned_campaigns, success=True)
+
+
 class VendorDetails(APIView):
     @staticmethod
     def get(request):

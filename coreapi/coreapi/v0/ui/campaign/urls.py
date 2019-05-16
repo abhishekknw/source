@@ -8,7 +8,8 @@ from .views import (ShortlistSocietyCountAPIView, BookCampaignAPIView,
                    GetAdInventoryTypeAndDurationTypeData, AddDynamicInventoryIds, DeleteAdInventoryIds,
                    CampaignLeads, CityWiseMultipleCampaignLeads, PhaseWiseMultipleCampaignLeads, CampaignLeadsCustom,
                    Comment, CampaignLeadsMultiple, GetPermissionBoxImages, CampaignWiseSummary, AssignedCampaigns,
-                    VendorWiseSummary, VendorDetails, UserCities, CityWiseSummary, MISReportReceipts, MISReportContacts)
+                    VendorWiseSummary, VendorDetails, UserCities, CityWiseSummary, MISReportReceipts, MISReportContacts,
+                    AllCampaigns)
 from v0.ui.website.views import (GetAssignedIdImagesListApiView)
 
 urlpatterns = [
@@ -37,6 +38,7 @@ urlpatterns = [
     url(r'^vendor-wise-summary/$', VendorWiseSummary.as_view()),
     url(r'^city-wise-summary/$', CityWiseSummary.as_view()),
     url(r'^assigned-campaigns/$', AssignedCampaigns.as_view()),
+    url(r'^all-campaigns/$', AllCampaigns.as_view()),
     url(r'^vendors-details/$', VendorDetails.as_view()),
     url(r'^user-cities/$', UserCities.as_view()),
     url(r'^mis-report-receipts/$', MISReportReceipts.as_view()),
