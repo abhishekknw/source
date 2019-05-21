@@ -30,6 +30,8 @@ from django.forms.models import model_to_dict
 from django.db import connection
 from django.core.cache import cache
 from django.utils.dateparse import parse_datetime
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -55,7 +57,7 @@ from v0.ui.inventory.models import (AdInventoryType, InventoryActivityAssignment
 from v0.ui.inventory.serializers import (InventoryActivityAssignmentSerializer)
 from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping, ProposalCenterSuppliers, ProposalMetrics,
-    ProposalInfoVersion, ProposalMasterCost, ShortlistedSpaces, SupplierPhase)
+    ProposalInfoVersion, ProposalMasterCost, ShortlistedSpaces, SupplierPhase, SupplierAssignment)
 from v0.ui.proposal.serializers import ProposalInfoSerializer, ProposalCenterMappingSerializer
 from v0.ui.campaign.models import CampaignAssignment, GenericExportFileName
 import v0.ui.utils as ui_utils
@@ -3968,7 +3970,7 @@ def is_campaign(proposal):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def prepare_shortlisted_spaces_and_inventories(proposal_id):
+def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned, search):
     """
 
     Args:
@@ -3987,14 +3989,37 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
         result = {}
 
         proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
-        shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id)
+
+        if assigned:
+            assigned_suppliers_list = SupplierAssignment.objects.filter(campaign=proposal_id,assigned_to=user.id). \
+                values_list('supplier_id')
+            shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id, object_id__in=assigned_suppliers_list). \
+                order_by('id')
+
+        elif search:
+            shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id, object_id=search).order_by('id')
+        else:
+            shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id).order_by('id')
+
+        if page:
+            entries = 10
+        else:
+            entries = 500
+            page = 1
+        paginator = Paginator(shortlisted_spaces, entries)
+        try:
+            spaces = paginator.page(int(page))
+        except PageNotAnInteger:
+            spaces = paginator.page(1)
+        except EmptyPage:
+            spaces = paginator.page(paginator.num_pages)
 
         # set the campaign data
         proposal_serializer = ProposalInfoSerializer(proposal)
         result['campaign'] = proposal_serializer.data
 
         # set the shortlisted spaces data. it maps various supplier ids to their respective content_types
-        response = get_objects_per_content_type(shortlisted_spaces.values())
+        response = get_objects_per_content_type(spaces.object_list)
 
         if not response.data['status']:
             return response
@@ -4021,10 +4046,11 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
         if not response.data['status']:
             return response
         supplier_price_per_content_type_per_supplier = response.data['data']
-        shortlisted_suppliers_serializer = ShortlistedSpacesSerializerReadOnly(shortlisted_spaces,
-                                                                                           many=True)
+
+        shortlisted_suppliers_serializer = ShortlistedSpacesSerializerReadOnly(spaces, many=True)
         shortlisted_suppliers_list = shortlisted_suppliers_serializer.data
         result['shortlisted_suppliers'] = shortlisted_suppliers_list
+        result['total_count'] = shortlisted_spaces.count()
 
         # put the extra supplier specific info like name, area, subarea in the final result.
         for supplier in shortlisted_suppliers_list:
@@ -4052,7 +4078,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
                 return response
             supplier['shortlisted_inventories'], total_inventory_supplier_price = response.data['data']
             supplier['total_inventory_supplier_price'] = total_inventory_supplier_price
-        # cache.set(str(proposal_id), result, timeout=60 * 100)
+        cache.set(str(proposal_id), result, timeout=60 * 100)
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
         print("e3",e)
@@ -4441,13 +4467,13 @@ def get_objects_per_content_type(objects):
 
             #  key can be both. one from serializer and one directly hitting .values()
             try:
-                content_type_id = my_object['content_type']
+                content_type_id = my_object.content_type.id
             except KeyError:
-                content_type_id = my_object['content_type_id']
+                content_type_id = my_object.content_type_id
             try:
-                object_id = my_object['object_id']
+                object_id = my_object.object_id
             except KeyError:
-                object_id = my_object['supplier_id']
+                object_id = my_object.supplier_id
 
             if not result.get(content_type_id):
                 result[content_type_id] = []
