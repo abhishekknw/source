@@ -4019,7 +4019,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
         result['campaign'] = proposal_serializer.data
 
         # set the shortlisted spaces data. it maps various supplier ids to their respective content_types
-        response = get_objects_per_content_type(spaces.object_list)
+        response = get_objects_per_content_type_by_instance(spaces.object_list)
 
         if not response.data['status']:
             return response
@@ -4448,7 +4448,7 @@ def map_objects_ids_to_objects(mapping):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def get_objects_per_content_type(objects):
+def get_objects_per_content_type_by_instance(objects):
     """
 
     Args:
@@ -4486,6 +4486,40 @@ def get_objects_per_content_type(objects):
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
 
+def get_objects_per_content_type(objects):
+    """
+    Args:
+        objects: a list of objects
+    Returns: returns a dict having key as content_type and value as list of ids.
+    """
+    function = get_objects_per_content_type.__name__
+    try:
+        result = {}
+        content_type_set = set()
+        supplier_id_set = set()
+
+        for my_object in objects:
+
+            #  key can be both. one from serializer and one directly hitting .values()
+            try:
+                content_type_id = my_object['content_type']
+            except KeyError:
+                content_type_id = my_object['content_type_id']
+            try:
+                object_id = my_object['object_id']
+            except KeyError:
+                object_id = my_object['supplier_id']
+
+            if not result.get(content_type_id):
+                result[content_type_id] = []
+                content_type_set.add(content_type_id)
+
+            result[content_type_id].append(object_id)
+            supplier_id_set.add(object_id)
+
+        return ui_utils.handle_response(function, data=(result, content_type_set, supplier_id_set), success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
 
 def can_inventory_be_assigned(proposal_release_date, proposal_closure_date, dates):
     """
