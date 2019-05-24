@@ -1346,10 +1346,7 @@ class UserViewSet(viewsets.ViewSet):
         try:
             data = request.data
             password = data['password']
-            confirm_password = data['confirm_password']
             serializer = BaseUserCreateSerializer(data=data)
-            if password != confirm_password:
-                return ui_utils.handle_response(class_name, data='passwords do not match', success=False)
             if validate_password(password) == 0:
                 return ui_utils.handle_response(class_name, data='password should have 8 chars including a capital'
                                                                  'and a special char', success=False)
