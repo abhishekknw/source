@@ -13,6 +13,8 @@ import boto3
 import v0.ui.utils as ui_utils
 from django.conf import settings
 import v0.ui.website.utils as website_utils
+from v0.ui.proposal.views import upload_hashtag_images
+from v0.ui.proposal.models import ProposalInfo
 
 
 
@@ -528,3 +530,39 @@ class UploadInventoryActivityImageGeneric(APIView):
             return ui_utils.handle_response(class_name, data=file_name, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class UploadHashTagImage(APIView):
+
+    def post(self, request, booking_data_id):
+        data = request.data
+        supplier = SupplySupplier.objects.raw({'_id': ObjectId(data['supplier_id'])})
+        campaign = ProposalInfo.objects.get(proposal_id=data['campaign_id'])
+        if supplier.count() > 0 and data['file']:
+            hashtag_data = {
+                "file": data['file'],
+                "hashtag": data['hashtag'],
+                "comment": data['comment'] if data['comment'] else None,
+                "supplier_name": supplier[0].name,
+                "campaign_name": campaign.name,
+                "supplier_id": data['supplier_id'],
+                "campaign_id": data['campaign_id']
+            }
+            response = upload_hashtag_images(hashtag_data)
+            image_data = {
+                "image_path": response.data['data']['image_path'],
+                "hashtag": response.data['data']['hashtag'],
+                "comment": response.data['data']['comment']
+            }
+            booking_data = BookingData.objects.raw({'_id': ObjectId(booking_data_id)})
+            if booking_data.count() > 0:
+                new_booking_attributes = booking_data[0].booking_attributes
+                for booking in new_booking_attributes:
+                    if data['name'] == booking['name']:
+                        if 'files' not in booking:
+                            booking['files'] = []
+                        booking['files'].append(image_data)
+                        BookingData.objects.raw({'_id': ObjectId(booking_data_id)}). \
+                            update({"$set": {"booking_attributes": new_booking_attributes}})
+                        break
+            return ui_utils.handle_response('', data={}, success=True)
+        return ui_utils.handle_response('', data="Supplier or File Not found", success=False)
