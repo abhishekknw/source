@@ -258,7 +258,10 @@ class BookingDataById(APIView):
 
 def get_supplier_attributes(supplier_id, supplier_attributes):
     all_supplier_attribute_names = [supplier['name'] for supplier in supplier_attributes]
-    supplier_object = SupplySupplier.objects.raw({"_id": ObjectId(supplier_id)})[0]
+    supplier_object_list = list(SupplySupplier.objects.raw({"_id": ObjectId(supplier_id)}))
+    if not len(supplier_object_list):
+        return []
+    supplier_object = supplier_object_list[0]
     final_attributes = []
     for supplier in supplier_object.supplier_attributes:
         if supplier['name'] in all_supplier_attribute_names:
