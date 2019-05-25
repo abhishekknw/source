@@ -8,7 +8,7 @@ from bson.objectid import ObjectId
 def validate_booking(booking_template):
     possible_attribute_types = ['FLOAT', 'INT', 'STRING', 'BOOLEAN', 'EMAIL', 'PASSWORD', 'PHONE', 'DROPDOWN', 'RADIO',
                                 'CHECKBOX', 'TEXTAREA', 'DATE', 'DATETIME', 'INVENTORY_TYPE','INVENTORY', "SUPPLIER_TYPE", "BASE_SUPPLIER_TYPE",
-                                "HASHTAG"]
+                                "HASHTAG", "MULTISELECT"]
     validation_msg_dict = {'repeating_name_field': [], "type_mismatch": [], "other_errors": [],
                            "base_booking_fields_mismatch": []}
     is_valid = True
