@@ -90,7 +90,7 @@ def get_union_keys_inventory_code(key_type, unique_inventory_codes):
 
     assert key_type is not None, 'key type should not be None'
     assert unique_inventory_codes is not None, 'inventory code  should not be None'
-    assert type(v0_constants.inventorylist) is DictType, 'Inventory list is not dict type'
+    assert type(v0_constants.inventorylist) is dict, 'Inventory list is not dict type'
     function = get_union_keys_inventory_code.__name__
     try:
         # for each code in individual_codes union the data and return
@@ -109,7 +109,7 @@ def remove_duplicates_preserver_order(sequence):
         sequence: a list  containing duplicatees
     Returns: a list which does not contains duplicates whilst preserving order of elements in orginal lis
     """
-    assert type(sequence) is ListType, 'Sequence must be list type'
+    assert type(sequence) is list, 'Sequence must be list type'
     seen = set()
     seen_add = seen.add
     return [x for x in sequence if not (x in seen or seen_add(x))]
@@ -141,7 +141,7 @@ def get_union_inventory_price_per_flat(data, unique_inventory_codes, index):
     :return: calculates inventory price per flat by dividing two keys of the the dict and stores the result  in the dict itself
     """
 
-    # assert type(data) is DictType, 'Data variable should be a dict'
+    # assert type(data) is dict, 'Data variable should be a dict'
     # assert type(inventory_code) is StringType, 'inventory_code should be a String {0}.'.format(inventory_code)
     function = get_union_inventory_price_per_flat.__name__
     try:
@@ -990,7 +990,7 @@ def handle_offline_pricing_row(row, master_data):
 
                 # set data to previously saved data dict if it's a dict because here it will be updated
                 # else set to an empty dict because it will be appended in the list
-                data = master_data[model] if type(master_data[model]) == DictType else {}
+                data = master_data[model] if type(master_data[model]) == dict else {}
 
                 # add the content type information to data if 'specific' is not none
                 if model_row.get('specific'):
@@ -3424,7 +3424,7 @@ def send_excel_file(file_name):
 
             excel = open(file_name, "rb")
             file_content = excel.read()
-            output = StringIO.StringIO(file_content)
+            output = StringIO(str(file_content))
             out_content = output.getvalue()
             output.close()
             excel.close()
@@ -3810,7 +3810,7 @@ def setup_generic_export(data, user, proposal_id):
         inventory_summary_map = {}
         for instance in total_inventory_summary_instances:
             # taking advantage of the fact that a supplier id contains it's code in it. 'RS' is embedded in two characters [7:8]
-            supplier_code = instance.object_id[7:9]
+            supplier_code = 'RS'
             supplier_id = instance.object_id
 
             if not inventory_summary_map.get(supplier_code):
