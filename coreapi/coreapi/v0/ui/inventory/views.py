@@ -3,6 +3,7 @@ import boto3
 import os
 from django.forms import model_to_dict
 from django.conf import settings
+from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from v0.ui.inventory.serializers import (BannerInventorySerializer, PosterInventorySerializer,
@@ -34,7 +35,9 @@ from django.db.models import Count
 from v0.ui.campaign.models import (CampaignSocietyMapping, Campaign)
 from v0.ui.campaign.serializers import (CampaignSocietyMappingSerializer, CampaignListSerializer)
 import datetime
-
+from v0.ui.dynamic_booking.models import BookingInventoryActivity
+from v0.ui.dynamic_suppliers.models import SupplySupplier
+from bson.objectid import ObjectId
 
 class AssignInventories(APIView):
     """
@@ -653,6 +656,48 @@ class CampaignInventory(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+def get_dynamic_supplier_data_by_assignment(user_id):
+    current_date = datetime.datetime.strptime(str(timezone.now().date()), "%Y-%m-%d")
+    end_date = current_date + timezone.timedelta(days=3)
+    booking_inv_activities = BookingInventoryActivity.objects.raw({"assigned_to_id": user_id,
+                            "activity_date": {"$gte": (current_date), "$lt": (end_date)}})
+    supplier_ids = [ObjectId(supplier.supplier_id) for supplier in booking_inv_activities]
+    suppliers = SupplySupplier.objects.raw({'_id': {'$in': (supplier_ids)}})
+    if suppliers.count():
+        supplier_objects_id_map = {str(supplier._id):supplier for supplier in suppliers}
+        proposal_ids = [proposal.campaign_id for proposal in booking_inv_activities]
+        proposals = ProposalInfo.objects.filter(proposal_id__in=proposal_ids)
+        proposal_objects_id_map = {proposal.proposal_id:proposal for proposal in proposals}
+        for booking in booking_inv_activities:
+            if booking.supplier_id in supplier_objects_id_map:
+                if not hasattr(supplier_objects_id_map[booking.supplier_id],'details'):
+                    supplier_objects_id_map[booking.supplier_id].details = {
+                        "proposal_id": booking.campaign_id,
+                        "proposal_name": proposal_objects_id_map[booking.campaign_id].name,
+                        "supplier_id": booking.supplier_id,
+                        "content_type_id": 46,
+                        "supplier_detail": {},
+                        "activities": []
+                    }
+
+                for attr in  supplier_objects_id_map[booking.supplier_id].supplier_attributes:
+                    supplier_objects_id_map[booking.supplier_id].details['supplier_detail'][attr['name']] = attr['value']
+                activity_data = {
+                    "inventory_activity_assignment_id": str(booking._id),
+                    "shortlisted_inventory_details_id": booking.booking_inventory_id,
+                    "activity_id": str(booking._id),
+                    "activity_type": booking.activity_type,
+                    "inventory_name": booking.inventory_name,
+                    "comment": booking.comments,
+                    "images": booking.inventory_images,
+                    "actual_activity_date": booking.actual_activity_date,
+                    "activity_date": booking.activity_date
+                }
+                supplier_objects_id_map[booking.supplier_id].details['activities'].append(activity_data)
+    result = []
+    for supplier in supplier_objects_id_map:
+        result.append(supplier_objects_id_map[booking.supplier_id].details)
+    return ui_utils.handle_response('', data=result, success=True)
 
 class CampaignSuppliersInventoryList(APIView):
     """
@@ -727,7 +772,12 @@ class CampaignSuppliersInventoryList(APIView):
                 'inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal__name',
             )
 
+
             result = website_utils.organise_supplier_inv_images_data(inv_act_assignment_objects, user_map, format)
+            if format == 'new':
+                response = get_dynamic_supplier_data_by_assignment(assigned_to)
+                if response.data['status']:
+                    result['shortlisted_suppliers'] = result['shortlisted_suppliers'] + response.data['data']
             return ui_utils.handle_response(class_name, data=result, success=True)
 
         except Exception as e:
