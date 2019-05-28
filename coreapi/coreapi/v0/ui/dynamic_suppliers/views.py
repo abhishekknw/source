@@ -45,7 +45,8 @@ class SupplierType(APIView):
                 "id": str(supply_supplier_type._id),
                 "base_supplier_type_id": str(supply_supplier_type.base_supplier_type_id),
                 "name": supply_supplier_type.name,
-                "supplier_attributes": supply_supplier_type.supplier_attributes
+                "supplier_attributes": supply_supplier_type.supplier_attributes,
+                "inventory_list":supply_supplier_type.inventory_list
             }
         return handle_response('', data=all_supply_supplier_type_dict, success=True)
 
@@ -58,7 +59,8 @@ class SupplierTypeById(APIView):
             "id": str(supply_supplier_type._id),
             "base_supplier_type_id": str(supply_supplier_type.base_supplier_type_id),
             "name": supply_supplier_type.name,
-            "supplier_attributes": supply_supplier_type.supplier_attributes
+            "supplier_attributes": supply_supplier_type.supplier_attributes,
+            "inventory_list": supply_supplier_type.inventory_list
         }
         return handle_response('', data=supply_supplier_type, success=True)
 
@@ -124,6 +126,7 @@ class Supplier(APIView):
                 "supplier_type_id": str(supply_supplier.supplier_type_id),
                 "name": supply_supplier.name,
                 "supplier_attributes": supply_supplier.supplier_attributes,
+                "inventory_list": supply_supplier.inventory_list,
                 "is_custom": supply_supplier.is_custom,
                 "organisation_id": supply_supplier.organisation_id,
                 "created_by": supply_supplier.created_by,
@@ -141,6 +144,7 @@ class SupplierById(APIView):
             "supplier_type_id": str(supply_supplier.supplier_type_id),
             "name": supply_supplier.name,
             "supplier_attributes": supply_supplier.supplier_attributes,
+            "inventory_list": supply_supplier.inventory_list,
             "is_custom": supply_supplier.is_custom,
             "organisation_id": supply_supplier.organisation_id,
             "created_by": supply_supplier.created_by,
