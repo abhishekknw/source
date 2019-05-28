@@ -185,7 +185,7 @@ class SupplierTransfer(APIView):
         new_base_supplier_for_society = BaseSupplySupplierType(**{
             "name": "Base Society",
             "supplier_attributes": [{"name":"supplier_id","type": "STRING"},
-                                  {"name":"society_name","type": "STRING"},
+                                  {"name":"name","type": "STRING"},
                                   {"name":"society_address1","type": "STRING"},
                                   {"name":"society_address2","type": "STRING"},
                                   {"name":"society_zip","type": "STRING"},
@@ -218,7 +218,7 @@ class SupplierTransfer(APIView):
             "name": "Base Society",
             "base_supplier_type_id": base_supplier_for_society_id,
             "supplier_attributes": [{"name": "supplier_id", "type": "STRING"},
-                                  {"name": "society_name", "type": "STRING"},
+                                  {"name": "name", "type": "STRING"},
                                   {"name": "society_address1", "type": "STRING"},
                                   {"name": "society_address2", "type": "STRING"},
                                   {"name": "society_zip", "type": "STRING"},
@@ -253,9 +253,39 @@ class SupplierTransfer(APIView):
             if society['society_name']:
                 name = society['society_name']
                 new_supplier_type_id = new_supplier_type_id
-                supplier_attributes = society
+                supplier_attributes = [
+                                  {"name": "supplier_id", "type": "STRING", "value": society['supplier_id']},
+                                  {"name": "name", "type": "STRING", "value": society['society_name']},
+                                  {"name": "society_address1", "type": "STRING", "value": society['society_address1']},
+                                  {"name": "society_address2", "type": "STRING", "value": society['society_address2']},
+                                  {"name": "society_zip", "type": "STRING", "value": society['society_zip']},
+                                  {"name": "society_name", "type": "STRING", "value": society['society_name']},
+                                  {"name": "society_city", "type": "STRING", "value": society['society_city']},
+                                  {"name": "society_state", "type": "STRING", "value": society['society_state']},
+                                  {"name": "society_longitude", "type": "STRING", "value": society['society_longitude']},
+                                  {"name": "society_locality", "type": "STRING", "value": society['society_locality']},
+                                  {"name": "society_subarea", "type": "STRING", "value": society['society_subarea']},
+                                  {"name": "society_latitude", "type": "STRING", "value": society['society_latitude']},
+                                  {"name": "society_location_type", "type": "STRING", "value": society['society_location_type']},
+                                  {"name": "society_type_quality", "type": "STRING", "value": society['society_type_quality']},
+                                  {"name": "society_type_quantity", "type": "STRING", "value": society['society_type_quantity']},
+                                  {"name": "flat_count", "type": "STRING", "value": society['flat_count']},
+                                  {"name": "flat_avg_rental_persqft", "type": "STRING", "value": society['flat_avg_rental_persqft']},
+                                  {"name": "flat_sale_cost_persqft", "type": "STRING", "value": society['flat_sale_cost_persqft']},
+                                  {"name": "tower_count", "type": "INT", "value": society['tower_count']},
+                                  {"name": "payment_details_available", "type": "BOOLEAN", "value": society['payment_details_available']},
+                                  {"name": "age_of_society", "type": "INT", "value": society['age_of_society']},
+                                  {"name": "total_tenant_flat_count", "type": "INT", "value": society['total_tenant_flat_count']},
+                                  {"name": "landmark", "type": "STRING", "value": society['landmark']},
+                                  {"name": "name_for_payment", "type": "STRING", "value": society['name_for_payment']},
+                                  {"name": "bank_name", "type": "STRING", "value": society['bank_name']},
+                                  {"name": "ifsc_code", "type": "STRING", "value": society['ifsc_code']},
+                                  {"name": "account_no", "type": "STRING", "value": society['account_no']},
+                                  {"name": "representative", "type": "STRING", "value": society['representative']}
+                                ],
+
                 organisation_id = "MAC1421"
-                dict_of_req_attributes = {"name": name, "supplier_attributes": supplier_attributes,
+                dict_of_req_attributes = {"name": name, "supplier_attributes": supplier_attributes[0],
                                           "organisation_id": organisation_id,
                                           "supplier_type_id": new_supplier_type_id,
                                           "old_supplier_id": society['supplier_id']}
