@@ -194,7 +194,7 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
             curr_supplier_id = entry['supplier_id']
             if curr_supplier_id not in supplier_id_names:
                 missing_suppliers.append(curr_supplier_id)
-                # return missing_suppliers[0]
+                continue
             else:
                 curr_supplier_name = supplier_id_names[curr_supplier_id]
         else:
