@@ -254,17 +254,18 @@ class SupplierTransfer(APIView):
         }).save()
         new_supplier_type_id = new_supplier_type_for_society._id
         for society in society_list:
-            name = 'Society'
-            new_supplier_type_id = new_supplier_type_id
-            supplier_attributes = society
-            organisation_id = "MAC1421"
-            dict_of_req_attributes = {"name": name, "supplier_attributes": supplier_attributes,
-                                      "organisation_id": organisation_id,
-                                      "supplier_type_id": new_supplier_type_id,
-                                      "old_supplier_id": society['supplier_id']}
-            supplier_dict = dict_of_req_attributes
-            supplier_dict["created_at"] = datetime.now()
-            SupplySupplier(**supplier_dict).save()
+            if society['society_name']:
+                name = society['society_name']
+                new_supplier_type_id = new_supplier_type_id
+                supplier_attributes = society
+                organisation_id = "MAC1421"
+                dict_of_req_attributes = {"name": name, "supplier_attributes": supplier_attributes,
+                                          "organisation_id": organisation_id,
+                                          "supplier_type_id": new_supplier_type_id,
+                                          "old_supplier_id": society['supplier_id']}
+                supplier_dict = dict_of_req_attributes
+                supplier_dict["created_at"] = datetime.now()
+                SupplySupplier(**supplier_dict).save()
         return handle_response('', data={"success": True}, success=True)
 
 
