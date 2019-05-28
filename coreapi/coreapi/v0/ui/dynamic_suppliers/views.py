@@ -30,6 +30,7 @@ class SupplierType(APIView):
         supplier_type_dict = dict_of_req_attributes
         supplier_type_dict["is_global"] = is_global
         supplier_type_dict["created_at"] = datetime.now()
+        supplier_type_dict["inventory_list"] = request.data['inventory_list'] if 'inventory_list' in request.data else []
         is_valid_adv, validation_msg_dict_adv = validate_supplier_type_data(supplier_type_dict)
         if not is_valid_adv:
             return handle_response('', data=validation_msg_dict_adv, success=False)
@@ -79,6 +80,8 @@ class SupplierTypeById(APIView):
         supplier_type_dict = dict_of_req_attributes
         supplier_type_dict["is_global"] = is_global
         supplier_type_dict["updated_at"] = datetime.now()
+        if 'inventory_list' in request.data:
+            supplier_type_dict["inventory_list"] = request.data['inventory_list']
         is_valid_adv, validation_msg_dict_adv = validate_supplier_type_data(supplier_type_dict)
         if not is_valid_adv:
             return handle_response('', data=validation_msg_dict_adv, success=False)
@@ -109,6 +112,8 @@ class Supplier(APIView):
         supplier_dict = dict_of_req_attributes
         supplier_dict['created_by'] = request.user.id
         supplier_dict['created_at'] = datetime.now()
+        supplier_dict["inventory_list"] = request.data['inventory_list'] if 'inventory_list' in request.data else []
+
         (is_valid_adv, validation_msg_dict_adv) = validate_with_supplier_type(supplier_dict,supplier_type_id)
         if not is_valid_adv:
             return handle_response('', data=validation_msg_dict_adv, success=False)
@@ -166,6 +171,8 @@ class SupplierById(APIView):
             return handle_response('', data=validation_msg_dict, success=False)
         supplier_dict = dict_of_req_attributes
         supplier_dict['updated_at'] = datetime.now()
+        if 'inventory_list' in request.data:
+            supplier_dict["inventory_list"] = request.data['inventory_list']
         (is_valid_adv, validation_msg_dict_adv) = validate_with_supplier_type(supplier_dict, supplier_type_id)
         if not is_valid_adv:
             return handle_response('', data=validation_msg_dict_adv, success=False)
