@@ -21,6 +21,8 @@ urlpatterns = [
     url(r'^dynamic-inventory/', include('v0.ui.dynamic_inventory.urls')),
     url(r'^dynamic-booking/', include('v0.ui.dynamic_booking.urls')),
     url(r'^notifications/', include('v0.ui.notifications.urls')),
+    url(r'^dynamic-location/', include('v0.ui.dynamic_location.urls')),
+
     url(r'^users/', include('v0.ui.user.urls')),
     url(r'^accounts/', include('v0.ui.account.urls')),
     url(r'^website/', include('v0.ui.account.urls')),
