@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from rest_framework.views import APIView
 from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg
-from .models import State
+from .models import StateDetails
 
 class State(APIView):
     @staticmethod
@@ -16,7 +16,7 @@ class State(APIView):
 
         state_dict = dict_of_req_attributes
 
-        State(**state_dict).save()
+        StateDetails(**state_dict).save()
         return handle_response('', data={"success": True}, success=True)
 
 
