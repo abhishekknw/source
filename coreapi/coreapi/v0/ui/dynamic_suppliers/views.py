@@ -312,7 +312,8 @@ class ShortlistedSpacesTransfer(APIView):
         shortlisted_spaces = ShortlistedSpaces.objects.all()
         serializer = ShortlistedSpacesSerializer(shortlisted_spaces, many=True)
         shortlisted_spaces_list = serializer.data
-        print(shortlisted_spaces_list[0])
+        base_supplier_type = BaseSupplySupplierType.objects.raw({'name': 'Base Society'})[0]
+        supplier_type = SupplySupplierType.objects.raw({'name': 'Base Society'})[0]
         booking_attributes_list = [
 
                                 {"name": "payment_method", "type": "DROPDOWN", "options": ["NEFT", "CASH", "ONLINE"]},
@@ -343,31 +344,37 @@ class ShortlistedSpacesTransfer(APIView):
         {
             "name": "Society BaseBooking",
             "booking_attributes": booking_attributes_list,
-            "base_supplier_type_id": "5c66829e2f2bc6117aac7c75"
+            "base_supplier_type_id": base_supplier_type._id,
+            "supplier_attributes": base_supplier_type.supplier_attributes,
+            "organisation_id": "MAC1421"
          }).save()
         new_base_booking_template_id = new_base_booking_template._id
         new_booking_template = BookingTemplate(**
         {
             "name":"Society Booking",
             "booking_attributes": booking_attributes_list,
-            "supplier_type_id": "5ca4ad779cb7fc6da6d92797",
-            "base_booking_template_id": new_base_booking_template_id
+            "supplier_type_id": supplier_type._id,
+            "base_booking_template_id": new_base_booking_template_id,
+            "supplier_attributes": supplier_type.supplier_attributes,
+            "organisation_id": "MAC1421"
         }).save()
         new_booking_template_id = new_booking_template._id
         for booking in shortlisted_spaces_list:
             data = {}
-            data['booking_template_id'] = new_booking_template_id,
+            data['booking_template_id'] = str(new_booking_template_id)
             data['campaign_id'] = booking['proposal']
             data['user_id'] = booking['user']
             data['center_id'] = booking['center']
             data['supplier_id_old'] = booking['object_id']
-            if SupplySupplier.objects.raw({'old_supplier_id':booking['object_id']}).count() > 0:
-                data['supplier_id'] = SupplySupplier.objects.raw({'old_supplier_id':booking['object_id']})[0]._id
+            temp_data = SupplySupplier.objects.raw({'old_supplier_id':booking['object_id']})
+            if  temp_data.count() > 0:
+                data['supplier_id'] = temp_data[0]._id
             else:
                 continue
             for item in booking_attributes_list:
                 item['value'] = booking[item['name']]
             data['booking_attributes'] = booking_attributes_list
+
             BookingData(**data).save()
         return handle_response('', data={"success": True}, success=True)
 
@@ -394,3 +401,5 @@ class SupplierInventoryTransfer(APIView):
             BookingInventory(**data).save()
 
         return handle_response('', data={"success": True}, success=True)
+
+class InventoryActivityImageTransfer(APIView):
