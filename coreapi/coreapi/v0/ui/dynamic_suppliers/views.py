@@ -13,6 +13,17 @@ from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTy
 from v0.ui.dynamic_booking.models import BaseBookingTemplate, BookingTemplate, BookingData, BookingInventory
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.inventory.models import InventoryActivityImage
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+def get_paginated_result(data, entries, page):
+    paginator = Paginator(data, entries)
+    try:
+        result = paginator.page(int(page))
+    except PageNotAnInteger:
+        result = paginator.page(1)
+    except EmptyPage:
+        result = paginator.page(paginator.num_pages)
+    return result
 
 class SupplierType(APIView):
     @staticmethod
@@ -124,8 +135,13 @@ class Supplier(APIView):
     @staticmethod
     def get(request):
         all_supply_supplier = SupplySupplier.objects.all()
+
+        page = request.query_params.get('page', 1)
+        entries = 25
+        suppliers = get_paginated_result(all_supply_supplier, entries, page)
+
         all_supply_supplier_dict = {}
-        for supply_supplier in all_supply_supplier:
+        for supply_supplier in suppliers:
             all_supply_supplier_dict[str(supply_supplier._id)] = {
                 "id": str(supply_supplier._id),
                 "supplier_type_id": str(supply_supplier.supplier_type_id),
