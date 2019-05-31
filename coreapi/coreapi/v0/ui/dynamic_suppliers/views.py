@@ -402,4 +402,4 @@ class SupplierInventoryTransfer(APIView):
 
         return handle_response('', data={"success": True}, success=True)
 
-class InventoryActivityImageTransfer(APIView):
+# class InventoryActivityImageTransfer(APIView):
