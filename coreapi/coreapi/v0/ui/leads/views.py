@@ -184,13 +184,19 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
 
 
     leads_data_values = []
+    missing_suppliers= []
+
     for entry in leads_data_list:
         curr_entry = entry['data']
         entry_date = entry['created_at']
         entry_id = entry['entry_id']
         if supplier_id == 'All':
             curr_supplier_id = entry['supplier_id']
-            curr_supplier_name = supplier_id_names[curr_supplier_id]
+            if curr_supplier_id not in supplier_id_names:
+                missing_suppliers.append(curr_supplier_id)
+                continue
+            else:
+                curr_supplier_name = supplier_id_names[curr_supplier_id]
         else:
             curr_supplier_name = supplier_name
         new_entry = [
@@ -219,7 +225,7 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
             new_entry.append({"order_id": item["item_id"], "value": value})
         leads_data_values.append(new_entry)
 
-    final_data = {"hot_leads": hot_leads, "headers": headers, "values": leads_data_values}
+    final_data = {"hot_leads": hot_leads, "headers": headers, "values": leads_data_values, "missing_suppliers": missing_suppliers[0]}
 
     return final_data
 
