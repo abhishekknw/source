@@ -48,6 +48,9 @@ class BookingData(MongoModel):
     created_by = fields.CharField()
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
+    user_id = fields.IntegerField()
+    center_id = fields.IntegerField()
+    supplier_id_old = fields.CharField()
 
     class Meta:
         write_concern = WriteConcern(j=True)
@@ -71,12 +74,13 @@ class BookingInventory(MongoModel):
     supplier_id = fields.CharField()
     campaign_id = fields.CharField()
     inventory_name = fields.CharField()  # POSTER or STALL or STANDEE
-    comments = fields.ListField()
-    inventory_images = fields.ListField()
+    comments = fields.ListField(blank=True)
+    inventory_images = fields.ListField(blank=True)
     organisation_id = fields.CharField()
     created_by = fields.CharField()
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
+    supplier_id_old = fields.CharField()
 
     class Meta:
         write_concern = WriteConcern(j=True)

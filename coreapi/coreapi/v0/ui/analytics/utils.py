@@ -60,6 +60,7 @@ related_fields_dict = {"campaign": ['ProposalInfo', 'proposal_id', 'campaign', '
 # increment types: 0 - equal to, 1 - greater than, 2 - less than,
 # 3 - greater than or equal to, 4 - less than or equal to
 count_details_parent_map = {
+    'map name': 'count_details_parent_map',
     'supplier':{'parent': 'campaign', 'model_name': 'ShortlistedSpaces', 'database_type': 'mysql',
                 'self_name_model': 'object_id', 'parent_name_model': 'proposal_id', 'storage_type': 'name'},
     'checklist': {'parent': 'campaign', 'model_name': 'checklists', 'database_type': 'mongodb',
@@ -109,8 +110,11 @@ count_details_parent_map_multiple = {
 
 reverse_direct_match = {'flattype':'supplier', 'qualitytype':'supplier','standeetype':'supplier',
                         'fliertype':'supplier','stalltype':'supplier','liftpostertype':'supplier',
-                        'nbpostertype':'supplier','bannertype':'supplier', 'bachelortype':'supplier'}
+                        'nbpostertype':'supplier','bannertype':'supplier', 'bachelortype':'supplier',
+                        'subarea': 'supplier', 'locality':'supplier'}
 
+binary_parameters_list = ['standeetype', 'fliertype', 'stalltype', 'liftpostertype', 'nbpostertype',
+                          'bannertype', 'bachelortype']
 
 count_details_parent_map_custom = {
     'lead': {'parent': 'date,supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
@@ -152,7 +156,13 @@ count_details_direct_match_multiple = {
                             'storage_type': 'name'},
     'supplier_bachelortype': {'parent': 'bachelortype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
                               'self_name_model': 'supplier_id', 'parent_name_model': 'bachelor_tenants_allowed',
-                              'storage_type': 'name'}
+                              'storage_type': 'name'},
+    'supplier_subarea': {'parent': 'subarea', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                         'self_name_model': 'supplier_id', 'parent_name_model': 'society_subarea',
+                         'storage_type': 'name'},
+    'supplier_locality': {'parent': 'locality', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
+                          'self_name_model': 'supplier_id', 'parent_name_model': 'society_locality',
+                          'storage_type': 'name'},
 }
 
 
@@ -186,9 +196,9 @@ time_parent_names = {
 
 # rounds to sig places with minimum sig significant digits
 # if sig = 2. round_sig_min(1547.128) = 1547.12, round_sig_min(0.000313) = 0.00031
-def round_sig_min(x,sig=2):
+def round_sig_min(x,sig=7):
     if x>=1:
-        return round(x,2)
+        return round(x,sig)
     elif x==0:
         return x
     else:
@@ -244,7 +254,7 @@ def calculate_freqdist_mode_from_list_floating(num_list, window_size=5):
         upper_limit = lower_limit + window_size
         if upper_limit>min_max[1]:
             upper_limit = min_max[1]
-        new_list = [round(x,4) for x in num_list_copy if x> lower_limit and x<=upper_limit]
+        new_list = [round_sig_min(x) for x in num_list_copy if x> lower_limit and x<=upper_limit]
         if new_list == []:
             lower_limit = upper_limit
             continue
@@ -276,7 +286,7 @@ def calculate_freqdist_mode_from_list(num_list, window_size=5):
     counter = 0
     while lower_limit <= last_window_start:
         upper_limit = lower_limit + window_size
-        new_list = [round(x,4) for x in num_list_copy if lower_limit <= x < upper_limit]
+        new_list = [round_sig_min(x) for x in num_list_copy if lower_limit <= x < upper_limit]
         freq = len(new_list)
         mean = np.mean(new_list) if len(new_list)>0 else None
         counter = counter+freq
@@ -367,7 +377,7 @@ def sum_array_by_single_key(array, keys):
 
 
 def binary_operation(a, b, op):
-    operator_map = {"/": round(float(a)/b,5) if not b==0 else None, "*":a*b, "+":a+b, "-": a-b}
+    operator_map = {"/": round_sig_min(float(a)/b) if not b==0 else None, "*":a*b, "+":a+b, "-": a-b}
     return operator_map[op]
 
 
@@ -514,7 +524,6 @@ def get_common_keys(arrays):
 
 
 def merge_dict_array_array_multiple_keys(arrays, key_names):
-    #key_names = ['date','campaign']
     final_array = []
     if arrays==[]:
         return arrays
@@ -635,7 +644,7 @@ def append_array_by_keys(array, grouping_keys, append_keys):
     return new_array
 
 
-def sum_array_by_keys(array, grouping_keys, sum_keys):
+def sum_array_by_keys(array, grouping_keys, sum_keys, constant_keys = []):
     new_array = []
     required_keys = set(sum_keys + grouping_keys)
     ref_sum_key = sum_keys[0]
@@ -659,10 +668,13 @@ def sum_array_by_keys(array, grouping_keys, sum_keys):
                     match = False
             if match:
                 for sum_key in sum_keys:
-                    curr_dict_sum[sum_key] = int(curr_dict[sum_key]) if curr_dict[sum_key] is not None else 0
-                    curr_dict_new_sum[sum_key] = int(curr_dict_new[sum_key]) if curr_dict_new[
-                                                 sum_key] is not None else 0
-                    curr_dict_new[sum_key] = curr_dict_sum[sum_key] + curr_dict_new_sum[sum_key]
+                    if sum_key in constant_keys:
+                        curr_dict_new[sum_key] = int(curr_dict[sum_key]) if curr_dict[sum_key] is not None else 0
+                    else:
+                        curr_dict_sum[sum_key] = int(curr_dict[sum_key]) if curr_dict[sum_key] is not None else 0
+                        curr_dict_new_sum[sum_key] = int(curr_dict_new[sum_key]) if curr_dict_new[
+                                                     sum_key] is not None else 0
+                        curr_dict_new[sum_key] = curr_dict_sum[sum_key] + curr_dict_new_sum[sum_key]
                 first_match = True
         if not first_match:
             new_dict = {}
@@ -780,7 +792,8 @@ def date_to_other_groups(dict_array, group_name, desired_metric, raw_data, highe
             new_group_name = list(date_to_others[desired_metric]['variables'].keys())
         new_group_name.remove('date')
         new_group_name.append(desired_metric)
-        new_array = sum_array_by_keys(new_array,new_group_name, raw_data)
+        constant_keys = ['flat','cost','cost_flat']
+        new_array = sum_array_by_keys(new_array,new_group_name, raw_data, constant_keys)
     if new_array == []:
         new_array = list(new_dict.values())
 
@@ -942,6 +955,7 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ran
     match_list = [x[existing_key] for x in dict_array]
     new_array = []
     if database_type == 'mysql':
+        curr_dict = None
         first_part_query = model_name + '.objects.filter('
         full_query = first_part_query + self_name_model + '__in=match_list)'
         query = list(eval(full_query).values_list(self_name_model, parent_name_model))
@@ -954,6 +968,8 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ran
             if allowed_values is not None and str(curr_value) not in allowed_values:
                 continue
             new_array.append(curr_dict)
+        if not curr_dict:
+            return []
         all_keys = list(curr_dict.keys())
         grouping_keys = all_keys
         grouping_keys.remove(sum_key)
@@ -971,9 +987,10 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ran
 
 
 def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key, value_ranges = {},
-                               incrementing_value = None, operation_type = 'sum'):
+                               incrementing_value = None, operation_type = 'sum', base = 0):
     # if existing_key == required_key:
     #     return dict_array
+    curr_dict = None
     if incrementing_value is not None:
         sum_key = sum_key + str(incrementing_value)
     for required_key in required_keys:
@@ -1003,11 +1020,15 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
         else:
             new_array = dict_array
         dict_array = new_array
+    if not curr_dict:
+        return []
     all_keys = list(curr_dict.keys())
     grouping_keys = all_keys
     grouping_keys.remove(sum_key)
     if existing_key in grouping_keys:
         grouping_keys.remove(existing_key)
+    if base == 1:
+        grouping_keys = grouping_keys + [existing_key]
     if operation_type == 'append':
         new_array = append_array_by_keys(new_array, grouping_keys, [sum_key])
     elif operation_type == 'mean':
@@ -1088,3 +1109,25 @@ def calculate_mode(num_list,window_size=3):
     max_index_upper = max_index_lower + window_size - 1
     mode = float((max_index_upper + max_index_lower))/2.0
     return mode
+
+
+def add_binary_field_status(dict_array, fields_list, false_prefix = 'No ',remove_suffix_len = 4,
+                            custom_binary_field_labels = {}):
+    dict_keys = dict_array[0].keys()
+    binary_keys_list = set(dict_keys).intersection(set(fields_list))
+    new_array = []
+    for curr_dict in dict_array:
+        binary_fields = []
+        for curr_key in binary_keys_list:
+            curr_key_cap = curr_key.capitalize()
+            if curr_key in custom_binary_field_labels:
+                curr_conditions = custom_binary_field_labels[curr_key]
+                curr_field = curr_conditions["true"] if curr_dict[curr_key] is True else curr_conditions["false"]
+                binary_fields.append(curr_field)
+            else:
+                curr_field = curr_key_cap if curr_dict[curr_key] is True else false_prefix + curr_key_cap
+                binary_fields.append(curr_field[:-remove_suffix_len])
+        curr_dict["binary_fields"] = binary_fields
+        new_array.append(curr_dict)
+    return new_array
+

@@ -1554,28 +1554,18 @@ class HashtagImagesViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
-
-class HashtagImagesNewViewSet(APIView):
-    """
-    This class is arround hashtagged images by audit app
-    """
-
-    def post(self, request):
-        """
-
-        :param request:
-        :return:
-        """
-        class_name = self.__class__.__name__
-        file = request.data['file']
-        data = request.data
+def upload_hashtag_images(data):
+    function_name = upload_hashtag_images.__name__
+    try:
+        file = data['file']
+        data = data
         data_dict = {}
         data_dict['content_type'] = 46
         data_dict['object_id'] = data['supplier_id']
         data_dict['hashtag'] = data['hashtag']
-        data_dict['comment'] = data['comment']
-        data_dict['latitude'] = data['lat']
-        data_dict['longitude'] = data['long']
+        data_dict['comment'] = data['comment'] if data['comment'] else None
+        data_dict['latitude'] = data['lat'] if 'lat' in data else None
+        data_dict['longitude'] = data['long'] if 'long' in data else None
         data_dict['campaign'] = data['campaign_id']
         campaign_name = data['campaign_name'].replace(" ", "_")
         supplier_name = data['supplier_name'].replace(" ", "_")
@@ -1589,8 +1579,30 @@ class HashtagImagesNewViewSet(APIView):
         serializer = HashtagImagesSerializer(data=data_dict)
         if serializer.is_valid():
             serializer.save()
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-        return ui_utils.handle_response(class_name, data=serializer.errors)
+            return ui_utils.handle_response(function_name, data=serializer.data, success=True)
+        return ui_utils.handle_response(function_name, data=serializer.errors)
+    except Exception as e:
+        return ui_utils.handle_response(function_name, exception_object=e, request=data)
+
+
+class HashtagImagesNewViewSet(APIView):
+    """
+    This class is arround hashtagged images by audit app
+    """
+
+    def post(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+
+        response = upload_hashtag_images(request.data)
+        if response.status == 200:
+            return ui_utils.handle_response(class_name, data=response.data, success=True)
+        return ui_utils.handle_response(class_name, data=response.data)
+
 
 
 class CreateFinalProposal(APIView):

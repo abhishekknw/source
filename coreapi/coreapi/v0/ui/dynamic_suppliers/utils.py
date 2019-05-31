@@ -7,7 +7,8 @@ from bson.objectid import ObjectId
 
 def validate_supplier_type_data(supplier_type_dict):
     possible_attribute_types = ['FLOAT', 'INT', 'STRING', 'BOOLEAN', 'EMAIL', 'PASSWORD', 'PHONE', 'DROPDOWN', 'RADIO',
-                                'CHECKBOX', 'TEXTAREA', 'DATE', 'DATETIME', 'INVENTORY_TYPE','INVENTORY', "SUPPLIER_TYPE", "BASE_SUPPLIER_TYPE"]
+                                'CHECKBOX', 'TEXTAREA', 'DATE', 'DATETIME', 'INVENTORY_TYPE','INVENTORY', "SUPPLIER_TYPE", "BASE_SUPPLIER_TYPE",
+                                "DATE_TIME"]
     validation_msg_dict = {'repeating_name_field': [], "type_mismatch": [], "other_errors": [],
                            "base_supplier_fields_mismatch": []}
     is_valid = True

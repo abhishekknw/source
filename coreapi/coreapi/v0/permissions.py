@@ -90,7 +90,7 @@ class IsProposalAuthenticated(permissions.BasePermission):
             try:
                 proposal_id = ''
                 keys = ['pk', 'proposal_id']
-                if type(request.data) == DictType:
+                if type(request.data) == dict:
                     proposal_id = request.data.get('proposal_id')
                 for key in keys:
                     proposal_id = view.kwargs.get(key)

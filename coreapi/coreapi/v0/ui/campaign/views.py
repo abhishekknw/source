@@ -45,6 +45,7 @@ from celery import shared_task
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 from v0.ui.common.models import mongo_client
 from django.db import connection, connections
+from v0.ui.dynamic_booking.views import (get_dynamic_booking_data_by_campaign)
 
 class CampaignAPIView(APIView):
 
@@ -1201,7 +1202,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
         time = curr_data['created_at']
         curr_date = str(time.date())
         curr_time = str(time)
-        curr_phase_int = 1 + (time - start_datetime_phase).days / 7
+        curr_phase_int = math.floor(1 + (time - start_datetime_phase).days / 7)
         curr_phase_start = time - timedelta(days = (time.weekday() - start_weekday_int)%7)
         curr_phase_end = curr_phase_start + timedelta(days=7)
         curr_phase = str(curr_phase_int)
@@ -2104,6 +2105,18 @@ def get_all_assigned_campaigns(user_id, vendor):
     return serialized_proposals
 
 
+def get_campaign_suppliers(campaign_id):
+    dynamic_supplier_data = get_dynamic_booking_data_by_campaign(campaign_id)
+    if len(dynamic_supplier_data):
+        return dynamic_supplier_data
+    supplier_list = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values_list(
+        'object_id', flat=True).distinct()
+    supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_list)
+    serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
+    supplier_details = serializer.data
+    return supplier_details
+
+
 class AssignedCampaigns(APIView):
     @staticmethod
     def get(request):
@@ -2115,11 +2128,22 @@ class AssignedCampaigns(APIView):
             if campaign['proposal_id']:
                 if campaign['proposal_id'] not in all_campaign_ids:
                     all_campaign_ids.append(campaign['proposal_id'])
-                    supplier_list = ShortlistedSpaces.objects.filter(proposal_id=campaign['proposal_id']).values_list(
-                        'object_id', flat=True).distinct()
-                    supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_list)
-                    serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
-                    supplier_details = serializer.data
+                    supplier_details = get_campaign_suppliers(campaign['proposal_id'])
+                    campaign['supplier_details']=supplier_details
+        return ui_utils.handle_response({}, data=all_assigned_campaigns, success=True)
+
+
+class AllCampaigns(APIView):
+    @staticmethod
+    def get(request):
+        all_campaigns = ProposalInfo.objects.filter(campaign_state="PTC")
+        all_assigned_campaigns = ProposalInfoSerializer(all_campaigns, many=True).data
+        all_campaign_ids = []
+        for campaign in all_assigned_campaigns:
+            if campaign['proposal_id']:
+                if campaign['proposal_id'] not in all_campaign_ids:
+                    all_campaign_ids.append(campaign['proposal_id'])
+                    supplier_details = get_campaign_suppliers(campaign['proposal_id'])
                     campaign['supplier_details']=supplier_details
         return ui_utils.handle_response({}, data=all_assigned_campaigns, success=True)
 
@@ -2194,7 +2218,7 @@ class MISReportReceipts(APIView):
             where d.proposal_id in (%s) and a.activity_date between %s and %s and r.hashtag \
             = 'RECEIPT'", [campaign.proposal_id,start_date, end_date])
             all_list_receipt = cursor.fetchall()
-            all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign.proposal_id).all()
+            all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign.proposal_id, is_completed=True).all()
             all_supplier_ids = [ss.object_id for ss in all_shortlisted_spaces]
             dict_details=['society_name', 'campaign_id', 'hashtag', 'society_city', 'society_locality']
             all_details_list_receipt=[dict(zip(dict_details,l)) for l in all_list_receipt]

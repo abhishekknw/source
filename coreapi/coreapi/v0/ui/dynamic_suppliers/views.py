@@ -6,7 +6,12 @@ from bson.objectid import ObjectId
 from datetime import datetime
 from .utils import validate_supplier_type_data, validate_with_supplier_type
 from v0.ui.supplier.models import (SupplierTypeSociety)
+from v0.ui.proposal.models import (ShortlistedSpaces)
+from v0.ui.inventory.serializers import (ShortlistedSpacesSerializer, ShortlistedInventoryPricingDetailsSerializer)
+from v0.ui.dynamic_booking.models import BookingData
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2
+from v0.ui.dynamic_booking.models import BaseBookingTemplate, BookingTemplate, BookingData, BookingInventory
+from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 
 
 class SupplierType(APIView):
@@ -25,6 +30,7 @@ class SupplierType(APIView):
         supplier_type_dict = dict_of_req_attributes
         supplier_type_dict["is_global"] = is_global
         supplier_type_dict["created_at"] = datetime.now()
+        supplier_type_dict["inventory_list"] = request.data['inventory_list'] if 'inventory_list' in request.data else []
         is_valid_adv, validation_msg_dict_adv = validate_supplier_type_data(supplier_type_dict)
         if not is_valid_adv:
             return handle_response('', data=validation_msg_dict_adv, success=False)
@@ -40,7 +46,8 @@ class SupplierType(APIView):
                 "id": str(supply_supplier_type._id),
                 "base_supplier_type_id": str(supply_supplier_type.base_supplier_type_id),
                 "name": supply_supplier_type.name,
-                "supplier_attributes": supply_supplier_type.supplier_attributes
+                "supplier_attributes": supply_supplier_type.supplier_attributes,
+                "inventory_list":supply_supplier_type.inventory_list
             }
         return handle_response('', data=all_supply_supplier_type_dict, success=True)
 
@@ -53,7 +60,8 @@ class SupplierTypeById(APIView):
             "id": str(supply_supplier_type._id),
             "base_supplier_type_id": str(supply_supplier_type.base_supplier_type_id),
             "name": supply_supplier_type.name,
-            "supplier_attributes": supply_supplier_type.supplier_attributes
+            "supplier_attributes": supply_supplier_type.supplier_attributes,
+            "inventory_list": supply_supplier_type.inventory_list
         }
         return handle_response('', data=supply_supplier_type, success=True)
 
@@ -72,6 +80,8 @@ class SupplierTypeById(APIView):
         supplier_type_dict = dict_of_req_attributes
         supplier_type_dict["is_global"] = is_global
         supplier_type_dict["updated_at"] = datetime.now()
+        if 'inventory_list' in request.data:
+            supplier_type_dict["inventory_list"] = request.data['inventory_list']
         is_valid_adv, validation_msg_dict_adv = validate_supplier_type_data(supplier_type_dict)
         if not is_valid_adv:
             return handle_response('', data=validation_msg_dict_adv, success=False)
@@ -102,6 +112,8 @@ class Supplier(APIView):
         supplier_dict = dict_of_req_attributes
         supplier_dict['created_by'] = request.user.id
         supplier_dict['created_at'] = datetime.now()
+        supplier_dict["inventory_list"] = request.data['inventory_list'] if 'inventory_list' in request.data else []
+
         (is_valid_adv, validation_msg_dict_adv) = validate_with_supplier_type(supplier_dict,supplier_type_id)
         if not is_valid_adv:
             return handle_response('', data=validation_msg_dict_adv, success=False)
@@ -119,6 +131,7 @@ class Supplier(APIView):
                 "supplier_type_id": str(supply_supplier.supplier_type_id),
                 "name": supply_supplier.name,
                 "supplier_attributes": supply_supplier.supplier_attributes,
+                "inventory_list": supply_supplier.inventory_list,
                 "is_custom": supply_supplier.is_custom,
                 "organisation_id": supply_supplier.organisation_id,
                 "created_by": supply_supplier.created_by,
@@ -136,6 +149,7 @@ class SupplierById(APIView):
             "supplier_type_id": str(supply_supplier.supplier_type_id),
             "name": supply_supplier.name,
             "supplier_attributes": supply_supplier.supplier_attributes,
+            "inventory_list": supply_supplier.inventory_list,
             "is_custom": supply_supplier.is_custom,
             "organisation_id": supply_supplier.organisation_id,
             "created_by": supply_supplier.created_by,
@@ -157,6 +171,8 @@ class SupplierById(APIView):
             return handle_response('', data=validation_msg_dict, success=False)
         supplier_dict = dict_of_req_attributes
         supplier_dict['updated_at'] = datetime.now()
+        if 'inventory_list' in request.data:
+            supplier_dict["inventory_list"] = request.data['inventory_list']
         (is_valid_adv, validation_msg_dict_adv) = validate_with_supplier_type(supplier_dict, supplier_type_id)
         if not is_valid_adv:
             return handle_response('', data=validation_msg_dict_adv, success=False)
@@ -171,7 +187,7 @@ class SupplierById(APIView):
         return handle_response('', data="success", success=True)
 
 
-class SupplierTypeSociety(APIView):
+class SupplierTransfer(APIView):
     @staticmethod
     def get(request):
         supplier_objects = SupplierTypeSociety.objects.all()
@@ -180,7 +196,7 @@ class SupplierTypeSociety(APIView):
         new_base_supplier_for_society = BaseSupplySupplierType(**{
             "name": "Base Society",
             "supplier_attributes": [{"name":"supplier_id","type": "STRING"},
-                                  {"name":"society_name","type": "STRING"},
+                                  {"name":"name","type": "STRING"},
                                   {"name":"society_address1","type": "STRING"},
                                   {"name":"society_address2","type": "STRING"},
                                   {"name":"society_zip","type": "STRING"},
@@ -213,7 +229,7 @@ class SupplierTypeSociety(APIView):
             "name": "Base Society",
             "base_supplier_type_id": base_supplier_for_society_id,
             "supplier_attributes": [{"name": "supplier_id", "type": "STRING"},
-                                  {"name": "society_name", "type": "STRING"},
+                                  {"name": "name", "type": "STRING"},
                                   {"name": "society_address1", "type": "STRING"},
                                   {"name": "society_address2", "type": "STRING"},
                                   {"name": "society_zip", "type": "STRING"},
@@ -240,18 +256,150 @@ class SupplierTypeSociety(APIView):
                                   {"name": "ifsc_code", "type": "STRING"},
                                   {"name": "account_no", "type": "STRING"},
                               {"name": "representative", "type": "STRING"}],
-            "organisation_id": "MAC1421"
+            "organisation_id": "MAC1421",
+
         }).save()
         new_supplier_type_id = new_supplier_type_for_society._id
         for society in society_list:
-            name = 'Society'
-            new_supplier_type_id = new_supplier_type_id
-            supplier_attributes = society
-            organisation_id = "MAC1421"
-            dict_of_req_attributes = {"name": name, "supplier_attributes": supplier_attributes,
-                                      "organisation_id": organisation_id,
-                                      "supplier_type_id": new_supplier_type_id}
-            supplier_dict = dict_of_req_attributes
-            supplier_dict["created_at"] = datetime.now()
-            SupplySupplier(**supplier_dict).save()
+            if society['society_name']:
+                name = society['society_name']
+                new_supplier_type_id = new_supplier_type_id
+                supplier_attributes = [
+                                  {"name": "supplier_id", "type": "STRING", "value": society['supplier_id']},
+                                  {"name": "name", "type": "STRING", "value": society['society_name']},
+                                  {"name": "society_address1", "type": "STRING", "value": society['society_address1']},
+                                  {"name": "society_address2", "type": "STRING", "value": society['society_address2']},
+                                  {"name": "society_zip", "type": "STRING", "value": society['society_zip']},
+                                  {"name": "society_name", "type": "STRING", "value": society['society_name']},
+                                  {"name": "society_city", "type": "STRING", "value": society['society_city']},
+                                  {"name": "society_state", "type": "STRING", "value": society['society_state']},
+                                  {"name": "society_longitude", "type": "STRING", "value": society['society_longitude']},
+                                  {"name": "society_locality", "type": "STRING", "value": society['society_locality']},
+                                  {"name": "society_subarea", "type": "STRING", "value": society['society_subarea']},
+                                  {"name": "society_latitude", "type": "STRING", "value": society['society_latitude']},
+                                  {"name": "society_location_type", "type": "STRING", "value": society['society_location_type']},
+                                  {"name": "society_type_quality", "type": "STRING", "value": society['society_type_quality']},
+                                  {"name": "society_type_quantity", "type": "STRING", "value": society['society_type_quantity']},
+                                  {"name": "flat_count", "type": "STRING", "value": society['flat_count']},
+                                  {"name": "flat_avg_rental_persqft", "type": "STRING", "value": society['flat_avg_rental_persqft']},
+                                  {"name": "flat_sale_cost_persqft", "type": "STRING", "value": society['flat_sale_cost_persqft']},
+                                  {"name": "tower_count", "type": "INT", "value": society['tower_count']},
+                                  {"name": "payment_details_available", "type": "BOOLEAN", "value": society['payment_details_available']},
+                                  {"name": "age_of_society", "type": "INT", "value": society['age_of_society']},
+                                  {"name": "total_tenant_flat_count", "type": "INT", "value": society['total_tenant_flat_count']},
+                                  {"name": "landmark", "type": "STRING", "value": society['landmark']},
+                                  {"name": "name_for_payment", "type": "STRING", "value": society['name_for_payment']},
+                                  {"name": "bank_name", "type": "STRING", "value": society['bank_name']},
+                                  {"name": "ifsc_code", "type": "STRING", "value": society['ifsc_code']},
+                                  {"name": "account_no", "type": "STRING", "value": society['account_no']},
+                                  {"name": "representative", "type": "STRING", "value": society['representative']}
+                                ],
+
+                organisation_id = "MAC1421"
+                dict_of_req_attributes = {"name": name, "supplier_attributes": supplier_attributes[0],
+                                          "organisation_id": organisation_id,
+                                          "supplier_type_id": new_supplier_type_id,
+                                          "old_supplier_id": society['supplier_id']}
+                supplier_dict = dict_of_req_attributes
+                supplier_dict["created_at"] = datetime.now()
+                SupplySupplier(**supplier_dict).save()
         return handle_response('', data={"success": True}, success=True)
+
+
+class ShortlistedSpacesTransfer(APIView):
+    @staticmethod
+    def get(request):
+        shortlisted_spaces = ShortlistedSpaces.objects.all()
+        serializer = ShortlistedSpacesSerializer(shortlisted_spaces, many=True)
+        shortlisted_spaces_list = serializer.data
+        base_supplier_type = BaseSupplySupplierType.objects.raw({'name': 'Base Society'})[0]
+        supplier_type = SupplySupplierType.objects.raw({'name': 'Base Society'})[0]
+        booking_attributes_list = [
+
+                                {"name": "payment_method", "type": "DROPDOWN", "options": ["NEFT", "CASH", "ONLINE"]},
+                                {"name": "payment_status", "type": "DROPDOWN", "options": ["Not Initiated", "Pending", "Cheque Released",
+                                                                                           "Paid", "Rejected"]},
+                                {"name": "status", "type":"DROPDOWN", "options": ["BUFFER", "REMOVED", "FINALIZED"]},
+                                {"name": "total_negotiated_price", "type":"FLOAT"},
+                                {"name": "booking_status", "type": "DROPDOWN", "options": ["Undecided",
+                                    "Decision Pending", "Conformed Booking", "Tentative Booking", "Phone Booked", "Visit Booked",
+                                    "Rejected", "Send Email", "Visit Required", "Call Required"]},
+
+                                {"name": "is_completed", "type": "BOOLEAN"},
+                                {"name": "transaction_or_check_number", "type": "STRING"},
+                                {"name": "phase_no", "type": "INT"},
+                                {"name": "freebies", "type": "MULTISELECT", "options": ["Whatsapp Group","Email Group",
+                                                                                     "Building ERP", " Door to Door"]},
+                                {"name": "stall_locations", "type": "MULTISELECT", "options": ["Nea Entry Gate","Near Exit Gate",
+                                        "In Front Of Tower", "Near Garden", "Near Play Area", "Near Club House",
+                                        "Near Swimming Pool", "Near Parking Area", "Near Shopping Area"]},
+                                {"name": "cost_per_flat", "type": "FLOAT"},
+                                {"name": "booking_priority", "type": "DROPDOWN", "options": ["Very High", "High"]},
+                                {"name": "sunboard_location", "type": "MULTISELECT", "options": ["Nea Entry Gate","Near Exit Gate",
+                                        "In Front Of Tower", "Near Garden", "Near Play Area", "Near Club House",
+                                        "Near Swimming Pool", "Near Parking Area", "Near Shopping Area"]},
+
+                                ]
+        new_base_booking_template = BaseBookingTemplate(**
+        {
+            "name": "Society BaseBooking",
+            "booking_attributes": booking_attributes_list,
+            "base_supplier_type_id": base_supplier_type._id,
+            "supplier_attributes": base_supplier_type.supplier_attributes,
+            "organisation_id": "MAC1421"
+         }).save()
+        new_base_booking_template_id = new_base_booking_template._id
+        new_booking_template = BookingTemplate(**
+        {
+            "name":"Society Booking",
+            "booking_attributes": booking_attributes_list,
+            "supplier_type_id": supplier_type._id,
+            "base_booking_template_id": new_base_booking_template_id,
+            "supplier_attributes": supplier_type.supplier_attributes,
+            "organisation_id": "MAC1421"
+        }).save()
+        new_booking_template_id = new_booking_template._id
+        for booking in shortlisted_spaces_list:
+            data = {}
+            data['booking_template_id'] = str(new_booking_template_id)
+            data['campaign_id'] = booking['proposal']
+            data['user_id'] = booking['user']
+            data['center_id'] = booking['center']
+            data['supplier_id_old'] = booking['object_id']
+            temp_data = SupplySupplier.objects.raw({'old_supplier_id':booking['object_id']})
+            if  temp_data.count() > 0:
+                data['supplier_id'] = temp_data[0]._id
+            else:
+                continue
+            for item in booking_attributes_list:
+                item['value'] = booking[item['name']]
+            data['booking_attributes'] = booking_attributes_list
+
+            BookingData(**data).save()
+        return handle_response('', data={"success": True}, success=True)
+
+class SupplierInventoryTransfer(APIView):
+    @staticmethod
+    def get(request):
+        supplier_inventories = ShortlistedInventoryPricingDetails.objects.all()
+        for inventory in supplier_inventories:
+            data = {}
+            if SupplySupplier.objects.raw({'old_supplier_id': inventory.shortlisted_spaces.object_id}).count() > 0:
+                data['supplier_id'] = SupplySupplier.objects.raw({'old_supplier_id': inventory.shortlisted_spaces.object_id})[0]._id
+            else:
+                continue
+            data['campaign_id'] = inventory.shortlisted_spaces.proposal.proposal_id
+            data['inventory_name'] = inventory.ad_inventory_type.adinventory_name
+            data['organisation_id'] = inventory.shortlisted_spaces.proposal.account.organisation.organisation_id
+            data['supplier_id_old'] = inventory.shortlisted_spaces.object_id
+            data['comments'] = []
+            data['inventory_images'] = []
+            data['created_by'] = inventory.user
+            data["created_at"] = datetime.now()
+            data["updated_at"] = datetime.now()
+
+            BookingInventory(**data).save()
+
+        return handle_response('', data={"success": True}, success=True)
+
+class InventoryActivityImageTransfer(APIView):

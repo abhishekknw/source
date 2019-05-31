@@ -13,6 +13,8 @@ import boto3
 import v0.ui.utils as ui_utils
 from django.conf import settings
 import v0.ui.website.utils as website_utils
+from v0.ui.proposal.views import upload_hashtag_images
+from v0.ui.proposal.models import ProposalInfo
 
 
 
@@ -258,7 +260,10 @@ class BookingDataById(APIView):
 
 def get_supplier_attributes(supplier_id, supplier_attributes):
     all_supplier_attribute_names = [supplier['name'] for supplier in supplier_attributes]
-    supplier_object = SupplySupplier.objects.raw({"_id": ObjectId(supplier_id)})[0]
+    supplier_object_list = list(SupplySupplier.objects.raw({"_id": ObjectId(supplier_id)}))
+    if not len(supplier_object_list):
+        return []
+    supplier_object = supplier_object_list[0]
     final_attributes = []
     for supplier in supplier_object.supplier_attributes:
         if supplier['name'] in all_supplier_attribute_names:
@@ -266,27 +271,34 @@ def get_supplier_attributes(supplier_id, supplier_attributes):
     return final_attributes
 
 
+def get_dynamic_booking_data_by_campaign(campaign_id):
+    data_all = list(BookingData.objects.raw({'campaign_id': campaign_id}))
+    if not data_all or not len(data_all):
+        return []
+    booking_template_id = data_all[0].booking_template_id
+    booking_template = BookingTemplate.objects.raw({"_id": ObjectId(booking_template_id)})[0]
+    final_data_list = []
+    for data in data_all:
+        final_data = {}
+        final_data['booking_attributes'] = data.booking_attributes
+        final_data['comments'] = data.comments
+        final_data['inventory_counts'] = data.inventory_counts
+        final_data['phase_id'] = data.phase_id
+        final_data['supplier_attributes'] = get_supplier_attributes(data.supplier_id,
+                                                                    booking_template.supplier_attributes)
+        final_data['supplier_id'] = data.supplier_id
+        final_data['organisation_id'] = data.organisation_id
+        final_data['campaign_id'] = data.campaign_id
+        final_data['booking_template_id'] = data.booking_template_id
+        final_data['id'] = str(data._id)
+        final_data_list.append(final_data)
+    return final_data_list
+
+
 class BookingDataByCampaignId(APIView):
     @staticmethod
     def get(request, campaign_id):
-        data_all = list(BookingData.objects.raw({'campaign_id': campaign_id}))
-        all_supplier_ids = [data.supplier_id for data in data_all]
-        booking_template_id = data_all[0].booking_template_id
-        booking_template = BookingTemplate.objects.raw({"_id": ObjectId(booking_template_id)})[0]
-        final_data_list = []
-        for data in data_all:
-            final_data = {}
-            final_data['booking_attributes'] = data.booking_attributes
-            final_data['comments'] = data.comments
-            final_data['inventory_counts'] = data.inventory_counts
-            final_data['phase_id'] = data.phase_id
-            final_data['supplier_attributes'] = get_supplier_attributes(data.supplier_id, booking_template.supplier_attributes)
-            final_data['supplier_id'] = data.supplier_id
-            final_data['organisation_id'] = data.organisation_id
-            final_data['campaign_id'] = data.campaign_id
-            final_data['booking_template_id'] = data.booking_template_id
-            final_data['id'] = str(data._id)
-            final_data_list.append(final_data)
+        final_data_list = get_dynamic_booking_data_by_campaign(campaign_id)
         return handle_response('', data=final_data_list, success=True)
 
     @staticmethod
@@ -518,3 +530,39 @@ class UploadInventoryActivityImageGeneric(APIView):
             return ui_utils.handle_response(class_name, data=file_name, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+class UploadHashTagImage(APIView):
+
+    def post(self, request, booking_data_id):
+        data = request.data
+        supplier = SupplySupplier.objects.raw({'_id': ObjectId(data['supplier_id'])})
+        campaign = ProposalInfo.objects.get(proposal_id=data['campaign_id'])
+        if supplier.count() > 0 and data['file']:
+            hashtag_data = {
+                "file": data['file'],
+                "hashtag": data['hashtag'],
+                "comment": data['comment'] if data['comment'] else None,
+                "supplier_name": supplier[0].name,
+                "campaign_name": campaign.name,
+                "supplier_id": data['supplier_id'],
+                "campaign_id": data['campaign_id']
+            }
+            response = upload_hashtag_images(hashtag_data)
+            image_data = {
+                "image_path": response.data['data']['image_path'],
+                "hashtag": response.data['data']['hashtag'],
+                "comment": response.data['data']['comment']
+            }
+            booking_data = BookingData.objects.raw({'_id': ObjectId(booking_data_id)})
+            if booking_data.count() > 0:
+                new_booking_attributes = booking_data[0].booking_attributes
+                for booking in new_booking_attributes:
+                    if data['name'] == booking['name']:
+                        if 'files' not in booking:
+                            booking['files'] = []
+                        booking['files'].append(image_data)
+                        BookingData.objects.raw({'_id': ObjectId(booking_data_id)}). \
+                            update({"$set": {"booking_attributes": new_booking_attributes}})
+                        break
+            return ui_utils.handle_response('', data={}, success=True)
+        return ui_utils.handle_response('', data="Supplier or File Not found", success=False)

@@ -30,6 +30,8 @@ from django.forms.models import model_to_dict
 from django.db import connection
 from django.core.cache import cache
 from django.utils.dateparse import parse_datetime
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 from rest_framework.response import Response
 from rest_framework import status
@@ -55,7 +57,7 @@ from v0.ui.inventory.models import (AdInventoryType, InventoryActivityAssignment
 from v0.ui.inventory.serializers import (InventoryActivityAssignmentSerializer)
 from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping, ProposalCenterSuppliers, ProposalMetrics,
-    ProposalInfoVersion, ProposalMasterCost, ShortlistedSpaces, SupplierPhase)
+    ProposalInfoVersion, ProposalMasterCost, ShortlistedSpaces, SupplierPhase, SupplierAssignment)
 from v0.ui.proposal.serializers import ProposalInfoSerializer, ProposalCenterMappingSerializer
 from v0.ui.campaign.models import CampaignAssignment, GenericExportFileName
 import v0.ui.utils as ui_utils
@@ -88,7 +90,7 @@ def get_union_keys_inventory_code(key_type, unique_inventory_codes):
 
     assert key_type is not None, 'key type should not be None'
     assert unique_inventory_codes is not None, 'inventory code  should not be None'
-    assert type(v0_constants.inventorylist) is DictType, 'Inventory list is not dict type'
+    assert type(v0_constants.inventorylist) is dict, 'Inventory list is not dict type'
     function = get_union_keys_inventory_code.__name__
     try:
         # for each code in individual_codes union the data and return
@@ -107,7 +109,7 @@ def remove_duplicates_preserver_order(sequence):
         sequence: a list  containing duplicatees
     Returns: a list which does not contains duplicates whilst preserving order of elements in orginal lis
     """
-    assert type(sequence) is ListType, 'Sequence must be list type'
+    assert type(sequence) is list, 'Sequence must be list type'
     seen = set()
     seen_add = seen.add
     return [x for x in sequence if not (x in seen or seen_add(x))]
@@ -139,7 +141,7 @@ def get_union_inventory_price_per_flat(data, unique_inventory_codes, index):
     :return: calculates inventory price per flat by dividing two keys of the the dict and stores the result  in the dict itself
     """
 
-    # assert type(data) is DictType, 'Data variable should be a dict'
+    # assert type(data) is dict, 'Data variable should be a dict'
     # assert type(inventory_code) is StringType, 'inventory_code should be a String {0}.'.format(inventory_code)
     function = get_union_inventory_price_per_flat.__name__
     try:
@@ -988,7 +990,7 @@ def handle_offline_pricing_row(row, master_data):
 
                 # set data to previously saved data dict if it's a dict because here it will be updated
                 # else set to an empty dict because it will be appended in the list
-                data = master_data[model] if type(master_data[model]) == DictType else {}
+                data = master_data[model] if type(master_data[model]) == dict else {}
 
                 # add the content type information to data if 'specific' is not none
                 if model_row.get('specific'):
@@ -3422,7 +3424,7 @@ def send_excel_file(file_name):
 
             excel = open(file_name, "rb")
             file_content = excel.read()
-            output = StringIO.StringIO(file_content)
+            output = StringIO(str(file_content))
             out_content = output.getvalue()
             output.close()
             excel.close()
@@ -3808,7 +3810,7 @@ def setup_generic_export(data, user, proposal_id):
         inventory_summary_map = {}
         for instance in total_inventory_summary_instances:
             # taking advantage of the fact that a supplier id contains it's code in it. 'RS' is embedded in two characters [7:8]
-            supplier_code = instance.object_id[7:9]
+            supplier_code = 'RS'
             supplier_id = instance.object_id
 
             if not inventory_summary_map.get(supplier_code):
@@ -3968,7 +3970,7 @@ def is_campaign(proposal):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def prepare_shortlisted_spaces_and_inventories(proposal_id):
+def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned, search):
     """
 
     Args:
@@ -3987,14 +3989,37 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
         result = {}
 
         proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
-        shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id)
+
+        if assigned:
+            assigned_suppliers_list = SupplierAssignment.objects.filter(campaign=proposal_id,assigned_to=user.id). \
+                values_list('supplier_id')
+            shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id, object_id__in=assigned_suppliers_list). \
+                order_by('id')
+
+        elif search:
+            shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id, object_id=search).order_by('id')
+        else:
+            shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id).order_by('id')
+
+        if page:
+            entries = 10
+        else:
+            entries = 500
+            page = 1
+        paginator = Paginator(shortlisted_spaces, entries)
+        try:
+            spaces = paginator.page(int(page))
+        except PageNotAnInteger:
+            spaces = paginator.page(1)
+        except EmptyPage:
+            spaces = paginator.page(paginator.num_pages)
 
         # set the campaign data
         proposal_serializer = ProposalInfoSerializer(proposal)
         result['campaign'] = proposal_serializer.data
 
         # set the shortlisted spaces data. it maps various supplier ids to their respective content_types
-        response = get_objects_per_content_type(shortlisted_spaces.values())
+        response = get_objects_per_content_type_by_instance(spaces.object_list)
 
         if not response.data['status']:
             return response
@@ -4021,10 +4046,11 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
         if not response.data['status']:
             return response
         supplier_price_per_content_type_per_supplier = response.data['data']
-        shortlisted_suppliers_serializer = ShortlistedSpacesSerializerReadOnly(shortlisted_spaces,
-                                                                                           many=True)
+
+        shortlisted_suppliers_serializer = ShortlistedSpacesSerializerReadOnly(spaces, many=True)
         shortlisted_suppliers_list = shortlisted_suppliers_serializer.data
         result['shortlisted_suppliers'] = shortlisted_suppliers_list
+        result['total_count'] = shortlisted_spaces.count()
 
         # put the extra supplier specific info like name, area, subarea in the final result.
         for supplier in shortlisted_suppliers_list:
@@ -4052,7 +4078,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id):
                 return response
             supplier['shortlisted_inventories'], total_inventory_supplier_price = response.data['data']
             supplier['total_inventory_supplier_price'] = total_inventory_supplier_price
-        # cache.set(str(proposal_id), result, timeout=60 * 100)
+        cache.set(str(proposal_id), result, timeout=60 * 100)
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
         print("e3",e)
@@ -4422,7 +4448,7 @@ def map_objects_ids_to_objects(mapping):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def get_objects_per_content_type(objects):
+def get_objects_per_content_type_by_instance(objects):
     """
 
     Args:
@@ -4430,6 +4456,41 @@ def get_objects_per_content_type(objects):
 
     Returns: returns a dict having key as content_type and value as list of ids.
 
+    """
+    function = get_objects_per_content_type.__name__
+    try:
+        result = {}
+        content_type_set = set()
+        supplier_id_set = set()
+
+        for my_object in objects:
+
+            #  key can be both. one from serializer and one directly hitting .values()
+            try:
+                content_type_id = my_object.content_type.id
+            except KeyError:
+                content_type_id = my_object.content_type_id
+            try:
+                object_id = my_object.object_id
+            except KeyError:
+                object_id = my_object.supplier_id
+
+            if not result.get(content_type_id):
+                result[content_type_id] = []
+                content_type_set.add(content_type_id)
+
+            result[content_type_id].append(object_id)
+            supplier_id_set.add(object_id)
+
+        return ui_utils.handle_response(function, data=(result, content_type_set, supplier_id_set), success=True)
+    except Exception as e:
+        return ui_utils.handle_response(function, exception_object=e)
+
+def get_objects_per_content_type(objects):
+    """
+    Args:
+        objects: a list of objects
+    Returns: returns a dict having key as content_type and value as list of ids.
     """
     function = get_objects_per_content_type.__name__
     try:
@@ -4459,7 +4520,6 @@ def get_objects_per_content_type(objects):
         return ui_utils.handle_response(function, data=(result, content_type_set, supplier_id_set), success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
-
 
 def can_inventory_be_assigned(proposal_release_date, proposal_closure_date, dates):
     """

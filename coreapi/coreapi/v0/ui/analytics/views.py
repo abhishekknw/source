@@ -10,7 +10,8 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     mean_calculator, count_details_parent_map_custom, flatten, flatten_dict_array,
                     round_sig_min, time_parent_names, raw_data_unrestricted,
                     key_replace_group_multiple, key_replace_group, truncate_by_value_ranges, linear_extrapolator,
-                    get_constrained_values, add_related_field, related_fields_dict, calculate_mode)
+                    get_constrained_values, add_related_field, related_fields_dict, calculate_mode,
+                    add_binary_field_status, binary_parameters_list)
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo, ProposalCenterMapping
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -64,8 +65,6 @@ def get_campaigns_from_vendors(vendor_list):
     return final_result
 
 
-# currently working with the following constraints:
-# exactly one scope restrictor with exact match, one type of data point
 def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
                        higher_level_statistical_information, bivariate_statistical_information):
     unilevel_constraints = {}
@@ -117,7 +116,14 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         highest_level_values = vendor_level_values_list
         highest_level = 'campaign'
         default_value_type = 'campaign'
-    for curr_metric in raw_data:
+    supplier_list = []
+
+    raw_data_lf = raw_data.copy() # raw data with lead first
+    if 'lead' in raw_data_lf and not raw_data_lf[0]=='lead':
+        raw_data_lf.remove('lead')
+        raw_data_lf.insert(0,'lead')
+
+    for curr_metric in raw_data_lf:
         lowest_level = curr_metric
         if data_scope_category == 'geographical':
             lowest_geographical_level = geographical_parent_details['base']
@@ -144,8 +150,10 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             if len(grouping_level) > 1:
                 hl = grouping_level[-1]
 
-            curr_output = get_details_by_higher_level(hl, lowest_level, curr_highest_level_values, lgl, grouping_level,
+            curr_output_all = get_details_by_higher_level(hl, lowest_level, curr_highest_level_values, lgl, grouping_level,
                                                       curr_dict, unilevel_constraints, grouping_category, value_ranges)
+            curr_output = curr_output_all[0]
+            supplier_list = curr_output_all[1]
             # add missing key, if needed
             if len(individual_metric_output.keys())>0:
                 prev_raw_data = list(individual_metric_output.keys())
@@ -170,9 +178,12 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 curr_output = sum_array_by_keys(curr_output, [highest_level]+grouping_level_original,[curr_metric])
                 grouping_level = grouping_level_original
         else:
-            curr_output = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
+            curr_output_all = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
                           default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category,
-                          value_ranges, supplier_constraints)
+                          value_ranges, supplier_constraints, supplier_list = supplier_list)
+
+            curr_output = curr_output_all[0]
+            supplier_list = curr_output_all[1]
             if curr_output == []:
                 continue
             if highest_level_original == 'vendor':
@@ -196,12 +207,17 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         individual_metric_output[lowest_level] = curr_output
 
     reverse_map = {}
+    custom_binary_field_labels = data_point["custom_binary_field_labels"] if "custom_binary_field_labels" in data_point\
+        else {}
     if data_summary == 0:
         if grouping_level[0] in reverse_direct_match.keys() or data_scope_category == 'geographical' \
                 or data_point["level"] == ["date"]:
             single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, [highest_level]+grouping_level)
         else:
             single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, grouping_level)
+        # adding binary fields status, such as 'fliertype', 'postertype', etc.
+        single_array = add_binary_field_status(single_array,binary_parameters_list,
+                                               custom_binary_field_labels = custom_binary_field_labels)
         single_array_keys = single_array[0].keys() if len(single_array) > 0 else []
         for key in single_array_keys:
             reverse_key = level_name_by_model_id[key] if key in level_name_by_model_id else None
@@ -212,6 +228,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                                                 raw_data, highest_level_values)
         single_array_subleveled = copy.deepcopy(single_array)
         single_array_truncated = truncate_by_value_ranges(single_array_subleveled,value_ranges, range_type)
+
 
         if single_array_truncated == []:
             print("no data within the given range")
@@ -228,7 +245,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     derived_array = derived_array_original
     additional_fields_list = list(related_fields_dict.keys())
     for curr_field in additional_fields_list:
-        derived_array = add_related_field(derived_array,*(related_fields_dict[curr_field]))
+        derived_array = add_related_field(derived_array, *(related_fields_dict[curr_field]))
 
     metric_parents = {}
     remaining_metrics = individual_metric_output.keys()
@@ -275,6 +292,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             "op": op,
             "name": metric_name
         })
+
         metric_parents[metric_name] = curr_metric_parents
 
     for curr_dict in derived_array:
@@ -378,7 +396,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                     not dr_value == 0 and nr_value is not None and dr_value is not None else None
                 new_name = curr_metric['name'] + '_total'
                 new_metric_names.append(new_name)
-                curr_dict[new_name] = round(result_value, 4) if result_value is not None else result_value
+                curr_dict[new_name] = round_sig_min(result_value, 7) if result_value is not None else result_value
 
         new_stat_metrics = []
         for curr_stat in stat_metrics:
@@ -402,7 +420,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
-                                grouping_category = "", value_ranges = {}, supplier_constraints = {}):
+                                grouping_category = "", value_ranges = {}, supplier_constraints = {},
+                                supplier_list = []):
     incrementing_value = None
     if lowest_level == None:
         return []
@@ -688,6 +707,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     if not all_results == [] and isinstance(all_results[0], dict) == True:
                         all_results = [all_results]
                     all_results.append(query)
+
                 #query2 = merge_dict_array_array_multiple_keys(all_results,parent_model_names)
                 next_level_match_array = [x[self_model_name] for x in query if x[self_model_name] is not None]
                 if storage_type == 'count':
@@ -712,21 +732,35 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         except:
             single_array_results = merge_dict_array_array_multiple_keys(new_results, ['supplier'])
 
+        result_keys = single_array_results[0].keys()
+        if "supplier" in result_keys:
+            if "lead" in result_keys:
+                supplier_list = [x['supplier'] for x in single_array_results]
+            else:
+                if len(single_array_results) > len(supplier_list) and not supplier_list == []:
+                    new_array_results = []
+                    for curr_array in single_array_results:
+                        if curr_array['supplier'] in supplier_list:
+                            new_array_results.append(curr_array)
+                    single_array_results = new_array_results
+
         if original_grouping_levels is not None:
+
             superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
             superlevels_base_set = list(set(superlevels_base))
             if len(superlevels_base_set)>1:
                 print("this is not developed yet")
-            else:
-                if len(superlevels)>1:
+            elif len(superlevels_base_set) == 1:
+                base = len([x for x in original_grouping_levels if x == superlevels_base_set[0]])
+                if len(superlevels)>1 or base==1:
                     single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
-                                    superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
+                                    superlevels, lowest_level, value_ranges, incrementing_value, storage_type, base)
                 elif len(superlevels)==1:
                     single_array_results = key_replace_group(single_array_results, superlevels_base_set[0],
                                 superlevels[0], lowest_level, value_ranges, incrementing_value, storage_type)
     else:
         single_array_results = []
-    return single_array_results
+    return [single_array_results, supplier_list]
 
 
 def get_details_by_higher_level_geographical(highest_level, highest_level_list, lowest_level='supplier',
@@ -921,11 +955,17 @@ def get_all_assigned_campaigns_vendor_city(user_id, city_list = None, vendor_lis
         user_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id).values_list(
             'campaign_id', flat=True).distinct()
     if city_list is not None:
-        city_campaigns = ProposalCenterMapping.objects.filter(city__in=city_list).values('proposal_id').distinct()
-        city_campaigns = [obj['proposal_id'] for obj in city_campaigns]
-        final_list = list(set(user_campaigns).intersection(set(city_campaigns)))
+        city_suppliers_result = get_details_by_higher_level_geographical('city',city_list)
+        city_suppliers_list = city_suppliers_result['single_list']
+        city_campaigns = ShortlistedSpaces.objects.filter(object_id__in=city_suppliers_list).values_list\
+            ('proposal_id', flat=True).distinct()
+        city_assigned_campaigns = CampaignAssignment.objects.filter(
+            assigned_to_id=user_id, campaign_id__in=city_campaigns).values_list('campaign_id', flat=True).distinct()
+        final_list = city_assigned_campaigns
+        if vendor_list is not None:
+            final_list = list(set(vendor_campaigns).intersection(set(city_assigned_campaigns)))
     final_result = ProposalInfo.objects.filter(proposal_id__in=final_list).extra(select={
-                    'campaign_id': 'proposal_id', 'campaign_name':'name'}).values('campaign_id','campaign_name')
+                    'campaign_id': 'proposal_id', 'campaign_name': 'name'}).values('campaign_id', 'campaign_name')
     return final_result
 
 
