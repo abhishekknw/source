@@ -8,11 +8,11 @@ from .utils import validate_supplier_type_data, validate_with_supplier_type
 from v0.ui.supplier.models import (SupplierTypeSociety)
 from v0.ui.proposal.models import (ShortlistedSpaces)
 from v0.ui.inventory.serializers import (ShortlistedSpacesSerializer, ShortlistedInventoryPricingDetailsSerializer)
-from v0.ui.dynamic_booking.models import BookingData
+from v0.ui.dynamic_booking.models import BookingData, BookingInventoryActivity
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2
 from v0.ui.dynamic_booking.models import BaseBookingTemplate, BookingTemplate, BookingData, BookingInventory
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
-
+from v0.ui.inventory.models import InventoryActivityImage
 
 class SupplierType(APIView):
     @staticmethod
@@ -397,9 +397,53 @@ class SupplierInventoryTransfer(APIView):
             data['created_by'] = inventory.user
             data["created_at"] = datetime.now()
             data["updated_at"] = datetime.now()
+            data["inventory_id_old"] = inventory.id
 
             BookingInventory(**data).save()
 
         return handle_response('', data={"success": True}, success=True)
 
 class InventoryActivityImageTransfer(APIView):
+    def get(self, request):
+        dynamic_inventory = BookingInventory.objects.raw({})
+        dynamic_inventory_ids_map = {inv.inventory_id_old: inv for inv in dynamic_inventory}
+
+        dynamic_supplier = SupplySupplier.objects.raw({})
+        dynamic_supplier_ids_map = {supplier.old_supplier_id:supplier for supplier in dynamic_supplier}
+
+        image_objects = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
+                                                      'inventory_activity_assignment__inventory_activity',
+                                                      'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
+                                                      'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
+                                                      'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal')
+        result = {}
+        for item in image_objects:
+            try:
+                if item and str(item.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details.id) in dynamic_inventory_ids_map:
+                    if item.inventory_activity_assignment not in result:
+
+                        result[item.inventory_activity_assignment] = {
+                            'booking_inventory_id': str(dynamic_inventory_ids_map[str(item.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details.id)]._id),
+                            'supplier_id': str(dynamic_supplier_ids_map[item.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details.shortlisted_spaces.object_id]._id),
+                            'inventory_name': item.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details.ad_inventory_type.adinventory_name,
+                            'comments': [],
+                            'campaign_id': item.inventory_activity_assignment.inventory_activity.shortlisted_inventory_details.shortlisted_spaces.proposal.proposal_id,
+                            'organisation_id': 'MAC1421',
+                            'inventory_images': [],
+                            'activity_type': item.inventory_activity_assignment.inventory_activity.activity_type,
+                            'activity_date': item.inventory_activity_assignment.activity_date,
+                            'assigned_to_id': item.inventory_activity_assignment.assigned_to.id
+                        }
+                    result[item.inventory_activity_assignment]['inventory_images'].append({
+                        'image_path': item.image_path,
+                        'latitude': item.latitude,
+                        'longitude': item.longitude,
+                        'comment': item.comment,
+                        'actual_activity_date': item.actual_activity_date,
+                        'activity_by': item.activity_by.id
+                    })
+            except Exception as e:
+                continue
+        for item in result.values():
+            BookingInventoryActivity(**item).save()
+        return handle_response('', data={}, success=True)
