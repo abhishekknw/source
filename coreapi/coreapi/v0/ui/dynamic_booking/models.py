@@ -81,6 +81,7 @@ class BookingInventory(MongoModel):
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
     supplier_id_old = fields.CharField()
+    inventory_id_old = fields.CharField()
 
     class Meta:
         write_concern = WriteConcern(j=True)
