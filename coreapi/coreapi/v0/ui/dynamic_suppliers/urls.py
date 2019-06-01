@@ -2,7 +2,8 @@ from __future__ import absolute_import
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 from .views import (SupplierType, SupplierTypeById, Supplier, SupplierById,SupplierTransfer, ShortlistedSpacesTransfer,
-                    SupplierInventoryTransfer, InventoryActivityImageTransfer)
+                    SupplierInventoryTransfer, InventoryActivityImageTransfer, AutoCompleteSupplierDataCreate,
+                    SupplierAutoComplete)
 from .base_supplier_type import BaseSupplierType, BaseSupplierTypeById
 
 urlpatterns = [
@@ -16,6 +17,8 @@ urlpatterns = [
     url(r'^shortlisted-spaces-add/$', ShortlistedSpacesTransfer.as_view()),
     url(r'^supplier-inventory-add/$', SupplierInventoryTransfer.as_view()),
     url(r'^inventory-images-add/$', InventoryActivityImageTransfer.as_view()),
+    url(r'^auto-complete-supplier-data-create/$', AutoCompleteSupplierDataCreate.as_view()),
+    url(r'^supplier-autocomplete/$', SupplierAutoComplete.as_view()),
 
 ]
 

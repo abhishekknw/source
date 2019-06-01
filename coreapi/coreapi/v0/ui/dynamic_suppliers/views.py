@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import redis
 from rest_framework.views import APIView
 from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg
 from .models import BaseSupplySupplierType, SupplySupplierType, SupplySupplier
@@ -463,3 +464,68 @@ class InventoryActivityImageTransfer(APIView):
         for item in result.values():
             BookingInventoryActivity(**item).save()
         return handle_response('', data={}, success=True)
+
+def create_auto_complete_supplier_data(supplier_list=None):
+
+    r = redis.StrictRedis(host='localhost', port=6379, db=0)
+    for supplier in supplier_list:
+        supplier_name = supplier.name.lower()
+        supplier_id = str(supplier._id)
+        line = supplier_name
+        '''+ '||' + str(supplier_id)'''
+        n = line.strip()
+        for l in range(1, len(n)):
+            prefix = n[0:l]
+            r.zadd('supplier_data', 0, prefix)
+        r.zadd('supplier_data', 0, n + "*" + str(supplier_id))
+    return handle_response('', data={}, success=True)
+
+class AutoCompleteSupplierDataCreate(APIView):
+    @staticmethod
+    def get(request):
+        suppliers = SupplySupplier.objects.all()
+        response = create_auto_complete_supplier_data(suppliers)
+        if response.data['status']:
+            return handle_response('', data={}, success=True)
+        return handle_response('', data={}, success=False)
+
+class SupplierAutoComplete(APIView):
+    @staticmethod
+    def get(request):
+        r = redis.StrictRedis(host='localhost', port=6379, db=0)
+        query = request.query_params.get('query','')
+        prefix = query.lower()
+
+        results = []
+        rangelen = 50  # This is not random, try to get replies < MTU size
+        start = r.zrank('supplier_data', prefix)
+        print(prefix, start)
+
+        if start is None:
+            # print "start is none"
+            return handle_response('', data=[], success=True)
+        redis_data = r.zrange('supplier_data', start, start + rangelen - 1)
+        redis_data = [data.decode('UTF-8') for data in redis_data]
+        print(redis_data)
+        try:
+            k = r.zrange('supplier_data', start + rangelen - 1, start + rangelen - 1)
+            print("hi", k)
+            while k[0].startswith(prefix):
+                start = start + 50
+                redis_data = r.zrange('supplier_data', start, start + rangelen - 1)
+                print(redis_data)
+                redis_data.extend(redis_data)
+                k = r.zrange('supplier_data', start + rangelen -
+                             1, start + rangelen - 1)
+        except:
+
+            for i in redis_data:
+
+                if i.startswith(prefix):
+
+                    if '*' in i:
+                        i_arr = i.split('*')
+                        i_obj = {'name': i_arr[0], 'id': i_arr[1]}
+                        results.append(i_obj)
+
+            return handle_response('', data=results, success=True)
