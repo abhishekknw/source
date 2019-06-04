@@ -5,7 +5,7 @@ from openpyxl import load_workbook, Workbook
 from .models import (get_leads_summary, LeadsPermissions, ExcelDownloadHash)
 from v0.ui.analytics.views import (get_data_analytics, get_details_by_higher_level,
                                    get_details_by_higher_level_geographical, geographical_parent_details)
-from v0.ui.supplier.models import SupplierTypeSociety
+from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeRetailShop
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.inventory.models import (InventoryActivityAssignment, InventoryActivity)
@@ -31,7 +31,7 @@ from v0.ui.proposal.views import convert_date_format
 pp = pprint.PrettyPrinter(depth=6)
 import hashlib
 from bson.objectid import ObjectId
-from v0.ui.proposal.models import ProposalInfo
+from v0.ui.proposal.models import ProposalInfo, ProposalCenterSuppliers
 from v0.ui.account.models import Profile
 
 
@@ -122,10 +122,22 @@ def convertToNumber(str):
     except ValueError:
         return str
 
+def get_data_by_supplier_typ_code(lead_form, supplier_id):
+    proposal_id = lead_form['campaign_id']
+    supplier_type_code = ProposalCenterSuppliers.objects.filter(proposal_id=proposal_id)
+    if len(supplier_type_code) > 0:
+        code = supplier_type_code[0].supplier_type_code
+        if code == 'RS':
+            supplier_data = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
+            return supplier_data, supplier_data.society_name
+        elif code == 'RE':
+            supplier_data = SupplierTypeRetailShop.objects.get(supplier_id=supplier_id)
+            return supplier_data, supplier_data.name
+    return
 
 def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **kwargs):
     leads_per_page = 25
-    leads_forms = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)}, {"_id":0, "data":1})
+    leads_forms = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)}, {"_id":0, "data":1, "campaign_id": 1})
     if not leads_forms:
         return None
     leads_forms_items = leads_forms["data"]
@@ -144,8 +156,8 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
         leads_data = mongo_client.leads.find({"$and": [{"leads_form_id": int(leads_form_id)}, {"supplier_id": supplier_id},
                                                        {"status": {"$ne": "inactive"}}]}, {"_id": 0})
         leads_data_list = list(leads_data)
-        supplier_data = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
-        supplier_name = supplier_data.society_name
+        supplier_data, supplier_name = get_data_by_supplier_typ_code(leads_forms, supplier_id)
+
 
     hot_leads = [x['entry_id'] for x in leads_data_list if x['is_hot'] == True]
     headers = []
