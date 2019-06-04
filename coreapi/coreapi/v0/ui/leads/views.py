@@ -333,6 +333,16 @@ class GetLeadsFormById(APIView):
                 }
         return handle_response({}, data=lead_form_dict, success=True)
 
+def get_supplier_data_by_type(name):
+    suppliers = SupplierTypeSociety.objects.filter(society_name=name).values('supplier_id',
+                                                                                     'society_name').all()
+    if len(suppliers) > 0:
+        return suppliers
+    else:
+        suppliers = SupplierTypeRetailShop.objects.filter(name=name).values('supplier_id', 'name').all()
+        if len(suppliers) > 0:
+            return suppliers
+    return []
 
 class LeadsFormBulkEntry(APIView):
     @staticmethod
@@ -379,6 +389,8 @@ class LeadsFormBulkEntry(APIView):
                 entity_index = apartment_index if apartment_index else club_name_index
                 if index > 0:
                     society_name = row[entity_index].value
+
+                    suppliers = get_supplier_data_by_type(society_name)
 
                     suppliers = SupplierTypeSociety.objects.filter(society_name=society_name).values('supplier_id',
                                                                                                      'society_name').all()
