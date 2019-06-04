@@ -392,8 +392,6 @@ class LeadsFormBulkEntry(APIView):
 
                     suppliers = get_supplier_data_by_type(society_name)
 
-                    suppliers = SupplierTypeSociety.objects.filter(society_name=society_name).values('supplier_id',
-                                                                                                     'society_name').all()
 
                     if len(suppliers) == 0:
                         if society_name not in missing_societies:
