@@ -2882,7 +2882,11 @@ class SupplierDetails(APIView):
             supplier_model = ContentType.objects.get(pk=content_type.id).model
             model = apps.get_model(settings.APP_NAME,supplier_model)
 
-            supplier_object = model.objects.get(supplier_id=supplier_id)
+            supplier_object = model.objects.filter(supplier_id=supplier_id)
+            if len(supplier_object) > 0:
+                supplier_object = model.objects.get(supplier_id=supplier_id)
+            else:
+                supplier_object = SupplierTypeRetailShop.objects.get(supplier_id=supplier_id)
 
             data = model_to_dict(supplier_object)
             data = website_utils.manipulate_object_key_values([data])[0]
