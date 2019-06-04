@@ -3810,7 +3810,7 @@ def setup_generic_export(data, user, proposal_id):
         inventory_summary_map = {}
         for instance in total_inventory_summary_instances:
             # taking advantage of the fact that a supplier id contains it's code in it. 'RS' is embedded in two characters [7:8]
-            supplier_code = 'RS'
+            supplier_code = instance.object_id[7:9]
             supplier_id = instance.object_id
 
             if not inventory_summary_map.get(supplier_code):
