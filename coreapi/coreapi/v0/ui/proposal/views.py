@@ -1562,7 +1562,7 @@ def upload_hashtag_images(data):
         data_dict = {}
         data_dict['content_type'] = 46
         data_dict['object_id'] = data['supplier_id']
-        data_dict['hashtag'] = data['hashtag']
+        data_dict['hashtag'] = data['hashtag'].upper()
         data_dict['comment'] = data['comment'] if data['comment'] else None
         data_dict['latitude'] = data['lat'] if 'lat' in data else None
         data_dict['longitude'] = data['long'] if 'long' in data else None
