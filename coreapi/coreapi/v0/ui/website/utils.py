@@ -4142,37 +4142,38 @@ def handle_update_campaign_inventories(user, data):
 
             shortlisted_inventories = supplier['shortlisted_inventories']
             for inventory, inventory_detail in shortlisted_inventories.items():
-                for inv in inventory_detail['detail']:
-                    for inventory_activity in inv['inventory_activities']:
-                        inventory_activity_id = inventory_activity['id']
+                if inventory != 'NA' or inventory_detail != 'NA':
+                    for inv in inventory_detail['detail']:
+                        for inventory_activity in inv['inventory_activities']:
+                            inventory_activity_id = inventory_activity['id']
 
-                        inventory_activity_ids.add(inventory_activity_id)
+                            inventory_activity_ids.add(inventory_activity_id)
 
-                        for inventory_activity_assignment in inventory_activity['inventory_activity_assignment']:
-                            if not inventory_activity_assignment.get('id'):
-                                new_inventory_activity_assignments.append(
-                                    {
+                            for inventory_activity_assignment in inventory_activity['inventory_activity_assignment']:
+                                if not inventory_activity_assignment.get('id'):
+                                    new_inventory_activity_assignments.append(
+                                        {
+                                            'inventory_activity_id': inventory_activity_id,
+                                            'activity_date': ui_utils.get_aware_datetime_from_string(
+                                                inventory_activity_assignment['activity_date'])
+                                        }
+                                    )
+                                else:
+                                    old_inventory_activity_assignments[inventory_activity_assignment['id']] = {
+
                                         'inventory_activity_id': inventory_activity_id,
-                                        'activity_date': ui_utils.get_aware_datetime_from_string(
-                                            inventory_activity_assignment['activity_date'])
+                                        'activity_date': ui_utils.get_aware_datetime_from_string
+                                        (inventory_activity_assignment['activity_date'])
                                     }
-                                )
-                            else:
-                                old_inventory_activity_assignments[inventory_activity_assignment['id']] = {
 
-                                    'inventory_activity_id': inventory_activity_id,
-                                    'activity_date': ui_utils.get_aware_datetime_from_string
-                                    (inventory_activity_assignment['activity_date'])
-                                }
-
-                    sid_global_id = inv['id']
-                    if not shortlisted_inventory_details.get(sid_global_id):
-                        shortlisted_inventory_details[sid_global_id] = {}
-                    shortlisted_inventory_details[sid_global_id] = {
-                        'comment': inv['comment']
-                    }
-                    if inv['inventory_number_of_days']:
-                        shortlisted_inventory_details[sid_global_id]['inventory_number_of_days'] = inv['inventory_number_of_days']
+                        sid_global_id = inv['id']
+                        if not shortlisted_inventory_details.get(sid_global_id):
+                            shortlisted_inventory_details[sid_global_id] = {}
+                        shortlisted_inventory_details[sid_global_id] = {
+                            'comment': inv['comment']
+                        }
+                        if inv['inventory_number_of_days']:
+                            shortlisted_inventory_details[sid_global_id]['inventory_number_of_days'] = inv['inventory_number_of_days']
         data = {
             'shortlisted_spaces': shortlisted_spaces,
             'shortlisted_inventory_details': shortlisted_inventory_details,

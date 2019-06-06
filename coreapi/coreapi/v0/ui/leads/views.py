@@ -225,7 +225,7 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
             new_entry.append({"order_id": item["item_id"], "value": value})
         leads_data_values.append(new_entry)
 
-    final_data = {"hot_leads": hot_leads, "headers": headers, "values": leads_data_values, "missing_suppliers": missing_suppliers[0]}
+    final_data = {"hot_leads": hot_leads, "headers": headers, "values": leads_data_values, "missing_suppliers": missing_suppliers}
 
     return final_data
 

@@ -510,7 +510,7 @@ class UploadInventoryActivityImageGeneric(APIView):
                 if not existing_images:
                     existing_images = []
                 existing_images.append({
-                    "file_name": file_name,
+                    "image_path": file_name,
                     "bucket_name": settings.ANDROID_BUCKET_NAME,
                     "lat": lat,
                     "long": long,
