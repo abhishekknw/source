@@ -43,6 +43,8 @@ class SupplierType(APIView):
         supplier_type_dict["is_global"] = is_global
         supplier_type_dict["created_at"] = datetime.now()
         supplier_type_dict["inventory_list"] = request.data['inventory_list'] if 'inventory_list' in request.data else []
+        supplier_type_dict["additional_attributes"] = request.data[
+            'additional_attributes'] if 'additional_attributes' in request.data else {}
         is_valid_adv, validation_msg_dict_adv = validate_supplier_type_data(supplier_type_dict)
         if not is_valid_adv:
             return handle_response('', data=validation_msg_dict_adv, success=False)
@@ -59,7 +61,8 @@ class SupplierType(APIView):
                 "base_supplier_type_id": str(supply_supplier_type.base_supplier_type_id),
                 "name": supply_supplier_type.name,
                 "supplier_attributes": supply_supplier_type.supplier_attributes,
-                "inventory_list":supply_supplier_type.inventory_list
+                "inventory_list":supply_supplier_type.inventory_list,
+                "additional_attributes": supply_supplier_type.additional_attributes
             }
         return handle_response('', data=all_supply_supplier_type_dict, success=True)
 
@@ -73,7 +76,8 @@ class SupplierTypeById(APIView):
             "base_supplier_type_id": str(supply_supplier_type.base_supplier_type_id),
             "name": supply_supplier_type.name,
             "supplier_attributes": supply_supplier_type.supplier_attributes,
-            "inventory_list": supply_supplier_type.inventory_list
+            "inventory_list": supply_supplier_type.inventory_list,
+            "additional_attributes": supply_supplier_type.additional_attributes
         }
         return handle_response('', data=supply_supplier_type, success=True)
 
@@ -94,9 +98,12 @@ class SupplierTypeById(APIView):
         supplier_type_dict["updated_at"] = datetime.now()
         if 'inventory_list' in request.data:
             supplier_type_dict["inventory_list"] = request.data['inventory_list']
+        if 'additional_attributes' in request.data:
+            supplier_type_dict["additional_attributes"] = request.data['additional_attributes']
         is_valid_adv, validation_msg_dict_adv = validate_supplier_type_data(supplier_type_dict)
         if not is_valid_adv:
             return handle_response('', data=validation_msg_dict_adv, success=False)
+        print(supplier_type_dict)
         SupplySupplierType.objects.raw({'_id': ObjectId(supplier_type_id)}).update({"$set": supplier_type_dict})
         return handle_response('', data="success", success=True)
 
@@ -125,6 +132,8 @@ class Supplier(APIView):
         supplier_dict['created_by'] = request.user.id
         supplier_dict['created_at'] = datetime.now()
         supplier_dict["inventory_list"] = request.data['inventory_list'] if 'inventory_list' in request.data else []
+        supplier_dict["additional_attributes"] = request.data['additional_attributes'] if 'additional_attributes' in request.data else {}
+
 
         (is_valid_adv, validation_msg_dict_adv) = validate_with_supplier_type(supplier_dict,supplier_type_id)
         if not is_valid_adv:
@@ -148,6 +157,7 @@ class Supplier(APIView):
                 "supplier_type_id": str(supply_supplier.supplier_type_id),
                 "name": supply_supplier.name,
                 "supplier_attributes": supply_supplier.supplier_attributes,
+                "additional_attributes": supply_supplier.additional_attributes,
                 "inventory_list": supply_supplier.inventory_list,
                 "is_custom": supply_supplier.is_custom,
                 "organisation_id": supply_supplier.organisation_id,
@@ -166,6 +176,7 @@ class SupplierById(APIView):
             "supplier_type_id": str(supply_supplier.supplier_type_id),
             "name": supply_supplier.name,
             "supplier_attributes": supply_supplier.supplier_attributes,
+            "additional_attributes": supply_supplier.additional_attributes,
             "inventory_list": supply_supplier.inventory_list,
             "is_custom": supply_supplier.is_custom,
             "organisation_id": supply_supplier.organisation_id,
@@ -180,9 +191,11 @@ class SupplierById(APIView):
         supplier_type_id = request.data['supplier_type_id'] if 'supplier_type_id' in request.data else None
         is_custom = request.data['is_custom'] if 'is_custom' in request.data else None
         supplier_attributes = request.data['supplier_attributes']
+        additional_attributes = request.data['additional_attributes']
         organisation_id = get_user_organisation_id(request.user)
         dict_of_req_attributes = {"name": name, "supplier_type_id": supplier_type_id, "is_custom": is_custom,
-                                  "supplier_attributes": supplier_attributes, "organisation_id": organisation_id}
+                                  "supplier_attributes": supplier_attributes, "organisation_id": organisation_id,
+                                  "additional_attributes": additional_attributes}
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
             return handle_response('', data=validation_msg_dict, success=False)
