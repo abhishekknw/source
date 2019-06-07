@@ -147,7 +147,7 @@ class Supplier(APIView):
         all_supply_supplier = SupplySupplier.objects.all()
 
         page = request.query_params.get('page', 1)
-        entries = 25
+        entries = 10000
         suppliers = get_paginated_result(all_supply_supplier, entries, page)
 
         all_supply_supplier_dict = {}
