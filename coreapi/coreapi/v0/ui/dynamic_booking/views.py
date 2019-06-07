@@ -254,6 +254,9 @@ class BookingDataById(APIView):
     @staticmethod
     def delete(request, booking_data_id):
         exist_query = BookingData.objects.raw({'_id': ObjectId(booking_data_id)})
+        inventories = BookingInventory.objects.raw({"campaign_id": exist_query[0].campaign_id,
+                                        "supplier_id": exist_query[0].supplier_id})
+        inventories.delete()
         exist_query.delete()
         return handle_response('', data="success", success=True)
 
