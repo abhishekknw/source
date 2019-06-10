@@ -663,6 +663,7 @@ def get_dynamic_supplier_data_by_assignment(user_id):
                             "activity_date": {"$gte": (current_date), "$lt": (end_date)}})
     supplier_ids = [ObjectId(supplier.supplier_id) for supplier in booking_inv_activities]
     suppliers = SupplySupplier.objects.raw({'_id': {'$in': (supplier_ids)}})
+    supplier_objects_id_map = {}
     if suppliers.count():
         supplier_objects_id_map = {str(supplier._id):supplier for supplier in suppliers}
         proposal_ids = [proposal.campaign_id for proposal in booking_inv_activities]
@@ -777,7 +778,10 @@ class CampaignSuppliersInventoryList(APIView):
             if format == 'new':
                 response = get_dynamic_supplier_data_by_assignment(assigned_to)
                 if response.data['status']:
-                    result['shortlisted_suppliers'] = result['shortlisted_suppliers'] + response.data['data']
+                    if 'shortlisted_suppliers' in result:
+                        result['shortlisted_suppliers'] = result['shortlisted_suppliers'] + response.data['data']
+                    else:
+                        result['shortlisted_suppliers'] = response.data['data']
             return ui_utils.handle_response(class_name, data=result, success=True)
 
         except Exception as e:
