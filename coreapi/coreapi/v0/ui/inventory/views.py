@@ -775,13 +775,13 @@ class CampaignSuppliersInventoryList(APIView):
 
 
             result = website_utils.organise_supplier_inv_images_data(inv_act_assignment_objects, user_map, format)
-            if format == 'new':
-                response = get_dynamic_supplier_data_by_assignment(assigned_to)
-                if response.data['status']:
-                    if 'shortlisted_suppliers' in result:
-                        result['shortlisted_suppliers'] = result['shortlisted_suppliers'] + response.data['data']
-                    else:
-                        result['shortlisted_suppliers'] = response.data['data']
+            # if format == 'new':
+            #     response = get_dynamic_supplier_data_by_assignment(assigned_to)
+            #     if response.data['status']:
+            #         if 'shortlisted_suppliers' in result:
+            #             result['shortlisted_suppliers'] = result['shortlisted_suppliers'] + response.data['data']
+            #         else:
+            #             result['shortlisted_suppliers'] = response.data['data']
             return ui_utils.handle_response(class_name, data=result, success=True)
 
         except Exception as e:
