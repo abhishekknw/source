@@ -1599,7 +1599,7 @@ class HashtagImagesNewViewSet(APIView):
         class_name = self.__class__.__name__
 
         response = upload_hashtag_images(request.data)
-        if response.status == 200:
+        if response.data["status"]:
             return ui_utils.handle_response(class_name, data=response.data, success=True)
         return ui_utils.handle_response(class_name, data=response.data)
 

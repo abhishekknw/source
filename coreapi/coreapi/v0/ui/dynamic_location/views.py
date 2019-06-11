@@ -4,9 +4,10 @@ from v0.ui.utils import handle_response, get_user_organisation_id, create_valida
 from .models import *
 from bson.objectid import ObjectId
 from datetime import datetime
+from v0.ui.location.models import *
+ 
 
-
-class State(APIView):
+class state(APIView):
     @staticmethod
     def post(request):
         state_name = request.data['state_name'] if 'state_name' in request.data else None
@@ -71,7 +72,7 @@ class StateById(APIView):
         return handle_response('', data="success", success=True)
 
 
-class City(APIView):
+class city(APIView):
     @staticmethod
     def post(request):
         city_name = request.data['city_name'] if 'city_name' in request.data else None
@@ -280,3 +281,71 @@ class SubAreaById(APIView):
         exist_sub_area_query = CitySubAreaDetails.objects.raw({'_id': ObjectId(sub_area_id)})[0]
         exist_sub_area_query.delete()
         return handle_response('', data="success", success=True)
+
+
+
+class StateTransfer(APIView):
+    @staticmethod
+    def get(request):
+        states_data = State.objects.all()
+        for state in states_data:
+            data = {}
+            data['state_name'] = state.state_name
+            data['state_code'] = state.state_code
+
+            StateDetails(**data).save()
+
+        return handle_response('', data={"success": True}, success=True)
+
+class CityTransfer(APIView):
+    @staticmethod
+    def get(request):
+        cities_data = City.objects.all()
+        for city in cities_data:
+            data = {}
+            data['city_name'] = city.city_name
+            data['city_code'] = city.city_code
+            data['state_code'] = city.state_code
+
+            CityDetails(**data).save()
+
+        return handle_response('', data={"success": True}, success=True)
+
+class AreaTransfer(APIView):
+    @staticmethod
+    def get(request):
+        areas_data = CityArea.objects.all()
+        for area in areas_data:
+            data = {}
+            data['label'] = area.label
+            data['area_code'] = area.area_code
+            data['city_code'] = area.city_code
+
+            CityAreaDetails(**data).save()
+
+        return handle_response('', data={"success": True}, success=True)
+
+class SubAreaTransfer(APIView):
+    @staticmethod
+    def get(request):
+        sub_area_data = CitySubArea.objects.all()
+        for sub_area in sub_area_data:
+            data = {}
+            data['subarea_name'] = sub_area.subarea_name
+            data['area_code'] = sub_area.area_code
+
+            if sub_area.locality_rating == None or ' ':
+              data['locality_rating'] = 'No rating'
+            else:
+              data['locality_rating'] = sub_area.locality_rating
+
+            if sub_area.subarea_code == None or ' ':
+              data['subarea_code'] = 'No code'
+            else:
+              data['subarea_code'] = sub_area.subarea_code
+
+            CitySubAreaDetails(**data).save()
+
+        return handle_response('', data={"success": True}, success=True)
+
+
