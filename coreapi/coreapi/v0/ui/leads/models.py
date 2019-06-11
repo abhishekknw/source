@@ -2,14 +2,11 @@ from __future__ import division
 from django.db import models
 from v0.ui.base.models import BaseModel
 from v0.ui.common.models import mongo_client
-from pymodm.connection import connect
 from pymongo.write_concern import WriteConcern
 from pymodm import MongoModel, fields
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.supplier.models import SupplierTypeSociety
 import copy
-
-connect("mongodb://localhost:27017/machadalo", alias="mongo_app")
 
 
 # class LeadsFormContacts(BaseModel):

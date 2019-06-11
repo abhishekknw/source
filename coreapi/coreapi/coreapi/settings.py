@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 from __future__ import absolute_import
+from pymodm import connect
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
@@ -288,3 +289,8 @@ LOGGING = {
         }
     }
 }
+
+#Establish a connection to the database and call the connection mongo_app
+connect(
+"mongodb://localhost:27017/machadalo", alias="mongo_app"
+)
