@@ -2,6 +2,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 import json
 import requests
+from bson.objectid import ObjectId
 from django.urls import reverse
 from django.forms.models import model_to_dict
 from openpyxl import load_workbook
@@ -14,6 +15,9 @@ from v0.ui.utils import (get_supplier_id, handle_response, get_content_type, sav
                          save_basic_supplier_details)
 from v0.ui.website.utils import manipulate_object_key_values, return_price
 import v0.ui.website.utils as website_utils
+
+from v0.ui.dynamic_booking.models import BookingInventoryActivity
+from v0.ui.dynamic_suppliers.models import SupplySupplier
 from .models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeGym,
                     SupplierTypeRetailShop, CorporateParkCompanyList, CorporateBuilding, SupplierTypeBusDepot,
                     SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE)
@@ -3051,5 +3055,19 @@ class listCampaignSuppliers(APIView):
         all_campaign_societies = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).all()
         serializer = SupplierTypeSocietySerializer(all_campaign_societies, many=True)
         all_societies = manipulate_object_key_values(serializer.data)
+        booking_inv_activities = BookingInventoryActivity.objects.raw({"campaign_id": campaign_id})
+        supplier_ids = [ObjectId(supplier.supplier_id) for supplier in booking_inv_activities]
+        suppliers = SupplySupplier.objects.raw({'_id': {'$in': (supplier_ids)}})
+        dynamic_suppliers = []
+        if suppliers.count() > 0:
+            for supplier in suppliers:
+                data = {
+                    "name": supplier.name,
+                    "supplier_id": str(supplier._id)
+                }
+                for attr in supplier.supplier_attributes:
+                    data[attr['name']] = attr['value']
+                dynamic_suppliers.append(data)
+        all_societies = all_societies + dynamic_suppliers
         all_societies = [dict(society) for society in all_societies]
         return ui_utils.handle_response({}, data=all_societies, success=True)
