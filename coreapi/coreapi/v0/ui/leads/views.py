@@ -33,6 +33,7 @@ import hashlib
 from bson.objectid import ObjectId
 from v0.ui.proposal.models import ProposalInfo, ProposalCenterSuppliers
 from v0.ui.account.models import Profile
+from v0.ui.dynamic_suppliers.utils import get_dynamic_single_supplier_data
 
 
 def is_user_permitted(permission_type, user, **kwargs):
@@ -122,17 +123,23 @@ def convertToNumber(str):
     except ValueError:
         return str
 
-def get_data_by_supplier_typ_code(lead_form, supplier_id):
+def get_data_by_supplier_type_code(lead_form, supplier_id):
     proposal_id = lead_form['campaign_id']
     supplier_type_code = ProposalCenterSuppliers.objects.filter(proposal_id=proposal_id)
     if len(supplier_type_code) > 0:
-        code = supplier_type_code[0].supplier_type_code
-        if code == 'RS':
-            supplier_data = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
-            return supplier_data, supplier_data.society_name
-        elif code == 'RE':
-            supplier_data = SupplierTypeRetailShop.objects.get(supplier_id=supplier_id)
-            return supplier_data, supplier_data.name
+        try:
+            code = supplier_type_code[0].supplier_type_code
+            if code == 'RS':
+                supplier_data = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
+                return supplier_data, supplier_data.society_name
+            elif code == 'RE':
+                supplier_data = SupplierTypeRetailShop.objects.get(supplier_id=supplier_id)
+                return supplier_data, supplier_data.name
+        except Exception as e:
+            supplier_data = {}
+            supplier_data = get_dynamic_single_supplier_data(supplier_id)
+            if supplier_data:
+                return supplier_data, supplier_data['name']
     return
 
 def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **kwargs):
@@ -156,7 +163,7 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
         leads_data = mongo_client.leads.find({"$and": [{"leads_form_id": int(leads_form_id)}, {"supplier_id": supplier_id},
                                                        {"status": {"$ne": "inactive"}}]}, {"_id": 0})
         leads_data_list = list(leads_data)
-        supplier_data, supplier_name = get_data_by_supplier_typ_code(leads_forms, supplier_id)
+        supplier_data, supplier_name = get_data_by_supplier_type_code(leads_forms, supplier_id)
 
 
     hot_leads = [x['entry_id'] for x in leads_data_list if x['is_hot'] == True]
