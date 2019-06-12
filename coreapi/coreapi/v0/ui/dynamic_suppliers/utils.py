@@ -1,7 +1,8 @@
 from __future__ import absolute_import
 from validate_email import validate_email
 from datetime import datetime
-from .models import SupplySupplierType, BaseSupplySupplierType
+from .models import SupplySupplierType, BaseSupplySupplierType, SupplySupplier
+from v0.ui.dynamic_booking.models import BookingData
 from bson.objectid import ObjectId
 
 
@@ -98,3 +99,32 @@ def validate_with_supplier_type(supplier_dict,supplier_type_id):
             #     is_valid = False
             #     validation_msg_dict['data_mismatch'].append(key)
     return is_valid, validation_msg_dict
+
+def get_dynamic_suppliers_by_campaign(campaign_id):
+    booking_data = BookingData.objects.raw({"campaign_id": campaign_id})
+    supplier_ids = [ObjectId(supplier.supplier_id) for supplier in booking_data]
+    suppliers = SupplySupplier.objects.raw({'_id': {'$in': (supplier_ids)}})
+    dynamic_suppliers = []
+    if suppliers.count() > 0:
+        for supplier in suppliers:
+            data = {
+                "name": supplier.name,
+                "supplier_id": str(supplier._id)
+            }
+            for attr in supplier.supplier_attributes:
+                data[attr['name'].lower()] = attr['value'] if 'value' in attr else ''
+            dynamic_suppliers.append(data)
+    return dynamic_suppliers
+
+def get_dynamic_single_supplier_data(supplier_id):
+    data = {}
+    supplier_object = SupplySupplier.objects.raw({'_id': ObjectId(supplier_id)})
+    if supplier_object.count() > 0:
+        supplier = supplier_object[0]
+        data = {
+            "name": supplier.name,
+            "supplier_id": str(supplier._id)
+        }
+        for attr in supplier.supplier_attributes:
+            data[attr['name'].lower()] = attr['value'] if 'value' in attr else ''
+    return data

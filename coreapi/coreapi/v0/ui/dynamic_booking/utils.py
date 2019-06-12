@@ -1,8 +1,9 @@
 from __future__ import absolute_import
 from validate_email import validate_email
 from datetime import datetime
-from .models import BaseBookingTemplate, BookingTemplate
+from .models import BaseBookingTemplate, BookingTemplate, BookingData
 from bson.objectid import ObjectId
+from v0.ui.dynamic_suppliers.models import SupplySupplier
 
 
 def validate_booking(booking_template):
@@ -44,4 +45,37 @@ def validate_booking(booking_template):
 
     return is_valid, validation_msg_dict
 
+def get_dynamic_booking_data_by_campaign(campaign_id):
+    data_all = list(BookingData.objects.raw({'campaign_id': campaign_id}))
+    if not data_all or not len(data_all):
+        return []
+    booking_template_id = data_all[0].booking_template_id
+    booking_template = BookingTemplate.objects.raw({"_id": ObjectId(booking_template_id)})[0]
+    final_data_list = []
+    for data in data_all:
+        final_data = {}
+        final_data['booking_attributes'] = data.booking_attributes
+        final_data['comments'] = data.comments
+        final_data['inventory_counts'] = data.inventory_counts
+        final_data['phase_id'] = data.phase_id
+        final_data['supplier_attributes'] = get_supplier_attributes(data.supplier_id,
+                                                                    booking_template.supplier_attributes)
+        final_data['supplier_id'] = data.supplier_id
+        final_data['organisation_id'] = data.organisation_id
+        final_data['campaign_id'] = data.campaign_id
+        final_data['booking_template_id'] = data.booking_template_id
+        final_data['id'] = str(data._id)
+        final_data_list.append(final_data)
+    return final_data_list
 
+def get_supplier_attributes(supplier_id, supplier_attributes):
+    all_supplier_attribute_names = [supplier['name'] for supplier in supplier_attributes]
+    supplier_object_list = list(SupplySupplier.objects.raw({"_id": ObjectId(supplier_id)}))
+    if not len(supplier_object_list):
+        return []
+    supplier_object = supplier_object_list[0]
+    final_attributes = []
+    for supplier in supplier_object.supplier_attributes:
+        if supplier['name'] in all_supplier_attribute_names:
+            final_attributes.append(supplier)
+    return final_attributes

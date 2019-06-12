@@ -1,5 +1,6 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from v0.ui.dynamic_booking.views import (get_dynamic_booking_data_by_campaign)
 import random
 import math
 import numpy as np
@@ -45,7 +46,6 @@ from celery import shared_task
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 from v0.ui.common.models import mongo_client
 from django.db import connection, connections
-from v0.ui.dynamic_booking.views import (get_dynamic_booking_data_by_campaign)
 
 class CampaignAPIView(APIView):
 

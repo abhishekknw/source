@@ -2887,13 +2887,25 @@ class SupplierDetails(APIView):
             model = apps.get_model(settings.APP_NAME,supplier_model)
 
             supplier_object = model.objects.filter(supplier_id=supplier_id)
+            data = {}
             if len(supplier_object) > 0:
                 supplier_object = model.objects.get(supplier_id=supplier_id)
             else:
-                supplier_object = SupplierTypeRetailShop.objects.get(supplier_id=supplier_id)
-
-            data = model_to_dict(supplier_object)
-            data = website_utils.manipulate_object_key_values([data])[0]
+                try:
+                    supplier_object = SupplierTypeRetailShop.objects.get(supplier_id=supplier_id)
+                except Exception as e:
+                    supplier_object = SupplySupplier.objects.raw({'_id': ObjectId(supplier_id)})
+                    if supplier_object.count() > 0:
+                        supplier = supplier_object[0]
+                        data = {
+                            "name": supplier.name,
+                            "supplier_id": str(supplier._id)
+                        }
+                        for attr in supplier.supplier_attributes:
+                            data[attr['name'].lower()] = attr['value'] if 'value' in attr else ''
+            if not data:
+                data = model_to_dict(supplier_object)
+                data = website_utils.manipulate_object_key_values([data])[0]
 
             return ui_utils.handle_response(class_name, data=data, success=True)
 
