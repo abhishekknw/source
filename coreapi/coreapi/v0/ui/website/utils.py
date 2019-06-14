@@ -78,6 +78,7 @@ from v0.ui.account.serializers import ContactDetailsSerializer
 from v0.ui.campaign.serializers import GenericExportFileSerializer
 from v0.ui.inventory.models import Filters
 from v0.ui.inventory.serializers import FiltersSerializer
+from v0.ui.dynamic_suppliers.utils import (get_dynamic_suppliers_by_campaign)
 
 fonts_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fonts')
 
@@ -2285,6 +2286,9 @@ def proposal_shortlisted_spaces(data):
             }
             result[center['id']] = center_result
 
+        dynamic_suppliers = get_dynamic_suppliers_by_campaign(proposal_id)
+        if len(dynamic_suppliers) > 0:
+            result['dynamic_suppliers'] = dynamic_suppliers
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
