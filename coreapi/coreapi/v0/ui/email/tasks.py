@@ -176,10 +176,10 @@ class SendLeadsToSelf(APIView):
         end_date = None
         if 'start_date' in data:
             start_date = data['start_date'][:10]
-            start_date = datetime.datetime.strptime(str(start_date), '%d-%m-%Y').date()
+            start_date = datetime.datetime.strptime(str(start_date), '%Y-%m-%d').date()
         if 'end_date' in data:
             end_date = data['end_date'][:10]
-            end_date = datetime.datetime.strptime(str(end_date), '%d-%m-%Y').date()
+            end_date = datetime.datetime.strptime(str(end_date), '%Y-%m-%d').date()
         leads_form_id = data['leads_form_id']
         campaign_id = data['campaign_id']
         (campaign_assignement_by_campaign_id, campaign_assignement_by_campaign_id_admins, all_leads_forms,
@@ -197,8 +197,8 @@ class SendLeadsToSelf(APIView):
             start_date) + '_' + str(end_date) + '.xlsx'
         filepath = cwd + '/' + filename
         book.save(filepath)
-        to_array = [user_email] if user_email in campaign_assignement_by_campaign_id[campaign_id] else []
-        # to_array = ['kshitij.mittal01@gmail.com']
+        # to_array = [user_email] if user_email in campaign_assignement_by_campaign_id[campaign_id] else []
+        to_array = ['kshitij.mittal01@gmail.com']
         if len(to_array) != 0:
             self_leads_template = get_template('self_leads_email.html')
             html_body = self_leads_template.render({'campaign_name': campaign_name, 'first_name':first_name,
