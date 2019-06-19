@@ -45,6 +45,7 @@ def validate_booking(booking_template):
 
     return is_valid, validation_msg_dict
 
+
 def get_dynamic_booking_data_by_campaign(campaign_id):
     data_all = list(BookingData.objects.raw({'campaign_id': campaign_id}))
     if not data_all or not len(data_all):
@@ -58,8 +59,8 @@ def get_dynamic_booking_data_by_campaign(campaign_id):
         final_data['comments'] = data.comments
         final_data['inventory_counts'] = data.inventory_counts
         final_data['phase_id'] = data.phase_id
-        final_data['supplier_attributes'] = get_supplier_attributes(data.supplier_id,
-                                                                    booking_template.supplier_attributes)
+        (final_data['supplier_attributes'], final_data['additional_attributes']) = get_supplier_attributes(
+            data.supplier_id, booking_template.supplier_attributes)
         final_data['supplier_id'] = data.supplier_id
         final_data['organisation_id'] = data.organisation_id
         final_data['campaign_id'] = data.campaign_id
@@ -68,6 +69,7 @@ def get_dynamic_booking_data_by_campaign(campaign_id):
         final_data_list.append(final_data)
     return final_data_list
 
+
 def get_supplier_attributes(supplier_id, supplier_attributes):
     all_supplier_attribute_names = [supplier['name'] for supplier in supplier_attributes]
     supplier_object_list = list(SupplySupplier.objects.raw({"_id": ObjectId(supplier_id)}))
@@ -75,7 +77,9 @@ def get_supplier_attributes(supplier_id, supplier_attributes):
         return []
     supplier_object = supplier_object_list[0]
     final_attributes = []
+    additional_attributes = supplier_object.additional_attributes if hasattr(supplier_object,
+                                                                             "additional_attributes") else None
     for supplier in supplier_object.supplier_attributes:
         if supplier['name'] in all_supplier_attribute_names:
             final_attributes.append(supplier)
-    return final_attributes
+    return (final_attributes, additional_attributes)

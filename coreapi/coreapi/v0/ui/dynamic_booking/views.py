@@ -227,7 +227,7 @@ class BookingDataById(APIView):
         final_data['comments'] = data.comments
         final_data['inventory_counts'] = data.inventory_counts
         final_data['phase_id'] = data.phase_id
-        final_data['supplier_attributes'] = get_supplier_attributes(data.supplier_id, booking_template.supplier_attributes)
+        (final_data['supplier_attributes'], final_data['additional_attributes']) = get_supplier_attributes(data.supplier_id, booking_template.supplier_attributes)
         final_data['name'] = data.name if 'name' in data else None
         final_data['supplier_id'] = data.supplier_id
         final_data['organisation_id'] = data.organisation_id
