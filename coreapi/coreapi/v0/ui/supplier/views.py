@@ -3078,7 +3078,7 @@ class listCampaignSuppliers(APIView):
                     "supplier_id": str(supplier._id)
                 }
                 for attr in supplier.supplier_attributes:
-                    data[attr['name']] = attr['value']
+                    data[attr['name']] = attr['value'] if 'value' in attr else None
                 dynamic_suppliers.append(data)
         all_societies = all_societies + dynamic_suppliers
         all_societies = [dict(society) for society in all_societies]
