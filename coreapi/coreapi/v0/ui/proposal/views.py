@@ -2914,8 +2914,9 @@ class SupplierAssignmentViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             user_id = request.query_params.get('id',None)
+            user = request.user.id
             campaign_id = request.query_params.get('campaign_id',None)
-            suppliers = SupplierAssignment.objects.filter(campaign=campaign_id, assigned_to=user_id)
+            suppliers = SupplierAssignment.objects.filter(campaign=campaign_id, assigned_by=user)
             serializer = SupplierAssignmentSerializer(suppliers, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
