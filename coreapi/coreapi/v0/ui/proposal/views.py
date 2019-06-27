@@ -2913,7 +2913,9 @@ class SupplierAssignmentViewSet(viewsets.ViewSet):
     def list(self, request):
         class_name = self.__class__.__name__
         user = request.user.id
-        campaign_id = request.query_params.get('campaign_id',None)
+        campaign_id = request.query_params.get('campaign_id')
+        if not campaign_id:
+            return ui_utils.handle_response(class_name, data='Please pass campaign Id', success=False)
         suppliers = SupplierAssignment.objects.filter(campaign=campaign_id, assigned_by=user)
         result_obj = {}
         for supplier_obj in suppliers:
