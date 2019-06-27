@@ -3083,3 +3083,56 @@ class listCampaignSuppliers(APIView):
         all_societies = all_societies + dynamic_suppliers
         all_societies = [dict(society) for society in all_societies]
         return ui_utils.handle_response({}, data=all_societies, success=True)
+
+class CreateSupplierPriceMappingObjects(APIView):
+    def get(self, request):
+        suppliers = SupplierTypeSociety.objects.all()
+        pmd_object = PriceMappingDefault.objects.all()
+        suppliers_no_pmd = []
+        for supplier in suppliers:
+            if len(pmd_object.filter(object_id=supplier.supplier_id)) == 0:
+                suppliers_no_pmd.append(supplier)
+        rs_content_type = get_content_type('RS').data['data']
+        print(len(suppliers_no_pmd))
+        index = 0
+        for supplier in suppliers_no_pmd:
+            index = index + 1
+            print(supplier.society_name, index)
+            new_society = supplier
+            supplier_id = supplier.supplier_id
+
+            try:
+                create_price_mapping_default('7', "POSTER", "A4", new_society,
+                                             0, rs_content_type, supplier_id)
+            except Exception as e:
+                pass
+            try:
+                create_price_mapping_default('0', "POSTER LIFT", "A4", new_society,
+                                             0, rs_content_type, supplier_id)
+            except Exception as e:
+                pass
+            try:
+                create_price_mapping_default('0', "STANDEE", "Small", new_society,
+                                             0, rs_content_type, supplier_id)
+            except Exception as e:
+                pass
+            try:
+                create_price_mapping_default('1', "STALL", "Small", new_society,
+                                             0, rs_content_type, supplier_id)
+            except Exception as e:
+                pass
+            try:
+                create_price_mapping_default('0', "CAR DISPLAY", "A4", new_society,
+                                             0, rs_content_type, supplier_id)
+            except Exception as e:
+                pass
+            try:
+                save_flyer_locations(0, 1, new_society, 'RS')
+            except Exception as e:
+                pass
+            try:
+                create_price_mapping_default('1', "FLIER", "Door-to-Door", new_society,
+                                             0, rs_content_type, supplier_id)
+            except Exception as e:
+                pass
+        return ui_utils.handle_response({}, data={}, success=True)

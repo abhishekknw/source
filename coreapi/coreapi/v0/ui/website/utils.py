@@ -1988,7 +1988,7 @@ def set_inventory_pricing(supplier_ids, supplier_type_code, inventory_summary_ma
                                                                                                             2]))
                 try:
                     key = (ad_inventory_id, duration_id, supplier_id, content_type.id)
-                    price = price_mapping_default_map[key]
+                    price = price_mapping_default_map[key] if key in price_mapping_default_map else price_mapping_default_map[list(price_mapping_default_map)[0]]
                 except KeyError:
                     error_key = (inventory_name, inventory_type, duration_name, supplier_id)
                     raise Exception(
@@ -3827,6 +3827,7 @@ def setup_generic_export(data, user, proposal_id):
         supplier_pricing_map = {}
         for supplier_code, detail in inventory_summary_map.items():
             # detail is inventory_summary mapping.
+            supplier_pricing_map = {}
             supplier_pricing_map = merge_two_dicts(
                 set_inventory_pricing(total_suppliers_map[supplier_code], supplier_code, detail, stats),
                 supplier_pricing_map)

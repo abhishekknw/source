@@ -1806,6 +1806,7 @@ class ProposalVersion(APIView):
             proposal.save()
 
             # change the status of the proposal to 'requested' once everything is okay.
+            data['stats']['inventory_summary_no_instance_error'] = list(data['stats']['inventory_summary_no_instance_error'])
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)

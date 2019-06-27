@@ -520,7 +520,7 @@ def save_flyer_locations(c1, c2, supplier, supplier_type_code):
                 'adinventory_id': flyer_id,
             }
             flyer = FlyerInventory.objects.get_or_create_objects(data, supplier.supplier_id, supplier_type_code)
-            flyer.flat_count = supplier.flat_count
+            flyer.flat_count = supplier.flat_count if supplier.flat_count else 0
             flyer.save()
 
     except Exception as e:
