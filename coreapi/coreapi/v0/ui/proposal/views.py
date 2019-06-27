@@ -1554,6 +1554,32 @@ class HashtagImagesViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+    @list_route(methods=['GET'])
+    def get_hashtag_images(self, request):
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get("campaign_id", None)
+            if not campaign_id:
+                return ui_utils.handle_response(class_name, data='Please pass campaign Id', success=False)
+            images = HashTagImages.objects.filter(campaign_id=campaign_id, hashtag__in=['Permission Box','RECEIPT']).order_by('-updated_at')
+            result_obj = {}
+            for image in images:
+                image.hashtag = image.hashtag.lower()
+                if image.hashtag == 'permission box':
+                    image.hashtag = 'permission_box'
+                if image.object_id not in result_obj:
+                    result_obj[image.object_id] = {}
+                if image.hashtag not in result_obj[image.object_id]:
+                    result_obj[image.object_id][image.hashtag] = {}
+                result_obj[image.object_id][image.hashtag]["image_path"] = image.image_path
+                result_obj[image.object_id][image.hashtag]["object_id"] = image.object_id
+                result_obj[image.object_id][image.hashtag]["hashtag"] = image.hashtag
+                result_obj[image.object_id][image.hashtag]["updated_at"] = image.updated_at
+                result_list = [result_obj[result] for result in result_obj]
+            return ui_utils.handle_response(class_name, data=result_list, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 def upload_hashtag_images(data):
     function_name = upload_hashtag_images.__name__
     try:

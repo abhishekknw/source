@@ -3078,8 +3078,11 @@ class listCampaignSuppliers(APIView):
                     "supplier_id": str(supplier._id)
                 }
                 for attr in supplier.supplier_attributes:
-                    data[attr['name']] = attr['value']
-                dynamic_suppliers.append(data)
+                    try:
+                        data[attr['name']] = attr['value']
+                        dynamic_suppliers.append(data)
+                    except KeyError:
+                        pass
         all_societies = all_societies + dynamic_suppliers
         all_societies = [dict(society) for society in all_societies]
         return ui_utils.handle_response({}, data=all_societies, success=True)
