@@ -289,6 +289,7 @@ class ShortlistedSpaces(BaseModel):
     cost_per_flat = models.FloatField(null=True, blank=True)
     booking_priority = models.CharField(max_length=10,null=True,blank=True)
     sunboard_location = models.CharField(max_length=50,null=True,blank=True)
+    next_action_date = models.DateTimeField(null=True)
 
     class Meta:
         db_table = 'shortlisted_spaces'

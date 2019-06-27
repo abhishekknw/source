@@ -4142,6 +4142,7 @@ def handle_update_campaign_inventories(user, data):
                 'cost_per_flat' : supplier['cost_per_flat'],
                 'booking_priority': supplier['booking_priority'],
                 'sunboard_location': supplier['sunboard_location'] if 'sunboard_location' in supplier else None,
+                'next_action_date': supplier['next_action_date'] if 'next_action_date' in supplier else None,
             }
 
             shortlisted_inventories = supplier['shortlisted_inventories']
@@ -4230,6 +4231,7 @@ def update_campaign_inventories(data):
             obj.cost_per_flat = shortlisted_spaces[ss_global_id]['cost_per_flat']
             obj.booking_priority = shortlisted_spaces[ss_global_id]['booking_priority']
             obj.sunboard_location = shortlisted_spaces[ss_global_id]['sunboard_location']
+            obj.next_action_date = shortlisted_spaces[ss_global_id]['next_action_date']
 
         sid_ids = list(shortlisted_inventory_details.keys())
         sid_objects = ShortlistedInventoryPricingDetails.objects.filter(id__in=sid_ids)
