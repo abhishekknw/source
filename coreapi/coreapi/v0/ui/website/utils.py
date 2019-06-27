@@ -4129,6 +4129,8 @@ def handle_update_campaign_inventories(user, data):
             supplier_sunboard_locations = supplier['sunboard_location'] if 'sunboard_location' in supplier else None
             if supplier_sunboard_locations and isinstance(supplier_sunboard_locations, list):
                 supplier_sunboard_locations = ','.join(supplier_sunboard_locations)
+            if 'next_action_date' in supplier and supplier['next_action_date']:
+                supplier['next_action_date'] = datetime.datetime.strptime(supplier['next_action_date'], '%d-%m-%Y').strftime('%Y-%m-%d')
             shortlisted_spaces[ss_global_id] = {
                 'phase': supplier['phase'],
                 'phase_no': supplier['phase_no'],
