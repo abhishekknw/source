@@ -2912,15 +2912,24 @@ class SupplierAssignmentViewSet(viewsets.ViewSet):
 
     def list(self, request):
         class_name = self.__class__.__name__
-        try:
-            user_id = request.query_params.get('id',None)
-            user = request.user.id
-            campaign_id = request.query_params.get('campaign_id',None)
-            suppliers = SupplierAssignment.objects.filter(campaign=campaign_id, assigned_by=user)
-            serializer = SupplierAssignmentSerializer(suppliers, many=True)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+        # user_id = request.query_params.get('id',None)s
+        user = request.user.id
+        campaign_id = request.query_params.get('campaign_id',None)
+        suppliers = SupplierAssignment.objects.filter(campaign=campaign_id, assigned_by=user)
+        result_obj = {}
+        for supplier_obj in suppliers:
+            if supplier_obj.supplier_id not in result_obj:
+                result_obj[supplier_obj.supplier_id] = {}
+            result_obj[supplier_obj.supplier_id]["assigned_to"] = supplier_obj.assigned_to.id
+            result_obj[supplier_obj.supplier_id]["updated_at"] = supplier_obj.updated_at
+            result_obj[supplier_obj.supplier_id]["supplier_id"] = supplier_obj.supplier_id
+        # serializer = SupplierAssignmentSerializer(suppliers, many=True)
+        result_list = [result_obj[supplier] for supplier in result_obj]
+        print(result_list)
+        return ui_utils.handle_response(class_name, data=result_list, success=True)
+        # try:
+        # except Exception as e:
+        #     return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 
