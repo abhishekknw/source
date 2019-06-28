@@ -2460,8 +2460,30 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
         try:
             campaign_id = request.query_params.get('campaign_id')
             phases = SupplierPhase.objects.filter(campaign=campaign_id)
-            serializer = SupplierPhaseSerializer(phases, many=True)
-            return handle_response(class_name, data=serializer.data, success=True)
+            current_date = datetime.datetime.now().date()
+            result_obj = {}
+            for phase in phases:
+                if phase.id not in result_obj:
+                    result_obj[phase.id] = {}
+                result_obj[phase.id]["start_date"] = phase.start_date
+                result_obj[phase.id]["end_date"] = phase.end_date
+                result_obj[phase.id]["phase_no"] = phase.phase_no
+                result_obj[phase.id]["created_at"] = phase.created_at
+                result_obj[phase.id]["id"] = phase.id
+                result_obj[phase.id]["comments"] = phase.comments
+                result_obj[phase.id]["campaign"] = campaign_id
+
+                if current_date > phase.end_date.date():
+                    result_obj[phase.id]["status"] = "completed"
+                elif phase.start_date.date() > current_date:
+                    result_obj[phase.id]["status"] = "upcoming"
+                elif phase.start_date.date() < current_date < phase.end_date.date():
+                    result_obj[phase.id]["status"] = "ongoing"
+
+            result_list = [result_obj[result] for result in result_obj]
+
+            return ui_utils.handle_response(class_name, data=result_list, success=True)
+
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
 
