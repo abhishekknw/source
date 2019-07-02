@@ -5,7 +5,7 @@ from django.core.mail import EmailMessage
 from .models import EmailSettings
 from v0.ui.leads.views import get_leads_excel_sheet
 from v0.ui.campaign.models import CampaignAssignment
-from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces
+from v0.ui.proposal.models import ProposalInfo
 from v0.ui.proposal.views import get_supplier_list_by_status_ctrl
 import datetime
 from datetime import timedelta
@@ -14,17 +14,12 @@ from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.views import convert_date_format
-from .views import send_email, send_mail_generic, send_mail_with_attachment
+from .views import send_email, send_mail_generic
 from v0.ui.common.models import BaseUser
 from celery import shared_task
 from django.conf import settings
 DEFAULT_CC_EMAILS = settings.DEFAULT_CC_EMAILS
-ENV = settings.ENV
-import schedule
-import time
-from v0.ui.account.models import ContactDetails
-import csv
-from django.db import connection
+
 
 def get_all_campaign_assignment_by_id(email_type):
     email_settings = EmailSettings.objects.filter(email_type=email_type).values("user__email", "is_allowed",
@@ -146,102 +141,7 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None, email=None):
                 end_date = (datetime.datetime.now() + timedelta(days=4)).strftime('%d %b %Y')
             subject = str(all_campaign_name_dict[campaign_id]) + " Societies Activation Status for this Weekend (" + start_date + " to " + end_date + ")"
         send_mail_generic.delay(subject, to_array, html, None,None)
-    return
-
-def send_mis_contact_report():
-    end_date = datetime.datetime.now().date()
-    start_date = end_date - datetime.timedelta(days=1)
-
-    all_campaigns = ProposalInfo.objects.filter(tentative_start_date__gte=start_date).all()
-    return_list = []
-    for campaign in all_campaigns:
-        try:
-            if "BYJU" in campaign.name:
-                partial_dict = {"campaign_name": campaign.name,
-                                "total_supplier_count": None,
-                                "total_contacts_with_name": 0, 
-                                "total_contacts_with_number": 0,
-                                }
-                all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign.proposal_id).all()
-                all_supplier_ids = [ss.object_id for ss in all_shortlisted_spaces]
-                all_suppliers = ContactDetails.objects.filter(object_id__in=all_supplier_ids)
-                partial_dict["total_supplier_count"] = len(all_shortlisted_spaces)
-                for sc in all_suppliers:
-                    if sc.mobile:
-                        partial_dict["total_contacts_with_number"] += 1
-                    if sc.name:
-                        partial_dict["total_contacts_with_name"] += 1
-
-
-                cursor = connection.cursor()
-                cursor.execute("SELECT DISTINCT e.society_name, d.proposal_id, r.hashtag, e.Society_City, e.SOCIETY_LOCALITY \
-                from shortlisted_inventory_pricing_details as c \
-                inner join inventory_activity_assignment as a \
-                inner join inventory_activity as b \
-                inner join shortlisted_spaces as d \
-                inner join supplier_society as e \
-                inner join hashtag_images as r \
-                on b.id = a.inventory_activity_id and b.shortlisted_inventory_details_id = c.id \
-                and c.shortlisted_spaces_id = d.id and d.object_id = e.SUPPLIER_ID and r.object_id = e.supplier_id \
-                where d.proposal_id in (%s) and a.activity_date between %s and %s and r.hashtag \
-                = 'PERMISSION BOX'", [campaign.proposal_id,start_date, end_date])
-                all_list_pb = cursor.fetchall()
-
-                dict_details=['society_name', 'campaign_id', 'hashtag', 'society_city', 'society_locality']
-                all_details_list_pb=[dict(zip(dict_details,l)) for l in all_list_pb]
-
-                cursor.execute("SELECT DISTINCT e.society_name, d.proposal_id, r.hashtag, e.Society_City, e.SOCIETY_LOCALITY \
-                from shortlisted_inventory_pricing_details as c \
-                inner join inventory_activity_assignment as a \
-                inner join inventory_activity as b \
-                inner join shortlisted_spaces as d \
-                inner join supplier_society as e \
-                inner join hashtag_images as r \
-                on b.id = a.inventory_activity_id and b.shortlisted_inventory_details_id = c.id \
-                and c.shortlisted_spaces_id = d.id and d.object_id = e.SUPPLIER_ID and r.object_id = e.supplier_id \
-                where d.proposal_id in (%s) and a.activity_date between %s and %s and r.hashtag \
-                = 'RECEIPT'", [campaign.proposal_id,start_date, end_date])
-                all_list_receipt = cursor.fetchall()
-                all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign.proposal_id, is_completed=True).all()
-                all_supplier_ids = [ss.object_id for ss in all_shortlisted_spaces]
-                dict_details=['society_name', 'campaign_id', 'hashtag', 'society_city', 'society_locality']
-                all_details_list_receipt=[dict(zip(dict_details,l)) for l in all_list_receipt]
-                partial_dict['count_permission'] = len(all_details_list_pb)
-                partial_dict['count_receipt'] = len(all_details_list_receipt)
-                partial_dict['supplier_count'] =  len(all_supplier_ids)
-
-                return_list.append(partial_dict)
-
-        except TypeError:
-            pass
-    template_name = "mis_report_contact.html"
-    booking_template = get_template(template_name)
-
-    html = booking_template.render(
-        {"partial_dict": return_list})
-
-    subject = "MIS Report"
-    to_array = ["shailesh.singh@machadalo.com", "sathya.sharma@machadalo.com", "divya.moses@machadalo.com", 
-                "shyamlee.khanna@machadalo.com","srishti.dhamija@machadalo.com", "nikita.walicha@machadalo.com", 
-                "prashantgupta888@gmail.com", "kwasi0883@gmail.com", "madhu.atri@machadalo.com", 
-                "tejas.pawar@machadalo.com", "jaya.murugan@machadalo.com", "muvaz.khan@machadalo.com",
-                "lokesh.kumar@machadalo.com", "vyoma.desai@machadalo.com", "lokesh.kumar@machadalo.com",
-                "anupam@machadalo.com", "Anmol.prabhu@machadalo.com", "abhishek.chandel@machadalo.com",
-                "momi.borah@machadalo.com"
-                ]
-    send_mail_generic.delay(subject, to_array, html, None,None)
-
-if ENV == 'prod':
-    # schedule.every(10).seconds.do(send_mis_contact_report)
-    # schedule.every(1).minutes.do(send_mis_contact_report)
-    # schedule.every().hour.do(send_mis_contact_report)
-    schedule.every().day.at("23:30").do(send_mis_contact_report) #sends every day at 6pm in IST
-    # schedule.every().monday.do(send_mis_contact_report)
-    # schedule.every().wednesday.at("13:15").do(send_mis_contact_report)
-
-    while True:
-        schedule.run_pending()
-        time.sleep(1) 
+    return 
 
 
 class SendBookingDetailMails(APIView):
