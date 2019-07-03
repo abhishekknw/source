@@ -1554,6 +1554,34 @@ class HashtagImagesViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+    @list_route(methods=['GET'])
+    def get_hashtag_images(self, request):
+        class_name = self.__class__.__name__
+        try:
+            campaign_id = request.query_params.get("campaign_id")
+            if not campaign_id:
+                return ui_utils.handle_response(class_name, data='Please pass campaign Id', success=False)
+            images = HashTagImages.objects.filter(campaign_id=campaign_id, hashtag__in=['Permission Box','RECEIPT']).order_by('-updated_at')
+            if not images:
+                return ui_utils.handle_response(class_name, data='No images found', success=False) 
+            result_obj = {}
+            for image in images:
+                image.hashtag = image.hashtag.lower()
+                if image.hashtag == 'permission box':
+                    image.hashtag = 'permission_box'
+                if image.object_id not in result_obj:
+                    result_obj[image.object_id] = {}
+                if image.hashtag not in result_obj[image.object_id]:
+                    result_obj[image.object_id][image.hashtag] = {}
+                result_obj[image.object_id][image.hashtag]["image_path"] = image.image_path
+                result_obj[image.object_id][image.hashtag]["object_id"] = image.object_id
+                result_obj[image.object_id][image.hashtag]["hashtag"] = image.hashtag
+                result_obj[image.object_id][image.hashtag]["updated_at"] = image.updated_at
+                result_list = [result_obj[result] for result in result_obj]
+            return ui_utils.handle_response(class_name, data=result_list, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 def upload_hashtag_images(data):
     function_name = upload_hashtag_images.__name__
     try:
@@ -2435,8 +2463,30 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
         try:
             campaign_id = request.query_params.get('campaign_id')
             phases = SupplierPhase.objects.filter(campaign=campaign_id)
-            serializer = SupplierPhaseSerializer(phases, many=True)
-            return handle_response(class_name, data=serializer.data, success=True)
+            current_date = datetime.datetime.now().date()
+            result_obj = {}
+            for phase in phases:
+                if phase.id not in result_obj:
+                    result_obj[phase.id] = {}
+                result_obj[phase.id]["start_date"] = phase.start_date
+                result_obj[phase.id]["end_date"] = phase.end_date
+                result_obj[phase.id]["phase_no"] = phase.phase_no
+                result_obj[phase.id]["created_at"] = phase.created_at
+                result_obj[phase.id]["id"] = phase.id
+                result_obj[phase.id]["comments"] = phase.comments
+                result_obj[phase.id]["campaign"] = campaign_id
+
+                if current_date > phase.end_date.date():
+                    result_obj[phase.id]["status"] = "completed"
+                elif phase.start_date.date() > current_date:
+                    result_obj[phase.id]["status"] = "upcoming"
+                elif phase.start_date.date() < current_date < phase.end_date.date():
+                    result_obj[phase.id]["status"] = "ongoing"
+
+            result_list = [result_obj[result] for result in result_obj]
+
+            return ui_utils.handle_response(class_name, data=result_list, success=True)
+
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
 
@@ -2913,14 +2963,19 @@ class SupplierAssignmentViewSet(viewsets.ViewSet):
 
     def list(self, request):
         class_name = self.__class__.__name__
-        try:
-            user_id = request.query_params.get('id',None)
-            campaign_id = request.query_params.get('campaign_id',None)
-            suppliers = SupplierAssignment.objects.filter(campaign=campaign_id, assigned_to=user_id)
-            serializer = SupplierAssignmentSerializer(suppliers, many=True)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
+        user = request.user.id
+        campaign_id = request.query_params.get('campaign_id')
+        if not campaign_id:
+            return ui_utils.handle_response(class_name, data='Please pass campaign Id', success=False)
+        suppliers = SupplierAssignment.objects.filter(campaign=campaign_id, assigned_by=user)
+        result_obj = {}
+        for supplier_obj in suppliers:
+            if supplier_obj.supplier_id not in result_obj:
+                result_obj[supplier_obj.supplier_id] = {}
+            result_obj[supplier_obj.supplier_id]["assigned_to"] = supplier_obj.assigned_to.id
+            result_obj[supplier_obj.supplier_id]["updated_at"] = supplier_obj.updated_at
+            result_obj[supplier_obj.supplier_id]["supplier_id"] = supplier_obj.supplier_id
+        result_list = [result_obj[supplier] for supplier in result_obj]
+        return ui_utils.handle_response(class_name, data=result_list, success=True)
 
 
