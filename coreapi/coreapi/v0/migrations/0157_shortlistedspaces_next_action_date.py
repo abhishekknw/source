@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('v0', '0155_auto_20190523_0851'),
+        ('v0', '0156_shortlistedspaces_booking_sub_status'),
     ]
 
     operations = [
