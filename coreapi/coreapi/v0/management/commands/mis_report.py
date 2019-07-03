@@ -24,13 +24,13 @@ class Command(BaseCommand):
 	def handle(self, *args, **options):
 
 		end_date = datetime.datetime.now().date()
-		start_date = end_date - datetime.timedelta(days=10000)
+		start_date = end_date - datetime.timedelta(days=1)
 
 		all_campaigns = ProposalInfo.objects.filter(tentative_start_date__gte=start_date).all()
 		return_list = []
 		for campaign in all_campaigns:
 			try:
-				if "BYJ" in campaign.name:
+				if "BYJ" in campaign.proposal_id:
 					partial_dict = {"campaign_name": campaign.name,
 					                "total_supplier_count": None,
 					                "total_contacts_with_name": 0, 
@@ -95,7 +95,7 @@ class Command(BaseCommand):
 		html = booking_template.render(
 		    {"partial_dict": return_list})
 
-		subject = "MIS Report"
+		subject = "MIS Report of CAMPAIGNS"
 		to_array = ["shailesh.singh@machadalo.com", "sathya.sharma@machadalo.com", "divya.moses@machadalo.com", 
 		            "shyamlee.khanna@machadalo.com","srishti.dhamija@machadalo.com", "nikita.walicha@machadalo.com", 
 		            "prashantgupta888@gmail.com", "kwasi0883@gmail.com", "madhu.atri@machadalo.com", 
@@ -118,7 +118,7 @@ def writeExcel(return_list):
         dict_writer = csv.DictWriter(output_file, keys)
         dict_writer.writeheader()
         dict_writer.writerows(toCSV)
-    subject = "Daily MIS contacts report"
+    subject = "MIS Report of CAMPAIGNS"
     to =("shailesh.singh@machadalo.com", "sathya.sharma@machadalo.com", "divya.moses@machadalo.com", 
 		            "shyamlee.khanna@machadalo.com","srishti.dhamija@machadalo.com", "nikita.walicha@machadalo.com", 
 		            "prashantgupta888@gmail.com", "kwasi0883@gmail.com", "madhu.atri@machadalo.com", 
