@@ -24,13 +24,13 @@ class Command(BaseCommand):
 	def handle(self, *args, **options):
 
 		end_date = datetime.datetime.now().date()
-		start_date = end_date - datetime.timedelta(days=1)
+		start_date = end_date - datetime.timedelta(days=10000)
 
 		all_campaigns = ProposalInfo.objects.filter(tentative_start_date__gte=start_date).all()
 		return_list = []
 		for campaign in all_campaigns:
 			try:
-				if "BYJ" in campaign.name:
+				if "BYJ" in campaign.proposal_id:
 					partial_dict = {"campaign_name": campaign.name,
 					                "total_supplier_count": None,
 					                "total_contacts_with_name": 0, 
