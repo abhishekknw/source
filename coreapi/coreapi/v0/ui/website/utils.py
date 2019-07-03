@@ -4138,6 +4138,7 @@ def handle_update_campaign_inventories(user, data):
                 'payment_method': supplier['payment_method'],
                 'total_negotiated_price': supplier['total_negotiated_price'],
                 'booking_status': supplier['booking_status'],
+                'booking_sub_status': supplier['booking_sub_status'],
                 'transaction_or_check_number': supplier['transaction_or_check_number'],
                 'freebies': supplier_freebies,
                 'stall_locations': supplier_stall_locations,
@@ -4227,6 +4228,7 @@ def update_campaign_inventories(data):
             obj.payment_method = shortlisted_spaces[ss_global_id]['payment_method']
             obj.total_negotiated_price = shortlisted_spaces[ss_global_id]['total_negotiated_price']
             obj.booking_status = shortlisted_spaces[ss_global_id]['booking_status']
+            obj.booking_sub_status = shortlisted_spaces[ss_global_id]['booking_sub_status']
             obj.transaction_or_check_number = shortlisted_spaces[ss_global_id]['transaction_or_check_number']
             obj.freebies = shortlisted_spaces[ss_global_id]['freebies']
             obj.stall_locations = shortlisted_spaces[ss_global_id]['stall_locations']

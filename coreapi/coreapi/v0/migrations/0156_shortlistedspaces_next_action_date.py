@@ -15,4 +15,9 @@ class Migration(migrations.Migration):
             name='next_action_date',
             field=models.DateTimeField(null=True),
         ),
+        migrations.AddField(
+            model_name='shortlistedspaces',
+            name='booking_sub_status',
+            field=models.CharField(blank=True, max_length=15, null=True),
+        ),
     ]

@@ -197,8 +197,8 @@ class SendLeadsToSelf(APIView):
             start_date) + '_' + str(end_date) + '.xlsx'
         filepath = cwd + '/' + filename
         book.save(filepath)
-        # to_array = [user_email] if user_email in campaign_assignement_by_campaign_id[campaign_id] else []
-        to_array = ['kshitij.mittal01@gmail.com']
+        to_array = [user_email] if user_email in campaign_assignement_by_campaign_id[campaign_id] else []
+        #to_array = ['kshitij.mittal01@gmail.com']
         if len(to_array) != 0:
             self_leads_template = get_template('self_leads_email.html')
             html_body = self_leads_template.render({'campaign_name': campaign_name, 'first_name':first_name,
