@@ -24,7 +24,7 @@ class Command(BaseCommand):
 	def handle(self, *args, **options):
 
 		end_date = datetime.datetime.now().date()
-		start_date = end_date - datetime.timedelta(days=10000)
+		start_date = end_date - datetime.timedelta(days=1)
 
 		all_campaigns = ProposalInfo.objects.filter(tentative_start_date__gte=start_date).all()
 		return_list = []
