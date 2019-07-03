@@ -59,7 +59,7 @@ def get_dynamic_booking_data_by_campaign(campaign_id):
         final_data['comments'] = data.comments
         final_data['inventory_counts'] = data.inventory_counts
         final_data['phase_id'] = data.phase_id
-        (final_data['supplier_attributes'], final_data['additional_attributes']) = get_supplier_attributes(
+        (final_data['supplier_attributes'], final_data['additional_attributes'], final_data['supplier_name']) = get_supplier_attributes(
             data.supplier_id, booking_template.supplier_attributes)
         final_data['supplier_id'] = data.supplier_id
         final_data['organisation_id'] = data.organisation_id
@@ -82,4 +82,5 @@ def get_supplier_attributes(supplier_id, supplier_attributes):
     for supplier in supplier_object.supplier_attributes:
         if supplier['name'] in all_supplier_attribute_names:
             final_attributes.append(supplier)
-    return (final_attributes, additional_attributes)
+    name = supplier_object.name
+    return (final_attributes, additional_attributes, name)
