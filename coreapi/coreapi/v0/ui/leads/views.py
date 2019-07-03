@@ -2,7 +2,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
-from .models import (get_leads_summary, LeadsPermissions, ExcelDownloadHash)
+from .models import (get_leads_summary, LeadsPermissions, ExcelDownloadHash, CampaignExcelDownloadHash)
 from v0.ui.analytics.views import (get_data_analytics, get_details_by_higher_level,
                                    get_details_by_higher_level_geographical, geographical_parent_details)
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeRetailShop
@@ -17,7 +17,8 @@ import datetime
 from bulk_update.helper import bulk_update
 from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignAssignment
-from v0.constants import campaign_status, proposal_on_hold
+from v0.constants import (campaign_status, proposal_on_hold, booking_code_to_status,
+                          payment_code_to_status, booking_priority_code_to_status )
 from django.http import HttpResponse
 from celery import shared_task
 from django.conf import settings
@@ -25,6 +26,7 @@ from v0.ui.common.models import mongo_client, mongo_test
 import pprint
 from random import randint
 import random, string
+from v0.ui.website.utils import prepare_shortlisted_spaces_and_inventories
 
 from v0.ui.proposal.views import convert_date_format
 
@@ -1428,4 +1430,128 @@ class UpdateLeadsEntry(APIView):
                           "hotness_level": lead_dict["hotness_level"]}})
         return handle_response('', data={"success": True}, success=True)
 
+def prepare_campaign_specific_data_in_excel(data):
+    header_list = [
+        'Index', 'Supplier Name', 'Subarea', 'Area', 'City', 'Address',
+        'Landmark', 'PinCode', 'Flat Count', 'Tower Count', 'Society Type',
+        'Cost Per Flat', 'Booking Priority', 'Booking Status', 'Next Action Date',
+        'Payment Method', 'Payment Status', 'Completion Status', 'Tota Price',
+        'Poster Allowed', 'Poster Count', 'Poster Price',
+        'Standee Allowed', 'Standee Count', 'Standee Price',
+        'Stall Allowed', 'Stall Count', 'Stall Price',
+        'Flier Allowed', 'Flier Count', 'Flier Price',
+        'Banner Allowed', 'Banner Count', 'Banner Price',
+    ]
+    book = Workbook()
+    sheet = book.active
+    sheet.append(header_list)
+    index = 0
+    for supplier in data['shortlisted_suppliers']:
+        index = index + 1
+        supplier_data = []
 
+        supplier_data.append(index)
+
+        supplier_data.append(supplier['name'])
+        supplier_data.append(supplier['subarea'])
+        supplier_data.append(supplier['area'])
+        supplier_data.append(supplier['city'])
+        supplier_data.append(str(supplier['address1']) + ' '+ str(supplier['address2']))
+
+        supplier_data.append(supplier['landmark'])
+        supplier_data.append(supplier['zipcode'])
+        supplier_data.append(supplier['flat_count'])
+        supplier_data.append(supplier['tower_count'])
+        supplier_data.append(supplier['society_location_type'])
+
+        supplier_data.append(supplier['cost_per_flat'])
+        supplier_data.append(
+            booking_priority_code_to_status[supplier['booking_priority']] if supplier['booking_priority'] else None)
+        supplier_data.append(booking_code_to_status[supplier['booking_status']] if supplier['booking_status'] else None)
+        supplier_data.append(supplier['next_action_date'])
+
+        supplier_data.append(supplier['payment_method'])
+        supplier_data.append(payment_code_to_status[supplier['payment_status']] if supplier['payment_status'] else None)
+        supplier_data.append('Yes' if supplier['is_completed'] else 'No')
+        supplier_data.append(supplier['total_negotiated_price'])
+
+        supplier_data.append('Yes' if 'POSTER' in supplier['shortlisted_inventories'] else 'No')
+        supplier_data.append(
+            supplier['shortlisted_inventories']['POSTER']['total_count'] if 'POSTER' in supplier[
+                'shortlisted_inventories'] else None)
+        supplier_data.append(
+            supplier['shortlisted_inventories']['POSTER']['actual_supplier_price'] if 'POSTER' in supplier[
+                'shortlisted_inventories'] else None)
+
+        supplier_data.append('Yes' if 'STANDEE' in supplier['shortlisted_inventories'] else 'No')
+        supplier_data.append(
+            supplier['shortlisted_inventories']['STANDEE']['total_count'] if 'STANDEE' in supplier[
+                'shortlisted_inventories'] else None)
+        supplier_data.append(
+            supplier['shortlisted_inventories']['STANDEE']['actual_supplier_price'] if 'STANDEE' in supplier[
+                'shortlisted_inventories'] else None)
+
+        supplier_data.append('Yes' if 'STALL' in supplier['shortlisted_inventories'] else 'No')
+        supplier_data.append(
+            supplier['shortlisted_inventories']['STALL']['total_count'] if 'STALL' in supplier[
+                'shortlisted_inventories'] else None)
+        supplier_data.append(
+            supplier['shortlisted_inventories']['STALL']['actual_supplier_price'] if 'STALL' in supplier[
+                'shortlisted_inventories'] else None)
+
+        supplier_data.append('Yes' if 'FLIER' in supplier['shortlisted_inventories'] else 'No')
+        supplier_data.append(
+            supplier['shortlisted_inventories']['FLIER']['total_count'] if 'FLIER' in supplier[
+                'shortlisted_inventories'] else None)
+        supplier_data.append(
+            supplier['shortlisted_inventories']['FLIER']['actual_supplier_price'] if 'FLIER' in supplier[
+                'shortlisted_inventories'] else None)
+
+        supplier_data.append('Yes' if 'BANNER' in supplier['shortlisted_inventories'] else 'No')
+        supplier_data.append(
+            supplier['shortlisted_inventories']['BANNER']['total_count'] if 'BANNER' in supplier[
+                'shortlisted_inventories'] else None)
+        supplier_data.append(
+            supplier['shortlisted_inventories']['BANNER']['actual_supplier_price'] if 'BANNER' in supplier[
+                'shortlisted_inventories'] else None)
+
+        sheet.append(supplier_data)
+
+    return book
+
+class CampaignDataInExcelSheet(APIView):
+    permission_classes = ()
+    authentication_classes = ()
+    @staticmethod
+    def get(request, one_time_hash):
+        print("hello")
+
+
+        excel_download_hash = list(CampaignExcelDownloadHash.objects.raw({"one_time_hash": one_time_hash}))
+        if len(excel_download_hash) > 0:
+            campaign_id = excel_download_hash[0].campaign_id
+            response = prepare_shortlisted_spaces_and_inventories(campaign_id, None, request.user, 0, None)
+            if response.data['status']:
+                data = response.data['data']
+                excel_book = prepare_campaign_specific_data_in_excel(data)
+                resp = HttpResponse(
+                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                resp['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
+                excel_book.save(resp)
+                return resp
+            print(response.data)
+
+
+
+        return handle_response({}, data=response.data, success=True)
+
+class GenerateCampaignExcelDownloadHash(APIView):
+    @staticmethod
+    def get(request, campaign_id):
+        excel_download_hash_dict = {"campaign_id": campaign_id}
+        now = datetime.datetime.now()
+        excel_download_hash_dict["created_at"] = now
+        one_time_hash = hashlib.sha256(str(now).encode('utf-8')).hexdigest()
+        excel_download_hash_dict["one_time_hash"] = one_time_hash
+        CampaignExcelDownloadHash(**excel_download_hash_dict).save()
+        return handle_response({}, data={"one_time_hash": one_time_hash}, success=True)

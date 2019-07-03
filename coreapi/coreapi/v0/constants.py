@@ -861,6 +861,19 @@ payment_status = {
     'payment_rejected' : 'PR'
 }
 
+payment_code_to_status = {
+    'PD': 'Payment Done',
+    'PNI': 'Payment Not Initiated',
+    'PP': 'Payment Pending',
+    'PCR': 'Cheque Released',
+    'PR': 'Payment Rejected',
+}
+
+booking_priority_code_to_status = {
+    'VH': 'Very High',
+    'HH': 'High'
+}
+
 # supplier booking status
 booking_status = {
     'booked': 'BK',
@@ -875,6 +888,18 @@ booking_status = {
     'tentative_booking' : 'TB',
 }
 
+booking_code_to_status = {
+    'BK': 'Confirmed Booked',
+    'NB': 'Not Booked',
+    'PB': 'Phone Booked',
+    'VB': 'Visit Booked',
+    'SR': 'Rejected',
+    'SE': 'Send Email',
+    'VR': 'Visit Required',
+    'CR': 'Call Required',
+    'DP': 'Decision Pending',
+    'TB': 'Tentative Booking'
+}
 # different campaign states
 completed = 'COMPLETED'
 running = 'RUNNING'
