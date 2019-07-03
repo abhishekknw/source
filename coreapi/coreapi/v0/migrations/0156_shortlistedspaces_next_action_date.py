@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('v0', '0156_shortlistedspaces_booking_sub_status'),
+        ('v0', '0155_auto_20190523_0851'),
     ]
 
     operations = [
@@ -14,5 +14,10 @@ class Migration(migrations.Migration):
             model_name='shortlistedspaces',
             name='next_action_date',
             field=models.DateTimeField(null=True),
+        ),
+        migrations.AddField(
+            model_name='shortlistedspaces',
+            name='booking_sub_status',
+            field=models.CharField(blank=True, max_length=15, null=True),
         ),
     ]
