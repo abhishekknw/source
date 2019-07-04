@@ -12,7 +12,7 @@ from celery import shared_task
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 from django.db import connection
 import csv
-from v0.ui.email.views import send_mail_with_attachment, send_mail_generic
+from v0.ui.email.views import send_mail_generic
 import datetime
 from datetime import timedelta
 from django.template.loader import get_template
@@ -24,13 +24,13 @@ class Command(BaseCommand):
 	def handle(self, *args, **options):
 
 		end_date = datetime.datetime.now().date()
-		start_date = end_date - datetime.timedelta(days=10000)
+		start_date = end_date - datetime.timedelta(days=1)
 
 		all_campaigns = ProposalInfo.objects.filter(tentative_start_date__gte=start_date).all()
 		return_list = []
 		for campaign in all_campaigns:
 			try:
-				if "BYJ" in campaign.name:
+				if "BYJ" in campaign.proposal_id:
 					partial_dict = {"campaign_name": campaign.name,
 					                "total_supplier_count": None,
 					                "total_contacts_with_name": 0, 
@@ -89,43 +89,32 @@ class Command(BaseCommand):
 			except TypeError:
 				pass
 		writeExcel(return_list)
-		template_name = "mis_report_contact.html"
-		booking_template = get_template(template_name)
-
-		html = booking_template.render(
-		    {"partial_dict": return_list})
-
-		subject = "MIS Report"
-		to_array = ["shailesh.singh@machadalo.com", "sathya.sharma@machadalo.com", "divya.moses@machadalo.com", 
-		            "shyamlee.khanna@machadalo.com","srishti.dhamija@machadalo.com", "nikita.walicha@machadalo.com", 
-		            "prashantgupta888@gmail.com", "kwasi0883@gmail.com", "madhu.atri@machadalo.com", 
-		            "tejas.pawar@machadalo.com", "jaya.murugan@machadalo.com", "muvaz.khan@machadalo.com",
-		            "lokesh.kumar@machadalo.com", "vyoma.desai@machadalo.com", "lokesh.kumar@machadalo.com",
-		            "anupam@machadalo.com", "Anmol.prabhu@machadalo.com", "abhishek.chandel@machadalo.com",
-		            "momi.borah@machadalo.com"
-		            ]
-		# to_array=['shailesh.singh@machadalo.com']
-		send_mail_generic(subject, to_array, html, None,None)
 
 def writeExcel(return_list):
 
-    toCSV = return_list
-    try:
-        keys = toCSV[0].keys()
-    except IndexError:
-        keys = 'null'
-    with open('mis_report.xls', 'w') as output_file:
-        dict_writer = csv.DictWriter(output_file, keys)
-        dict_writer.writeheader()
-        dict_writer.writerows(toCSV)
-    subject = "Daily MIS contacts report"
-    to =("shailesh.singh@machadalo.com", "sathya.sharma@machadalo.com", "divya.moses@machadalo.com", 
+	template_name = "mis_report.html"
+	booking_template = get_template(template_name)
+
+	html = booking_template.render(
+	    {"partial_dict": return_list})
+	toCSV = return_list
+	try:
+	    keys = toCSV[0].keys()
+	except IndexError:
+	    keys = 'null'
+	with open('mis_report.csv', 'w') as output_file:
+	    dict_writer = csv.DictWriter(output_file, keys)
+	    dict_writer.writeheader()
+	    dict_writer.writerows(toCSV)
+	subject = "MIS Report of CAMPAIGNS"
+	to_clients =["prashantgupta888@gmail.com", "kwasi0883@gmail.com"]
+
+	cc_machadalo = ["shailesh.singh@machadalo.com", "sathya.sharma@machadalo.com", "divya.moses@machadalo.com", 
 		            "shyamlee.khanna@machadalo.com","srishti.dhamija@machadalo.com", "nikita.walicha@machadalo.com", 
-		            "prashantgupta888@gmail.com", "kwasi0883@gmail.com", "madhu.atri@machadalo.com", 
-		            "tejas.pawar@machadalo.com", "jaya.murugan@machadalo.com", "muvaz.khan@machadalo.com",
+		            "madhu.atri@machadalo.com", "tejas.pawar@machadalo.com", "jaya.murugan@machadalo.com", "muvaz.khan@machadalo.com",
 		            "lokesh.kumar@machadalo.com", "vyoma.desai@machadalo.com", "lokesh.kumar@machadalo.com",
 		            "anupam@machadalo.com", "Anmol.prabhu@machadalo.com", "abhishek.chandel@machadalo.com",
-		            "momi.borah@machadalo.com")
-    # to = ("shailesh.singh@machadalo.com", "abaadada@machadalo.com")
+		            "momi.borah@machadalo.com" 
+		            ]
 
-    send_mail_with_attachment("mis_report.xls", subject, to)
+	send_mail_generic.delay(subject, to_array, html, cc_machadalo, "mis_report.csv")

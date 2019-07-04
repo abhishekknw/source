@@ -8,7 +8,11 @@ table, td, th {
     <body>
         Dear {{campaign_name}} Team,<br><br>
         The following are the Supplier details for {{campaign_name}} campaign:
-        <br /> <br />
+        <br/> <br/>
+        <p>
+            For more details, Please Click on : <a href="https://platform.machadalo.com/#/dashboard">https://platform.machadalo.com/#/dashboard</a>
+        </p>
+        <br>
 
         List of Suppliers are as follows:
     <br>
@@ -22,10 +26,10 @@ table, td, th {
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Area(Subarea)</th>
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Address</th>
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Map Address</th>
-                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Inventory Count</th>
+<!--                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Inventory Count</th>
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Stall Location</th>
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Freebies</th>
-                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Comments</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Comments</th> -->
             </tr>
             {% if details_dict.ongoing_phase %}
                 {% for supplier in details_dict.ongoing_phase.total_booked.supplier_data %}
@@ -40,7 +44,7 @@ table, td, th {
                         <td style="height: 50px;vertical-align: middle;border: 1px solid black;">
                             <a href="https://www.google.com/maps/?q=+{{supplier.society_latitude}}+{{supplier.society_longitude}}">Details</a>
                         </td>
-                        <td style="height: 50px;min-width:120px;vertical-align: bottom;border: 1px solid black;">
+                 <!--        <td style="height: 50px;min-width:120px;vertical-align: bottom;border: 1px solid black;">
                             <div>
                                 Poster : {% if supplier.inventory_counts.POSTER %}{{supplier.inventory_counts.POSTER}}{% else %} 0 {% endif %}<br/>
                                     Release Date : {% if supplier.inventory_dates.POSTER %}
@@ -111,7 +115,7 @@ table, td, th {
                                 No Comments Available
                             {% endif %}
 
-                        </td>
+                        </td> -->
                     </tr>
                 {% endfor %}
                     <tr style="background-color:#8C1B24;color:white;border: 1px solid black;">
@@ -121,13 +125,10 @@ table, td, th {
                     </tr>
             {% endif %}
         </table>
-        <p>
-            For more details, Please Click on : <a href="https://platform.machadalo.com">https://platform.machadalo.com/#/dashboard</a>
-        </p>
     <br><br>
     <b>Thanks and Regards,<br> Client Servicing Team <br> Machadalo</b>
     <br> <br>
-    <p>© 2018 Machadalo, Brand owned by Vijaikirti Technology Private Limited. All rights reserved.
+    <p>© 2019 Machadalo, Brand owned by Vijaikirti Technology Private Limited. All rights reserved.
         Copyright in the whole and any part of this document belongs to  Machadalo, Brand owned by
         Vijaikirti Technology Private Limited. This work may not be used, sold, transferred, adapted, abridged,
         copied or reproduced in whole or in part, in any manner or form, or in any media, without the prior written
