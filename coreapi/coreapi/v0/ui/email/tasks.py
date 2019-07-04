@@ -139,7 +139,7 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None, email=None):
             else:
                 start_date = (datetime.datetime.now() + timedelta(days=1)).strftime('%d %b %Y')
                 end_date = (datetime.datetime.now() + timedelta(days=4)).strftime('%d %b %Y')
-            subject = str(all_campaign_name_dict[campaign_id]) + " Societies Activation Status for this Weekend (" + start_date + " to " + end_date + ")"
+            subject = str(all_campaign_name_dict[campaign_id]) + " Societies Activation Details for this Weekend (" + start_date + " to " + end_date + ")"
         send_mail_generic.delay(subject, to_array, html, None,None)
     return
 
