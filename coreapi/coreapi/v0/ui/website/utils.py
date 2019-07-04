@@ -3975,7 +3975,7 @@ def is_campaign(proposal):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned, search):
+def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned, search, start_date, end_date):
     """
 
     Args:
@@ -3984,6 +3984,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
     Returns: The data in required form.
 
     """
+
     function = prepare_shortlisted_spaces_and_inventories.__name__
     try:
         # if str(proposal_id) in cache:
@@ -3995,16 +3996,24 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
 
         proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
 
-        if assigned:
-            assigned_suppliers_list = SupplierAssignment.objects.filter(campaign=proposal_id,assigned_to=user.id). \
-                values_list('supplier_id')
-            shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id, object_id__in=assigned_suppliers_list). \
-                order_by('id')
+        filter_query = Q()
 
-        elif search:
-            shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id, object_id=search).order_by('id')
-        else:
-            shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id).order_by('id')
+        filter_query &= Q(proposal_id=proposal_id)
+
+        if assigned:
+            assigned_suppliers_list = SupplierAssignment.objects.filter(campaign=proposal_id,assigned_to=assigned). \
+                values_list('supplier_id')
+            filter_query &= Q(object_id__in=assigned_suppliers_list)
+            # shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id, object_id__in=assigned_suppliers_list). \
+            #     order_by('id')
+
+        if search:
+            filter_query &= Q(object_id=search)
+            # shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id, object_id=search).order_by('id')
+        if start_date and end_date:
+            filter_query &= Q(next_action_date__gte=start_date)
+            filter_query &= Q(next_action_date__lte=end_date)
+        shortlisted_spaces = ShortlistedSpaces.objects.filter(filter_query).order_by('id')
 
         if page:
             entries = 10

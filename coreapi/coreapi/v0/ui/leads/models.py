@@ -190,3 +190,13 @@ class ExcelDownloadHash(MongoModel):
     class Meta:
         write_concern = WriteConcern(j=True)
         connection_alias = 'mongo_app'
+
+
+class CampaignExcelDownloadHash(MongoModel):
+    campaign_id = fields.CharField()
+    one_time_hash = fields.CharField()
+    created_at = fields.DateTimeField()
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'mongo_app'
