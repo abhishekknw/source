@@ -117,4 +117,4 @@ def writeExcel(return_list):
 		            "momi.borah@machadalo.com" 
 		            ]
 
-	send_mail_generic.delay(subject, to_array, html, cc_machadalo, "mis_report.csv")
+	send_mail_generic.delay(subject, to_clients, html, cc_machadalo, "mis_report.csv")
