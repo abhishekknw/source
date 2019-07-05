@@ -1524,13 +1524,10 @@ class CampaignDataInExcelSheet(APIView):
     authentication_classes = ()
     @staticmethod
     def get(request, one_time_hash):
-        print("hello")
-
-
         excel_download_hash = list(CampaignExcelDownloadHash.objects.raw({"one_time_hash": one_time_hash}))
         if len(excel_download_hash) > 0:
             campaign_id = excel_download_hash[0].campaign_id
-            response = prepare_shortlisted_spaces_and_inventories(campaign_id, None, request.user, 0, None)
+            response = prepare_shortlisted_spaces_and_inventories(campaign_id, None, request.user, 0, None, None, None)
             if response.data['status']:
                 data = response.data['data']
                 excel_book = prepare_campaign_specific_data_in_excel(data)
