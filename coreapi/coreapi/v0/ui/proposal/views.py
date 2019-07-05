@@ -2466,6 +2466,8 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
             current_date = datetime.datetime.now().date()
             result_obj = {}
             for phase in phases:
+                if not (phase.end_date and phase.start_date):
+                    continue
                 if phase.id not in result_obj:
                     result_obj[phase.id] = {}
                 result_obj[phase.id]["start_date"] = phase.start_date
