@@ -23,10 +23,11 @@ class Command(BaseCommand):
 
 	def handle(self, *args, **options):
 
-		end_date = datetime.datetime.now().date()
-		start_date = end_date - datetime.timedelta(days=1)
+		current_date = datetime.datetime.now().date()
+		end_date = current_date + datetime.timedelta(days=4)
+		start_date = current_date - datetime.timedelta(days=3)
 
-		all_campaigns = ProposalInfo.objects.filter(tentative_start_date__gte=start_date).all()
+		all_campaigns = ProposalInfo.objects.filter(tentative_start_date__gte=start_date, tentative_end_date__lte= end_date).all()
 		return_list = []
 		for campaign in all_campaigns:
 			try:
@@ -91,21 +92,6 @@ class Command(BaseCommand):
 		writeExcel(return_list)
 
 def writeExcel(return_list):
-
-	template_name = "mis_report.html"
-	booking_template = get_template(template_name)
-
-	html = booking_template.render(
-	    {"partial_dict": return_list})
-	toCSV = return_list
-	try:
-	    keys = toCSV[0].keys()
-	except IndexError:
-	    keys = 'null'
-	with open('mis_report.csv', 'w') as output_file:
-	    dict_writer = csv.DictWriter(output_file, keys)
-	    dict_writer.writeheader()
-	    dict_writer.writerows(toCSV)
 	subject = "MIS Report of CAMPAIGNS"
 	to_clients =["prashantgupta888@gmail.com", "kwasi0883@gmail.com"]
 
@@ -117,4 +103,21 @@ def writeExcel(return_list):
 		            "momi.borah@machadalo.com" 
 		            ]
 
-	send_mail_generic.delay(subject, to_clients, html, cc_machadalo, "mis_report.csv")
+	if len(return_list) !=0:
+
+		template_name = "mis_report.html"
+		booking_template = get_template(template_name)
+
+		html = booking_template.render(
+		    {"partial_dict": return_list})
+		toCSV = return_list
+		try:
+		    keys = toCSV[0].keys()
+		except IndexError:
+		    keys = 'null'
+		with open('mis_report.csv', 'w') as output_file:
+		    dict_writer = csv.DictWriter(output_file, keys)
+		    dict_writer.writeheader()
+		    dict_writer.writerows(toCSV)
+
+		send_mail_generic.delay(subject, to_clients, html, cc_machadalo, "mis_report.csv")
