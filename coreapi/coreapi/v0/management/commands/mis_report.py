@@ -27,8 +27,6 @@ class Command(BaseCommand):
 		end_date = current_date + datetime.timedelta(days=4)
 		start_date = current_date - datetime.timedelta(days=3)
 
-		print(current_date, end_date, start_date)
-
 		all_campaigns = ProposalInfo.objects.filter(tentative_start_date__gte=start_date, tentative_end_date__lte= end_date).all()
 		return_list = []
 		for campaign in all_campaigns:
@@ -106,7 +104,6 @@ def writeExcel(return_list):
 		            ]
 
 	if len(return_list) !=0:
-
 
 		template_name = "mis_report.html"
 		booking_template = get_template(template_name)
