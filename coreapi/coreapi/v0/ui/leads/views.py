@@ -706,8 +706,8 @@ class DeleteLeadEntry(APIView):
         supplier_ids = request_body.get("supplier_ids",None)
         campaign_id = request_body.get("campaign_id",None)
         for supplier_id in supplier_ids:
-            result = mongo_client.leads.delete_many({"campaign_id": campaign_id, "supplier_id": supplier_id})
-            print(result)
+            mongo_client.leads.remove({"campaign_id": campaign_id, "supplier_id": supplier_id})
+            return handle_response('', data={"success": True}, success=True)
 
 
 class DeleteLeadItem(APIView):
