@@ -222,37 +222,35 @@ class LocationsAPIView(APIView):
     def post(self, request, id, format=None):
         class_name = self.__class__.__name__
         request_data = request.data
-        city_name = request_data.get("city_name")
+        city_name = request_data.get("city_name", None)
         city_id = request_data.get("city_id", None)
-        city_code = request_data.get("city_code")
-        area_name = request_data.get("area_name")
-        subarea_name = request_data.get("subarea_name")
-        area_id = None
+        city_code = request_data.get("city_code", None)
+        area_name = request_data.get("area_name", None)
+        subarea_name = request_data.get("subarea_name", None)
+        area_id = request_data.get("area_id", None)
         
         try:
             if not city_id:
-
                 city_dict ={}
                 city_dict['city_name'] = city_name.title()
                 city_dict['city_code'] = city_code.upper()
                 city_dict['state_code'] = int(id)
-
                 city_serializer = CitySerializer(data=city_dict)
-
                 if city_serializer.is_valid():
                     city_instance = city_serializer.save()
                     city_id = city_instance.id
                 else:
-                    return Response({"message":"City already exists!"}, status=400)  
+                    return Response({"message":"City already exists!"}, status=400)
 
-            area_dict ={}
-            area_dict['label'] = area_name.title()
-            area_dict['area_code'] = area_name.upper()[:2]
-            area_dict['city_code'] = city_id
-            area_serializer = CityAreaSerializer(data=area_dict)
-            if area_serializer.is_valid():
-                area_instance = area_serializer.save()
-                area_id = area_instance.id
+            if not area_id:
+                area_dict ={}
+                area_dict['label'] = area_name.title()
+                area_dict['area_code'] = area_name.upper()[:2]
+                area_dict['city_code'] = city_id
+                area_serializer = CityAreaSerializer(data=area_dict)
+                if area_serializer.is_valid():
+                    area_instance = area_serializer.save()
+                    area_id = area_instance.id
             
             subarea_dict ={}
             subarea_dict['subarea_name'] = subarea_name.title()
