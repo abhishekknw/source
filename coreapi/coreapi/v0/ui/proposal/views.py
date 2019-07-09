@@ -2475,12 +2475,15 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
                 result_obj[phase.id]["comments"] = phase.comments
                 result_obj[phase.id]["campaign"] = campaign_id
 
-                if current_date > phase.end_date.date():
-                    result_obj[phase.id]["status"] = "completed"
-                elif phase.start_date.date() > current_date:
-                    result_obj[phase.id]["status"] = "upcoming"
-                elif phase.start_date.date() < current_date < phase.end_date.date():
-                    result_obj[phase.id]["status"] = "ongoing"
+                if not phase.end_date or not phase.start_date:
+                    result_obj[phase.id]["status"] = "Phase not defined"
+                else:
+                    if current_date > phase.end_date.date():
+                        result_obj[phase.id]["status"] = "completed"
+                    elif phase.start_date.date() > current_date:
+                        result_obj[phase.id]["status"] = "upcoming"
+                    elif phase.start_date.date() < current_date < phase.end_date.date():
+                        result_obj[phase.id]["status"] = "ongoing"
 
             result_list = [result_obj[result] for result in result_obj]
 
