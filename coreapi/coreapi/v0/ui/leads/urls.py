@@ -28,6 +28,7 @@ urlpatterns = [
     url(r'^(?P<one_time_hash>[A-Z_a-z0-9]+)/download_lead_data_excel', DownloadLeadDataExcel.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_form$', DeleteLeadForm.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_entry/(?P<entry_id>[A-Z_a-z0-9]+)$', DeleteLeadEntry.as_view()),
+    url(r'^delete-leads/$', DeleteLeadEntry.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_form_element/(?P<item_id>[A-Z_a-z0-9]+)$', DeleteLeadItem.as_view()),
     url(r'^sanitize_leads_data/$', SanitizeLeadsData.as_view()),
     # url(r'^(?P<form_id>[0-9]+)/add_sms_contact$', SmsContact.as_view()),
