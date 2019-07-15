@@ -71,6 +71,7 @@ def add_extra_leads(leads_summary, campaign_list=None, user_start_datetime=None)
                     single_summary['hot_leads_count'] = leads_extras_dict[single_summary['campaign_id']][single_summary['supplier_id']]["extra_hot_leads"]
                     single_summary['hot_leads_percentage'] = (float(single_summary['hot_leads_count'])/float(single_summary['total_leads_count']) * 100)
     for campaign_id in leads_extras_all_dict:
+        print(campaign_id, campaign_list)
         if campaign_id in campaign_list:
             for supplier_id in leads_extras_all_dict[campaign_id]:
                     if (campaign_id not in leads_summary_dict) or (supplier_id not in leads_summary_dict[campaign_id]):
