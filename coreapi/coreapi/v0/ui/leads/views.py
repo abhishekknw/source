@@ -1436,7 +1436,6 @@ class AddHotnessLevelsToLeadForm(APIView):
     def get(request):
         lead_forms = mongo_client.leads_forms.find()
         for lead_form in lead_forms:
-            print(len(lead_form['data'].keys()))
             index = len(lead_form['data'].keys())
             index = index + 1
 
@@ -1515,34 +1514,45 @@ class AddHotnessLevelsToLeadForm(APIView):
             mongo_client.leads_forms.update_one({"leads_form_id": lead_form['leads_form_id']},
                                             {"$set": {'data': lead_form['data'],
                                                     'global_hot_lead_criteria': lead_form['global_hot_lead_criteria']}})
-            leads = mongo_client.leads.find({})
-            fields_array = ["Is Meeting Fixed", "Is Meeting Completed", "Is Lead Converted"]
+        leads = mongo_client.leads.find({})
+        fields_array = ["Is Meeting Fixed", "Is Meeting Completed", "Is Lead Converted"]
 
-            for lead in leads:
-                count = len(lead['data'])
-                for field in fields_array:
-                    count = count + 1
-                    lead['data'].append({
-                        "key_name": field,
-                        "key_type": "STRING",
-                        "item_id": count,
-                        "value": None
-                    })
+        bulk = mongo_client.leads.initialize_unordered_bulk_op()
+        counter = 0
+        for lead in leads:
+            count = len(lead['data'])
+            for field in fields_array:
                 count = count + 1
                 lead['data'].append({
-                    "key_name": "Order Punched Date",
-                    "key_type": "DATE",
+                    "key_name": field,
+                    "key_type": "STRING",
                     "item_id": count,
                     "value": None
                 })
+            count = count + 1
+            lead['data'].append({
+                "key_name": "Order Punched Date",
+                "key_type": "DATE",
+                "item_id": count,
+                "value": None
+            })
 
-                lead_sha_256 = create_lead_hash(lead)
-                lead["lead_sha_256"] = lead_sha_256
+            lead_sha_256 = create_lead_hash(lead)
+            lead["lead_sha_256"] = lead_sha_256
 
-                mongo_client.leads.update_one(
-                    {"leads_form_id": int(lead['leads_form_id']), "entry_id": int(lead['entry_id']),
-                     "supplier_id": lead['supplier_id']},
-                    {"$set": {"data": lead["data"], "lead_sha_256": lead_sha_256}})
+            bulk.find({"_id": ObjectId(lead['_id'])}).update({"$set":
+                                                      {"data": lead["data"], "lead_sha_256": lead_sha_256}})
+            counter += 1
+            if counter % 1000 == 0:
+                bulk.execute()
+                bulk = mongo_client.leads.initialize_unordered_bulk_op()
+        if counter > 0:
+            bulk.execute()
+
+                # mongo_client.leads.update_one(
+                #     {"leads_form_id": int(lead['leads_form_id']), "entry_id": int(lead['entry_id']),
+                #      "supplier_id": lead['supplier_id']},
+                #     {"$set": {"data": lead["data"], "lead_sha_256": lead_sha_256}})
 
         return handle_response('', data={"success": True}, success=True)
 
@@ -1563,7 +1573,6 @@ class UpdateConvertedLeadsFromSheet(APIView):
                 campaign_names_list.add(row[8].value.lower())
                 supplier_campaign_name_map[row[4].value.lower()] = row[8].value.lower()
         suppliers = SupplierTypeSociety.objects.filter(society_name__in=list(supplier_names_list))
-        print(suppliers)
 
         campaigns = ProposalInfo.objects.filter(name__in=list(campaign_names_list))
         suppliers_map_with_id = { supplier.society_name.lower(): supplier.supplier_id for supplier in suppliers }
@@ -1587,11 +1596,9 @@ class UpdateConvertedLeadsFromSheet(APIView):
         mismatch_suppliers_in_punched_order = []
         for supplier in suppliers_in_purchase_order:
             supplier_leads[supplier] = {}
-            print("supplier name : ",supplier)
             if supplier in suppliers_map_with_id:
                 supplier_leads[supplier]['leads'] = mongo_client.leads.find({'supplier_id': suppliers_map_with_id[supplier],
                                                          'campaign_id': campaigns_map_with_id[supplier_campaign_name_map[supplier]]})
-                print(supplier_leads[supplier]['leads'].count())
                 if supplier_leads[supplier]['leads'].count() > 0:
                     supplier_leads[supplier]['name_list'] = []
                     supplier_leads[supplier]['names_objects_map'] = {}
@@ -1607,9 +1614,7 @@ class UpdateConvertedLeadsFromSheet(APIView):
             if 'name_list' in supplier_leads[item['supplier_name']]:
                 matched_name = difflib.get_close_matches(item['name'], supplier_leads[item['supplier_name']]['name_list'])
                 if len(matched_name) > 0:
-                    print("matched")
                     name = matched_name[0]
-                    # print(name,supplier_leads, supplier)
                     lead = supplier_leads[item['supplier_name']]['names_objects_map'][name]
                     count = len(lead['data'])
                     if lead['data'][count-1]['key_name'] == 'Order Punched Date':
@@ -1626,7 +1631,7 @@ class UpdateConvertedLeadsFromSheet(APIView):
                     mongo_client.leads.update_one(
                         {"leads_form_id": int(lead['leads_form_id']), "entry_id": int(lead['entry_id']), "supplier_id": lead['supplier_id']},
                         {"$set": {"data": lead["data"], "lead_sha_256": lead_sha_256,
-                                  "hotness_level": 4}})
+                                  "hotness_level": 4, "multi_level_is_hot": lead['multi_level_is_hot']}})
         # To update leads summary table
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[1])
         for index, row in enumerate(ws.iter_rows()):
