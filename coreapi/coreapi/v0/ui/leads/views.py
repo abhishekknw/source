@@ -1536,10 +1536,13 @@ class AddHotnessLevelsToLeadForm(APIView):
                     "value": None
                 })
 
+                lead_sha_256 = create_lead_hash(lead)
+                lead["lead_sha_256"] = lead_sha_256
+
                 mongo_client.leads.update_one(
                     {"leads_form_id": int(lead['leads_form_id']), "entry_id": int(lead['entry_id']),
                      "supplier_id": lead['supplier_id']},
-                    {"$set": {"data": lead["data"]}})
+                    {"$set": {"data": lead["data"], "lead_sha_256": lead_sha_256}})
 
         return handle_response('', data={"success": True}, success=True)
 
@@ -1555,15 +1558,17 @@ class UpdateConvertedLeadsFromSheet(APIView):
         for index, row in enumerate(ws.iter_rows()):
             if index == 0:
                 continue
-            supplier_names_list.add(row[4].value)
-            campaign_names_list.add(row[8].value)
-            supplier_campaign_name_map[row[4].value] = row[8].value
+            if row[4].value:
+                supplier_names_list.add(row[4].value.lower())
+                campaign_names_list.add(row[8].value.lower())
+                supplier_campaign_name_map[row[4].value.lower()] = row[8].value.lower()
         suppliers = SupplierTypeSociety.objects.filter(society_name__in=list(supplier_names_list))
+        print(suppliers)
 
         campaigns = ProposalInfo.objects.filter(name__in=list(campaign_names_list))
-        suppliers_map_with_id = { supplier.society_name: supplier.supplier_id for supplier in suppliers }
-        suppliers_map_with_name = {supplier.supplier_id: supplier.society_name for supplier in suppliers}
-        campaigns_map_with_id = { campaign.name: campaign.proposal_id for campaign in campaigns }
+        suppliers_map_with_id = { supplier.society_name.lower(): supplier.supplier_id for supplier in suppliers }
+        suppliers_map_with_name = {supplier.supplier_id: supplier.society_name.lower() for supplier in suppliers}
+        campaigns_map_with_id = { campaign.name.lower(): campaign.proposal_id for campaign in campaigns }
 
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[4])
         purchase_order_objects = []
@@ -1572,61 +1577,76 @@ class UpdateConvertedLeadsFromSheet(APIView):
             if index == 0:
                 continue
             purchase_order_objects.append({
-                "name": row[0].value,
-                "supplier_name": row[1].value,
+                "name": row[0].value.lower(),
+                "supplier_name": row[1].value.lower(),
                 "date": row[2].value
             })
-            suppliers_in_purchase_order.add(row[1].value)
+            suppliers_in_purchase_order.add(row[1].value.lower())
 
         supplier_leads = {}
+        mismatch_suppliers_in_punched_order = []
         for supplier in suppliers_in_purchase_order:
             supplier_leads[supplier] = {}
-            supplier_leads[supplier]['leads'] = mongo_client.leads.find({'supplier_id': suppliers_map_with_id[supplier],
-                                                     'campaign_id': campaigns_map_with_id[supplier_campaign_name_map[supplier]]})
-            print(supplier_leads[supplier]['leads'].count())
-            if supplier_leads[supplier]['leads'].count() > 0:
-                supplier_leads[supplier]['name_list'] = []
-                supplier_leads[supplier]['names_objects_map'] = {}
-                for lead in supplier_leads[supplier]['leads']:
-                    if 'data' in lead:
-                        name = lead['data'][0]['value']
-                        if name:
-                            supplier_leads[supplier]['name_list'].append(name)
-                            supplier_leads[supplier]['names_objects_map'][name] = lead
+            print("supplier name : ",supplier)
+            if supplier in suppliers_map_with_id:
+                supplier_leads[supplier]['leads'] = mongo_client.leads.find({'supplier_id': suppliers_map_with_id[supplier],
+                                                         'campaign_id': campaigns_map_with_id[supplier_campaign_name_map[supplier]]})
+                print(supplier_leads[supplier]['leads'].count())
+                if supplier_leads[supplier]['leads'].count() > 0:
+                    supplier_leads[supplier]['name_list'] = []
+                    supplier_leads[supplier]['names_objects_map'] = {}
+                    for lead in supplier_leads[supplier]['leads']:
+                        if 'data' in lead:
+                            name = lead['data'][0]['value'].lower()
+                            if name:
+                                supplier_leads[supplier]['name_list'].append(name)
+                                supplier_leads[supplier]['names_objects_map'][name] = lead
+            else:
+                mismatch_suppliers_in_punched_order.append(supplier)
         for item in purchase_order_objects:
-                if 'name_list' in supplier_leads[item['supplier_name']]:
-                    matched_name = difflib.get_close_matches(item['name'], supplier_leads[item['supplier_name']]['name_list'])
-                    if len(matched_name) > 0:
-                        print("matched")
-                        print(lead['_id'])
-                        name = matched_name[0]
-                        lead = supplier_leads[supplier]['names_objects_map'][name]
-                        count = len(lead['data'])
-                        if lead['data'][count-1]['key_name'] == 'Order Punched Date':
-                            lead['data'][count-1]['value'] = item['date']
-                        if lead['data'][count-2]['key_name'] == 'Is Lead Converted':
-                            lead['data'][count-2]['value'] = 'Yes'
-                        mongo_client.leads.update_one(
-                            {"leads_form_id": int(lead['leads_form_id']), "entry_id": int(lead['entry_id']), "supplier_id": lead['supplier_id']},
-                            {"$set": {"data": lead["data"],
-                                      "hotness_level": 4}})
+            if 'name_list' in supplier_leads[item['supplier_name']]:
+                matched_name = difflib.get_close_matches(item['name'], supplier_leads[item['supplier_name']]['name_list'])
+                if len(matched_name) > 0:
+                    print("matched")
+                    name = matched_name[0]
+                    # print(name,supplier_leads, supplier)
+                    lead = supplier_leads[item['supplier_name']]['names_objects_map'][name]
+                    count = len(lead['data'])
+                    if lead['data'][count-1]['key_name'] == 'Order Punched Date':
+                        lead['data'][count-1]['value'] = item['date']
+                    if lead['data'][count-2]['key_name'] == 'Is Lead Converted':
+                        lead['data'][count-2]['value'] = 'Yes'
+                    lead['multi_level_is_hot']['is_hot_level_2'] = True
+                    lead['multi_level_is_hot']['is_hot_level_3'] = True
+                    lead['multi_level_is_hot']['is_hot_level_4'] = True
+
+                    lead_sha_256 = create_lead_hash(lead)
+                    lead["lead_sha_256"] = lead_sha_256
+
+                    mongo_client.leads.update_one(
+                        {"leads_form_id": int(lead['leads_form_id']), "entry_id": int(lead['entry_id']), "supplier_id": lead['supplier_id']},
+                        {"$set": {"data": lead["data"], "lead_sha_256": lead_sha_256,
+                                  "hotness_level": 4}})
         # To update leads summary table
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[1])
         for index, row in enumerate(ws.iter_rows()):
             if index == 0:
                 continue
-            lead = list(mongo_client.leads_summary.find({"supplier_id": suppliers_map_with_id[row[4].value],
-                                             "campaign_id": campaigns_map_with_id[supplier_campaign_name_map[row[4].value]]}))
-            print(lead)
-            if len(lead) > 0:
-                total_booking_confirmed = row[12].value if row[12].value else None
-                total_orders_punched = row[13].value if row[13].value else None
+            if row[4].value:
+                lead = list(mongo_client.leads_summary.find({"supplier_id": suppliers_map_with_id[row[4].value.lower()],
+                                                 "campaign_id": campaigns_map_with_id[supplier_campaign_name_map[row[4].value.lower()]]}))
 
-                mongo_client.leads_summary.update({"_id": ObjectId(lead[0]['_id'])},
-                                                  {"$set": {'total_booking_confirmed': total_booking_confirmed,
-                                                            'total_orders_punched': total_orders_punched}})
+                if len(lead) > 0:
+                    total_booking_confirmed = row[12].value if row[12].value else None
+                    total_orders_punched = row[13].value if row[13].value else None
 
-        return handle_response('', data={"success": True}, success=True)
+                    mongo_client.leads_summary.update({"_id": ObjectId(lead[0]['_id'])},
+                                                      {"$set": {'total_booking_confirmed': total_booking_confirmed,
+                                                                'total_orders_punched': total_orders_punched}})
+        data = {
+            "mismatch_suppliers_in_punched_order": mismatch_suppliers_in_punched_order,
+        }
+        return handle_response('', data=data, success=True)
 
 class UpdateLeadSummary(APIView):
     @staticmethod
