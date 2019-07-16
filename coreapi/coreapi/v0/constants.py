@@ -736,7 +736,7 @@ mime = {
 email = {
     'subject': 'Test subject',
     'body': 'This a system generated mail. Please find the file named $file attached',
-    'to': ['yogesh.mhetre@machadalo.com']
+    'to': ['kshitij.mittal01@gmail.com']
 }
 
 # filter types
@@ -791,7 +791,7 @@ emails = {
     'bd_head': 'bd@machadalo.com',
     'bd_user': 'anmol.prabhu@machadalo.com',
     'root_user': 'anupam@machadalo.com',
-    'developer': 'yogesh.mhetre@machadalo.com'
+    'developer': 'kshitij.mittal01@gmail.com'
 }
 
 # default status of each inventory is defined here. The reason i didn't chose a boolean value is because may be in
@@ -861,6 +861,19 @@ payment_status = {
     'payment_rejected' : 'PR'
 }
 
+payment_code_to_status = {
+    'PD': 'Payment Done',
+    'PNI': 'Payment Not Initiated',
+    'PP': 'Payment Pending',
+    'PCR': 'Cheque Released',
+    'PR': 'Payment Rejected',
+}
+
+booking_priority_code_to_status = {
+    'VH': 'Very High',
+    'HH': 'High'
+}
+
 # supplier booking status
 booking_status = {
     'booked': 'BK',
@@ -875,6 +888,18 @@ booking_status = {
     'tentative_booking' : 'TB',
 }
 
+booking_code_to_status = {
+    'BK': 'Confirmed Booked',
+    'NB': 'Not Booked',
+    'PB': 'Phone Booked',
+    'VB': 'Visit Booked',
+    'SR': 'Rejected',
+    'SE': 'Send Email',
+    'VR': 'Visit Required',
+    'CR': 'Call Required',
+    'DP': 'Decision Pending',
+    'TB': 'Tentative Booking'
+}
 # different campaign states
 completed = 'COMPLETED'
 running = 'RUNNING'
@@ -1247,7 +1272,7 @@ permission_type_update = 'update'
 permission_type_delete = 'delete'
 
 
-api_error_mail_to = 'yogesh.mhetre@machadalo.com'
+api_error_mail_to = 'kshitij.mittal01@gmail.com'
 # default prices
 default_actual_supplier_price = 0
 default_suggested_supplier_price = 0

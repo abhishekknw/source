@@ -1558,10 +1558,12 @@ class HashtagImagesViewSet(viewsets.ViewSet):
     def get_hashtag_images(self, request):
         class_name = self.__class__.__name__
         try:
-            campaign_id = request.query_params.get("campaign_id", None)
+            campaign_id = request.query_params.get("campaign_id")
             if not campaign_id:
                 return ui_utils.handle_response(class_name, data='Please pass campaign Id', success=False)
             images = HashTagImages.objects.filter(campaign_id=campaign_id, hashtag__in=['Permission Box','RECEIPT']).order_by('-updated_at')
+            if not images:
+                return ui_utils.handle_response(class_name, data='No images found', success=False) 
             result_obj = {}
             for image in images:
                 image.hashtag = image.hashtag.lower()
@@ -1832,6 +1834,7 @@ class ProposalVersion(APIView):
             proposal.save()
 
             # change the status of the proposal to 'requested' once everything is okay.
+            data['stats']['inventory_summary_no_instance_error'] = list(data['stats']['inventory_summary_no_instance_error'])
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -2463,6 +2466,8 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
             current_date = datetime.datetime.now().date()
             result_obj = {}
             for phase in phases:
+                if not (phase.end_date and phase.start_date):
+                    continue
                 if phase.id not in result_obj:
                     result_obj[phase.id] = {}
                 result_obj[phase.id]["start_date"] = phase.start_date

@@ -90,7 +90,7 @@ class BookingInventoryActivity(MongoModel):
     inventory_name = fields.CharField()
     supplier_id = fields.CharField()
     campaign_id = fields.CharField()
-    assigned_to_id = fields.CharField()
+    assigned_to_id = fields.CharField(blank=True)
     activity_type = fields.CharField()  # RELEASE or AUDIT or CLOSURE
     activity_date = fields.DateTimeField()
     actual_activity_date = fields.DateTimeField()

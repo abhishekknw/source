@@ -20,8 +20,8 @@ urlpatterns = [
     url(r'^dynamic-suppliers/', include('v0.ui.dynamic_suppliers.urls')),
     url(r'^dynamic-inventory/', include('v0.ui.dynamic_inventory.urls')),
     url(r'^dynamic-booking/', include('v0.ui.dynamic_booking.urls')),
-    url(r'^notifications/', include('v0.ui.notifications.urls')),
     url(r'^dynamic-location/', include('v0.ui.dynamic_location.urls')),
+    url(r'^notifications/', include('v0.ui.notifications.urls')),
 
     url(r'^users/', include('v0.ui.user.urls')),
     url(r'^accounts/', include('v0.ui.account.urls')),
@@ -73,7 +73,7 @@ urlpatterns = [
 
     url(r'^create_supplier/load_initial_data/$', views.GetInitialDataAPIView.as_view()),
     url(r'^(?P<id>[A-Z_a-z0-9]+)/load_initial_data_corporate/$', SaveBasicCorporateDetailsAPIView.as_view(), name='load-initial-corporate-data'),
-    url(r'^locations/(?P<id>[A-Z_a-z0-9]+)/$', views.GetLocationsAPIView.as_view(), name='locations'),
+    url(r'^locations/(?P<id>[A-Z_a-z0-9]+)/$', views.LocationsAPIView.as_view(), name='locations'),
     url(r'^supplier/generate_id/$', GenerateSupplierIdAPIView.as_view(), name='generate-id'),
     url(r'^check_supplier_code/(?P<code>[A-Z0-9]+)$', checkSupplierCodeAPIView.as_view()),
 

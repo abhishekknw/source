@@ -9,7 +9,7 @@ from .views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntri
                    UpdateLeadsDataIsHot, InsertExtraLeads, LeadsPermissionsAPI, LeadsPermissionsSelfAPI,
                    LeadsPermissionsByProfileIdAPI, GetLeadsFormById,GetAllLeadFormsByCampaigns,
                    DeleteExtraLeadEntry, DeleteLeadItem, GetLeadsEntry, UpdateLeadsEntry, GeographicalLevelsTest,
-                   GetListsCounts, DownloadLeadDataExcel)
+                   GetListsCounts, DownloadLeadDataExcel, CampaignDataInExcelSheet, GenerateCampaignExcelDownloadHash)
 
 from .one_time_scripts import UpdateLeadsMissingItems, UpdateLeadsEntryIds
 
@@ -28,6 +28,7 @@ urlpatterns = [
     url(r'^(?P<one_time_hash>[A-Z_a-z0-9]+)/download_lead_data_excel', DownloadLeadDataExcel.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_form$', DeleteLeadForm.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_entry/(?P<entry_id>[A-Z_a-z0-9]+)$', DeleteLeadEntry.as_view()),
+    url(r'^delete-leads/$', DeleteLeadEntry.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_form_element/(?P<item_id>[A-Z_a-z0-9]+)$', DeleteLeadItem.as_view()),
     url(r'^sanitize_leads_data/$', SanitizeLeadsData.as_view()),
     # url(r'^(?P<form_id>[0-9]+)/add_sms_contact$', SmsContact.as_view()),
@@ -51,6 +52,9 @@ urlpatterns = [
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/update-leads-entry/(?P<supplier_id>[A-Z_a-z0-9]+)/(?P<entry_id>[A-Z_a-z0-9]+)/$', UpdateLeadsEntry.as_view()),
     url(r'^update-missing-items/', UpdateLeadsMissingItems.as_view()),
     url(r'^update-entry-ids/', UpdateLeadsEntryIds.as_view()),
+    url(r'^download-campaign-data-sheet/(?P<one_time_hash>[A-Z_a-z0-9]+)/$', CampaignDataInExcelSheet.as_view()),
+    url(r'^generate-campaign-hash/(?P<campaign_id>[A-Z_a-z0-9]+)/$', GenerateCampaignExcelDownloadHash.as_view()),
+
 ]
 
 router = DefaultRouter()
