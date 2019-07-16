@@ -625,6 +625,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
 
         elif storage_type == 'count' or storage_type == 'sum' or storage_type == 'condition' or \
                 storage_type == 'append' or storage_type == 'mean':
+            self_model_name_mongo = '$' + self_model_name
             if database_type == 'mongodb':
                 if 'hotness_level' in next_level:
                     next_level = next_level + str(incrementing_value)
@@ -638,7 +639,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     else:
                         group_dict.update({'_id': {}, next_level: {"$sum": 1}})
                 elif storage_type == 'sum':
-                    group_dict.update({'_id': {}, next_level: {"$sum": self_model_name}})
+                    group_dict.update({'_id': {}, next_level: {"$sum": self_model_name_mongo}})
                 elif storage_type == 'mean':
                     group_dict.update({'_id': {}, next_level: {"$avg": self_model_name}})
                 else:

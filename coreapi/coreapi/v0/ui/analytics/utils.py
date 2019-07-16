@@ -85,7 +85,13 @@ count_details_parent_map = {
                           'storage_type': 'name'},
     'cost_flat': {'parent': 'campaign', 'model_name':'ShortlistedSpaces', 'database_type': 'mysql',
                   'self_name_model': 'cost_per_flat', 'parent_name_model': 'proposal_id',
-                  'storage_type': 'mean', 'other_grouping_column':'object_id'}
+                  'storage_type': 'mean', 'other_grouping_column':'object_id'},
+    'total_booking_confirmed': {'parent': 'campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
+                          'self_name_model': 'total_booking_confirmed', 'parent_name_model': 'campaign_id',
+                          'storage_type': 'sum'},
+    'total_orders_punched': {'parent': 'campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
+                       'self_name_model': 'total_orders_punched', 'parent_name_model': 'campaign_id',
+                       'storage_type': 'sum'}
 }
 
 count_details_parent_map_multiple = {
@@ -105,7 +111,13 @@ count_details_parent_map_multiple = {
                        'storage_type': 'condition', 'increment_type': 3},
     'cost_flat': {'parent': 'supplier,campaign', 'model_name': 'ShortlistedSpaces', 'database_type': 'mysql',
                   'self_name_model': 'cost_per_flat', 'parent_name_model': 'object_id,proposal_id',
-                  'storage_type': 'mean'}
+                  'storage_type': 'mean'},
+    'total_booking_confirmed': {'parent': 'supplier,campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
+                 'self_name_model': 'total_booking_confirmed', 'parent_name_model': 'supplier_id,campaign_id',
+                 'storage_type': 'sum'},
+    'total_orders_punched': {'parent': 'supplier,campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
+                 'self_name_model': 'total_orders_punched', 'parent_name_model': 'supplier_id,campaign_id',
+                 'storage_type': 'sum'}
 }
 
 reverse_direct_match = {'flattype':'supplier', 'qualitytype':'supplier','standeetype':'supplier',
