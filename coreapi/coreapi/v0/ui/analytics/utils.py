@@ -45,6 +45,8 @@ weekday_codes = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
 # list of raw data points which cannot be restricted
 raw_data_unrestricted = ['flat','cost','cost_flat']
 
+zero_filtered_raw_data = ['total_booking_confirmed','total_orders_punched']
+
 level_name_by_model_id = {
     "supplier_id": "supplier", "object_id": "supplier", "campaign_id": "campaign", "proposal_id": "campaign",
     "flat_count": "flat","total_negotiated_price": "cost", "created_at": "date", "phase_no": "phase",
@@ -1176,3 +1178,17 @@ def add_binary_field_status(dict_array, fields_list, false_prefix = 'No ',remove
         new_array.append(curr_dict)
     return new_array
 
+
+# def truncate_by_key_value(array_array, key, value):
+#     main_array = []
+#     new_array = []
+#     for curr_array in array_array:
+#         if len(curr_array)<0 and key in curr_array[0].keys():
+#             main_array = curr_array
+#         else:
+#             new_array.append(curr_array)
+#     if main_array == {}:
+#         return array_array
+#     new_subarray = []
+#     for curr_dict in main_array:
+#

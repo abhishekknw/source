@@ -10,7 +10,7 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     mean_calculator, count_details_parent_map_custom, flatten, flatten_dict_array,
                     round_sig_min, time_parent_names, raw_data_unrestricted,
                     key_replace_group_multiple, key_replace_group, truncate_by_value_ranges, linear_extrapolator,
-                    get_constrained_values, add_related_field, related_fields_dict, calculate_mode,
+                    get_constrained_values, add_related_field, related_fields_dict, zero_filtered_raw_data,
                     add_binary_field_status, binary_parameters_list)
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo
@@ -124,6 +124,15 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         raw_data_lf.insert(0,'lead')
 
     for curr_metric in raw_data_lf:
+        zero_filter = False
+        if curr_metric in zero_filtered_raw_data:
+            zero_filter = True
+        elif '_nz' in curr_metric:
+            curr_index = raw_data_lf.index(curr_metric)
+            original_index = raw_data.index(curr_metric)
+            curr_metric = curr_metric[:-3]
+            raw_data_lf[curr_index] = curr_metric
+            raw_data[original_index] = curr_metric
         lowest_level = curr_metric
         if data_scope_category == 'geographical':
             lowest_geographical_level = geographical_parent_details['base']
@@ -151,7 +160,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 hl = grouping_level[-1]
 
             curr_output_all = get_details_by_higher_level(hl, lowest_level, curr_highest_level_values, lgl, grouping_level,
-                                                      curr_dict, unilevel_constraints, grouping_category, value_ranges)
+                                                      curr_dict, unilevel_constraints, grouping_category, value_ranges,
+                                                          zero_filter= zero_filter)
             curr_output = curr_output_all[0]
             supplier_list = curr_output_all[1]
             # add missing key, if needed
@@ -180,7 +190,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         else:
             curr_output_all = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
                           default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category,
-                          value_ranges, supplier_constraints, supplier_list = supplier_list)
+                          value_ranges, supplier_constraints, supplier_list = supplier_list, zero_filter = zero_filter)
 
             curr_output = curr_output_all[0]
             supplier_list = curr_output_all[1]
@@ -420,7 +430,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
                                 grouping_category = "", value_ranges = {}, supplier_constraints = {},
-                                supplier_list = []):
+                                supplier_list = [], zero_filter = False):
     incrementing_value = None
     if lowest_level == None:
         return []
@@ -731,6 +741,10 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             single_array_results = merge_dict_array_array_multiple_keys(new_results, grouping_levels)
         except:
             single_array_results = merge_dict_array_array_multiple_keys(new_results, ['supplier'])
+
+        if zero_filter:
+            filtered_results = [x for x in single_array_results if x[lowest_level]>0]
+            single_array_results = filtered_results
 
         result_keys = single_array_results[0].keys()
         if "supplier" in result_keys:
