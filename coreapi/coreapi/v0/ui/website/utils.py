@@ -3815,7 +3815,7 @@ def setup_generic_export(data, user, proposal_id):
         inventory_summary_map = {}
         for instance in total_inventory_summary_instances:
             # taking advantage of the fact that a supplier id contains it's code in it. 'RS' is embedded in two characters [7:8]
-            supplier_code = instance.object_id[7:9]
+            supplier_code = 'RS'
             supplier_id = instance.object_id
 
             if not inventory_summary_map.get(supplier_code):
@@ -3829,8 +3829,6 @@ def setup_generic_export(data, user, proposal_id):
         for supplier_code, detail in inventory_summary_map.items():
             # detail is inventory_summary mapping.
             supplier_pricing_map = {}
-            if supplier_code == 'NR':
-                continue
             supplier_pricing_map = merge_two_dicts(
                 set_inventory_pricing(total_suppliers_map[supplier_code], supplier_code, detail, stats),
                 supplier_pricing_map)
