@@ -337,7 +337,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         for curr_stat in stats:
             statistics_array = statistics_map[curr_stat](derived_array, metrics_array_dict)
             derived_array = statistics_array
-
     bsi = []
     if not bivariate_statistical_information == {}:
         stats = list(bivariate_statistical_information.keys())
@@ -363,6 +362,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_data = prev_data
             raw_data_list.append(curr_data)
         higher_level_list_old = append_array_by_keys(derived_array,grouping_level,stat_metrics+raw_data)
+        for curr_field in additional_fields_list:
+            higher_level_list_test = add_related_field(higher_level_list_old, *(related_fields_dict[curr_field]))
 
         higher_level_list = []
         higher_level_raw_data = []
