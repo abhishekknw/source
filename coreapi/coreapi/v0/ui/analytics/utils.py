@@ -93,7 +93,7 @@ count_details_parent_map = {
                           'storage_type': 'sum'},
     'total_orders_punched': {'parent': 'campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
                        'self_name_model': 'total_orders_punched', 'parent_name_model': 'campaign_id',
-                       'storage_type': 'sum'}
+                       'storage_type': 'sum'},
 }
 
 count_details_parent_map_multiple = {
@@ -177,6 +177,9 @@ count_details_direct_match_multiple = {
     'supplier_locality': {'parent': 'locality', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
                           'self_name_model': 'supplier_id', 'parent_name_model': 'society_locality',
                           'storage_type': 'name'},
+    'supplier_booking': {'parent': 'booking', 'model_name': 'leads_summary', 'database_type': 'mongodb',
+                          'self_name_model': 'supplier_id', 'parent_name_model': 'total_booking_confirmed',
+                          'storage_type': 'condition'}
 }
 
 
@@ -343,7 +346,7 @@ def mean_calculator(dict_array, keys, weighted=0):
         for curr_dict in dict_array:
             new_keys = []
             for curr_key in keys:
-                new_name = curr_key + '_total'
+                new_name = curr_key
                 new_keys.append(new_name)
                 mean_key = 'mean_' + new_name
                 curr_dict[mean_key] = curr_dict[new_name]
