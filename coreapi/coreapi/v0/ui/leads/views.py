@@ -1795,6 +1795,7 @@ class UpdateLeadSummary(APIView):
             mongo_client.leads_summary.insert_one({
                 "campaign_id": item['campaign_id'],
                 "supplier_id": item['supplier_id'],
+                "lead_date": item['created_at'] if 'created_at' in item else None,
                 "total_leads_count": item['total_leads_count'],
                 "total_hot_leads_count": item['hot_leads_count'],
                 "total_booking_confirmed": 0,

@@ -110,6 +110,7 @@ def get_leads_summary(campaign_list=None, user_start_datetime=None,user_end_date
                             "_id": {"campaign_id": "$campaign_id", "supplier_id": "$supplier_id"},
                             "campaign_id": {"$first": '$campaign_id'},
                             "supplier_id": {"$first": '$supplier_id'},
+                            "created_at": {"$first": '$created_at'},
                             "total_leads_count": {"$sum": 1},
                             "hot_leads_count": {"$sum": {"$cond": ["$is_hot", 1, 0]}},
                         }
@@ -118,6 +119,7 @@ def get_leads_summary(campaign_list=None, user_start_datetime=None,user_end_date
                     "$project": {
                         "campaign_id": 1,
                         "supplier_id": 1,
+                        "created_at": 1,
                         "total_leads_count": 1,
                         "hot_leads_count": 1,
                         "hot_leads_percentage": {
