@@ -360,7 +360,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             stat_metrics.append(get_metrics_from_code(curr_index,raw_data,metric_names))
         raw_data_list = []
         for prev_data in raw_data:
-            curr_data = prev_data + '_total'
+            curr_data = prev_data
             raw_data_list.append(curr_data)
         higher_level_list_old = append_array_by_keys(derived_array,grouping_level,stat_metrics+raw_data)
 
@@ -368,7 +368,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         higher_level_raw_data = []
         for curr_dict in higher_level_list_old:
             for curr_metric in raw_data:
-                curr_name = curr_metric+'_total'
+                curr_name = curr_metric
                 curr_list = curr_dict[curr_metric]
                 if not type(curr_list)==list:
                     curr_list = [curr_list]
@@ -386,11 +386,11 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 a = curr_metric["a"]
                 b = curr_metric["b"]
                 try:
-                    nr = a + '_total'
+                    nr = a
                 except:
                     nr=a
                 try:
-                    dr = b+'_total'
+                    dr = b
                 except:
                     dr=b
                 if isinstance(nr, str):
@@ -403,13 +403,13 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                     dr_value = dr
                 result_value = binary_operation(float(nr_value), float(dr_value), curr_metric['op']) if \
                     not dr_value == 0 and nr_value is not None and dr_value is not None else None
-                new_name = curr_metric['name'] + '_total'
+                new_name = curr_metric['name']
                 new_metric_names.append(new_name)
                 curr_dict[new_name] = round_sig_min(result_value, 7) if result_value is not None else result_value
 
         new_stat_metrics = []
         for curr_stat in stat_metrics:
-            new_name = curr_stat + '_total'
+            new_name = curr_stat
             new_stat_metrics.append(new_name)
 
         for curr_stat in stats:
@@ -424,8 +424,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     return {"individual metrics":individual_metric_output, "lower_group_data": derived_array,
             "higher_group_data":higher_level_list, "bivariate_statistical_information": bsi}
 
-
-#def get_details_by_lower_level(higher_level, lower_level, lower_level_list)
 
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
