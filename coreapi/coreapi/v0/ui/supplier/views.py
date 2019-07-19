@@ -2,6 +2,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 import json
 import requests
+from bson.objectid import ObjectId
 from django.urls import reverse
 from django.forms.models import model_to_dict
 from openpyxl import load_workbook
@@ -14,6 +15,9 @@ from v0.ui.utils import (get_supplier_id, handle_response, get_content_type, sav
                          save_basic_supplier_details)
 from v0.ui.website.utils import manipulate_object_key_values, return_price
 import v0.ui.website.utils as website_utils
+
+from v0.ui.dynamic_booking.models import BookingInventoryActivity
+from v0.ui.dynamic_suppliers.models import SupplySupplier
 from .models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeGym,
                     SupplierTypeRetailShop, CorporateParkCompanyList, CorporateBuilding, SupplierTypeBusDepot,
                     SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE)
@@ -63,6 +67,8 @@ from v0.utils import create_cache_key, get_values
 from django.conf import settings
 from django.apps import apps
 from django.db import IntegrityError
+from .supplier_uploads import create_price_mapping_default
+
 
 def get_values(list_name,key):
     values = []
@@ -102,30 +108,6 @@ def get_city_subarea_map():
     return city_subarea_map
 
 
-def create_price_mapping_default(days_count, adinventory_name, adinventory_type, new_society,
-                                 actual_supplier_price, content_type, supplier_id):
-    print(new_society.society_name)
-    duration_types = DurationType.objects.filter()
-    adinventory_types = AdInventoryType.objects.filter(adinventory_name=adinventory_name)
-    for adinv_type in adinventory_types:
-        for dur_type in duration_types:
-
-            if dur_type.days_count == days_count and adinv_type.adinventory_name == adinventory_name and adinv_type.adinventory_type == adinventory_type:
-                obj,created = PriceMappingDefault.objects.get_or_create(supplier=new_society, duration_type=dur_type,
-                                              adinventory_type=adinv_type,
-                                              content_type=content_type,
-                                              object_id=supplier_id)
-
-                obj.actual_supplier_price = actual_supplier_price
-                obj.save()
-            else:
-                if (adinv_type.adinventory_name == 'FLIER' and dur_type.duration_name == 'Unit Daily') or adinv_type.adinventory_name != 'FLIER':
-                    PriceMappingDefault.objects.get_or_create(supplier=new_society, duration_type=dur_type,
-                                                          adinventory_type=adinv_type,
-                                                          content_type=content_type,
-                                                          object_id=supplier_id)
-
-
 def get_flat_count_type(flat_count):
     if flat_count is None:
         return None
@@ -136,6 +118,7 @@ def get_flat_count_type(flat_count):
     else:
         flat_type = '401+'
     return flat_type
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class SocietyDataImport(APIView):
@@ -152,61 +135,67 @@ class SocietyDataImport(APIView):
         for index, row in enumerate(ws.iter_rows()):
             if index > 0:
                 print(index)
-                flat_count = int(row[17].value) if row[17].value else None
+                flat_count = int(row[18].value) if row[18].value else None
+                vendor_name = row[0].value if row[0].value else None
+                representative_id = None
+                if vendor_name:
+                    ventor_organisation_all = Organisation.objects.filter(name=vendor_name).all()
+                    if len(ventor_organisation_all):
+                        representative_id = ventor_organisation_all[0].organisation_id
                 flat_count_type = get_flat_count_type(flat_count)
                 society_data_list.append({
-                    'society_name': row[0].value if row[0].value else None,
-                    'society_city': str(row[1].value) if row[1].value else None,
-                    'society_city_code': str(row[2].value) if row[2].value else None,
-                    'society_locality': row[3].value if row[3].value else None,
-                    'society_locality_code': row[4].value if row[4].value else None,
-                    'society_subarea': row[5].value if row[5].value else None,
-                    'society_subarea_code': row[6].value if row[6].value else None,
-                    'society_code': row[7].value if row[7].value else None,
-                    'supplier_code': row[8].value if row[8].value else None,
-                    'supplier_id': row[9].value if row[9].value else None,
-                    'society_zip': int(row[10].value) if row[10].value else None,
-                    'society_address1' : row[11].value if row[11].value else None,
-                    'landmark' : row[12].value if row[12].value else None,
-                    'society_type_quality' : row[13].value if row[13].value else None,
-                    'society_latitude': float(row[14].value) if row[14].value else None,
-                    'society_longitude': float(row[15].value) if row[15].value else None,
-                    'tower_count': int(row[16].value) if row[16].value else None,
-                    'flat_count': int(row[17].value) if row[17].value else None,
+                    'representative_id': representative_id,
+                    'society_name': row[1].value if row[1].value else None,
+                    'society_city': str(row[2].value) if row[2].value else None,
+                    'society_city_code': str(row[3].value) if row[3].value else None,
+                    'society_locality': row[4].value if row[4].value else None,
+                    'society_locality_code': row[5].value if row[5].value else None,
+                    'society_subarea': row[6].value if row[6].value else None,
+                    'society_subarea_code': row[7].value if row[7].value else None,
+                    'society_code': row[8].value if row[8].value else None,
+                    'supplier_code': row[9].value if row[9].value else None,
+                    'supplier_id': row[10].value if row[10].value else None,
+                    'society_zip': int(row[11].value) if row[11].value else None,
+                    'society_address1' : row[12].value if row[12].value else None,
+                    'landmark' : row[13].value if row[13].value else None,
+                    'society_type_quality' : row[14].value if row[14].value else None,
+                    'society_latitude': float(row[15].value) if row[15].value else None,
+                    'society_longitude': float(row[16].value) if row[16].value else None,
+                    'tower_count': int(row[17].value) if row[17].value else None,
+                    'flat_count': int(row[18].value) if row[18].value else None,
                     'flat_count_type': flat_count_type,
-                    'vacant_flat_count' : int(row[18].value) if row[18].value else None,
-                    'bachelor_tenants_allowed': row[19].value if row[19].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'designation': row[20].value if row[20].value else None,
-                    'salutation': row[21].value if row[21].value else None,
-                    'contact_name': row[22].value if row[22].value else None,
-                    'email': row[23].value if row[23].value else None,
-                    'mobile': row[24].value if row[24].value else None,
-                    'landline': row[25].value if row[25].value else None,
-                    'name_for_payment': row[26].value if row[26].value else None,
-                    'ifsc_code': row[27].value if row[27].value else None,
-                    'bank_name': row[28].value if row[28].value else None,
-                    'account_no': row[29].value if row[29].value else None,
-                    'relationship_manager' : row[30].value if row[30].value else None,
-                    'age_of_society' : row[31].value if row[31].value else None,
-                    'stall_allowed': True if row[32].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'total_stall_count': row[33].value if row[34].value else None,
-                    'poster_allowed_nb': True if row[34].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'nb_per_tower': int(row[35].value) if row[32].value else None,
-                    'poster_allowed_lift': True if row[36].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'lift_per_tower': int(row[37].value) if row[34].value else None,
-                    'flier_allowed': True if row[38].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'flier_frequency': int(row[39].value) if row[39].value else None,
-                    'stall_price': float(row[40].value) if row[40].value else None,
-                    'poster_price': float(row[41].value) if row[41].value else None,
-                    'flier_price': float(row[42].value) if row[42].value else None,
-                    'status': row[43].value,
-                    'comments': row[44].value,
+                    'vacant_flat_count' : int(row[19].value) if row[19].value else None,
+                    'bachelor_tenants_allowed': row[20].value if row[20].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'designation': row[21].value if row[21].value else None,
+                    'salutation': row[22].value if row[22].value else None,
+                    'contact_name': row[23].value if row[23].value else None,
+                    'email': row[24].value if row[24].value else None,
+                    'mobile': row[25].value if row[25].value else None,
+                    'landline': row[26].value if row[26].value else None,
+                    'name_for_payment': row[27].value if row[27].value else None,
+                    'ifsc_code': row[28].value if row[28].value else None,
+                    'bank_name': row[29].value if row[29].value else None,
+                    'account_no': row[30].value if row[30].value else None,
+                    'relationship_manager' : row[31].value if row[31].value else None,
+                    'age_of_society' : row[32].value if row[32].value else None,
+                    'stall_allowed': True if row[33].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'total_stall_count': row[34].value if row[34].value else None,
+                    'poster_allowed_nb': True if row[35].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'nb_per_tower': int(row[36].value) if row[36].value else None,
+                    'poster_allowed_lift': True if row[37].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'lift_per_tower': int(row[38].value) if row[38].value else None,
+                    'flier_allowed': True if row[39].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'flier_frequency': int(row[40].value) if row[40].value else None,
+                    'stall_price': float(row[41].value) if row[41].value else None,
+                    'poster_price': float(row[42].value) if row[42].value else None,
+                    'flier_price': float(row[43].value) if row[43].value else None,
+                    'status': row[44].value,
+                    'comments': row[45].value,
                 })
         all_states_map = get_state_map()
         all_city_map = get_city_map()
         all_city_area_map = get_city_area_map()
         all_city_subarea_map = get_city_subarea_map()
-
         for society in society_data_list:
             if society['supplier_code'] is not None:
                 data = {
@@ -217,20 +206,21 @@ class SocietyDataImport(APIView):
                     'supplier_code': society['supplier_code'],
                     'supplier_name': society['society_name']
                 }
+
                 supplier_id = None
                 if society['supplier_id']:
                     supplier_id = society['supplier_id']
                 else:
-                    supplier_id = get_supplier_id(data, state_name=all_states_map[society['society_city_code']]['state_name'],
-                                              state_code=all_states_map[society['society_city_code']]['state_code'])
+                    supplier_id = get_supplier_id(data)
 
                 supplier_length = len(SupplierTypeSociety.objects.filter(supplier_id=supplier_id))
                 if len(SupplierTypeSociety.objects.filter(society_name=society['society_name'])):
-                    print(society['society_name'])
+
                     # instance = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
                     instance = SupplierTypeSociety.objects.filter(society_name=society['society_name'])[0]
                     supplier_id = instance.supplier_id
                     instance.society_name = society['society_name']
+                    instance.representative_id = society['representative_id']
                     instance.society_locality = society['society_locality']
                     instance.society_city = society['society_city']
                     instance.society_state = all_states_map[society['society_city_code']]['state_name']
@@ -259,8 +249,10 @@ class SocietyDataImport(APIView):
                     new_society = instance
 
                 elif supplier_length:
+
                     instance = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
                     instance.society_name = society['society_name']
+                    instance.representative_id = society['representative_id']
                     instance.society_locality = society['society_locality']
                     instance.society_city = society['society_city']
                     instance.society_state = all_states_map[society['society_city_code']]['state_name']
@@ -289,9 +281,11 @@ class SocietyDataImport(APIView):
                     new_society = instance
 
                 else:
+
                     new_society = SupplierTypeSociety(**{
                         'supplier_id': supplier_id,
                         'society_name': society['society_name'],
+                        'representative_id': society['representative_id'],
                         'society_locality': society['society_locality'],
                         'society_city': society['society_city'],
                         'society_state': all_states_map[society['society_city_code']]['state_name'],
@@ -319,33 +313,53 @@ class SocietyDataImport(APIView):
                     })
                     new_society.save()
 
-                # new_contact_data = {
-                #     'name': society['contact_name'],
-                #     'email': society['email'],
-                #     'designation': society['designation'],
-                #     'salutation': society['salutation'],
-                #     'mobile': society['mobile'],
-                #     'landline': society['landline'],
-                #     'content_type': get_content_type('RS').data['data'],
-                #     'object_id': supplier_id
-                # }
-                # obj, is_created = ContactDetails.objects.get_or_create(**new_contact_data)
-                # obj.save()
+                new_contact_data = {
+                    'name': society['contact_name'],
+                    'email': society['email'],
+                    'designation': society['designation'],
+                    'salutation': society['salutation'],
+                    'mobile': society['mobile'],
+                    'landline': society['landline'],
+                    'content_type': get_content_type('RS').data['data'],
+                    'object_id': supplier_id
+                }
+                contacts = ContactDetails.objects.filter(mobile=society['mobile'])
+                if not len(contacts):
+                    ContactDetails.objects.create(**new_contact_data)
 
                 rs_content_type = get_content_type('RS').data['data']
-                create_price_mapping_default('7', "POSTER", "A4", new_society,
+                print(society['society_name'])
+                try:
+                    create_price_mapping_default('7', "POSTER", "A4", new_society,
                                              society['poster_price'], rs_content_type, supplier_id)
-                create_price_mapping_default('0', "POSTER LIFT", "A4", new_society,
+                except Exception as e:
+                    pass
+                try:
+                    create_price_mapping_default('0', "POSTER LIFT", "A4", new_society,
                                              0, rs_content_type, supplier_id)
-                create_price_mapping_default('0', "STANDEE", "Small", new_society,
+                except Exception as e:
+                    pass
+                try:
+                    create_price_mapping_default('0', "STANDEE", "Small", new_society,
                                              0, rs_content_type, supplier_id)
-                create_price_mapping_default('1', "STALL", "Small", new_society,
+                except Exception as e:
+                    pass
+                try:
+                    create_price_mapping_default('1', "STALL", "Small", new_society,
                                              society['stall_price'], rs_content_type, supplier_id)
-                create_price_mapping_default('0', "CAR DISPLAY", "A4", new_society,
+                except Exception as e:
+                    pass
+                try:
+                    create_price_mapping_default('0', "CAR DISPLAY", "A4", new_society,
                                              0, rs_content_type, supplier_id)
+                except Exception as e:
+                    pass
                 save_flyer_locations(0, 1, new_society, society['supplier_code'])
-                create_price_mapping_default('1', "FLIER", "Door-to-Door", new_society,
+                try:
+                    create_price_mapping_default('1', "FLIER", "Door-to-Door", new_society,
                                              society['flier_price'], rs_content_type, supplier_id)
+                except Exception as e:
+                    pass
 
                 inventory_obj = InventorySummary.objects.filter(object_id=supplier_id).first()
                 inventory_id = inventory_obj.id if inventory_obj else None
@@ -2820,8 +2834,8 @@ class SupplierSearch(APIView):
             search_txt = request.query_params.get('search')
             supplier_type_code = request.query_params.get('supplier_type_code')
             vendor = request.query_params.get('vendor', None)
-            if not supplier_type_code or not vendor:
-                return ui_utils.handle_response(class_name, data='provide supplier type code or Principal vendor is not present')
+            if not supplier_type_code :
+                return ui_utils.handle_response(class_name, data='provide supplier type code')
 
             if not search_txt:
                 return ui_utils.handle_response(class_name, data=[], success=True)
@@ -2833,8 +2847,10 @@ class SupplierSearch(APIView):
                     search_query |= Q(**{search_field: search_txt})
                 else:
                     search_query = Q(**{search_field: search_txt})
-
-            suppliers = model.objects.filter(search_query, representative=vendor)
+            if vendor:
+                suppliers = model.objects.filter(search_query, representative=vendor)
+            else:
+                suppliers = model.objects.filter(search_query)
             serializer_class = ui_utils.get_serializer(supplier_type_code)
             serializer = serializer_class(suppliers, many=True)
             suppliers = website_utils.manipulate_object_key_values(serializer.data,
@@ -2870,10 +2886,26 @@ class SupplierDetails(APIView):
             supplier_model = ContentType.objects.get(pk=content_type.id).model
             model = apps.get_model(settings.APP_NAME,supplier_model)
 
-            supplier_object = model.objects.get(supplier_id=supplier_id)
-
-            data = model_to_dict(supplier_object)
-            data = website_utils.manipulate_object_key_values([data])[0]
+            supplier_object = model.objects.filter(supplier_id=supplier_id)
+            data = {}
+            if len(supplier_object) > 0:
+                supplier_object = model.objects.get(supplier_id=supplier_id)
+            else:
+                try:
+                    supplier_object = SupplierTypeRetailShop.objects.get(supplier_id=supplier_id)
+                except Exception as e:
+                    supplier_object = SupplySupplier.objects.raw({'_id': ObjectId(supplier_id)})
+                    if supplier_object.count() > 0:
+                        supplier = supplier_object[0]
+                        data = {
+                            "name": supplier.name,
+                            "supplier_id": str(supplier._id)
+                        }
+                        for attr in supplier.supplier_attributes:
+                            data[attr['name'].lower()] = attr['value'] if 'value' in attr else ''
+            if not data:
+                data = model_to_dict(supplier_object)
+                data = website_utils.manipulate_object_key_values([data])[0]
 
             return ui_utils.handle_response(class_name, data=data, success=True)
 
@@ -3035,5 +3067,72 @@ class listCampaignSuppliers(APIView):
         all_campaign_societies = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).all()
         serializer = SupplierTypeSocietySerializer(all_campaign_societies, many=True)
         all_societies = manipulate_object_key_values(serializer.data)
+        booking_inv_activities = BookingInventoryActivity.objects.raw({"campaign_id": campaign_id})
+        supplier_ids = [ObjectId(supplier.supplier_id) for supplier in booking_inv_activities]
+        suppliers = SupplySupplier.objects.raw({'_id': {'$in': (supplier_ids)}})
+        dynamic_suppliers = []
+        if suppliers.count() > 0:
+            for supplier in suppliers:
+                data = {
+                    "name": supplier.name,
+                    "supplier_id": str(supplier._id)
+                }
+                for attr in supplier.supplier_attributes:
+                    data[attr['name']] = attr['value'] if 'value' in attr else None
+                dynamic_suppliers.append(data)
+        all_societies = all_societies + dynamic_suppliers
         all_societies = [dict(society) for society in all_societies]
         return ui_utils.handle_response({}, data=all_societies, success=True)
+
+class CreateSupplierPriceMappingObjects(APIView):
+    def get(self, request):
+        suppliers = SupplierTypeSociety.objects.all()
+        pmd_object = PriceMappingDefault.objects.all()
+        suppliers_no_pmd = []
+        for supplier in suppliers:
+            if len(pmd_object.filter(object_id=supplier.supplier_id)) == 0:
+                suppliers_no_pmd.append(supplier)
+        rs_content_type = get_content_type('RS').data['data']
+        print(len(suppliers_no_pmd))
+        index = 0
+        for supplier in suppliers_no_pmd:
+            index = index + 1
+            print(supplier.society_name, index)
+            new_society = supplier
+            supplier_id = supplier.supplier_id
+
+            try:
+                create_price_mapping_default('7', "POSTER", "A4", new_society,
+                                             0, rs_content_type, supplier_id)
+            except Exception as e:
+                pass
+            try:
+                create_price_mapping_default('0', "POSTER LIFT", "A4", new_society,
+                                             0, rs_content_type, supplier_id)
+            except Exception as e:
+                pass
+            try:
+                create_price_mapping_default('0', "STANDEE", "Small", new_society,
+                                             0, rs_content_type, supplier_id)
+            except Exception as e:
+                pass
+            try:
+                create_price_mapping_default('1', "STALL", "Small", new_society,
+                                             0, rs_content_type, supplier_id)
+            except Exception as e:
+                pass
+            try:
+                create_price_mapping_default('0', "CAR DISPLAY", "A4", new_society,
+                                             0, rs_content_type, supplier_id)
+            except Exception as e:
+                pass
+            try:
+                save_flyer_locations(0, 1, new_society, 'RS')
+            except Exception as e:
+                pass
+            try:
+                create_price_mapping_default('1', "FLIER", "Door-to-Door", new_society,
+                                             0, rs_content_type, supplier_id)
+            except Exception as e:
+                pass
+        return ui_utils.handle_response({}, data={}, success=True)

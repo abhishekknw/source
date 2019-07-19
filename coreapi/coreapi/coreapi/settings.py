@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 from __future__ import absolute_import
+from pymodm import connect
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
@@ -30,6 +31,7 @@ SECRET_KEY = 'ewis(omy!u-rgpf%9hp1^3@8ivz!upuwc&tp!0trx%#vjqs!&2'
 # SECURITY WARNING: don't run with debug turned on in production!
 if Config:
     DEBUG = Config.DEBUG if hasattr(Config, 'DEBUG') else True
+    ENV = Config.ENV
 
 ALLOWED_HOSTS = ['13.232.210.224', 'localhost','13.127.154.33', 'api.machadalo.com', 'platform.machadalo.com',
                  '127.0.0.1', 'devapi.machadalo.com']
@@ -288,3 +290,8 @@ LOGGING = {
         }
     }
 }
+
+#Establish a connection to the database and call the connection mongo_app
+connect(
+"mongodb://localhost:27017/machadalo", alias="mongo_app"
+)

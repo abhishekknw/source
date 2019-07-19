@@ -281,6 +281,7 @@ class ShortlistedSpaces(BaseModel):
     payment_method = models.CharField(max_length=255, null=True, blank=True)
     total_negotiated_price = models.CharField(max_length=255, null=True, blank=True)
     booking_status = models.CharField(max_length=10, null=True, blank=True)
+    booking_sub_status = models.CharField(max_length=15, null=True, blank=True)
     is_completed = models.BooleanField(default=False)
     transaction_or_check_number = models.CharField(max_length=50, null=True, blank=True)
     phase_no = models.ForeignKey('SupplierPhase', blank=True, null=True, on_delete=models.PROTECT)
@@ -289,6 +290,7 @@ class ShortlistedSpaces(BaseModel):
     cost_per_flat = models.FloatField(null=True, blank=True)
     booking_priority = models.CharField(max_length=10,null=True,blank=True)
     sunboard_location = models.CharField(max_length=50,null=True,blank=True)
+    next_action_date = models.DateTimeField(null=True)
 
     class Meta:
         db_table = 'shortlisted_spaces'
@@ -299,7 +301,7 @@ class HashTagImages(BaseModel):
     This model stores campaign images which is hashtagged by BANNER,RECEIPT...etc
     """
     campaign = models.ForeignKey('ProposalInfo', null=False, blank=False, on_delete=models.CASCADE)
-    object_id = models.CharField(db_index=True, max_length=supplier_id_max_length)
+    object_id = models.CharField(db_index=True, max_length=100)
     content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     image_path = models.CharField(max_length=1000, null=True, blank=True)
     hashtag = models.CharField(max_length=255)
@@ -323,3 +325,16 @@ class SupplierPhase(BaseModel):
 
     class Meta:
         db_table = 'supplier_phase'
+
+class SupplierAssignment(BaseModel):
+    """
+    This model stores supplier assignment
+    """
+    campaign = models.ForeignKey('ProposalInfo', null=False, blank=False, on_delete=models.CASCADE)
+    supplier_id = models.CharField(db_index=True, max_length=supplier_id_max_length)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    assigned_by = models.ForeignKey('BaseUser', related_name="assigned_by_user", null=False, blank=False, on_delete=models.CASCADE)
+    assigned_to = models.ForeignKey('BaseUser', related_name="assigned_to_user", null=False, blank=False, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'supplier_assignment'

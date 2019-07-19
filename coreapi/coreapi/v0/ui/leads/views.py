@@ -1,11 +1,14 @@
 from __future__ import print_function
 from __future__ import absolute_import
+
+import difflib
+
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
-from .models import (get_leads_summary, LeadsPermissions, ExcelDownloadHash)
+from .models import (get_leads_summary, LeadsPermissions, ExcelDownloadHash, CampaignExcelDownloadHash)
 from v0.ui.analytics.views import (get_data_analytics, get_details_by_higher_level,
                                    get_details_by_higher_level_geographical, geographical_parent_details)
-from v0.ui.supplier.models import SupplierTypeSociety
+from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeRetailShop
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.inventory.models import (InventoryActivityAssignment, InventoryActivity)
@@ -17,7 +20,8 @@ import datetime
 from bulk_update.helper import bulk_update
 from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignAssignment
-from v0.constants import campaign_status, proposal_on_hold
+from v0.constants import (campaign_status, proposal_on_hold, booking_code_to_status,
+                          payment_code_to_status, booking_priority_code_to_status )
 from django.http import HttpResponse
 from celery import shared_task
 from django.conf import settings
@@ -25,14 +29,16 @@ from v0.ui.common.models import mongo_client, mongo_test
 import pprint
 from random import randint
 import random, string
+from v0.ui.website.utils import prepare_shortlisted_spaces_and_inventories
 
 from v0.ui.proposal.views import convert_date_format
 
 pp = pprint.PrettyPrinter(depth=6)
 import hashlib
 from bson.objectid import ObjectId
-from v0.ui.proposal.models import ProposalInfo
+from v0.ui.proposal.models import ProposalInfo, ProposalCenterSuppliers
 from v0.ui.account.models import Profile
+from v0.ui.dynamic_suppliers.utils import get_dynamic_single_supplier_data
 
 
 def is_user_permitted(permission_type, user, **kwargs):
@@ -122,10 +128,28 @@ def convertToNumber(str):
     except ValueError:
         return str
 
+def get_data_by_supplier_type_code(lead_form, supplier_id):
+    proposal_id = lead_form['campaign_id']
+    supplier_type_code = ProposalCenterSuppliers.objects.filter(proposal_id=proposal_id)
+    if len(supplier_type_code) > 0:
+        try:
+            code = supplier_type_code[0].supplier_type_code
+            if code == 'RS':
+                supplier_data = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
+                return supplier_data, supplier_data.society_name
+            elif code == 'RE':
+                supplier_data = SupplierTypeRetailShop.objects.get(supplier_id=supplier_id)
+                return supplier_data, supplier_data.name
+        except Exception as e:
+            supplier_data = {}
+            supplier_data = get_dynamic_single_supplier_data(supplier_id)
+            if supplier_data:
+                return supplier_data, supplier_data['name']
+    return
 
 def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **kwargs):
     leads_per_page = 25
-    leads_forms = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)}, {"_id":0, "data":1})
+    leads_forms = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)}, {"_id":0, "data":1, "campaign_id": 1})
     if not leads_forms:
         return None
     leads_forms_items = leads_forms["data"]
@@ -144,8 +168,8 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
         leads_data = mongo_client.leads.find({"$and": [{"leads_form_id": int(leads_form_id)}, {"supplier_id": supplier_id},
                                                        {"status": {"$ne": "inactive"}}]}, {"_id": 0})
         leads_data_list = list(leads_data)
-        supplier_data = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
-        supplier_name = supplier_data.society_name
+        supplier_data, supplier_name = get_data_by_supplier_type_code(leads_forms, supplier_id)
+
 
     hot_leads = [x['entry_id'] for x in leads_data_list if x['is_hot'] == True]
     headers = []
@@ -184,13 +208,19 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
 
 
     leads_data_values = []
+    missing_suppliers= []
+
     for entry in leads_data_list:
         curr_entry = entry['data']
         entry_date = entry['created_at']
         entry_id = entry['entry_id']
         if supplier_id == 'All':
             curr_supplier_id = entry['supplier_id']
-            curr_supplier_name = supplier_id_names[curr_supplier_id]
+            if curr_supplier_id not in supplier_id_names:
+                missing_suppliers.append(curr_supplier_id)
+                continue
+            else:
+                curr_supplier_name = supplier_id_names[curr_supplier_id]
         else:
             curr_supplier_name = supplier_name
         new_entry = [
@@ -219,7 +249,7 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
             new_entry.append({"order_id": item["item_id"], "value": value})
         leads_data_values.append(new_entry)
 
-    final_data = {"hot_leads": hot_leads, "headers": headers, "values": leads_data_values}
+    final_data = {"hot_leads": hot_leads, "headers": headers, "values": leads_data_values, "missing_suppliers": missing_suppliers}
 
     return final_data
 
@@ -315,6 +345,16 @@ class GetLeadsFormById(APIView):
                 }
         return handle_response({}, data=lead_form_dict, success=True)
 
+def get_supplier_data_by_type(name):
+    suppliers = SupplierTypeSociety.objects.filter(society_name=name).values('supplier_id',
+                                                                                     'society_name').all()
+    if len(suppliers) > 0:
+        return suppliers
+    else:
+        suppliers = SupplierTypeRetailShop.objects.filter(name=name).values('supplier_id', 'name').all()
+        if len(suppliers) > 0:
+            return suppliers
+    return []
 
 class LeadsFormBulkEntry(APIView):
     @staticmethod
@@ -362,8 +402,8 @@ class LeadsFormBulkEntry(APIView):
                 if index > 0:
                     society_name = row[entity_index].value
 
-                    suppliers = SupplierTypeSociety.objects.filter(society_name=society_name).values('supplier_id',
-                                                                                                     'society_name').all()
+                    suppliers = get_supplier_data_by_type(society_name)
+
 
                     if len(suppliers) == 0:
                         if society_name not in missing_societies:
@@ -662,6 +702,15 @@ class DeleteLeadEntry(APIView):
         result = mongo_client.leads.update_one({"leads_form_id": int(form_id), "entry_id": int(entry_id)},
                                      {"$set": {"status": "inactive"}})
         return handle_response(result, data='success', success=True)
+
+    @staticmethod
+    def delete(request):
+        request_body = request.data
+        supplier_ids = request_body.get("supplier_ids",None)
+        campaign_id = request_body.get("campaign_id",None)
+        for supplier_id in supplier_ids:
+            mongo_client.leads.remove({"campaign_id": campaign_id, "supplier_id": supplier_id})
+        return handle_response('', data={"success": True}, success=True)
 
 
 class DeleteLeadItem(APIView):
@@ -1393,4 +1442,362 @@ class UpdateLeadsEntry(APIView):
                           "hotness_level": lead_dict["hotness_level"]}})
         return handle_response('', data={"success": True}, success=True)
 
+def prepare_campaign_specific_data_in_excel(data):
+    header_list = [
+        'Index', 'Supplier Name', 'Subarea', 'Area', 'City', 'Address',
+        'Landmark', 'PinCode', 'Flat Count', 'Tower Count', 'Society Type',
+        'Cost Per Flat', 'Booking Priority', 'Booking Status', 'Next Action Date',
+        'Payment Method', 'Payment Status', 'Completion Status', 'Tota Price',
+        'Poster Allowed', 'Poster Count', 'Poster Price',
+        'Standee Allowed', 'Standee Count', 'Standee Price',
+        'Stall Allowed', 'Stall Count', 'Stall Price',
+        'Flier Allowed', 'Flier Count', 'Flier Price',
+        'Banner Allowed', 'Banner Count', 'Banner Price',
+    ]
+    book = Workbook()
+    sheet = book.active
+    sheet.append(header_list)
+    index = 0
+    for supplier in data['shortlisted_suppliers']:
+        index = index + 1
+        supplier_data = []
 
+        supplier_data.append(index)
+
+        supplier_data.append(supplier['name'])
+        supplier_data.append(supplier['subarea'])
+        supplier_data.append(supplier['area'])
+        supplier_data.append(supplier['city'])
+        supplier_data.append(str(supplier['address1']) + ' '+ str(supplier['address2']))
+
+        supplier_data.append(supplier['landmark'])
+        supplier_data.append(supplier['zipcode'])
+        supplier_data.append(supplier['flat_count'])
+        supplier_data.append(supplier['tower_count'])
+        supplier_data.append(supplier['society_location_type'])
+
+        supplier_data.append(supplier['cost_per_flat'])
+        supplier_data.append(
+            booking_priority_code_to_status[supplier['booking_priority']] if supplier['booking_priority'] else None)
+        supplier_data.append(booking_code_to_status[supplier['booking_status']] if supplier['booking_status'] else None)
+        supplier_data.append(supplier['next_action_date'])
+
+        supplier_data.append(supplier['payment_method'])
+        supplier_data.append(payment_code_to_status[supplier['payment_status']] if supplier['payment_status'] else None)
+        supplier_data.append('Yes' if supplier['is_completed'] else 'No')
+        supplier_data.append(supplier['total_negotiated_price'])
+
+        supplier_data.append('Yes' if 'POSTER' in supplier['shortlisted_inventories'] else 'No')
+        supplier_data.append(
+            supplier['shortlisted_inventories']['POSTER']['total_count'] if 'POSTER' in supplier[
+                'shortlisted_inventories'] else None)
+        supplier_data.append(
+            supplier['shortlisted_inventories']['POSTER']['actual_supplier_price'] if 'POSTER' in supplier[
+                'shortlisted_inventories'] else None)
+
+        supplier_data.append('Yes' if 'STANDEE' in supplier['shortlisted_inventories'] else 'No')
+        supplier_data.append(
+            supplier['shortlisted_inventories']['STANDEE']['total_count'] if 'STANDEE' in supplier[
+                'shortlisted_inventories'] else None)
+        supplier_data.append(
+            supplier['shortlisted_inventories']['STANDEE']['actual_supplier_price'] if 'STANDEE' in supplier[
+                'shortlisted_inventories'] else None)
+
+        supplier_data.append('Yes' if 'STALL' in supplier['shortlisted_inventories'] else 'No')
+        supplier_data.append(
+            supplier['shortlisted_inventories']['STALL']['total_count'] if 'STALL' in supplier[
+                'shortlisted_inventories'] else None)
+        supplier_data.append(
+            supplier['shortlisted_inventories']['STALL']['actual_supplier_price'] if 'STALL' in supplier[
+                'shortlisted_inventories'] else None)
+
+        supplier_data.append('Yes' if 'FLIER' in supplier['shortlisted_inventories'] else 'No')
+        supplier_data.append(
+            supplier['shortlisted_inventories']['FLIER']['total_count'] if 'FLIER' in supplier[
+                'shortlisted_inventories'] else None)
+        supplier_data.append(
+            supplier['shortlisted_inventories']['FLIER']['actual_supplier_price'] if 'FLIER' in supplier[
+                'shortlisted_inventories'] else None)
+
+        supplier_data.append('Yes' if 'BANNER' in supplier['shortlisted_inventories'] else 'No')
+        supplier_data.append(
+            supplier['shortlisted_inventories']['BANNER']['total_count'] if 'BANNER' in supplier[
+                'shortlisted_inventories'] else None)
+        supplier_data.append(
+            supplier['shortlisted_inventories']['BANNER']['actual_supplier_price'] if 'BANNER' in supplier[
+                'shortlisted_inventories'] else None)
+
+        sheet.append(supplier_data)
+
+    return book
+
+class CampaignDataInExcelSheet(APIView):
+    permission_classes = ()
+    authentication_classes = ()
+    @staticmethod
+    def get(request, one_time_hash):
+        excel_download_hash = list(CampaignExcelDownloadHash.objects.raw({"one_time_hash": one_time_hash}))
+        if len(excel_download_hash) > 0:
+            campaign_id = excel_download_hash[0].campaign_id
+            response = prepare_shortlisted_spaces_and_inventories(campaign_id, None, request.user, 0, None, None, None)
+            if response.data['status']:
+                data = response.data['data']
+                excel_book = prepare_campaign_specific_data_in_excel(data)
+                resp = HttpResponse(
+                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                resp['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
+                excel_book.save(resp)
+                return resp
+            print(response.data)
+
+
+
+        return handle_response({}, data=response.data, success=True)
+
+class GenerateCampaignExcelDownloadHash(APIView):
+    @staticmethod
+    def get(request, campaign_id):
+        excel_download_hash_dict = {"campaign_id": campaign_id}
+        now = datetime.datetime.now()
+        excel_download_hash_dict["created_at"] = now
+        one_time_hash = hashlib.sha256(str(now).encode('utf-8')).hexdigest()
+        excel_download_hash_dict["one_time_hash"] = one_time_hash
+        CampaignExcelDownloadHash(**excel_download_hash_dict).save()
+        return handle_response({}, data={"one_time_hash": one_time_hash}, success=True)
+class AddHotnessLevelsToLeadForm(APIView):
+    @staticmethod
+    def get(request):
+        lead_forms = mongo_client.leads_forms.find()
+        for lead_form in lead_forms:
+            index = len(lead_form['data'].keys())
+            index = index + 1
+
+            lead_form['data'][
+                str(index)] = {
+                    "order_id": None,
+                    "key_name": "Is Meeting Fixed",
+                    "key_type": "STRING",
+                    "item_id": index,
+                    "is_required": False
+                }
+
+            lead_form["global_hot_lead_criteria"][
+                "is_hot_level_2"] = {
+                    "or": {
+                        str(index) : [
+                            "Y",
+                            "y",
+                            "Yes",
+                            "yes",
+                            "YES"
+                        ]
+                    }
+                }
+            index = index + 1
+            lead_form['data'][
+                str(index)] = {
+                    "order_id": None,
+                    "key_name": "Is Meeting Completed",
+                    "key_type": "STRING",
+                    "item_id": index,
+                    "is_required": False
+                }
+            lead_form["global_hot_lead_criteria"][
+            "is_hot_level_3" ] = {
+                "or": {
+                    str(index): [
+                        "Y",
+                        "y",
+                        "Yes",
+                        "yes",
+                        "YES"
+                    ]
+                }
+            }
+            index = index + 1
+            lead_form['data'][
+                str(index)] = {
+                    "order_id": None,
+                    "key_name": "Is Lead Converted",
+                    "key_type": "STRING",
+                    "item_id": index,
+                    "is_required": False
+                }
+            lead_form["global_hot_lead_criteria"][
+            "is_hot_level_4"] = {
+                "or": {
+                    str(index): [
+                        "Y",
+                        "y",
+                        "Yes",
+                        "yes",
+                        "YES"
+                    ]
+                }
+            }
+            index = index + 1
+            lead_form['data'][
+                str(index)] = {
+                "order_id": None,
+                "key_name": "Order Punched Date",
+                "key_type": "DATE",
+                "item_id": index,
+                "is_required": False
+            }
+            mongo_client.leads_forms.update_one({"leads_form_id": lead_form['leads_form_id']},
+                                            {"$set": {'data': lead_form['data'],
+                                                    'global_hot_lead_criteria': lead_form['global_hot_lead_criteria']}})
+        leads = mongo_client.leads.find({})
+        fields_array = ["Is Meeting Fixed", "Is Meeting Completed", "Is Lead Converted"]
+
+        bulk = mongo_client.leads.initialize_unordered_bulk_op()
+        counter = 0
+        for lead in leads:
+            count = len(lead['data'])
+            for field in fields_array:
+                count = count + 1
+                lead['data'].append({
+                    "key_name": field,
+                    "key_type": "STRING",
+                    "item_id": count,
+                    "value": None
+                })
+            count = count + 1
+            lead['data'].append({
+                "key_name": "Order Punched Date",
+                "key_type": "DATE",
+                "item_id": count,
+                "value": None
+            })
+
+            lead_sha_256 = create_lead_hash(lead)
+            lead["lead_sha_256"] = lead_sha_256
+
+            bulk.find({"_id": ObjectId(lead['_id'])}).update({"$set":
+                                                      {"data": lead["data"], "lead_sha_256": lead_sha_256}})
+            counter += 1
+            if counter % 1000 == 0:
+                bulk.execute()
+                bulk = mongo_client.leads.initialize_unordered_bulk_op()
+        if counter > 0:
+            bulk.execute()
+
+                # mongo_client.leads.update_one(
+                #     {"leads_form_id": int(lead['leads_form_id']), "entry_id": int(lead['entry_id']),
+                #      "supplier_id": lead['supplier_id']},
+                #     {"$set": {"data": lead["data"], "lead_sha_256": lead_sha_256}})
+
+        return handle_response('', data={"success": True}, success=True)
+
+class UpdateConvertedLeadsFromSheet(APIView):
+    @staticmethod
+    def post(request):
+        source_file = request.data['file']
+        wb = load_workbook(source_file)
+        ws = wb.get_sheet_by_name(wb.get_sheet_names()[1])
+        supplier_names_list = set()
+        campaign_names_list = set()
+        supplier_campaign_name_map = {}
+        for index, row in enumerate(ws.iter_rows()):
+            if index == 0:
+                continue
+            if row[4].value:
+                supplier_names_list.add(row[4].value.lower())
+                campaign_names_list.add(row[8].value.lower())
+                supplier_campaign_name_map[row[4].value.lower()] = row[8].value.lower()
+        suppliers = SupplierTypeSociety.objects.filter(society_name__in=list(supplier_names_list))
+
+        campaigns = ProposalInfo.objects.filter(name__in=list(campaign_names_list))
+        suppliers_map_with_id = { supplier.society_name.lower(): supplier.supplier_id for supplier in suppliers }
+        suppliers_map_with_name = {supplier.supplier_id: supplier.society_name.lower() for supplier in suppliers}
+        campaigns_map_with_id = { campaign.name.lower(): campaign.proposal_id for campaign in campaigns }
+
+        ws = wb.get_sheet_by_name(wb.get_sheet_names()[4])
+        purchase_order_objects = []
+        suppliers_in_purchase_order = set()
+        for index, row in enumerate(ws.iter_rows()):
+            if index == 0:
+                continue
+            purchase_order_objects.append({
+                "name": row[0].value.lower(),
+                "supplier_name": row[1].value.lower(),
+                "date": row[2].value
+            })
+            suppliers_in_purchase_order.add(row[1].value.lower())
+
+        supplier_leads = {}
+        mismatch_suppliers_in_punched_order = []
+        for supplier in suppliers_in_purchase_order:
+            supplier_leads[supplier] = {}
+            if supplier in suppliers_map_with_id:
+                supplier_leads[supplier]['leads'] = mongo_client.leads.find({'supplier_id': suppliers_map_with_id[supplier],
+                                                         'campaign_id': campaigns_map_with_id[supplier_campaign_name_map[supplier]]})
+                if supplier_leads[supplier]['leads'].count() > 0:
+                    supplier_leads[supplier]['name_list'] = []
+                    supplier_leads[supplier]['names_objects_map'] = {}
+                    for lead in supplier_leads[supplier]['leads']:
+                        if 'data' in lead:
+                            name = lead['data'][0]['value'].lower()
+                            if name:
+                                supplier_leads[supplier]['name_list'].append(name)
+                                supplier_leads[supplier]['names_objects_map'][name] = lead
+            else:
+                mismatch_suppliers_in_punched_order.append(supplier)
+        for item in purchase_order_objects:
+            if 'name_list' in supplier_leads[item['supplier_name']]:
+                matched_name = difflib.get_close_matches(item['name'], supplier_leads[item['supplier_name']]['name_list'])
+                if len(matched_name) > 0:
+                    name = matched_name[0]
+                    lead = supplier_leads[item['supplier_name']]['names_objects_map'][name]
+                    count = len(lead['data'])
+                    if lead['data'][count-1]['key_name'] == 'Order Punched Date':
+                        lead['data'][count-1]['value'] = item['date']
+                    if lead['data'][count-2]['key_name'] == 'Is Lead Converted':
+                        lead['data'][count-2]['value'] = 'Yes'
+                    lead['multi_level_is_hot']['is_hot_level_2'] = True
+                    lead['multi_level_is_hot']['is_hot_level_3'] = True
+                    lead['multi_level_is_hot']['is_hot_level_4'] = True
+
+                    lead_sha_256 = create_lead_hash(lead)
+                    lead["lead_sha_256"] = lead_sha_256
+
+                    mongo_client.leads.update_one(
+                        {"leads_form_id": int(lead['leads_form_id']), "entry_id": int(lead['entry_id']), "supplier_id": lead['supplier_id']},
+                        {"$set": {"data": lead["data"], "lead_sha_256": lead_sha_256,
+                                  "hotness_level": 4, "multi_level_is_hot": lead['multi_level_is_hot']}})
+        # To update leads summary table
+        ws = wb.get_sheet_by_name(wb.get_sheet_names()[1])
+        for index, row in enumerate(ws.iter_rows()):
+            if index == 0:
+                continue
+            if row[4].value:
+                lead = list(mongo_client.leads_summary.find({"supplier_id": suppliers_map_with_id[row[4].value.lower()],
+                                                 "campaign_id": campaigns_map_with_id[supplier_campaign_name_map[row[4].value.lower()]]}))
+
+                if len(lead) > 0:
+                    total_booking_confirmed = row[12].value if row[12].value else None
+                    total_orders_punched = row[13].value if row[13].value else None
+
+                    mongo_client.leads_summary.update({"_id": ObjectId(lead[0]['_id'])},
+                                                      {"$set": {'total_booking_confirmed': total_booking_confirmed,
+                                                                'total_orders_punched': total_orders_punched}})
+        data = {
+            "mismatch_suppliers_in_punched_order": mismatch_suppliers_in_punched_order,
+        }
+        return handle_response('', data=data, success=True)
+
+class UpdateLeadSummary(APIView):
+    @staticmethod
+    def get(request):
+        campaign_list = ProposalInfo.objects.filter().values_list('proposal_id', flat=True)
+        data = get_leads_summary(list(campaign_list))
+        for item in data:
+            mongo_client.leads_summary.insert_one({
+                "campaign_id": item['campaign_id'],
+                "supplier_id": item['supplier_id'],
+                "total_leads_count": item['total_leads_count'],
+                "total_hot_leads_count": item['hot_leads_count'],
+                "total_booking_confirmed": 0,
+                "total_orders_punched": 0
+            })
+        return handle_response('', data={"success": True}, success=True)

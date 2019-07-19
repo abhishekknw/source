@@ -9,6 +9,7 @@ boto3==1.9.71
 botocore==1.12.71
 celery==3.1.26.post2
 certifi==2018.11.29
+cffi==1.11.5
 chardet==3.0.4
 Click==7.0
 coreapi==2.3.3
@@ -49,6 +50,7 @@ pathlib==1.0.1
 Pillow==5.4.1
 pluggy==0.8.1
 py==1.7.0
+pycparser==2.19
 pygeocoder==1.2.5
 PyJWT==1.7.1
 pymodm==0.4.1
@@ -70,5 +72,6 @@ six==1.12.0
 sqlparse==0.2.4
 uritemplate==3.0.0
 urllib3==1.24.1
+uWSGI==2.0.17.1
 validate-email==1.3
 vine==1.1.4

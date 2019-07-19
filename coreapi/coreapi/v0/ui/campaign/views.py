@@ -1,5 +1,6 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from v0.ui.dynamic_booking.views import (get_dynamic_booking_data_by_campaign)
 import random
 import math
 import numpy as np
@@ -7,7 +8,7 @@ from django.db.models import Count, Sum
 from dateutil import tz
 from datetime import datetime
 from datetime import timedelta
-from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, SupplierPhase, HashTagImages
+from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, SupplierPhase, HashTagImages, ProposalCenterMapping
 from v0.ui.organisation.models import Organisation
 from v0.ui.utils import handle_response, calculate_percentage
 from django.utils import timezone
@@ -34,6 +35,7 @@ from v0.ui.base.models import DurationType
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.organisation.models import Organisation
 from v0.ui.proposal.serializers import ProposalInfoSerializer
+from v0.ui.account.models import ContactDetails
 from django.core.cache import cache
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
 from django.conf import settings
@@ -43,7 +45,7 @@ import requests
 from celery import shared_task
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 from v0.ui.common.models import mongo_client
-
+from django.db import connection, connections
 
 class CampaignAPIView(APIView):
 
@@ -2057,6 +2059,38 @@ class VendorWiseSummary(APIView):
         return ui_utils.handle_response({}, data=campaign_summary, success=True)
 
 
+def get_duration_wise_summary_for_cities(all_city_campaign_mapping, all_campaign_ids, days):
+    start_date = None
+    if days:
+        start_date = datetime.now() - timedelta(days=days)
+    campaign_summary_map = {}
+    for city in all_city_campaign_mapping:
+        campaign_summary_map[city] = get_campaign_wise_summary(all_city_campaign_mapping[city], start_date)[
+            "all_campaigns"]
+    campaign_summary_map['overall'] = get_campaign_wise_summary(all_campaign_ids, start_date)["all_campaigns"]
+    return campaign_summary_map
+
+
+class CityWiseSummary(APIView):
+    @staticmethod
+    def get(request):
+        user_id = request.user.id
+        all_assigned_campaigns = get_all_assigned_campaigns(user_id, None)
+        all_campaign_ids = [campaign["proposal_id"] for campaign in all_assigned_campaigns]
+        all_city_campaign = ProposalCenterMapping.objects.filter(proposal_id__in=all_campaign_ids).all()
+        all_city_campaign_mapping = {}
+        for obj in all_city_campaign:
+            if obj.city not in all_city_campaign_mapping:
+                all_city_campaign_mapping[obj.city] = []
+            all_city_campaign_mapping[obj.city].append(obj.proposal_id)
+        campaign_summary = {}
+        campaign_summary['last_week'] = get_duration_wise_summary_for_cities(all_city_campaign_mapping, all_campaign_ids, 7)
+        campaign_summary['last_two_week'] = get_duration_wise_summary_for_cities(all_city_campaign_mapping, all_campaign_ids, 14)
+        campaign_summary['last_three_week'] = get_duration_wise_summary_for_cities(all_city_campaign_mapping, all_campaign_ids, 21)
+        campaign_summary['overall'] = get_duration_wise_summary_for_cities(all_city_campaign_mapping, all_campaign_ids, None)
+        return ui_utils.handle_response({}, data=campaign_summary, success=True)
+
+
 def get_all_assigned_campaigns(user_id, vendor):
     if vendor:
         campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
@@ -2071,6 +2105,18 @@ def get_all_assigned_campaigns(user_id, vendor):
     return serialized_proposals
 
 
+def get_campaign_suppliers(campaign_id):
+    dynamic_supplier_data = get_dynamic_booking_data_by_campaign(campaign_id)
+    if len(dynamic_supplier_data):
+        return dynamic_supplier_data
+    supplier_list = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values_list(
+        'object_id', flat=True).distinct()
+    supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_list)
+    serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
+    supplier_details = serializer.data
+    return supplier_details
+
+
 class AssignedCampaigns(APIView):
     @staticmethod
     def get(request):
@@ -2082,12 +2128,25 @@ class AssignedCampaigns(APIView):
             if campaign['proposal_id']:
                 if campaign['proposal_id'] not in all_campaign_ids:
                     all_campaign_ids.append(campaign['proposal_id'])
-                    supplier_list = ShortlistedSpaces.objects.filter(proposal_id=campaign['proposal_id']).values_list(
-                        'object_id', flat=True).distinct()
-                    supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_list)
-                    serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
-                    supplier_details = serializer.data
+                    supplier_details = get_campaign_suppliers(campaign['proposal_id'])
                     campaign['supplier_details']=supplier_details
+        return ui_utils.handle_response({}, data=all_assigned_campaigns, success=True)
+
+
+class AllCampaigns(APIView):
+    @staticmethod
+    def get(request):
+        is_supplier = request.query_params.get("supplier",False)
+        all_campaigns = ProposalInfo.objects.filter(campaign_state="PTC")
+        all_assigned_campaigns = ProposalInfoSerializer(all_campaigns, many=True).data
+        all_campaign_ids = []
+        if is_supplier:
+            for campaign in all_assigned_campaigns:
+                if campaign['proposal_id']:
+                    if campaign['proposal_id'] not in all_campaign_ids:
+                        all_campaign_ids.append(campaign['proposal_id'])
+                        supplier_details = get_campaign_suppliers(campaign['proposal_id'])
+                        campaign['supplier_details']=supplier_details
         return ui_utils.handle_response({}, data=all_assigned_campaigns, success=True)
 
 
@@ -2107,4 +2166,93 @@ class VendorDetails(APIView):
         for vendor in all_vendors:
             all_vendors_dict[vendor.organisation_id] = {'name': vendor.name}
         return ui_utils.handle_response({}, data=all_vendors_dict, success=True)
+
+
+class UserCities(APIView):
+    @staticmethod
+    def get(request):
+        user_id = request.user.id
+        all_assigned_campaigns = get_all_assigned_campaigns(user_id, None)
+        all_campaign_ids = [campaign['proposal_id'] for campaign in all_assigned_campaigns]
+        campaign_cities = ProposalCenterMapping.objects.filter(proposal_id__in=all_campaign_ids).values_list(
+            "city", flat=True)
+        campaign_cities_distinct = list(set(campaign_cities))
+        return ui_utils.handle_response({}, data={"list_of_cities": campaign_cities_distinct}, success=True)
+
+class MISReportReceipts(APIView):
+    @staticmethod
+    def get(request):
+        user_id = request.user.id
+        start_date = request.query_params.get('start_date', None)
+        end_date = request.query_params.get('end_date', None)
+        if start_date:
+            all_campaigns = ProposalInfo.objects.all()
+        else:
+            all_campaigns = ProposalInfo.objects.all()
+        return_list = []
+        for campaign in all_campaigns:
+            cursor = connection.cursor()
+            cursor.execute("SELECT DISTINCT e.society_name, d.proposal_id, r.hashtag, e.Society_City, e.SOCIETY_LOCALITY \
+            from shortlisted_inventory_pricing_details as c \
+            inner join inventory_activity_assignment as a \
+            inner join inventory_activity as b \
+            inner join shortlisted_spaces as d \
+            inner join supplier_society as e \
+            inner join hashtag_images as r \
+            on b.id = a.inventory_activity_id and b.shortlisted_inventory_details_id = c.id \
+            and c.shortlisted_spaces_id = d.id and d.object_id = e.SUPPLIER_ID and r.object_id = e.supplier_id \
+            where d.proposal_id in (%s) and a.activity_date between %s and %s and r.hashtag \
+            = 'PERMISSION BOX'", [campaign.proposal_id,start_date, end_date])
+            all_list_pb = cursor.fetchall()
+
+            dict_details=['society_name', 'campaign_id', 'hashtag', 'society_city', 'society_locality']
+            all_details_list_pb=[dict(zip(dict_details,l)) for l in all_list_pb]
+
+            cursor.execute("SELECT DISTINCT e.society_name, d.proposal_id, r.hashtag, e.Society_City, e.SOCIETY_LOCALITY \
+            from shortlisted_inventory_pricing_details as c \
+            inner join inventory_activity_assignment as a \
+            inner join inventory_activity as b \
+            inner join shortlisted_spaces as d \
+            inner join supplier_society as e \
+            inner join hashtag_images as r \
+            on b.id = a.inventory_activity_id and b.shortlisted_inventory_details_id = c.id \
+            and c.shortlisted_spaces_id = d.id and d.object_id = e.SUPPLIER_ID and r.object_id = e.supplier_id \
+            where d.proposal_id in (%s) and a.activity_date between %s and %s and r.hashtag \
+            = 'RECEIPT'", [campaign.proposal_id,start_date, end_date])
+            all_list_receipt = cursor.fetchall()
+            all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign.proposal_id, is_completed=True).all()
+            all_supplier_ids = [ss.object_id for ss in all_shortlisted_spaces]
+            dict_details=['society_name', 'campaign_id', 'hashtag', 'society_city', 'society_locality']
+            all_details_list_receipt=[dict(zip(dict_details,l)) for l in all_list_receipt]
+            return_list.append({"campaign_name": campaign.name,
+                                "count_permission": len(all_details_list_pb),
+                                "count_receipt": len(all_details_list_receipt),
+                                "supplier_count": len(all_supplier_ids)})
+        return ui_utils.handle_response({}, data=return_list, success=True)
+
+class MISReportContacts(APIView):
+    @staticmethod
+    def get(request):
+        user_id = request.user.id
+        start_date = request.query_params.get('start_date', None)
+        if start_date:
+            all_campaigns = ProposalInfo.objects.filter(tentative_start_date__gte=start_date).all()
+        else:
+            all_campaigns = ProposalInfo.objects.all()
+        return_list = []
+        for campaign in all_campaigns:
+            partial_dict = {"total_supplier_count": None,
+                                                    "total_contacts_with_name": 0, "total_contacts_with_number": 0,
+                            "campaign_name": campaign.name}
+            all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign.proposal_id).all()
+            all_supplier_ids = [ss.object_id for ss in all_shortlisted_spaces]
+            all_suppliers = ContactDetails.objects.filter(object_id__in=all_supplier_ids)
+            partial_dict["total_supplier_count"] = len(all_shortlisted_spaces)
+            for sc in all_suppliers:
+                if sc.mobile:
+                    partial_dict["total_contacts_with_number"] += 1
+                if sc.name:
+                    partial_dict["total_contacts_with_name"] += 1
+            return_list.append(partial_dict)
+        return handle_response('', data=return_list, success=True)
 

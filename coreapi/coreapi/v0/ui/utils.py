@@ -520,7 +520,7 @@ def save_flyer_locations(c1, c2, supplier, supplier_type_code):
                 'adinventory_id': flyer_id,
             }
             flyer = FlyerInventory.objects.get_or_create_objects(data, supplier.supplier_id, supplier_type_code)
-            flyer.flat_count = supplier.flat_count
+            flyer.flat_count = supplier.flat_count if supplier.flat_count else 0
             flyer.save()
 
     except Exception as e:
@@ -965,8 +965,8 @@ def validate_attributes(attributes_dict):
     types = [x['type'] for x in attributes_dict if 'type' in x]
     attribute_validation_dict = {'unknown_keys': [], 'unknown_types': []}
     all_keys = list(set([item for sublist in attributes_dict for item in sublist]))
-    allowed_keys = ['name', 'type', 'is_required']
-    allowed_types = ['INT', 'FLOAT', 'STRING', 'DATE', 'EMAIL']
+    allowed_keys = ['name', 'type', 'is_required', 'options']
+    allowed_types = ['INT', 'FLOAT', 'STRING', 'DATE', 'EMAIL', 'DROPDOWN', 'MULTISELECT']
     # if not (all_keys=={('type','name')} or all_keys=={('name','type')}):
     duplicate_names = list(set([x for x in names if names.count(x)>1]))
     if not duplicate_names == []:

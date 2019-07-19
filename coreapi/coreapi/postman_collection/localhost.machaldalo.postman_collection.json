@@ -1,0 +1,3020 @@
+{
+	"variables": [],
+	"info": {
+		"name": "localhost.machaldalo",
+		"_postman_id": "b763cdd9-12c3-fa4a-ae73-e0d3247f3e0a",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Dynamic Location",
+			"description": "",
+			"item": [
+				{
+					"name": "dynamic state",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/dynamic-location/state/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\"state_name\": \"jharkhand\",\n\"state_code\": \"JH\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "state by id",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/dynamic-location/state/5cef92fee920151c5c6f37bb/",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\"state_name\": \"jharkhand\",\n\"state_code\": \"JHJ\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "city",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/dynamic-location/city/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\"city_name\": \"jharkhand\",\n\"city_code\":\"RNC\",\n\"state_code\": \"JH\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "city by id",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/dynamic-location/city/5cefb910e920152dbb8f7728/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "area",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/dynamic-location/area/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\"label\": \"near hotel taj\",\n\"area_code\":\"GH\",\n\"city_code\":\"JHJ\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "area by id",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/dynamic-location/area/5cefbdc1e920152e3db2539f/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "sub area",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/dynamic-location/sub-area/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\n\t\"subarea_name\":\"hurhi\",\n\t\"subarea_code\":\"huh\",\n\t\"locality_rating\":\"5\",\n\t\"area_code\":\"GH\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "sub area by id",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/dynamic-location/sub-area/5cefbeb8e920152e3db253a0/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "state-transfer",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/dynamic-location/state-transfer/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "city transfer",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/dynamic-location/city-transfer/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "area transfer",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/dynamic-location/area-transfer/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "sub-area transfer",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/dynamic-location/sub-area-transfer/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "analytics",
+			"description": "",
+			"item": [
+				{
+					"name": "Data point value range",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/analytics/get-leads-data-generic/",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzM3MjMyOTMsIm5hbWUiOiIiLCJleHAiOjE1MzM3MjM1OTMsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.f3qbNVnV5PN-27e7eTzR8tW8AcKap6QSCLlMC9NpSvg"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"data_scope\": {\"1\":{\"category\": \"unordered\", \"level\": \"campaign\", \"match_type\": 0, \n\t\t\"values\": {\"exact\": [\"BYJMACC9CA\", \"TESYOG06F2\"]}, \"value_type\": \"campaign\"}},\n    \"data_point\": {\n        \"category\": \"unordered\",\n        \"level\": [\"flattype\"],\n        \"value_ranges\": {\"flattype\":[\"1\",\"2\"]}\n    },\n    \"raw_data\": [\n        \"lead\", \"hot_lead\"\n    ],\n    \"metrics\": [[\"2\",\"1\",\"/\"]]\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get Leads Data Generic City-Supplier-Campaign",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/analytics/get-leads-data-generic/",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzM3MjMyOTMsIm5hbWUiOiIiLCJleHAiOjE1MzM3MjM1OTMsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.f3qbNVnV5PN-27e7eTzR8tW8AcKap6QSCLlMC9NpSvg"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"data_scope\": {\"1\":{\"category\": \"unordered\", \"level\": \"campaign\", \"match_type\": 0,\n        \"values\": {\"exact\": [\"BYJMACC9CA\", \"TESYOG06F2\"]}, \"value_type\": \"campaign\"}},\n    \"data_point\": {\n        \"category\": \"time\",\n        \"level\": [\"date\"],\n        \"sublevel\": \"phase\"\n    },\n    \"raw_data\": [\n        \"lead\",\"hotness_level_2\",\"flat\",\"cost_flat\"\n    ]\n}"
+						},
+						"description": "City, supplier, campaign, six keys"
+					},
+					"response": []
+				},
+				{
+					"name": "Freqdist, mean",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/analytics/get-leads-data-generic/",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzM3MjMyOTMsIm5hbWUiOiIiLCJleHAiOjE1MzM3MjM1OTMsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.f3qbNVnV5PN-27e7eTzR8tW8AcKap6QSCLlMC9NpSvg"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"data_scope\": {\n        \"1\": {\n            \"category\": \"unordered\",\n            \"level\": \"campaign\",\n            \"match_type\": 0,\n            \"values\": {\n                \"exact\": [\n                    \"BYJMAC214B\"\n                ]\n            },\n            \"value_type\": \"campaign\"\n        }\n    },\n    \"data_point\": {\n        \"category\": \"unordered\",\n        \"level\": [\n            \"campaign\"\n        ]\n    },\n    \"raw_data\": [\n        \"lead\",\n        \"hot_lead\",\n        \"flat\"\n    ],\n    \"metrics\": [\n        [\n            \"1\",\n            \"3\",\n            \"/\"\n        ],\n        [\n            \"m1\",\n            100,\n            \"*\"\n        ],\n        [\n            \"2\",\n            \"3\",\n            \"/\"\n        ],\n        [\n            \"m3\",\n            100,\n            \"*\"\n        ]\n    ],\n    \"statistical_information\": {\n        \"stats\": [\n            \"z_score\"\n        ],\n        \"metrics\": [\n            \"m1\",\n            \"m3\"\n        ]\n    },\n    \"higher_level_statistical_information\": {\n        \"level\": [\n            \"campaign\"\n        ],\n        \"stats\": [\n            \"frequency_distribution\",\n            \"weighted_mean\",\n            \"variance_stdev\"\n        ],\n        \"metrics\": [\n            \"m2\",\n            \"m4\"\n        ]\n    }\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "date_phase_hotness_level",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/analytics/get-leads-data-generic/",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzM3MjMyOTMsIm5hbWUiOiIiLCJleHAiOjE1MzM3MjM1OTMsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.f3qbNVnV5PN-27e7eTzR8tW8AcKap6QSCLlMC9NpSvg"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"data_scope\": {\"1\":{\"category\": \"unordered\", \"level\": \"campaign\", \"match_type\": 0,\n        \"values\": {\"exact\": [\"BYJMACC9CA\", \"TESYOG06F2\"]}, \"value_type\": \"campaign\"}},\n    \"data_point\": {\n        \"category\": \"time\",\n        \"level\": [\"date\"],\n        \"sublevel\": \"phase\"\n    },\n    \"raw_data\": [\n        \"lead\",\"hotness_level_2\",\"flat\",\"cost_flat\"\n    ]\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8001/v0/ui/analytics/city-vendor-campaigns/",
+					"request": {
+						"url": "localhost:8000/v0/ui/analytics/city-vendor-campaigns/",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n \"vendors\":[\"MAC1421\"]\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "leads",
+			"description": "",
+			"item": [
+				{
+					"name": "localhost:8000/v0/ui/leads/4/entry_list/",
+					"request": {
+						"url": "localhost:8000/v0/ui/leads/4/entry_list/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/leads/update_all_is_hot/",
+					"request": {
+						"url": "localhost:8000/v0/ui/leads/update_all_is_hot/",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzMzMjM5NjYsIm5hbWUiOiIiLCJleHAiOjE1MzMzMjQyNjYsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.OzOrVMzbP-9kUUM1XauMItGsdHZgS5WgRl2HOTi_9C8"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_sp_website",
+								"value": "True",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/leads/generate_demo_data/",
+					"request": {
+						"url": "http://13.232.210.224:8002/v0/ui/leads/generate_demo_data/",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzMzMjM5NjYsIm5hbWUiOiIiLCJleHAiOjE1MzMzMjQyNjYsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.OzOrVMzbP-9kUUM1XauMItGsdHZgS5WgRl2HOTi_9C8"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_sp_website",
+								"value": "True",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/leads/13/generate_lead_data_excel?supplier_id=DNINSNRSSUG",
+					"request": {
+						"url": {
+							"raw": "localhost:8001/v0/ui/leads/13/generate_lead_data_excel?supplier_id=DNINSNRSSUG",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"leads",
+								"13",
+								"generate_lead_data_excel"
+							],
+							"query": [
+								{
+									"key": "supplier_id",
+									"value": "DNINSNRSSUG"
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+								"disabled": true
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/leads/update_global_hot_lead_criteria/?",
+					"request": {
+						"url": "localhost:8000/v0/ui/leads/update_global_hot_lead_criteria/",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzMzMjM5NjYsIm5hbWUiOiIiLCJleHAiOjE1MzMzMjQyNjYsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.OzOrVMzbP-9kUUM1XauMItGsdHZgS5WgRl2HOTi_9C8"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_sp_website",
+								"value": "True",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"refresh_all\":true}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/leads/1/entry_list/BYJMAC1394",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/leads/1/entry_list/BYJMAC1394",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzM3MjMyOTMsIm5hbWUiOiIiLCJleHAiOjE1MzM3MjM1OTMsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.f3qbNVnV5PN-27e7eTzR8tW8AcKap6QSCLlMC9NpSvg"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/leads/2/entry_list/",
+					"request": {
+						"url": "localhost:8000/v0/ui/leads/2/entry_list/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/leads/1/edit_form",
+					"request": {
+						"url": "localhost:8000/v0/ui/leads/1/edit_form",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzY3NjA4MzQsIm5hbWUiOiIiLCJleHAiOjE1MzY3NjExMzQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.gq00d6IC47sVkMoYYrXj12slWIac1qT7_0KDA9W6bmY"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_sp_website",
+								"value": "True",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"global_hot_lead_criteria\":{ \n\t\t\"is_hot\": {\n            \"or\": {\"11\":[\"AnyValue\"], \"5\": [\"Y\",\"y\",\"Yes\",\"yes\",\"YES\"]}\n        },\n        \"is_hot_level_2\": {\n            \"or\": {\"11\":[\"AnyValue\"]}\n        }\n\t}\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/leads/update_global_hot_lead_criteria/",
+					"request": {
+						"url": "localhost:8000/v0/ui/leads/update_global_hot_lead_criteria/",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzMzMjM5NjYsIm5hbWUiOiIiLCJleHAiOjE1MzMzMjQyNjYsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.OzOrVMzbP-9kUUM1XauMItGsdHZgS5WgRl2HOTi_9C8"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_sp_website",
+								"value": "True",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"refresh_all\":true}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/leads/1/add_field",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/leads/1/add_field",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzM3MjMyOTMsIm5hbWUiOiIiLCJleHAiOjE1MzM3MjM1OTMsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.f3qbNVnV5PN-27e7eTzR8tW8AcKap6QSCLlMC9NpSvg"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"key_name\":\"available\",\"key_type\":\"string\", \"order_id\":6, \"is_required\":0}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/leads/1/delete_entry/2",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/leads/1/delete_entry/2",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzM3MjMyOTMsIm5hbWUiOiIiLCJleHAiOjE1MzM3MjM1OTMsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.f3qbNVnV5PN-27e7eTzR8tW8AcKap6QSCLlMC9NpSvg"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "checklists",
+			"description": "",
+			"item": [
+				{
+					"name": "http://localhost:8000/v0/ui/checklists/list_all_checklists/",
+					"request": {
+						"url": "http://localhost:8001/v0/ui/checklists/list_all_checklists/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzY3NjA4MzQsIm5hbWUiOiIiLCJleHAiOjE1MzY3NjExMzQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.gq00d6IC47sVkMoYYrXj12slWIac1qT7_0KDA9W6bmY"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_sp_website",
+								"value": "True",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/checklists/1/delete_entry/1",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/checklists/1/delete_entry/1",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzM3MjMyOTMsIm5hbWUiOiIiLCJleHAiOjE1MzM3MjM1OTMsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.f3qbNVnV5PN-27e7eTzR8tW8AcKap6QSCLlMC9NpSvg"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "",
+									"value": "",
+									"disabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "dynamic_machadalo",
+			"description": "",
+			"item": [
+				{
+					"name": "Supplier",
+					"description": "",
+					"item": [
+						{
+							"name": "localhost:8001/v0/ui/dynamic-suppliers/supplier-type/",
+							"request": {
+								"url": "localhost:8001/v0/ui/dynamic-suppliers/supplier-type/",
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"name\":\"Poster\", \n\"supplier_attributes\":[{\"name\":\"latitude\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"longitude\",\"type\":\"FLOAT\", \"is_required\":true}, {\"name\":\"area\", \"type\":\"STRING\"}, {\"name\": \"locality\", \"type\":\"STRING\"},{\"name\":\"inventories\", \"type\":\"INVENTORYLIST\"}, {\"name\": \"footprint\", \"type\":\"DROPDOWN\", \"options\":[\"low\",\"medium\",\"high\"]}], \"is_global\":true\n}"
+								},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "localhost:8000/v0/ui/dynamic-suppliers/base-supplier-type/",
+							"request": {
+								"url": "localhost:8000/v0/ui/dynamic-suppliers/base-supplier-type/",
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"name\":\"Bus Shelter\", \n\"supplier_attributes\":[{\"name\":\"latitude\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"longitude\",\"type\":\"FLOAT\", \"is_required\":true}, {\"name\":\"area\", \"type\":\"STRING\"}, {\"name\": \"locality\", \"type\":\"STRING\"},{\"name\":\"inventories\", \"type\":\"INVENTORYLIST\"}, {\"name\": \"footprint\", \"type\":\"DROPDOWN\", \"options\":[\"low\",\"medium\",\"high\"]}], \"is_global\":true\n}"
+								},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "localhost:8000/v0/ui/dynamic-suppliers/supplier-type",
+							"request": {
+								"url": "localhost:8000/v0/ui/dynamic-suppliers/supplier-type",
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"name\":\"Poster\", \n\"supplier_attributes\":[{\"name\":\"latitude\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"longitude\",\"type\":\"FLOAT\", \"is_required\":true}, {\"name\":\"area\", \"type\":\"STRING\"}, {\"name\": \"locality\", \"type\":\"STRING\"},{\"name\":\"inventories\", \"type\":\"INVENTORYLIST\"}, {\"name\": \"footprint\", \"type\":\"DROPDOWN\", \"options\":[\"low\",\"medium\",\"high\"]}], \"is_global\":true\n}"
+								},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "localhost:8000/v0/ui/dynamic-suppliers/supplier-type/5c14ba282f2bc6021bef9dab",
+							"request": {
+								"url": "localhost:8000/v0/ui/dynamic-suppliers/supplier-type/5c14ba282f2bc6021bef9dab",
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"name\":\"Bus Shelter ADV\", \n\"supplier_attributes\":[{\"name\":\"latitude\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"longitude\",\"type\":\"FLOAT\", \"is_required\":true}, {\"name\":\"area\", \"type\":\"STRING\"}, {\"name\": \"locality\", \"type\":\"STRING\"},{\"name\":\"inventories\", \"type\":\"INVENTORYLIST\"}, {\"name\": \"footprint\", \"type\":\"DROPDOWN\", \"options\":[\"low\",\"medium\",\"high\"]},{\"name\":\"contant_email\", \"type\":\"EMAIL\"}], \"is_global\":true\n}"
+								},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "localhost:8000/v0/ui/dynamic-suppliers/suppliers/",
+							"request": {
+								"url": "localhost:8000/v0/ui/dynamic-suppliers/suppliers/",
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"name\":\"Poster\", \"is_custom\": false,\"entity_type_id\":\"5c23399c9cb7fc96bb4d8804\",\n\"supplier_attributes\":[{\"name\":\"latitude\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"longitude\",\"type\":\"FLOAT\", \"is_required\":true}, {\"name\":\"area\", \"type\":\"STRING\"}, {\"name\": \"locality\", \"type\":\"STRING\"},{\"name\":\"inventories\", \"type\":\"INVENTORYLIST\"}, {\"name\": \"footprint\", \"type\":\"DROPDOWN\", \"options\":[\"low\",\"medium\",\"high\"]}], \"is_global\":true\n}"
+								},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "localhost:8000/v0/ui/dynamic-suppliers/supplier-type/5c245ef39cb7fc71f0cddccf/",
+							"request": {
+								"url": "",
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"description": ""
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Inventory",
+					"description": "",
+					"item": [
+						{
+							"name": "http://localhost:8000/v0/ui/dynamic-inventory/inventory",
+							"request": {
+								"url": "http://localhost:8001/v0/ui/dynamic-inventory/inventory/",
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "http://localhost:8000/v0/ui/dynamic-inventory/inventory/",
+							"request": {
+								"url": "http://localhost:8001/v0/ui/dynamic-inventory/inventory/",
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"name\":\"Poster\", \"supplier_id\":\"MUMAECKRSHD3\", \"campaign_id\":\"HDFHDF0789\",\"base_inventory\": \"5c420f119cb7fca8add1c5bd\",\n\"inventory_attributes\":[{\"name\":\"latitude\",\"type\": \"FLOAT\"}, {\"name\":\"longitude\",\"type\": \"FLOAT\"},{\"name\":\"height\",\"type\":\"FLOAT\"}, {\"name\":\"width\",\"type\":\"FLOAT\"}], \"inventory_type\": \"space_based\"\n}"
+								},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "http://localhost:8000/v0/ui/dynamic-inventory/inventory/5c420f639cb7fca8add1c5be/",
+							"request": {
+								"url": "http://localhost:8001/v0/ui/dynamic-inventory/inventory/5c420f639cb7fca8add1c5be/",
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "http://localhost:8000/v0/ui/dynamic-inventory/inventory/5c420f639cb7fca8add1c5be/",
+							"request": {
+								"url": "http://localhost:8001/v0/ui/dynamic-inventory/inventory/5c420f639cb7fca8add1c5be/",
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"name\":\"Poster New\", \"supplier_id\":\"MUMAECKRSHD3\", \"campaign_id\":\"HDFHDF0789\",\"base_inventory\": \"5c420f119cb7fca8add1c5bd\",\n\"inventory_attributes\":[{\"name\":\"latitude\",\"type\": \"FLOAT\"}, {\"name\":\"longitude\",\"type\": \"FLOAT\"},{\"name\":\"height\",\"type\":\"FLOAT\"}, {\"name\":\"width\",\"type\":\"FLOAT\"}], \"inventory_type\": \"space_based\"\n}"
+								},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "http://localhost:8000/v0/ui/dynamic-inventory/inventory/",
+							"request": {
+								"url": "http://localhost:8001/v0/ui/dynamic-inventory/inventory/",
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "http://localhost:8001/v0/ui/dynamic-inventory/inventory/",
+							"request": {
+								"url": "http://localhost:8001/v0/ui/dynamic-inventory/inventory/",
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"name\":\"Poster\", \"supplier_id\":\"MUMAECKRSHD3\", \"campaign_id\":\"HDFHDF0789\",\"base_inventory\": \"5c420f119cb7fca8add1c5bd\",\n\"inventory_attributes\":[{\"name\":\"latitude\",\"type\": \"FLOAT\"}, {\"name\":\"longitude\",\"type\": \"FLOAT\"},{\"name\":\"height\",\"type\":\"FLOAT\"}, {\"name\":\"width\",\"type\":\"FLOAT\"}], \"inventory_type\": \"space_based\"\n}"
+								},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "http://localhost:8001/v0/ui/dynamic-inventory/base-inventory/",
+							"request": {
+								"url": "http://localhost:8001/v0/ui/dynamic-inventory/base-inventory/",
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"name\":\"Poster\", \"supplier_id\":\"MUMAECKRSHD3\", \"campaign_id\":\"HDFHDF0789\",\"base_inventory\": \"5c420f119cb7fca8add1c5bd\",\n\"inventory_attributes\":[{\"name\":\"latitude\",\"type\": \"FLOAT\"}, {\"name\":\"longitude\",\"type\": \"FLOAT\"},{\"name\":\"height\",\"type\":\"FLOAT\"}, {\"name\":\"width\",\"type\":\"FLOAT\"}], \"inventory_type\": \"space_based\"\n}"
+								},
+								"description": ""
+							},
+							"response": []
+						},
+						{
+							"name": "http://localhost:8000/v0/ui/dynamic-inventory/inventory/",
+							"request": {
+								"url": "http://localhost:8000/v0/ui/dynamic-inventory/inventory/",
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"description": ""
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "dynamic_booking",
+					"description": "",
+					"item": [
+						{
+							"name": "base_booking_template",
+							"description": "",
+							"item": [
+								{
+									"name": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/",
+									"request": {
+										"url": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/",
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+											},
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "is_import_sheet",
+												"value": "true",
+												"disabled": true
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\"name\":\"Society Booking\", \n\"booking_attributes\":[{\"name\":\"Price Per Flat\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"is_poster_allowed\",\"type\":\"BOOLEAN\", \"is_required\":true}, {\"name\": \"mode of payment\", \"type\":\"DROPDOWN\", \"options\":[\"NEFT\",\"CASH\",\"ONLINE\"]}],\n\"supplier_attributes\":[{\"name\":\"Latitude\",\"is_required\":true},{\"name\":\"Longitude\",\"is_required\":true}, {\"name\": \"Sub Area\"}],\"base_entity_type_id\": \"5c66829e2f2bc6117aac7c75\"\n}"
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/",
+									"request": {
+										"url": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/",
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+											},
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "is_import_sheet",
+												"value": "true",
+												"disabled": true
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/5c77adb19cb7fc73ac9badea/",
+									"request": {
+										"url": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/5c77adb19cb7fc73ac9badea/",
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+											},
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "is_import_sheet",
+												"value": "true",
+												"disabled": true
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/5c77adb19cb7fc73ac9badea/",
+									"request": {
+										"url": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/5c77adb19cb7fc73ac9badea/",
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+											},
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "is_import_sheet",
+												"value": "true",
+												"disabled": true
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/5c77adb19cb7fc73ac9badea/",
+									"request": {
+										"url": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/5c77adb19cb7fc73ac9badea/",
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+											},
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "is_import_sheet",
+												"value": "true",
+												"disabled": true
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\"name\":\"Society Booking modified\", \n\"booking_attributes\":[{\"name\":\"Price Per Flat\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"is_poster_allowed\",\"type\":\"BOOLEAN\", \"is_required\":true}, {\"name\": \"mode of payment\", \"type\":\"DROPDOWN\", \"options\":[\"NEFT\",\"CASH\",\"ONLINE\"]}],\n\"supplier_attributes\":[{\"name\":\"Latitude\",\"is_required\":true},{\"name\":\"Longitude\",\"is_required\":true}, {\"name\": \"Sub Area\"}],\"base_entity_type_id\": \"5c66829e2f2bc6117aac7c75\"\n}"
+										},
+										"description": ""
+									},
+									"response": []
+								}
+							],
+							"_postman_isSubFolder": true
+						},
+						{
+							"name": "booking_template",
+							"description": "",
+							"item": [
+								{
+									"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/",
+									"request": {
+										"url": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/",
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+											},
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											},
+											{
+												"key": "is_import_sheet",
+												"value": "true",
+												"disabled": true
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\"name\":\"Society Booking\", \n\"booking_attributes\":[{\"name\":\"Price Per Flat\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"is_poster_allowed\",\"type\":\"BOOLEAN\", \"is_required\":true}, {\"name\": \"mode of payment\", \"type\":\"DROPDOWN\", \"options\":[\"NEFT\",\"CASH\",\"ONLINE\"]}],\n\"supplier_attributes\":[{\"name\":\"Latitude\",\"is_required\":true},{\"name\":\"Longitude\",\"is_required\":true}, {\"name\": \"Sub Area\"}],\"entity_type_id\": \"5ca4ad779cb7fc6da6d92797\", \"base_booking_template_id\": \"5ca4adc39cb7fc6da6d92798\"\n}"
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/",
+									"request": {
+										"url": "http://localhost:8000/v0/ui/dynamic-booking/base-booking-template/",
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+											},
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "is_import_sheet",
+												"value": "true",
+												"disabled": true
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/5c769e269cb7fca7bb2b2a8a/",
+									"request": {
+										"url": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/5c769e269cb7fca7bb2b2a8a/",
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+											},
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "is_import_sheet",
+												"value": "true",
+												"disabled": true
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/5c77adb19cb7fc73ac9badea/",
+									"request": {
+										"url": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/5c769e269cb7fca7bb2b2a8a/",
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+											},
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											},
+											{
+												"key": "is_import_sheet",
+												"value": "true",
+												"disabled": true
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\"name\":\"Society Booking updated\", \n\"booking_attributes\":[{\"name\":\"Price Per Flat updated\",\"type\":\"FLOAT\", \"is_required\":true},{\"name\":\"is_poster_allowed\",\"type\":\"BOOLEAN\", \"is_required\":true}, {\"name\": \"mode of payment\", \"type\":\"DROPDOWN\", \"options\":[\"NEFT\",\"CASH\",\"ONLINE\"]}],\n\"supplier_attributes\":[{\"name\":\"Latitude\",\"is_required\":true},{\"name\":\"Longitude\",\"is_required\":true}, {\"name\": \"Sub Area\"}],\"entity_type_id\": \"5c66858c2f2bc66625d229fa\", \"base_booking_template_id\": \"5c66829e2f2bc6117aac7c75\"\n}"
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/5c769e269cb7fca7bb2b2a8a/",
+									"request": {
+										"url": "http://localhost:8000/v0/ui/dynamic-booking/booking-template/5c769e269cb7fca7bb2b2a8a/",
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+											},
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "is_import_sheet",
+												"value": "true",
+												"disabled": true
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"description": ""
+									},
+									"response": []
+								}
+							],
+							"_postman_isSubFolder": true
+						},
+						{
+							"name": "booking_data",
+							"description": "",
+							"item": [
+								{
+									"name": "save booking",
+									"request": {
+										"url": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/",
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\"booking_template_id\":\"5cb70bfc9cb7fc6fdcd8eeb4\",\"supplier_id\":\"5cb70c729cb7fc6fdcd8eeb5\",\"campaign_id\":\"HDFHDF0F34\",\"organisation_id\":\"MAC1421\",\"booking_attributes\":[{\"name\":\"is_poster_allowed\",\"type\":\"DROPDOWN\",\"is_required\":false,\"options\":[\"Yes\",\"No\"],\"value\":\"Yes\"},{\"name\":\"Payment Method\",\"is_required\":false,\"type\":\"DROPDOWN\",\"options\":[\"CASH\",\"NEFT\"],\"value\":\"CASH\"},{\"name\":\"Price Per Flat\",\"is_required\":false,\"type\":\"FLOAT\"}],\n\t\"inventory_counts\":[{\"name\":\"Poster\",\"type\":\"INVENTORY_TYPE\",\"is_required\":false,\"is_editable\":true,\"count\": 10}]\n}"
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "fetch bookings in campaign",
+									"request": {
+										"url": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/campaign/BYJMACBB24/",
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+												"type": "text"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "fetch booking using booking-id",
+									"request": {
+										"url": {
+											"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/5ca4e8889cb7fcc9538e2987/?",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"v0",
+												"ui",
+												"dynamic-booking",
+												"booking-data",
+												"5ca4e8889cb7fcc9538e2987",
+												""
+											],
+											"query": [
+												{
+													"key": "",
+													"value": "",
+													"disabled": true
+												},
+												{
+													"key": "",
+													"value": "",
+													"disabled": true
+												}
+											],
+											"variable": []
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+												"type": "text"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/5ca4e8889cb7fcc9538e2987/",
+									"request": {
+										"url": {
+											"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/5ca4e8889cb7fcc9538e2987/?",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"v0",
+												"ui",
+												"dynamic-booking",
+												"booking-data",
+												"5ca4e8889cb7fcc9538e2987",
+												""
+											],
+											"query": [
+												{
+													"key": "",
+													"value": "",
+													"disabled": true
+												},
+												{
+													"key": "",
+													"value": "",
+													"disabled": true
+												}
+											],
+											"variable": []
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+												"type": "text"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n\"booking_attributes\": [{\"name\":\"Price Per Flat\",\"type\":\"FLOAT\", \"is_required\":true, \"value\": 100.5},{\"name\":\"is_poster_allowed\",\"type\":\"BOOLEAN\", \"is_required\":true, \"value\": true}, {\"name\": \"mode of payment\", \"type\":\"DROPDOWN\", \"options\":[\"NEFT\",\"CASH\",\"ONLINE\"], \"value\": \"NEFT\"}]}"
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/5ca4e8889cb7fcc9538e2987/",
+									"request": {
+										"url": {
+											"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/5ca4e8889cb7fcc9538e2987/?",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"v0",
+												"ui",
+												"dynamic-booking",
+												"booking-data",
+												"5ca4e8889cb7fcc9538e2987",
+												""
+											],
+											"query": [
+												{
+													"key": "",
+													"value": "",
+													"disabled": true
+												},
+												{
+													"key": "",
+													"value": "",
+													"disabled": true
+												}
+											],
+											"variable": []
+										},
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+												"type": "text"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/5ca4e8889cb7fcc9538e2987/",
+									"request": {
+										"url": {
+											"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-data/campaign/BYJMACBB24/?",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"v0",
+												"ui",
+												"dynamic-booking",
+												"booking-data",
+												"campaign",
+												"BYJMACBB24",
+												""
+											],
+											"query": [
+												{
+													"key": "",
+													"value": "",
+													"disabled": true
+												},
+												{
+													"key": "",
+													"value": "",
+													"disabled": true
+												}
+											],
+											"variable": []
+										},
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+												"type": "text"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "localhost:8000/v0/ui/dynamic-entities/migration_from_old",
+									"request": {
+										"url": "localhost:8000/v0/ui/dynamic-entities/societies-add/",
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											},
+											{
+												"key": "is_import_sheet",
+												"value": "true",
+												"disabled": true
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"description": ""
+									},
+									"response": []
+								}
+							],
+							"_postman_isSubFolder": true
+						},
+						{
+							"name": "booking_details",
+							"description": "",
+							"item": [
+								{
+									"name": "save booking details",
+									"request": {
+										"url": "http://localhost:8000/v0/ui/dynamic-booking/booking-details/",
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											},
+											{
+												"key": "Authorization",
+												"type": "text",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n\"booking_template_id\": \"5ca4ae3e9cb7fc6da6d92799\",\n\"organisation_id\": \"someid\", \"campaign_id\": \"BYJMACBB24\"}"
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "fetch bookings in campaign",
+									"request": {
+										"url": "http://localhost:8000/v0/ui/dynamic-booking/booking-details/campaign/BYJMACBB24/",
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+												"type": "text"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "fetch booking using booking-id",
+									"request": {
+										"url": {
+											"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-details/5cae21729cb7fc6444f6441a/?",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"v0",
+												"ui",
+												"dynamic-booking",
+												"booking-details",
+												"5cae21729cb7fc6444f6441a",
+												""
+											],
+											"query": [
+												{
+													"key": "",
+													"value": "",
+													"disabled": true
+												},
+												{
+													"key": "",
+													"value": "",
+													"disabled": true
+												}
+											],
+											"variable": []
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+												"type": "text"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-details/5cae21729cb7fc6444f6441a/",
+									"request": {
+										"url": {
+											"raw": "http://localhost:8000/v0/ui/dynamic-booking/booking-details/5cae21729cb7fc6444f6441a/?",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "8000",
+											"path": [
+												"v0",
+												"ui",
+												"dynamic-booking",
+												"booking-details",
+												"5cae21729cb7fc6444f6441a",
+												""
+											],
+											"query": [
+												{
+													"key": "",
+													"value": "",
+													"disabled": true
+												},
+												{
+													"key": "",
+													"value": "",
+													"disabled": true
+												}
+											],
+											"variable": []
+										},
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+												"type": "text"
+											},
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"description": ""
+									},
+									"response": []
+								}
+							],
+							"_postman_isSubFolder": true
+						},
+						{
+							"name": "booking_assignment",
+							"description": "",
+							"item": [
+								{
+									"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-assignment/",
+									"request": {
+										"url": "http://localhost:8000/v0/ui/dynamic-booking/booking-assignment/",
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\"campaign_id\":\"HDFHDF0F34\",\"inventory_name\":\"Poster\", \"supplier_id\": \"5cb70c729cb7fc6fdcd8eeb5\", \"activity_list\": [{\"assigned_to_id\": 23, \"activity_type\": \"RELEASE\", \"activity_date\": \"2019-04-20\"}, {\"assigned_to_id\": 23, \"activity_type\": \"CLOSURE\", \"activity_date\": \"2019-04-20\"},\n{\"assigned_to_id\": 23, \"activity_type\": \"AUDIT\", \"activity_date\": \"2019-04-20\"}]}\n"
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-assignment/",
+									"request": {
+										"url": "http://localhost:8000/v0/ui/dynamic-booking/booking-assignment/campaign/HDFHDF0F34/",
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-inventory/campaign/HDFHDF0F34/",
+									"request": {
+										"url": "http://localhost:8000/v0/ui/dynamic-booking/booking-inventory/campaign/HDFHDF0F34/",
+										"method": "GET",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": ""
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "http://localhost:8000/v0/ui/dynamic-booking/booking-assignment/campaign/HDFHDF0F34/",
+									"request": {
+										"url": "http://localhost:8000/v0/ui/dynamic-booking/booking-assignment/campaign/HDFHDF0F34/",
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"type": "text",
+												"value": "application/json"
+											},
+											{
+												"key": "Authorization",
+												"type": "text",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\"campaign_id\":\"HDFHDF0F34\",\"inventory_name\":\"Poster\", \"activity_list\": [{\"assigned_to_id\": 23, \"activity_type\": \"RELEASE\", \"activity_date\": \"2019-04-20\"}, {\"assigned_to_id\": 23, \"activity_type\": \"CLOSURE\", \"activity_date\": \"2019-04-20\"},\n{\"assigned_to_id\": 23, \"activity_type\": \"AUDIT\", \"activity_date\": \"2019-04-20\"}]}"
+										},
+										"description": ""
+									},
+									"response": []
+								},
+								{
+									"name": "http://localhost:8000/v0/ui/website/upload-inventory-activity-image-amazon-new/",
+									"request": {
+										"url": "http://localhost:8000/v0/ui/website/upload-inventory-activity-image-amazon-new/",
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+											},
+											{
+												"key": "Content-Type",
+												"name": "Content-Type",
+												"value": "application/x-www-form-urlencoded",
+												"type": "text"
+											},
+											{
+												"key": "is_import_sheet",
+												"value": "true",
+												"disabled": true
+											}
+										],
+										"body": {
+											"mode": "formdata",
+											"formdata": [
+												{
+													"key": "file",
+													"type": "file",
+													"src": "",
+													"value": ""
+												},
+												{
+													"key": "supplier_name",
+													"value": "United Cooperative Society",
+													"type": "text"
+												},
+												{
+													"key": "activity_type",
+													"value": "RELEASE",
+													"type": "text"
+												},
+												{
+													"key": "actual_activity_date",
+													"value": "2019-02-14 12:15:18 PM",
+													"type": "text"
+												},
+												{
+													"key": "inventory_name",
+													"value": "BANNER",
+													"type": "text"
+												},
+												{
+													"key": "inventory_activity_assignment_id",
+													"value": "76547",
+													"type": "text"
+												},
+												{
+													"key": "lat",
+													"value": "52.509669",
+													"type": "text"
+												},
+												{
+													"key": "long",
+													"value": "13.376294",
+													"type": "text"
+												},
+												{
+													"key": "activity_date",
+													"value": "2019-02-14",
+													"type": "text"
+												},
+												{
+													"key": "comment",
+													"value": "testing 1..2..3.. haalo haaloo",
+													"type": "text"
+												}
+											]
+										},
+										"description": ""
+									},
+									"response": []
+								}
+							],
+							"_postman_isSubFolder": true
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "Data Transfer",
+					"description": "",
+					"item": [
+						{
+							"name": "localhost:8000/v0/ui/dynamic-entities/societies-add/",
+							"request": {
+								"url": "localhost:8000/v0/ui/dynamic-entities/societies-add/",
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "is_import_sheet",
+										"value": "true",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"description": ""
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				}
+			]
+		},
+		{
+			"name": "campaign_and_suppliers",
+			"description": "",
+			"item": [
+				{
+					"name": "http://localhost:8000/v0/ui/website/campaigns-suppliers-inventory-list/?assigned_to=67",
+					"request": {
+						"url": {
+							"raw": "https://api.machadalo.com/v0/ui/website/campaigns-suppliers-inventory-list/?assigned_to=67",
+							"protocol": "https",
+							"host": [
+								"api",
+								"machadalo",
+								"com"
+							],
+							"path": [
+								"v0",
+								"ui",
+								"website",
+								"campaigns-suppliers-inventory-list",
+								""
+							],
+							"query": [
+								{
+									"key": "assigned_to",
+									"value": "67"
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/website/campaigns-suppliers-inventory-list/?assigned_to=67&return_format=new",
+					"request": {
+						"url": {
+							"raw": "http://localhost:8001/v0/ui/website/campaigns-suppliers-inventory-list/?assigned_to=67&return_format=new",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"v0",
+								"ui",
+								"website",
+								"campaigns-suppliers-inventory-list",
+								""
+							],
+							"query": [
+								{
+									"key": "assigned_to",
+									"value": "67"
+								},
+								{
+									"key": "return_format",
+									"value": "new"
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/website/vendor-wise-summary/",
+					"request": {
+						"url": "http://localhost:8001/v0/ui/website/vendor-wise-summary/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6InlvZ2VzaC5taGV0cmVAbWFjaGFkYWxvLmNvbSIsInVzZXJuYW1lIjoidmlkaGlkZXZlbG9wbWVudCIsIm5hbWUiOiJBZG1pbiIsImV4cCI6MTU0OTQ1ODMxOCwib3JpZ19pYXQiOjE1NDk0NTgwMTh9.gJkpdKpK8hefSh1H17MdoTjO3ABzzq07Z0X2BCgznx4"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/website/campaign-assignment/",
+					"request": {
+						"url": "localhost:8001/v0/ui/website/campaign-assignment/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"campaign_id\": \"TESSMA45DA\",\n\t\"to\": \"1\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/website/BYJMACCB20/list_suppliers/",
+					"request": {
+						"url": "http://localhost:8001/v0/ui/website/BYJMACCB20/list_suppliers/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/website/assigned-campaigns/",
+					"request": {
+						"url": "http://localhost:8001/v0/ui/website/assigned-campaigns/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6InlvZ2VzaC5taGV0cmVAbWFjaGFkYWxvLmNvbSIsInVzZXJuYW1lIjoidmlkaGlkZXZlbG9wbWVudCIsIm5hbWUiOiJBZG1pbiIsImV4cCI6MTU0OTQ1ODMxOCwib3JpZ19pYXQiOjE1NDk0NTgwMTh9.gJkpdKpK8hefSh1H17MdoTjO3ABzzq07Z0X2BCgznx4"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/website/BYJMACBB24/comment/",
+					"request": {
+						"url": "localhost:8000/v0/ui/website/BYJMACBB24/comment/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"comment\": \"This is some other comment.\", \"shortlisted_spaces_id\": 10790, \"inventory_type\": \"Stall\", \"related_to\": \"EXECUTION\"}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/website/send-weekly-leads-mail/",
+					"request": {
+						"url": "localhost:8001/v0/ui/website/send-weekly-leads-mail/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/campaign/campaign-wise-summary/",
+					"request": {
+						"url": "localhost:8000/v0/ui/campaign/campaign-wise-summary/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/proposal/hashtag-images-new",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/proposal/hashtag-images-new",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"type": "text",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "",
+									"value": ""
+								},
+								{
+									"key": "supplier_name",
+									"value": "United Cooperative Society",
+									"type": "text"
+								},
+								{
+									"key": "campaign_name",
+									"value": "Byju's Andaman Test",
+									"type": "text"
+								},
+								{
+									"key": "hashtag",
+									"value": "BANDAR",
+									"type": "text"
+								},
+								{
+									"key": "campaign_id",
+									"value": "BYJMACB64A",
+									"type": "text"
+								},
+								{
+									"key": "lat",
+									"value": "52.509669",
+									"type": "text"
+								},
+								{
+									"key": "long",
+									"value": "13.376294",
+									"type": "text"
+								},
+								{
+									"key": "supplier_id",
+									"value": "CHAPA20RSCIH",
+									"type": "text"
+								},
+								{
+									"key": "comment",
+									"value": "arre bhai idhar suniye.. Halloo",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/proposal/hashtag-images-new/",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/proposal/hashtag-images-new/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"type": "text"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "",
+									"value": ""
+								},
+								{
+									"key": "supplier_name",
+									"value": "United Cooperative Society",
+									"type": "text"
+								},
+								{
+									"key": "campaign_name",
+									"value": "Byju's Andaman Test",
+									"type": "text"
+								},
+								{
+									"key": "hashtag",
+									"value": "BANDAR",
+									"type": "text"
+								},
+								{
+									"key": "campaign_id",
+									"value": "BYJMACB64A",
+									"type": "text"
+								},
+								{
+									"key": "lat",
+									"value": "52.509669",
+									"type": "text"
+								},
+								{
+									"key": "long",
+									"value": "13.376294",
+									"type": "text"
+								},
+								{
+									"key": "supplier_id",
+									"value": "CHAPA20RSCIH",
+									"type": "text"
+								},
+								{
+									"key": "comment",
+									"value": "arre bhai idhar suniye.. Halloo",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "http://localhost:8000/v0/ui/website/upload-inventory-activity-image-amazon-new/",
+					"request": {
+						"url": "http://localhost:8000/v0/ui/website/upload-inventory-activity-image-amazon-new/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"type": "text"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "",
+									"value": ""
+								},
+								{
+									"key": "supplier_name",
+									"value": "United Cooperative Society",
+									"type": "text"
+								},
+								{
+									"key": "activity_type",
+									"value": "RELEASE",
+									"type": "text"
+								},
+								{
+									"key": "actual_activity_date",
+									"value": "2019-02-14 12:15:18 PM",
+									"type": "text"
+								},
+								{
+									"key": "inventory_name",
+									"value": "BANNER",
+									"type": "text"
+								},
+								{
+									"key": "inventory_activity_assignment_id",
+									"value": "76547",
+									"type": "text"
+								},
+								{
+									"key": "lat",
+									"value": "52.509669",
+									"type": "text"
+								},
+								{
+									"key": "long",
+									"value": "13.376294",
+									"type": "text"
+								},
+								{
+									"key": "activity_date",
+									"value": "2019-02-14",
+									"type": "text"
+								},
+								{
+									"key": "comment",
+									"value": "testing 1..2..3.. haalo haaloo",
+									"type": "text"
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/campaign/user-cities/",
+					"request": {
+						"url": "localhost:8000/v0/ui/campaign/mis-report-contacts/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/campaign/mis-report-contacts/?start_date=2019-04-01",
+					"request": {
+						"url": {
+							"raw": "localhost:8000/v0/ui/campaign/mis-report-receipts/?start_date=2019-04-01",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"v0",
+								"ui",
+								"campaign",
+								"mis-report-receipts",
+								""
+							],
+							"query": [
+								{
+									"key": "start_date",
+									"value": "2019-04-01"
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/campaign/user-cities/",
+					"request": {
+						"url": "localhost:8000/v0/ui/campaign/user-cities/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_import_sheet",
+								"value": "true",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n \"vendors\":[\"MAC1421\"]\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "localhost:8000/v0/ui/supplier/society-data-import-excel/",
+					"request": {
+						"url": "localhost:8000/v0/ui/supplier/corporate-park-data-import-excel/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzMzMjM5NjYsIm5hbWUiOiIiLCJleHAiOjE1MzMzMjQyNjYsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.OzOrVMzbP-9kUUM1XauMItGsdHZgS5WgRl2HOTi_9C8"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "is_sp_website",
+								"value": "True",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "",
+									"value": ""
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "http://localhost:8000/v0/ui/users/",
+			"request": {
+				"url": "localhost:8000/v0/ui/campaign/user-cities/",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwib3JpZ19pYXQiOjE1MzU3MTY3OTQsIm5hbWUiOiIiLCJleHAiOjE1MzU3MTcwOTQsInVzZXJfaWQiOjE5LCJlbWFpbCI6IiJ9.Ky5l4hTqPO1RWhq8Ktm8FZyPEBIBNSJ8TuDVeEJDVJA"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "is_import_sheet",
+						"value": "true",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8000/api-token-auth/",
+			"request": {
+				"url": "http://13.232.210.224:8000/api-token-auth/",
+				"method": "POST",
+				"header": [
+					{
+						"key": "token",
+						"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjgxYjVhODRjLTNiYjktNDRiMy04Yzc3LTNkY2ZiMGI3MTRiYiJ9.-ZfKEAOaYio_mn2pHjAe1SvlsPOqrExdvZ_OZPPdCEQ",
+						"disabled": true
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "is_sp_website",
+						"value": "True",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"username\": \"admin\",\n\t\"password\": \"admin\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8000/v0/ui/users/",
+			"request": {
+				"url": "http://localhost:8000/v0/ui/users/",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6InlvZ2VzaC5taGV0cmVAbWFjaGFkYWxvLmNvbSIsInVzZXJuYW1lIjoidmlkaGlkZXZlbG9wbWVudCIsIm5hbWUiOiJBZG1pbiIsImV4cCI6MTU1Mzg2NTA2Niwib3JpZ19pYXQiOjE1NTM4NjQ3NjZ9.hsnAaPAzvi-nNt2sq7e4Lqsd-94xODcP5FeAGcaHz8w"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "is_import_sheet",
+						"value": "true",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "localhost:8000/v0/ui/website/organisation/",
+			"request": {
+				"url": "localhost:8000/v0/ui/website/organisation/",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "JWT eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJlbWFpbCI6InlvZ2VzaC5taGV0cmVAbWFjaGFkYWxvLmNvbSIsInVzZXJuYW1lIjoidmlkaGlkZXZlbG9wbWVudCIsIm5hbWUiOiJBZG1pbiIsImV4cCI6MTU1Mzg2NTA2Niwib3JpZ19pYXQiOjE1NTM4NjQ3NjZ9.hsnAaPAzvi-nNt2sq7e4Lqsd-94xODcP5FeAGcaHz8w"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "is_import_sheet",
+						"value": "true",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
