@@ -45,7 +45,7 @@ weekday_codes = {'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
 # list of raw data points which cannot be restricted
 raw_data_unrestricted = ['flat','cost','cost_flat']
 
-zero_filtered_raw_data = ['total_booking_confirmed','total_orders_punched']
+zero_filtered_raw_data = ['total_booking_confirmed','total_orders_punched','lead','hot_lead']
 
 level_name_by_model_id = {
     "supplier_id": "supplier", "object_id": "supplier", "campaign_id": "campaign", "proposal_id": "campaign",
@@ -69,11 +69,15 @@ count_details_parent_map = {
                   'self_name_model': 'checklist_id', 'parent_name_model': 'campaign_id', 'storage_type': 'unique'},
     'flat': {'parent': 'supplier', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
              'self_name_model': 'flat_count', 'parent_name_model': 'supplier_id', 'storage_type': 'sum'},
-    'lead': {'parent': 'campaign', 'model_name': 'leads', 'database_type': 'mongodb',
-             'self_name_model': 'entry_id', 'parent_name_model': 'campaign_id', 'storage_type': 'count'},
-    'hot_lead': {'parent': 'campaign', 'model_name': 'leads', 'database_type': 'mongodb',
-                 'self_name_model': 'is_hot', 'parent_name_model': 'campaign_id',
-                 'storage_type': 'condition'},
+    # 'lead': {'parent': 'campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+    #          'self_name_model': 'entry_id', 'parent_name_model': 'campaign_id', 'storage_type': 'count'},
+    # 'hot_lead': {'parent': 'campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+    #              'self_name_model': 'is_hot', 'parent_name_model': 'campaign_id',
+    #              'storage_type': 'condition'},
+    'lead': {'parent': 'campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
+             'self_name_model': 'total_leads_count', 'parent_name_model': 'campaign_id', 'storage_type': 'sum'},
+    'hot_lead': {'parent': 'campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
+                 'self_name_model': 'total_hot_leads_count', 'parent_name_model': 'campaign_id', 'storage_type': 'sum'},
     'cost': {'parent': 'campaign', 'model_name':'ShortlistedSpaces', 'database_type': 'mysql',
              'self_name_model': 'total_negotiated_price', 'parent_name_model': 'proposal_id',
              'storage_type': 'sum'},
@@ -89,19 +93,25 @@ count_details_parent_map = {
                   'self_name_model': 'cost_per_flat', 'parent_name_model': 'proposal_id',
                   'storage_type': 'mean', 'other_grouping_column':'object_id'},
     'total_booking_confirmed': {'parent': 'campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
-                          'self_name_model': 'total_booking_confirmed', 'parent_name_model': 'campaign_id',
-                          'storage_type': 'sum'},
+                                'self_name_model': 'total_booking_confirmed', 'parent_name_model': 'campaign_id',
+                                'storage_type': 'sum'},
     'total_orders_punched': {'parent': 'campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
-                       'self_name_model': 'total_orders_punched', 'parent_name_model': 'campaign_id',
-                       'storage_type': 'sum'},
+                             'self_name_model': 'total_orders_punched', 'parent_name_model': 'campaign_id',
+                             'storage_type': 'sum'},
 }
 
 count_details_parent_map_multiple = {
-    'lead': {'parent': 'supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
-             'self_name_model': 'entry_id', 'parent_name_model': 'supplier_id,campaign_id', 'storage_type': 'count'},
-    'hot_lead': {'parent': 'supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
-                 'self_name_model': 'is_hot', 'parent_name_model': 'supplier_id,campaign_id',
-                 'storage_type': 'condition'},
+    # 'lead': {'parent': 'supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+    #          'self_name_model': 'entry_id', 'parent_name_model': 'supplier_id,campaign_id', 'storage_type': 'count'},
+    # 'hot_lead': {'parent': 'supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+    #              'self_name_model': 'is_hot', 'parent_name_model': 'supplier_id,campaign_id',
+    #              'storage_type': 'condition'},
+    'lead': {'parent': 'supplier,campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
+             'self_name_model': 'total_leads_count', 'parent_name_model': 'supplier_id,campaign_id',
+             'storage_type': 'sum'},
+    'hot_lead': {'parent': 'supplier,campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
+                 'self_name_model': 'total_hot_leads_count', 'parent_name_model': 'supplier_id,campaign_id',
+                 'storage_type': 'sum'},
     'cost': {'parent': 'supplier,campaign', 'model_name': 'ShortlistedSpaces', 'database_type': 'mysql',
              'self_name_model': 'total_negotiated_price', 'parent_name_model': 'object_id,proposal_id',
              'storage_type': 'sum'},
@@ -130,13 +140,21 @@ reverse_direct_match = {'flattype':'supplier', 'qualitytype':'supplier','standee
 binary_parameters_list = ['standeetype', 'fliertype', 'stalltype', 'liftpostertype', 'nbpostertype',
                           'bannertype', 'bachelortype']
 
+# count_details_parent_map_custom = {
+#     'lead': {'parent': 'date,supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+#              'self_name_model': 'entry_id', 'parent_name_model': 'created_at,supplier_id,campaign_id',
+#              'storage_type': 'count'},
+#     'hot_lead': {'parent': 'date,supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+#                  'self_name_model': 'is_hot', 'parent_name_model': 'created_at,supplier_id,campaign_id',
+#                  'storage_type': 'condition'},
+# }
 count_details_parent_map_custom = {
-    'lead': {'parent': 'date,supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
-             'self_name_model': 'entry_id', 'parent_name_model': 'created_at,supplier_id,campaign_id',
-             'storage_type': 'count'},
-    'hot_lead': {'parent': 'date,supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
-                 'self_name_model': 'is_hot', 'parent_name_model': 'created_at,supplier_id,campaign_id',
-                 'storage_type': 'condition'},
+    'lead': {'parent': 'date,supplier,campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
+             'self_name_model': 'total_leads_count', 'parent_name_model': 'lead_date,supplier_id,campaign_id',
+             'storage_type': 'sum'},
+    'hot_lead': {'parent': 'date,supplier,campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
+                 'self_name_model': 'total_leads_count', 'parent_name_model': 'lead_date,supplier_id,campaign_id',
+                 'storage_type': 'sum'},
 }
 
 
@@ -184,10 +202,12 @@ count_details_direct_match_multiple = {
 
 
 count_details_parent_map_time = {
-    'lead': {'parent': 'date, campaign', 'model_name': 'leads', 'database_type': 'mongodb',
-             'self_name_model': 'entry_id', 'parent_name_model': 'created_at,campaign_id', 'storage_type': 'count'},
+    'lead': {'parent': 'date, campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
+             'self_name_model': 'total_leads_count', 'parent_name_model': 'lead_date,campaign_id',
+             'storage_type': 'sum'},
     'hot_lead': {'parent': 'date,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
-                 'self_name_model': 'is_hot', 'parent_name_model': 'created_at,campaign_id', 'storage_type': 'condition'},
+                 'self_name_model': 'total_hot_leads_count', 'parent_name_model': 'lead_date,campaign_id',
+                 'storage_type': 'sum'},
     'hotness_level_': {'parent': 'date, campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                   'self_name_model': 'hotness_level', 'parent_name_model': 'created_at,campaign_id',
                   'storage_type': 'condition'},
