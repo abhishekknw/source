@@ -9,6 +9,8 @@ import math
 from v0.ui.organisation.models import Organisation
 from scipy import interpolate
 from scipy import stats
+from v0.ui.common.models import mongo_client
+
 
 
 def flatten(items):
@@ -34,6 +36,7 @@ def get_metrics_from_code(code, raw_metrics, derived_metrics):
 
 
 alternate_name_keys = {"supplier": "supplier_name", "campaign":"campaign_name"}
+alternate_name_group_dicts = {""}
 
 
 weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
@@ -50,7 +53,8 @@ zero_filtered_raw_data = ['total_booking_confirmed','total_orders_punched','lead
 level_name_by_model_id = {
     "supplier_id": "supplier", "object_id": "supplier", "campaign_id": "campaign", "proposal_id": "campaign",
     "flat_count": "flat","total_negotiated_price": "cost", "created_at": "date", "phase_no": "phase",
-    "society_city": "city", "society_name":"supplier_name", "cost_per_flat":"cost_flat", "name":"campaign_name"
+    "society_city": "city", "society_name":"supplier_name", "cost_per_flat":"cost_flat", "name":"campaign_name",
+    "lead_date": "date"
 }
 
 
@@ -205,12 +209,12 @@ count_details_parent_map_time = {
     'lead': {'parent': 'date, campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
              'self_name_model': 'total_leads_count', 'parent_name_model': 'lead_date,campaign_id',
              'storage_type': 'sum'},
-    'hot_lead': {'parent': 'date,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
+    'hot_lead': {'parent': 'date,campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
                  'self_name_model': 'total_hot_leads_count', 'parent_name_model': 'lead_date,campaign_id',
                  'storage_type': 'sum'},
     'hotness_level_': {'parent': 'date, campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                   'self_name_model': 'hotness_level', 'parent_name_model': 'created_at,campaign_id',
-                  'storage_type': 'condition'},
+                  'storage_type': 'condition'}
     }
 
 geographical_parent_details = {
@@ -225,10 +229,6 @@ date_to_others = {
               'self_name_model': 'phase_no'}
 }
 
-date_to_others = {
-    'phase': {'model_name': 'SupplierPhase', 'variables':{'date':['start_date','end_date'],'campaign':['campaign_id'],},
-              'self_name_model': 'phase_no'}
-}
 time_parent_names = {
     "default": "created_at"
 }
@@ -482,7 +482,7 @@ def convert_dict_arrays_keys_to_standard_names(dict_arrays):
     for curr_array in dict_arrays:
         new_array = []
         for curr_dict in curr_array:
-            if curr_dict == []:
+            if not curr_dict:
                 continue
             keys = list(curr_dict.keys())
             for curr_key in keys:
@@ -793,7 +793,7 @@ def find_level_sequence(highest_level, lowest_level, default_map = count_details
     return error_message
 
 
-def date_to_other_groups(dict_array, group_name, desired_metric, raw_data, highest_level_values):
+def date_to_other_groups(dict_array, group_name, desired_metric, raw_data, highest_level_values, date_variable='date'):
     sequential_time_metrics = ['day','month','year']
     new_dict = {}
     new_array = []
@@ -1202,16 +1202,12 @@ def add_binary_field_status(dict_array, fields_list, false_prefix = 'No ',remove
     return new_array
 
 
-# def truncate_by_key_value(array_array, key, value):
-#     main_array = []
-#     new_array = []
-#     for curr_array in array_array:
-#         if len(curr_array)<0 and key in curr_array[0].keys():
-#             main_array = curr_array
-#         else:
-#             new_array.append(curr_array)
-#     if main_array == {}:
-#         return array_array
-#     new_subarray = []
-#     for curr_dict in main_array:
-#
+# used to compute metrics like count of orders punched by dates from leads table
+def get_list_elements_frequency(model_name, match_dict, outer_key, inner_key, nonnull_key):
+    null_constraint = {outer_key:{"$elemMatch":{"key_name": inner_key, nonnull_key:{"$ne":None}}}}
+    match_dict.update(null_constraint)
+    query = mongo_client[model_name].find(match_dict, {outer_key:1, "_id":0})
+    query_output = list(query)
+    print(query_output)
+    return query_output
+

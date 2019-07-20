@@ -134,6 +134,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             raw_data_lf[curr_index] = curr_metric
             raw_data[original_index] = curr_metric
         lowest_level = curr_metric
+        print(lowest_level)
         if data_scope_category == 'geographical':
             lowest_geographical_level = geographical_parent_details['base']
             if data_point_category == 'geographical':
@@ -191,6 +192,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_output_all = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
                           default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category,
                           value_ranges, supplier_constraints, supplier_list = supplier_list, zero_filter = zero_filter)
+            print(curr_output_all)
 
             curr_output = curr_output_all[0]
             supplier_list = curr_output_all[1]
@@ -208,6 +210,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_output_keys = curr_output[0].keys()
             allowed_keys = set([highest_level_original] + grouping_level + [curr_metric])
             #curr_output = key_replace_group(curr_output,'supplier','flattype')
+            print(curr_output)
             if not curr_output_keys<=allowed_keys:
                 curr_output = sum_array_by_keys(curr_output, [highest_level_original]+grouping_level,[curr_metric])
         if data_summary == 1:
@@ -516,6 +519,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         desc_sequence = desc_sequence[1:]
     last_level_id = len(desc_sequence) - 1
     common_keys = []
+    print("sequence")
+    print(desc_sequence)
     while curr_level_id < last_level_id:
         curr_level = desc_sequence[curr_level_id]
         next_level = desc_sequence[curr_level_id+1]
@@ -546,6 +551,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             add_category = first_constraint['category']
             add_map_name = add_category + '_parent_names'
             add_variable_name = eval(add_map_name)['default']
+            if lowest_level in ['lead','hot_lead']:
+                add_variable_name = "lead_date"
             add_match_type = first_constraint["match_type"]
             add_match_list = first_constraint["values"]
 
@@ -678,7 +685,13 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                         }
                     ]
                 )
+                # sample_query = mongo_client["leads"].find({"data": {"$elemMatch": {"key_name":"Order Punched Date",
+                #                                                     "value": {"$ne":None}}},"campaign_id":"BYJMAC214B"})
                 query = list(query)
+                print(model_name)
+                print(match_dict)
+                print(group_dict)
+                print(project_dict)
                 if not query==[]:
                     if not all_results == [] and isinstance(all_results[0], dict) == True:
                         all_results = [all_results]
@@ -736,6 +749,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             all_results = [all_results]
     if not len(all_results)==0:
         new_results = convert_dict_arrays_keys_to_standard_names(all_results)
+
         try:
             single_array_results = merge_dict_array_array_multiple_keys(new_results, grouping_levels)
         except:
@@ -756,7 +770,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                         if curr_array['supplier'] in supplier_list:
                             new_array_results.append(curr_array)
                     single_array_results = new_array_results
-
         if original_grouping_levels is not None:
             superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
             superlevels_base_set = list(set(superlevels_base))
