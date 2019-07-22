@@ -1988,7 +1988,7 @@ def set_inventory_pricing(supplier_ids, supplier_type_code, inventory_summary_ma
                                                                                                             2]))
                 try:
                     key = (ad_inventory_id, duration_id, supplier_id, content_type.id)
-                    price = price_mapping_default_map[key]
+                    price = price_mapping_default_map[key] if key in price_mapping_default_map else price_mapping_default_map[list(price_mapping_default_map)[0]]
                 except KeyError:
                     error_key = (inventory_name, inventory_type, duration_name, supplier_id)
                     raise Exception(
@@ -2508,12 +2508,13 @@ def make_export_final_response(result, data, inventory_summary_map, supplier_inv
                         stats['inventory_summary_no_instance_error'].add(supplier_id)
 
                     if inventory_summary_map.get(code) and inventory_summary_map[code].get(supplier_id):
-                        # this module inserts a few keys in supplier_object such as 'is_allowed' and 'pricing' keys for each inventory.
-                        is_error, detail = set_supplier_inventory_keys(supplier_object,
-                                                                       inventory_summary_map[code][supplier_id],
-                                                                       unique_inv_codes,
-                                                                       supplier_inventory_pricing_map[supplier_id])
-                        supplier_object = detail.copy()
+                        if supplier_id in supplier_inventory_pricing_map:
+                            # this module inserts a few keys in supplier_object such as 'is_allowed' and 'pricing' keys for each inventory.
+                            is_error, detail = set_supplier_inventory_keys(supplier_object,
+                                                                           inventory_summary_map[code][supplier_id],
+                                                                           unique_inv_codes,
+                                                                           supplier_inventory_pricing_map[supplier_id])
+                            supplier_object = detail.copy()
 
                     # obtain the dict containing non-center information
                     supplier_info_dict = construct_single_supplier_row(supplier_object, result[code]['data_keys'])
@@ -3814,7 +3815,7 @@ def setup_generic_export(data, user, proposal_id):
         inventory_summary_map = {}
         for instance in total_inventory_summary_instances:
             # taking advantage of the fact that a supplier id contains it's code in it. 'RS' is embedded in two characters [7:8]
-            supplier_code = instance.object_id[7:9]
+            supplier_code = 'RS'
             supplier_id = instance.object_id
 
             if not inventory_summary_map.get(supplier_code):
@@ -3827,6 +3828,7 @@ def setup_generic_export(data, user, proposal_id):
         supplier_pricing_map = {}
         for supplier_code, detail in inventory_summary_map.items():
             # detail is inventory_summary mapping.
+            supplier_pricing_map = {}
             supplier_pricing_map = merge_two_dicts(
                 set_inventory_pricing(total_suppliers_map[supplier_code], supplier_code, detail, stats),
                 supplier_pricing_map)
@@ -3974,7 +3976,7 @@ def is_campaign(proposal):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned, search):
+def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned, search, start_date, end_date):
     """
 
     Args:
@@ -3983,6 +3985,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
     Returns: The data in required form.
 
     """
+
     function = prepare_shortlisted_spaces_and_inventories.__name__
     try:
         # if str(proposal_id) in cache:
@@ -3994,16 +3997,24 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
 
         proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
 
-        if assigned:
-            assigned_suppliers_list = SupplierAssignment.objects.filter(campaign=proposal_id,assigned_to=user.id). \
-                values_list('supplier_id')
-            shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id, object_id__in=assigned_suppliers_list). \
-                order_by('id')
+        filter_query = Q()
 
-        elif search:
-            shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id, object_id=search).order_by('id')
-        else:
-            shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id).order_by('id')
+        filter_query &= Q(proposal_id=proposal_id)
+
+        if assigned:
+            assigned_suppliers_list = SupplierAssignment.objects.filter(campaign=proposal_id,assigned_to=assigned). \
+                values_list('supplier_id')
+            filter_query &= Q(object_id__in=assigned_suppliers_list)
+            # shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id, object_id__in=assigned_suppliers_list). \
+            #     order_by('id')
+
+        if search:
+            filter_query &= Q(object_id=search)
+            # shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id, object_id=search).order_by('id')
+        if start_date and end_date:
+            filter_query &= Q(next_action_date__gte=start_date)
+            filter_query &= Q(next_action_date__lte=end_date)
+        shortlisted_spaces = ShortlistedSpaces.objects.filter(filter_query).order_by('id')
 
         if page:
             entries = 10
@@ -4128,6 +4139,8 @@ def handle_update_campaign_inventories(user, data):
             supplier_sunboard_locations = supplier['sunboard_location'] if 'sunboard_location' in supplier else None
             if supplier_sunboard_locations and isinstance(supplier_sunboard_locations, list):
                 supplier_sunboard_locations = ','.join(supplier_sunboard_locations)
+            if 'next_action_date' in supplier and supplier['next_action_date']:
+                supplier['next_action_date'] = supplier['next_action_date']
             shortlisted_spaces[ss_global_id] = {
                 'phase': supplier['phase'],
                 'phase_no': supplier['phase_no'],
@@ -4143,6 +4156,7 @@ def handle_update_campaign_inventories(user, data):
                 'cost_per_flat' : supplier['cost_per_flat'],
                 'booking_priority': supplier['booking_priority'],
                 'sunboard_location': supplier['sunboard_location'] if 'sunboard_location' in supplier else None,
+                'next_action_date': supplier['next_action_date'] if 'next_action_date' in supplier else None,
             }
 
             shortlisted_inventories = supplier['shortlisted_inventories']
@@ -4232,6 +4246,7 @@ def update_campaign_inventories(data):
             obj.cost_per_flat = shortlisted_spaces[ss_global_id]['cost_per_flat']
             obj.booking_priority = shortlisted_spaces[ss_global_id]['booking_priority']
             obj.sunboard_location = shortlisted_spaces[ss_global_id]['sunboard_location']
+            obj.next_action_date = shortlisted_spaces[ss_global_id]['next_action_date']
 
         sid_ids = list(shortlisted_inventory_details.keys())
         sid_objects = ShortlistedInventoryPricingDetails.objects.filter(id__in=sid_ids)
@@ -6760,7 +6775,6 @@ def create_inventory_ids(supplier_object, filter_code, is_import_sheet=False, su
     """
     function_name = create_inventory_ids.__name__
     try:
-        print(supplier_object.society_name)
         tower_count = int(supplier_object.tower_count) if supplier_object.tower_count else 1
         inventory_ids = []
         Struct = namedtuple('Struct', 'adinventory_id')

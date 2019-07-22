@@ -71,6 +71,7 @@ def add_extra_leads(leads_summary, campaign_list=None, user_start_datetime=None)
                     single_summary['hot_leads_count'] = leads_extras_dict[single_summary['campaign_id']][single_summary['supplier_id']]["extra_hot_leads"]
                     single_summary['hot_leads_percentage'] = (float(single_summary['hot_leads_count'])/float(single_summary['total_leads_count']) * 100)
     for campaign_id in leads_extras_all_dict:
+        print(campaign_id, campaign_list)
         if campaign_id in campaign_list:
             for supplier_id in leads_extras_all_dict[campaign_id]:
                     if (campaign_id not in leads_summary_dict) or (supplier_id not in leads_summary_dict[campaign_id]):
@@ -109,6 +110,7 @@ def get_leads_summary(campaign_list=None, user_start_datetime=None,user_end_date
                             "_id": {"campaign_id": "$campaign_id", "supplier_id": "$supplier_id"},
                             "campaign_id": {"$first": '$campaign_id'},
                             "supplier_id": {"$first": '$supplier_id'},
+                            "created_at": {"$first": '$created_at'},
                             "total_leads_count": {"$sum": 1},
                             "hot_leads_count": {"$sum": {"$cond": ["$is_hot", 1, 0]}},
                         }
@@ -117,6 +119,7 @@ def get_leads_summary(campaign_list=None, user_start_datetime=None,user_end_date
                     "$project": {
                         "campaign_id": 1,
                         "supplier_id": 1,
+                        "created_at": 1,
                         "total_leads_count": 1,
                         "hot_leads_count": 1,
                         "hot_leads_percentage": {
@@ -185,6 +188,16 @@ class ExcelDownloadHash(MongoModel):
     leads_form_id = fields.IntegerField()
     supplier_id = fields.CharField()
     one_time_hash = fields.ListField()  # CREATE, UPDATE, READ, DELETE, FILL
+    created_at = fields.DateTimeField()
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'mongo_app'
+
+
+class CampaignExcelDownloadHash(MongoModel):
+    campaign_id = fields.CharField()
+    one_time_hash = fields.CharField()
     created_at = fields.DateTimeField()
 
     class Meta:

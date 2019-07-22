@@ -1834,6 +1834,7 @@ class ProposalVersion(APIView):
             proposal.save()
 
             # change the status of the proposal to 'requested' once everything is okay.
+            data['stats']['inventory_summary_no_instance_error'] = list(data['stats']['inventory_summary_no_instance_error'])
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -2465,6 +2466,8 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
             current_date = datetime.datetime.now().date()
             result_obj = {}
             for phase in phases:
+                if not (phase.end_date and phase.start_date):
+                    continue
                 if phase.id not in result_obj:
                     result_obj[phase.id] = {}
                 result_obj[phase.id]["start_date"] = phase.start_date

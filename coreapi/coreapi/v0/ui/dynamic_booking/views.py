@@ -227,7 +227,7 @@ class BookingDataById(APIView):
         final_data['comments'] = data.comments
         final_data['inventory_counts'] = data.inventory_counts
         final_data['phase_id'] = data.phase_id
-        final_data['supplier_attributes'] = get_supplier_attributes(data.supplier_id, booking_template.supplier_attributes)
+        (final_data['supplier_attributes'], final_data['additional_attributes']) = get_supplier_attributes(data.supplier_id, booking_template.supplier_attributes)
         final_data['name'] = data.name if 'name' in data else None
         final_data['supplier_id'] = data.supplier_id
         final_data['organisation_id'] = data.organisation_id
@@ -361,7 +361,7 @@ class BookingAssignmentView(APIView):
                 activity_date = activity['activity_date'] if 'activity_date' in activity else None
                 comments = request.data['comments'] if 'comments' in request.data else None
                 inventory_images = request.data['inventory_images'] if 'inventory_images' in request.data else None
-                dict_of_req_attributes = {"booking_inventory_id": booking_inventory_id, "assigned_to_id": assigned_to_id,
+                dict_of_req_attributes = {"booking_inventory_id": booking_inventory_id,
                                           "activity_type": activity_type, "activity_date": activity_date,
                                           "campaign_id": campaign_id, "inventory_name": inventory_name,
                                           "supplier_id": supplier_id}
@@ -369,6 +369,7 @@ class BookingAssignmentView(APIView):
                 (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
                 if not is_valid:
                     return handle_response('', data=validation_msg_dict, success=None)
+                dict_of_req_attributes['assigned_to_id'] = assigned_to_id if assigned_to_id else None
                 booking_assignment = dict_of_req_attributes
                 booking_assignment["comments"] = comments
                 booking_assignment["inventory_images"] = inventory_images

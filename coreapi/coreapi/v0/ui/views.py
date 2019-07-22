@@ -201,12 +201,15 @@ class GetInitialDataAPIView(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
-class GetLocationsAPIView(APIView):
+class LocationsAPIView(APIView):
     def get(self, request, id, format=None):
         class_name = self.__class__.__name__
         try:
             type = request.query_params.get('type', None)
-            if type == 'areas':
+            if type == 'city':
+                items = City.objects.filter(state_code__id=id)
+                serializer = CitySerializer(items, many=True)
+            elif type == 'areas':
                 items = CityArea.objects.filter(city_code__id=id)
                 serializer = CityAreaSerializer(items, many=True)
             elif type == 'sub_areas':
@@ -215,6 +218,58 @@ class GetLocationsAPIView(APIView):
             return Response(serializer.data)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def post(self, request, id, format=None):
+        class_name = self.__class__.__name__
+        request_data = request.data
+        city_name = request_data.get("city_name", None)
+        city_id = request_data.get("city_id", None)
+        city_code = request_data.get("city_code", None)
+        area_name = request_data.get("area_name", None)
+        subarea_name = request_data.get("subarea_name", None)
+        area_id = request_data.get("area_id", None)
+        
+        try:
+            if not city_id:
+                city_dict ={}
+                city_dict['city_name'] = city_name.title()
+                city_dict['city_code'] = city_code.upper()
+                city_dict['state_code'] = int(id)
+                city_serializer = CitySerializer(data=city_dict)
+                if city_serializer.is_valid():
+                    city_instance = city_serializer.save()
+                    city_id = city_instance.id
+                else:
+                    return Response({"message":"City already exists!"}, status=400)
+
+            if not area_id:
+                area_dict ={}
+                area_dict['label'] = area_name.title()
+                area_dict['area_code'] = area_name.upper()[:2]
+                area_dict['city_code'] = city_id
+                area_serializer = CityAreaSerializer(data=area_dict)
+                if area_serializer.is_valid():
+                    area_instance = area_serializer.save()
+                    area_id = area_instance.id
+            
+            subarea_dict ={}
+            subarea_dict['subarea_name'] = subarea_name.title()
+            subarea_dict['subarea_code'] = subarea_name.upper()[:2]
+            subarea_dict['area_code'] = area_id
+            subarea_dict['locality_rating'] = 'Standard'
+            subarea_serializer = CitySubAreaSerializer(data=subarea_dict)
+            if subarea_serializer.is_valid():
+                subarea_instance = subarea_serializer.save()
+                response = { "message": "Already exists!" }
+                if subarea_instance and subarea_instance.area_code:
+                    response["message"] = "Successfully added"
+                return Response(response, status=201)
+
+            return Response(city_serializer.errors, status=400)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 
 
 class SocietyAPIFilterSubAreaView(APIView):
