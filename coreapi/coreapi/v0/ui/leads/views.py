@@ -1,5 +1,8 @@
 from __future__ import print_function
 from __future__ import absolute_import
+
+import difflib
+
 from rest_framework.views import APIView
 from openpyxl import load_workbook, Workbook
 from .models import (get_leads_summary, LeadsPermissions, ExcelDownloadHash, CampaignExcelDownloadHash)
@@ -1566,3 +1569,241 @@ class GenerateCampaignExcelDownloadHash(APIView):
         excel_download_hash_dict["one_time_hash"] = one_time_hash
         CampaignExcelDownloadHash(**excel_download_hash_dict).save()
         return handle_response({}, data={"one_time_hash": one_time_hash}, success=True)
+class AddHotnessLevelsToLeadForm(APIView):
+    @staticmethod
+    def get(request):
+        lead_forms = mongo_client.leads_forms.find()
+        for lead_form in lead_forms:
+            index = len(lead_form['data'].keys())
+            index = index + 1
+
+            lead_form['data'][
+                str(index)] = {
+                    "order_id": None,
+                    "key_name": "Is Meeting Fixed",
+                    "key_type": "STRING",
+                    "item_id": index,
+                    "is_required": False
+                }
+
+            lead_form["global_hot_lead_criteria"][
+                "is_hot_level_2"] = {
+                    "or": {
+                        str(index) : [
+                            "Y",
+                            "y",
+                            "Yes",
+                            "yes",
+                            "YES"
+                        ]
+                    }
+                }
+            index = index + 1
+            lead_form['data'][
+                str(index)] = {
+                    "order_id": None,
+                    "key_name": "Is Meeting Completed",
+                    "key_type": "STRING",
+                    "item_id": index,
+                    "is_required": False
+                }
+            lead_form["global_hot_lead_criteria"][
+            "is_hot_level_3" ] = {
+                "or": {
+                    str(index): [
+                        "Y",
+                        "y",
+                        "Yes",
+                        "yes",
+                        "YES"
+                    ]
+                }
+            }
+            index = index + 1
+            lead_form['data'][
+                str(index)] = {
+                    "order_id": None,
+                    "key_name": "Is Lead Converted",
+                    "key_type": "STRING",
+                    "item_id": index,
+                    "is_required": False
+                }
+            lead_form["global_hot_lead_criteria"][
+            "is_hot_level_4"] = {
+                "or": {
+                    str(index): [
+                        "Y",
+                        "y",
+                        "Yes",
+                        "yes",
+                        "YES"
+                    ]
+                }
+            }
+            index = index + 1
+            lead_form['data'][
+                str(index)] = {
+                "order_id": None,
+                "key_name": "Order Punched Date",
+                "key_type": "DATE",
+                "item_id": index,
+                "is_required": False
+            }
+            mongo_client.leads_forms.update_one({"leads_form_id": lead_form['leads_form_id']},
+                                            {"$set": {'data': lead_form['data'],
+                                                    'global_hot_lead_criteria': lead_form['global_hot_lead_criteria']}})
+        leads = mongo_client.leads.find({})
+        fields_array = ["Is Meeting Fixed", "Is Meeting Completed", "Is Lead Converted"]
+
+        bulk = mongo_client.leads.initialize_unordered_bulk_op()
+        counter = 0
+        for lead in leads:
+            count = len(lead['data'])
+            for field in fields_array:
+                count = count + 1
+                lead['data'].append({
+                    "key_name": field,
+                    "key_type": "STRING",
+                    "item_id": count,
+                    "value": None
+                })
+            count = count + 1
+            lead['data'].append({
+                "key_name": "Order Punched Date",
+                "key_type": "DATE",
+                "item_id": count,
+                "value": None
+            })
+
+            lead_sha_256 = create_lead_hash(lead)
+            lead["lead_sha_256"] = lead_sha_256
+
+            bulk.find({"_id": ObjectId(lead['_id'])}).update({"$set":
+                                                      {"data": lead["data"], "lead_sha_256": lead_sha_256}})
+            counter += 1
+            if counter % 1000 == 0:
+                bulk.execute()
+                bulk = mongo_client.leads.initialize_unordered_bulk_op()
+        if counter > 0:
+            bulk.execute()
+
+                # mongo_client.leads.update_one(
+                #     {"leads_form_id": int(lead['leads_form_id']), "entry_id": int(lead['entry_id']),
+                #      "supplier_id": lead['supplier_id']},
+                #     {"$set": {"data": lead["data"], "lead_sha_256": lead_sha_256}})
+
+        return handle_response('', data={"success": True}, success=True)
+
+class UpdateConvertedLeadsFromSheet(APIView):
+    @staticmethod
+    def post(request):
+        source_file = request.data['file']
+        wb = load_workbook(source_file)
+        ws = wb.get_sheet_by_name(wb.get_sheet_names()[1])
+        supplier_names_list = set()
+        campaign_names_list = set()
+        supplier_campaign_name_map = {}
+        for index, row in enumerate(ws.iter_rows()):
+            if index == 0:
+                continue
+            if row[4].value:
+                supplier_names_list.add(row[4].value.lower())
+                campaign_names_list.add(row[8].value.lower())
+                supplier_campaign_name_map[row[4].value.lower()] = row[8].value.lower()
+        suppliers = SupplierTypeSociety.objects.filter(society_name__in=list(supplier_names_list))
+
+        campaigns = ProposalInfo.objects.filter(name__in=list(campaign_names_list))
+        suppliers_map_with_id = { supplier.society_name.lower(): supplier.supplier_id for supplier in suppliers }
+        suppliers_map_with_name = {supplier.supplier_id: supplier.society_name.lower() for supplier in suppliers}
+        campaigns_map_with_id = { campaign.name.lower(): campaign.proposal_id for campaign in campaigns }
+
+        ws = wb.get_sheet_by_name(wb.get_sheet_names()[4])
+        purchase_order_objects = []
+        suppliers_in_purchase_order = set()
+        for index, row in enumerate(ws.iter_rows()):
+            if index == 0:
+                continue
+            purchase_order_objects.append({
+                "name": row[0].value.lower(),
+                "supplier_name": row[1].value.lower(),
+                "date": row[2].value
+            })
+            suppliers_in_purchase_order.add(row[1].value.lower())
+
+        supplier_leads = {}
+        mismatch_suppliers_in_punched_order = []
+        for supplier in suppliers_in_purchase_order:
+            supplier_leads[supplier] = {}
+            if supplier in suppliers_map_with_id:
+                supplier_leads[supplier]['leads'] = mongo_client.leads.find({'supplier_id': suppliers_map_with_id[supplier],
+                                                         'campaign_id': campaigns_map_with_id[supplier_campaign_name_map[supplier]]})
+                if supplier_leads[supplier]['leads'].count() > 0:
+                    supplier_leads[supplier]['name_list'] = []
+                    supplier_leads[supplier]['names_objects_map'] = {}
+                    for lead in supplier_leads[supplier]['leads']:
+                        if 'data' in lead:
+                            name = lead['data'][0]['value'].lower()
+                            if name:
+                                supplier_leads[supplier]['name_list'].append(name)
+                                supplier_leads[supplier]['names_objects_map'][name] = lead
+            else:
+                mismatch_suppliers_in_punched_order.append(supplier)
+        for item in purchase_order_objects:
+            if 'name_list' in supplier_leads[item['supplier_name']]:
+                matched_name = difflib.get_close_matches(item['name'], supplier_leads[item['supplier_name']]['name_list'])
+                if len(matched_name) > 0:
+                    name = matched_name[0]
+                    lead = supplier_leads[item['supplier_name']]['names_objects_map'][name]
+                    count = len(lead['data'])
+                    if lead['data'][count-1]['key_name'] == 'Order Punched Date':
+                        lead['data'][count-1]['value'] = item['date']
+                    if lead['data'][count-2]['key_name'] == 'Is Lead Converted':
+                        lead['data'][count-2]['value'] = 'Yes'
+                    lead['multi_level_is_hot']['is_hot_level_2'] = True
+                    lead['multi_level_is_hot']['is_hot_level_3'] = True
+                    lead['multi_level_is_hot']['is_hot_level_4'] = True
+
+                    lead_sha_256 = create_lead_hash(lead)
+                    lead["lead_sha_256"] = lead_sha_256
+
+                    mongo_client.leads.update_one(
+                        {"leads_form_id": int(lead['leads_form_id']), "entry_id": int(lead['entry_id']), "supplier_id": lead['supplier_id']},
+                        {"$set": {"data": lead["data"], "lead_sha_256": lead_sha_256,
+                                  "hotness_level": 4, "multi_level_is_hot": lead['multi_level_is_hot']}})
+        # To update leads summary table
+        ws = wb.get_sheet_by_name(wb.get_sheet_names()[1])
+        for index, row in enumerate(ws.iter_rows()):
+            if index == 0:
+                continue
+            if row[4].value:
+                lead = list(mongo_client.leads_summary.find({"supplier_id": suppliers_map_with_id[row[4].value.lower()],
+                                                 "campaign_id": campaigns_map_with_id[supplier_campaign_name_map[row[4].value.lower()]]}))
+
+                if len(lead) > 0:
+                    total_booking_confirmed = row[12].value if row[12].value else None
+                    total_orders_punched = row[13].value if row[13].value else None
+
+                    mongo_client.leads_summary.update({"_id": ObjectId(lead[0]['_id'])},
+                                                      {"$set": {'total_booking_confirmed': total_booking_confirmed,
+                                                                'total_orders_punched': total_orders_punched}})
+        data = {
+            "mismatch_suppliers_in_punched_order": mismatch_suppliers_in_punched_order,
+        }
+        return handle_response('', data=data, success=True)
+
+class UpdateLeadSummary(APIView):
+    @staticmethod
+    def get(request):
+        campaign_list = ProposalInfo.objects.filter().values_list('proposal_id', flat=True)
+        data = get_leads_summary(list(campaign_list))
+        for item in data:
+            mongo_client.leads_summary.insert_one({
+                "campaign_id": item['campaign_id'],
+                "supplier_id": item['supplier_id'],
+                "lead_date": item['created_at'] if 'created_at' in item else None,
+                "total_leads_count": item['total_leads_count'],
+                "total_hot_leads_count": item['hot_leads_count'],
+                "total_booking_confirmed": 0,
+                "total_orders_punched": 0
+            })
+        return handle_response('', data={"success": True}, success=True)

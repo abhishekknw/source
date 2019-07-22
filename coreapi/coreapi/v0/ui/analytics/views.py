@@ -10,7 +10,7 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     mean_calculator, count_details_parent_map_custom, flatten, flatten_dict_array,
                     round_sig_min, time_parent_names, raw_data_unrestricted,
                     key_replace_group_multiple, key_replace_group, truncate_by_value_ranges, linear_extrapolator,
-                    get_constrained_values, add_related_field, related_fields_dict, calculate_mode,
+                    get_constrained_values, add_related_field, related_fields_dict, zero_filtered_raw_data,
                     add_binary_field_status, binary_parameters_list)
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo, ProposalCenterMapping
@@ -124,6 +124,15 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         raw_data_lf.insert(0,'lead')
 
     for curr_metric in raw_data_lf:
+        zero_filter = False
+        if curr_metric in zero_filtered_raw_data:
+            zero_filter = True
+        elif '_nz' in curr_metric:
+            curr_index = raw_data_lf.index(curr_metric)
+            original_index = raw_data.index(curr_metric)
+            curr_metric = curr_metric[:-3]
+            raw_data_lf[curr_index] = curr_metric
+            raw_data[original_index] = curr_metric
         lowest_level = curr_metric
         if data_scope_category == 'geographical':
             lowest_geographical_level = geographical_parent_details['base']
@@ -151,7 +160,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 hl = grouping_level[-1]
 
             curr_output_all = get_details_by_higher_level(hl, lowest_level, curr_highest_level_values, lgl, grouping_level,
-                                                      curr_dict, unilevel_constraints, grouping_category, value_ranges)
+                                                      curr_dict, unilevel_constraints, grouping_category, value_ranges,
+                                                          zero_filter= zero_filter)
             curr_output = curr_output_all[0]
             supplier_list = curr_output_all[1]
             # add missing key, if needed
@@ -180,7 +190,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         else:
             curr_output_all = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
                           default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category,
-                          value_ranges, supplier_constraints, supplier_list = supplier_list)
+                          value_ranges, supplier_constraints, supplier_list = supplier_list, zero_filter = zero_filter)
 
             curr_output = curr_output_all[0]
             supplier_list = curr_output_all[1]
@@ -224,11 +234,10 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             if reverse_key in raw_data:
                 reverse_map[reverse_key] = key
         if "sublevel" in data_point:
-            single_array = date_to_other_groups(single_array,grouping_level, data_point["sublevel"],
+            single_array = date_to_other_groups(single_array,[grouping_level[0]], data_point["sublevel"],
                                                 raw_data, highest_level_values)
         single_array_subleveled = copy.deepcopy(single_array)
         single_array_truncated = truncate_by_value_ranges(single_array_subleveled,value_ranges, range_type)
-
 
         if single_array_truncated == []:
             print("no data within the given range")
@@ -421,7 +430,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
                                 grouping_category = "", value_ranges = {}, supplier_constraints = {},
-                                supplier_list = []):
+                                supplier_list = [], zero_filter = False):
     incrementing_value = None
     if lowest_level == None:
         return []
@@ -463,7 +472,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         if lowest_level not in count_details_parent_map:
             print("incorrect raw data")
             return []
-    if len(grouping_levels)==3:
+    if len(grouping_levels)>=3:
         trial_map = count_details_parent_map_custom
         if lowest_level in trial_map:
             default_map = trial_map
@@ -626,6 +635,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
 
         elif storage_type == 'count' or storage_type == 'sum' or storage_type == 'condition' or \
                 storage_type == 'append' or storage_type == 'mean':
+            self_model_name_mongo = '$' + self_model_name
             if database_type == 'mongodb':
                 if 'hotness_level' in next_level:
                     next_level = next_level + str(incrementing_value)
@@ -639,7 +649,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     else:
                         group_dict.update({'_id': {}, next_level: {"$sum": 1}})
                 elif storage_type == 'sum':
-                    group_dict.update({'_id': {}, next_level: {"$sum": self_model_name}})
+                    group_dict.update({'_id': {}, next_level: {"$sum": self_model_name_mongo}})
                 elif storage_type == 'mean':
                     group_dict.update({'_id': {}, next_level: {"$avg": self_model_name}})
                 else:
@@ -732,6 +742,10 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         except:
             single_array_results = merge_dict_array_array_multiple_keys(new_results, ['supplier'])
 
+        if zero_filter:
+            filtered_results = [x for x in single_array_results if x[lowest_level]>0]
+            single_array_results = filtered_results
+
         result_keys = single_array_results[0].keys()
         if "supplier" in result_keys:
             if "lead" in result_keys:
@@ -745,7 +759,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     single_array_results = new_array_results
 
         if original_grouping_levels is not None:
-
             superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
             superlevels_base_set = list(set(superlevels_base))
             if len(superlevels_base_set)>1:
@@ -756,8 +769,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
                                     superlevels, lowest_level, value_ranges, incrementing_value, storage_type, base)
                 elif len(superlevels)==1:
-                    single_array_results = key_replace_group(single_array_results, superlevels_base_set[0],
-                                superlevels[0], lowest_level, value_ranges, incrementing_value, storage_type)
+                    single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
+                                superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
     else:
         single_array_results = []
     return [single_array_results, supplier_list]
