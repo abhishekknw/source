@@ -12,10 +12,13 @@ urlpatterns = [
     url(r'^state/(?P<state_id>[A-Z_a-z0-9]+)/$', StateById.as_view()),
     url(r'^city/$', city.as_view()),
     url(r'^city/(?P<city_id>[A-Z_a-z0-9]+)/$', CityById.as_view()),
+    url(r'^city-by-state/(?P<state_id>[A-Z_a-z0-9]+)/$', CityByStateCode.as_view()),
     url(r'^area/$', Area.as_view()),
     url(r'^area/(?P<area_id>[A-Z_a-z0-9]+)/$', AreaById.as_view()),
+    url(r'^area-by-city/(?P<city_id>[A-Z_a-z0-9]+)/$', AreaByCityCode.as_view()),
     url(r'^sub-area/$', SubArea.as_view()),
     url(r'^sub-area/(?P<sub_area_id>[A-Z_a-z0-9]+)/$', SubAreaById.as_view()),
+    url(r'^sub-area-by-area/(?P<area_id>[A-Z_a-z0-9]+)/$', SubAreaByAreaCode.as_view()),
 
 ]
 

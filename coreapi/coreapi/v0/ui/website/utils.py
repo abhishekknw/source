@@ -2508,12 +2508,13 @@ def make_export_final_response(result, data, inventory_summary_map, supplier_inv
                         stats['inventory_summary_no_instance_error'].add(supplier_id)
 
                     if inventory_summary_map.get(code) and inventory_summary_map[code].get(supplier_id):
-                        # this module inserts a few keys in supplier_object such as 'is_allowed' and 'pricing' keys for each inventory.
-                        is_error, detail = set_supplier_inventory_keys(supplier_object,
-                                                                       inventory_summary_map[code][supplier_id],
-                                                                       unique_inv_codes,
-                                                                       supplier_inventory_pricing_map[supplier_id])
-                        supplier_object = detail.copy()
+                        if supplier_id in supplier_inventory_pricing_map:
+                            # this module inserts a few keys in supplier_object such as 'is_allowed' and 'pricing' keys for each inventory.
+                            is_error, detail = set_supplier_inventory_keys(supplier_object,
+                                                                           inventory_summary_map[code][supplier_id],
+                                                                           unique_inv_codes,
+                                                                           supplier_inventory_pricing_map[supplier_id])
+                            supplier_object = detail.copy()
 
                     # obtain the dict containing non-center information
                     supplier_info_dict = construct_single_supplier_row(supplier_object, result[code]['data_keys'])
@@ -3814,7 +3815,7 @@ def setup_generic_export(data, user, proposal_id):
         inventory_summary_map = {}
         for instance in total_inventory_summary_instances:
             # taking advantage of the fact that a supplier id contains it's code in it. 'RS' is embedded in two characters [7:8]
-            supplier_code = instance.object_id[7:9]
+            supplier_code = 'RS'
             supplier_id = instance.object_id
 
             if not inventory_summary_map.get(supplier_code):
@@ -6774,7 +6775,6 @@ def create_inventory_ids(supplier_object, filter_code, is_import_sheet=False, su
     """
     function_name = create_inventory_ids.__name__
     try:
-        print(supplier_object.society_name)
         tower_count = int(supplier_object.tower_count) if supplier_object.tower_count else 1
         inventory_ids = []
         Struct = namedtuple('Struct', 'adinventory_id')

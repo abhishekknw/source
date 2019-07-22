@@ -27,14 +27,15 @@ class state(APIView):
     @staticmethod
     def get(request):
         all_states= StateDetails.objects.all()
-        all_state_dict = {}
+        states_list = []
         for state in all_states:
-            all_state_dict[str(state._id)] = {
+            states_list.append({
                 "id": str(state._id),
                 "state_name": state.state_name,
                 "state_code": state.state_code,
-            }
-        return handle_response('', data=all_state_dict, success=True)
+            })
+
+        return handle_response('', data=states_list, success=True)
 
 
 class StateById(APIView):
@@ -301,12 +302,15 @@ class CityTransfer(APIView):
     @staticmethod
     def get(request):
         cities_data = City.objects.all()
+        all_states = StateDetails.objects.all()
+        old_states_data = State.objects.all()
+        all_states_by_old_id = {state.id: state for state in old_states_data}
+        all_states_by_name = {state.state_name: state for state in all_states}
         for city in cities_data:
             data = {}
             data['city_name'] = city.city_name
             data['city_code'] = city.city_code
-            data['state_code'] = city.state_code
-
+            data['state_id'] = str(all_states_by_name[all_states_by_old_id[city.state_code.id].state_name]._id)
             CityDetails(**data).save()
 
         return handle_response('', data={"success": True}, success=True)
@@ -315,11 +319,15 @@ class AreaTransfer(APIView):
     @staticmethod
     def get(request):
         areas_data = CityArea.objects.all()
+        all_cities = CityDetails.objects.all()
+        old_cities_data = City.objects.all()
+        all_cities_by_old_id = {city.id: city for city in old_cities_data}
+        all_cities_by_name = {city.city_name: city for city in all_cities}
         for area in areas_data:
             data = {}
             data['label'] = area.label
             data['area_code'] = area.area_code
-            data['city_code'] = area.city_code
+            data['city_id'] = str(all_cities_by_name[all_cities_by_old_id[area.city_code.id].city_name]._id)
 
             CityAreaDetails(**data).save()
 
@@ -329,10 +337,14 @@ class SubAreaTransfer(APIView):
     @staticmethod
     def get(request):
         sub_area_data = CitySubArea.objects.all()
+        all_areas = CityAreaDetails.objects.all()
+        old_areas_data = CityArea.objects.all()
+        all_sub_areas_by_old_id = { area.id: area for area in old_areas_data }
+        all_areas_by_name = { area.label: area for area in all_areas }
         for sub_area in sub_area_data:
             data = {}
             data['subarea_name'] = sub_area.subarea_name
-            data['area_code'] = sub_area.area_code
+            data['area_id'] = str(all_areas_by_name[all_sub_areas_by_old_id[sub_area.area_code.id].label    ]._id)
 
             if sub_area.locality_rating == None or ' ':
               data['locality_rating'] = 'No rating'
@@ -348,4 +360,46 @@ class SubAreaTransfer(APIView):
 
         return handle_response('', data={"success": True}, success=True)
 
+class CityByStateCode(APIView):
+    @staticmethod
+    def get(request, state_id):
+        print("hello", state_id)
+        cities = CityDetails.objects.raw({'state_id': state_id})
+        cities_list = []
+        for city in cities:
+            cities_list.append({
+                "id": str(city._id),
+                "city_name": city.city_name,
+                "city_code": city.city_code,
+                "state_id": city.state_id,
+            })
+        return handle_response('', data=cities_list, success=True)
 
+class AreaByCityCode(APIView):
+    @staticmethod
+    def get(request, city_id):
+        all_areas = CityAreaDetails.objects.raw({'city_id': city_id})
+        areas_list = []
+        for area in all_areas:
+            areas_list.append({
+                "id": str(area._id),
+                "label": area.label,
+                "area_code": area.area_code,
+                "city_id": area.city_id,
+            })
+        return handle_response('', data=areas_list, success=True)
+
+class SubAreaByAreaCode(APIView):
+    @staticmethod
+    def get(request, area_id):
+        all_sub_areas = CitySubAreaDetails.objects.raw({'area_id': area_id})
+        sub_areas_list = []
+        for sub_area in all_sub_areas:
+            sub_areas_list.append({
+                "id": str(sub_area._id),
+                "subarea_name": sub_area.subarea_name,
+                "subarea_code": sub_area.subarea_code,
+                "locality_rating": sub_area.locality_rating,
+                "area_id": sub_area.area_id,
+            })
+        return handle_response('', data=sub_areas_list, success=True)
