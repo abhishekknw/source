@@ -1104,6 +1104,7 @@ def calculate_is_hot(curr_lead, global_hot_lead_criteria):
         for item_id in global_hot_lead_criteria[is_hot_level]['or']:
             if item_id in curr_lead_data_dict and curr_lead_data_dict[item_id]['value'] is not None:
                 if str(curr_lead_data_dict[item_id]['value']) in global_hot_lead_criteria[is_hot_level]['or'][item_id]:
+                    
                     multi_level_is_hot[is_hot_level] = True
                     any_is_hot = True
                 if "AnyValue" in global_hot_lead_criteria[is_hot_level]['or'][item_id] and str(
@@ -1548,7 +1549,6 @@ class CampaignDataInExcelSheet(APIView):
                 resp['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
                 excel_book.save(resp)
                 return resp
-            print(response.data)
 
 
 
@@ -1800,4 +1800,19 @@ class UpdateLeadSummary(APIView):
                 "total_booking_confirmed": 0,
                 "total_orders_punched": 0
             })
+        return handle_response('', data={"success": True}, success=True)
+
+class UpdateOrderId(APIView):
+    @staticmethod
+    def get(request):
+        lead_forms = mongo_client.leads_forms.find({})
+        for lead_form in lead_forms:
+            if len(lead_form['data']) > 0:
+                for item in lead_form['data'].values():
+                    if not item['order_id']:
+                        item['order_id'] = item['item_id']
+                mongo_client.leads_forms.update({"_id": ObjectId(lead_form['_id'])},
+                                                  {"$set": {'data': lead_form['data'] }})
+
+
         return handle_response('', data={"success": True}, success=True)
