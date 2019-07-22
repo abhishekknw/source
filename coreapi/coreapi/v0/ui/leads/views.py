@@ -274,9 +274,14 @@ class GetLeadsEntriesByCampaignId(APIView):
     @staticmethod
     def get(request, campaign_id, supplier_id='All'):
         page_number = int(request.query_params.get('page_number', 0))
-        first_leads_form_id = mongo_client.leads_forms.find_one({"campaign_id":campaign_id})['leads_form_id']
-        supplier_all_lead_entries = get_supplier_all_leads_entries(first_leads_form_id, supplier_id, page_number)
-        return handle_response({}, data=supplier_all_lead_entries, success=True)
+        first_leads_form_id = mongo_client.leads_forms.find_one({"campaign_id":campaign_id})
+
+        if first_leads_form_id is not None:
+            leads_form_id = first_leads_form_id['leads_form_id']
+            supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number)
+            return handle_response({}, data=supplier_all_lead_entries, success=True)
+        else:
+            return handle_response({}, data="No leads found", success=False)
 
 
 class CreateLeadsForm(APIView):
