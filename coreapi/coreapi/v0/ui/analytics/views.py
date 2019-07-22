@@ -134,6 +134,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             raw_data_lf[curr_index] = curr_metric
             raw_data[original_index] = curr_metric
         lowest_level = curr_metric
+        print(lowest_level)
         if data_scope_category == 'geographical':
             lowest_geographical_level = geographical_parent_details['base']
             if data_point_category == 'geographical':
@@ -191,6 +192,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_output_all = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
                           default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category,
                           value_ranges, supplier_constraints, supplier_list = supplier_list, zero_filter = zero_filter)
+            print(curr_output_all)
 
             curr_output = curr_output_all[0]
             supplier_list = curr_output_all[1]
@@ -208,6 +210,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_output_keys = curr_output[0].keys()
             allowed_keys = set([highest_level_original] + grouping_level + [curr_metric])
             #curr_output = key_replace_group(curr_output,'supplier','flattype')
+            print(curr_output)
             if not curr_output_keys<=allowed_keys:
                 curr_output = sum_array_by_keys(curr_output, [highest_level_original]+grouping_level,[curr_metric])
         if data_summary == 1:
@@ -337,7 +340,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         for curr_stat in stats:
             statistics_array = statistics_map[curr_stat](derived_array, metrics_array_dict)
             derived_array = statistics_array
-
     bsi = []
     if not bivariate_statistical_information == {}:
         stats = list(bivariate_statistical_information.keys())
@@ -360,15 +362,17 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             stat_metrics.append(get_metrics_from_code(curr_index,raw_data,metric_names))
         raw_data_list = []
         for prev_data in raw_data:
-            curr_data = prev_data + '_total'
+            curr_data = prev_data
             raw_data_list.append(curr_data)
         higher_level_list_old = append_array_by_keys(derived_array,grouping_level,stat_metrics+raw_data)
+        for curr_field in additional_fields_list:
+            higher_level_list_test = add_related_field(higher_level_list_old, *(related_fields_dict[curr_field]))
 
         higher_level_list = []
         higher_level_raw_data = []
         for curr_dict in higher_level_list_old:
             for curr_metric in raw_data:
-                curr_name = curr_metric+'_total'
+                curr_name = curr_metric
                 curr_list = curr_dict[curr_metric]
                 if not type(curr_list)==list:
                     curr_list = [curr_list]
@@ -386,11 +390,11 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 a = curr_metric["a"]
                 b = curr_metric["b"]
                 try:
-                    nr = a + '_total'
+                    nr = a
                 except:
                     nr=a
                 try:
-                    dr = b+'_total'
+                    dr = b
                 except:
                     dr=b
                 if isinstance(nr, str):
@@ -403,13 +407,13 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                     dr_value = dr
                 result_value = binary_operation(float(nr_value), float(dr_value), curr_metric['op']) if \
                     not dr_value == 0 and nr_value is not None and dr_value is not None else None
-                new_name = curr_metric['name'] + '_total'
+                new_name = curr_metric['name']
                 new_metric_names.append(new_name)
                 curr_dict[new_name] = round_sig_min(result_value, 7) if result_value is not None else result_value
 
         new_stat_metrics = []
         for curr_stat in stat_metrics:
-            new_name = curr_stat + '_total'
+            new_name = curr_stat
             new_stat_metrics.append(new_name)
 
         for curr_stat in stats:
@@ -424,8 +428,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     return {"individual metrics":individual_metric_output, "lower_group_data": derived_array,
             "higher_group_data":higher_level_list, "bivariate_statistical_information": bsi}
 
-
-#def get_details_by_lower_level(higher_level, lower_level, lower_level_list)
 
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
@@ -517,6 +519,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         desc_sequence = desc_sequence[1:]
     last_level_id = len(desc_sequence) - 1
     common_keys = []
+    print("sequence")
+    print(desc_sequence)
     while curr_level_id < last_level_id:
         curr_level = desc_sequence[curr_level_id]
         next_level = desc_sequence[curr_level_id+1]
@@ -547,6 +551,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             add_category = first_constraint['category']
             add_map_name = add_category + '_parent_names'
             add_variable_name = eval(add_map_name)['default']
+            if lowest_level in ['lead','hot_lead']:
+                add_variable_name = "lead_date"
             add_match_type = first_constraint["match_type"]
             add_match_list = first_constraint["values"]
 
@@ -679,7 +685,13 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                         }
                     ]
                 )
+                # sample_query = mongo_client["leads"].find({"data": {"$elemMatch": {"key_name":"Order Punched Date",
+                #                                                     "value": {"$ne":None}}},"campaign_id":"BYJMAC214B"})
                 query = list(query)
+                print(model_name)
+                print(match_dict)
+                print(group_dict)
+                print(project_dict)
                 if not query==[]:
                     if not all_results == [] and isinstance(all_results[0], dict) == True:
                         all_results = [all_results]
@@ -737,6 +749,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             all_results = [all_results]
     if not len(all_results)==0:
         new_results = convert_dict_arrays_keys_to_standard_names(all_results)
+
         try:
             single_array_results = merge_dict_array_array_multiple_keys(new_results, grouping_levels)
         except:
@@ -757,7 +770,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                         if curr_array['supplier'] in supplier_list:
                             new_array_results.append(curr_array)
                     single_array_results = new_array_results
-
         if original_grouping_levels is not None:
             superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
             superlevels_base_set = list(set(superlevels_base))
