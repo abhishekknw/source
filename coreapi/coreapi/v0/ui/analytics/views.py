@@ -423,8 +423,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 weighted = 1
             higher_level_list = statistics_map[curr_stat](higher_level_list,stat_metrics, weighted=weighted)
 
+    custom_function_output = {}
     if not custom_functions == []:
-        custom_function_output = {}
         for curr_function in custom_functions:
             if curr_function == "order_cumulative":
                 campaign_list = data_scope_first["values"]["exact"]
