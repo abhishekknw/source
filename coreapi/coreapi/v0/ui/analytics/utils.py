@@ -1241,7 +1241,10 @@ def cumulative_distribution(campaigns, frequency_results, sum_results, key_name,
             inner_dict[key_name] = curr_key
             count = count + curr_dict[curr_key]
             inner_dict[value_name] = round(count*100/overall_sum, 4)
+            inner_dict['campaign'] = curr_campaign
             cumulative_frequency_results[curr_campaign].append(inner_dict)
+        cumulative_frequency_results[curr_campaign] = add_related_field(cumulative_frequency_results[curr_campaign],
+                                                                        *(related_fields_dict['campaign']))
     return cumulative_frequency_results
 
 
