@@ -1223,23 +1223,24 @@ def get_list_elements_frequency_mongo(model_name, match_dict, outer_key, inner_k
     outer_data = [x[outer_key] for x in query_output]
     inner_data = [[date_from_datetime(y[nonnull_key]) for y in x if y[inner_key]==inner_value][0] for x in outer_data]
     value_count = dict(collections.Counter(inner_data))
-    return value_count
+    sum_values = sum(value_count.values())
+    return [value_count, sum_values]
 
 
-def cumulative_distribution(campaigns, frequency_results, key_name, value_name):
+def cumulative_distribution(campaigns, frequency_results, sum_results, key_name, value_name):
     cumulative_frequency_results = {}
     for curr_campaign in campaigns:
+        overall_sum = sum_results[curr_campaign]
         cumulative_frequency_results[curr_campaign] = []
         curr_dict = frequency_results[curr_campaign]
         count = 0
         curr_dict_keys = list(curr_dict.keys())
         curr_dict_keys.sort()
-        print(curr_dict_keys)
         for curr_key in curr_dict_keys:
             inner_dict = {}
             inner_dict[key_name] = curr_key
             count = count + curr_dict[curr_key]
-            inner_dict[value_name] = count
+            inner_dict[value_name] = round(count*100/overall_sum, 4)
             cumulative_frequency_results[curr_campaign].append(inner_dict)
     return cumulative_frequency_results
 

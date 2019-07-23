@@ -96,8 +96,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     grouping_level = data_point['level'] if 'level' in data_point else None
     grouping_level_first = grouping_level[0] if grouping_level is not None else None
     grouping_category = data_point["category"] if 'category' in data_point else None
-    # if highest_level == grouping_level:
-    #     return "lowest level should be lower than highest level"
+
     individual_metric_output = {}
     highest_level_values = data_scope_first['values']['exact'] if 'values' in data_scope_first \
         and 'exact' in data_scope_first['values'] else []
@@ -434,14 +433,15 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 inner_value = 'Order Punched Date'
                 nonnull_key = "value"
                 frequency_results = {}
-                print(campaign_list)
+                sum_results = {}
                 for curr_campaign in campaign_list:
                     match_dict = {"campaign_id": curr_campaign}
                     curr_res = get_list_elements_frequency_mongo(model_name, match_dict, outer_key, inner_key,
                                                                  inner_value, nonnull_key)
-                    frequency_results[curr_campaign] = curr_res
-                cumulative_frequency_results = cumulative_distribution(campaign_list, frequency_results, 'date',
-                                                                       'total orders punched')
+                    frequency_results[curr_campaign] = curr_res[0]
+                    sum_results[curr_campaign] = curr_res[1]
+                cumulative_frequency_results = cumulative_distribution(campaign_list, frequency_results, sum_results,
+                                                                       'date', 'total orders punched pct')
                 custom_function_output["order_cumulative"] = cumulative_frequency_results
 
     return {"individual metrics":individual_metric_output, "lower_group_data": derived_array,
@@ -582,6 +582,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             supplier_match_list = get_constrained_values('SupplierTypeSociety','supplier_id',supplier_constraints)
 
         # general queries common to all storage types
+        match_dict = {}
         if database_type == 'mongodb':
             add_constraint = []
             project_dict = {}
@@ -796,7 +797,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                                 superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
     else:
         single_array_results = []
-    return [single_array_results, supplier_list]
+    print(match_dict)
+    return [single_array_results, supplier_list, match_dict]
 
 
 def get_details_by_higher_level_geographical(highest_level, highest_level_list, lowest_level='supplier',
