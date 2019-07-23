@@ -876,6 +876,7 @@ booking_priority_code_to_status = {
 # supplier booking status
 booking_status = {
     'booked': 'BK',
+    'unknown': 'UN',
     'not_booked': 'NB',
     'phone_booked' : 'PB',
     'visit_booked' : 'VB',
@@ -885,10 +886,13 @@ booking_status = {
     'call_required' : 'CR',
     'decision_pending' : 'DP',
     'tentative_booking' : 'TB',
+    'new_entity': 'NE',
+    'not_initiated': 'NI'
 }
 
 booking_code_to_status = {
-    'BK': 'Confirmed Booked',
+    'BK': 'Confirmed Booking',
+    'UN': 'Unknown',
     'NB': 'Not Booked',
     'PB': 'Phone Booked',
     'VB': 'Visit Booked',
@@ -897,7 +901,9 @@ booking_code_to_status = {
     'VR': 'Visit Required',
     'CR': 'Call Required',
     'DP': 'Decision Pending',
-    'TB': 'Tentative Booking'
+    'TB': 'Tentative Booking',
+    'NE': 'New Entity',
+    'NI': 'Not Initiated'
 }
 # different campaign states
 completed = 'COMPLETED'
