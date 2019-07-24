@@ -651,6 +651,10 @@ def operate_array_by_key(array, grouping_keys, operate_key, operation_type='sum'
 
 
 def sum_array_by_key(array, grouping_keys, sum_key):
+    print("values")
+    print(array)
+    print(grouping_keys)
+    print(sum_key)
     new_array = []
     required_keys = [sum_key] + grouping_keys
     for curr_dict in array:
@@ -1106,6 +1110,7 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
     if not curr_dict:
         return []
     all_keys = list(curr_dict.keys())
+    print("cd: ", curr_dict)
     grouping_keys = all_keys
     grouping_keys.remove(sum_key)
     if existing_key in grouping_keys:
@@ -1285,7 +1290,7 @@ def get_list_elements_single_array(model_name, match_dict, outer_key, inner_key,
 
 
 def cumulative_distribution_from_array(dict_array, grouping_keys, sum_keys, order_key):
-    if order_key not in dict_array or sum_keys[0] not in dict_array:
+    if order_key not in dict_array[0] or sum_keys[0] not in dict_array[0]:
         return dict_array
     dict_array = sorted(dict_array, key=lambda k: k[order_key])
     total_dict_array = sum_array_by_keys(dict_array, grouping_keys, sum_keys)

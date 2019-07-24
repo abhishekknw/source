@@ -214,7 +214,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             if 'order_cumulative' in custom_functions:
                 allowed_keys = allowed_keys.union(set(custom_keys))
             if not curr_output_keys<=allowed_keys:
-                curr_output = sum_array_by_keys(curr_output, [highest_level_original]+grouping_level,[curr_metric])
+                curr_output = sum_array_by_keys(curr_output, list(allowed_keys-set([curr_metric])),[curr_metric])
         if data_summary == 1:
             print("summarizing data")
             final_value = sum([x[curr_metric] for x in curr_output])
@@ -225,6 +225,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     custom_binary_field_labels = data_point["custom_binary_field_labels"] if "custom_binary_field_labels" in data_point\
         else {}
     if data_summary == 0:
+        print(individual_metric_output)
+        print(grouping_level)
         if grouping_level[0] in reverse_direct_match.keys() or data_scope_category == 'geographical' \
                 or data_point["level"] == ["date"]:
             single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, [highest_level]+grouping_level)
@@ -719,7 +721,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     ]
                 )
                 query = list(query)
-                if new_results: query = query+new_results
+                if new_results: query = new_results
                 if not query==[]:
                     if not all_results == [] and isinstance(all_results[0], dict) == True:
                         all_results = [all_results]
@@ -812,7 +814,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
                                 superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
         if next_level == 'total_orders_punched':
-            single_array_results = cumulative_distribution_from_array(single_array_results, ['campaign','flattype'],
+            curr_grouping_levels = list(set(original_grouping_levels) - set({"date"}))
+            single_array_results = cumulative_distribution_from_array(single_array_results, curr_grouping_levels,
                                                ['total_orders_punched'],'date')
     else:
         single_array_results = []
