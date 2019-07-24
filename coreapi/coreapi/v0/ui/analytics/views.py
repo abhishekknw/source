@@ -8,7 +8,7 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     merge_dict_array_dict_multiple_keys, count_details_parent_map_multiple, sum_array_by_keys,
                     sum_array_by_single_key, append_array_by_keys, frequency_mode_calculator, var_stdev_calculator,
                     mean_calculator, count_details_parent_map_custom, flatten, flatten_dict_array,
-                    round_sig_min, time_parent_names, raw_data_unrestricted,
+                    round_sig_min, time_parent_names, raw_data_unrestricted, averaging_metrics_list,
                     key_replace_group_multiple, key_replace_group, truncate_by_value_ranges, linear_extrapolator,
                     get_constrained_values, add_related_field, related_fields_dict, zero_filtered_raw_data,
                     add_binary_field_status, binary_parameters_list, get_list_elements_frequency_mongo,
@@ -379,7 +379,10 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 if not type(curr_list)==list:
                     curr_list = [curr_list]
                 curr_list = [int(y) for y in curr_list if y is not None]
-                curr_value = sum(curr_list)
+                if curr_metric in averaging_metrics_list:
+                    curr_value = np.mean(curr_list)
+                else:
+                    curr_value = sum(curr_list)
                 curr_dict[curr_name] = curr_value
                 if len(higher_level_raw_data) < len(raw_data):
                     higher_level_raw_data.append(curr_name)
@@ -611,8 +614,9 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                         start_value = datetime.strptime(start_value, "%Y-%m-%d")
                         end_value = datetime.strptime(end_value, "%Y-%m-%d")
                     add_constraint = [{add_variable_name:{"$gte": start_value, "$lte": end_value}}]
-                match_constraint = match_constraint + add_constraint
-                match_dict = {"$and": match_constraint}
+                if not next_level == 'total_orders_punched':
+                    match_constraint = match_constraint + add_constraint
+                    match_dict = {"$and": match_constraint}
         elif database_type == 'mysql':
             add_query = ''
             if next_level == lowest_level and not unilevel_constraints == {} and \
@@ -715,7 +719,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     ]
                 )
                 query = list(query)
-                if new_results: query = new_results
+                if new_results: query = query+new_results
                 if not query==[]:
                     if not all_results == [] and isinstance(all_results[0], dict) == True:
                         all_results = [all_results]
@@ -808,7 +812,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
                                 superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
         if next_level == 'total_orders_punched':
-            print("here")
             single_array_results = cumulative_distribution_from_array(single_array_results, ['campaign','flattype'],
                                                ['total_orders_punched'],'date')
     else:

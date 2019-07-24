@@ -59,6 +59,9 @@ level_name_by_model_id = {
 }
 
 
+averaging_metrics_list = ["cost_flat"]
+
+
 related_fields_dict = {"campaign": ['ProposalInfo', 'proposal_id', 'campaign', 'name', 'campaign_name'],
                        "supplier": ['SupplierTypeSociety', 'supplier_id', 'supplier', 'society_name', 'supplier_name'],
                        "vendor": ['Organisation', 'organisation_id', 'vendor', 'name', 'vendor_name']
@@ -368,9 +371,11 @@ def var_stdev_calculator(dict_array, keys, weighted=0):
 
 
 def mean_calculator(dict_array, keys, weighted=0):
+    print("mean keys: ", keys)
     new_array = []
     if weighted == 1:
         for curr_dict in dict_array:
+            print(curr_dict)
             new_keys = []
             for curr_key in keys:
                 new_name = curr_key
@@ -416,6 +421,7 @@ def linear_extrapolator(dict_array, y_stat, x_stat, n_pts = 100, diff = 0.01):
 
 # redundant
 def sum_array_by_single_key(array, keys):
+    print("sum keys: ",keys)
     count_dict = {}
     for curr_key in keys:
         values = [x[curr_key] for x in array if x[curr_key] is not None]
@@ -1272,12 +1278,15 @@ def get_list_elements_single_array(model_name, match_dict, outer_key, inner_key,
         new_dict["total_orders_punched"] = 1
         first_array.append(new_dict)
     sum_keys = set({'total_orders_punched'})
+    print(first_array)
     grouping_keys = set(first_array[0].keys()) - sum_keys
     final_array = sum_array_by_keys(first_array, list(grouping_keys), list(sum_keys))
     return final_array
 
 
 def cumulative_distribution_from_array(dict_array, grouping_keys, sum_keys, order_key):
+    if order_key not in dict_array or sum_keys[0] not in dict_array:
+        return dict_array
     dict_array = sorted(dict_array, key=lambda k: k[order_key])
     total_dict_array = sum_array_by_keys(dict_array, grouping_keys, sum_keys)
     final_array = []
