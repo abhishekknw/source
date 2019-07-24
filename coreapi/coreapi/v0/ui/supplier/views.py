@@ -5,7 +5,8 @@ import requests
 from bson.objectid import ObjectId
 from django.urls import reverse
 from django.forms.models import model_to_dict
-from openpyxl import load_workbook
+from django.http import HttpResponse
+from openpyxl import load_workbook, Workbook
 import csv
 from rest_framework.views import APIView
 from rest_framework import viewsets
@@ -68,6 +69,8 @@ from django.conf import settings
 from django.apps import apps
 from django.db import IntegrityError
 from .supplier_uploads import create_price_mapping_default
+from django.db import connection
+
 
 
 def get_values(list_name,key):
@@ -3136,3 +3139,34 @@ class CreateSupplierPriceMappingObjects(APIView):
             except Exception as e:
                 pass
         return ui_utils.handle_response({}, data={}, success=True)
+
+class GetLocationDataInSheet(APIView):
+    @staticmethod
+    def get(request):
+        suppliers = SupplierTypeSociety.objects.all()
+        serializer = SupplierTypeSocietySerializer(suppliers, many=True)
+        data = serializer.data
+        header_list = ['Index', 'Society Name', 'Supplier Id', 'State', 'City', 'Area', 'Subarea']
+        for supplier in data:
+            book = Workbook()
+            sheet = book.active
+            sheet.append(header_list)
+            index = 0
+            for supplier in data:
+                index = index + 1
+                supplier_data = []
+
+                supplier_data.append(index)
+                supplier_data.append(supplier['society_name'])
+                supplier_data.append(supplier['supplier_id'])
+                supplier_data.append(supplier['society_state'])
+                supplier_data.append(supplier['society_city'])
+                supplier_data.append(supplier['society_locality'])
+                supplier_data.append(supplier['society_subarea'])
+                sheet.append(supplier_data)
+            resp = HttpResponse(
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            resp['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
+            book.save(resp)
+            return resp
+        return ()

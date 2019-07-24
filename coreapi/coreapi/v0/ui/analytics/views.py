@@ -11,7 +11,7 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     round_sig_min, time_parent_names, raw_data_unrestricted,
                     key_replace_group_multiple, key_replace_group, truncate_by_value_ranges, linear_extrapolator,
                     get_constrained_values, add_related_field, related_fields_dict, zero_filtered_raw_data,
-                    add_binary_field_status, binary_parameters_list)
+                    add_binary_field_status, binary_parameters_list, get_list_elements_frequency_mongo, cumulative_distribution)
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo, ProposalCenterMapping
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -66,7 +66,8 @@ def get_campaigns_from_vendors(vendor_list):
 
 
 def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
-                       higher_level_statistical_information, bivariate_statistical_information):
+                       higher_level_statistical_information, bivariate_statistical_information,
+                       custom_functions = []):
     unilevel_constraints = {}
     supplier_constraints = {}
     data_scope_first = {}
@@ -95,8 +96,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     grouping_level = data_point['level'] if 'level' in data_point else None
     grouping_level_first = grouping_level[0] if grouping_level is not None else None
     grouping_category = data_point["category"] if 'category' in data_point else None
-    # if highest_level == grouping_level:
-    #     return "lowest level should be lower than highest level"
+
     individual_metric_output = {}
     highest_level_values = data_scope_first['values']['exact'] if 'values' in data_scope_first \
         and 'exact' in data_scope_first['values'] else []
@@ -192,7 +192,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_output_all = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
                           default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category,
                           value_ranges, supplier_constraints, supplier_list = supplier_list, zero_filter = zero_filter)
-            print(curr_output_all)
 
             curr_output = curr_output_all[0]
             supplier_list = curr_output_all[1]
@@ -210,7 +209,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_output_keys = curr_output[0].keys()
             allowed_keys = set([highest_level_original] + grouping_level + [curr_metric])
             #curr_output = key_replace_group(curr_output,'supplier','flattype')
-            print(curr_output)
             if not curr_output_keys<=allowed_keys:
                 curr_output = sum_array_by_keys(curr_output, [highest_level_original]+grouping_level,[curr_metric])
         if data_summary == 1:
@@ -424,9 +422,31 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 weighted = 1
             higher_level_list = statistics_map[curr_stat](higher_level_list,stat_metrics, weighted=weighted)
 
+    custom_function_output = {}
+    if not custom_functions == []:
+        for curr_function in custom_functions:
+            if curr_function == "order_cumulative":
+                campaign_list = data_scope_first["values"]["exact"]
+                model_name = "leads"
+                outer_key = "data"
+                inner_key = "key_name"
+                inner_value = 'Order Punched Date'
+                nonnull_key = "value"
+                frequency_results = {}
+                sum_results = {}
+                for curr_campaign in campaign_list:
+                    match_dict = {"campaign_id": curr_campaign}
+                    curr_res = get_list_elements_frequency_mongo(model_name, match_dict, outer_key, inner_key,
+                                                                 inner_value, nonnull_key)
+                    frequency_results[curr_campaign] = curr_res[0]
+                    sum_results[curr_campaign] = curr_res[1]
+                cumulative_frequency_results = cumulative_distribution(campaign_list, frequency_results, sum_results,
+                                                                       'date', 'total orders punched pct')
+                custom_function_output["order_cumulative"] = cumulative_frequency_results
 
     return {"individual metrics":individual_metric_output, "lower_group_data": derived_array,
-            "higher_group_data":higher_level_list, "bivariate_statistical_information": bsi}
+            "higher_group_data":higher_level_list, "bivariate_statistical_information": bsi,
+            "custom function output": custom_function_output}
 
 
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
@@ -472,7 +492,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     if lowest_level not in default_map:
         default_map = count_details_parent_map
         if lowest_level not in count_details_parent_map:
-            print("incorrect raw data")
+            print("incorrect raw data: ", lowest_level)
             return []
     if len(grouping_levels)>=3:
         trial_map = count_details_parent_map_custom
@@ -519,8 +539,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         desc_sequence = desc_sequence[1:]
     last_level_id = len(desc_sequence) - 1
     common_keys = []
-    print("sequence")
-    print(desc_sequence)
     while curr_level_id < last_level_id:
         curr_level = desc_sequence[curr_level_id]
         next_level = desc_sequence[curr_level_id+1]
@@ -551,7 +569,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             add_category = first_constraint['category']
             add_map_name = add_category + '_parent_names'
             add_variable_name = eval(add_map_name)['default']
-            if lowest_level in ['lead','hot_lead']:
+            if lowest_level in ['lead','hot_lead','total_booking_confirmed','total_orders_punched']:
                 add_variable_name = "lead_date"
             add_match_type = first_constraint["match_type"]
             add_match_list = first_constraint["values"]
@@ -564,6 +582,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             supplier_match_list = get_constrained_values('SupplierTypeSociety','supplier_id',supplier_constraints)
 
         # general queries common to all storage types
+        match_dict = {}
         if database_type == 'mongodb':
             add_constraint = []
             project_dict = {}
@@ -630,7 +649,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                         }
                     ]
                 )
-
                 query = list(query)
                 next_level_match_list = [x[self_model_name] for x in query]
             elif database_type == 'mysql':
@@ -685,13 +703,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                         }
                     ]
                 )
-                # sample_query = mongo_client["leads"].find({"data": {"$elemMatch": {"key_name":"Order Punched Date",
-                #                                                     "value": {"$ne":None}}},"campaign_id":"BYJMAC214B"})
                 query = list(query)
-                print(model_name)
-                print(match_dict)
-                print(group_dict)
-                print(project_dict)
+                print(query)
                 if not query==[]:
                     if not all_results == [] and isinstance(all_results[0], dict) == True:
                         all_results = [all_results]
@@ -770,7 +783,9 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                         if curr_array['supplier'] in supplier_list:
                             new_array_results.append(curr_array)
                     single_array_results = new_array_results
+
         if original_grouping_levels is not None:
+            print("sar: ",single_array_results)
             superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
             superlevels_base_set = list(set(superlevels_base))
             if len(superlevels_base_set)>1:
@@ -785,7 +800,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                                 superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
     else:
         single_array_results = []
-    return [single_array_results, supplier_list]
+    print(match_dict)
+    return [single_array_results, supplier_list, match_dict]
 
 
 def get_details_by_higher_level_geographical(highest_level, highest_level_list, lowest_level='supplier',
@@ -852,8 +868,10 @@ class GetLeadsDataGeneric(APIView):
         higher_level_statistical_information = all_data['higher_level_statistical_information'] if \
             'higher_level_statistical_information' in all_data else {}
         bivariate_statistical_information = all_data.get('bivariate_statistical_information',{})
+        custom_functions = all_data.get('custom_functions', [])
         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
-                                         higher_level_statistical_information, bivariate_statistical_information)
+                                         higher_level_statistical_information, bivariate_statistical_information,
+                                         custom_functions)
         if type(mongo_query) == str:
             success = False
         return handle_response('', data=mongo_query, success=success)
