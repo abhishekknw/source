@@ -12,7 +12,7 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     key_replace_group_multiple, key_replace_group, truncate_by_value_ranges, linear_extrapolator,
                     get_constrained_values, add_related_field, related_fields_dict, zero_filtered_raw_data,
                     add_binary_field_status, binary_parameters_list, get_list_elements_frequency_mongo,
-                    cumulative_distribution, get_list_elements_single_array)
+                    cumulative_distribution, get_list_elements_single_array, cumulative_distribution_from_array)
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo, ProposalCenterMapping
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -32,6 +32,8 @@ statistics_map = {"z_score": z_calculator_array_multiple, "frequency_distributio
                   "straight_line_forecasting": linear_extrapolator}
 
 unilevel_categories = ['time']
+
+custom_keys = ['total_orders_punched_cum_pct']
 
 
 def get_reverse_dict(original_dict):
@@ -209,7 +211,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 
             curr_output_keys = curr_output[0].keys()
             allowed_keys = set([highest_level_original] + grouping_level + [curr_metric])
-            #curr_output = key_replace_group(curr_output,'supplier','flattype')
+            if 'order_cumulative' in custom_functions:
+                allowed_keys = allowed_keys.union(set(custom_keys))
             if not curr_output_keys<=allowed_keys:
                 curr_output = sum_array_by_keys(curr_output, [highest_level_original]+grouping_level,[curr_metric])
         if data_summary == 1:
@@ -703,7 +706,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     nonnull_key = 'value'
                     other_keys = parent_model_names
                     new_results = get_list_elements_single_array(new_model_name, match_dict.copy(), outer_key,
-                                                                  inner_key, inner_value, nonnull_key, other_keys)
+                                                                inner_key, inner_value, nonnull_key, other_keys)
                 query = mongo_client[model_name].aggregate(
                     [
                         {"$match": match_dict},
@@ -770,7 +773,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             all_results = [all_results]
     if not len(all_results)==0:
         new_results = convert_dict_arrays_keys_to_standard_names(all_results)
-
         try:
             single_array_results = merge_dict_array_array_multiple_keys(new_results, grouping_levels)
         except:
@@ -805,9 +807,12 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 elif len(superlevels)==1:
                     single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
                                 superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
+        if next_level == 'total_orders_punched':
+            print("here")
+            single_array_results = cumulative_distribution_from_array(single_array_results, ['campaign','flattype'],
+                                               ['total_orders_punched'],'date')
     else:
         single_array_results = []
-    print("sar: ",single_array_results)
     return [single_array_results, supplier_list, match_dict]
 
 

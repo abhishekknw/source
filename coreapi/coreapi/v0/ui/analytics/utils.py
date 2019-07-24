@@ -1271,9 +1271,26 @@ def get_list_elements_single_array(model_name, match_dict, outer_key, inner_key,
         new_dict["date"] = inner_data
         new_dict["total_orders_punched"] = 1
         first_array.append(new_dict)
-    sum_keys = set({"total_orders_punched"})
+    sum_keys = set({'total_orders_punched'})
     grouping_keys = set(first_array[0].keys()) - sum_keys
-    gross_total = len(first_array)
     final_array = sum_array_by_keys(first_array, list(grouping_keys), list(sum_keys))
-    top = [x['total_orders_punched'] for x in final_array]
+    return final_array
+
+
+def cumulative_distribution_from_array(dict_array, grouping_keys, sum_keys, order_key):
+    dict_array = sorted(dict_array, key=lambda k: k[order_key])
+    total_dict_array = sum_array_by_keys(dict_array, grouping_keys, sum_keys)
+    final_array = []
+    sum_key = sum_keys[0]
+    new_key_name = sum_key + '_cum_pct'
+    for total_dict in total_dict_array:
+        print(total_dict)
+        new_array = dict_array
+        curr_count = 0
+        for curr_key in grouping_keys:
+            new_array = [x for x in new_array if x[curr_key]==total_dict[curr_key]]
+        overall_count = total_dict[sum_key]
+        for curr_array in new_array:
+            curr_array[new_key_name] = round(100*((curr_array[sum_key]+curr_count)/overall_count), 4)
+            final_array.append(curr_array)
     return final_array
