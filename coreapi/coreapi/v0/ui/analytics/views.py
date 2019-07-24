@@ -704,6 +704,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     ]
                 )
                 query = list(query)
+                print(query)
                 if not query==[]:
                     if not all_results == [] and isinstance(all_results[0], dict) == True:
                         all_results = [all_results]
@@ -782,7 +783,9 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                         if curr_array['supplier'] in supplier_list:
                             new_array_results.append(curr_array)
                     single_array_results = new_array_results
+
         if original_grouping_levels is not None:
+            print("sar: ",single_array_results)
             superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
             superlevels_base_set = list(set(superlevels_base))
             if len(superlevels_base_set)>1:
