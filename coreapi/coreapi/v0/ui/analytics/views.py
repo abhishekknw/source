@@ -11,7 +11,8 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     round_sig_min, time_parent_names, raw_data_unrestricted,
                     key_replace_group_multiple, key_replace_group, truncate_by_value_ranges, linear_extrapolator,
                     get_constrained_values, add_related_field, related_fields_dict, zero_filtered_raw_data,
-                    add_binary_field_status, binary_parameters_list, get_list_elements_frequency_mongo, cumulative_distribution)
+                    add_binary_field_status, binary_parameters_list, get_list_elements_frequency_mongo,
+                    cumulative_distribution, get_list_elements_single_array)
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo, ProposalCenterMapping
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -444,6 +445,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                                                                        'date', 'total orders punched pct')
                 custom_function_output["order_cumulative"] = cumulative_frequency_results
 
+
     return {"individual metrics":individual_metric_output, "lower_group_data": derived_array,
             "higher_group_data":higher_level_list, "bivariate_statistical_information": bsi,
             "custom function output": custom_function_output}
@@ -692,19 +694,25 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     group_dict["_id"][curr_parent_model_name] = '$' + curr_parent_model_name
                     group_dict[curr_parent_model_name] = {"$first": '$' + curr_parent_model_name}
                     project_dict[curr_parent_model_name] = 1
+                new_results = None
+                if next_level == 'total_orders_punched':
+                    new_model_name = 'leads'
+                    outer_key = 'data'
+                    inner_key = 'key_name'
+                    inner_value = 'Order Punched Date'
+                    nonnull_key = 'value'
+                    other_keys = parent_model_names
+                    new_results = get_list_elements_single_array(new_model_name, match_dict.copy(), outer_key,
+                                                                  inner_key, inner_value, nonnull_key, other_keys)
                 query = mongo_client[model_name].aggregate(
                     [
                         {"$match": match_dict},
-                        {
-                            "$group": group_dict
-                        },
-                        {
-                            "$project": project_dict
-                        }
+                        {"$group": group_dict},
+                        {"$project": project_dict}
                     ]
                 )
                 query = list(query)
-                print(query)
+                if new_results: query = new_results
                 if not query==[]:
                     if not all_results == [] and isinstance(all_results[0], dict) == True:
                         all_results = [all_results]
@@ -785,7 +793,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     single_array_results = new_array_results
 
         if original_grouping_levels is not None:
-            print("sar: ",single_array_results)
             superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
             superlevels_base_set = list(set(superlevels_base))
             if len(superlevels_base_set)>1:
@@ -800,7 +807,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                                 superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
     else:
         single_array_results = []
-    print(match_dict)
+    print("sar: ",single_array_results)
     return [single_array_results, supplier_list, match_dict]
 
 
