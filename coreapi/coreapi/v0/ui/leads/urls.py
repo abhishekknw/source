@@ -26,7 +26,7 @@ urlpatterns = [
     url(r'^(?P<leads_form_id>[A-Z_a-z0-9]+)/import_lead$', LeadsFormBulkEntry.as_view()),
     url(r'^(?P<leads_form_id>[A-Z_a-z0-9]+)/generate_lead_form$', GenerateLeadForm.as_view()),
     url(r'^(?P<leads_form_id>[A-Z_a-z0-9]+)/generate_lead_data_excel', GenerateLeadDataExcel.as_view()),
-    url(r'^(?P<one_time_hash>[A-Z_a-z0-9]+)/download_lead_data_excel', DownloadLeadDataExcel.as_view()),
+    url(r'^download_lead_data_excel/(?P<one_time_hash>[A-Z_a-z0-9]+)/', DownloadLeadDataExcel.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_form$', DeleteLeadForm.as_view()),
     url(r'^(?P<form_id>[A-Z_a-z0-9]+)/delete_entry/(?P<entry_id>[A-Z_a-z0-9]+)$', DeleteLeadEntry.as_view()),
     url(r'^delete-leads/$', DeleteLeadEntry.as_view()),
