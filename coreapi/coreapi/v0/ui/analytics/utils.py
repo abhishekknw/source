@@ -371,11 +371,9 @@ def var_stdev_calculator(dict_array, keys, weighted=0):
 
 
 def mean_calculator(dict_array, keys, weighted=0):
-    print("mean keys: ", keys)
     new_array = []
     if weighted == 1:
         for curr_dict in dict_array:
-            print(curr_dict)
             new_keys = []
             for curr_key in keys:
                 new_name = curr_key
@@ -421,7 +419,6 @@ def linear_extrapolator(dict_array, y_stat, x_stat, n_pts = 100, diff = 0.01):
 
 # redundant
 def sum_array_by_single_key(array, keys):
-    print("sum keys: ",keys)
     count_dict = {}
     for curr_key in keys:
         values = [x[curr_key] for x in array if x[curr_key] is not None]
@@ -594,7 +591,6 @@ def merge_dict_array_array_multiple_keys(arrays, key_names):
     # if len(key_names) == 1:
     #     return merge_dict_array_array_single(arrays, key_names[0])
     common_keys_set = get_common_keys(arrays)
-    print("ck: ",common_keys_set)
     if len(set.intersection(set(key_names),common_keys_set)) == 0:
         key_names = list(common_keys_set)
     first_array = arrays[0]
@@ -652,10 +648,6 @@ def operate_array_by_key(array, grouping_keys, operate_key, operation_type='sum'
 
 
 def sum_array_by_key(array, grouping_keys, sum_key):
-    print("values")
-    print(array)
-    print(grouping_keys)
-    print(sum_key)
     new_array = []
     required_keys = [sum_key] + grouping_keys
     for curr_dict in array:
@@ -1202,6 +1194,8 @@ def calculate_mode(num_list,window_size=3):
 
 def add_binary_field_status(dict_array, fields_list, false_prefix = 'No ',remove_suffix_len = 4,
                             custom_binary_field_labels = {}):
+    if len(dict_array) == 0:
+        return dict_array
     dict_keys = dict_array[0].keys()
     binary_keys_list = set(dict_keys).intersection(set(fields_list))
     new_array = []
@@ -1236,7 +1230,6 @@ def get_list_elements_frequency_mongo(model_name, match_dict, outer_key, inner_k
     inner_data = [[date_from_datetime(y[nonnull_key]) for y in x if y[inner_key]==inner_value][0] for x in outer_data]
     value_count = dict(collections.Counter(inner_data))
     sum_values = sum(value_count.values())
-    print([value_count, sum_values])
     return [value_count, sum_values]
 
 
@@ -1269,6 +1262,8 @@ def get_list_elements_single_array(model_name, match_dict, outer_key, inner_key,
         project_dict[curr_key] = 1
     query = mongo_client[model_name].find(match_dict, project_dict)
     query_output = list(query)
+    if len(query_output) == 0:
+        return []
 
     first_array = []
     inner_data_dict = {}
@@ -1284,7 +1279,6 @@ def get_list_elements_single_array(model_name, match_dict, outer_key, inner_key,
         new_dict["total_orders_punched"] = 1
         first_array.append(new_dict)
     sum_keys = set({'total_orders_punched'})
-    print(first_array)
     grouping_keys = set(first_array[0].keys()) - sum_keys
     final_array = sum_array_by_keys(first_array, list(grouping_keys), list(sum_keys))
     return final_array

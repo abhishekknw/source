@@ -226,8 +226,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     custom_binary_field_labels = data_point["custom_binary_field_labels"] if "custom_binary_field_labels" in data_point\
         else {}
     if data_summary == 0:
-        print(individual_metric_output)
-        print(grouping_level)
         if grouping_level[0] in reverse_direct_match.keys() or data_scope_category == 'geographical' \
                 or data_point["level"] == ["date"]:
             single_array = merge_dict_array_dict_multiple_keys(individual_metric_output, [highest_level]+grouping_level)
@@ -722,6 +720,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     ]
                 )
                 query = list(query)
+                print(query)
                 if new_results: query = new_results
                 if not query==[]:
                     if not all_results == [] and isinstance(all_results[0], dict) == True:
@@ -815,7 +814,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
                                 superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
 
-        print("cf: ",custom_functions)
         if next_level == 'total_orders_punched' and 'order_cumulative' in custom_functions:
             curr_grouping_levels = list(set(original_grouping_levels) - set({"date"}))
             single_array_results = cumulative_distribution_from_array(single_array_results, curr_grouping_levels,
