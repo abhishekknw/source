@@ -137,7 +137,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             raw_data_lf[curr_index] = curr_metric
             raw_data[original_index] = curr_metric
         lowest_level = curr_metric
-        print(lowest_level)
+        print("current_level: ",lowest_level)
         if data_scope_category == 'geographical':
             lowest_geographical_level = geographical_parent_details['base']
             if data_point_category == 'geographical':
@@ -703,7 +703,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     group_dict[curr_parent_model_name] = {"$first": '$' + curr_parent_model_name}
                     project_dict[curr_parent_model_name] = 1
                 new_results = None
-                if next_level == 'total_orders_punched':
+                if next_level == 'total_orders_punched' and 'order_cumulative' in custom_functions:
                     new_model_name = 'leads'
                     outer_key = 'data'
                     inner_key = 'key_name'
@@ -720,7 +720,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     ]
                 )
                 query = list(query)
-                print(query)
                 if new_results: query = new_results
                 if not query==[]:
                     if not all_results == [] and isinstance(all_results[0], dict) == True:
@@ -813,7 +812,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 elif len(superlevels)==1:
                     single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
                                 superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
-
         if next_level == 'total_orders_punched' and 'order_cumulative' in custom_functions:
             curr_grouping_levels = list(set(original_grouping_levels) - set({"date"}))
             single_array_results = cumulative_distribution_from_array(single_array_results, curr_grouping_levels,

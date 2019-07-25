@@ -1103,7 +1103,6 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
     if not curr_dict:
         return []
     all_keys = list(curr_dict.keys())
-    print("cd: ", curr_dict)
     grouping_keys = all_keys
     grouping_keys.remove(sum_key)
     if existing_key in grouping_keys:
