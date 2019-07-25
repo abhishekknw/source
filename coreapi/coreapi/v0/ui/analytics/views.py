@@ -1007,6 +1007,8 @@ class RangeAPIView(APIView):
 
 
 def get_all_assigned_campaigns_vendor_city(user_id, city_list = None, vendor_list = None):
+    final_result = None
+    city_assigned_campaigns = None
     if vendor_list is not None:
         user_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id,
                                                              campaign__principal_vendor__in=vendor_list).values_list(
@@ -1022,8 +1024,11 @@ def get_all_assigned_campaigns_vendor_city(user_id, city_list = None, vendor_lis
         city_assigned_campaigns = CampaignAssignment.objects.filter(
             assigned_to_id=user_id, campaign_id__in=city_campaigns).values_list('campaign_id', flat=True).distinct()
         final_list = city_assigned_campaigns
-        if vendor_list is not None:
-            final_list = list(set(vendor_campaigns).intersection(set(city_assigned_campaigns)))
+        # if vendor_list is not None:
+    if city_assigned_campaigns:
+        final_list = list(set(user_campaigns).intersection(set(city_assigned_campaigns)))
+    else:
+        final_list = list(set(user_campaigns))
     final_result = ProposalInfo.objects.filter(proposal_id__in=final_list).extra(select={
                     'campaign_id': 'proposal_id', 'campaign_name': 'name'}).values('campaign_id', 'campaign_name')
     return final_result

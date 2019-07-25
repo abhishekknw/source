@@ -277,10 +277,10 @@ class GetLeadsEntriesByCampaignId(APIView):
     @staticmethod
     def get(request, campaign_id, supplier_id='All'):
         page_number = int(request.query_params.get('page_number', 0))
-        first_leads_form_id = mongo_client.leads_forms.find_one({"campaign_id":campaign_id})['leads_form_id']
-        supplier_all_lead_entries = get_supplier_all_leads_entries(first_leads_form_id, supplier_id, page_number)
+        first_leads_form_id = mongo_client.leads_forms.find_one({"campaign_id":campaign_id})
+        leads_form_id = first_leads_form_id['leads_form_id']
+        supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number)
         return handle_response({}, data=supplier_all_lead_entries, success=True)
-
 
 class CreateLeadsForm(APIView):
     @staticmethod
@@ -668,11 +668,22 @@ class DownloadLeadDataExcel(APIView):
     authentication_classes = ()
     @staticmethod
     def get(request, one_time_hash):
+        start_date = None
+        end_date = None
+        st_date = request.query_params.get('start_date', None)
+        e_date = request.query_params.get('end_date', None)
+        if st_date:
+            start_date = st_date[:10]
+            start_date = datetime.datetime.strptime(str(start_date), '%Y-%m-%d').date()
+        if e_date:
+            end_date = e_date[:10]
+            end_date = datetime.datetime.strptime(str(end_date), '%Y-%m-%d').date()
         excel_download_hash = list(ExcelDownloadHash.objects.raw({"one_time_hash": one_time_hash}))
         if len(excel_download_hash) > 0:
             supplier_id = excel_download_hash[0].supplier_id
             leads_form_id = excel_download_hash[0].leads_form_id
-            (excel_book, total_leads_count) = get_leads_excel_sheet(leads_form_id, supplier_id)
+            (excel_book, total_leads_count) = get_leads_excel_sheet(leads_form_id, 'All', start_date=start_date,
+                                                              end_date=end_date)
             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
             excel_book.save(response)
@@ -1795,6 +1806,7 @@ class UpdateLeadSummary(APIView):
             mongo_client.leads_summary.insert_one({
                 "campaign_id": item['campaign_id'],
                 "supplier_id": item['supplier_id'],
+                "lead_date": item['created_at'] if 'created_at' in item else None,
                 "total_leads_count": item['total_leads_count'],
                 "total_hot_leads_count": item['hot_leads_count'],
                 "total_booking_confirmed": 0,
