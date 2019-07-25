@@ -1285,7 +1285,7 @@ def get_list_elements_single_array(model_name, match_dict, outer_key, inner_key,
 
 
 def cumulative_distribution_from_array(dict_array, grouping_keys, sum_keys, order_key):
-    if order_key not in dict_array[0] or sum_keys[0] not in dict_array[0]:
+    if len(dict_array)==0 or order_key not in dict_array[0] or sum_keys[0] not in dict_array[0]:
         return dict_array
     dict_array = sorted(dict_array, key=lambda k: k[order_key])
     total_dict_array = sum_array_by_keys(dict_array, grouping_keys, sum_keys)
