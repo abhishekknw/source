@@ -194,7 +194,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         else:
             curr_output_all = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
                           default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category,
-                          value_ranges, supplier_constraints, supplier_list = supplier_list, zero_filter = zero_filter)
+                          value_ranges, supplier_constraints, supplier_list = supplier_list, zero_filter = zero_filter,
+                                                          custom_functions = custom_functions)
 
             curr_output = curr_output_all[0]
             supplier_list = curr_output_all[1]
@@ -462,7 +463,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
                                 grouping_category = "", value_ranges = {}, supplier_constraints = {},
-                                supplier_list = [], zero_filter = False):
+                                supplier_list = [], zero_filter = False, custom_functions = []):
     incrementing_value = None
     if lowest_level == None:
         return []
@@ -813,7 +814,9 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 elif len(superlevels)==1:
                     single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
                                 superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
-        if next_level == 'total_orders_punched':
+
+        print("cf: ",custom_functions)
+        if next_level == 'total_orders_punched' and 'order_cumulative' in custom_functions:
             curr_grouping_levels = list(set(original_grouping_levels) - set({"date"}))
             single_array_results = cumulative_distribution_from_array(single_array_results, curr_grouping_levels,
                                                ['total_orders_punched'],'date')

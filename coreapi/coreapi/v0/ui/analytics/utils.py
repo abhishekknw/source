@@ -212,16 +212,16 @@ count_details_direct_match_multiple = {
 count_details_parent_map_time = {
     'lead': {'parent': 'date, campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
              'self_name_model': 'total_leads_count', 'parent_name_model': 'lead_date,campaign_id',
-             'storage_type': 'sum'},
+             'storage_type': 'sum', 'format': 'time'},
     'hot_lead': {'parent': 'date,campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
                  'self_name_model': 'total_hot_leads_count', 'parent_name_model': 'lead_date,campaign_id',
-                 'storage_type': 'sum'},
+                 'storage_type': 'sum', 'format': 'time'},
     'hotness_level_': {'parent': 'date, campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                   'self_name_model': 'hotness_level', 'parent_name_model': 'created_at,campaign_id',
                   'storage_type': 'condition'},
     'total_booking_confirmed': {'parent': 'date,campaign', 'model_name':'leads_summary','database_type': 'mongodb',
                     'self_name_model': 'total_booking_confirmed', 'parent_name_model': 'lead_date,campaign_id',
-                                'storage_type': 'sum'},
+                                'storage_type': 'sum',  'format': 'time'},
     'total_orders_punched': {'parent': 'date,campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
                              'self_name_model': 'total_orders_punched', 'parent_name_model': 'lead_date,campaign_id',
                              'storage_type': 'sum'}
@@ -594,6 +594,7 @@ def merge_dict_array_array_multiple_keys(arrays, key_names):
     # if len(key_names) == 1:
     #     return merge_dict_array_array_single(arrays, key_names[0])
     common_keys_set = get_common_keys(arrays)
+    print("ck: ",common_keys_set)
     if len(set.intersection(set(key_names),common_keys_set)) == 0:
         key_names = list(common_keys_set)
     first_array = arrays[0]
@@ -1298,13 +1299,13 @@ def cumulative_distribution_from_array(dict_array, grouping_keys, sum_keys, orde
     sum_key = sum_keys[0]
     new_key_name = sum_key + '_cum_pct'
     for total_dict in total_dict_array:
-        print(total_dict)
         new_array = dict_array
         curr_count = 0
         for curr_key in grouping_keys:
             new_array = [x for x in new_array if x[curr_key]==total_dict[curr_key]]
         overall_count = total_dict[sum_key]
-        for curr_array in new_array:
-            curr_array[new_key_name] = round(100*((curr_array[sum_key]+curr_count)/overall_count), 4)
-            final_array.append(curr_array)
+        for curr_dict in new_array:
+            curr_count = curr_dict[sum_key]+curr_count
+            curr_dict[new_key_name] = round(100*(curr_count/overall_count), 4)
+            final_array.append(curr_dict)
     return final_array
