@@ -743,6 +743,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     query_new = []
                     for curr_dict in query:
                         self_value = curr_dict[self_model_name]
+                        if curr_dict[other_column] not in joining_data:
+                            continue
                         joining_value = joining_data[curr_dict[other_column]]
                         if self_value is not None and joining_value is not None:
                             new_dict = {}
