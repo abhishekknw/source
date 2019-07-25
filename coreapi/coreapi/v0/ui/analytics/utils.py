@@ -59,6 +59,9 @@ level_name_by_model_id = {
 }
 
 
+averaging_metrics_list = ["cost_flat"]
+
+
 related_fields_dict = {"campaign": ['ProposalInfo', 'proposal_id', 'campaign', 'name', 'campaign_name'],
                        "supplier": ['SupplierTypeSociety', 'supplier_id', 'supplier', 'society_name', 'supplier_name'],
                        "vendor": ['Organisation', 'organisation_id', 'vendor', 'name', 'vendor_name']
@@ -209,16 +212,16 @@ count_details_direct_match_multiple = {
 count_details_parent_map_time = {
     'lead': {'parent': 'date, campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
              'self_name_model': 'total_leads_count', 'parent_name_model': 'lead_date,campaign_id',
-             'storage_type': 'sum'},
+             'storage_type': 'sum', 'format': 'time'},
     'hot_lead': {'parent': 'date,campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
                  'self_name_model': 'total_hot_leads_count', 'parent_name_model': 'lead_date,campaign_id',
-                 'storage_type': 'sum'},
+                 'storage_type': 'sum', 'format': 'time'},
     'hotness_level_': {'parent': 'date, campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                   'self_name_model': 'hotness_level', 'parent_name_model': 'created_at,campaign_id',
                   'storage_type': 'condition'},
     'total_booking_confirmed': {'parent': 'date,campaign', 'model_name':'leads_summary','database_type': 'mongodb',
                     'self_name_model': 'total_booking_confirmed', 'parent_name_model': 'lead_date,campaign_id',
-                                'storage_type': 'sum'},
+                                'storage_type': 'sum',  'format': 'time'},
     'total_orders_punched': {'parent': 'date,campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
                              'self_name_model': 'total_orders_punched', 'parent_name_model': 'lead_date,campaign_id',
                              'storage_type': 'sum'}
@@ -1100,6 +1103,7 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
     if not curr_dict:
         return []
     all_keys = list(curr_dict.keys())
+    print("cd: ", curr_dict)
     grouping_keys = all_keys
     grouping_keys.remove(sum_key)
     if existing_key in grouping_keys:
@@ -1190,6 +1194,8 @@ def calculate_mode(num_list,window_size=3):
 
 def add_binary_field_status(dict_array, fields_list, false_prefix = 'No ',remove_suffix_len = 4,
                             custom_binary_field_labels = {}):
+    if len(dict_array) == 0:
+        return dict_array
     dict_keys = dict_array[0].keys()
     binary_keys_list = set(dict_keys).intersection(set(fields_list))
     new_array = []
@@ -1248,3 +1254,52 @@ def cumulative_distribution(campaigns, frequency_results, sum_results, key_name,
     return cumulative_frequency_results
 
 
+def get_list_elements_single_array(model_name, match_dict, outer_key, inner_key, inner_value, nonnull_key, other_keys):
+    null_constraint = {outer_key:{"$elemMatch":{inner_key: inner_value, nonnull_key:{"$ne":None}}}}
+    match_dict.update(null_constraint)
+    project_dict = {outer_key:1, "_id":0}
+    for curr_key in other_keys:
+        project_dict[curr_key] = 1
+    query = mongo_client[model_name].find(match_dict, project_dict)
+    query_output = list(query)
+    if len(query_output) == 0:
+        return []
+
+    first_array = []
+    inner_data_dict = {}
+    for curr_output in query_output:
+        new_dict = {}
+        outer_data = curr_output[outer_key]
+        inner_data = [date_from_datetime(y[nonnull_key]) for y in outer_data if y[inner_key]==inner_value][0]
+        # prev_frequency = inner_data_dict[inner_data] if inner_data in inner_data_dict else 0
+        # new_frequency = prev_frequency + 1
+        for curr_key in other_keys:
+            new_dict[curr_key] = curr_output[curr_key]
+        new_dict["date"] = inner_data
+        new_dict["total_orders_punched"] = 1
+        first_array.append(new_dict)
+    sum_keys = set({'total_orders_punched'})
+    grouping_keys = set(first_array[0].keys()) - sum_keys
+    final_array = sum_array_by_keys(first_array, list(grouping_keys), list(sum_keys))
+    return final_array
+
+
+def cumulative_distribution_from_array(dict_array, grouping_keys, sum_keys, order_key):
+    if order_key not in dict_array[0] or sum_keys[0] not in dict_array[0]:
+        return dict_array
+    dict_array = sorted(dict_array, key=lambda k: k[order_key])
+    total_dict_array = sum_array_by_keys(dict_array, grouping_keys, sum_keys)
+    final_array = []
+    sum_key = sum_keys[0]
+    new_key_name = sum_key + '_cum_pct'
+    for total_dict in total_dict_array:
+        new_array = dict_array
+        curr_count = 0
+        for curr_key in grouping_keys:
+            new_array = [x for x in new_array if x[curr_key]==total_dict[curr_key]]
+        overall_count = total_dict[sum_key]
+        for curr_dict in new_array:
+            curr_count = curr_dict[sum_key]+curr_count
+            curr_dict[new_key_name] = round(100*(curr_count/overall_count), 4)
+            final_array.append(curr_dict)
+    return final_array
