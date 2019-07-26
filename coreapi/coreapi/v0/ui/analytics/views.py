@@ -121,22 +121,25 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         default_value_type = 'campaign'
     supplier_list = []
 
+    raw_data_original = raw_data.copy()
     raw_data_lf = raw_data.copy() # raw data with lead first
     if 'lead' in raw_data_lf and not raw_data_lf[0]=='lead':
         raw_data_lf.remove('lead')
         raw_data_lf.insert(0,'lead')
-
+    common_supplier_list = []
     for curr_metric in raw_data_lf:
         zero_filter = False
-        if curr_metric in zero_filtered_raw_data:
+        # if curr_metric in zero_filtered_raw_data:
+        #     zero_filter = True
+        if '_nz' in curr_metric:
             zero_filter = True
-        elif '_nz' in curr_metric:
             curr_index = raw_data_lf.index(curr_metric)
             original_index = raw_data.index(curr_metric)
             curr_metric = curr_metric[:-3]
             raw_data_lf[curr_index] = curr_metric
             raw_data[original_index] = curr_metric
         lowest_level = curr_metric
+        curr_index = raw_data_lf.index(curr_metric)
         print("current_level: ",lowest_level)
         if data_scope_category == 'geographical':
             lowest_geographical_level = geographical_parent_details['base']
@@ -214,13 +217,38 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             allowed_keys = set([highest_level_original] + grouping_level + [curr_metric])
             if 'order_cumulative' in custom_functions:
                 allowed_keys = allowed_keys.union(set(custom_keys))
-            if not curr_output_keys<=allowed_keys:
-                curr_output = sum_array_by_keys(curr_output, list(allowed_keys-set([curr_metric])),[curr_metric])
+            # if not curr_output_keys<=allowed_keys:
+            #     curr_output = sum_array_by_keys(curr_output, list(allowed_keys-set([curr_metric])),[curr_metric])
         if data_summary == 1:
             print("summarizing data")
             final_value = sum([x[curr_metric] for x in curr_output])
             curr_output = final_value
         individual_metric_output[lowest_level] = curr_output
+
+    for curr_metric in raw_data_original:
+        if '_nz' in curr_metric:
+            zero_filter = True
+            curr_metric = curr_metric[:-3]
+        curr_output = individual_metric_output[curr_metric]
+        if 'supplier' in curr_output[0]:
+            curr_output = [x for x in curr_output if x['supplier'] in supplier_list]
+            superlevels_base_set = ['supplier']
+            superlevels = [x for x in grouping_level if x in reverse_direct_match]
+            curr_metric_sp_case = 'hotness_level_' if 'hotness_level' in curr_metric else curr_metric
+            storage_type = count_details_parent_map[curr_metric_sp_case]['storage_type']
+            curr_output = key_replace_group_multiple(curr_output, superlevels_base_set[0], superlevels, curr_metric,
+                                                     value_ranges, None, storage_type)
+        if curr_metric == 'total_orders_punched' and 'order_cumulative' in custom_functions:
+            curr_grouping_levels = list(set(grouping_level) - set({"date"}))
+            curr_output = cumulative_distribution_from_array(curr_output, curr_grouping_levels,
+                                               ['total_orders_punched'],'date')
+        curr_output_keys = set(curr_output[0].keys())
+        allowed_keys = set([highest_level_original] + grouping_level + [curr_metric])
+        if 'order_cumulative' in custom_functions:
+            allowed_keys = allowed_keys.union(set(custom_keys))
+        if not curr_output_keys <= allowed_keys:
+            curr_output = sum_array_by_keys(curr_output, list(allowed_keys - set([curr_metric])), [curr_metric])
+        individual_metric_output[curr_metric] = curr_output
 
     reverse_map = {}
     custom_binary_field_labels = data_point["custom_binary_field_labels"] if "custom_binary_field_labels" in data_point\
@@ -791,33 +819,39 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
 
         result_keys = single_array_results[0].keys()
         if "supplier" in result_keys:
-            if "lead" in result_keys:
+            if supplier_list == []:
                 supplier_list = [x['supplier'] for x in single_array_results]
             else:
-                if len(single_array_results) > len(supplier_list) and not supplier_list == []:
-                    new_array_results = []
-                    for curr_array in single_array_results:
-                        if curr_array['supplier'] in supplier_list:
-                            new_array_results.append(curr_array)
-                    single_array_results = new_array_results
+                # if len(single_array_results) > len(supplier_list) and not supplier_list == []:
+                #     new_array_results = []
+                #     for curr_array in single_array_results:
+                #         if curr_array['supplier'] in supplier_list:
+                #             new_array_results.append(curr_array)
+                new_supplier_list = [x['supplier'] for x in single_array_results]
+                net_supplier_list = list(set(supplier_list).intersection(set(new_supplier_list)))
+                new_array_results = [x for x in single_array_results if x['supplier'] in net_supplier_list]
+                single_array_results = new_array_results
+                supplier_list = net_supplier_list
 
-        if original_grouping_levels is not None:
-            superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
-            superlevels_base_set = list(set(superlevels_base))
-            if len(superlevels_base_set)>1:
-                print("this is not developed yet")
-            elif len(superlevels_base_set) == 1:
-                base = len([x for x in original_grouping_levels if x == superlevels_base_set[0]])
-                if len(superlevels)>1 or base==1:
-                    single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
-                                    superlevels, lowest_level, value_ranges, incrementing_value, storage_type, base)
-                elif len(superlevels)==1:
-                    single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
-                                superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
-        if next_level == 'total_orders_punched' and 'order_cumulative' in custom_functions:
-            curr_grouping_levels = list(set(original_grouping_levels) - set({"date"}))
-            single_array_results = cumulative_distribution_from_array(single_array_results, curr_grouping_levels,
-                                               ['total_orders_punched'],'date')
+        # if original_grouping_levels is not None:
+        #     superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
+        #     superlevels_base_set = list(set(superlevels_base))
+        #     if len(superlevels_base_set)>1:
+        #         print("this is not developed yet")
+        #     elif len(superlevels_base_set) == 1:
+        #         base = len([x for x in original_grouping_levels if x == superlevels_base_set[0]])
+        #         if len(superlevels)>1 or base==1:
+        #             single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
+        #                             superlevels, lowest_level, value_ranges, incrementing_value, storage_type, base)
+        #         elif len(superlevels)==1:
+        #             single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
+        #                         superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
+        # if next_level == 'total_orders_punched' and 'order_cumulative' in custom_functions:
+        #     curr_grouping_levels = list(set(original_grouping_levels) - set({"date"}))
+        #     print(curr_grouping_levels)
+        #     print(single_array_results)
+        #     single_array_results = cumulative_distribution_from_array(single_array_results, curr_grouping_levels,
+        #                                        ['total_orders_punched'],'date')
     else:
         single_array_results = []
     return [single_array_results, supplier_list, match_dict]

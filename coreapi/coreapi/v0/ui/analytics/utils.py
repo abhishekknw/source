@@ -1302,3 +1302,6 @@ def cumulative_distribution_from_array(dict_array, grouping_keys, sum_keys, orde
             curr_dict[new_key_name] = round(100*(curr_count/overall_count), 4)
             final_array.append(curr_dict)
     return final_array
+
+
+#def get_nonzero_supplier_list(raw_data, campaign_list)
