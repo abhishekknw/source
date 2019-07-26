@@ -1254,32 +1254,52 @@ def cumulative_distribution(campaigns, frequency_results, sum_results, key_name,
 
 
 def get_list_elements_single_array(model_name, match_dict, outer_key, inner_key, inner_value, nonnull_key, other_keys):
+    all_leads_match_dict = match_dict.copy()
     null_constraint = {outer_key:{"$elemMatch":{inner_key: inner_value, nonnull_key:{"$ne":None}}}}
     match_dict.update(null_constraint)
     project_dict = {outer_key:1, "_id":0}
+    project_dict_full = {"date":1, "_id":0}
+    group_dict = {"_id": {},'date':{'$min': '$created_at'}}
     for curr_key in other_keys:
         project_dict[curr_key] = 1
-    query = mongo_client[model_name].find(match_dict, project_dict)
+        project_dict_full[curr_key] = 1
+        group_dict["_id"][curr_key] = '$'+curr_key
+        group_dict[curr_key] = {'$first': '$'+curr_key}
+    query = mongo_client[model_name].find(match_dict)
     query_output = list(query)
     if len(query_output) == 0:
         return []
+    full_query = mongo_client[model_name].aggregate(
+        [
+            {"$match": all_leads_match_dict},
+            {"$group": group_dict},
+            {"$project": project_dict_full}
+        ]
+    )
+    #full_query = mongo_client[model_name].find(all_leads_match_dict, project_dict_full)
+    full_query_output = list(full_query)
 
     first_array = []
     inner_data_dict = {}
+    start_date_array = []
     for curr_output in query_output:
         new_dict = {}
         outer_data = curr_output[outer_key]
         inner_data = [date_from_datetime(y[nonnull_key]) for y in outer_data if y[inner_key]==inner_value][0]
-        # prev_frequency = inner_data_dict[inner_data] if inner_data in inner_data_dict else 0
-        # new_frequency = prev_frequency + 1
+        first_date_data = full_query_output
         for curr_key in other_keys:
             new_dict[curr_key] = curr_output[curr_key]
         new_dict["date"] = inner_data
         new_dict["total_orders_punched"] = 1
         first_array.append(new_dict)
-    sum_keys = set({'total_orders_punched'})
+    #print([x['created_at'] for x in full_query_output])
+    sum_keys = {'total_orders_punched'}
     grouping_keys = set(first_array[0].keys()) - sum_keys
     final_array = sum_array_by_keys(first_array, list(grouping_keys), list(sum_keys))
+    for curr_output in full_query_output:
+        curr_output['total_orders_punched'] = 0
+        curr_output['date'] = date_from_datetime(curr_output['date'])
+        final_array.append(curr_output)
     return final_array
 
 
@@ -1297,10 +1317,24 @@ def cumulative_distribution_from_array(dict_array, grouping_keys, sum_keys, orde
         for curr_key in grouping_keys:
             new_array = [x for x in new_array if x[curr_key]==total_dict[curr_key]]
         overall_count = total_dict[sum_key]
+        first_ele = True
         for curr_dict in new_array:
+            if curr_dict[sum_key] == 0 and not first_ele:
+                continue
+            if first_ele:
+                start_date = curr_dict[order_key]
+                curr_dict["day"] = 0
+            else:
+                curr_date = curr_dict[order_key]
+                days = (curr_date - start_date).days
+                curr_dict["day"] = days
             curr_count = curr_dict[sum_key]+curr_count
-            curr_dict[new_key_name] = round(100*(curr_count/overall_count), 4)
+            if overall_count == 0:
+                curr_dict[new_key_name] = 0.00
+            else:
+                curr_dict[new_key_name] = round(100*(curr_count/overall_count), 4)
             final_array.append(curr_dict)
+            first_ele = False
     return final_array
 
 
