@@ -234,6 +234,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_output = [x for x in curr_output if x['supplier'] in supplier_list]
             superlevels_base_set = ['supplier']
             superlevels = [x for x in grouping_level if x in reverse_direct_match]
+            if len(superlevels)==0:
+                break
             curr_metric_sp_case = 'hotness_level_' if 'hotness_level' in curr_metric else curr_metric
             storage_type = count_details_parent_map[curr_metric_sp_case]['storage_type']
             curr_output = key_replace_group_multiple(curr_output, superlevels_base_set[0], superlevels, curr_metric,
@@ -854,7 +856,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         #                                        ['total_orders_punched'],'date')
     else:
         single_array_results = []
-    return [single_array_results, supplier_list, match_dict]
+    return [single_array_results, supplier_list, match_dict, original_grouping_levels]
 
 
 def get_details_by_higher_level_geographical(highest_level, highest_level_list, lowest_level='supplier',
