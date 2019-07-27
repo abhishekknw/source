@@ -1319,16 +1319,20 @@ def cumulative_distribution_from_array(dict_array, grouping_keys, sum_keys, orde
         overall_count = total_dict[sum_key]
         first_ele = True
         for curr_dict in new_array:
+            curr_dict["date_old"] = curr_dict["date"]
             if curr_dict[sum_key] == 0 and not first_ele:
                 continue
             if first_ele:
                 start_date = curr_dict[order_key]
-                curr_dict["day"] = 0
+                curr_dict["date"] = 0
             else:
                 curr_date = curr_dict[order_key]
                 days = (curr_date - start_date).days
-                curr_dict["day"] = days
+                if days > 365:
+                    break
+                curr_dict["date"] = days
             curr_count = curr_dict[sum_key]+curr_count
+
             if overall_count == 0:
                 curr_dict[new_key_name] = 0.00
             else:

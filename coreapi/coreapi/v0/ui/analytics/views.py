@@ -33,7 +33,7 @@ statistics_map = {"z_score": z_calculator_array_multiple, "frequency_distributio
 
 unilevel_categories = ['time']
 
-custom_keys = ['total_orders_punched_cum_pct','day']
+custom_keys = ['total_orders_punched_cum_pct','date_old']
 
 
 def get_reverse_dict(original_dict):
