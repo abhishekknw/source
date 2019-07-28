@@ -1328,7 +1328,7 @@ def cumulative_distribution_from_array(dict_array, grouping_keys, sum_keys, orde
             else:
                 curr_date = curr_dict[order_key]
                 days = (curr_date - start_date).days
-                if days > 365:
+                if days > 36500:
                     break
                 curr_dict["date"] = days
             curr_count = curr_dict[sum_key]+curr_count

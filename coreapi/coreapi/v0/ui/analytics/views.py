@@ -199,8 +199,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                           default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category,
                           value_ranges, supplier_constraints, supplier_list = supplier_list, zero_filter = zero_filter,
                                                           custom_functions = custom_functions)
-
             curr_output = curr_output_all[0]
+            print(curr_output)
             supplier_list = curr_output_all[1]
             if curr_output == []:
                 continue
@@ -244,7 +244,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_output = cumulative_distribution_from_array(curr_output, curr_grouping_levels,
                                                ['total_orders_punched'],'date')
         curr_output_keys = set(curr_output[0].keys())
-        print(curr_output[0])
+        print(curr_output)
         allowed_keys = set([highest_level_original] + grouping_level + [curr_metric])
         if 'order_cumulative' in custom_functions:
             allowed_keys = allowed_keys.union(set(custom_keys))
