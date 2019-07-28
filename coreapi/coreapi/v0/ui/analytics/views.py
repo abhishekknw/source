@@ -234,17 +234,17 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_output = [x for x in curr_output if x['supplier'] in supplier_list]
             superlevels_base_set = ['supplier']
             superlevels = [x for x in grouping_level if x in reverse_direct_match]
-            if len(superlevels)==0:
-                break
             curr_metric_sp_case = 'hotness_level_' if 'hotness_level' in curr_metric else curr_metric
             storage_type = count_details_parent_map[curr_metric_sp_case]['storage_type']
-            curr_output = key_replace_group_multiple(curr_output, superlevels_base_set[0], superlevels, curr_metric,
-                                                     value_ranges, None, storage_type)
+            if len(superlevels)>0:
+                curr_output = key_replace_group_multiple(curr_output, superlevels_base_set[0], superlevels, curr_metric,
+                                                         value_ranges, None, storage_type)
         if curr_metric == 'total_orders_punched' and 'order_cumulative' in custom_functions:
             curr_grouping_levels = list(set(grouping_level) - set({"date"}))
             curr_output = cumulative_distribution_from_array(curr_output, curr_grouping_levels,
                                                ['total_orders_punched'],'date')
         curr_output_keys = set(curr_output[0].keys())
+        print(curr_output[0])
         allowed_keys = set([highest_level_original] + grouping_level + [curr_metric])
         if 'order_cumulative' in custom_functions:
             allowed_keys = allowed_keys.union(set(custom_keys))
