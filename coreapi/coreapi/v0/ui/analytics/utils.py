@@ -1071,6 +1071,7 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
     # if existing_key == required_key:
     #     return dict_array
     curr_dict = None
+    print(dict_array[:5])
     if incrementing_value is not None:
         sum_key = sum_key + str(incrementing_value)
     for required_key in required_keys:
@@ -1115,6 +1116,7 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
         new_array = operate_array_by_key(new_array, grouping_keys, sum_key, 'mean')
     else:
         new_array = sum_array_by_key(new_array, grouping_keys, sum_key)
+    print("na: ", new_array[:5])
     return new_array
 
 
@@ -1276,7 +1278,6 @@ def get_list_elements_single_array(model_name, match_dict, outer_key, inner_key,
             {"$project": project_dict_full}
         ]
     )
-    #full_query = mongo_client[model_name].find(all_leads_match_dict, project_dict_full)
     full_query_output = list(full_query)
 
     first_array = []
@@ -1292,13 +1293,13 @@ def get_list_elements_single_array(model_name, match_dict, outer_key, inner_key,
         new_dict["date"] = inner_data
         new_dict["total_orders_punched"] = 1
         first_array.append(new_dict)
-    #print([x['created_at'] for x in full_query_output])
     sum_keys = {'total_orders_punched'}
     grouping_keys = set(first_array[0].keys()) - sum_keys
     final_array = sum_array_by_keys(first_array, list(grouping_keys), list(sum_keys))
     for curr_output in full_query_output:
         curr_output['total_orders_punched'] = 0
         curr_output['date'] = date_from_datetime(curr_output['date'])
+        curr_output['lead_date'] = date_from_datetime(curr_output['date'])
         final_array.append(curr_output)
     return final_array
 
@@ -1312,25 +1313,31 @@ def cumulative_distribution_from_array(dict_array, grouping_keys, sum_keys, orde
     sum_key = sum_keys[0]
     new_key_name = sum_key + '_cum_pct'
     for total_dict in total_dict_array:
+        print("tda: ", total_dict)
         new_array = dict_array
         curr_count = 0
         for curr_key in grouping_keys:
             new_array = [x for x in new_array if x[curr_key]==total_dict[curr_key]]
         overall_count = total_dict[sum_key]
         first_ele = True
+        zero_count = 0
         for curr_dict in new_array:
             curr_dict["date_old"] = curr_dict["date"]
-            if curr_dict[sum_key] == 0 and not first_ele:
-                continue
             if first_ele:
-                start_date = curr_dict[order_key]
-                curr_dict["date"] = 0
+                if curr_dict[sum_key]>0:
+                    continue
+                else:
+                    start_date = curr_dict[order_key]
+                    curr_dict["date"] = 0
             else:
-                curr_date = curr_dict[order_key]
-                days = (curr_date - start_date).days
-                if days > 36500:
-                    break
-                curr_dict["date"] = days
+                if curr_dict[sum_key] == 0:
+                    continue
+                else:
+                    curr_date = curr_dict[order_key]
+                    days = (curr_date - start_date).days
+                    if days > 36500:
+                        break
+                    curr_dict["date"] = days
             curr_count = curr_dict[sum_key]+curr_count
 
             if overall_count == 0:

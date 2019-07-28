@@ -33,7 +33,7 @@ statistics_map = {"z_score": z_calculator_array_multiple, "frequency_distributio
 
 unilevel_categories = ['time']
 
-custom_keys = ['total_orders_punched_cum_pct','date_old']
+custom_keys = ['total_orders_punched_cum_pct','date_old',"lead_date"]
 
 
 def get_reverse_dict(original_dict):
@@ -200,7 +200,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                           value_ranges, supplier_constraints, supplier_list = supplier_list, zero_filter = zero_filter,
                                                           custom_functions = custom_functions)
             curr_output = curr_output_all[0]
-            print(curr_output)
             supplier_list = curr_output_all[1]
             if curr_output == []:
                 continue
@@ -236,15 +235,17 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             superlevels = [x for x in grouping_level if x in reverse_direct_match]
             curr_metric_sp_case = 'hotness_level_' if 'hotness_level' in curr_metric else curr_metric
             storage_type = count_details_parent_map[curr_metric_sp_case]['storage_type']
+            print("initial: ",curr_output[:10])
             if len(superlevels)>0:
                 curr_output = key_replace_group_multiple(curr_output, superlevels_base_set[0], superlevels, curr_metric,
                                                          value_ranges, None, storage_type)
+            print("final: ", curr_output[:10])
         if curr_metric == 'total_orders_punched' and 'order_cumulative' in custom_functions:
             curr_grouping_levels = list(set(grouping_level) - set({"date"}))
+            print(curr_output[0])
             curr_output = cumulative_distribution_from_array(curr_output, curr_grouping_levels,
                                                ['total_orders_punched'],'date')
         curr_output_keys = set(curr_output[0].keys())
-        print(curr_output)
         allowed_keys = set([highest_level_original] + grouping_level + [curr_metric])
         if 'order_cumulative' in custom_functions:
             allowed_keys = allowed_keys.union(set(custom_keys))
@@ -645,7 +646,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                         start_value = datetime.strptime(start_value, "%Y-%m-%d")
                         end_value = datetime.strptime(end_value, "%Y-%m-%d")
                     add_constraint = [{add_variable_name:{"$gte": start_value, "$lte": end_value}}]
-                if not next_level == 'total_orders_punched':
+                if not (next_level == 'total_orders_punched' and 'order_cumulative' in custom_functions):
                     match_constraint = match_constraint + add_constraint
                     match_dict = {"$and": match_constraint}
         elif database_type == 'mysql':
@@ -750,7 +751,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     ]
                 )
                 query = list(query)
-                if new_results: query = new_results
+                if new_results:
+                    query = new_results
                 if not query==[]:
                     if not all_results == [] and isinstance(all_results[0], dict) == True:
                         all_results = [all_results]
