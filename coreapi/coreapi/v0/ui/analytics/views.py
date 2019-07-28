@@ -228,6 +228,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         if '_nz' in curr_metric:
             zero_filter = True
             curr_metric = curr_metric[:-3]
+        if curr_metric not in individual_metric_output:
+            continue
         curr_output = individual_metric_output[curr_metric]
         if 'supplier' in curr_output[0]:
             curr_output = [x for x in curr_output if x['supplier'] in supplier_list]
@@ -235,11 +237,9 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             superlevels = [x for x in grouping_level if x in reverse_direct_match]
             curr_metric_sp_case = 'hotness_level_' if 'hotness_level' in curr_metric else curr_metric
             storage_type = count_details_parent_map[curr_metric_sp_case]['storage_type']
-            print("initial: ",curr_output[:10])
             if len(superlevels)>0:
                 curr_output = key_replace_group_multiple(curr_output, superlevels_base_set[0], superlevels, curr_metric,
                                                          value_ranges, None, storage_type)
-            print("final: ", curr_output[:10])
         if curr_metric == 'total_orders_punched' and 'order_cumulative' in custom_functions:
             curr_grouping_levels = list(set(grouping_level) - set({"date"}))
             print(curr_output[0])
