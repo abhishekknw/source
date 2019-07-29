@@ -59,6 +59,9 @@ level_name_by_model_id = {
 }
 
 
+averaging_metrics_list = ["cost_flat"]
+
+
 related_fields_dict = {"campaign": ['ProposalInfo', 'proposal_id', 'campaign', 'name', 'campaign_name'],
                        "supplier": ['SupplierTypeSociety', 'supplier_id', 'supplier', 'society_name', 'supplier_name'],
                        "vendor": ['Organisation', 'organisation_id', 'vendor', 'name', 'vendor_name']
@@ -209,16 +212,16 @@ count_details_direct_match_multiple = {
 count_details_parent_map_time = {
     'lead': {'parent': 'date, campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
              'self_name_model': 'total_leads_count', 'parent_name_model': 'lead_date,campaign_id',
-             'storage_type': 'sum'},
+             'storage_type': 'sum', 'format': 'time'},
     'hot_lead': {'parent': 'date,campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
                  'self_name_model': 'total_hot_leads_count', 'parent_name_model': 'lead_date,campaign_id',
-                 'storage_type': 'sum'},
+                 'storage_type': 'sum', 'format': 'time'},
     'hotness_level_': {'parent': 'date, campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                   'self_name_model': 'hotness_level', 'parent_name_model': 'created_at,campaign_id',
                   'storage_type': 'condition'},
     'total_booking_confirmed': {'parent': 'date,campaign', 'model_name':'leads_summary','database_type': 'mongodb',
                     'self_name_model': 'total_booking_confirmed', 'parent_name_model': 'lead_date,campaign_id',
-                                'storage_type': 'sum'},
+                                'storage_type': 'sum',  'format': 'time'},
     'total_orders_punched': {'parent': 'date,campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
                              'self_name_model': 'total_orders_punched', 'parent_name_model': 'lead_date,campaign_id',
                              'storage_type': 'sum'}
@@ -250,6 +253,16 @@ def round_sig_min(x,sig=7):
         return x
     else:
         return round(x, sig-int(math.floor(math.log10(abs(x))))-1)
+
+
+def reverse_supplier_levels(levels):
+    new_levels = []
+    for level in levels:
+        new_level = level
+        if level in reverse_direct_match:
+            new_level = reverse_direct_match[level]
+        new_levels.append(new_level)
+    return new_levels
 
 
 def z_calculator_array_multiple(data_array, metrics_array_dict, weighted=0):
@@ -1190,6 +1203,8 @@ def calculate_mode(num_list,window_size=3):
 
 def add_binary_field_status(dict_array, fields_list, false_prefix = 'No ',remove_suffix_len = 4,
                             custom_binary_field_labels = {}):
+    if len(dict_array) == 0:
+        return dict_array
     dict_keys = dict_array[0].keys()
     binary_keys_list = set(dict_keys).intersection(set(fields_list))
     new_array = []
@@ -1248,3 +1263,151 @@ def cumulative_distribution(campaigns, frequency_results, sum_results, key_name,
     return cumulative_frequency_results
 
 
+def get_list_elements_single_array(model_name, match_dict, outer_key, inner_key, inner_value, nonnull_key, other_keys):
+    all_leads_match_dict = match_dict.copy()
+    null_constraint = {outer_key:{"$elemMatch":{inner_key: inner_value, nonnull_key:{"$ne":None}}}}
+    match_dict.update(null_constraint)
+    project_dict = {outer_key:1, "_id":0}
+    project_dict_full = {"date":1, "_id":0}
+    group_dict = {"_id": {},'date':{'$min': '$created_at'}}
+    for curr_key in other_keys:
+        project_dict[curr_key] = 1
+        project_dict_full[curr_key] = 1
+        group_dict["_id"][curr_key] = '$'+curr_key
+        group_dict[curr_key] = {'$first': '$'+curr_key}
+    query = mongo_client[model_name].find(match_dict)
+    query_output = list(query)
+    if len(query_output) == 0:
+        return []
+    full_query = mongo_client[model_name].aggregate(
+        [
+            {"$match": all_leads_match_dict},
+            {"$group": group_dict},
+            {"$project": project_dict_full}
+        ]
+    )
+    full_query_output = list(full_query)
+
+    first_array = []
+    inner_data_dict = {}
+    start_date_array = []
+    for curr_output in query_output:
+        new_dict = {}
+        outer_data = curr_output[outer_key]
+        inner_data = [date_from_datetime(y[nonnull_key]) for y in outer_data if y[inner_key]==inner_value][0]
+        first_date_data = full_query_output
+        for curr_key in other_keys:
+            new_dict[curr_key] = curr_output[curr_key]
+        new_dict["date"] = inner_data
+        new_dict["total_orders_punched"] = 1
+        first_array.append(new_dict)
+    sum_keys = {'total_orders_punched'}
+    grouping_keys = set(first_array[0].keys()) - sum_keys
+    final_array = sum_array_by_keys(first_array, list(grouping_keys), list(sum_keys))
+    for curr_output in full_query_output:
+        curr_output['total_orders_punched'] = 0
+        curr_output['date'] = date_from_datetime(curr_output['date'])
+        curr_output['lead_date'] = date_from_datetime(curr_output['date'])
+        final_array.append(curr_output)
+    return final_array
+
+
+def convert_date_to_days(dict_array, grouping_keys, sum_keys, order_key):
+    dict_array = sorted(dict_array, key=lambda k: k[order_key]) if order_key is not None else dict_array
+    total_dict_array = sum_array_by_keys(dict_array, grouping_keys, sum_keys)
+    final_array = []
+    sum_key = sum_keys[0]
+    for total_dict in total_dict_array:
+        new_array = dict_array
+        for curr_key in grouping_keys:
+            new_array = [x for x in new_array if x[curr_key] == total_dict[curr_key]]
+        first_ele = True
+        for curr_dict in new_array:
+            if first_ele:
+                if curr_dict[sum_key] > 0:
+                    continue
+                else:
+                    start_date = curr_dict[order_key]
+                    curr_dict["date"] = 0
+            else:
+                if curr_dict[sum_key] == 0:
+                    continue
+                else:
+                    curr_date = curr_dict[order_key]
+                    days = (curr_date - start_date).days
+                    if days > 36500:
+                        break
+                    curr_dict["date"] = days
+            final_array.append(curr_dict)
+            first_ele = False
+    return final_array
+
+
+def cumulative_distribution_from_array_day(dict_array, grouping_keys, sum_keys, order_key):
+    if len(dict_array)==0 or order_key not in dict_array[0] or sum_keys[0] not in dict_array[0]:
+        return dict_array
+    dict_array = sorted(dict_array, key=lambda k: k[order_key]) if order_key is not None else dict_array
+    grouping_keys = list(set(grouping_keys) - set(['date']))
+    total_dict_array = sum_array_by_keys(dict_array, grouping_keys, sum_keys)
+    final_array = []
+    sum_key = sum_keys[0]
+    new_key_name = sum_key + '_cum_pct'
+    for total_dict in total_dict_array:
+        new_array = dict_array
+        for curr_key in grouping_keys:
+            new_array = [x for x in new_array if x[curr_key]==total_dict[curr_key]]
+        overall_count = total_dict[sum_key]
+        curr_count_total = 0
+        for curr_dict in new_array:
+            curr_count = curr_dict[sum_key]
+            curr_count_total = curr_count_total + curr_count
+            if overall_count == 0:
+                curr_dict[new_key_name] = 0.00
+            else:
+                curr_dict[new_key_name] = round(100*(curr_count_total/overall_count), 4)
+            final_array.append(curr_dict)
+            first_ele = False
+    return final_array
+
+
+def cumulative_distribution_from_array(dict_array, grouping_keys, sum_keys, order_key):
+    if len(dict_array)==0 or order_key not in dict_array[0] or sum_keys[0] not in dict_array[0]:
+        return dict_array
+    dict_array = sorted(dict_array, key=lambda k: k[order_key]) if order_key is not None else dict_array
+    total_dict_array = sum_array_by_keys(dict_array, grouping_keys, sum_keys)
+    final_array = []
+    sum_key = sum_keys[0]
+    new_key_name = sum_key + '_cum_pct'
+    for total_dict in total_dict_array:
+        new_array = dict_array
+        curr_count = 0
+        for curr_key in grouping_keys:
+            new_array = [x for x in new_array if x[curr_key]==total_dict[curr_key]]
+        overall_count = total_dict[sum_key]
+        first_ele = True
+        zero_count = 0
+        for curr_dict in new_array:
+            if first_ele:
+                if curr_dict[sum_key]>0:
+                    continue
+                else:
+                    start_date = curr_dict[order_key]
+                    curr_dict["date"] = 0
+            else:
+                if curr_dict[sum_key] == 0:
+                    continue
+                else:
+                    curr_date = curr_dict[order_key]
+                    days = (curr_date - start_date).days
+                    if days > 36500:
+                        break
+                    curr_dict["date"] = days
+            curr_count = curr_dict[sum_key]+curr_count
+
+            if overall_count == 0:
+                curr_dict[new_key_name] = 0.00
+            else:
+                curr_dict[new_key_name] = round(100*(curr_count/overall_count), 4)
+            final_array.append(curr_dict)
+            first_ele = False
+    return final_array

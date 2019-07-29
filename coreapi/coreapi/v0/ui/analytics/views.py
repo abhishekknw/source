@@ -1,6 +1,6 @@
 from __future__ import print_function
 from __future__ import absolute_import
-from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge_dict_array_dict_single,
+from .utils import (level_name_by_model_id, convert_date_to_days, merge_dict_array_dict_single,
                     convert_dict_arrays_keys_to_standard_names, get_similar_structure_keys, geographical_parent_details,
                     count_details_parent_map, find_level_sequence, binary_operation, count_details_direct_match_multiple,
                     sum_array_by_key, z_calculator_array_multiple, get_metrics_from_code, reverse_direct_match,
@@ -8,10 +8,12 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     merge_dict_array_dict_multiple_keys, count_details_parent_map_multiple, sum_array_by_keys,
                     sum_array_by_single_key, append_array_by_keys, frequency_mode_calculator, var_stdev_calculator,
                     mean_calculator, count_details_parent_map_custom, flatten, flatten_dict_array,
-                    round_sig_min, time_parent_names, raw_data_unrestricted,
+                    round_sig_min, time_parent_names, raw_data_unrestricted, averaging_metrics_list,
                     key_replace_group_multiple, key_replace_group, truncate_by_value_ranges, linear_extrapolator,
-                    get_constrained_values, add_related_field, related_fields_dict, zero_filtered_raw_data,
-                    add_binary_field_status, binary_parameters_list, get_list_elements_frequency_mongo, cumulative_distribution)
+                    get_constrained_values, add_related_field, related_fields_dict, reverse_supplier_levels,
+                    add_binary_field_status, binary_parameters_list, get_list_elements_frequency_mongo,
+                    cumulative_distribution, get_list_elements_single_array, cumulative_distribution_from_array,
+                    cumulative_distribution_from_array_day)
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo, ProposalCenterMapping
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -31,6 +33,8 @@ statistics_map = {"z_score": z_calculator_array_multiple, "frequency_distributio
                   "straight_line_forecasting": linear_extrapolator}
 
 unilevel_categories = ['time']
+
+custom_keys = ['total_orders_punched_cum_pct','date_old',"lead_date"]
 
 
 def get_reverse_dict(original_dict):
@@ -118,23 +122,26 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         default_value_type = 'campaign'
     supplier_list = []
 
+    raw_data_original = raw_data.copy()
     raw_data_lf = raw_data.copy() # raw data with lead first
     if 'lead' in raw_data_lf and not raw_data_lf[0]=='lead':
         raw_data_lf.remove('lead')
         raw_data_lf.insert(0,'lead')
-
+    common_supplier_list = []
     for curr_metric in raw_data_lf:
         zero_filter = False
-        if curr_metric in zero_filtered_raw_data:
+        # if curr_metric in zero_filtered_raw_data:
+        #     zero_filter = True
+        if '_nz' in curr_metric:
             zero_filter = True
-        elif '_nz' in curr_metric:
             curr_index = raw_data_lf.index(curr_metric)
             original_index = raw_data.index(curr_metric)
             curr_metric = curr_metric[:-3]
             raw_data_lf[curr_index] = curr_metric
             raw_data[original_index] = curr_metric
         lowest_level = curr_metric
-        print(lowest_level)
+        curr_index = raw_data_lf.index(curr_metric)
+        print("current_level: ",lowest_level)
         if data_scope_category == 'geographical':
             lowest_geographical_level = geographical_parent_details['base']
             if data_point_category == 'geographical':
@@ -191,10 +198,11 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         else:
             curr_output_all = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
                           default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category,
-                          value_ranges, supplier_constraints, supplier_list = supplier_list, zero_filter = zero_filter)
-
+                          value_ranges, supplier_constraints, supplier_list = supplier_list, zero_filter = zero_filter,
+                                                          custom_functions = custom_functions)
             curr_output = curr_output_all[0]
             supplier_list = curr_output_all[1]
+
             if curr_output == []:
                 continue
             if highest_level_original == 'vendor':
@@ -208,14 +216,48 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 
             curr_output_keys = curr_output[0].keys()
             allowed_keys = set([highest_level_original] + grouping_level + [curr_metric])
-            #curr_output = key_replace_group(curr_output,'supplier','flattype')
-            if not curr_output_keys<=allowed_keys:
-                curr_output = sum_array_by_keys(curr_output, [highest_level_original]+grouping_level,[curr_metric])
+            if 'order_cumulative' in custom_functions:
+                allowed_keys = allowed_keys.union(set(custom_keys))
+            # if not curr_output_keys<=allowed_keys:
+            #     curr_output = sum_array_by_keys(curr_output, list(allowed_keys-set([curr_metric])),[curr_metric])
         if data_summary == 1:
             print("summarizing data")
             final_value = sum([x[curr_metric] for x in curr_output])
             curr_output = final_value
         individual_metric_output[lowest_level] = curr_output
+
+    for curr_metric in raw_data_original:
+        if '_nz' in curr_metric:
+            zero_filter = True
+            curr_metric = curr_metric[:-3]
+        if curr_metric not in individual_metric_output:
+            continue
+        curr_output = individual_metric_output[curr_metric]
+        if curr_metric == 'total_orders_punched' and 'order_cumulative' in custom_functions:
+            curr_grouping_levels = [highest_level_original]+ list(set(reverse_supplier_levels(grouping_level))
+                                                                  - set({"date"}))
+            if 'supplier' not in curr_grouping_levels:
+                curr_grouping_levels = curr_grouping_levels + ["supplier"]
+            curr_output = convert_date_to_days(curr_output, curr_grouping_levels,
+                                                             ['total_orders_punched'], 'date')
+        if 'supplier' in curr_output[0]:
+            curr_output = [x for x in curr_output if x['supplier'] in supplier_list]
+            superlevels_base_set = ['supplier']
+            superlevels = [x for x in grouping_level if x in reverse_direct_match]
+            curr_metric_sp_case = 'hotness_level_' if 'hotness_level' in curr_metric else curr_metric
+            storage_type = count_details_parent_map[curr_metric_sp_case]['storage_type']
+            if len(superlevels)>0:
+                curr_output = key_replace_group_multiple(curr_output, superlevels_base_set[0], superlevels, curr_metric,
+                                                         value_ranges, None, storage_type)
+        curr_output_keys = set(curr_output[0].keys())
+        allowed_keys = set([highest_level_original] + grouping_level + [curr_metric])
+        if 'order_cumulative' in custom_functions:
+            curr_output = cumulative_distribution_from_array_day(curr_output, grouping_level,
+                                                             ['total_orders_punched'], 'date')
+            allowed_keys = allowed_keys.union(set(custom_keys))
+        if not curr_output_keys <= allowed_keys:
+            curr_output = sum_array_by_keys(curr_output, list(allowed_keys - set([curr_metric])), [curr_metric])
+        individual_metric_output[curr_metric] = curr_output
 
     reverse_map = {}
     custom_binary_field_labels = data_point["custom_binary_field_labels"] if "custom_binary_field_labels" in data_point\
@@ -375,7 +417,10 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 if not type(curr_list)==list:
                     curr_list = [curr_list]
                 curr_list = [int(y) for y in curr_list if y is not None]
-                curr_value = sum(curr_list)
+                if curr_metric in averaging_metrics_list:
+                    curr_value = np.mean(curr_list)
+                else:
+                    curr_value = sum(curr_list)
                 curr_dict[curr_name] = curr_value
                 if len(higher_level_raw_data) < len(raw_data):
                     higher_level_raw_data.append(curr_name)
@@ -444,6 +489,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                                                                        'date', 'total orders punched pct')
                 custom_function_output["order_cumulative"] = cumulative_frequency_results
 
+
     return {"individual metrics":individual_metric_output, "lower_group_data": derived_array,
             "higher_group_data":higher_level_list, "bivariate_statistical_information": bsi,
             "custom function output": custom_function_output}
@@ -452,7 +498,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
                                 grouping_category = "", value_ranges = {}, supplier_constraints = {},
-                                supplier_list = [], zero_filter = False):
+                                supplier_list = [], zero_filter = False, custom_functions = []):
     incrementing_value = None
     if lowest_level == None:
         return []
@@ -606,8 +652,9 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                         start_value = datetime.strptime(start_value, "%Y-%m-%d")
                         end_value = datetime.strptime(end_value, "%Y-%m-%d")
                     add_constraint = [{add_variable_name:{"$gte": start_value, "$lte": end_value}}]
-                match_constraint = match_constraint + add_constraint
-                match_dict = {"$and": match_constraint}
+                if not (next_level == 'total_orders_punched' and 'order_cumulative' in custom_functions):
+                    match_constraint = match_constraint + add_constraint
+                    match_dict = {"$and": match_constraint}
         elif database_type == 'mysql':
             add_query = ''
             if next_level == lowest_level and not unilevel_constraints == {} and \
@@ -692,19 +739,26 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     group_dict["_id"][curr_parent_model_name] = '$' + curr_parent_model_name
                     group_dict[curr_parent_model_name] = {"$first": '$' + curr_parent_model_name}
                     project_dict[curr_parent_model_name] = 1
+                new_results = None
+                if next_level == 'total_orders_punched' and 'order_cumulative' in custom_functions:
+                    new_model_name = 'leads'
+                    outer_key = 'data'
+                    inner_key = 'key_name'
+                    inner_value = 'Order Punched Date'
+                    nonnull_key = 'value'
+                    other_keys = parent_model_names
+                    new_results = get_list_elements_single_array(new_model_name, match_dict.copy(), outer_key,
+                                                                inner_key, inner_value, nonnull_key, other_keys)
                 query = mongo_client[model_name].aggregate(
                     [
                         {"$match": match_dict},
-                        {
-                            "$group": group_dict
-                        },
-                        {
-                            "$project": project_dict
-                        }
+                        {"$group": group_dict},
+                        {"$project": project_dict}
                     ]
                 )
                 query = list(query)
-                print(query)
+                if new_results:
+                    query = new_results
                 if not query==[]:
                     if not all_results == [] and isinstance(all_results[0], dict) == True:
                         all_results = [all_results]
@@ -727,6 +781,8 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     query_new = []
                     for curr_dict in query:
                         self_value = curr_dict[self_model_name]
+                        if curr_dict[other_column] not in joining_data:
+                            continue
                         joining_value = joining_data[curr_dict[other_column]]
                         if self_value is not None and joining_value is not None:
                             new_dict = {}
@@ -762,7 +818,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             all_results = [all_results]
     if not len(all_results)==0:
         new_results = convert_dict_arrays_keys_to_standard_names(all_results)
-
         try:
             single_array_results = merge_dict_array_array_multiple_keys(new_results, grouping_levels)
         except:
@@ -774,34 +829,42 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
 
         result_keys = single_array_results[0].keys()
         if "supplier" in result_keys:
-            if "lead" in result_keys:
+            if supplier_list == []:
                 supplier_list = [x['supplier'] for x in single_array_results]
             else:
-                if len(single_array_results) > len(supplier_list) and not supplier_list == []:
-                    new_array_results = []
-                    for curr_array in single_array_results:
-                        if curr_array['supplier'] in supplier_list:
-                            new_array_results.append(curr_array)
-                    single_array_results = new_array_results
+                # if len(single_array_results) > len(supplier_list) and not supplier_list == []:
+                #     new_array_results = []
+                #     for curr_array in single_array_results:
+                #         if curr_array['supplier'] in supplier_list:
+                #             new_array_results.append(curr_array)
+                new_supplier_list = [x['supplier'] for x in single_array_results]
+                net_supplier_list = list(set(supplier_list).intersection(set(new_supplier_list)))
+                new_array_results = [x for x in single_array_results if x['supplier'] in net_supplier_list]
+                single_array_results = new_array_results
+                supplier_list = net_supplier_list
 
-        if original_grouping_levels is not None:
-            print("sar: ",single_array_results)
-            superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
-            superlevels_base_set = list(set(superlevels_base))
-            if len(superlevels_base_set)>1:
-                print("this is not developed yet")
-            elif len(superlevels_base_set) == 1:
-                base = len([x for x in original_grouping_levels if x == superlevels_base_set[0]])
-                if len(superlevels)>1 or base==1:
-                    single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
-                                    superlevels, lowest_level, value_ranges, incrementing_value, storage_type, base)
-                elif len(superlevels)==1:
-                    single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
-                                superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
+        # if original_grouping_levels is not None:
+        #     superlevels = [x for x in original_grouping_levels if x in reverse_direct_match]
+        #     superlevels_base_set = list(set(superlevels_base))
+        #     if len(superlevels_base_set)>1:
+        #         print("this is not developed yet")
+        #     elif len(superlevels_base_set) == 1:
+        #         base = len([x for x in original_grouping_levels if x == superlevels_base_set[0]])
+        #         if len(superlevels)>1 or base==1:
+        #             single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
+        #                             superlevels, lowest_level, value_ranges, incrementing_value, storage_type, base)
+        #         elif len(superlevels)==1:
+        #             single_array_results = key_replace_group_multiple(single_array_results, superlevels_base_set[0],
+        #                         superlevels, lowest_level, value_ranges, incrementing_value, storage_type)
+        # if next_level == 'total_orders_punched' and 'order_cumulative' in custom_functions:
+        #     curr_grouping_levels = list(set(original_grouping_levels) - set({"date"}))
+        #     print(curr_grouping_levels)
+        #     print(single_array_results)
+        #     single_array_results = cumulative_distribution_from_array(single_array_results, curr_grouping_levels,
+        #                                        ['total_orders_punched'],'date')
     else:
         single_array_results = []
-    print(match_dict)
-    return [single_array_results, supplier_list, match_dict]
+    return [single_array_results, supplier_list, match_dict, original_grouping_levels]
 
 
 def get_details_by_higher_level_geographical(highest_level, highest_level_list, lowest_level='supplier',
@@ -990,6 +1053,8 @@ class RangeAPIView(APIView):
 
 
 def get_all_assigned_campaigns_vendor_city(user_id, city_list = None, vendor_list = None):
+    final_result = None
+    city_assigned_campaigns = None
     if vendor_list is not None:
         user_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id,
                                                              campaign__principal_vendor__in=vendor_list).values_list(
@@ -1005,8 +1070,11 @@ def get_all_assigned_campaigns_vendor_city(user_id, city_list = None, vendor_lis
         city_assigned_campaigns = CampaignAssignment.objects.filter(
             assigned_to_id=user_id, campaign_id__in=city_campaigns).values_list('campaign_id', flat=True).distinct()
         final_list = city_assigned_campaigns
-        if vendor_list is not None:
-            final_list = list(set(vendor_campaigns).intersection(set(city_assigned_campaigns)))
+        # if vendor_list is not None:
+    if city_assigned_campaigns:
+        final_list = list(set(user_campaigns).intersection(set(city_assigned_campaigns)))
+    else:
+        final_list = list(set(user_campaigns))
     final_result = ProposalInfo.objects.filter(proposal_id__in=final_list).extra(select={
                     'campaign_id': 'proposal_id', 'campaign_name': 'name'}).values('campaign_id', 'campaign_name')
     return final_result
