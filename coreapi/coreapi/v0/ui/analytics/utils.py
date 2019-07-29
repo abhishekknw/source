@@ -255,6 +255,16 @@ def round_sig_min(x,sig=7):
         return round(x, sig-int(math.floor(math.log10(abs(x))))-1)
 
 
+def reverse_supplier_levels(levels):
+    new_levels = []
+    for level in levels:
+        new_level = level
+        if level in reverse_direct_match:
+            new_level = reverse_direct_match[level]
+        new_levels.append(new_level)
+    return new_levels
+
+
 def z_calculator_array_multiple(data_array, metrics_array_dict, weighted=0):
     result_array = []
     global_data = {}
@@ -1071,7 +1081,6 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
     # if existing_key == required_key:
     #     return dict_array
     curr_dict = None
-    print(dict_array[:5])
     if incrementing_value is not None:
         sum_key = sum_key + str(incrementing_value)
     for required_key in required_keys:
@@ -1116,7 +1125,6 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
         new_array = operate_array_by_key(new_array, grouping_keys, sum_key, 'mean')
     else:
         new_array = sum_array_by_key(new_array, grouping_keys, sum_key)
-    print("na: ", new_array[:5])
     return new_array
 
 
@@ -1304,16 +1312,76 @@ def get_list_elements_single_array(model_name, match_dict, outer_key, inner_key,
     return final_array
 
 
+def convert_date_to_days(dict_array, grouping_keys, sum_keys, order_key):
+    dict_array = sorted(dict_array, key=lambda k: k[order_key]) if order_key is not None else dict_array
+    total_dict_array = sum_array_by_keys(dict_array, grouping_keys, sum_keys)
+    final_array = []
+    sum_key = sum_keys[0]
+    for total_dict in total_dict_array:
+        new_array = dict_array
+        for curr_key in grouping_keys:
+            new_array = [x for x in new_array if x[curr_key] == total_dict[curr_key]]
+        first_ele = True
+        for curr_dict in new_array:
+            if first_ele:
+                if curr_dict[sum_key] > 0:
+                    continue
+                else:
+                    start_date = curr_dict[order_key]
+                    curr_dict["date"] = 0
+            else:
+                if curr_dict[sum_key] == 0:
+                    continue
+                else:
+                    curr_date = curr_dict[order_key]
+                    days = (curr_date - start_date).days
+                    if days > 36500:
+                        break
+                    curr_dict["date"] = days
+            final_array.append(curr_dict)
+            first_ele = False
+    return final_array
+
+
+def cumulative_distribution_from_array_day(dict_array, grouping_keys, sum_keys, order_key):
+    if len(dict_array)==0 or order_key not in dict_array[0] or sum_keys[0] not in dict_array[0]:
+        return dict_array
+    dict_array = sorted(dict_array, key=lambda k: k[order_key]) if order_key is not None else dict_array
+    for i in range(5):
+        print("da: ", dict_array[i])
+    grouping_keys = list(set(grouping_keys) - set(['date']))
+    total_dict_array = sum_array_by_keys(dict_array, grouping_keys, sum_keys)
+    print("tda: ", total_dict_array)
+    final_array = []
+    sum_key = sum_keys[0]
+    new_key_name = sum_key + '_cum_pct'
+    for total_dict in total_dict_array:
+        new_array = dict_array
+        for curr_key in grouping_keys:
+            new_array = [x for x in new_array if x[curr_key]==total_dict[curr_key]]
+        overall_count = total_dict[sum_key]
+        curr_count_total = 0
+        for curr_dict in new_array:
+            curr_count = curr_dict[sum_key]
+            curr_count_total = curr_count_total + curr_count
+            if overall_count == 0:
+                curr_dict[new_key_name] = 0.00
+            else:
+                curr_dict[new_key_name] = round(100*(curr_count_total/overall_count), 4)
+            final_array.append(curr_dict)
+            first_ele = False
+    return final_array
+
+
 def cumulative_distribution_from_array(dict_array, grouping_keys, sum_keys, order_key):
     if len(dict_array)==0 or order_key not in dict_array[0] or sum_keys[0] not in dict_array[0]:
         return dict_array
-    dict_array = sorted(dict_array, key=lambda k: k[order_key])
+    dict_array = sorted(dict_array, key=lambda k: k[order_key]) if order_key is not None else dict_array
     total_dict_array = sum_array_by_keys(dict_array, grouping_keys, sum_keys)
     final_array = []
     sum_key = sum_keys[0]
     new_key_name = sum_key + '_cum_pct'
     for total_dict in total_dict_array:
-        print("tda: ", total_dict)
         new_array = dict_array
         curr_count = 0
         for curr_key in grouping_keys:
@@ -1322,7 +1390,6 @@ def cumulative_distribution_from_array(dict_array, grouping_keys, sum_keys, orde
         first_ele = True
         zero_count = 0
         for curr_dict in new_array:
-            curr_dict["date_old"] = curr_dict["date"]
             if first_ele:
                 if curr_dict[sum_key]>0:
                     continue
@@ -1347,6 +1414,3 @@ def cumulative_distribution_from_array(dict_array, grouping_keys, sum_keys, orde
             final_array.append(curr_dict)
             first_ele = False
     return final_array
-
-
-#def get_nonzero_supplier_list(raw_data, campaign_list)

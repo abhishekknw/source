@@ -1,6 +1,6 @@
 from __future__ import print_function
 from __future__ import absolute_import
-from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge_dict_array_dict_single,
+from .utils import (level_name_by_model_id, convert_date_to_days, merge_dict_array_dict_single,
                     convert_dict_arrays_keys_to_standard_names, get_similar_structure_keys, geographical_parent_details,
                     count_details_parent_map, find_level_sequence, binary_operation, count_details_direct_match_multiple,
                     sum_array_by_key, z_calculator_array_multiple, get_metrics_from_code, reverse_direct_match,
@@ -10,9 +10,10 @@ from .utils import (level_name_by_model_id, merge_dict_array_array_single, merge
                     mean_calculator, count_details_parent_map_custom, flatten, flatten_dict_array,
                     round_sig_min, time_parent_names, raw_data_unrestricted, averaging_metrics_list,
                     key_replace_group_multiple, key_replace_group, truncate_by_value_ranges, linear_extrapolator,
-                    get_constrained_values, add_related_field, related_fields_dict, zero_filtered_raw_data,
+                    get_constrained_values, add_related_field, related_fields_dict, reverse_supplier_levels,
                     add_binary_field_status, binary_parameters_list, get_list_elements_frequency_mongo,
-                    cumulative_distribution, get_list_elements_single_array, cumulative_distribution_from_array)
+                    cumulative_distribution, get_list_elements_single_array, cumulative_distribution_from_array,
+                    cumulative_distribution_from_array_day)
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo, ProposalCenterMapping
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -231,6 +232,11 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         if curr_metric not in individual_metric_output:
             continue
         curr_output = individual_metric_output[curr_metric]
+        if curr_metric == 'total_orders_punched' and 'order_cumulative' in custom_functions:
+            curr_grouping_levels = [highest_level_original]+ list(set(reverse_supplier_levels(grouping_level))
+                                                                  - set({"date"}))
+            curr_output = convert_date_to_days(curr_output, curr_grouping_levels,
+                                                             ['total_orders_punched'], 'date')
         if 'supplier' in curr_output[0]:
             curr_output = [x for x in curr_output if x['supplier'] in supplier_list]
             superlevels_base_set = ['supplier']
@@ -240,14 +246,12 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             if len(superlevels)>0:
                 curr_output = key_replace_group_multiple(curr_output, superlevels_base_set[0], superlevels, curr_metric,
                                                          value_ranges, None, storage_type)
-        if curr_metric == 'total_orders_punched' and 'order_cumulative' in custom_functions:
-            curr_grouping_levels = list(set(grouping_level) - set({"date"}))
-            print(curr_output[0])
-            curr_output = cumulative_distribution_from_array(curr_output, curr_grouping_levels,
-                                               ['total_orders_punched'],'date')
+
         curr_output_keys = set(curr_output[0].keys())
         allowed_keys = set([highest_level_original] + grouping_level + [curr_metric])
         if 'order_cumulative' in custom_functions:
+            curr_output = cumulative_distribution_from_array_day(curr_output, grouping_level,
+                                                             ['total_orders_punched'], 'date')
             allowed_keys = allowed_keys.union(set(custom_keys))
         if not curr_output_keys <= allowed_keys:
             curr_output = sum_array_by_keys(curr_output, list(allowed_keys - set([curr_metric])), [curr_metric])
