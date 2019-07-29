@@ -1356,7 +1356,6 @@ def cumulative_distribution_from_array_day(dict_array, grouping_keys, sum_keys, 
         new_array = dict_array
         for curr_key in grouping_keys:
             new_array = [x for x in new_array if x[curr_key]==total_dict[curr_key]]
-        other_array = [x for x in new_array if not x['campaign']==total_dict['campaign']]
         overall_count = total_dict[sum_key]
         curr_count_total = 0
         for curr_dict in new_array:
