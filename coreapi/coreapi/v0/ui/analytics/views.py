@@ -202,6 +202,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                                                           custom_functions = custom_functions)
             curr_output = curr_output_all[0]
             supplier_list = curr_output_all[1]
+
             if curr_output == []:
                 continue
             if highest_level_original == 'vendor':
@@ -235,6 +236,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         if curr_metric == 'total_orders_punched' and 'order_cumulative' in custom_functions:
             curr_grouping_levels = [highest_level_original]+ list(set(reverse_supplier_levels(grouping_level))
                                                                   - set({"date"}))
+            if 'supplier' not in curr_grouping_levels:
+                curr_grouping_levels = curr_grouping_levels + ["supplier"]
             curr_output = convert_date_to_days(curr_output, curr_grouping_levels,
                                                              ['total_orders_punched'], 'date')
         if 'supplier' in curr_output[0]:
@@ -246,7 +249,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             if len(superlevels)>0:
                 curr_output = key_replace_group_multiple(curr_output, superlevels_base_set[0], superlevels, curr_metric,
                                                          value_ranges, None, storage_type)
-
         curr_output_keys = set(curr_output[0].keys())
         allowed_keys = set([highest_level_original] + grouping_level + [curr_metric])
         if 'order_cumulative' in custom_functions:

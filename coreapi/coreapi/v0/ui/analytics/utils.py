@@ -1347,11 +1347,8 @@ def cumulative_distribution_from_array_day(dict_array, grouping_keys, sum_keys, 
     if len(dict_array)==0 or order_key not in dict_array[0] or sum_keys[0] not in dict_array[0]:
         return dict_array
     dict_array = sorted(dict_array, key=lambda k: k[order_key]) if order_key is not None else dict_array
-    for i in range(5):
-        print("da: ", dict_array[i])
     grouping_keys = list(set(grouping_keys) - set(['date']))
     total_dict_array = sum_array_by_keys(dict_array, grouping_keys, sum_keys)
-    print("tda: ", total_dict_array)
     final_array = []
     sum_key = sum_keys[0]
     new_key_name = sum_key + '_cum_pct'
@@ -1359,6 +1356,7 @@ def cumulative_distribution_from_array_day(dict_array, grouping_keys, sum_keys, 
         new_array = dict_array
         for curr_key in grouping_keys:
             new_array = [x for x in new_array if x[curr_key]==total_dict[curr_key]]
+        other_array = [x for x in new_array if not x['campaign']==total_dict['campaign']]
         overall_count = total_dict[sum_key]
         curr_count_total = 0
         for curr_dict in new_array:
