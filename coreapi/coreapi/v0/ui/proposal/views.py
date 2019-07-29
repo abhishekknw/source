@@ -1802,9 +1802,13 @@ class ProposalVersion(APIView):
             # }
 
             attachment = {
-                'file_name': file_name,
+                'filepath': file_name,
                 'mime_type': v0_constants.mime['xlsx']
             }
+
+
+            # upload this shit to amazon
+            upload_to_amazon_aync_id = tasks.upload_to_amazon.delay(file_name).id
 
             # send mail to Bd Head with attachment
             bd_head_async_id = send_email.delay(email_data, attachment=attachment).id
@@ -1817,9 +1821,6 @@ class ProposalVersion(APIView):
             }
 
             logged_in_user_async_id = send_email.delay(email_data).id
-
-            # upload this shit to amazon
-            upload_to_amazon_aync_id = tasks.upload_to_amazon.delay(file_name).id
 
             # prepare to send back async ids
             data = {
