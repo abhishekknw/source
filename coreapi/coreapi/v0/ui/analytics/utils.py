@@ -1340,15 +1340,18 @@ def convert_date_to_days(dict_array, grouping_keys, sum_keys, order_key):
                     curr_dict["date"] = days
             final_array.append(curr_dict)
             first_ele = False
+    print("fa: ",final_array[:5])
     return final_array
 
 
 def cumulative_distribution_from_array_day(dict_array, grouping_keys, sum_keys, order_key):
     if len(dict_array)==0 or order_key not in dict_array[0] or sum_keys[0] not in dict_array[0]:
         return dict_array
-    dict_array = sorted(dict_array, key=lambda k: k[order_key]) if order_key is not None else dict_array
+    grouping_keys_original = grouping_keys
     grouping_keys = list(set(grouping_keys) - set(['date']))
     total_dict_array = sum_array_by_keys(dict_array, grouping_keys, sum_keys)
+    dict_array = sum_array_by_keys(dict_array, grouping_keys_original, sum_keys)
+    dict_array = sorted(dict_array, key=lambda k: k[order_key]) if order_key is not None else dict_array
     final_array = []
     sum_key = sum_keys[0]
     new_key_name = sum_key + '_cum_pct'
@@ -1369,6 +1372,7 @@ def cumulative_distribution_from_array_day(dict_array, grouping_keys, sum_keys, 
                 curr_dict[new_key_name] = round(100*(curr_count_total/overall_count), 4)
             final_array.append(curr_dict)
             first_ele = False
+
     return final_array
 
 

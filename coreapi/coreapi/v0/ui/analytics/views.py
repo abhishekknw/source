@@ -255,8 +255,10 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_output = cumulative_distribution_from_array_day(curr_output, grouping_level,
                                                              ['total_orders_punched'], 'date')
             allowed_keys = allowed_keys.union(set(custom_keys))
+        curr_sum_key = [curr_metric]
         if not curr_output_keys <= allowed_keys:
             curr_output = sum_array_by_keys(curr_output, list(allowed_keys - set([curr_metric])), [curr_metric])
+            print(curr_output[:5])
         individual_metric_output[curr_metric] = curr_output
 
     reverse_map = {}
