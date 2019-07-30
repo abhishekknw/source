@@ -1362,7 +1362,7 @@ def cumulative_distribution_from_array_day(dict_array, grouping_keys, sum_keys, 
         for curr_dict in new_array:
             curr_count = curr_dict[sum_key]
             curr_count_total = curr_count_total + curr_count
-            curr_dict[new_count_key_name] = curr_count_total
+            curr_dict[sum_key] = curr_count_total
             if overall_count == 0:
                 curr_dict[new_key_name] = 0.00
             else:
