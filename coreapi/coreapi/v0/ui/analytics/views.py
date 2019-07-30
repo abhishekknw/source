@@ -826,8 +826,10 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         if zero_filter:
             filtered_results = [x for x in single_array_results if x[lowest_level]>0]
             single_array_results = filtered_results
-
-        result_keys = single_array_results[0].keys()
+        if len(single_array_results)>0:
+            result_keys = single_array_results[0].keys()
+        else:
+            result_keys = []
         if "supplier" in result_keys:
             if supplier_list == []:
                 supplier_list = [x['supplier'] for x in single_array_results]
