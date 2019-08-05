@@ -1843,6 +1843,8 @@ class GetMISData(APIView):
         supplier_id_with_leads_map = { supplier['supplier_id']:supplier for supplier in leads_data}
         for supplier in serializer.data:
             if supplier['supplier_id'] in supplier_id_with_leads_map:
-                supplier['leads_data'] = supplier_id_with_leads_map[supplier['supplier_id']]
+                supplier['total_leads'] = supplier_id_with_leads_map[supplier['supplier_id']]['total_leads_count']
+                supplier['hot_leads'] = supplier_id_with_leads_map[supplier['supplier_id']]['hot_leads_count']
+                supplier['lead_date'] = supplier_id_with_leads_map[supplier['supplier_id']]['created_at']
 
         return handle_response('', data=serializer.data, success=True)
