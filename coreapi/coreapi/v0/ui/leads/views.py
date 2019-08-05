@@ -9,6 +9,7 @@ from .models import (get_leads_summary, LeadsPermissions, ExcelDownloadHash, Cam
 from v0.ui.analytics.views import (get_data_analytics, get_details_by_higher_level,
                                    get_details_by_higher_level_geographical, geographical_parent_details)
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeRetailShop
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.inventory.models import (InventoryActivityAssignment, InventoryActivity)
@@ -1828,3 +1829,20 @@ class UpdateOrderId(APIView):
 
 
         return handle_response('', data={"success": True}, success=True)
+
+class GetMISData(APIView):
+    @staticmethod
+    def post(request):
+        data = request.data
+        supplier_ids = ShortlistedSpaces.objects.filter(proposal_id=data['campaign_id']).values('object_id')
+        suppliers = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids,flat_count__gte=data['flat_count_gt'],
+                                                       flat_count__lte=data['flat_count_lt'])
+        serializer = SupplierTypeSocietySerializer(suppliers,many=True)
+
+        leads_data = get_leads_summary([data['campaign_id']])
+        supplier_id_with_leads_map = { supplier['supplier_id']:supplier for supplier in leads_data}
+        for supplier in serializer.data:
+            if supplier['supplier_id'] in supplier_id_with_leads_map:
+                supplier['leads_data'] = supplier_id_with_leads_map[supplier['supplier_id']]
+
+        return handle_response('', data=serializer.data, success=True)
