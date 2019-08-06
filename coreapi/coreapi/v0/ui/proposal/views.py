@@ -2760,8 +2760,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             phase_dict['status'] = status
             completed_phases.append(phase_dict)
     last_completed_phase = None
-    sorted_upcoing_phases = sorted(upcoming_phases, key=lambda k: k['phase_no'])
-    upcoming_beyond_three = sorted_upcoing_phases[3:]
+    sorted_upcoming_phases = sorted(upcoming_phases, key=lambda k: k['phase_no'])
+    upcoming_beyond_three = sorted_upcoming_phases[3:]
     pipeline = {'followup_required': {'supplier_count': 0, 'flat_count': 0, 'supplier_data':[]},
                 'confirmed_booked': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 'verbally_booked': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
@@ -2801,13 +2801,14 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         pipeline['total_booked']['supplier_count'] += 1
 
     if len(completed_phases) > 0:
-        last_completed_phase = sorted(completed_phases, key=lambda k: convert_date_format(k['end_date']))[-1]
+        last_completed_phase = sorted(completed_phases, key=lambda k: k['end_date'])[-1]
     shortlisted_spaces_by_phase_dict = {
         'all_phases': shortlisted_spaces_by_phase_list,
         'last_completed_phase': last_completed_phase,
-        'upcoming_phases': sorted_upcoing_phases[:3],
+        'upcoming_phases': sorted_upcoming_phases[:3],
         'ongoing_phase': ongoing_phase,
-        'pipeline_suppliers': pipeline
+        'pipeline_suppliers': pipeline,
+        'completed_phases': completed_phases
     }
     return shortlisted_spaces_by_phase_dict
 
