@@ -118,9 +118,9 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None, email=None):
         supplier_list_details_by_status = get_supplier_list_by_status_ctrl(campaign_id)
         supplier_list_details_by_status = json.dumps(supplier_list_details_by_status)
         booking_template = get_template(template_name)
-        to_array = [email] if email else campaign_assignement_by_campaign_id[campaign_id]
-        
+        to_array = [email] if email else campaign_assignement_by_campaign_id[campaign_id]        
         supplier_list_details_by_status_json = json.loads(supplier_list_details_by_status)
+
         html = booking_template.render(
             {"campaign_name": str(all_campaign_name_dict[campaign_id]),
              "details_dict": supplier_list_details_by_status_json})
@@ -144,7 +144,7 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None, email=None):
                 start_date = (datetime.datetime.now() + timedelta(days=1)).strftime('%d %b %Y')
                 end_date = (datetime.datetime.now() + timedelta(days=4)).strftime('%d %b %Y')
             subject = str(all_campaign_name_dict[campaign_id]) + " Societies Activation Details for this Weekend (" + start_date + " to " + end_date + ")"
-        send_mail_generic.delay(subject, to_array, html, None,None)
+        # send_mail_generic.delay(subject, to_array, html, None,None)
     return
 
 
