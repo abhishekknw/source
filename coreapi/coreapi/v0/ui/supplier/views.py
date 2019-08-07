@@ -599,10 +599,11 @@ class SocietyAPIView(APIView):
         current_user = request.user
         if 'supplier_id' in request.data:
             society = SupplierTypeSociety.objects.filter(pk=request.data['supplier_id']).first()
+            if request.data['flat_count']:
+                request.data['flat_count_type'] = get_flat_count_type(request.data['flat_count'])
             if society:
                 serializer = SupplierTypeSocietySerializer(society, data=request.data)
             else:
-
                 serializer = SupplierTypeSocietySerializer(data=request.data)
 
         if serializer.is_valid():

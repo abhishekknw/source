@@ -10,6 +10,7 @@ from v0.ui.proposal.views import get_supplier_list_by_status_ctrl
 import datetime
 from datetime import timedelta
 import os
+import json
 from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
 from v0.ui.common.models import mongo_client
@@ -115,32 +116,34 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None, email=None):
         all_campaign_ids = [req_campaign_id]
     for campaign_id in all_campaign_ids:
         supplier_list_details_by_status = get_supplier_list_by_status_ctrl(campaign_id)
-        supplier_list_details_by_status = supplier_list_details_by_status
+        supplier_list_details_by_status = json.dumps(supplier_list_details_by_status)
         booking_template = get_template(template_name)
-        to_array = [email] if email else campaign_assignement_by_campaign_id[campaign_id]
-        
+        to_array = [email] if email else campaign_assignement_by_campaign_id[campaign_id]        
+        supplier_list_details_by_status_json = json.loads(supplier_list_details_by_status)
         html = booking_template.render(
-            {'campaign_name': str(all_campaign_name_dict[campaign_id]),
-             "details_dict": supplier_list_details_by_status})
+            {"campaign_name": str(all_campaign_name_dict[campaign_id]),
+             "details_dict": supplier_list_details_by_status_json})
         if template_name == 'pipeline_details.html':
             subject = "Socities In Pipeline For " + str(all_campaign_name_dict[campaign_id])
+        elif template_name == 'pre_hype_emails.html':
+            subject = "Socities In Pre-Hype For " + str(all_campaign_name_dict[campaign_id])
         elif template_name == 'booking_details.html':
-            if len(supplier_list_details_by_status['upcoming_phases']) > 0:
-                start_date = supplier_list_details_by_status['upcoming_phases'][0]['start_date']
-                end_date = supplier_list_details_by_status['upcoming_phases'][0]['end_date']
+            if len(supplier_list_details_by_status_json['upcoming_phases']) > 0:
+                start_date = supplier_list_details_by_status_json['upcoming_phases'][0]['start_date']
+                end_date = supplier_list_details_by_status_json['upcoming_phases'][0]['end_date']
             else:
                 start_date = (datetime.datetime.now() + timedelta(days=1)).strftime('%d %b %Y')
                 end_date = (datetime.datetime.now() + timedelta(days=4)).strftime('%d %b %Y')
             subject = "Societies for " + str(all_campaign_name_dict[campaign_id]) + ": " + start_date + " to " + end_date
         elif template_name == 'advanced_booking_details.html':
-            if (supplier_list_details_by_status['ongoing_phase']):
-                start_date = supplier_list_details_by_status['ongoing_phase']['start_date']
-                end_date = supplier_list_details_by_status['ongoing_phase']['end_date']
+            if (supplier_list_details_by_status_json['ongoing_phase']):
+                start_date = supplier_list_details_by_status_json['ongoing_phase']['start_date']
+                end_date = supplier_list_details_by_status_json['ongoing_phase']['end_date']
             else:
                 start_date = (datetime.datetime.now() + timedelta(days=1)).strftime('%d %b %Y')
                 end_date = (datetime.datetime.now() + timedelta(days=4)).strftime('%d %b %Y')
             subject = str(all_campaign_name_dict[campaign_id]) + " Societies Activation Details for this Weekend (" + start_date + " to " + end_date + ")"
-        send_mail_generic.delay(subject, to_array, html, None,None)
+        # send_mail_generic.delay(subject, to_array, html, None,None)
     return
 
 
@@ -151,6 +154,13 @@ class SendBookingDetailMails(APIView):
         send_booking_mails_ctrl('booking_details.html', campaign_id, email_id)
         return ui_utils.handle_response('', data={}, success=True)
 
+
+class SendPreHypeMails(APIView):
+    @staticmethod
+    def get(request, campaign_id):
+        email_id = request.query_params.get("email", None)
+        send_booking_mails_ctrl('pre_hype_emails.html', campaign_id, email_id)
+        return ui_utils.handle_response('', data={}, success=True)
 
 class SendPipelineDetailMails(APIView):
     @staticmethod

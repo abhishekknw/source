@@ -30,7 +30,7 @@ def send_email(email_data, attachment=None):
         email = EmailMessage(email_data['subject'], email_data['body'], to=email_data['to'])
         if attachment:
             filepath = attachment['filepath']
-            file_to_send = open(filepath, 'r')
+            file_to_send = open(filepath, 'rb')
             filename = filepath[filepath.rfind('/')+1:]
             email.attach(filename, file_to_send.read(), attachment['mime_type'])
             file_to_send.close()
