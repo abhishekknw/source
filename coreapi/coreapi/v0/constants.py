@@ -888,8 +888,8 @@ booking_status = {
     'tentative_booking' : 'TB',
     'unknown': 'UN',
     'new_entity': 'NE',
-    'not_initiated': 'NI',
-    }
+    'not_initiated': 'NI'
+}
 
 booking_code_to_status = {
     'BK': 'Confirmed Booking',
