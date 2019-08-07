@@ -886,9 +886,9 @@ booking_status = {
     'call_required' : 'CR',
     'decision_pending' : 'DP',
     'tentative_booking' : 'TB',
+    'unknown': 'UN',
     'new_entity': 'NE',
-    'not_initiated': 'NI'
-}
+    'not_initiated': 'NI',
 
 booking_code_to_status = {
     'BK': 'Confirmed Booking',
@@ -902,6 +902,7 @@ booking_code_to_status = {
     'CR': 'Call Required',
     'DP': 'Decision Pending',
     'TB': 'Tentative Booking',
+    'UN': 'Unknown',
     'NE': 'New Entity',
     'NI': 'Not Initiated'
 }
