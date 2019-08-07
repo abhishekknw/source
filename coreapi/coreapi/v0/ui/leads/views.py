@@ -279,9 +279,14 @@ class GetLeadsEntriesByCampaignId(APIView):
     def get(request, campaign_id, supplier_id='All'):
         page_number = int(request.query_params.get('page_number', 0))
         first_leads_form_id = mongo_client.leads_forms.find_one({"campaign_id":campaign_id})
-        leads_form_id = first_leads_form_id['leads_form_id']
-        supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number)
-        return handle_response({}, data=supplier_all_lead_entries, success=True)
+
+        if first_leads_form_id is not None:
+            leads_form_id = first_leads_form_id['leads_form_id']
+            supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number)
+            return handle_response({}, data=supplier_all_lead_entries, success=True)
+        else:
+            return handle_response({}, data="No leads found", success=False)
+
 
 class CreateLeadsForm(APIView):
     @staticmethod
@@ -1116,7 +1121,6 @@ def calculate_is_hot(curr_lead, global_hot_lead_criteria):
         for item_id in global_hot_lead_criteria[is_hot_level]['or']:
             if item_id in curr_lead_data_dict and curr_lead_data_dict[item_id]['value'] is not None:
                 if str(curr_lead_data_dict[item_id]['value']) in global_hot_lead_criteria[is_hot_level]['or'][item_id]:
-                    
                     multi_level_is_hot[is_hot_level] = True
                     any_is_hot = True
                 if "AnyValue" in global_hot_lead_criteria[is_hot_level]['or'][item_id] and str(

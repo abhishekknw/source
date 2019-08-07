@@ -34,9 +34,9 @@ def send_email(email_data, attachment=None):
             filename = filepath[filepath.rfind('/')+1:]
             email.attach(filename, file_to_send.read(), attachment['mime_type'])
             file_to_send.close()
-        email_send_return = email.send()
-        os.unlink(filepath)
-        return email_send_return
+            email_send_return = email.send()
+            os.unlink(filepath)
+            return email_send_return
     except SMTPException as e:
         raise Exception(function, "Error " + ui_utils.get_system_error(e))
     except Exception as e:

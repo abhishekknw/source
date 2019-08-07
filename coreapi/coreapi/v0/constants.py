@@ -876,6 +876,7 @@ booking_priority_code_to_status = {
 # supplier booking status
 booking_status = {
     'booked': 'BK',
+    'unknown': 'UN',
     'not_booked': 'NB',
     'phone_booked' : 'PB',
     'visit_booked' : 'VB',
@@ -887,13 +888,12 @@ booking_status = {
     'tentative_booking' : 'TB',
     'unknown': 'UN',
     'new_entity': 'NE',
-    'not_initiated': 'NI',
-
-
+    'not_initiated': 'NI'
 }
 
 booking_code_to_status = {
-    'BK': 'Confirmed Booked',
+    'BK': 'Confirmed Booking',
+    'UN': 'Unknown',
     'NB': 'Not Booked',
     'PB': 'Phone Booked',
     'VB': 'Visit Booked',
