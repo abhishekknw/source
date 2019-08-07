@@ -889,6 +889,7 @@ booking_status = {
     'unknown': 'UN',
     'new_entity': 'NE',
     'not_initiated': 'NI',
+    }
 
 booking_code_to_status = {
     'BK': 'Confirmed Booking',
