@@ -1802,7 +1802,7 @@ class ProposalVersion(APIView):
             # }
 
             attachment = {
-                'file_name': file_name,
+                'filepath': file_name,
                 'mime_type': v0_constants.mime['xlsx']
             }
 
