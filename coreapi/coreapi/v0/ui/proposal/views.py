@@ -1806,6 +1806,9 @@ class ProposalVersion(APIView):
                 'mime_type': v0_constants.mime['xlsx']
             }
 
+            # upload this shit to amazon
+            upload_to_amazon_aync_id = tasks.upload_to_amazon.delay(file_name).id
+
             # send mail to Bd Head with attachment
             bd_head_async_id = send_email.delay(email_data, attachment=attachment).id
 
@@ -1817,9 +1820,6 @@ class ProposalVersion(APIView):
             }
 
             logged_in_user_async_id = send_email.delay(email_data).id
-
-            # upload this shit to amazon
-            upload_to_amazon_aync_id = tasks.upload_to_amazon.delay(file_name).id
 
             # prepare to send back async ids
             data = {
@@ -2578,7 +2578,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     "STALL": [],
                     "STANDEE": [],
                     "FLIER": [],
-                    "BANNER": []
+                    "BANNER": [],
+                    "GATEWAY ARCH": []
                 }
         inventory_days_dict = {
             "POSTER": None,
@@ -2642,13 +2643,14 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     followup_req_status = ['SE', 'VR', 'CR']
     not_initiated_status = ['NB']
     rejected_status = ['SR']
-    recce_required = ['DPRR']
+    recce_required = ['UN']
     all_not_initiated_supplier = []
     all_rejected_supplier = []
     all_reccee_supplier = []
     total_not_initiated_flats = 0
     total_rejected_flats = 0
     total_recce_flats = 0
+
     for phase_id in shortlisted_spaces_by_phase_dict:
         end_date = all_phase_by_id[phase_id]['end_date'] if phase_id in all_phase_by_id else None
         start_date = all_phase_by_id[phase_id]['start_date'] if phase_id in all_phase_by_id else None
@@ -2825,7 +2827,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         pipeline['total_booked']['supplier_count'] += 1
 
     if len(completed_phases) > 0:
-        last_completed_phase = sorted(completed_phases, key=lambda k: convert_date_format(k['end_date']))[-1]
+        last_completed_phase = sorted(completed_phases, key=lambda k: k['end_date'])[-1]
     shortlisted_spaces_by_phase_dict = {
         'all_phases': shortlisted_spaces_by_phase_list,
         'last_completed_phase': last_completed_phase,
