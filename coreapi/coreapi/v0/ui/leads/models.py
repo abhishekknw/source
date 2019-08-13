@@ -129,6 +129,7 @@ def get_leads_summary(campaign_list=None, user_start_datetime=None,user_end_date
             ]
         )
     leads_summary = list(leads_summary)
+
     if with_extra:
         leads_summary = add_extra_leads(leads_summary, campaign_list, user_start_datetime)
     return leads_summary
@@ -168,7 +169,26 @@ def get_leads_summary_by_campaign(campaign_list=None):
             ]
         )
     return list(leads_summary)
+def get_leads_summary_by_campaign_and_hotness_level(leads, lead_form):
+    result = {}
 
+    for lead in leads:
+        result.setdefault(lead['supplier_id'],{})
+        result[lead['supplier_id']].setdefault('lead_data', {})
+        get_hot_lead_data(lead_form, lead, result[lead['supplier_id']]['lead_data'])
+
+    return result
+
+def get_hot_lead_data(lead_form, lead, result):
+    for hot_level, values in lead_form['global_hot_lead_criteria'].items():
+        result.setdefault(hot_level, 0)
+        if 'or' in values:
+            for item in values['or']:
+                itemValues = values['or'][item]
+                if lead['data'][int(item)]['value']:
+                    if 'AnyValue' in itemValues or lead['data'][int(item)]['value'] in itemValues:
+                        result[hot_level] = result[hot_level] + 1
+                        break
 
 class LeadsPermissions(MongoModel):
     profile_id = fields.IntegerField()

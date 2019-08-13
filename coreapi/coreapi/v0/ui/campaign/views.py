@@ -30,7 +30,8 @@ from rest_framework import viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework import status
 import gpxpy.geo
-from v0.ui.leads.models import get_leads_summary, get_leads_summary_by_campaign, get_extra_leads_dict
+from v0.ui.leads.models import (get_leads_summary, get_leads_summary_by_campaign, get_extra_leads_dict,
+            get_leads_summary_by_campaign_and_hotness_level)
 from v0.ui.base.models import DurationType
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.organisation.models import Organisation
@@ -193,14 +194,37 @@ def hot_lead_ratio_calculator(data_array):
     return data_array
 
 
-def lead_counter(campaign_id, leads_form_data,user_start_datetime,user_end_datetime):
+def lead_counter(campaign_id, leads_form_data,user_start_datetime,user_end_datetime, lead_form):
     result = {}
     all_leads_summary = get_leads_summary(campaign_id,user_start_datetime,user_end_datetime)
+    and_constraint = [{"campaign_id": campaign_id}]
+    if user_start_datetime:
+        and_constraint.append({"created_at": {"$gte": user_start_datetime}})
+    if user_end_datetime:
+        and_constraint.append({"created_at": {"$lte": user_end_datetime}})
+    leads = list(mongo_client.leads.find(
+        {"$and": and_constraint}, {"_id": 0}))
+    leads_by_hoteness_level = get_leads_summary_by_campaign_and_hotness_level(leads, lead_form)
+
     all_campaign_leads = leads_form_data
     for summary in all_leads_summary:
         result[summary['supplier_id']] = {"hot_leads": summary['hot_leads_count'],
                                           "total_leads": summary['total_leads_count'],
-                                          "hot_lead_details": []}
+                                          "hot_lead_details": [],
+                                          "is_hot_level_1": leads_by_hoteness_level[summary['supplier_id']]
+                                          ['lead_data']['is_hot_level_1']
+                                            if summary['supplier_id'] in leads_by_hoteness_level else None,
+                                          "is_hot_level_2": leads_by_hoteness_level[summary['supplier_id']]
+                                          ['lead_data']['is_hot_level_2']
+                                          if summary['supplier_id'] in leads_by_hoteness_level else None,
+                                          "is_hot_level_3": leads_by_hoteness_level[summary['supplier_id']]
+                                          ['lead_data']['is_hot_level_3']
+                                          if summary['supplier_id'] in leads_by_hoteness_level else None,
+                                          "is_hot_level_4": leads_by_hoteness_level[summary['supplier_id']]
+                                          ['lead_data']['is_hot_level_4']
+                                          if summary['supplier_id'] in leads_by_hoteness_level else None
+
+                                          }
     for lead in all_campaign_leads:
         result[lead['supplier_id']]["hot_lead_details"].append({
             "entry_id": lead["entry_id"],
@@ -1075,7 +1099,11 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
             'supplier_count': 0,
             'total_leads': 0,
             'total_hot_leads': 0,
-            'flat_count': 0
+            'flat_count': 0,
+            'is_hot_level_1': 0,
+            'is_hot_level_2': 0,
+            'is_hot_level_3': 0,
+            'is_hot_level_4': 0,
         }
         for flat_category in flat_categories:
             flat_category_id = flat_category_id + 1
@@ -1085,17 +1113,36 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                 "interested": 0,
                 "total": 0,
                 "suppliers": 0,
-                "flat_count": 0
+                "flat_count": 0,
+                'is_hot_level_1': 0,
+                'is_hot_level_2': 0,
+                'is_hot_level_3': 0,
+                'is_hot_level_4': 0,
             }
-        campaign_hot_leads_dict = lead_counter(campaign_id, leads_form_data, user_start_datetime, user_end_datetime)
+        lead_form = mongo_client.leads_forms.find({"campaign_id": campaign_id})
+        campaign_hot_leads_dict = lead_counter(campaign_id, leads_form_data, user_start_datetime, user_end_datetime, lead_form[0])
+
         for curr_supplier_data in supplier_data:
             supplier_id = curr_supplier_data['supplier_id']
             supplier_locality = curr_supplier_data['society_locality']
             supplier_flat_count = curr_supplier_data['flat_count'] if curr_supplier_data['flat_count'] else 0
             lead_count = campaign_hot_leads_dict[supplier_id] if supplier_id in campaign_hot_leads_dict else None
+            # leads_data =  campaign_hot_leads_dict[supplier_id]['leads'] if supplier_id in campaign_hot_leads_dict else None
             if not lead_count:
                 continue
             overall_data['supplier_count'] += 1
+            is_hot_level_1 = campaign_hot_leads_dict[supplier_id]['is_hot_level_1'] \
+                if supplier_id in campaign_hot_leads_dict else 0
+            is_hot_level_2 = campaign_hot_leads_dict[supplier_id]['is_hot_level_2'] \
+                if supplier_id in campaign_hot_leads_dict else 0
+            is_hot_level_3 = campaign_hot_leads_dict[supplier_id]['is_hot_level_3'] \
+                if supplier_id in campaign_hot_leads_dict else 0
+            is_hot_level_4 = campaign_hot_leads_dict[supplier_id]['is_hot_level_4'] \
+                if supplier_id in campaign_hot_leads_dict else 0
+            overall_data['is_hot_level_1'] += is_hot_level_1
+            overall_data['is_hot_level_2'] += is_hot_level_2
+            overall_data['is_hot_level_3'] += is_hot_level_3
+            overall_data['is_hot_level_4'] += is_hot_level_4
             supplier_wise_lead_count[supplier_id] = lead_count
             hot_leads = lead_count['hot_leads']
             total_leads = lead_count['total_leads']
@@ -1113,7 +1160,11 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                 "total": total_leads,
                 "data": curr_supplier_data,
                 "hot_leads_percentage": hot_leads_percentage,
-                "flat_count": supplier_flat_count
+                "flat_count": supplier_flat_count,
+                'is_hot_level_1': is_hot_level_1,
+                'is_hot_level_2': is_hot_level_2,
+                'is_hot_level_3': is_hot_level_3,
+                'is_hot_level_4': is_hot_level_4,
             }
             all_suppliers_list_non_analytics[supplier_id] = curr_supplier_lead_data
 
@@ -1126,6 +1177,14 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                                                                     supplier_locality][ "suppliers"] + 1
                 all_localities_data_non_analytics[supplier_locality]["flat_count"] = \
                     all_localities_data_non_analytics[supplier_locality]["flat_count"] + supplier_flat_count
+                all_localities_data_non_analytics[supplier_locality]["is_hot_level_1"] = \
+                    all_localities_data_non_analytics[supplier_locality]["is_hot_level_1"] + is_hot_level_1
+                all_localities_data_non_analytics[supplier_locality]["is_hot_level_2"] = \
+                    all_localities_data_non_analytics[supplier_locality]["is_hot_level_2"] + is_hot_level_2
+                all_localities_data_non_analytics[supplier_locality]["is_hot_level_3"] = \
+                    all_localities_data_non_analytics[supplier_locality]["is_hot_level_3"] + is_hot_level_3
+                all_localities_data_non_analytics[supplier_locality]["is_hot_level_4"] = \
+                    all_localities_data_non_analytics[supplier_locality]["is_hot_level_4"] + is_hot_level_4
 
             else:
                 curr_locality_data = {
@@ -1135,7 +1194,11 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                     "interested": hot_leads,
                     "total": total_leads,
                     "suppliers": 1,
-                    "flat_count": supplier_flat_count
+                    "flat_count": supplier_flat_count,
+                    'is_hot_level_1': is_hot_level_1,
+                    'is_hot_level_2': is_hot_level_2,
+                    'is_hot_level_3': is_hot_level_3,
+                    'is_hot_level_4': is_hot_level_4,
                 }
                 all_localities_data_non_analytics[supplier_locality] = curr_locality_data
 
@@ -1145,6 +1208,10 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                 curr_flat_data['total'] = curr_flat_data['total']+total_leads
                 curr_flat_data['suppliers'] = curr_flat_data['suppliers'] + 1
                 curr_flat_data['flat_count'] = curr_flat_data['flat_count'] + supplier_flat_count
+                curr_flat_data['is_hot_level_1'] = curr_flat_data['is_hot_level_1'] + is_hot_level_1
+                curr_flat_data['is_hot_level_2'] = curr_flat_data['is_hot_level_2'] + is_hot_level_2
+                curr_flat_data['is_hot_level_3'] = curr_flat_data['is_hot_level_3'] + is_hot_level_3
+                curr_flat_data['is_hot_level_4'] = curr_flat_data['is_hot_level_4'] + is_hot_level_4
                 all_flat_data['0-150'] = curr_flat_data
             elif supplier_flat_count<400:
                 curr_flat_data = all_flat_data['151-399']
@@ -1152,6 +1219,10 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                 curr_flat_data['total'] = curr_flat_data['total']+total_leads
                 curr_flat_data['suppliers'] = curr_flat_data['suppliers'] + 1
                 curr_flat_data['flat_count'] = curr_flat_data['flat_count'] + supplier_flat_count
+                curr_flat_data['is_hot_level_1'] = curr_flat_data['is_hot_level_1'] + is_hot_level_1
+                curr_flat_data['is_hot_level_2'] = curr_flat_data['is_hot_level_2'] + is_hot_level_2
+                curr_flat_data['is_hot_level_3'] = curr_flat_data['is_hot_level_3'] + is_hot_level_3
+                curr_flat_data['is_hot_level_4'] = curr_flat_data['is_hot_level_4'] + is_hot_level_4
                 all_flat_data['151-399'] = curr_flat_data
             else:
                 curr_flat_data = all_flat_data['400+']
@@ -1159,6 +1230,10 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                 curr_flat_data['total'] = curr_flat_data['total'] + total_leads
                 curr_flat_data['suppliers'] = curr_flat_data['suppliers'] + 1
                 curr_flat_data['flat_count'] = curr_flat_data['flat_count'] + supplier_flat_count
+                curr_flat_data['is_hot_level_1'] = curr_flat_data['is_hot_level_1'] + is_hot_level_1
+                curr_flat_data['is_hot_level_2'] = curr_flat_data['is_hot_level_2'] + is_hot_level_2
+                curr_flat_data['is_hot_level_3'] = curr_flat_data['is_hot_level_3'] + is_hot_level_3
+                curr_flat_data['is_hot_level_4'] = curr_flat_data['is_hot_level_4'] + is_hot_level_4
                 all_flat_data['400+'] = curr_flat_data
 
         all_suppliers_list = z_calculator_dict(all_suppliers_list_non_analytics, "hot_leads_percentage")
@@ -1216,7 +1291,11 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                     'flat_count': 0,
                     'phase': curr_phase,
                     'start date': curr_phase_start,
-                    'end date': curr_phase_end
+                    'end date': curr_phase_end,
+                    'is_hot_level_1': 0,
+                    'is_hot_level_2': 0,
+                    'is_hot_level_3': 0,
+                    'is_hot_level_4': 0,
                 }
 
             curr_weekday = weekday_names[str(time.weekday())]
@@ -1236,7 +1315,11 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                     'created_at': curr_time,
                     'suppliers': [],
                     'supplier_count': 0,
-                    'flat_count': 0
+                    'flat_count': 0,
+                    'is_hot_level_1': 0,
+                    'is_hot_level_2': 0,
+                    'is_hot_level_3': 0,
+                    'is_hot_level_4': 0,
                 }
 
             if curr_weekday not in weekday_data:
@@ -1245,7 +1328,11 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                     'interested': 0,
                     'suppliers': [],
                     'supplier_count': 0,
-                    'flat_count': 0
+                    'flat_count': 0,
+                    'is_hot_level_1': 0,
+                    'is_hot_level_2': 0,
+                    'is_hot_level_3': 0,
+                    'is_hot_level_4': 0,
                 }
 
             date_data[curr_date]['total'] = date_data[curr_date]['total'] + 1
@@ -1280,13 +1367,14 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
         all_weekdays_data = z_calculator_dict(weekday_data_hot_ratio,"hot_leads_percentage")
         all_phase_data = z_calculator_dict(phase_data_hot_ratio,"hot_leads_percentage")
         all_flat_data = hot_lead_ratio_calculator(all_flat_data)
-        mean_median_dict = get_mean_median_mode(all_suppliers_list, ['interested', 'total'])
+        mean_median_dict = get_mean_median_mode(all_suppliers_list, ['interested', 'total','is_hot_level_3','is_hot_level_4'])
         overall_data['supplier_stats'] = mean_median_dict
         final_data = {'supplier_data': all_suppliers_list, 'date_data': all_dates_data,
                       'locality_data': all_localities_data, 'weekday_data': all_weekdays_data,
                       'flat_data': all_flat_data, 'phase_data': phase_data, 'overall_data': overall_data}
         return final_data
     except Exception as e:
+        print(e)
         return None
 
 
