@@ -668,22 +668,17 @@ class BasicPricingAPIView(APIView):
             if not towercount_response.data['status']:
                 return towercount_response
             tower_count = towercount_response.data['data']
-
             for basic_item, basic_select_item in zip(basic_prices, selected_prices):
                 if basic_select_item.supplier:
                     basic_item['supplier'] = basic_select_item.supplier.__dict__
-                else:
-                    None
                 basic_item['adinventory_type'] = basic_select_item.adinventory_type.__dict__
                 basic_item['duration_type'] = basic_select_item.duration_type.__dict__
-
                 if basic_item['adinventory_type']:
                     basic_item['adinventory_type'].pop("_state", None)
-                if basic_item['duration_type']:
-                    basic_item['duration_type'].pop("_state", None)
                 if 'supplier' in basic_item and basic_item['supplier']:
                     basic_item['supplier'].pop("_state", None)
-
+                if basic_item['duration_type']:
+                    basic_item['duration_type'].pop("_state", None)
             response['tower_count'] = tower_count
             response['prices'] = basic_prices
 

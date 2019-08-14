@@ -596,11 +596,14 @@ class SocietyAPIView(APIView):
         return Response(status=204)
 
     def post(self, request, format=None):
-        current_user = request.user
-        if 'supplier_id' in request.data:
-            society = SupplierTypeSociety.objects.filter(pk=request.data['supplier_id']).first()
-            if request.data['flat_count']:
-                request.data['flat_count_type'] = get_flat_count_type(request.data['flat_count'])
+        supplier_id = request.data.get('supplier_id', None)
+        tower_count = request.data.get('tower_count', None)
+        basic_contact_available = request.data.get('basic_contact_available', None)
+        basic_reference_available = request.data.get('basic_reference_available', None)
+        basic_reference_contacts = request.data.get('basic_reference_contacts', None)
+        basic_contacts = request.data.get('basic_contacts', None)
+        if supplier_id:
+            society = SupplierTypeSociety.objects.filter(pk=supplier_id).first()
             if society:
                 serializer = SupplierTypeSocietySerializer(society, data=request.data)
             else:
@@ -612,12 +615,12 @@ class SocietyAPIView(APIView):
             return Response(serializer.errors, status=400)
 
         society = SupplierTypeSociety.objects.filter(pk=serializer.data['supplier_id']).first()
-        object_id = serializer.data['supplier_id']
+        object_id = serializer.data.get('supplier_id')
         content_type = ContentType.objects.get_for_model(SupplierTypeSociety)
 
         # here we will start storing contacts
-        if request.data and 'basic_contact_available' in request.data and request.data['basic_contact_available']:
-            for contact in request.data['basic_contacts']:
+        if basic_contact_available:
+            for contact in basic_contacts:
                 if 'id' in contact:
                     item = ContactDetails.objects.filter(pk=contact['id']).first()
                     contact_serializer = ContactDetailsSerializer(item, data=contact)
@@ -626,22 +629,21 @@ class SocietyAPIView(APIView):
                 if contact_serializer.is_valid():
                     contact_serializer.save(object_id=object_id, content_type=content_type)
 
-        if request.data and 'basic_reference_available' in request.data and request.data['basic_reference_available']:
-            contact = request.data['basic_reference_contacts']
-            if 'id' in contact:
-                item = ContactDetails.objects.filter(pk=contact['id']).first()
-                contact_serializer = ContactDetailsSerializer(item, data=contact)
+        if basic_reference_available and basic_reference_contacts:
+            if 'id' in basic_reference_contacts:
+                item = ContactDetails.objects.filter(pk=basic_reference_contacts['id']).first()
+                contact_serializer = ContactDetailsSerializer(item, data=basic_reference_contacts)
             else:
-                contact_serializer = ContactDetailsSerializer(data=contact)
+                contact_serializer = ContactDetailsSerializer(data=basic_reference_contacts)
             if contact_serializer.is_valid():
                 contact_serializer.save(contact_type="Reference", object_id=object_id, content_type=content_type)
 
-        towercount = SocietyTower.objects.filter(supplier=society).count()
-        abc = 0
-        if request.data['tower_count'] > towercount:
-            abc = request.data['tower_count'] - towercount
-        if 'tower_count' in request.data:
-            for i in range(abc):
+        society_tower_count = SocietyTower.objects.filter(supplier=society).count()
+        difference_of_tower_count = 0
+        if tower_count and tower_count > society_tower_count:
+            difference_of_tower_count = tower_count - society_tower_count
+        if difference_of_tower_count > 0:
+            for i in range(difference_of_tower_count):
                 tower = SocietyTower(supplier=society, object_id=object_id, content_type=content_type)
                 tower.save()
         return Response(serializer.data, status=201)
@@ -2018,6 +2020,7 @@ class FilteredSuppliers(APIView):
                 return ui_utils.handle_response(class_name, data='provide supplier type code')
 
             # common filters are necessary
+
             common_filters = request.data['common_filters']  # maps to BaseSupplier Model or a few other models.
             inventory_filters = request.data.get('inventory_filters')  # maps to InventorySummary model
             priority_index_filters = request.data.get('priority_index_filters')  # maps to specific supplier table and are used in calculation of priority index
