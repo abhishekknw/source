@@ -322,52 +322,61 @@ class FlatTypeAPIView(APIView):
         totalFlats = 0
         flag = True
         content_type = ui_utils.fetch_content_type(v0_constants.society_code)
-        if request.data['flat_details_available']:
-            for key in request.data['flat_details']:
-                if 'size_builtup_area' in key and 'flat_rent' in key and key['size_builtup_area'] > 0 and key[
-                    'flat_rent'] > 0:
-                    rent = key['flat_rent']
-                    area = key['size_builtup_area']
-                    key['average_rent_per_sqft'] = rent / area
-                    if 'flat_count' in key:
-                        count = key['flat_count']
-                        num = num + (count * key['average_rent_per_sqft'])
-                        den = den + count
-                    else:
-                        flag = False
+        flat_details = request.data.get('flat_details', [])
+        flat_details_available = request.data.get('flat_details_available', False)
+        flat_type_count = request.data.get('flat_type_count', 0)
+
+        if flat_details_available:
+            for flat_detail in flat_details:
+                flat_rent = flat_detail.get('flat_rent')
+                size_builtup_area = flat_detail.get('size_builtup_area')
+                average_rent_per_sqft = flat_detail.get('average_rent_per_sqft')
+                flat_count = flat_detail.get('flat_count')
+                size_carpet_area = flat_detail.get('size_carpet_area')
+
+                if not flat_rent:
+                    flat_detail['flat_rent'] = None
+                if not size_carpet_area:
+                    flat_detail['size_carpet_area'] = None
+                if not size_builtup_area:
+                    flat_detail['size_builtup_area'] = None
+                if not average_rent_per_sqft:
+                    flat_detail['average_rent_per_sqft'] = None
+                if not flat_count:
+                    flat_detail['flat_count'] = None
+                if size_builtup_area and flat_rent and size_builtup_area > 0 and flat_rent > 0:
+                    if not average_rent_per_sqft:
+                        flat_detail.average_rent_per_sqft = flat_rent / size_builtup_area
                 else:
                     flag = False
 
-                if 'size_builtup_area' in key and key['size_builtup_area'] > 0:
-                    builtup = key['size_builtup_area'] / 1.2
-                    key['size_carpet_area'] = builtup
+                if flat_count and average_rent_per_sqft:
+                    num = num + (flat_count * average_rent_per_sqft)
+                    den = den + flat_count
+                else:
+                    flag = False
 
-                if 'flat_count' in key and key['flat_count'] > 0:
-                    totalFlats = totalFlats + key['flat_count']
+                if size_builtup_area and size_builtup_area > 0:
+                    flat_detail.size_carpet_area = size_builtup_area / 1.2
 
-            if flag:
-                avgRentpsf = num / den
-                society.average_rent = avgRentpsf
-                society.flat_type_count = request.data['flat_type_count']
-                society.save()
+                if flat_count and flat_count > 0:
+                    totalFlats = totalFlats + flat_count
 
-            if request.data['flat_type_count'] != len(request.data['flat_details']):
-                return Response({'message': 'No of Flats entered does not match flat type count'}, status=400)
-            if totalFlats > 0 and society.flat_count != totalFlats:
-                return Response({'message': 'No of Flats entered does not match total flat count of society'},
-                                status=400)
+                if flag and den != 0:
+                    avgRentpsf = num / den
+                    society.average_rent = avgRentpsf
+                    society.flat_type_count = flat_type_count
+                    society.save()
 
-        for key in request.data['flat_details']:
-            if 'id' in key:
-                item = FlatType.objects.get(pk=key['id'])
-                serializer = FlatTypeSerializer(item, data=key)
-            else:
-                serializer = FlatTypeSerializer(data=key)
-            if serializer.is_valid():
-                serializer.save(society=society, content_type=content_type, object_id=society.supplier_id)
-            else:
-                return Response(serializer.errors, status=400)
-
+                if 'id' in flat_detail:
+                    item = FlatType.objects.get(pk=flat_detail['id'])
+                    serializer = FlatTypeSerializer(item, data=flat_detail)
+                else:
+                    serializer = FlatTypeSerializer(data=flat_detail)
+                if serializer.is_valid():
+                    serializer.save(society=society, content_type=content_type, object_id=society.supplier_id)
+                else:
+                    return Response(serializer.errors, status=400)
         return Response(status=201)
 
     def delete(self, request, id, format=None):
