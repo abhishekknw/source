@@ -7028,18 +7028,23 @@ def calculate_location_difference_between_inventory_and_supplier(data, suppliers
             lat1 = item['latitude']
             lon1 = item['longitude']
             # need to be changed for other suppliers i.e society_latitude
-            if 'society_latitude' in supplier_objects_id_map[item['object_id']]:
-                lat2 = supplier_objects_id_map[item['object_id']]['society_latitude']
-            else :
-                lat2 = supplier_objects_id_map[item['object_id']]['latitude']
-            if 'society_longitude' in supplier_objects_id_map[item['object_id']]:
-                lon2 = supplier_objects_id_map[item['object_id']]['society_longitude']
-            else :
-                lon2 = supplier_objects_id_map[item['object_id']]['longitude']
+            if item['object_id'] in supplier_objects_id_map:
+                if 'society_latitude' in supplier_objects_id_map[item['object_id']]:
+                    lat2 = supplier_objects_id_map[item['object_id']]['society_latitude'] if \
+                        supplier_objects_id_map[item['object_id']]['society_latitude'] else None
+                else :
+                    lat2 = supplier_objects_id_map[item['object_id']]['latitude'] if \
+                            supplier_objects_id_map[item['object_id']]['latitude'] else None
+                if 'society_longitude' in supplier_objects_id_map[item['object_id']]:
+                    lon2 = supplier_objects_id_map[item['object_id']]['society_longitude'] if \
+                                supplier_objects_id_map[item['object_id']]['society_longitude'] else None
+                else :
+                    lon2 = supplier_objects_id_map[item['object_id']]['longitude'] if \
+                        supplier_objects_id_map[item['object_id']]['longitude'] else None
 
-            if lat1 and lon1 and lat2 and lon2:
-                distance = gpxpy.geo.haversine_distance(lat1, lon1, lat2, lon2)
-                item['distance'] = distance
+                if lat1 and lon1 and lat2 and lon2:
+                    distance = gpxpy.geo.haversine_distance(lat1, lon1, lat2, lon2)
+                    item['distance'] = distance
         return data
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
