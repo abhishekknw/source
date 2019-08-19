@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 from .views import (SendMail, Mail, EmailSettingsView)
-from .tasks import SendWeeklyLeadsMail, SendGraphPdf, SendBookingDetailMails, SendLeadsToSelf, SendPipelineDetailMails, SendAdvancedBookingDetailMails
+from .tasks import SendWeeklyLeadsMail, SendGraphPdf, SendBookingDetailMails, SendLeadsToSelf, SendPipelineDetailMails, SendAdvancedBookingDetailMails, SendPreHypeMails
 urlpatterns = [
     url(r'^send-mail/$', SendMail.as_view()),
     url(r'^mail/$', Mail.as_view()),
@@ -12,6 +12,7 @@ urlpatterns = [
     url(r'^send-graph-pdf/$', SendGraphPdf.as_view()),
     url(r'^send-booking-details/(?P<campaign_id>[A-Z_a-z0-9]+)/$', SendBookingDetailMails.as_view()),
     url(r'^send-leads-to-self/$', SendLeadsToSelf.as_view()),
+    url(r'^send-pre-hype-mails/(?P<campaign_id>[A-Z_a-z0-9]+)/$', SendPreHypeMails.as_view()),
     url(r'^send-pipeline-details/(?P<campaign_id>[A-Z_a-z0-9]+)/$', SendPipelineDetailMails.as_view()),
     url(r'^send-advanced-booking-details/(?P<campaign_id>[A-Z_a-z0-9]+)/$', SendAdvancedBookingDetailMails.as_view()),
 ]

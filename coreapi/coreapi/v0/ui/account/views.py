@@ -23,6 +23,8 @@ from datetime import datetime
 from dateutil import tz
 from v0.ui.account.models import Profile
 from v0.ui.utils import get_user_organisation_id
+import logging
+logger = logging.getLogger(__name__)
 
 
 class GetBusinessTypesAPIView(APIView):
@@ -35,6 +37,7 @@ class GetBusinessTypesAPIView(APIView):
             serializer = BusinessTypesSerializer(busTypes, many=True)
             return Response(serializer.data, status=200)
         except :
+            logger.exception("Something bad happened in GetBusinessTypesAPIView")
             return Response(status=404)
 
 
@@ -55,6 +58,7 @@ class BusinessAPIListView(APIView):
             serializer = BusinessInfoSerializer(items, many=True)
             return Response(serializer.data, status=200)
         except Exception as e:
+            logger.info("Error in get of BusinessAPIListView is %s", e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     #the delete api is not being used
@@ -62,6 +66,7 @@ class BusinessAPIListView(APIView):
         try:
             item = SupplierTypeSociety.objects.get(pk=id)
         except SupplierTypeSociety.DoesNotExist:
+            logger.info("SupplierTypeSociety DoesNotExist")
             return Response(status=404)
         contacts = item.get_contact_list()
         for contact in contacts:
@@ -77,6 +82,7 @@ class GetBusinessSubTypesAPIView(APIView):
             serializer = BusinessSubTypesSerializer(items, many=True)
             return Response(serializer.data)
         except Exception as e:
+            logger.info("Error in get of GetBusinessSubTypesAPIView is %s", e)
             return Response({'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -99,6 +105,7 @@ class BusinessAccounts(APIView):
             }
             return Response(response, status=200)
         except Exception as e:
+            logger.info("Error in get of BusinessAccounts is %s", e.message)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
@@ -113,6 +120,7 @@ class Accounts(APIView):
             serializer = AccountInfoSerializer(items, many=True)
             return Response(serializer.data, status=200)
         except Exception as e:
+            logger.info("Error in get of Accounts is %s", e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
@@ -135,6 +143,7 @@ class AccountAPIView(APIView):
             data = {'account': account_serializer.data, 'business': business_serializer.data}
             return Response(data, status=200)
         except Exception as e:
+            logger.info("Error in get of AccountAPIView is  %s", e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
@@ -158,6 +167,7 @@ class BusinessContacts(APIView):
 
         business_data = request.data.get('business')
         if not business_data:
+            logger.error("No business data supplied")
             return Response(data={'status': False, 'error': 'No business data supplied'},
                             status=status.HTTP_400_BAD_REQUEST)
 
@@ -234,7 +244,8 @@ class BusinessContacts(APIView):
                 }
                 return Response(response, status=200)
         except Exception as e:
-                return Response(data={'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
+            logger.info("Error in post of BusinessContacts is %s", e)
+            return Response(data={'status': False, 'error': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
     def generate_organisation_id(self, business_name, sub_type, type_name, lower=False):
         business_code = create_code(name=business_name)
@@ -261,6 +272,7 @@ class BusinessContacts(APIView):
                 i += 1
 
         except Organisation.DoesNotExist:
+            logger.info("Organisation DoesNotExist")
             return organisation_id.upper()
 
 
@@ -336,6 +348,7 @@ class AccountContacts(APIView):
                 if serializer.is_valid():
                     account = serializer.save(business=business, user=current_user)
                 else:
+                    logger.error("Error occured %s", serializer.errors)
                     return Response(serializer.errors, status=400)
 
                 content_type_account = ContentType.objects.get_for_model(AccountInfo)
@@ -364,6 +377,7 @@ class AccountContacts(APIView):
                         contact = contact_serializer.save()
                         contact_list.append(contact)
                     else:
+                        logger.error("Error occured %s", contact_serializer.errors)
                         return Response(contact_serializer.errors, status=400)
 
                 BusinessAccountContact.objects.filter(id__in=contact_ids).delete()
@@ -373,6 +387,7 @@ class AccountContacts(APIView):
                 response['contacts'] = contacts_serializer.data
             return Response(response, status=200)
         except Exception as e:
+            logger.exception("Error occured %s", e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def generate_account_id(self, account_name, organisation_id, lower=False):
@@ -398,6 +413,7 @@ class AccountContacts(APIView):
                 i += 1
 
         except AccountInfo.DoesNotExist:
+            logger.info("AccountInfo DoesNotExist")
             return account_id.upper()
 
 
@@ -418,6 +434,7 @@ class AccountViewSet(viewsets.ViewSet):
             serializer = AccountInfoSerializer(accounts, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
+            logger.exception('Error occured in list of AccountViewSet API as %s', e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def retrieve(self, request, pk):
@@ -439,6 +456,7 @@ class AccountViewSet(viewsets.ViewSet):
             }
             return ui_utils.handle_response(class_name, data=data, success=True)
         except Exception as e:
+            logger.exception('Error occured in retrieve of AccountViewSet API as %s', e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def create(self, request):
@@ -460,8 +478,10 @@ class AccountViewSet(viewsets.ViewSet):
                 if not response.data['status']:
                     return response
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            logger.error('Error occured in create of AccountAPIView is %s', serializer.errors)
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
+            logger.exception('Error occured in create of AccountViewSet API as %s', e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def update(self, request, pk):
@@ -482,8 +502,10 @@ class AccountViewSet(viewsets.ViewSet):
                 if not response.data['status']:
                     return response
                 return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            logger.error('Error occured in update of AccountAPIView is %s', serializer.errors)
             return ui_utils.handle_response(class_name, data=serializer.errors)
         except Exception as e:
+            logger.exception('Error occured in update of AccountViewSet API as %s', e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
@@ -495,6 +517,7 @@ class SignupAPIView(APIView):
             serializer = SignupSerializer(item)
             return Response(serializer.data)
         except Signup.DoesNotExist:
+            logger.info('Signup DoesNotExist')
             return Response(status=404)
 
     def put(self, request, id, format=None):
@@ -506,12 +529,14 @@ class SignupAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
+        logger.error('Something went wrong in SignupAPIView %s', serializer.errors)
         return Response(serializer.errors, status=400)
 
     def delete(self, request, id, format=None):
         try:
             item = Signup.objects.get(pk=id)
         except Signup.DoesNotExist:
+            logger.error('Signup DoesNotExist')
             return Response(status=404)
         item.delete()
         return Response(status=204)
@@ -530,6 +555,7 @@ class SignupAPIListView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
+        logger.error('Error occured %s', serializer.errors)
         return Response(serializer.errors, status=400)
 
 @receiver(user_logged_in)

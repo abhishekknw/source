@@ -885,6 +885,11 @@ booking_status = {
     'call_required' : 'CR',
     'decision_pending' : 'DP',
     'tentative_booking' : 'TB',
+    'unknown': 'UN',
+    'new_entity': 'NE',
+    'not_initiated': 'NI',
+
+
 }
 
 booking_code_to_status = {
@@ -897,7 +902,10 @@ booking_code_to_status = {
     'VR': 'Visit Required',
     'CR': 'Call Required',
     'DP': 'Decision Pending',
-    'TB': 'Tentative Booking'
+    'TB': 'Tentative Booking',
+    'UN': 'Unknown',
+    'NE': 'New Entity',
+    'NI': 'Not Initiated'
 }
 # different campaign states
 completed = 'COMPLETED'
