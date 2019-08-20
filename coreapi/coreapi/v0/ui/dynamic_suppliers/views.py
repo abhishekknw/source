@@ -397,6 +397,8 @@ class ShortlistedSpacesTransfer(APIView):
             "organisation_id": "MAC1421"
         }).save()
         new_booking_template_id = new_booking_template._id
+        booking_list = []
+        counter = 0
         for booking in shortlisted_spaces_list:
             data = {}
             data['booking_template_id'] = str(new_booking_template_id)
@@ -412,8 +414,13 @@ class ShortlistedSpacesTransfer(APIView):
             for item in booking_attributes_list:
                 item['value'] = booking[item['name']]
             data['booking_attributes'] = booking_attributes_list
-
-            BookingData(**data).save()
+            booking_list.append(BookingData(**data))
+            counter = counter + 1
+            if counter % 1000 == 0:
+                BookingData.objects.bulk_create(booking_list)
+                booking_list = []
+        if len(booking_list) > 0:
+            BookingData.objects.bulk_create(booking_list)
         return handle_response('', data={"success": True}, success=True)
 
 class SupplierInventoryTransfer(APIView):
