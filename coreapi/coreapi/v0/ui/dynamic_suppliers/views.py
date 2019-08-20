@@ -290,6 +290,8 @@ class SupplierTransfer(APIView):
 
         }).save()
         new_supplier_type_id = new_supplier_type_for_society._id
+        supplier_list = []
+        counter = 0
         for society in society_list:
             if society['society_name']:
                 name = society['society_name']
@@ -332,7 +334,13 @@ class SupplierTransfer(APIView):
                                           "old_supplier_id": society['supplier_id']}
                 supplier_dict = dict_of_req_attributes
                 supplier_dict["created_at"] = datetime.now()
-                SupplySupplier(**supplier_dict).save()
+                supplier_list.append(SupplySupplier(**supplier_dict))
+                counter = counter + 1
+                if counter % 500 == 0:
+                    SupplySupplier.objects.bulk_create(supplier_list)
+                    supplier_list = []
+        if len(supplier_list) > 0:
+            SupplySupplier.objects.bulk_create(supplier_list)
         return handle_response('', data={"success": True}, success=True)
 
 
