@@ -427,12 +427,19 @@ class SupplierInventoryTransfer(APIView):
     @staticmethod
     def get(request):
         supplier_inventories = ShortlistedInventoryPricingDetails.objects.all()
+        suppliers = SupplySupplier.objects.raw({})
+        suppliers_id_map = {}
+        for supplier in suppliers:
+            suppliers_id_map.setdefault(supplier.old_supplier_id, None)
+            suppliers_id_map[supplier.old_supplier_id] = str(supplier._id)
+        inventory_list = []
+        counter = 0
         for inventory in supplier_inventories:
             data = {}
-            if SupplySupplier.objects.raw({'old_supplier_id': inventory.shortlisted_spaces.object_id}).count() > 0:
-                data['supplier_id'] = SupplySupplier.objects.raw({'old_supplier_id': inventory.shortlisted_spaces.object_id})[0]._id
-            else:
+            if inventory.shortlisted_spaces.object_id not in suppliers_id_map:
                 continue
+            else:
+                data['supplier_id'] = suppliers_id_map[inventory.shortlisted_spaces.object_id]
             data['campaign_id'] = inventory.shortlisted_spaces.proposal.proposal_id
             data['inventory_name'] = inventory.ad_inventory_type.adinventory_name
             data['organisation_id'] = inventory.shortlisted_spaces.proposal.account.organisation.organisation_id
@@ -444,7 +451,13 @@ class SupplierInventoryTransfer(APIView):
             data["updated_at"] = datetime.now()
             data["inventory_id_old"] = inventory.id
 
-            BookingInventory(**data).save()
+            inventory_list.append(BookingInventory(**data))
+            counter = counter + 1
+            if counter % 5000 == 0:
+                BookingInventory.objects.bulk_create(inventory_list)
+                inventory_list = []
+        if len(inventory_list) > 0:
+            BookingInventory.objects.bulk_create(inventory_list)
 
         return handle_response('', data={"success": True}, success=True)
 
@@ -457,10 +470,10 @@ class InventoryActivityImageTransfer(APIView):
         dynamic_supplier_ids_map = {supplier.old_supplier_id:supplier for supplier in dynamic_supplier}
 
         image_objects = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
-                                                      'inventory_activity_assignment__inventory_activity',
-                                                      'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
-                                                      'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
-                                                      'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal')
+                                                                      'inventory_activity_assignment__inventory_activity',
+                                                                      'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
+                                                                      'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces',
+                                                                      'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal')
         result = {}
         for item in image_objects:
             try:
@@ -489,8 +502,16 @@ class InventoryActivityImageTransfer(APIView):
                     })
             except Exception as e:
                 continue
+        booking_act_list = []
+        counter = 0
         for item in result.values():
-            BookingInventoryActivity(**item).save()
+            booking_act_list.append(BookingInventoryActivity(**item))
+            counter = counter + 1
+            if counter % 1000 == 0:
+                BookingInventoryActivity.objects.bulk_create(booking_act_list)
+                booking_act_list = []
+        if len(booking_act_list) > 0:
+            BookingInventoryActivity.objects.bulk_create(booking_act_list)
         return handle_response('', data={}, success=True)
 
 def create_auto_complete_supplier_data(supplier_list=None):
