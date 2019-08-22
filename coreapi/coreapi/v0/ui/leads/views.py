@@ -294,6 +294,7 @@ class CreateLeadsForm(APIView):
         leads_form_name = request.data['leads_form_name']
         leads_form_items = request.data['leads_form_items']
         global_hot_lead_criteria = request.data['global_hot_lead_criteria'] if 'global_hot_lead_criteria' in request.data else None
+        hotness_mapping = request.data['hotness_mapping'] if 'hotness_mapping' in request.data else None
         item_id = 0
         max_id_data = mongo_client.leads_forms.find_one(sort=[('leads_form_id', -1)])
         max_id = max_id_data['leads_form_id'] if max_id_data is not None else 0
@@ -316,6 +317,8 @@ class CreateLeadsForm(APIView):
             mongo_dict['global_hot_lead_criteria'] = global_hot_lead_criteria
         else:
             mongo_dict['global_hot_lead_criteria'] = create_global_hot_lead_criteria(mongo_dict)
+        if hotness_mapping:
+            mongo_dict['hotness_mapping'] = hotness_mapping
         mongo_client.leads_forms.insert_one(mongo_dict)
         add_single_leads_permission(request.user.profile_id, new_leads_form_id, ["EDIT", "VIEW", "DELETE", "FILL", "FREEZE", "UNFREEZE"])
         return handle_response({}, data='success', success=True)
@@ -332,10 +335,10 @@ class GetLeadsForm(APIView):
                 "leads_form_name": lead_form['leads_form_name'],
                 "leads_form_id": lead_form['leads_form_id'],
                 "leads_form_items": lead_form['data'],
-                "global_hot_lead_criteria": lead_form['global_hot_lead_criteria']
+                "global_hot_lead_criteria": lead_form['global_hot_lead_criteria'],
+                "hotness_mapping": lead_form['hotness_mapping'] if 'hotness_mapping' in lead_form else None
             }
         return handle_response({}, data=lead_form_dict, success=True)
-
 
 class GetLeadsFormById(APIView):
     @staticmethod
@@ -795,6 +798,8 @@ class EditLeadsForm(APIView):
         leads_form_items = request.data['leads_form_items'] if 'leads_form_items' in request.data.keys() else None
         global_hot_lead_criteria = request.data[
             'global_hot_lead_criteria'] if 'global_hot_lead_criteria' in request.data.keys() else None
+        hotness_mapping = request.data[
+            'hotness_mapping'] if 'hotness_mapping' in request.data.keys() else None
         name = request.data['name'] if 'name' in request.data.keys() else None
         set_dict = {}
         if name:
@@ -803,6 +808,8 @@ class EditLeadsForm(APIView):
             set_dict["data"] = leads_form_items
         if global_hot_lead_criteria:
             set_dict["global_hot_lead_criteria"] = global_hot_lead_criteria
+        if hotness_mapping:
+            set_dict["hotness_mapping"] = hotness_mapping
         mongo_client.leads_forms.update_one({"leads_form_id": int(form_id)}, {"$set": set_dict})
         return handle_response({}, data='success', success=True)
 
