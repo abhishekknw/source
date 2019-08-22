@@ -331,7 +331,8 @@ class GetLeadsForm(APIView):
             lead_form_dict[lead_form["leads_form_id"]] = {
                 "leads_form_name": lead_form['leads_form_name'],
                 "leads_form_id": lead_form['leads_form_id'],
-                "leads_form_items": lead_form['data']
+                "leads_form_items": lead_form['data'],
+                "global_hot_lead_criteria": lead_form['global_hot_lead_criteria']
             }
         return handle_response({}, data=lead_form_dict, success=True)
 
@@ -1850,5 +1851,10 @@ class GetMISData(APIView):
                 supplier['total_leads'] = supplier_id_with_leads_map[supplier['supplier_id']]['total_leads_count']
                 supplier['hot_leads'] = supplier_id_with_leads_map[supplier['supplier_id']]['hot_leads_count']
                 supplier['lead_date'] = supplier_id_with_leads_map[supplier['supplier_id']]['created_at']
+                supplier['total_leads_percentage'] = supplier_id_with_leads_map[supplier['supplier_id']][
+                                                         'total_leads_count'] / supplier['flat_count'] * 100
+                supplier['hot_leads_percentage'] = supplier_id_with_leads_map[supplier['supplier_id']][
+                                                         'hot_leads_count'] / supplier['flat_count'] * 100
+
 
         return handle_response('', data=serializer.data, success=True)
