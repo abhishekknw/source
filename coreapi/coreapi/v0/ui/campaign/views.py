@@ -193,18 +193,31 @@ def hot_lead_ratio_calculator(data_array):
         data_array[data]['hot_leads_percentage'] = hot_lead_ratio*100
     return data_array
 
+def get_leads_summary_from_summary_table(campaign_id):
+    suppliers  = list(mongo_client.leads_summary.find({"campaign_id": campaign_id}))
+    result = {}
+    if len(suppliers) > 0:
+        for supplier in suppliers:
+            result.setdefault(supplier['supplier_id'],{})
+            supplier['is_hot_level_1'] = supplier['total_leads_count'] if supplier['total_leads_count'] else 0
+            supplier['is_hot_level_2'] = supplier['total_hot_leads_count'] if supplier['total_hot_leads_count'] else 0
+            supplier['is_hot_level_3'] = supplier['total_booking_confirmed'] if supplier['total_booking_confirmed'] else 0
+            supplier['is_hot_level_4'] = supplier['total_orders_punched'] if supplier['total_orders_punched'] else 0
+            result[supplier['supplier_id']] = supplier
 
+    return result
 def lead_counter(campaign_id, leads_form_data,user_start_datetime,user_end_datetime, lead_form):
     result = {}
     all_leads_summary = get_leads_summary(campaign_id,user_start_datetime,user_end_datetime)
-    and_constraint = [{"campaign_id": campaign_id}]
-    if user_start_datetime:
-        and_constraint.append({"created_at": {"$gte": user_start_datetime}})
-    if user_end_datetime:
-        and_constraint.append({"created_at": {"$lte": user_end_datetime}})
-    leads = list(mongo_client.leads.find(
-        {"$and": and_constraint}, {"_id": 0}))
-    leads_by_hoteness_level = get_leads_summary_by_campaign_and_hotness_level(leads, lead_form)
+    # and_constraint = [{"campaign_id": campaign_id}]
+    # if user_start_datetime:
+    #     and_constraint.append({"created_at": {"$gte": user_start_datetime}})
+    # if user_end_datetime:
+    #     and_constraint.append({"created_at": {"$lte": user_end_datetime}})
+    # leads = list(mongo_client.leads.find(
+    #     {"$and": and_constraint}, {"_id": 0}))
+    # leads_by_hoteness_level = get_leads_summary_by_campaign_and_hotness_level(leads, lead_form)
+    leads_by_hoteness_level = get_leads_summary_from_summary_table(campaign_id)
 
     all_campaign_leads = leads_form_data
     for summary in all_leads_summary:
@@ -212,17 +225,17 @@ def lead_counter(campaign_id, leads_form_data,user_start_datetime,user_end_datet
                                           "total_leads": summary['total_leads_count'],
                                           "hot_lead_details": [],
                                           "is_hot_level_1": leads_by_hoteness_level[summary['supplier_id']]
-                                          ['lead_data']['is_hot_level_1']
-                                            if summary['supplier_id'] in leads_by_hoteness_level else None,
+                                          ['is_hot_level_1']
+                                            if summary['supplier_id'] in leads_by_hoteness_level else 0,
                                           "is_hot_level_2": leads_by_hoteness_level[summary['supplier_id']]
-                                          ['lead_data']['is_hot_level_2']
-                                          if summary['supplier_id'] in leads_by_hoteness_level else None,
+                                          ['is_hot_level_2']
+                                          if summary['supplier_id'] in leads_by_hoteness_level else 0,
                                           "is_hot_level_3": leads_by_hoteness_level[summary['supplier_id']]
-                                          ['lead_data']['is_hot_level_3']
-                                          if summary['supplier_id'] in leads_by_hoteness_level else None,
+                                          ['is_hot_level_3']
+                                          if summary['supplier_id'] in leads_by_hoteness_level else 0,
                                           "is_hot_level_4": leads_by_hoteness_level[summary['supplier_id']]
-                                          ['lead_data']['is_hot_level_4']
-                                          if summary['supplier_id'] in leads_by_hoteness_level else None
+                                          ['is_hot_level_4']
+                                          if summary['supplier_id'] in leads_by_hoteness_level else 0
 
                                           }
     for lead in all_campaign_leads:
@@ -1374,7 +1387,6 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                       'flat_data': all_flat_data, 'phase_data': phase_data, 'overall_data': overall_data}
         return final_data
     except Exception as e:
-        print(e)
         return None
 
 
