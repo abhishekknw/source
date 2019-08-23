@@ -258,7 +258,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         curr_sum_key = [curr_metric]
         if not curr_output_keys <= allowed_keys:
             curr_output = sum_array_by_keys(curr_output, list(allowed_keys - set([curr_metric])), [curr_metric])
-            print(curr_output[:5])
         individual_metric_output[curr_metric] = curr_output
 
     reverse_map = {}
@@ -406,6 +405,26 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         for prev_data in raw_data:
             curr_data = prev_data
             raw_data_list.append(curr_data)
+            new_metric_names = []
+        for curr_dict in derived_array:
+            for curr_metric in metric_processed:
+                a = curr_metric["a"]
+                b = curr_metric["b"]
+                nr = a
+                dr = b
+                if isinstance(nr, str):
+                    nr_value = curr_dict[nr] if nr in curr_dict else curr_dict[reverse_map[nr]]
+                else:
+                    nr_value = nr
+                if isinstance(dr, str):
+                    dr_value = curr_dict[dr] if dr in curr_dict else curr_dict[reverse_map[dr]]
+                else:
+                    dr_value = dr
+                result_value = binary_operation(float(nr_value), float(dr_value), curr_metric['op']) if \
+                    not dr_value == 0 and nr_value is not None and dr_value is not None else None
+                new_name = curr_metric['name']
+                new_metric_names.append(new_name)
+                curr_dict[new_name] = round_sig_min(result_value, 7) if result_value is not None else result_value
         higher_level_list_old = append_array_by_keys(derived_array,grouping_level,stat_metrics+raw_data)
         for curr_field in additional_fields_list:
             higher_level_list_test = add_related_field(higher_level_list_old, *(related_fields_dict[curr_field]))
@@ -428,45 +447,17 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                     higher_level_raw_data.append(curr_name)
             higher_level_list.append(curr_dict)
 
-        new_metric_processed = {}
-        new_metric_names = []
-        for curr_dict in higher_level_list:
-            for curr_metric in metric_processed:
-                a = curr_metric["a"]
-                b = curr_metric["b"]
-                try:
-                    nr = a
-                except:
-                    nr=a
-                try:
-                    dr = b
-                except:
-                    dr=b
-                if isinstance(nr, str):
-                    nr_value = curr_dict[nr] if nr in curr_dict else curr_dict[reverse_map[nr]]
-                else:
-                    nr_value = nr
-                if isinstance(dr, str):
-                    dr_value = curr_dict[dr] if dr in curr_dict else curr_dict[reverse_map[dr]]
-                else:
-                    dr_value = dr
-                result_value = binary_operation(float(nr_value), float(dr_value), curr_metric['op']) if \
-                    not dr_value == 0 and nr_value is not None and dr_value is not None else None
-                new_name = curr_metric['name']
-                new_metric_names.append(new_name)
-                curr_dict[new_name] = round_sig_min(result_value, 7) if result_value is not None else result_value
-
         new_stat_metrics = []
         for curr_stat in stat_metrics:
             new_name = curr_stat
             new_stat_metrics.append(new_name)
-
         for curr_stat in stats:
             weighted = 0
             pfix = 'weighted_'
             if curr_stat[:len(pfix)] == pfix:
                 curr_stat = curr_stat[len(pfix):]
                 weighted = 1
+            print(statistics_map[curr_stat])
             higher_level_list = statistics_map[curr_stat](higher_level_list,stat_metrics, weighted=weighted)
 
     custom_function_output = {}
@@ -637,7 +628,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             group_dict = {}
             if highest_level_list == [] or highest_level_list is None:
                 match_dict ={}
-
             else:
                 match_constraint = [{parent_model_name: {"$in": match_list}}]
                 match_dict = {"$and": match_constraint}
