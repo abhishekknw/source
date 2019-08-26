@@ -19,6 +19,7 @@ from .views import send_email, send_mail_generic
 from v0.ui.common.models import BaseUser
 from celery import shared_task
 from django.conf import settings
+from v0.ui.proposal.models import SupplierPhase
 DEFAULT_CC_EMAILS = settings.DEFAULT_CC_EMAILS
 
 
@@ -117,7 +118,7 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None, email=None):
         supplier_list_details_by_status = get_supplier_list_by_status_ctrl(campaign_id)
         supplier_list_details_by_status = json.dumps(supplier_list_details_by_status)
         booking_template = get_template(template_name)
-        to_array = [email] if email else campaign_assignement_by_campaign_id[campaign_id]        
+        to_array = [email] if email else campaign_assignement_by_campaign_id[campaign_id]
         supplier_list_details_by_status_json = json.loads(supplier_list_details_by_status)
         html = booking_template.render(
             {"campaign_name": str(all_campaign_name_dict[campaign_id]),
@@ -245,7 +246,11 @@ class SendLeadsToSelf(APIView):
 
 class SendDailyAssignmentMails(APIView):
     @staticmethod
-    def get(request, campaign_id):
-        email_id = request.query_params.get("email", None)
-        send_booking_mails_ctrl('daily_assignment_mail.html', campaign_id, email_id)
+    def get(request):
+        # Get all ongoing campaigns
+        current_date = datetime.datetime.now().date()
+        phases = SupplierPhase.objects.filter(start_date__lte=current_date, end_date__gte=current_date).all()
+        for phase in phases:
+            campaign_id = phase.campaign_id
+            send_booking_mails_ctrl('daily_assignment_mail.html', campaign_id)
         return ui_utils.handle_response('', data={}, success=True)
