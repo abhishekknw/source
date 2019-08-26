@@ -277,6 +277,7 @@ class AddBulkLocationAPIView(APIView):
             class_name = self.__class__.__name__
             request_data = request.data
             data = request_data.get('data')
+            response = []
             if not data:
                 return Response({'message':'Please add data'}, status=400)
             for location in data:
@@ -296,9 +297,9 @@ class AddBulkLocationAPIView(APIView):
                 if area_id:
                     subarea_id = AddSubArea(subarea, area_id)
                 if subarea_id:
-                    print(state, state_id, city, city_id, area, area_id, subarea, subarea_id)
-                    print('Subarea added successfully')
-            return Response({'message': 'Created successfully'}, status=200)
+                    response.append(state + '-' + str(state_id) + ', ' + city + '-' + str(city_id) +
+                                    ', ' + area + '-' + str(area_id) + ', ' + subarea + '-' + str(subarea_id))
+            return Response({'message': 'Created successfully', 'response': response}, status=200)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
