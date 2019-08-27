@@ -928,7 +928,6 @@ def add_related_field(dict_array, model_name, self_name_model, self_name,
     if not database_type == 'mysql':
         print("this function is currently not developed for non-mysql database")
         return dict_array
-    print(dict_array)
     if not dict_array or self_name not in dict_array[0]:
         return dict_array
     self_values = list(flatten([x[self_name] for x in dict_array]))
@@ -1244,8 +1243,17 @@ def cumulative_distribution(campaigns, frequency_results, sum_results, key_name,
         overall_sum = sum_results[curr_campaign]
         cumulative_frequency_results[curr_campaign] = []
         curr_dict = frequency_results[curr_campaign]
-        count = 0
         curr_dict_keys = list(curr_dict.keys())
+
+        for i in range(len(curr_dict_keys)):
+            curr_key = curr_dict_keys[i]
+            if isinstance(curr_key, str):
+                date_key = curr_key[:10]
+                date_date = datetime.strptime(date_key, '%Y-%m-%d').date()
+                curr_dict_keys[i] = date_date
+                curr_dict[date_date] = curr_dict.pop(curr_key)
+        count = 0
+        curr_dict_keys.sort()
         curr_dict_keys.sort()
         for curr_key in curr_dict_keys:
             inner_dict = {}
@@ -1309,6 +1317,12 @@ def get_list_elements_single_array(model_name, match_dict, outer_key, inner_key,
 
 
 def convert_date_to_days(dict_array, grouping_keys, sum_keys, order_key):
+    for i in range(len(dict_array)):
+        curr_array = dict_array[i]
+        if isinstance(curr_array['date'], str):
+            date_str = curr_array['date'][:10]
+            date_date = datetime.strptime(date_str,'%Y-%m-%d').date()
+            dict_array[i]['date'] = date_date
     dict_array = sorted(dict_array, key=lambda k: k[order_key]) if order_key is not None else dict_array
     total_dict_array = sum_array_by_keys(dict_array, grouping_keys, sum_keys)
     final_array = []
