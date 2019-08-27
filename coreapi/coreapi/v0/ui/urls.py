@@ -37,6 +37,8 @@ urlpatterns = [
     url(r'^website/', include('v0.ui.email.urls')),
     url(r'^website/', include('v0.ui.website.urls')),
     url(r'^analytics/', include('v0.ui.analytics.urls')),
+    url(r'^mis/', include('v0.ui.mis.urls')),
+    url(r'^leads/', include('v0.ui.mis.urls')),
 
 
     # url(r'^website/create_business/load_business_types/',web_views.getBusinessTypesAPIView.as_view()),

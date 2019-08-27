@@ -11,7 +11,7 @@ from .views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntri
                    DeleteExtraLeadEntry, DeleteLeadItem, GetLeadsEntry, UpdateLeadsEntry, GeographicalLevelsTest,
                    GetListsCounts, DownloadLeadDataExcel, CampaignDataInExcelSheet, GenerateCampaignExcelDownloadHash,
                     AddHotnessLevelsToLeadForm, UpdateConvertedLeadsFromSheet, UpdateLeadSummary, UpdateOrderId,
-                    GetMISData)
+                    MigrateLeadsFormsByAlias)
 
 from .one_time_scripts import UpdateLeadsMissingItems, UpdateLeadsEntryIds
 
@@ -60,7 +60,7 @@ urlpatterns = [
     url(r'^update-converted-leads/', UpdateConvertedLeadsFromSheet.as_view()),
     url(r'^update-leads-summary/', UpdateLeadSummary.as_view()),
     url(r'^update-order-id/', UpdateOrderId.as_view()),
-    url(r'^get-mis-data/', GetMISData.as_view())
+    url(r'^migrate-leads-forms-by-alias/', MigrateLeadsFormsByAlias.as_view()),
 ]
 
 router = DefaultRouter()
