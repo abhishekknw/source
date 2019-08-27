@@ -252,7 +252,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
         curr_output_keys = set(curr_output[0].keys())
         allowed_keys = set([highest_level_original] + grouping_level + [curr_metric])
         if 'order_cumulative' in custom_functions:
-            curr_output = cumulative_distribution_from_array_day(curr_output, grouping_level,
+            curr_output = cumulative_distribution_from_array_day(curr_output, grouping_level+[highest_level],
                                                              ['total_orders_punched'], 'date')
             allowed_keys = allowed_keys.union(set(custom_keys))
         curr_sum_key = [curr_metric]

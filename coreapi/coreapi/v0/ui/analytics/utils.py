@@ -1350,7 +1350,6 @@ def convert_date_to_days(dict_array, grouping_keys, sum_keys, order_key):
                     curr_dict["date"] = days
             final_array.append(curr_dict)
             first_ele = False
-    print("fa: ",final_array[:5])
     return final_array
 
 
