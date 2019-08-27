@@ -928,7 +928,8 @@ def add_related_field(dict_array, model_name, self_name_model, self_name,
     if not database_type == 'mysql':
         print("this function is currently not developed for non-mysql database")
         return dict_array
-    if self_name not in dict_array[0]:
+    print(dict_array)
+    if not dict_array or self_name not in dict_array[0]:
         return dict_array
     self_values = list(flatten([x[self_name] for x in dict_array]))
     model_data_query = model_name+'.objects.filter('+self_name_model+'__in=self_values)'
