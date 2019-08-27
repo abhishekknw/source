@@ -282,7 +282,7 @@ class SupplierTransfer(APIView):
                                   {"name": "Total Tenant Flat Count", "type": "INT"},
                                   {"name": "Landmark", "type": "STRING"},
                                   {"name": "Name for Payment", "type": "STRING"},
-                                  {"name": "Bank Name", "type": "STRING  "},
+                                  {"name": "Bank Name", "type": "STRING"},
                                   {"name": "IFSC Code", "type": "STRING"},
                                   {"name": "Account No", "type": "STRING"},
                                   {"name": "Representative", "type": "STRING"}],
