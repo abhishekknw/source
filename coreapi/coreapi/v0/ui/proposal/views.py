@@ -3017,3 +3017,20 @@ class SupplierAssignmentViewSet(viewsets.ViewSet):
         return ui_utils.handle_response(class_name, data=result_list, success=True)
 
 
+class ConvertProposalToCampaign(APIView):
+    def post(self, request, proposal_id):
+        try:
+            class_name = self.__class__.__name__
+            proposal_details = ProposalInfo.objects.filter(proposal_id=proposal_id)
+            status = 'PTC'
+            start_date = proposal_details[0].created_at
+            end_date = start_date + datetime.timedelta(weeks=16)
+            invoice_number = proposal_id
+            proposal_details.update(tentative_start_date=start_date, tentative_end_date=end_date, campaign_state=status, invoice_number=invoice_number)
+
+            generic_file = GenericExportFileName.objects.filter(proposal_id=proposal_id)
+            generic_file.update(is_exported=0)
+
+            return ui_utils.handle_response(class_name, data='Proposal conversion successfull', success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, data='Error converting proposal', success=False)

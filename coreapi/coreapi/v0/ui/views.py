@@ -271,6 +271,91 @@ class LocationsAPIView(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
+class AddBulkLocationAPIView(APIView):
+    def post(self, request):
+        try:
+            class_name = self.__class__.__name__
+            request_data = request.data
+            data = request_data.get('data')
+            response = []
+            if not data:
+                return Response({'message':'Please add data'}, status=400)
+            for location in data:
+                state = location.get('state')
+                city = location.get('city')
+                area = location.get('area')
+                subarea = location.get('subarea')
+
+                if not state or not city or not area or not subarea:
+                    return Response({'message': 'Please add state,city,area,subarea'}, status=400)
+
+                state_id = AddState(state)
+                if state_id:
+                    city_id = AddCity(city, state_id)
+                if city_id:
+                    area_id = AddArea(area, city_id)
+                if area_id:
+                    subarea_id = AddSubArea(subarea, area_id)
+                if subarea_id:
+                    response.append(state + '-' + str(state_id) + ', ' + city + '-' + str(city_id) +
+                                    ', ' + area + '-' + str(area_id) + ', ' + subarea + '-' + str(subarea_id))
+            return Response({'message': 'Created successfully', 'response': response}, status=200)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+def AddState(state):
+    state_detail = State.objects.filter(state_name__icontains=state).values('id')
+    if state_detail and len(state_detail) > 0:
+        state_id = state_detail[0]['id']
+    else:
+        state_code = ui_utils.getRandomString()
+        stateInserted = State.objects.create(state_name=state, state_code=state_code.upper())
+        if stateInserted:
+            state_id = stateInserted.id
+        else:
+            print('Failed to add State :', state)
+    return state_id
+
+def AddCity(city, state_id):
+    city_detail = City.objects.filter(city_name__icontains=city, state_code=state_id).values('id')
+    if city_detail and len(city_detail) > 0:
+        city_id = city_detail[0]['id']
+    else:
+        city_code = ui_utils.getRandomString()
+        cityInserted = City.objects.create(city_name=city, city_code=city_code.upper(), state_code_id=state_id)
+        if cityInserted:
+            city_id = cityInserted.id
+        else:
+            print('Failed to add City :', city)
+    return city_id
+
+
+def AddArea(area, city_id):
+    area_detail = CityArea.objects.filter(label__icontains=area, city_code=city_id).values('id')
+    if area_detail and len(area_detail) > 0:
+        area_id = area_detail[0]['id']
+    else:
+        area_code = ui_utils.getRandomString()
+        areaInserted = CityArea.objects.create(label=area, area_code=area_code.upper(), city_code_id=city_id)
+        if areaInserted:
+            area_id = areaInserted.id
+        else:
+            print('Failed to add City :', area)
+    return area_id
+
+
+def AddSubArea(subarea, area_id):
+    subarea_detail = CitySubArea.objects.filter(subarea_name__icontains=subarea, area_code=area_id).values('id')
+    if subarea_detail and len(subarea_detail) > 0:
+        subarea_id = subarea_detail[0]['id']
+    else:
+        subarea_code = ui_utils.getRandomString()
+        subareaInserted = CitySubArea.objects.create(subarea_name=subarea, subarea_code=subarea_code.upper(), area_code_id=area_id, locality_rating='Standard')
+        if subareaInserted:
+            subarea_id = subareaInserted.id
+        else:
+            print('Failed to add Subarea :', subarea)
+    return subarea_id
 
 class SocietyAPIFilterSubAreaView(APIView):
     def post(self, request, format=None):
@@ -289,6 +374,7 @@ class SocietyAPIFilterSubAreaView(APIView):
         subarea_serializer = CitySubAreaSerializer(subareas, many=True)
 
         return Response(subarea_serializer.data, status=200)
+
 
 class FlatTypeAPIView(APIView):
     def get(self, request, id, format=None):
