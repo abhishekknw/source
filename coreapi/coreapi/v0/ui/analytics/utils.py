@@ -12,7 +12,7 @@ from scipy import stats
 from v0.ui.common.models import mongo_client
 import collections
 
-
+const_intervals = 15.0
 
 def flatten(items):
     """Yield items from any nested iterable"""
@@ -38,7 +38,6 @@ def get_metrics_from_code(code, raw_metrics, derived_metrics):
 
 alternate_name_keys = {"supplier": "supplier_name", "campaign":"campaign_name"}
 alternate_name_group_dicts = {""}
-
 
 weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
                  '4': 'Friday', '5': 'Saturday', '6': 'Sunday'}
@@ -77,11 +76,6 @@ count_details_parent_map = {
                   'self_name_model': 'checklist_id', 'parent_name_model': 'campaign_id', 'storage_type': 'unique'},
     'flat': {'parent': 'supplier', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
              'self_name_model': 'flat_count', 'parent_name_model': 'supplier_id', 'storage_type': 'sum'},
-    # 'lead': {'parent': 'campaign', 'model_name': 'leads', 'database_type': 'mongodb',
-    #          'self_name_model': 'entry_id', 'parent_name_model': 'campaign_id', 'storage_type': 'count'},
-    # 'hot_lead': {'parent': 'campaign', 'model_name': 'leads', 'database_type': 'mongodb',
-    #              'self_name_model': 'is_hot', 'parent_name_model': 'campaign_id',
-    #              'storage_type': 'condition'},
     'lead': {'parent': 'campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
              'self_name_model': 'total_leads_count', 'parent_name_model': 'campaign_id', 'storage_type': 'sum'},
     'hot_lead': {'parent': 'campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
@@ -328,37 +322,38 @@ def calculate_freqdist_mode_from_list_floating(num_list, window_size=5):
     return freq_dist
 
 
-def calculate_freqdist_mode_from_list(num_list, window_size=5):
-    if not type(num_list) == list:
-        return {}
-    if len(num_list) == 0:
+def calculate_freqdist_mode_from_list(num_list, window_size=0, intervals = const_intervals):
+    if not type(num_list) == list or len(num_list) == 0:
         return {}
     if len(num_list) == 1:
         return [num_list, num_list[0]]
     num_list = sorted(num_list)
-    min_max = [num_list[0],num_list[-1]]
-    max = min_max[1]
-    last_window_start = max-max%window_size
+    [min_value, max_value] = [num_list[0],num_list[-1]]
+    if window_size == 0:
+        window_size = max_value/intervals
+        last_window_start = max_value - window_size
+    else:
+        last_window_start = max_value-max_value%window_size
     freq_dist = {}
     num_list_copy = num_list.copy()
     lower_limit = 0
     actual_length = len(num_list)
     counter = 0
     while lower_limit <= last_window_start:
-        upper_limit = lower_limit + window_size
+        upper_limit = round(lower_limit + window_size, 7)
+        print(lower_limit, upper_limit)
         new_list = [round_sig_min(x) for x in num_list_copy if lower_limit <= x < upper_limit]
         freq = len(new_list)
         mean = np.mean(new_list) if len(new_list)>0 else None
         counter = counter+freq
         group_name = str(lower_limit) + ' to ' + str(upper_limit)
         freq_dist[group_name] = {}
-        if new_list == []:
-            lower_limit = upper_limit
+        lower_limit = upper_limit
+        if not new_list:
             continue
         freq_dist[group_name]['values'] = new_list
         freq_dist[group_name]['mode'] = freq
         freq_dist[group_name]['mean'] = mean
-        lower_limit = upper_limit
     return freq_dist
 
 
@@ -909,19 +904,19 @@ def add_missing_keys(main_dict, main_keys):
     return main_dict
 
 
-def frequency_mode_calculator(dict_array, frequency_keys, weighted=0, window_size=5):
+def frequency_mode_calculator(dict_array, frequency_keys, weighted=0, window_size=0):
     new_array= []
     for curr_dict in dict_array:
         freq_keys = []
         for key in frequency_keys:
-            curr_dist = calculate_freqdist_mode_from_list(curr_dict[key],window_size)
+            curr_dist = calculate_freqdist_mode_from_list(curr_dict[key], window_size)
             if curr_dist == {}:
                 continue
             new_key = 'freq_dist_'+ key
             freq_keys.append(new_key)
             curr_dict[new_key] = curr_dist
         new_array.append(curr_dict)
-        x = add_missing_keys(curr_dict,freq_keys)
+        # x = add_missing_keys(curr_dict,freq_keys)
     return new_array
 
 
@@ -933,7 +928,8 @@ def add_related_field(dict_array, model_name, self_name_model, self_name,
     if not database_type == 'mysql':
         print("this function is currently not developed for non-mysql database")
         return dict_array
-    if self_name not in dict_array[0]:
+    print(dict_array)
+    if not dict_array or self_name not in dict_array[0]:
         return dict_array
     self_values = list(flatten([x[self_name] for x in dict_array]))
     model_data_query = model_name+'.objects.filter('+self_name_model+'__in=self_values)'
@@ -1340,15 +1336,18 @@ def convert_date_to_days(dict_array, grouping_keys, sum_keys, order_key):
                     curr_dict["date"] = days
             final_array.append(curr_dict)
             first_ele = False
+    print("fa: ",final_array[:5])
     return final_array
 
 
 def cumulative_distribution_from_array_day(dict_array, grouping_keys, sum_keys, order_key):
     if len(dict_array)==0 or order_key not in dict_array[0] or sum_keys[0] not in dict_array[0]:
         return dict_array
-    dict_array = sorted(dict_array, key=lambda k: k[order_key]) if order_key is not None else dict_array
+    grouping_keys_original = grouping_keys
     grouping_keys = list(set(grouping_keys) - set(['date']))
     total_dict_array = sum_array_by_keys(dict_array, grouping_keys, sum_keys)
+    dict_array = sum_array_by_keys(dict_array, grouping_keys_original, sum_keys)
+    dict_array = sorted(dict_array, key=lambda k: k[order_key]) if order_key is not None else dict_array
     final_array = []
     sum_key = sum_keys[0]
     new_key_name = sum_key + '_cum_pct'
@@ -1369,6 +1368,7 @@ def cumulative_distribution_from_array_day(dict_array, grouping_keys, sum_keys, 
                 curr_dict[new_key_name] = round(100*(curr_count_total/overall_count), 4)
             final_array.append(curr_dict)
             first_ele = False
+
     return final_array
 
 
