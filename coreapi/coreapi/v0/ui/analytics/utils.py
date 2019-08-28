@@ -399,6 +399,16 @@ def mean_calculator(dict_array, keys, weighted=0):
     return new_array
 
 
+def adder(dict_array, keys, weighted = 0):
+    new_array = []
+    for curr_dict in dict_array:
+        for key in keys:
+            sum_key = 'total_' + key
+            curr_dict[sum_key] = sum(curr_dict[key])
+        new_array.append(curr_dict)
+    return new_array
+
+
 def linear_extrapolator(dict_array, y_stat, x_stat, n_pts = 100, diff = 0.01):
     y = [z[y_stat] for z in dict_array]
     x = [z[x_stat] for z in dict_array]

@@ -13,7 +13,7 @@ from .utils import (level_name_by_model_id, convert_date_to_days, merge_dict_arr
                     get_constrained_values, add_related_field, related_fields_dict, reverse_supplier_levels,
                     add_binary_field_status, binary_parameters_list, get_list_elements_frequency_mongo,
                     cumulative_distribution, get_list_elements_single_array, cumulative_distribution_from_array,
-                    cumulative_distribution_from_array_day)
+                    cumulative_distribution_from_array_day, adder)
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo, ProposalCenterMapping
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -29,7 +29,7 @@ import numpy as np
 from v0.ui.campaign.models import CampaignAssignment
 
 statistics_map = {"z_score": z_calculator_array_multiple, "frequency_distribution": frequency_mode_calculator,
-                  "variance_stdev": var_stdev_calculator, "mean": mean_calculator,
+                  "variance_stdev": var_stdev_calculator, "mean": mean_calculator, "sum": adder,
                   "straight_line_forecasting": linear_extrapolator}
 
 unilevel_categories = ['time']
