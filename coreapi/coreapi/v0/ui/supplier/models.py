@@ -5,8 +5,9 @@ from django.contrib.contenttypes import fields
 from v0.ui.base.models import BaseModel
 from v0.ui.account.models import ContactDetailsGeneric, ContactDetails
 from v0.ui.proposal.models import SupplierPhase
-
 from v0 import managers
+
+Q = models.Q
 
 RETAIL_SHOP_TYPE = (
     ('GROCERY_STORE', 'GROCERY_STORE'),
@@ -212,13 +213,13 @@ class SupplierTypeSociety(BaseModel):
 
     def get_contact_list(self):
         try:
-            return ContactDetails.objects.filter(object_id = self.supplier_id)
+            return ContactDetails.objects.filter(~Q(contact_type="Reference"), object_id = self.supplier_id)
         except:
             return None
 
     def get_reference(self):
         try:
-            return self.contacts.all().get(contact_type="Reference")
+            return ContactDetails.objects.filter(contact_type="Reference", object_id = self.supplier_id)
         except:
             return None
 
@@ -229,7 +230,7 @@ class SupplierTypeSociety(BaseModel):
         return False
 
     def is_reference_available(self):
-        if self.get_reference():
+        if self.get_reference() and len(self.get_reference()) > 0:
             return True
         return False
 
