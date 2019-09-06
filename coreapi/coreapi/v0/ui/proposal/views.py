@@ -2571,8 +2571,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         inventory_activity_assignment = InventoryActivityAssignment.objects.filter(
             inventory_activity__shortlisted_inventory_details__shortlisted_spaces_id=space.id).values('activity_date',
                                                                                                       'inventory_activity__activity_type',
-                                                                                                      'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',
-                                                                                                          )
+                                                                                                      'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name'
+                                                                                                        )
         inventory_dates_dict = {
                     "POSTER": [],
                     "STALL": [],
@@ -2589,9 +2589,9 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             "BANNER": None
         }
         for inventory_activity in inventory_activity_assignment:
-            inventoy_name = inventory_activity['inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name']
-            activity_date = inventory_activity['activity_date']
-            if activity_date:
+            inventoy_name = inventory_activity.get('inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name')
+            activity_date = inventory_activity.get('activity_date')
+            if activity_date and inventoy_name:
                 activity_date = activity_date.strftime('%d %b %Y')
                 if activity_date not in inventory_dates_dict[inventoy_name]:
                     inventory_dates_dict[inventoy_name].append(activity_date)

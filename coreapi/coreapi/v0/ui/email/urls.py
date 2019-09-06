@@ -16,6 +16,7 @@ urlpatterns = [
     url(r'^send-recce-mails/(?P<campaign_id>[A-Z_a-z0-9]+)/$', SendRecceMails.as_view()),
     url(r'^send-pipeline-details/(?P<campaign_id>[A-Z_a-z0-9]+)/$', SendPipelineDetailMails.as_view()),
     url(r'^send-advanced-booking-details/(?P<campaign_id>[A-Z_a-z0-9]+)/$', SendAdvancedBookingDetailMails.as_view()),
+    url(r'^send-campaign-assignment/$', SendDailyAssignmentMails.as_view()),
 ]
 
 router = DefaultRouter()
