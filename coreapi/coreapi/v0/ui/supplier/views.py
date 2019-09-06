@@ -168,7 +168,7 @@ class SocietyDataImport(APIView):
                     'flat_count': int(row[18].value) if row[18].value else None,
                     'flat_count_type': flat_count_type,
                     'vacant_flat_count' : int(row[19].value) if row[19].value else None,
-                    'bachelor_tenants_allowed': row[20].value if row[20].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'bachelor_tenants_allowed': row[20].value if row[20].value in ['Y', 'y', 't', 'T', 'true','True'] else False,
                     'designation': row[21].value if row[21].value else None,
                     'salutation': row[22].value if row[22].value else None,
                     'contact_name': row[23].value if row[23].value else None,
@@ -608,12 +608,10 @@ class SocietyAPIView(APIView):
                 serializer = SupplierTypeSocietySerializer(society, data=request.data)
             else:
                 serializer = SupplierTypeSocietySerializer(data=request.data)
-
         if serializer.is_valid():
             serializer.save()
         else:
             return Response(serializer.errors, status=400)
-
         society = SupplierTypeSociety.objects.filter(pk=serializer.data['supplier_id']).first()
         object_id = serializer.data.get('supplier_id')
         content_type = ContentType.objects.get_for_model(SupplierTypeSociety)
