@@ -125,11 +125,11 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None, email=None):
             {"campaign_name": str(all_campaign_name_dict[campaign_id]),
              "details_dict": supplier_list_details_by_status_json})
         if template_name == 'pipeline_details.html':
-            subject = "Socities In Pipeline For " + str(all_campaign_name_dict[campaign_id])
+            subject = "Suppliers In Pipeline For " + str(all_campaign_name_dict[campaign_id])
         elif template_name == 'pre_hype_emails.html':
-            subject = "Socities In Pre-Hype For " + str(all_campaign_name_dict[campaign_id])
+            subject = "Suppliers In Pre-Hype For " + str(all_campaign_name_dict[campaign_id])
         elif template_name == 'recce_email.html':
-            subject = "Socities In Recce For " + str(all_campaign_name_dict[campaign_id])
+            subject = "Suppliers In Recce For " + str(all_campaign_name_dict[campaign_id])
         elif template_name == 'booking_details.html':
             if len(supplier_list_details_by_status_json['upcoming_phases']) > 0:
                 start_date = supplier_list_details_by_status_json['upcoming_phases'][0]['start_date']
@@ -137,7 +137,7 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None, email=None):
             else:
                 start_date = (datetime.datetime.now() + timedelta(days=1)).strftime('%d %b %Y')
                 end_date = (datetime.datetime.now() + timedelta(days=4)).strftime('%d %b %Y')
-            subject = "Societies for " + str(all_campaign_name_dict[campaign_id]) + ": " + start_date + " to " + end_date
+            subject = "Suppliers for " + str(all_campaign_name_dict[campaign_id]) + ": " + start_date + " to " + end_date
         elif template_name == 'advanced_booking_details.html':
             if (supplier_list_details_by_status_json['ongoing_phase']):
                 start_date = supplier_list_details_by_status_json['ongoing_phase']['start_date']
@@ -145,7 +145,7 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None, email=None):
             else:
                 start_date = (datetime.datetime.now() + timedelta(days=1)).strftime('%d %b %Y')
                 end_date = (datetime.datetime.now() + timedelta(days=4)).strftime('%d %b %Y')
-            subject = str(all_campaign_name_dict[campaign_id]) + " Societies Activation Details for this Weekend (" + start_date + " to " + end_date + ")"
+            subject = str(all_campaign_name_dict[campaign_id]) + " Suppliers Activation Details for this Weekend (" + start_date + " to " + end_date + ")"
         send_mail_generic.delay(subject, to_array, html, None,None)
     return
 
