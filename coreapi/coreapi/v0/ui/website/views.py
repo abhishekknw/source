@@ -980,7 +980,7 @@ class DeleteFileFromSystem(APIView):
             os.remove(os.path.join(settings.BASE_DIR, file_name))
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
-            return ui_utils.handle_response(class_name, data=os.path.join(settings.BASE_DIR, file_name), exception_object=e, request=request)
+            return ui_utils.handle_response(class_name, data='Error Deleting File', success=False)
 
 
 class ExportAllSupplierData(APIView):
