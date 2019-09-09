@@ -153,7 +153,8 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None, email=None):
                 user = BaseUser.objects.filter(id=campaign.assigned_to_id).values('email')
                 to_array = []
                 if user and len(user) > 0:
-                    to_array.append(user[0]['email'])
+                    if user[0] and user[0]['email'] and user[0]['email'].find('machadalo') > -1:
+                        to_array.append(user[0]['email'])
         send_mail_generic.delay(subject, to_array, html, None,None)
     return
 
