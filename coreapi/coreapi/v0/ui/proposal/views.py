@@ -2631,7 +2631,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         elif space.phase_no_id:
             if space.phase_no_id not in shortlisted_spaces_by_phase_dict:
                 shortlisted_spaces_by_phase_dict[space.phase_no_id] = {'BK': [], 'NB': [], 'PB': [], 'VB': [], 'SR': [],
-                                                                       'SE': [], 'VR': [], 'CR': [],
+                                                                       'SE': [], 'VR': [], 'CR': [], 'DPCR':[], 'DPNR':[],
                                                                        'DP': [], 'TB': [], 'UN':[], 'DPRR': [], 'RLC':[]}
             if space.booking_status:
                 shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(

@@ -3378,7 +3378,9 @@ def get_file_name(user, proposal_id, is_exported=True):
             user = None
         else:
             user_string = user.get_username()
-        file_name = user_string + '_' + organisation.name.lower() + '_' + account.name.lower() + '_' + proposal_id + '_' + datetime_stamp + '.xlsx'
+        # file_name = user_string + '_' + organisation.name.lower() + '_' + account.name.lower() + '_' + proposal_id + '_' + datetime_stamp + '.xlsx'
+        file_name = organisation.name.lower() + '_' + proposal_id + '_' + datetime_stamp + '.xlsx'
+
         # save this file in db
         data = {
             'user': user,
