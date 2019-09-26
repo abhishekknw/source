@@ -540,16 +540,18 @@ class AssignCampaign(APIView):
         class_name = self.__class__.__name__
         try:
             assigned_by = request.user
+            assigned_to = request.data['to']
 
             campaign_id = request.data['campaign_id']
             if assigned_by.is_anonymous:
                 return ui_utils.handle_response(class_name, data='A campaign cannot be assigned by an Anonymous user')
 
-            if not request.data['to']:
+            if not assigned_to:
                 return ui_utils.handle_response(class_name, data='You must provide a user to which this campaign will be assigned')
 
             # fetch BaseUser object.
-            assigned_to = BaseUser.objects.get(id=request.data['to'])
+            for assigned_id in assigned_to:
+                assigned_to = BaseUser.objects.get(id=assigned_id['id'])
 
             # fetch ProposalInfo object.
             proposal = ProposalInfo.objects.get(proposal_id=campaign_id)

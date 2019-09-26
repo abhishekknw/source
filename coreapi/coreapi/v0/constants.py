@@ -886,14 +886,15 @@ booking_status = {
     'call_required' : 'CR',
     'decision_pending' : 'DP',
     'tentative_booking' : 'TB',
-    'unknown': 'UN',
     'new_entity': 'NE',
-    'not_initiated': 'NI'
+    'not_initiated': 'NI',
+    'recce':'RE',
+    'meeting_fixed':'MF',
+
 }
 
 booking_code_to_status = {
     'BK': 'Confirmed Booking',
-    'UN': 'Unknown',
     'NB': 'Not Booked',
     'PB': 'Phone Booked',
     'VB': 'Visit Booked',
@@ -905,7 +906,9 @@ booking_code_to_status = {
     'TB': 'Tentative Booking',
     'UN': 'Unknown',
     'NE': 'New Entity',
-    'NI': 'Not Initiated'
+    'NI': 'Not Initiated',
+    'RE': 'Recce',
+    'MF': 'Meeting Fixed'
 }
 # different campaign states
 completed = 'COMPLETED'

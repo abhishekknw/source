@@ -1792,7 +1792,7 @@ class ProposalVersion(APIView):
             email_data = {
                 'subject': v0_constants.subjects['bd_head'],
                 'body': bd_body,
-                'to': [v0_constants.emails['bd_head'], v0_constants.emails['bd_user'], v0_constants.emails['root_user']]
+                'to': ['dev@machadalo.com', 'anmol.prabhu@machadalo.com', 'anupam@machadalo.com', 'abhishek.chandel@machadalo.com', 'vinit.pimputkar@machadalo.com', 'prateek.kumar@machadalo.com']
             }
 
             #  email_data = {
@@ -2631,7 +2631,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         elif space.phase_no_id:
             if space.phase_no_id not in shortlisted_spaces_by_phase_dict:
                 shortlisted_spaces_by_phase_dict[space.phase_no_id] = {'BK': [], 'NB': [], 'PB': [], 'VB': [], 'SR': [],
-                                                                       'SE': [], 'VR': [], 'CR': [],
+                                                                       'SE': [], 'VR': [], 'CR': [], 'DPCR':[], 'DPNR':[],
                                                                        'DP': [], 'TB': [], 'UN':[], 'DPRR': [], 'RLC':[]}
             if space.booking_status:
                 shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(
