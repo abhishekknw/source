@@ -6,6 +6,7 @@ from .views import *
 
 urlpatterns = [
     url(r'^society-analytics/', GetSocietyAnalytics.as_view()),
+    url(r'^campaign-analytics/', GetCampaignWiseAnalytics.as_view())
 ]
 
 router = DefaultRouter()
