@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger(__name__)
 import datetime
 import dateutil.relativedelta
 from django.utils import timezone
@@ -189,122 +191,125 @@ class GetSocietyAnalytics(APIView):
 
             return Response(data={"status": True, "data": data}, status=status.HTTP_200_OK)
         except Exception as e:
-            print(e)
-            return Response(data={"status": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            logger.exception(e)
+            return Response(data={"status": False, "error": "Error getting data"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GetCampaignWiseAnalytics(APIView):
     def get(self, request):
-        class_name = self.__class__.__name__
-        user_id = request.user.id
-        vendor = request.query_params.get('vendor',None)
-        if vendor:
-            campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
-                                                              campaign__principal_vendor=vendor).values_list(
-                'campaign_id', flat=True).distinct()
-        else:
-            campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
-                                                              ).values_list('campaign_id', flat=True).distinct()
-        campaign_list = [campaign_id for campaign_id in campaign_list]
-        all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).\
-            values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name', 'proposal__tentative_start_date',
-                   'proposal__tentative_end_date', 'proposal__campaign_state')
-
-        all_campaign_dict = {}
-        all_shortlisted_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier]
-        all_supplier_society = SupplierTypeSociety.objects.filter(supplier_id__in=all_shortlisted_supplier_id).values('supplier_id', 'flat_count', 'payment_details_available')
-        all_proposal_city = ProposalCenterMapping.objects.filter(proposal_id__in=campaign_list).values('proposal_id', 'city')
-        all_supplier_society_dict = {}
-        all_proposal_city_dict = {}
-        current_date = datetime.datetime.now().date()
-        for supplier in all_supplier_society:
-            all_supplier_society_dict[supplier['supplier_id']] = {
-                'flat_count': supplier['flat_count'],
-                'payment_details_available': supplier['payment_details_available']
-            }
-
-        for proposal in all_proposal_city:
-            all_proposal_city_dict[proposal['proposal_id']] = {'city': proposal['city']}
-
-        for shortlisted_supplier in all_shortlisted_supplier:
-            if shortlisted_supplier['proposal_id'] not in all_campaign_dict:
-                all_campaign_dict[shortlisted_supplier['proposal_id']] = {
-                    'all_supplier_ids': [],
-                    'all_phase_ids': [],
-                    'total_flat_counts': 0,
-                    'contact_name_filled': 0,
-                    'contact_name_not_filled': 0,
-                    'contact_number_filled': 0,
-                    'contact_number_not_filled': 0,
-                    'flat_count_filled': 0,
-                    'total_payment_details': 0
-                }
-            if shortlisted_supplier['object_id'] not in all_campaign_dict[shortlisted_supplier['proposal_id']]['all_supplier_ids']:
-                all_campaign_dict[shortlisted_supplier['proposal_id']]['all_supplier_ids'].append(shortlisted_supplier['object_id'])
-                if shortlisted_supplier['object_id'] in all_supplier_society_dict and all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count']:
-                    all_campaign_dict[shortlisted_supplier['proposal_id']]['total_flat_counts'] += all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count']
-                    all_campaign_dict[shortlisted_supplier['proposal_id']]['flat_count_filled'] += 1 if all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count'] else 0
-                    all_campaign_dict[shortlisted_supplier['proposal_id']]['total_payment_details'] += 1 if all_supplier_society_dict[shortlisted_supplier['object_id']]['payment_details_available'] == 1 else 0
-
-            if shortlisted_supplier['phase_no_id'] and shortlisted_supplier['phase_no_id'] not in all_campaign_dict[shortlisted_supplier['proposal_id']]['all_phase_ids']:
-                if shortlisted_supplier['proposal__tentative_end_date'].date() < current_date:
-                    all_campaign_dict[shortlisted_supplier['proposal_id']]['all_phase_ids'].append(
-                        shortlisted_supplier['phase_no_id'])
-            try:
-                contact_details = ContactDetails.objects.filter(object_id=shortlisted_supplier['object_id']).values()
-            except ContactDetails.DoesNotExist:
-                contact_details = None
-            if contact_details:
-                all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_name_filled'] += 1 if contact_details[0]['name'] else 0
-                all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_number_filled'] += 1 if contact_details[0]['mobile'] else 0
-
-            all_campaign_dict[shortlisted_supplier['proposal_id']]['name'] = shortlisted_supplier['proposal__name']
-            all_campaign_dict[shortlisted_supplier['proposal_id']]['start_date'] = shortlisted_supplier['proposal__tentative_start_date']
-            all_campaign_dict[shortlisted_supplier['proposal_id']]['end_date'] = shortlisted_supplier['proposal__tentative_end_date']
-            all_campaign_dict[shortlisted_supplier['proposal_id']]['campaign_status'] = shortlisted_supplier['proposal__campaign_state']
-
-        all_campaign_summary = []
-        for campaign_id in all_campaign_dict:
-            this_campaign_status = None
-            if all_campaign_dict[campaign_id]['campaign_status'] not in [proposal_on_hold, proposal_not_converted_to_campaign, proposal_finalized]:
-                if all_campaign_dict[campaign_id]['start_date'].date() > current_date:
-                    this_campaign_status = campaign_status['upcoming_campaigns']
-                elif all_campaign_dict[campaign_id]['end_date'].date() >= current_date:
-                    this_campaign_status = campaign_status['ongoing_campaigns']
-                elif all_campaign_dict[campaign_id]['end_date'].date() < current_date:
-                    this_campaign_status = campaign_status['completed_campaigns']
-            elif all_campaign_dict[campaign_id]['campaign_status'] == 'PNC':
-                this_campaign_status = "rejected"
-            elif all_campaign_dict[campaign_id]['campaign_status'] == 'PF':
-                this_campaign_status = 'not_initiated'
+        try:
+            user_id = request.user.id
+            vendor = request.query_params.get('vendor',None)
+            if vendor:
+                campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
+                                                                  campaign__principal_vendor=vendor).values_list(
+                    'campaign_id', flat=True).distinct()
             else:
-                this_campaign_status = "on_hold"
+                campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
+                                                                  ).values_list('campaign_id', flat=True).distinct()
+            campaign_list = [campaign_id for campaign_id in campaign_list]
+            all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).\
+                values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name', 'proposal__tentative_start_date',
+                       'proposal__tentative_end_date', 'proposal__campaign_state', 'booking_status', 'booking_sub_status')
 
-            all_campaign_summary.append({
-                "campaign_id": campaign_id,
-                "name": all_campaign_dict[campaign_id]['name'],
-                "city": all_proposal_city_dict[campaign_id]['city'],
-                "start_date": all_campaign_dict[campaign_id]['start_date'],
-                "end_date": all_campaign_dict[campaign_id]['end_date'],
-                "phase_complete": len(all_campaign_dict[campaign_id]['all_phase_ids']),
-                "supplier_count": len(all_campaign_dict[campaign_id]['all_supplier_ids']),
-                "flat_count": all_campaign_dict[campaign_id]['total_flat_counts'],
-                "campaign_status": this_campaign_status,
-                "contact_name": {
-                    "filled": all_campaign_dict[campaign_id]['contact_name_filled'],
-                    "not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_name_filled']
-                 },
-                "contact_number": {
-                    "filled": all_campaign_dict[campaign_id]['contact_number_filled'],
-                    "not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_number_filled']
-                },
-                "flat_count_details" :{
-                    "filled": all_campaign_dict[campaign_id]['flat_count_filled'],
-                    "not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['flat_count_filled']
-                },
-                "payment_details": {
-                    "filled": all_campaign_dict[campaign_id]['total_payment_details'],
-                    "not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['total_payment_details']
+            all_campaign_dict = {}
+            all_shortlisted_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier]
+            all_supplier_society = SupplierTypeSociety.objects.filter(supplier_id__in=all_shortlisted_supplier_id).values('supplier_id', 'flat_count', 'payment_details_available')
+            all_proposal_city = ProposalCenterMapping.objects.filter(proposal_id__in=campaign_list).values('proposal_id', 'city')
+            all_supplier_society_dict = {}
+            all_proposal_city_dict = {}
+            current_date = datetime.datetime.now().date()
+            for supplier in all_supplier_society:
+                all_supplier_society_dict[supplier['supplier_id']] = {
+                    'flat_count': supplier['flat_count'],
+                    'payment_details_available': supplier['payment_details_available']
                 }
-            })
-        return Response(data={"status": True, "data": all_campaign_summary}, status=status.HTTP_200_OK)
+
+            for proposal in all_proposal_city:
+                all_proposal_city_dict[proposal['proposal_id']] = {'city': proposal['city']}
+
+            for shortlisted_supplier in all_shortlisted_supplier:
+                if shortlisted_supplier['proposal_id'] not in all_campaign_dict:
+                    all_campaign_dict[shortlisted_supplier['proposal_id']] = {
+                        'all_supplier_ids': [],
+                        'all_phase_ids': [],
+                        'total_flat_counts': 0,
+                        'contact_name_filled': 0,
+                        'contact_name_not_filled': 0,
+                        'contact_number_filled': 0,
+                        'contact_number_not_filled': 0,
+                        'flat_count_filled': 0,
+                        'total_payment_details': 0
+                    }
+                if shortlisted_supplier['object_id'] not in all_campaign_dict[shortlisted_supplier['proposal_id']]['all_supplier_ids']:
+                    all_campaign_dict[shortlisted_supplier['proposal_id']]['all_supplier_ids'].append(shortlisted_supplier['object_id'])
+                    if shortlisted_supplier['object_id'] in all_supplier_society_dict and all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count']:
+                        all_campaign_dict[shortlisted_supplier['proposal_id']]['total_flat_counts'] += all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count']
+                        all_campaign_dict[shortlisted_supplier['proposal_id']]['flat_count_filled'] += 1 if all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count'] else 0
+                        all_campaign_dict[shortlisted_supplier['proposal_id']]['total_payment_details'] += 1 if all_supplier_society_dict[shortlisted_supplier['object_id']]['payment_details_available'] == 1 else 0
+
+                if shortlisted_supplier['phase_no_id'] and shortlisted_supplier['phase_no_id'] not in all_campaign_dict[shortlisted_supplier['proposal_id']]['all_phase_ids']:
+                    if shortlisted_supplier['proposal__tentative_end_date'].date() < current_date:
+                        all_campaign_dict[shortlisted_supplier['proposal_id']]['all_phase_ids'].append(
+                            shortlisted_supplier['phase_no_id'])
+                try:
+                    contact_details = ContactDetails.objects.filter(object_id=shortlisted_supplier['object_id']).values()
+                except ContactDetails.DoesNotExist:
+                    contact_details = None
+                if contact_details:
+                    all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_name_filled'] += 1 if contact_details[0]['name'] else 0
+                    all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_number_filled'] += 1 if contact_details[0]['mobile'] else 0
+
+                all_campaign_dict[shortlisted_supplier['proposal_id']]['name'] = shortlisted_supplier['proposal__name']
+                all_campaign_dict[shortlisted_supplier['proposal_id']]['start_date'] = shortlisted_supplier['proposal__tentative_start_date']
+                all_campaign_dict[shortlisted_supplier['proposal_id']]['end_date'] = shortlisted_supplier['proposal__tentative_end_date']
+                all_campaign_dict[shortlisted_supplier['proposal_id']]['campaign_status'] = shortlisted_supplier['proposal__campaign_state']
+
+            all_campaign_summary = []
+            for campaign_id in all_campaign_dict:
+                this_campaign_status = None
+                if all_campaign_dict[campaign_id]['campaign_status'] not in [proposal_on_hold, proposal_not_converted_to_campaign, proposal_finalized]:
+                    if all_campaign_dict[campaign_id]['start_date'].date() > current_date:
+                        this_campaign_status = campaign_status['upcoming_campaigns']
+                    elif all_campaign_dict[campaign_id]['end_date'].date() >= current_date:
+                        this_campaign_status = campaign_status['ongoing_campaigns']
+                    elif all_campaign_dict[campaign_id]['end_date'].date() < current_date:
+                        this_campaign_status = campaign_status['completed_campaigns']
+                elif all_campaign_dict[campaign_id]['campaign_status'] == 'PNC':
+                    this_campaign_status = "rejected"
+                elif all_campaign_dict[campaign_id]['campaign_status'] == 'PF':
+                    this_campaign_status = 'not_initiated'
+                else:
+                    this_campaign_status = "on_hold"
+
+                all_campaign_summary.append({
+                    "campaign_id": campaign_id,
+                    "name": all_campaign_dict[campaign_id]['name'],
+                    "city": all_proposal_city_dict[campaign_id]['city'],
+                    "start_date": all_campaign_dict[campaign_id]['start_date'],
+                    "end_date": all_campaign_dict[campaign_id]['end_date'],
+                    "phase_complete": len(all_campaign_dict[campaign_id]['all_phase_ids']),
+                    "supplier_count": len(all_campaign_dict[campaign_id]['all_supplier_ids']),
+                    "flat_count": all_campaign_dict[campaign_id]['total_flat_counts'],
+                    "campaign_status": this_campaign_status,
+                    "contact_name": {
+                        "filled": all_campaign_dict[campaign_id]['contact_name_filled'],
+                        "not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_name_filled']
+                     },
+                    "contact_number": {
+                        "filled": all_campaign_dict[campaign_id]['contact_number_filled'],
+                        "not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_number_filled']
+                    },
+                    "flat_count_details": {
+                        "filled": all_campaign_dict[campaign_id]['flat_count_filled'],
+                        "not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['flat_count_filled']
+                    },
+                    "payment_details": {
+                        "filled": all_campaign_dict[campaign_id]['total_payment_details'],
+                        "not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['total_payment_details']
+                    }
+                })
+            return Response(data={"status": True, "data": all_campaign_summary}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.exception(e)
+            return Response(data={"status": False, "error": "Error getting data"}, status=status.HTTP_400_BAD_REQUEST)
