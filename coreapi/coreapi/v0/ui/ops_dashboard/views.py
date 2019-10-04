@@ -196,7 +196,8 @@ class GetSocietyAnalytics(APIView):
 
 
 class GetCampaignWiseAnalytics(APIView):
-    def get(self, request):
+    @staticmethod
+    def get(request):
         try:
             user_id = request.user.id
             vendor = request.query_params.get('vendor',None)
@@ -310,6 +311,119 @@ class GetCampaignWiseAnalytics(APIView):
                     }
                 })
             return Response(data={"status": True, "data": all_campaign_summary}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.exception(e)
+            return Response(data={"status": False, "error": "Error getting data"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GetSupplierDetail(APIView):
+    @staticmethod
+    def get(request):
+        try:
+            user_id = request.user.id
+            campaign_id = request.query_params.get('campaign_id')
+            if not campaign_id:
+                return Response(data={"status": False, "error": "Missing campaign id"}, status=status.HTTP_400_BAD_REQUEST)
+            all_supplier_dict = {
+                'completed': {
+                    'supplier_ids': [],
+                    'supplier': []
+                },
+                'rejected': {
+                    'supplier_ids': [],
+                    'supplier': []
+                },
+                'not_initiated': {
+                    'supplier_ids': [],
+                    'supplier': []
+                },
+                'booked': {
+                    'supplier_ids': [],
+                    'supplier': []
+                },
+                'not_completed': {
+                    'supplier_ids': [],
+                    'supplier': []
+                },
+                'tentative_booking': {
+                    'supplier_ids': [],
+                    'supplier': []
+                }
+            }
+            all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
+                values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name',
+                       'proposal__tentative_end_date', 'proposal__campaign_state', 'booking_status',
+                       'booking_sub_status', 'payment_method', 'payment_status')
+
+            all_shortlisted_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier]
+            all_supplier_society = SupplierTypeSociety.objects.filter(
+                supplier_id__in=all_shortlisted_supplier_id).values('supplier_id', 'flat_count',
+                                                                    'payment_details_available')
+            completed_supplier_ids = []
+            booked_supplier_ids = []
+            rejected_supplier_ids = []
+            not_initiated_supplier_ids = []
+            for shortlisted_supplier in all_shortlisted_supplier:
+                if shortlisted_supplier['is_completed']:
+                    booking_category = 'completed'
+                    completed_supplier_ids.append(shortlisted_supplier['object_id'])
+                    all_supplier_dict[booking_category]['supplier_ids'].append(shortlisted_supplier['object_id'])
+                    all_supplier_dict[booking_category]['supplier'].append({
+                        'supplier_id': shortlisted_supplier['object_id'],
+                        'payment_method': shortlisted_supplier['payment_method'],
+                        'is_completed': shortlisted_supplier['is_completed']
+                    })
+                else:
+                    if shortlisted_supplier['booking_status']:
+                        if shortlisted_supplier['booking_status'] == 'BK':
+                            booking_category = 'booked'
+                            booked_supplier_ids.append(shortlisted_supplier['object_id'])
+                            all_supplier_dict[booking_category]['supplier_ids'].append(shortlisted_supplier['object_id'])
+                            all_supplier_dict[booking_category]['supplier'].append({
+                                'supplier_id': shortlisted_supplier['object_id'],
+                                'payment_method': shortlisted_supplier['payment_method'],
+                                'is_completed': shortlisted_supplier['is_completed']
+                            })
+                        elif shortlisted_supplier['booking_status'] == 'TB':
+                            booking_category = 'tentative_booking'
+                            booked_supplier_ids.append(shortlisted_supplier['object_id'])
+                            all_supplier_dict[booking_category]['supplier_ids'].append(shortlisted_supplier['object_id'])
+                            all_supplier_dict[booking_category]['supplier'].append({
+                                'supplier_id': shortlisted_supplier['object_id'],
+                                'payment_method': shortlisted_supplier['payment_method'],
+                                'is_completed': shortlisted_supplier['is_completed']
+                            })
+                        elif shortlisted_supplier['booking_status'] in ['SR', 'NB']:
+                            booking_category = 'rejected'
+                            rejected_supplier_ids.append(shortlisted_supplier['object_id'])
+                            all_supplier_dict[booking_category]['supplier_ids'].append(shortlisted_supplier['object_id'])
+                            all_supplier_dict[booking_category]['supplier'].append({
+                                'supplier_id': shortlisted_supplier['object_id'],
+                                'payment_method': shortlisted_supplier['payment_method'],
+                                'is_completed': shortlisted_supplier['is_completed']
+                            })
+                        else:
+                            booking_category = 'not_initiated'
+                            not_initiated_supplier_ids.append(shortlisted_supplier['object_id'])
+                            all_supplier_dict[booking_category]['supplier_ids'].append(shortlisted_supplier['object_id'])
+                            all_supplier_dict[booking_category]['supplier'].append({
+                                'supplier_id': shortlisted_supplier['object_id'],
+                                'payment_method': shortlisted_supplier['payment_method'],
+                                'is_completed': shortlisted_supplier['is_completed']
+                            })
+
+            # Get hashtag images
+            permission_box_count = HashTagImages.objects.filter(object_id__in=completed_supplier_ids, hashtag__in=['permission_box', 'Permission Box', 'PERMISSION BOX', 'permission box']).values_list('object_id', flat=True).distinct().count()
+            receipt_count = HashTagImages.objects.filter(object_id__in=completed_supplier_ids, hashtag__in=['receipt', 'Receipt', 'RECEIPT']).values_list('object_id',flat=True).distinct().count()
+            all_supplier_dict['completed']['permission_box_count'] = permission_box_count
+            all_supplier_dict['completed']['receipt_count'] = receipt_count
+            # Get Comments
+            comments_count = CampaignComments.objects.filter(campaign_id=campaign_id,
+                                                       shortlisted_spaces_id__in=not_initiated_supplier_ids).values_list('shortlisted_spaces_id', flat=True).distinct().count()
+            all_supplier_dict['not_initiated']['comments_count'] = comments_count
+            # Get payment details by payment status & booking method - BK
+
+            return Response(data={"status": True, "data": all_supplier_dict}, status=status.HTTP_200_OK)
         except Exception as e:
             logger.exception(e)
             return Response(data={"status": False, "error": "Error getting data"}, status=status.HTTP_400_BAD_REQUEST)
