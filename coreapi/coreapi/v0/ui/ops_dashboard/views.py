@@ -328,26 +328,6 @@ class GetSupplierDetail(APIView):
                 'completed': {
                     'supplier_ids': [],
                     'supplier': []
-                },
-                'rejected': {
-                    'supplier_ids': [],
-                    'supplier': []
-                },
-                'not_initiated': {
-                    'supplier_ids': [],
-                    'supplier': []
-                },
-                'booked': {
-                    'supplier_ids': [],
-                    'supplier': []
-                },
-                'not_completed': {
-                    'supplier_ids': [],
-                    'supplier': []
-                },
-                'tentative_booking': {
-                    'supplier_ids': [],
-                    'supplier': []
                 }
             }
             all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
@@ -360,11 +340,11 @@ class GetSupplierDetail(APIView):
                 supplier_id__in=all_shortlisted_supplier_id).values('supplier_id', 'flat_count',
                                                                     'payment_details_available')
             completed_supplier_ids = []
-            booked_supplier_ids = []
-            rejected_supplier_ids = []
-            not_initiated_supplier_ids = []
             for shortlisted_supplier in all_shortlisted_supplier:
-                if shortlisted_supplier['is_completed']:
+                booking_status_code = shortlisted_supplier['booking_status']
+                if booking_status_code is not None:
+                    booking_status = booking_code_to_status[booking_status_code]
+                if shortlisted_supplier['is_completed'] and booking_status_code == 'BK':
                     booking_category = 'completed'
                     completed_supplier_ids.append(shortlisted_supplier['object_id'])
                     all_supplier_dict[booking_category]['supplier_ids'].append(shortlisted_supplier['object_id'])
@@ -374,43 +354,18 @@ class GetSupplierDetail(APIView):
                         'is_completed': shortlisted_supplier['is_completed']
                     })
                 else:
-                    if shortlisted_supplier['booking_status']:
-                        if shortlisted_supplier['booking_status'] == 'BK':
-                            booking_category = 'booked'
-                            booked_supplier_ids.append(shortlisted_supplier['object_id'])
-                            all_supplier_dict[booking_category]['supplier_ids'].append(shortlisted_supplier['object_id'])
-                            all_supplier_dict[booking_category]['supplier'].append({
+                    if booking_status_code:
+                        try:
+                            all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
+                            all_supplier_dict[booking_status]['supplier'].append({
                                 'supplier_id': shortlisted_supplier['object_id'],
                                 'payment_method': shortlisted_supplier['payment_method'],
                                 'is_completed': shortlisted_supplier['is_completed']
                             })
-                        elif shortlisted_supplier['booking_status'] == 'TB':
-                            booking_category = 'tentative_booking'
-                            booked_supplier_ids.append(shortlisted_supplier['object_id'])
-                            all_supplier_dict[booking_category]['supplier_ids'].append(shortlisted_supplier['object_id'])
-                            all_supplier_dict[booking_category]['supplier'].append({
-                                'supplier_id': shortlisted_supplier['object_id'],
-                                'payment_method': shortlisted_supplier['payment_method'],
-                                'is_completed': shortlisted_supplier['is_completed']
-                            })
-                        elif shortlisted_supplier['booking_status'] in ['SR', 'NB']:
-                            booking_category = 'rejected'
-                            rejected_supplier_ids.append(shortlisted_supplier['object_id'])
-                            all_supplier_dict[booking_category]['supplier_ids'].append(shortlisted_supplier['object_id'])
-                            all_supplier_dict[booking_category]['supplier'].append({
-                                'supplier_id': shortlisted_supplier['object_id'],
-                                'payment_method': shortlisted_supplier['payment_method'],
-                                'is_completed': shortlisted_supplier['is_completed']
-                            })
-                        else:
-                            booking_category = 'not_initiated'
-                            not_initiated_supplier_ids.append(shortlisted_supplier['object_id'])
-                            all_supplier_dict[booking_category]['supplier_ids'].append(shortlisted_supplier['object_id'])
-                            all_supplier_dict[booking_category]['supplier'].append({
-                                'supplier_id': shortlisted_supplier['object_id'],
-                                'payment_method': shortlisted_supplier['payment_method'],
-                                'is_completed': shortlisted_supplier['is_completed']
-                            })
+                        except KeyError:
+                            all_supplier_dict[booking_status] = {}
+                            all_supplier_dict[booking_status]['supplier_ids'] = []
+                            all_supplier_dict[booking_status]['supplier'] = []
 
             # Get hashtag images
             permission_box_count = HashTagImages.objects.filter(object_id__in=completed_supplier_ids, hashtag__in=['permission_box', 'Permission Box', 'PERMISSION BOX', 'permission box']).values_list('object_id', flat=True).distinct().count()
@@ -418,10 +373,9 @@ class GetSupplierDetail(APIView):
             all_supplier_dict['completed']['permission_box_count'] = permission_box_count
             all_supplier_dict['completed']['receipt_count'] = receipt_count
             # Get Comments
-            comments_count = CampaignComments.objects.filter(campaign_id=campaign_id,
-                                                       shortlisted_spaces_id__in=not_initiated_supplier_ids).values_list('shortlisted_spaces_id', flat=True).distinct().count()
-            all_supplier_dict['not_initiated']['comments_count'] = comments_count
-            # Get payment details by payment status & booking method - BK
+            # comments_count = CampaignComments.objects.filter(campaign_id=campaign_id,
+            #                                            shortlisted_spaces_id__in=not_initiated_supplier_ids).values_list('shortlisted_spaces_id', flat=True).distinct().count()
+            # all_supplier_dict['not_initiated']['comments_count'] = comments_count
 
             return Response(data={"status": True, "data": all_supplier_dict}, status=status.HTTP_200_OK)
         except Exception as e:
