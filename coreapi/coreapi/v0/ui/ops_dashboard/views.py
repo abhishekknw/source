@@ -9,9 +9,10 @@ from rest_framework.response import Response
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo, ProposalCenterMapping, HashTagImages
 from v0.ui.account.models import ContactDetails
-from v0.ui.campaign.models import CampaignComments, CampaignAssignment
+from v0.ui.campaign.models import CampaignAssignment
 from v0.constants import (campaign_status, proposal_on_hold, booking_code_to_status,
                           payment_code_to_status, booking_priority_code_to_status, proposal_not_converted_to_campaign,proposal_finalized )
+from .utils import getEachCampaignComments
 
 class GetSocietyAnalytics(APIView):
     @staticmethod
@@ -334,12 +335,16 @@ class GetSupplierDetail(APIView):
                 values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name',
                        'proposal__tentative_end_date', 'proposal__campaign_state', 'booking_status',
                        'booking_sub_status', 'payment_method', 'payment_status')
-
-            all_shortlisted_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier]
-            all_supplier_society = SupplierTypeSociety.objects.filter(
-                supplier_id__in=all_shortlisted_supplier_id).values('supplier_id', 'flat_count',
-                                                                    'payment_details_available')
             completed_supplier_ids = []
+            decision_pending_supplier_ids = []
+            booked_supplier_ids = []
+            tentative_booked_supplier_ids = []
+            phone_booked_supplier_ids = []
+            not_booked_supplier_ids = []
+            rejected_supplier_ids = []
+            recce_supplier_ids = []
+            visit_required_supplier_ids = []
+            booking_status = None
             for shortlisted_supplier in all_shortlisted_supplier:
                 booking_status_code = shortlisted_supplier['booking_status']
                 if booking_status_code is not None:
@@ -354,18 +359,33 @@ class GetSupplierDetail(APIView):
                         'is_completed': shortlisted_supplier['is_completed']
                     })
                 else:
-                    if booking_status_code:
-                        try:
-                            all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
-                            all_supplier_dict[booking_status]['supplier'].append({
-                                'supplier_id': shortlisted_supplier['object_id'],
-                                'payment_method': shortlisted_supplier['payment_method'],
-                                'is_completed': shortlisted_supplier['is_completed']
-                            })
-                        except KeyError:
-                            all_supplier_dict[booking_status] = {}
-                            all_supplier_dict[booking_status]['supplier_ids'] = []
-                            all_supplier_dict[booking_status]['supplier'] = []
+                    if booking_status in all_supplier_dict.keys():
+                        if booking_status_code == 'DP':
+                            decision_pending_supplier_ids.append(shortlisted_supplier['object_id'])
+                        elif booking_status_code == 'BK':
+                            booked_supplier_ids.append(shortlisted_supplier['object_id'])
+                        elif booking_status_code == 'PB':
+                            phone_booked_supplier_ids.append(shortlisted_supplier['object_id'])
+                        elif booking_status_code == 'TB':
+                            tentative_booked_supplier_ids.append(shortlisted_supplier['object_id'])
+                        elif booking_status_code == 'NB':
+                            not_booked_supplier_ids.append(shortlisted_supplier['object_id'])
+                        elif booking_status_code == 'SR':
+                            rejected_supplier_ids.append(shortlisted_supplier['object_id'])
+                        elif booking_status_code == 'RE':
+                            recce_supplier_ids.append(shortlisted_supplier['object_id'])
+                        elif booking_status_code == 'VR':
+                            visit_required_supplier_ids.append(shortlisted_supplier['object_id'])
+                        all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
+                        all_supplier_dict[booking_status]['supplier'].append({
+                            'supplier_id': shortlisted_supplier['object_id'],
+                            'payment_method': shortlisted_supplier['payment_method'],
+                            'is_completed': shortlisted_supplier['is_completed']
+                        })
+                    else:
+                        all_supplier_dict[booking_status] = {}
+                        all_supplier_dict[booking_status]['supplier_ids'] = []
+                        all_supplier_dict[booking_status]['supplier'] = []
 
             # Get hashtag images
             permission_box_count = HashTagImages.objects.filter(object_id__in=completed_supplier_ids, hashtag__in=['permission_box', 'Permission Box', 'PERMISSION BOX', 'permission box']).values_list('object_id', flat=True).distinct().count()
@@ -373,10 +393,18 @@ class GetSupplierDetail(APIView):
             all_supplier_dict['completed']['permission_box_count'] = permission_box_count
             all_supplier_dict['completed']['receipt_count'] = receipt_count
             # Get Comments
-            # comments_count = CampaignComments.objects.filter(campaign_id=campaign_id,
-            #                                            shortlisted_spaces_id__in=not_initiated_supplier_ids).values_list('shortlisted_spaces_id', flat=True).distinct().count()
-            # all_supplier_dict['not_initiated']['comments_count'] = comments_count
-
+            all_supplier_dict = getEachCampaignComments(campaign_id, {
+                'CM': completed_supplier_ids,
+                'DP': decision_pending_supplier_ids,
+                'NB': not_booked_supplier_ids,
+                'PB': phone_booked_supplier_ids,
+                'TB': tentative_booked_supplier_ids,
+                'BK': booked_supplier_ids,
+                'SR': rejected_supplier_ids,
+                'VR': visit_required_supplier_ids,
+                'RE': recce_supplier_ids
+                }, all_supplier_dict
+            )
             return Response(data={"status": True, "data": all_supplier_dict}, status=status.HTTP_200_OK)
         except Exception as e:
             logger.exception(e)
