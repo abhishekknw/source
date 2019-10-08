@@ -47,8 +47,8 @@ class CampaignListSerializer(ModelSerializer):
 
 class CampaignAssignmentSerializerReadOnly(ModelSerializer):
 
-    assigned_by = BaseUserSerializer()
-    assigned_to = BaseUserSerializer()
+    # assigned_by = BaseUserSerializer()
+    # assigned_to = BaseUserSerializer()
     campaign = ProposalInfoSerializer()
 
     class Meta:

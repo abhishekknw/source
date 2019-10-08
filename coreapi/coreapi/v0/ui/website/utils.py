@@ -4128,10 +4128,10 @@ def handle_update_campaign_inventories(user, data):
             if not shortlisted_spaces.get(ss_global_id):
                 shortlisted_spaces[ss_global_id] = {}
 
-            response = check_valid_codes(supplier['payment_status'], supplier['payment_method'],
-                                         supplier['booking_status'])
-            if not response.data['status']:
-                return response
+            # response = check_valid_codes(supplier['payment_status'], supplier['payment_method'],
+            #                              supplier['booking_status'])
+            # if not response.data['status']:
+            #     return response
             supplier_freebies = supplier['freebies'] if 'freebies' in supplier else None
             if supplier_freebies and isinstance(supplier_freebies,list):
                 supplier_freebies = ','.join(supplier_freebies)
