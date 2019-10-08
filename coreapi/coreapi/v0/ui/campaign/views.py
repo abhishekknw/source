@@ -1999,10 +1999,10 @@ class GetPermissionBoxImages(APIView):
 #         return ui_utils.handle_response(class_name, data={}, success=True)
 
 
-def get_campaign_wise_summary(all_campaign_ids, user_start_datetime=None):
+def get_campaign_wise_summary(all_campaign_ids, user_start_datetime=None, user_end_datetime=None):
     all_campaign_objects = ProposalInfo.objects.filter(proposal_id__in=all_campaign_ids).all()
     all_campaign_id_name_map = {campaign.proposal_id: campaign.name for campaign in all_campaign_objects}
-    leads_summary_by_supplier = get_leads_summary(campaign_list=all_campaign_ids,user_start_datetime=user_start_datetime)
+    leads_summary_by_supplier = get_leads_summary(campaign_list=all_campaign_ids,user_start_datetime=user_start_datetime, user_end_datetime=user_end_datetime)
     campaign_supplier_map = {}
     reverse_campaign_supplier_map = {}
     all_supplier_ids = []
@@ -2105,17 +2105,25 @@ def get_campaign_wise_summary(all_campaign_ids, user_start_datetime=None):
     return campaign_summary
 
 
-def get_campaign_wise_summary_by_user(user_id, user_start_datetime=None):
+def get_campaign_wise_summary_by_user(user_id, user_start_datetime=None, user_end_datetime=None):
     all_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id).all()
     all_campaign_ids = [campaign.campaign_id for campaign in all_campaigns]
-    campaign_wise_summary = get_campaign_wise_summary(all_campaign_ids, user_start_datetime)
+    campaign_wise_summary = get_campaign_wise_summary(all_campaign_ids, user_start_datetime, user_end_datetime)
     return campaign_wise_summary
 
 
 class CampaignWiseSummary(APIView):
     @staticmethod
     def get(request):
+        print('jwwerwerewrwerewrewrewr')
         user_id = request.user.id
+        user_start_date_str = request.query_params.get('start_date', None)
+        user_end_date_str = request.query_params.get('end_date', None)
+        campaign_summary = get_campaign_wise_summary_by_user(user_id, user_start_date_str, user_end_date_str)
+        if not campaign_summary:
+            return ui_utils.handle_response(class_name, data=campaign_summary, success=False)
+        start_date = datetime.now() - timedelta(days=7)
+
         campaign_summary = {}
         start_date = datetime.now() - timedelta(days=7)
         campaign_summary['last_week'] = get_campaign_wise_summary_by_user(user_id, start_date)

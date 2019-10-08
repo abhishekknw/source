@@ -2632,7 +2632,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             if space.phase_no_id not in shortlisted_spaces_by_phase_dict:
                 shortlisted_spaces_by_phase_dict[space.phase_no_id] = {'BK': [], 'NB': [], 'PB': [], 'VB': [], 'SR': [], 'NI':[], 'MF':[], 'RERA':[], 'MWS':[], 'MWC':[], 'MWT':[], 'MWO':[],
                                                                        'SE': [], 'VR': [], 'CR': [], 'DPCR':[], 'DPNR':[], 'NE':[], 'UN':[], 'MWA':[], 'UPNI':[], 'UCPI':[], 'TB':[],
-                                                                       'DP': [], 'TB': [], 'UN':[], 'DPRR': [], 'RLC':[], 'PR': [], 'NVOS':[]}
+                                                                       'DP': [], 'TB': [], 'MC':[], 'UN':[], 'DPRR': [], 'RLC':[], 'PR': [], 'NVOS':[]}
             if space.booking_status:
                 shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(
                     supplier_society_serialized)
@@ -2645,17 +2645,21 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     upcoming_phases = []
     completed_phases = []
     confirmed_booked_status = ['BK']
+    # not_initiated = ['NI']
+    meeting_fixed = ['MF']
     verbally_booked_status = ['VB', 'TB', 'PB']
     followup_req_status = ['SE', 'VR', 'CR']
-    not_initiated_status = ['NB']
+    not_initiated_status = ['NB', 'NI']
     rejected_status = ['SR']
     recce_required = ['DPRR']
     all_not_initiated_supplier = []
     all_rejected_supplier = []
     all_recce_supplier = []
+    all_meeting_fixed_supplier =[]
     total_not_initiated_flats = 0
     total_rejected_flats = 0
     total_recce_flats = 0
+    total_meeting_fixed_flats=0
 
     for phase_id in shortlisted_spaces_by_phase_dict:
         end_date = all_phase_by_id[phase_id]['end_date'] if phase_id in all_phase_by_id else None
@@ -2672,6 +2676,9 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         not_initiated_flats = 0
         rejected_supplier_count = 0
         recce_required_supplier_count = 0
+        not_initiated_supplier_count = 0
+        meeting_fixed_supplier_count =0
+        meeting_fixed_flats =0
         recce_flats = 0
         rejected_flats = 0
         for status in shortlisted_spaces_by_phase_dict[phase_id]:
@@ -2707,6 +2714,12 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 recce_flats += phase_booked_flats
                 total_recce_flats += phase_booked_flats
                 all_recce_supplier_count = all_recce_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+            if status in meeting_fixed:
+                meeting_fixed_supplier_count += phase_booked_suppliers
+                meeting_fixed_flats += phase_booked_flats
+                total_meeting_fixed_flats += phase_booked_flats
+                all_meeting_fixed_supplier_count = all_meeting_fixed_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+
 
         total_booked_suppliers_list = flatten_list(
             [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items()])
@@ -2728,6 +2741,9 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         recce_required_suppliers_list = flatten_list(
             [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
              status in recce_required])
+        meeting_fixed_suppliers_list = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
+             status in meeting_fixed])
 
         phase_dict = {
             'phase_no': all_phase_by_id[phase_id]['phase_no'],
@@ -2771,6 +2787,11 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 'flat_count': recce_flats,
                 'supplier_data': recce_required_suppliers_list
             },
+            'meeting_fixed': {
+                'supplier_count': meeting_fixed_supplier_count,
+                'flat_count': meeting_fixed_flats,
+                'supplier_data': meeting_fixed_suppliers_list
+            },
         }
         if end_date is not None and end_date.date() >= current_date:
             shortlisted_spaces_by_phase_list.append(phase_dict)
@@ -2796,9 +2817,10 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 'not_initiated': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 'total_booked': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 'recce_required': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'meeting_fixed': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 }
     for phase in upcoming_beyond_three:
-        for status_type in ['followup_required', 'confirmed_booked', 'verbally_booked', 'rejected', 'total_booked', 'recce_required']:
+        for status_type in ['followup_required', 'confirmed_booked', 'verbally_booked', 'rejected', 'total_booked', 'not_initiated', 'recce_required', 'meeting_fixed']:
             pipeline[status_type]['supplier_count'] += phase[status_type]['supplier_count']
             pipeline[status_type]['flat_count'] += phase[status_type]['flat_count']
             pipeline[status_type]['supplier_data'] += phase[status_type]['supplier_data']
@@ -2827,6 +2849,10 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             pipeline['recce_required']['supplier_data'].append(supplier)
             pipeline['recce_required']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['recce_required']['supplier_count'] += 1
+        if supplier['booking_status'] in meeting_fixed:
+            pipeline['meeting_fixed']['supplier_data'].append(supplier)
+            pipeline['meeting_fixed']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['meeting_fixed']['supplier_count'] += 1
 
         pipeline['total_booked']['supplier_data'].append(supplier)
         pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
