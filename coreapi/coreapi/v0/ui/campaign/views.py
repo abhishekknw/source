@@ -1093,7 +1093,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
         user_end_datetime = datetime.strptime(user_end_date_str,format_str) if user_end_date_str is not None else None
         and_constraint = [{"campaign_id": campaign_id}, {"status": {"$ne": "inactive"}}]
         if user_start_datetime:
-            and_constraint.append({"created_at": {"$gte": user_start_datetime}})
+            and_constraint.append({"user_end_datetimecreated_at": {"$gte": user_start_datetime}})
         if user_end_datetime:
             and_constraint.append({"created_at": {"$lte": user_end_datetime}})
         leads_form_data = list(mongo_client.leads.find(
@@ -2115,23 +2115,24 @@ def get_campaign_wise_summary_by_user(user_id, user_start_datetime=None, user_en
 class CampaignWiseSummary(APIView):
     @staticmethod
     def get(request):
-        print('jwwerwerewrwerewrewrewr')
         user_id = request.user.id
         user_start_date_str = request.query_params.get('start_date', None)
         user_end_date_str = request.query_params.get('end_date', None)
-        campaign_summary = get_campaign_wise_summary_by_user(user_id, user_start_date_str, user_end_date_str)
-        if not campaign_summary:
-            return ui_utils.handle_response(class_name, data=campaign_summary, success=False)
-        start_date = datetime.now() - timedelta(days=7)
-
         campaign_summary = {}
         start_date = datetime.now() - timedelta(days=7)
-        campaign_summary['last_week'] = get_campaign_wise_summary_by_user(user_id, start_date)
-        start_date = datetime.now() - timedelta(days=14)
-        campaign_summary['last_two_weeks'] = get_campaign_wise_summary_by_user(user_id, start_date)
-        start_date = datetime.now() - timedelta(days=21)
-        campaign_summary['last_three_weeks'] = get_campaign_wise_summary_by_user(user_id, start_date)
-        campaign_summary['overall'] = get_campaign_wise_summary_by_user(user_id)
+        if user_start_date_str == None:
+            campaign_summary['last_week'] = get_campaign_wise_summary_by_user(user_id, start_date)
+            start_date = datetime.now() - timedelta(days=14)
+            campaign_summary['last_two_weeks'] = get_campaign_wise_summary_by_user(user_id, start_date)
+            start_date = datetime.now() - timedelta(days=21)
+            campaign_summary['last_three_weeks'] = get_campaign_wise_summary_by_user(user_id, start_date)
+            campaign_summary['overall'] = get_campaign_wise_summary_by_user(user_id)
+        else:
+            campaign_summary['last_week'] = get_campaign_wise_summary_by_user(user_id, user_start_date_str, user_end_date_str)
+            campaign_summary['last_two_weeks'] = get_campaign_wise_summary_by_user(user_id, user_start_date_str, user_end_date_str)
+            campaign_summary['last_three_weeks'] = get_campaign_wise_summary_by_user(user_id, user_start_date_str, user_end_date_str)
+            campaign_summary['overall'] = get_campaign_wise_summary_by_user(user_id, user_start_date_str, user_end_date_str)
+
         return ui_utils.handle_response({}, data=campaign_summary, success=True)
 
 
