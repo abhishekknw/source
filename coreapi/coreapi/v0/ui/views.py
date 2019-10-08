@@ -416,7 +416,7 @@ class FlatTypeAPIView(APIView):
             for flat_detail in flat_details:
                 flat_rent = flat_detail.get('flat_rent')
                 size_builtup_area = flat_detail.get('size_builtup_area')
-                average_rent_per_sqft = flat_detail.get('average_rent_per_sqft')
+                flat_detail['average_rent_per_sqft'] = 0
                 flat_count = flat_detail.get('flat_count')
                 size_carpet_area = flat_detail.get('size_carpet_area')
 
@@ -426,24 +426,23 @@ class FlatTypeAPIView(APIView):
                     flat_detail['size_carpet_area'] = None
                 if not size_builtup_area:
                     flat_detail['size_builtup_area'] = None
-                if not average_rent_per_sqft:
-                    flat_detail['average_rent_per_sqft'] = None
+                # if not average_rent_per_sqft:
+                #     flat_detail['average_rent_per_sqft'] = None
                 if not flat_count:
                     flat_detail['flat_count'] = None
-                if size_builtup_area and flat_rent and size_builtup_area > 0 and flat_rent > 0:
-                    if not average_rent_per_sqft:
-                        flat_detail.average_rent_per_sqft = flat_rent / size_builtup_area
+                if size_builtup_area and flat_rent and size_builtup_area > 0 and flat_rent > 0:    
+                    flat_detail['average_rent_per_sqft'] = flat_rent / size_builtup_area
                 else:
                     flag = False
 
-                if flat_count and average_rent_per_sqft:
-                    num = num + (flat_count * average_rent_per_sqft)
+                if flat_count and flat_detail['average_rent_per_sqft']:
+                    num = num + (flat_count * flat_detail['average_rent_per_sqft'])
                     den = den + flat_count
                 else:
                     flag = False
 
                 if size_builtup_area and size_builtup_area > 0:
-                    flat_detail.size_carpet_area = size_builtup_area / 1.2
+                    flat_detail['size_carpet_area'] = size_builtup_area / 1.2
 
                 if flat_count and flat_count > 0:
                     totalFlats = totalFlats + flat_count

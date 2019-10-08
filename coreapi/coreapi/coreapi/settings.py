@@ -187,7 +187,9 @@ JWT_AUTH = {
       }
 
 
-BASE_URL = Config.BASE_URL if Config else "http://localhost:8000/"
+BASE_URL = Config.BASE_URL if hasattr(Config,'BASE_URL') else "http://localhost:8000/"
+if type(BASE_URL) != str:
+    BASE_URL = BASE_URL[0]
 if Config:
     MONGO_DB = Config.MONGO_DB if hasattr(Config, 'MONGO_DB') else 'machadalo_2'
     MONGO_DB_TEST = Config.MONGO_DB_TEST if hasattr(Config,'MONGO_DB_TEST') else 'mdtest'

@@ -15,7 +15,7 @@ class UISocietySerializer(ModelSerializer):
     basic_contact_available = serializers.BooleanField(source='is_contact_available')
     basic_contacts = ContactDetailsSerializer(source='get_contact_list', many=True)
     basic_reference_available = serializers.BooleanField(source='is_reference_available')
-    basic_reference_contacts = ContactDetailsSerializer(source='get_reference')
+    basic_reference_contacts = ContactDetailsSerializer(source='get_reference', many=True)
     society_image = ImageMappingSerializer(source='get_society_image')
     past_details = serializers.BooleanField(source='is_past_details_available')
     demographic_details_available = serializers.BooleanField(source='is_demographic_details_available')

@@ -19,6 +19,7 @@ from .views import send_email, send_mail_generic
 from v0.ui.common.models import BaseUser
 from celery import shared_task
 from django.conf import settings
+from v0.ui.proposal.models import SupplierPhase
 DEFAULT_CC_EMAILS = settings.DEFAULT_CC_EMAILS
 
 
@@ -93,7 +94,6 @@ class SendGraphPdf(APIView):
         (campaign_assignement_by_campaign_id, campaign_assignement_by_campaign_id_admins, all_leads_forms,
          all_campaign_name_dict) = get_all_campaign_assignment_by_id("WEEKLY_LEADS_GRAPH")
         to_array = campaign_assignement_by_campaign_id[campaign_id]
-        # to_array = ["yogesh.mhetre@machadalo.com"]
         all_campaign_name = ProposalInfo.objects.filter(proposal_id=campaign_id).values('proposal_id','name')
         all_campaign_name_dict = {campaign['proposal_id']: campaign['name'] for campaign in all_campaign_name}
         this_campaign_name = str(all_campaign_name_dict[campaign_id])
@@ -118,18 +118,17 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None, email=None):
         supplier_list_details_by_status = get_supplier_list_by_status_ctrl(campaign_id)
         supplier_list_details_by_status = json.dumps(supplier_list_details_by_status)
         booking_template = get_template(template_name)
-        to_array = [email] if email else campaign_assignement_by_campaign_id[campaign_id]        
+        to_array = [email] if email else campaign_assignement_by_campaign_id[campaign_id]
         supplier_list_details_by_status_json = json.loads(supplier_list_details_by_status)
-
         html = booking_template.render(
             {"campaign_name": str(all_campaign_name_dict[campaign_id]),
              "details_dict": supplier_list_details_by_status_json})
         if template_name == 'pipeline_details.html':
-            subject = "Socities In Pipeline For " + str(all_campaign_name_dict[campaign_id])
+            subject = "Suppliers In Pipeline For " + str(all_campaign_name_dict[campaign_id])
         elif template_name == 'pre_hype_emails.html':
-            subject = "Socities In Pre-Hype For " + str(all_campaign_name_dict[campaign_id])
+            subject = "Suppliers In Pre-Hype For " + str(all_campaign_name_dict[campaign_id])
         elif template_name == 'recce_email.html':
-            subject = "Socities In Recce For " + str(all_campaign_name_dict[campaign_id])
+            subject = "Suppliers In Recce For " + str(all_campaign_name_dict[campaign_id])
         elif template_name == 'booking_details.html':
             if len(supplier_list_details_by_status_json['upcoming_phases']) > 0:
                 start_date = supplier_list_details_by_status_json['upcoming_phases'][0]['start_date']
@@ -137,7 +136,7 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None, email=None):
             else:
                 start_date = (datetime.datetime.now() + timedelta(days=1)).strftime('%d %b %Y')
                 end_date = (datetime.datetime.now() + timedelta(days=4)).strftime('%d %b %Y')
-            subject = "Societies for " + str(all_campaign_name_dict[campaign_id]) + ": " + start_date + " to " + end_date
+            subject = "Suppliers for " + str(all_campaign_name_dict[campaign_id]) + ": " + start_date + " to " + end_date
         elif template_name == 'advanced_booking_details.html':
             if (supplier_list_details_by_status_json['ongoing_phase']):
                 start_date = supplier_list_details_by_status_json['ongoing_phase']['start_date']
@@ -145,7 +144,17 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None, email=None):
             else:
                 start_date = (datetime.datetime.now() + timedelta(days=1)).strftime('%d %b %Y')
                 end_date = (datetime.datetime.now() + timedelta(days=4)).strftime('%d %b %Y')
-            subject = str(all_campaign_name_dict[campaign_id]) + " Societies Activation Details for this Weekend (" + start_date + " to " + end_date + ")"
+            subject = str(all_campaign_name_dict[campaign_id]) + " Suppliers Activation Details for this Weekend (" + start_date + " to " + end_date + ")"
+        elif template_name == 'daily_assignment_mail.html':
+            subject = "Suppliers Assigned for " + str(all_campaign_name_dict[campaign_id])
+            # Get assigned user
+            campaign_assignment = CampaignAssignment.objects.filter(campaign_id=campaign_id)
+            for campaign in campaign_assignment:
+                user = BaseUser.objects.filter(id=campaign.assigned_to_id).values('email')
+                to_array = []
+                if user and len(user) > 0:
+                    if user[0] and user[0]['email'] and user[0]['email'].find('machadalo') > -1:
+                        to_array.append(user[0]['email'])
         send_mail_generic.delay(subject, to_array, html, None,None)
     return
 
@@ -233,4 +242,16 @@ class SendLeadsToSelf(APIView):
             #     subject = 'Leads Custom Email Generation Alert!'
             #     body = 'User with username {0} and email {1} has generated a leads mail for campaign - {2} from date: {3} to date: {4}.'.format(username, user_email, campaign_name, str(start_date), str(end_date))
             #     send_mail_generic.delay(subject, to_array_admins, body, None, None)
+        return ui_utils.handle_response('', data={}, success=True)
+
+
+class SendDailyAssignmentMails(APIView):
+    @staticmethod
+    def get(request):
+        # Get all ongoing campaigns
+        current_date = datetime.datetime.now().date()
+        phases = SupplierPhase.objects.filter(start_date__lte=current_date, end_date__gte=current_date).all()
+        for phase in phases:
+            campaign_id = phase.campaign_id
+            send_booking_mails_ctrl('daily_assignment_mail.html', campaign_id)
         return ui_utils.handle_response('', data={}, success=True)

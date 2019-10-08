@@ -1792,7 +1792,7 @@ class ProposalVersion(APIView):
             email_data = {
                 'subject': v0_constants.subjects['bd_head'],
                 'body': bd_body,
-                'to': [v0_constants.emails['bd_head'], v0_constants.emails['bd_user'], v0_constants.emails['root_user']]
+                'to': ['dev@machadalo.com', 'anmol.prabhu@machadalo.com', 'anupam@machadalo.com', 'abhishek.chandel@machadalo.com', 'vinit.pimputkar@machadalo.com', 'prateek.kumar@machadalo.com']
             }
 
             #  email_data = {
@@ -2571,8 +2571,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         inventory_activity_assignment = InventoryActivityAssignment.objects.filter(
             inventory_activity__shortlisted_inventory_details__shortlisted_spaces_id=space.id).values('activity_date',
                                                                                                       'inventory_activity__activity_type',
-                                                                                                      'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name',
-                                                                                                          )
+                                                                                                      'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name'
+                                                                                                        )
         inventory_dates_dict = {
                     "POSTER": [],
                     "STALL": [],
@@ -2589,9 +2589,9 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             "BANNER": None
         }
         for inventory_activity in inventory_activity_assignment:
-            inventoy_name = inventory_activity['inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name']
-            activity_date = inventory_activity['activity_date']
-            if activity_date:
+            inventoy_name = inventory_activity.get('inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name')
+            activity_date = inventory_activity.get('activity_date')
+            if activity_date and inventoy_name:
                 activity_date = activity_date.strftime('%d %b %Y')
                 if activity_date not in inventory_dates_dict[inventoy_name]:
                     inventory_dates_dict[inventoy_name].append(activity_date)
@@ -2630,9 +2630,9 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 no_status_suppliers.append(supplier_society_serialized)
         elif space.phase_no_id:
             if space.phase_no_id not in shortlisted_spaces_by_phase_dict:
-                shortlisted_spaces_by_phase_dict[space.phase_no_id] = {'BK': [], 'NB': [], 'PB': [], 'VB': [], 'SR': [],
-                                                                       'SE': [], 'VR': [], 'CR': [],
-                                                                       'DP': [], 'TB': [], 'UN':[], 'DPRR': [], 'RLC':[]}
+                shortlisted_spaces_by_phase_dict[space.phase_no_id] = {'BK': [], 'NB': [], 'PB': [], 'VB': [], 'SR': [], 'NI':[], 'MF':[], 'RERA':[], 'MWS':[], 'MWC':[], 'MWT':[], 'MWO':[],
+                                                                       'SE': [], 'VR': [], 'CR': [], 'DPCR':[], 'DPNR':[], 'NE':[], 'UN':[], 'MWA':[], 'UPNI':[], 'UCPI':[], 'TB':[],
+                                                                       'DP': [], 'TB': [], 'UN':[], 'DPRR': [], 'RLC':[], 'PR': [], 'NVOS':[]}
             if space.booking_status:
                 shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(
                     supplier_society_serialized)

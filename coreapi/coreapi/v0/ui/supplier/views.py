@@ -2818,6 +2818,7 @@ class ImportSupplierData(APIView):
             # fetch proposal instance and change it's status to 'finalized'.
             proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
             proposal.campaign_state = v0_constants.proposal_finalized
+            proposal.invoice_number = proposal.name.replace(" ", "")[:9].upper()
             proposal.save()
 
             return Response({'status': True, 'data': file_name}, status=status.HTTP_200_OK)

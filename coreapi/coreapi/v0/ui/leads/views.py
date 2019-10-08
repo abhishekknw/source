@@ -617,7 +617,7 @@ def write_keys_to_file(keys_list):
         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
         aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
     )
-    with open(filepath) as f:
+    with open(filepath, 'rb') as f:
         try:
             s3.put_object(Body=f, Bucket='leads-forms-templates', Key=filename)
             os.unlink(filepath)
