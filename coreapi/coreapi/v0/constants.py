@@ -889,8 +889,7 @@ booking_status = {
     'new_entity': 'NE',
     'not_initiated': 'NI',
     'recce':'RE',
-    'meeting_fixed':'MF',
-
+    'meeting_fixed':'MF'
 }
 
 booking_code_to_status = {
@@ -904,11 +903,11 @@ booking_code_to_status = {
     'CR': 'Call Required',
     'DP': 'Decision Pending',
     'TB': 'Tentative Booking',
-    'UN': 'Unknown',
     'NE': 'New Entity',
     'NI': 'Not Initiated',
     'RE': 'Recce',
-    'MF': 'Meeting Fixed'
+    'MF': 'Meeting Fixed',
+    'CM': 'completed'
 }
 # different campaign states
 completed = 'COMPLETED'
