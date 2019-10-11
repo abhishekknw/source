@@ -46,14 +46,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'django_extensions',
+    'django_extensions',
     'rest_framework',
     'rest_jwt',
     'corsheaders',
     'v0',
     'drf_generators',
     'rest_framework_swagger',
-    'djcelery',
+    'djcelery'
 ]
 
 

@@ -17,7 +17,7 @@ import copy
 #     class Meta:
 #         db_table = 'leads_form_contacts'
 
-def get_extra_leads_dict(campaign_list=None, only_latest_count=False, user_start_datetime=None):
+def get_extra_leads_dict(campaign_list=None, only_latest_count=False, user_start_datetime=None, user_end_datetime=None):
     match_constraints = []
     if campaign_list:
         if not isinstance(campaign_list, list):
@@ -25,6 +25,8 @@ def get_extra_leads_dict(campaign_list=None, only_latest_count=False, user_start
         match_constraints.append({"campaign_id": {"$in": campaign_list}})
     if user_start_datetime:
         match_constraints.append({"created_at": {"$gte": user_start_datetime}})
+    if user_end_datetime:
+        match_constraints.append({"created_at": {"$lte": user_end_datetime}})
     if len(match_constraints) == 0:
         match_dict = {}
     else:
@@ -54,8 +56,8 @@ def get_extra_leads_dict(campaign_list=None, only_latest_count=False, user_start
     return all_extra_leads_dict
 
 
-def add_extra_leads(leads_summary, campaign_list=None, user_start_datetime=None):
-    leads_extras_all_dict = get_extra_leads_dict(None, False, user_start_datetime)
+def add_extra_leads(leads_summary, campaign_list=None, user_start_datetime=None, user_end_datetime=None):
+    leads_extras_all_dict = get_extra_leads_dict(None, False, user_start_datetime, user_end_datetime)
     leads_extras_dict = {}
     leads_summary_dict = {}
     for single_summary in leads_summary:
@@ -71,7 +73,6 @@ def add_extra_leads(leads_summary, campaign_list=None, user_start_datetime=None)
                     single_summary['hot_leads_count'] = leads_extras_dict[single_summary['campaign_id']][single_summary['supplier_id']]["extra_hot_leads"]
                     single_summary['hot_leads_percentage'] = (float(single_summary['hot_leads_count'])/float(single_summary['total_leads_count']) * 100)
     for campaign_id in leads_extras_all_dict:
-        print(campaign_id, campaign_list)
         if campaign_id in campaign_list:
             for supplier_id in leads_extras_all_dict[campaign_id]:
                     if (campaign_id not in leads_summary_dict) or (supplier_id not in leads_summary_dict[campaign_id]):
@@ -131,7 +132,7 @@ def get_leads_summary(campaign_list=None, user_start_datetime=None,user_end_date
     leads_summary = list(leads_summary)
 
     if with_extra:
-        leads_summary = add_extra_leads(leads_summary, campaign_list, user_start_datetime)
+        leads_summary = add_extra_leads(leads_summary, campaign_list, user_start_datetime, user_end_datetime)
     return leads_summary
 
 
