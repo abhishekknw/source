@@ -294,22 +294,14 @@ class GetCampaignWiseAnalytics(APIView):
                     "supplier_count": len(all_campaign_dict[campaign_id]['all_supplier_ids']),
                     "flat_count": all_campaign_dict[campaign_id]['total_flat_counts'],
                     "campaign_status": this_campaign_status,
-                    "contact_name": {
-                        "filled": all_campaign_dict[campaign_id]['contact_name_filled'],
-                        "not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_name_filled']
-                     },
-                    "contact_number": {
-                        "filled": all_campaign_dict[campaign_id]['contact_number_filled'],
-                        "not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_number_filled']
-                    },
-                    "flat_count_details": {
-                        "filled": all_campaign_dict[campaign_id]['flat_count_filled'],
-                        "not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['flat_count_filled']
-                    },
-                    "payment_details": {
-                        "filled": all_campaign_dict[campaign_id]['total_payment_details'],
-                        "not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['total_payment_details']
-                    }
+                    "contact_name_filled": all_campaign_dict[campaign_id]['contact_name_filled'],
+                    "contact_name_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_name_filled'],
+                    "contact_number_filled": all_campaign_dict[campaign_id]['contact_number_filled'],
+                    "contact_number_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_number_filled'],
+                    "flat_count_details_filled": all_campaign_dict[campaign_id]['flat_count_filled'],
+                    "flat_count_details_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['flat_count_filled'],
+                    "payment_details_filled": all_campaign_dict[campaign_id]['total_payment_details'],
+                    "payment_details_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['total_payment_details']
                 })
             return Response(data={"status": True, "data": all_campaign_summary}, status=status.HTTP_200_OK)
         except Exception as e:
