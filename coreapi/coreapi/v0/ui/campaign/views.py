@@ -2128,13 +2128,15 @@ class CampaignWiseSummary(APIView):
             campaign_summary['last_three_weeks'] = get_campaign_wise_summary_by_user(user_id, start_date)
             campaign_summary['overall'] = get_campaign_wise_summary_by_user(user_id)
         else:
-            campaign_summary['last_week'] = get_campaign_wise_summary_by_user(user_id, user_start_date_str, user_end_date_str)
-            campaign_summary['last_two_weeks'] = get_campaign_wise_summary_by_user(user_id, user_start_date_str, user_end_date_str)
-            campaign_summary['last_three_weeks'] = get_campaign_wise_summary_by_user(user_id, user_start_date_str, user_end_date_str)
-            campaign_summary['overall'] = get_campaign_wise_summary_by_user(user_id, user_start_date_str, user_end_date_str)
+            format_str = '%d/%m/%Y'
+            user_start_datetime = datetime.strptime(user_start_date_str,format_str) if user_start_date_str is not None else None
+            user_end_datetime = datetime.strptime(user_end_date_str,format_str) if user_end_date_str is not None else None
+            campaign_summary['last_week'] = get_campaign_wise_summary_by_user(user_id, user_start_datetime, user_end_datetime)
+            campaign_summary['last_two_weeks'] = get_campaign_wise_summary_by_user(user_id, user_start_datetime, user_end_datetime)
+            campaign_summary['last_three_weeks'] = get_campaign_wise_summary_by_user(user_id, user_start_datetime, user_end_datetime)
+            campaign_summary['overall'] = get_campaign_wise_summary_by_user(user_id, user_start_datetime, user_end_datetime)
 
         return ui_utils.handle_response({}, data=campaign_summary, success=True)
-
 
 def get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, days):
     start_date = None
