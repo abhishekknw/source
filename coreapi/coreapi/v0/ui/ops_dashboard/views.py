@@ -378,7 +378,9 @@ class GetSupplierDetail(APIView):
                         all_supplier_dict[booking_status] = {}
                         all_supplier_dict[booking_status]['supplier_ids'] = []
                         all_supplier_dict[booking_status]['supplier'] = []
-
+            # Get supplier count
+            all_supplier_dict[booking_status]['supplier_count'] = len(all_supplier_dict[booking_status]['supplier_ids'])
+            all_supplier_dict['completed']['supplier_count'] = len(all_supplier_dict['completed']['supplier_ids'])
             # Get hashtag images
             permission_box_count = HashTagImages.objects.filter(object_id__in=completed_supplier_ids, hashtag__in=['permission_box', 'Permission Box', 'PERMISSION BOX', 'permission box']).values_list('object_id', flat=True).distinct().count()
             receipt_count = HashTagImages.objects.filter(object_id__in=completed_supplier_ids, hashtag__in=['receipt', 'Receipt', 'RECEIPT']).values_list('object_id',flat=True).distinct().count()
@@ -401,3 +403,45 @@ class GetSupplierDetail(APIView):
         except Exception as e:
             logger.exception(e)
             return Response(data={"status": False, "error": "Error getting data"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GetCampaignStatusCount(APIView):
+    @staticmethod
+    def get(request):
+        try:
+            campaign_id = request.query_params.get('campaign_id')
+            if not campaign_id:
+                return Response(data={"status": False, "error": "Missing campaign id"},
+                                status=status.HTTP_400_BAD_REQUEST)
+            all_supplier_dict = {
+                'completed': {
+                    'supplier_count': 0,
+                    'supplier_ids': []
+                }
+            }
+            all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
+                values('proposal_id', 'object_id', 'is_completed','booking_status')
+            booking_status = None
+            for shortlisted_supplier in all_shortlisted_supplier:
+                booking_status_code = shortlisted_supplier['booking_status']
+                if booking_status_code is not None:
+                    booking_status = booking_code_to_status[booking_status_code]
+                if shortlisted_supplier['is_completed'] and booking_status_code == 'BK':
+                    all_supplier_dict['completed']['supplier_ids'].append(shortlisted_supplier['object_id'])
+                else:
+                    if booking_status in all_supplier_dict.keys():
+                        all_supplier_dict[booking_status]['supplier_ids'].append(
+                            shortlisted_supplier['object_id'])
+                    else:
+                        all_supplier_dict[booking_status] = {}
+                        all_supplier_dict[booking_status]['supplier_ids'] = []
+            # Get supplier count
+            all_supplier_dict[booking_status]['supplier_count'] = len(
+                all_supplier_dict[booking_status]['supplier_ids'])
+            all_supplier_dict['completed']['supplier_count'] = len(
+                all_supplier_dict['completed']['supplier_ids'])
+            return Response(data={"status": True, "data": all_supplier_dict}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.exception(e)
+            return Response(data={"status": False, "error": "Error getting data"},
+                            status=status.HTTP_400_BAD_REQUEST)
