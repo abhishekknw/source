@@ -440,7 +440,12 @@ class GetCampaignStatusCount(APIView):
                 all_supplier_dict[booking_status]['supplier_ids'])
             all_supplier_dict['completed']['supplier_count'] = len(
                 all_supplier_dict['completed']['supplier_ids'])
-            return Response(data={"status": True, "data": all_supplier_dict}, status=status.HTTP_200_OK)
+            response = {
+                'campaign_id': campaign_id
+            }
+            for campaign_status, supplier in all_supplier_dict.items():
+                response[campaign_status] = supplier['supplier_count']
+            return Response(data={"status": True, "data": response}, status=status.HTTP_200_OK)
         except Exception as e:
             logger.exception(e)
             return Response(data={"status": False, "error": "Error getting data"},
