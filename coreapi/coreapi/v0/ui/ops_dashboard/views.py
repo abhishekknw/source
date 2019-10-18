@@ -435,8 +435,9 @@ class GetCampaignStatusCount(APIView):
                     all_supplier_dict[booking_status] = {}
                     all_supplier_dict[booking_status]['supplier_ids'] = []
             # Get supplier count
-            all_supplier_dict[booking_status]['supplier_count'] = len(
-                all_supplier_dict[booking_status]['supplier_ids'])
+            if booking_status is not None:
+                all_supplier_dict[booking_status]['supplier_count'] = len(
+                    all_supplier_dict[booking_status]['supplier_ids'])
             all_supplier_dict['completed']['supplier_count'] = len(
                 all_supplier_dict['completed']['supplier_ids'])
             response = {
