@@ -326,7 +326,7 @@ class GetSupplierDetail(APIView):
             all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
                 values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name',
                        'proposal__tentative_end_date', 'proposal__campaign_state', 'booking_status',
-                       'booking_sub_status', 'payment_method', 'payment_status')
+                       'booking_sub_status', 'payment_method', 'payment_status', 'supplier_code')
             completed_supplier_ids = []
             decision_pending_supplier_ids = []
             booked_supplier_ids = []
@@ -345,7 +345,12 @@ class GetSupplierDetail(APIView):
                     booking_category = 'completed'
                     completed_supplier_ids.append(shortlisted_supplier['object_id'])
                     all_supplier_dict[booking_category]['supplier_ids'].append(shortlisted_supplier['object_id'])
+                    supplier_detail = []
+                    if shortlisted_supplier['supplier_code'] and shortlisted_supplier['supplier_code'] == 'RS':
+                        supplier_detail = SupplierTypeSociety.objects.filter(
+                            supplier_id=shortlisted_supplier['object_id']).values('society_name')
                     all_supplier_dict[booking_category]['supplier'].append({
+                        'name': supplier_detail[0]['society_name'],
                         'supplier_id': shortlisted_supplier['object_id'],
                         'payment_method': shortlisted_supplier['payment_method'],
                         'is_completed': shortlisted_supplier['is_completed']
@@ -369,7 +374,12 @@ class GetSupplierDetail(APIView):
                         elif booking_status_code == 'VR':
                             visit_required_supplier_ids.append(shortlisted_supplier['object_id'])
                         all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
+                        # Get supplier name from supplier society
+                        supplier_detail = []
+                        if shortlisted_supplier['supplier_code'] and shortlisted_supplier['supplier_code'] == 'RS':
+                            supplier_detail = SupplierTypeSociety.objects.filter(supplier_id=shortlisted_supplier['object_id']).values('society_name')
                         all_supplier_dict[booking_status]['supplier'].append({
+                            'name': supplier_detail[0]['society_name'],
                             'supplier_id': shortlisted_supplier['object_id'],
                             'payment_method': shortlisted_supplier['payment_method'],
                             'is_completed': shortlisted_supplier['is_completed']
@@ -379,7 +389,8 @@ class GetSupplierDetail(APIView):
                         all_supplier_dict[booking_status]['supplier_ids'] = []
                         all_supplier_dict[booking_status]['supplier'] = []
             # Get supplier count
-            if booking_status is not None:
+            bs = all_supplier_dict.get(booking_status, None)
+            if booking_status is not None and bs is not None:
                 all_supplier_dict[booking_status]['supplier_count'] = len(all_supplier_dict[booking_status]['supplier_ids'])
             all_supplier_dict['completed']['supplier_count'] = len(all_supplier_dict['completed']['supplier_ids'])
             # Get hashtag images
