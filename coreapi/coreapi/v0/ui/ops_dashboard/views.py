@@ -379,7 +379,8 @@ class GetSupplierDetail(APIView):
                         all_supplier_dict[booking_status]['supplier_ids'] = []
                         all_supplier_dict[booking_status]['supplier'] = []
             # Get supplier count
-            all_supplier_dict[booking_status]['supplier_count'] = len(all_supplier_dict[booking_status]['supplier_ids'])
+            if booking_status is not None:
+                all_supplier_dict[booking_status]['supplier_count'] = len(all_supplier_dict[booking_status]['supplier_ids'])
             all_supplier_dict['completed']['supplier_count'] = len(all_supplier_dict['completed']['supplier_ids'])
             # Get hashtag images
             permission_box_count = HashTagImages.objects.filter(object_id__in=completed_supplier_ids, hashtag__in=['permission_box', 'Permission Box', 'PERMISSION BOX', 'permission box']).values_list('object_id', flat=True).distinct().count()
