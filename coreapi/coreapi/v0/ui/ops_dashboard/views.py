@@ -348,9 +348,14 @@ class GetSupplierDetail(APIView):
                     supplier_detail = []
                     if shortlisted_supplier['supplier_code'] and shortlisted_supplier['supplier_code'] == 'RS':
                         supplier_detail = SupplierTypeSociety.objects.filter(
-                            supplier_id=shortlisted_supplier['object_id']).values('society_name')
+                            supplier_id=shortlisted_supplier['object_id']).values('society_name', 'society_locality', 'society_subarea', 'society_city', 'society_type_quality', 'society_type_quantity')
                     all_supplier_dict[booking_category]['supplier'].append({
                         'name': supplier_detail[0]['society_name'],
+                        'subarea': supplier_detail[0]['society_subarea'],
+                        'locality': supplier_detail[0]['society_locality'],
+                        'city': supplier_detail[0]['society_city'],
+                        'society_quality': supplier_detail[0]['society_type_quality'],
+                        'society_quantity': supplier_detail[0]['society_type_quantity'],
                         'supplier_id': shortlisted_supplier['object_id'],
                         'payment_method': shortlisted_supplier['payment_method'],
                         'is_completed': shortlisted_supplier['is_completed']
@@ -377,9 +382,14 @@ class GetSupplierDetail(APIView):
                         # Get supplier name from supplier society
                         supplier_detail = []
                         if shortlisted_supplier['supplier_code'] and shortlisted_supplier['supplier_code'] == 'RS':
-                            supplier_detail = SupplierTypeSociety.objects.filter(supplier_id=shortlisted_supplier['object_id']).values('society_name')
+                            supplier_detail = SupplierTypeSociety.objects.filter(supplier_id=shortlisted_supplier['object_id']).values('society_name', 'society_locality', 'society_subarea', 'society_city', 'society_type_quality', 'society_type_quantity')
                         all_supplier_dict[booking_status]['supplier'].append({
                             'name': supplier_detail[0]['society_name'],
+                            'subarea': supplier_detail[0]['society_subarea'],
+                            'locality': supplier_detail[0]['society_locality'],
+                            'city': supplier_detail[0]['society_city'],
+                            'society_quality': supplier_detail[0]['society_type_quality'],
+                            'society_quantity': supplier_detail[0]['society_type_quantity'],
                             'supplier_id': shortlisted_supplier['object_id'],
                             'payment_method': shortlisted_supplier['payment_method'],
                             'is_completed': shortlisted_supplier['is_completed']
