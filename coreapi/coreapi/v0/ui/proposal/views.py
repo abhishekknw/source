@@ -2859,7 +2859,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         pipeline['total_booked']['supplier_count'] += 1
 
     if len(completed_phases) > 0:
-        last_completed_phase = sorted(completed_phases, key=lambda k: k['end_date'])[-1]
+        last_completed_phase = sorted(completed_phases, key=lambda k: k['phase_no'])[-1]
     shortlisted_spaces_by_phase_dict = {
         'all_phases': shortlisted_spaces_by_phase_list,
         'last_completed_phase': last_completed_phase,
