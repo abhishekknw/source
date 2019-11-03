@@ -3,6 +3,7 @@ logger = logging.getLogger(__name__)
 from v0.ui.campaign.models import CampaignComments
 from v0.constants import booking_code_to_status
 
+
 def getCommentsCount(campaign_id, supplier_ids):
     try:
         if len(supplier_ids) > 0:
@@ -22,4 +23,5 @@ def getEachCampaignComments(campaign_id, status_dict, supplier_dict):
         comment_count = getCommentsCount(campaign_id, status_dict[key])
         if booking_code_to_status[key] in supplier_dict:
             supplier_dict[booking_code_to_status[key]]['comments_count'] = comment_count
+            supplier_dict[booking_code_to_status[key]]['status'] = [booking_code_to_status[key]][0].lower()
     return supplier_dict
