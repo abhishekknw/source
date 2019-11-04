@@ -12,7 +12,7 @@ from v0.ui.account.models import ContactDetails
 from v0.ui.campaign.models import CampaignAssignment
 from v0.constants import (campaign_status, proposal_on_hold, booking_code_to_status,
                           payment_code_to_status, booking_priority_code_to_status, proposal_not_converted_to_campaign,proposal_finalized )
-from .utils import getEachCampaignComments
+from .utils import getEachCampaignComments, getSocietyDetails
 
 class GetSocietyAnalytics(APIView):
     @staticmethod
@@ -349,19 +349,11 @@ class GetSupplierDetail(APIView):
                     if shortlisted_supplier['supplier_code'] and shortlisted_supplier['supplier_code'] == 'RS':
                         supplier_detail = SupplierTypeSociety.objects.filter(
                             supplier_id=shortlisted_supplier['object_id']).values('society_name', 'society_locality', 'society_subarea', 'society_city', 'society_type_quality', 'society_type_quantity')
-                    all_supplier_dict[booking_category]['supplier'].append({
-                        'name': supplier_detail[0]['society_name'],
-                        'subarea': supplier_detail[0]['society_subarea'],
-                        'locality': supplier_detail[0]['society_locality'],
-                        'city': supplier_detail[0]['society_city'],
-                        'society_quality': supplier_detail[0]['society_type_quality'],
-                        'society_quantity': supplier_detail[0]['society_type_quantity'],
-                        'supplier_id': shortlisted_supplier['object_id'],
-                        'payment_method': shortlisted_supplier['payment_method'],
-                        'is_completed': shortlisted_supplier['is_completed']
-                    })
+                    all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_category, supplier_detail[0], shortlisted_supplier)
+                if booking_status_code == 'BK':
+                    booked_supplier_ids.append(shortlisted_supplier['object_id'])
                 else:
-                    if booking_status in all_supplier_dict.keys():
+                    if booking_status_code is not None and booking_status in all_supplier_dict.keys():
                         if booking_status_code == 'DP':
                             decision_pending_supplier_ids.append(shortlisted_supplier['object_id'])
                         elif booking_status_code == 'BK':
@@ -378,30 +370,27 @@ class GetSupplierDetail(APIView):
                             recce_supplier_ids.append(shortlisted_supplier['object_id'])
                         elif booking_status_code == 'VR':
                             visit_required_supplier_ids.append(shortlisted_supplier['object_id'])
-                        all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
-                        # Get supplier name from supplier society
-                        supplier_detail = []
-                        if shortlisted_supplier['supplier_code'] and shortlisted_supplier['supplier_code'] == 'RS':
-                            supplier_detail = SupplierTypeSociety.objects.filter(supplier_id=shortlisted_supplier['object_id']).values('society_name', 'society_locality', 'society_subarea', 'society_city', 'society_type_quality', 'society_type_quantity')
-                        all_supplier_dict[booking_status]['supplier'].append({
-                            'name': supplier_detail[0]['society_name'],
-                            'subarea': supplier_detail[0]['society_subarea'],
-                            'locality': supplier_detail[0]['society_locality'],
-                            'city': supplier_detail[0]['society_city'],
-                            'society_quality': supplier_detail[0]['society_type_quality'],
-                            'society_quantity': supplier_detail[0]['society_type_quantity'],
-                            'supplier_id': shortlisted_supplier['object_id'],
-                            'payment_method': shortlisted_supplier['payment_method'],
-                            'is_completed': shortlisted_supplier['is_completed']
-                        })
                     else:
                         all_supplier_dict[booking_status] = {}
-                        all_supplier_dict[booking_status]['supplier_ids'] = []
+                        all_supplier_dict[booking_status]['supplier_ids'] = [shortlisted_supplier['object_id']]
                         all_supplier_dict[booking_status]['supplier'] = []
+                        all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_status, supplier_detail[0], shortlisted_supplier)
+
+                    all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
+                    all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_status, supplier_detail[0], shortlisted_supplier)
+                    # Get supplier name from supplier society
+                    supplier_detail = []
+                    if shortlisted_supplier['supplier_code'] and shortlisted_supplier['supplier_code'] == 'RS':
+                        supplier_detail = SupplierTypeSociety.objects.filter(
+                            supplier_id=shortlisted_supplier['object_id']).values('society_name', 'society_locality',
+                                                                                  'society_subarea', 'society_city',
+                                                                                  'society_type_quality',
+                                                                                  'society_type_quantity')
             # Get supplier count
             for campaign_status, supplier in all_supplier_dict.items():
                 supplier_count = len(supplier['supplier_ids'])
                 all_supplier_dict[campaign_status]['supplier_count'] = supplier_count
+
             # Get hashtag images
             permission_box_count = HashTagImages.objects.filter(object_id__in=completed_supplier_ids, hashtag__in=['permission_box', 'Permission Box', 'PERMISSION BOX', 'permission box']).values_list('object_id', flat=True).distinct().count()
             receipt_count = HashTagImages.objects.filter(object_id__in=completed_supplier_ids, hashtag__in=['receipt', 'Receipt', 'RECEIPT']).values_list('object_id',flat=True).distinct().count()
@@ -448,11 +437,17 @@ class GetCampaignStatusCount(APIView):
                 if booking_status_code is not None:
                     booking_status = booking_code_to_status[booking_status_code]
                     if shortlisted_supplier['is_completed'] and booking_status_code == 'BK':
-                            all_supplier_dict['completed']['supplier_ids'].append(shortlisted_supplier['object_id'])
+                        all_supplier_dict['completed']['supplier_ids'].append(shortlisted_supplier['object_id'])
+                    if booking_status_code == 'BK':
+                        if booking_status not in all_supplier_dict.keys():
+                            all_supplier_dict[booking_status] = {}
+                            all_supplier_dict[booking_status]['supplier_ids'] = [shortlisted_supplier['object_id']]
+                        else:
+                            all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
                     else:
                         if booking_status not in all_supplier_dict.keys():
                             all_supplier_dict[booking_status] = {}
-                            all_supplier_dict[booking_status]['supplier_ids'] = []
+                            all_supplier_dict[booking_status]['supplier_ids'] = [shortlisted_supplier['object_id']]
                         else:
                             all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
             response = {
