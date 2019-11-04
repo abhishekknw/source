@@ -25,3 +25,18 @@ def getEachCampaignComments(campaign_id, status_dict, supplier_dict):
             supplier_dict[booking_code_to_status[key]]['comments_count'] = comment_count
             supplier_dict[booking_code_to_status[key]]['status'] = [booking_code_to_status[key]][0].lower()
     return supplier_dict
+
+
+def getSocietyDetails(all_supplier_dict, booking_status, supplier_detail, shortlisted_supplier):
+    all_supplier_dict[booking_status]['supplier'].append({
+        'name': supplier_detail['society_name'],
+        'subarea': supplier_detail['society_subarea'],
+        'locality': supplier_detail['society_locality'],
+        'city': supplier_detail['society_city'],
+        'society_quality': supplier_detail['society_type_quality'],
+        'society_quantity': supplier_detail['society_type_quantity'],
+        'supplier_id': shortlisted_supplier['object_id'],
+        'payment_method': shortlisted_supplier['payment_method'],
+        'is_completed': shortlisted_supplier['is_completed']
+    })
+    return all_supplier_dict
