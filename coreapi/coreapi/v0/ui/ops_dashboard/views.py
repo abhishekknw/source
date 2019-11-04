@@ -399,10 +399,9 @@ class GetSupplierDetail(APIView):
                         all_supplier_dict[booking_status]['supplier_ids'] = []
                         all_supplier_dict[booking_status]['supplier'] = []
             # Get supplier count
-            bs = all_supplier_dict.get(booking_status, None)
-            if booking_status is not None and bs is not None:
-                all_supplier_dict[booking_status]['supplier_count'] = len(all_supplier_dict[booking_status]['supplier_ids'])
-            all_supplier_dict['completed']['supplier_count'] = len(all_supplier_dict['completed']['supplier_ids'])
+            for campaign_status, supplier in all_supplier_dict.items():
+                supplier_count = len(supplier['supplier_ids'])
+                all_supplier_dict[campaign_status]['supplier_count'] = supplier_count
             # Get hashtag images
             permission_box_count = HashTagImages.objects.filter(object_id__in=completed_supplier_ids, hashtag__in=['permission_box', 'Permission Box', 'PERMISSION BOX', 'permission box']).values_list('object_id', flat=True).distinct().count()
             receipt_count = HashTagImages.objects.filter(object_id__in=completed_supplier_ids, hashtag__in=['receipt', 'Receipt', 'RECEIPT']).values_list('object_id',flat=True).distinct().count()
@@ -443,30 +442,24 @@ class GetCampaignStatusCount(APIView):
             }
             all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
                 values('proposal_id', 'object_id', 'is_completed','booking_status')
-            booking_status = None
+
             for shortlisted_supplier in all_shortlisted_supplier:
                 booking_status_code = shortlisted_supplier['booking_status']
                 if booking_status_code is not None:
                     booking_status = booking_code_to_status[booking_status_code]
-                if shortlisted_supplier['is_completed']:
-                    all_supplier_dict['completed']['supplier_ids'].append(shortlisted_supplier['object_id'])
-                if booking_status in all_supplier_dict.keys():
-                    all_supplier_dict[booking_status]['supplier_ids'].append(
-                        shortlisted_supplier['object_id'])
-                else:
-                    all_supplier_dict[booking_status] = {}
-                    all_supplier_dict[booking_status]['supplier_ids'] = []
-            # Get supplier count
-            if booking_status is not None:
-                all_supplier_dict[booking_status]['supplier_count'] = len(
-                    all_supplier_dict[booking_status]['supplier_ids'])
-            all_supplier_dict['completed']['supplier_count'] = len(
-                all_supplier_dict['completed']['supplier_ids'])
+                    if shortlisted_supplier['is_completed'] and booking_status_code == 'BK':
+                            all_supplier_dict['completed']['supplier_ids'].append(shortlisted_supplier['object_id'])
+                    else:
+                        if booking_status not in all_supplier_dict.keys():
+                            all_supplier_dict[booking_status] = {}
+                            all_supplier_dict[booking_status]['supplier_ids'] = []
+                        else:
+                            all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
             response = {
                 'campaign_id': campaign_id
             }
             for campaign_status, supplier in all_supplier_dict.items():
-                supplier_count = supplier.get('supplier_count', 0)
+                supplier_count = len(supplier['supplier_ids'])
                 response[campaign_status] = supplier_count
             return Response(data={"status": True, "data": response}, status=status.HTTP_200_OK)
         except Exception as e:
