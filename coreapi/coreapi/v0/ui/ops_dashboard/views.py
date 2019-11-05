@@ -336,28 +336,36 @@ class GetSupplierDetail(APIView):
             rejected_supplier_ids = []
             recce_supplier_ids = []
             visit_required_supplier_ids = []
-            booking_status = None
             for shortlisted_supplier in all_shortlisted_supplier:
                 booking_status_code = shortlisted_supplier['booking_status']
-                if booking_status_code is not None:
-                    booking_status = booking_code_to_status[booking_status_code]
+                supplier_detail = []
+                if shortlisted_supplier['supplier_code'] and shortlisted_supplier['supplier_code'] == 'RS':
+                    supplier_detail = SupplierTypeSociety.objects.filter(
+                        supplier_id=shortlisted_supplier['object_id']).values('society_name', 'society_locality',
+                                                                              'society_subarea', 'society_city',
+                                                                              'society_type_quality',
+                                                                              'society_type_quantity')
+                if booking_status_code is None:
+                    continue
+                booking_status = booking_code_to_status[booking_status_code]
                 if shortlisted_supplier['is_completed'] and booking_status_code == 'BK':
                     booking_category = 'completed'
                     completed_supplier_ids.append(shortlisted_supplier['object_id'])
                     all_supplier_dict[booking_category]['supplier_ids'].append(shortlisted_supplier['object_id'])
-                    supplier_detail = []
-                    if shortlisted_supplier['supplier_code'] and shortlisted_supplier['supplier_code'] == 'RS':
-                        supplier_detail = SupplierTypeSociety.objects.filter(
-                            supplier_id=shortlisted_supplier['object_id']).values('society_name', 'society_locality', 'society_subarea', 'society_city', 'society_type_quality', 'society_type_quantity')
                     all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_category, supplier_detail[0], shortlisted_supplier)
                 if booking_status_code == 'BK':
                     booked_supplier_ids.append(shortlisted_supplier['object_id'])
+                    if booking_status not in all_supplier_dict.keys():
+                        all_supplier_dict[booking_status] = {
+                            'supplier_ids': [],
+                            'supplier': []
+                        }
+                    all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
+                    all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_status, supplier_detail[0], shortlisted_supplier)
                 else:
-                    if booking_status_code is not None and booking_status in all_supplier_dict.keys():
+                    if booking_status in all_supplier_dict.keys():
                         if booking_status_code == 'DP':
                             decision_pending_supplier_ids.append(shortlisted_supplier['object_id'])
-                        elif booking_status_code == 'BK':
-                            booked_supplier_ids.append(shortlisted_supplier['object_id'])
                         elif booking_status_code == 'PB':
                             phone_booked_supplier_ids.append(shortlisted_supplier['object_id'])
                         elif booking_status_code == 'TB':
@@ -371,21 +379,12 @@ class GetSupplierDetail(APIView):
                         elif booking_status_code == 'VR':
                             visit_required_supplier_ids.append(shortlisted_supplier['object_id'])
                     else:
-                        all_supplier_dict[booking_status] = {}
-                        all_supplier_dict[booking_status]['supplier_ids'] = [shortlisted_supplier['object_id']]
-                        all_supplier_dict[booking_status]['supplier'] = []
-                        all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_status, supplier_detail[0], shortlisted_supplier)
-
+                        all_supplier_dict[booking_status] = {
+                            'supplier_ids': [],
+                            'supplier': []
+                        }
                     all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
                     all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_status, supplier_detail[0], shortlisted_supplier)
-                    # Get supplier name from supplier society
-                    supplier_detail = []
-                    if shortlisted_supplier['supplier_code'] and shortlisted_supplier['supplier_code'] == 'RS':
-                        supplier_detail = SupplierTypeSociety.objects.filter(
-                            supplier_id=shortlisted_supplier['object_id']).values('society_name', 'society_locality',
-                                                                                  'society_subarea', 'society_city',
-                                                                                  'society_type_quality',
-                                                                                  'society_type_quantity')
             # Get supplier count
             for campaign_status, supplier in all_supplier_dict.items():
                 supplier_count = len(supplier['supplier_ids'])
