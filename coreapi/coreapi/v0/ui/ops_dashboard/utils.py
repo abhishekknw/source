@@ -24,6 +24,7 @@ def getEachCampaignComments(campaign_id, status_dict, supplier_dict):
         if booking_code_to_status[key] in supplier_dict:
             supplier_dict[booking_code_to_status[key]]['comments_count'] = comment_count
             supplier_dict[booking_code_to_status[key]]['status'] = [booking_code_to_status[key]][0].lower()
+    supplier_dict['campaign_id'] = campaign_id
     return supplier_dict
 
 
