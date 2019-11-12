@@ -209,14 +209,6 @@ def get_leads_summary_from_summary_table(campaign_id):
 def lead_counter(campaign_id, leads_form_data,user_start_datetime,user_end_datetime, lead_form):
     result = {}
     all_leads_summary = get_leads_summary(campaign_id,user_start_datetime,user_end_datetime)
-    # and_constraint = [{"campaign_id": campaign_id}]
-    # if user_start_datetime:
-    #     and_constraint.append({"created_at": {"$gte": user_start_datetime}})
-    # if user_end_datetime:
-    #     and_constraint.append({"created_at": {"$lte": user_end_datetime}})
-    # leads = list(mongo_client.leads.find(
-    #     {"$and": and_constraint}, {"_id": 0}))
-    # leads_by_hoteness_level = get_leads_summary_by_campaign_and_hotness_level(leads, lead_form)
     leads_by_hoteness_level = get_leads_summary_from_summary_table(campaign_id)
 
     all_campaign_leads = leads_form_data
@@ -1389,16 +1381,44 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
     except Exception as e:
         return None
 
+def bookingPerformance(campaign_id, start_date):
+
+    all_suppliers = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('phase_no_id', 'booking_status', 'booking_sub_status')
+    phase_no=[]
+    for suppliers in all_suppliers:
+       all_pahses = suppliers.phase_no_id
+       phase_no.append(all_phases)
+
+    phases = SupplierPhase.objects.filter(campaign_id=campaign_id, start_date__gte=start_date)
+    # for phase in phases:
+        # print(phase.start_date)
+
+
+
 
 class CampaignLeads(APIView):
 
     def get(self, request):
         try:
             class_name = self.__class__.__name__
+            user_id = request.user.id
             query_type = request.query_params.get('query_type')
             user_start_date_str = request.query_params.get('start_date', None)
             user_end_date_str = request.query_params.get('end_date', None)
             campaign_id = request.query_params.get('campaign_id', None)
+
+            # if 'NOB' in campaign_id:
+            #     final_data = {}
+            #     start_date = datetime.now() - timedelta(days=7)
+            #     if user_start_date_str != None:
+            #         start_date = datetime.now() - timedelta(days=7)
+            #         final_data['last_week'] = bookingPerformance(campaign_id, start_date.strftime("%d/%m/%Y"))
+            #         start_date = datetime.now() - timedelta(days=14)
+            #         final_data['last_two_weeks'] = bookingPerformance(campaign_id, start_date.strftime("%d/%m/%Y"))
+            #         start_date = datetime.now() - timedelta(days=21)
+            #         final_data['last_three_weeks'] = bookingPerformance(campaign_id, start_date.strftime("%d/%m/%Y"))
+            #         final_data['overall_data'] = bookingPerformance(campaign_id)
+            # else:
             final_data = get_leads_data_for_campaign(campaign_id, user_start_date_str, user_end_date_str)
             if not final_data:
                 return ui_utils.handle_response(class_name, data=final_data, success=False)
@@ -2137,6 +2157,7 @@ class CampaignWiseSummary(APIView):
             campaign_summary['overall'] = get_campaign_wise_summary_by_user(user_id, user_start_datetime, user_end_datetime)
 
         return ui_utils.handle_response({}, data=campaign_summary, success=True)
+
 
 def get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, days):
     start_date = None
