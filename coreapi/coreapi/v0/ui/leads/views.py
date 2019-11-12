@@ -499,7 +499,7 @@ class LeadsFormBulkEntry(APIView):
             missing_societies.sort()
 
             missing_dict = {
-                "missing societies": missing_societies,
+                "missing_societies": missing_societies,
                 "unresolved_societies": list(set(unresolved_societies)),
                 "more_than_ones_same_shortlisted_society": list(set(more_than_ones_same_shortlisted_society)),
                 "inv_activity_assignment_missing_societies": list(set(inv_activity_assignment_missing_societies)),
