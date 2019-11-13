@@ -416,7 +416,7 @@ class LeadsFormBulkEntry(APIView):
 
 
                     if len(suppliers) == 0:
-                        if society_name not in missing_societies:
+                        if society_name not in missing_societies and society_name is not None:
                             missing_societies.append(society_name)
                         continue
                     else:
