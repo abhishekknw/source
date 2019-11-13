@@ -410,7 +410,8 @@ class LeadsFormBulkEntry(APIView):
                     return handle_response('', data="neither apartment nor club found in the sheet", success=False)
                 entity_index = apartment_index if apartment_index else club_name_index
                 if index > 0:
-                    society_name = row[entity_index].value
+                    if not (row[entity_index].value is None):
+                        society_name = row[entity_index].value
 
                     suppliers = get_supplier_data_by_type(society_name)
 
@@ -429,10 +430,10 @@ class LeadsFormBulkEntry(APIView):
                             shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id,
                                                                                   object_id__in=supplier_ids).values(
                                 'object_id', 'id').all()
-                            if len(shortlisted_spaces) > 1 and society_name is not None:
+                            if len(shortlisted_spaces) > 1:
                                 more_than_ones_same_shortlisted_society.append(society_name)
                                 continue
-                            if len(shortlisted_spaces) == 0 and society_name is not None:
+                            if len(shortlisted_spaces) == 0:
                                 not_present_in_shortlisted_societies.append(society_name)
                                 continue
                             else:
@@ -440,7 +441,7 @@ class LeadsFormBulkEntry(APIView):
 
                     shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=found_supplier_id).filter(
                         proposal_id=campaign_id).all()
-                    if len(shortlisted_spaces) == 0 and society_name is not None:
+                    if len(shortlisted_spaces) == 0:
                         not_present_in_shortlisted_societies.append(society_name)
                         continue
                     inventory_list = ShortlistedInventoryPricingDetails.objects.filter(
@@ -457,18 +458,18 @@ class LeadsFormBulkEntry(APIView):
                     inventory_list = InventoryActivity.objects.filter(
                         shortlisted_inventory_details_id=shortlisted_inventory_details_id, activity_type='RELEASE').all()
 
-                    if len(inventory_list) == 0 and society_name is not None:
+                    if len(inventory_list) == 0:
                         inv_activity_missing_societies.append(society_name)
                         continue
                     inventory_activity_id = inventory_list[0].id
                     inventory_activity_list = InventoryActivityAssignment.objects.filter(
                         inventory_activity_id=inventory_activity_id).all()
-                    if len(inventory_activity_list) == 0 and society_name is not None:
+                    if len(inventory_activity_list) == 0:
                         inv_activity_assignment_missing_societies.append(society_name)
                         continue
 
                     created_at = inventory_activity_list[0].activity_date if inventory_activity_list[0].activity_date else None
-                    if not created_at and society_name is not None:
+                    if not created_at:
                         inv_activity_assignment_activity_date_missing_societies.append(society_name)
                         continue
                     lead_dict = {"data": [], "is_hot": False, "created_at": created_at, "supplier_id": found_supplier_id,
