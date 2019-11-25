@@ -3990,11 +3990,6 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
 
     function = prepare_shortlisted_spaces_and_inventories.__name__
     try:
-        # if str(proposal_id) in cache:
-        #     result = cache.get(str(proposal_id))
-        #     return ui_utils.handle_response(function, data=result, success=True)
-
-        # the result
         result = {}
 
         proposal = ProposalInfo.objects.get(proposal_id=proposal_id)

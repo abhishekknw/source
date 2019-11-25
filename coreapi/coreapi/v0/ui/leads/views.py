@@ -410,13 +410,14 @@ class LeadsFormBulkEntry(APIView):
                     return handle_response('', data="neither apartment nor club found in the sheet", success=False)
                 entity_index = apartment_index if apartment_index else club_name_index
                 if index > 0:
-                    society_name = row[entity_index].value
+                    if not (row[entity_index].value is None):
+                        society_name = row[entity_index].value
 
                     suppliers = get_supplier_data_by_type(society_name)
 
 
                     if len(suppliers) == 0:
-                        if society_name not in missing_societies:
+                        if society_name not in missing_societies and society_name is not None:
                             missing_societies.append(society_name)
                         continue
                     else:
@@ -499,7 +500,7 @@ class LeadsFormBulkEntry(APIView):
             missing_societies.sort()
 
             missing_dict = {
-                "missing societies": missing_societies,
+                "missing_societies": missing_societies,
                 "unresolved_societies": list(set(unresolved_societies)),
                 "more_than_ones_same_shortlisted_society": list(set(more_than_ones_same_shortlisted_society)),
                 "inv_activity_assignment_missing_societies": list(set(inv_activity_assignment_missing_societies)),
