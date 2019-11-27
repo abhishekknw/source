@@ -140,8 +140,9 @@ def create_proposal_object(organisation_id, account_id, user, tentative_cost, na
         'user': user.id,
         'created_by': user.id,
         'tentative_cost': tentative_cost,
-        'name': name
-        # 'campaign_state': 'PTC'
+        'name': name,
+        'updated_by':user.id,
+        'campaign_state': 'PTC'
     }
 
 def genrate_supplier_data(data):
@@ -446,6 +447,16 @@ class CreateInitialProposal(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+class CreateDummyProposal(APIView):
+    """docstring for CreateDummyProposal"""
+    def post(self, request):
+        source_file = request.data['file']
+        wb = load_workbook(source_file)
+        ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+        proposal_list = []
+        campaign_list = []
+        proposal_data = {}
+        
 
 class CreateInitialProposalBulkBasic(APIView):
     def post(self, request):
@@ -465,17 +476,28 @@ class CreateInitialProposalBulkBasic(APIView):
         response = website_utils.create_basic_proposal(proposal_data)
         if not response.data['status']:
             return response
-        center_name = request.data['center_name']
-        city = request.data['city']
-        area = request.data['area']
-        subarea = request.data['subarea']
-        pincode = request.data['pincode']
-        radius = request.data['radius']
-        address = request.data['address']
+        for index, row in enumerate(ws.iter_rows()):
+            if index > 0:
+                center_name = row[3].value if row[3].value else None
+                subarea = row[3].value if row[3].value else None
+                city = row[3].value if row[3].value else None
+                state = row[4].value if row[4].value else None
+                area = row[3].value if row[3].value else None
+                radius = 3,
+                pincode =1234,
+                address = row[2].value if row[2].value else None
+
+        # center_name = request.data['center_name']
+        # city = request.data['city']
+        # area = request.data['area']
+        # subarea = request.data['subarea']
+        # pincode = request.data['pincode']
+        # radius = request.data['radius']
+        # address = request.data['address']
         supplier_codes = request.data['codes'].split(',')
         supplier_codes = [x.strip(' ') for x in supplier_codes]
         city_id = City.objects.get(city_name=city).id
-        area_id = CityArea.objects.get(label=area).id
+        # area_id = CityArea.objects.get(label=area).id
         all_suppliers = {'RS': 'Societies', 'CP': 'Corporate Parks', 'BS': 'Bus Shelter', 'GY': 'Gym', 'SA': 'Saloon',
                          'RE': 'Retail Shop'}
         suppliers = []
@@ -491,7 +513,7 @@ class CreateInitialProposalBulkBasic(APIView):
         centers = [{
             'isEditProposal': False,
             'city': city_id,
-            'area': area_id,
+            # 'area': area_id,
             'suppliers': suppliers,
             'center': {
                 'city': city,
@@ -499,12 +521,13 @@ class CreateInitialProposalBulkBasic(APIView):
                 'codes': supplier_codes,
                 'center_name': center_name,
                 'subarea': subarea,
-                'pincode': pincode,
+                'pincode': str(pincode),
                 'radius': radius,
                 'address': address
             }}]
         proposal_data['centers'] = centers
         center_response = website_utils.save_center_data(proposal_data, user)
+        print(center_response)
         center_id = center_response.data['data']['center_id']
         if not center_response.data['status']:
             return response

@@ -10,6 +10,7 @@ from .views import (CreateInitialProposalBulkBasic, HashtagImagesViewSet, Initia
                     ConvertProposalToCampaign)
 
 urlpatterns = [
+    # url(r'^/create-dummy-proposal/$', CreateDummyProposal.as_view()),
     url(r'^create-initial-proposal-basic/$', CreateInitialProposalBulkBasic.as_view()),
     url(r'^(?P<account_id>[A-Z_a-z0-9]+)/getAccountProposals/$', GetAccountProposalsAPIView.as_view(),
         name='get-account-proposals'),
