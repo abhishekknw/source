@@ -67,6 +67,7 @@ from .website.utils import save_price_mapping_default
 import v0.constants as v0_constants
 from .utils import get_from_dict
 from .controller import inventory_summary_insert
+from v0.ui.email.views import send_email, send_mail_generic
 
 class UsersProfilesAPIView(APIView):
 
@@ -178,6 +179,29 @@ class getUserData(APIView):
         item.delete()
         return Response(status=204)
 
+class resetPasswordAPIView(APIView):
+    def post(self, request):
+        email = request.query_params.get('email', None)
+        try:
+            user = BaseUser.objects.filter(email=email).order_by('-last_login')[0]
+        except IndexError:
+            return "No user found"
+        if user:
+            to_email = [email]
+            email_body = "www.machadalo.com"
+            send_mail_generic("Reset you passowrd", to_email, email_body, None)
+        # user.set_password(data['password'])
+        # user.save()
+            return Response(status=200)
+        else:
+            return Response(status =404)
+
+    # def put(self, request, format=None):
+    #     data = request.data
+    #     user = BaseUser.objects.get(email=data['email'])
+    #     user.set_password(data['password'])
+    #     user.save()
+    #     return Response(status=200)
 
 class deleteUsersAPIView(APIView):
 
