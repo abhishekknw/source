@@ -907,7 +907,8 @@ booking_code_to_status = {
     'NI': 'Not Initiated',
     'RE': 'Recce',
     'MF': 'Meeting Fixed',
-    'CM': 'completed'
+    'CM': 'completed',
+    'UN': 'unknown'
 }
 # different campaign states
 completed = 'COMPLETED'
