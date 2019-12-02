@@ -318,6 +318,12 @@ class GetSupplierDetail(APIView):
             campaign_id = request.query_params.get('campaign_id')
             if not campaign_id:
                 return Response(data={"status": False, "error": "Missing campaign id"}, status=status.HTTP_400_BAD_REQUEST)
+            # Get campaign name from campaign id
+            campaign_detail = ProposalInfo.objects.filter(proposal_id=campaign_id).values('name')
+            campaign_name = ''
+            if campaign_detail:
+                campaign_name = campaign_detail[0]['name']
+
             all_supplier_dict = {
                 'completed': {
                     'supplier_ids': [],
@@ -397,7 +403,7 @@ class GetSupplierDetail(APIView):
             all_supplier_dict['completed']['permission_box_count'] = permission_box_count
             all_supplier_dict['completed']['receipt_count'] = receipt_count
             # Get Comments
-            all_supplier_dict = getEachCampaignComments(campaign_id, {
+            all_supplier_dict = getEachCampaignComments(campaign_id, campaign_name, {
                 'CM': completed_supplier_ids,
                 'DP': decision_pending_supplier_ids,
                 'NB': not_booked_supplier_ids,
