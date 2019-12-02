@@ -194,10 +194,14 @@ class resetPasswordAPIView(APIView):
         except IndexError:
             return Response("No user found", status=404)
         if user:
+            email_template = get_template('password_reset_email.html')
+            html = email_template.render(
+            {"username": str(user.username),
+            "first_name": str(user.first_name)})
             to_email = [email]
-            email_body = "www.machadalo.com"
-            # email_template = get_template('password_reset_email.html')
-            send_mail_generic("Reset you passowrd", to_email, email_body, None)
+            subject = "Password reset request"
+            send_mail_generic(subject, to_email, html, None)
+
             return Response("Email sent to the user", status=200)
         else:
             return Response(status =404)
