@@ -179,7 +179,13 @@ class getUserData(APIView):
         item.delete()
         return Response(status=204)
 
+from rest_framework import permissions
+
+
 class resetPasswordAPIView(APIView):
+
+    permission_classes = (permissions.AllowAny)
+
     def post(self, request):
         email = request.query_params.get('email', None)
         try:
@@ -190,18 +196,9 @@ class resetPasswordAPIView(APIView):
             to_email = [email]
             email_body = "www.machadalo.com"
             send_mail_generic("Reset you passowrd", to_email, email_body, None)
-        # user.set_password(data['password'])
-        # user.save()
-            return Response(status=200)
+            return Response("Email sent to the user", status=200)
         else:
             return Response(status =404)
-
-    # def put(self, request, format=None):
-    #     data = request.data
-    #     user = BaseUser.objects.get(email=data['email'])
-    #     user.set_password(data['password'])
-    #     user.save()
-    #     return Response(status=200)
 
 class deleteUsersAPIView(APIView):
 
