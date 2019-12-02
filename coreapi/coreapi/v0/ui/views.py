@@ -180,11 +180,12 @@ class getUserData(APIView):
         return Response(status=204)
 
 from rest_framework import permissions
+from django.template.loader import get_template
 
 
 class resetPasswordAPIView(APIView):
 
-    permission_classes = (permissions.AllowAny)
+    permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
         email = request.query_params.get('email', None)
@@ -195,6 +196,7 @@ class resetPasswordAPIView(APIView):
         if user:
             to_email = [email]
             email_body = "www.machadalo.com"
+            # email_template = get_template('password_reset_email.html')
             send_mail_generic("Reset you passowrd", to_email, email_body, None)
             return Response("Email sent to the user", status=200)
         else:
