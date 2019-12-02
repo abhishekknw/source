@@ -192,7 +192,7 @@ class resetPasswordAPIView(APIView):
         try:
             user = BaseUser.objects.filter(email=email).order_by('-last_login')[0]
         except IndexError:
-            return "No user found"
+            return Response("No user found", status=404)
         if user:
             to_email = [email]
             email_body = "www.machadalo.com"
