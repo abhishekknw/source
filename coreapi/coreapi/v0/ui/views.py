@@ -69,6 +69,8 @@ from .utils import get_from_dict
 from .controller import inventory_summary_insert
 from v0.ui.email.views import send_email, send_mail_generic
 
+import random
+
 class UsersProfilesAPIView(APIView):
 
     def get(self, request, format=None):
@@ -182,7 +184,6 @@ class getUserData(APIView):
 from rest_framework import permissions
 from django.template.loader import get_template
 
-
 class resetPasswordAPIView(APIView):
 
     permission_classes = (permissions.AllowAny,)
@@ -190,17 +191,47 @@ class resetPasswordAPIView(APIView):
     def post(self, request):
         email = request.query_params.get('email', None)
         try:
-            user = BaseUser.objects.filter(email=email).order_by('-last_login')[0]
+            user = BaseUser.objects.filter(email=email).order_by('-last_login').first()
+            if user:
+                code = random.randrange(20202, 545850, 3)
+                user.emailVerifyCode = code
+                user.save()
+                
+                #to_email = [email]
+                #email_body = "www.machadalo.com"
+                #email_template = get_template('password_reset_email.html')
+                #send_mail_generic("Reset you passowrd", to_email, email_body, None)
+                
+                return Response({'status': 200, 'msg': 'Email sent to the user', 'code':code, 'url':'http://localhost:9000/reset-password/'+str(code)+'/'+request.query_params.get('email', None)})
+            else:
+                return Response(status =404)
         except IndexError:
-            return Response("No user found", status=404)
-        if user:
-            to_email = [email]
-            email_body = "www.machadalo.com"
-            # email_template = get_template('password_reset_email.html')
-            send_mail_generic("Reset you passowrd", to_email, email_body, None)
-            return Response("Email sent to the user", status=200)
-        else:
-            return Response(status =404)
+            return Response({'status': 500, 'msg': 'No user found'})
+
+        # userData = UserSerializer(instance=user).data
+
+
+class setResetPasswordAPIView(APIView):
+    permission_classes = (permissions.AllowAny,)
+    def post(self, request):
+        try:
+            email = 'rahul@yopmail.com'
+            user = BaseUser.objects.filter(email=email).order_by('-last_login')[0]
+            if user:
+                mail_template = get_template('password_reset_email.html')
+                html = mail_template.render(
+                {"username": str(user.username),
+                "first_name": str(user.first_name)})
+                to_email = [email]
+                subject = "Password reset request"
+                send_mail_generic(subject, to_email, html, None)
+
+                return Response("Email sent to the user", status=200)
+
+
+        except IndexError:
+            return Response({'status': 500, 'msg': 'No user found'})
+
 
 class deleteUsersAPIView(APIView):
 
