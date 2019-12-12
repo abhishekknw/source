@@ -204,7 +204,7 @@ class resetPasswordAPIView(APIView):
                 #email_template = get_template('password_reset_email.html')
                 #send_mail_generic("Reset you passowrd", to_email, email_body, None)
                 
-                return Response({'status': 200, 'msg': 'Email sent to the user', 'code':code, 'url':'http://localhost:9000/reset-password/'+str(code)+'/'+request.query_params.get('email', None)})
+                return Response({'status': 200, 'msg': 'Email sent to the user', 'code':code, 'url':'https://dev.machadalo.com/reset-password/'+str(code)+'/'+request.query_params.get('email', None)})
             else:
                 return Response(status =404)
         except IndexError:
