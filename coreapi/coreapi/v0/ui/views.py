@@ -249,7 +249,7 @@ class forgotPasswordAPIView(APIView):
                 user.emailVerifyCode = code
                 user.save()
 
-                link = 'http://localhost:9000/#/reset-password/'+str(code)+'/'+email
+                link = 'https://dev.machadalo.com/#/reset-password/'+str(code)+'/'+email
 
                 email_template = get_template('password_reset_email.html')
                 html = email_template.render({"username": str(user.username), "first_name": str(user.first_name), "link": link})
