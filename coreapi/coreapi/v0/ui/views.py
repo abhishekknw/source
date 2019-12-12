@@ -4,6 +4,7 @@ from __future__ import absolute_import
 import csv
 import json
 import openpyxl
+import re
 
 # django imports
 from django.contrib.contenttypes.models import ContentType
@@ -189,6 +190,7 @@ class resetPasswordAPIView(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
+        
         email = request.query_params.get('email', None)
         try:
             user = BaseUser.objects.filter(email=email).order_by('-last_login').first()
@@ -214,24 +216,73 @@ class resetPasswordAPIView(APIView):
 class setResetPasswordAPIView(APIView):
     permission_classes = (permissions.AllowAny,)
     def post(self, request):
+        class_name = self.__class__.__name__
+
         try:
-            email = 'rahul@yopmail.com'
-            user = BaseUser.objects.filter(email=email).order_by('-last_login')[0]
+            email = request.data['email']
+
+            user = BaseUser.objects.get(email=email)
+            new_password = request.data['password']
+            password_valid = validate_password(new_password)
+            if password_valid == 1:
+                user.set_password(new_password)
+                user.save()
+                return ui_utils.handle_response(class_name, data='password changed successfully', success=True)
+            else:
+                return ui_utils.handle_response(class_name, data='please make sure to have 1 capital, 1 special '
+                                                                 'character, and total 8 characters', success=False)
+        except IndexError:
+            return Response("No user found", status=404)
+
+        
+
+
+class forgotPasswordAPIView(APIView):
+    permission_classes = (permissions.AllowAny,)
+    def post(self, request):
+        try:
+            email = request.query_params.get('email', None)
+           
+            user = BaseUser.objects.filter(email=email).order_by('-last_login').first()
             if user:
-                mail_template = get_template('password_reset_email.html')
-                html = mail_template.render(
-                {"username": str(user.username),
-                "first_name": str(user.first_name)})
+                code = random.randrange(20202, 545850, 3)
+                user.emailVerifyCode = code
+                user.save()
+
+                link = 'http://localhost:9000/#/reset-password/'+str(code)+'/'+email
+
+                email_template = get_template('password_reset_email.html')
+                html = email_template.render({"username": str(user.username), "first_name": str(user.first_name), "link": link})
                 to_email = [email]
                 subject = "Password reset request"
                 send_mail_generic(subject, to_email, html, None)
 
-                return Response("Email sent to the user", status=200)
+                
 
-
+                return Response({'status': 200, 'msg': 'Email sent to the user', 'code':code, 'url':link}, status=200)
+            else:
+                return Response(status =404)
         except IndexError:
-            return Response({'status': 500, 'msg': 'No user found'})
+            return Response("No user found", status=404)
 
+
+def validate_password(new_password):
+    # used to check whether the new password is strong enough
+    valid = 1
+    if not any(x.isupper() for x in new_password):
+        valid = 0
+    if re.match("[^a-zA-Z0-9_]", new_password):
+        valid = 0
+    if len(new_password)<8:
+        valid = 0
+    # rules = [lambda s: any(x.isupper() for x in s),  # must have at least one uppercase
+    #          lambda s: re.match("[^a-zA-Z0-9_]", s)==False,  # must have at least one special char
+    #          lambda s: len(s) >= 8  # must be at least 8 characters
+    #          ]
+    # if all(rule(new_password) for rule in rules):
+    #     valid = 1
+    #     print 'valid'
+    return valid
 
 class deleteUsersAPIView(APIView):
 
