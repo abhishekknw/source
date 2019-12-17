@@ -634,12 +634,14 @@ class AssignCampaign(APIView):
                 # if it is a campaign.
                 if response.data['status']:
                     proposal_id = assign_object.campaign.proposal_id
-                    if proposal_id not in all_proposal_ids:
-                        all_proposal_ids.append(proposal_id)
-                        campaigns.append(assign_object)
+                    # if proposal_id not in all_proposal_ids:
+                        # all_proposal_ids.append(proposal_id)
+                    campaigns.append(assign_object)
                     # assign statuses to each of the campaigns.
 
             serializer = CampaignAssignmentSerializerReadOnly(campaigns, many=True)
+
+            campaign_obj = {}
 
             for data in serializer.data:
                 proposal_start_date = parse_datetime(data['campaign']['tentative_start_date'])
@@ -648,8 +650,23 @@ class AssignCampaign(APIView):
                 if not response.data['status']:
                     return response
                 data['campaign']['status'] = response.data['data']
+                
+                
+                if not campaign_obj.get(data['campaign']['proposal_id']):
+                    campaign_obj[data['campaign']['proposal_id']] = data
+                    campaign_obj[data['campaign']['proposal_id']]["assigned"] = []
+                
+                row = {
+                    "assigned_by":data["assigned_by"],
+                    "assigned_to":data["assigned_to"],
+                }
+                campaign_obj[data['campaign']['proposal_id']]["assigned"].append(row)
 
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+                # data['campaign']['status'] = 'response.data['data']'
+
+            campaign_list = [value for key,value in campaign_obj.items()]
+
+            return ui_utils.handle_response(class_name, data=campaign_list, success=True)
         except ObjectDoesNotExist as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
         except KeyError as e:
@@ -840,6 +857,26 @@ class UserMinimalList(APIView):
         Args:
             request:
         Returns: returns all users
+            
+            for user in users:
+                row = {
+                    "id": user.id,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "email": user.email,
+                    "username": user.username,
+                    "profile_id": user.profile_id,
+                    "role_id": user.role_id,
+                }
+                user_list.append(row)
+
+                if not user_obj.get(user.id):
+                    user_obj[user.id] = row
+                #user_list.append(row)
+                
+            return ui_utils.handle_response(class_name, data={"user_list":user_list, "user_obj":user_obj}, success=True)
+
+
         """
         class_name = self.__class__.__name__
         try:

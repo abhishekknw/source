@@ -2847,21 +2847,28 @@ class SupplierSearch(APIView):
                 return ui_utils.handle_response(class_name, data=[], success=True)
 
             model = ui_utils.get_model(supplier_type_code)
+            print('model._meta.app_label',model._meta)
+
             search_query = Q()
             for search_field in v0_constants.search_fields[supplier_type_code]:
                 if search_query:
                     search_query |= Q(**{search_field: search_txt})
                 else:
                     search_query = Q(**{search_field: search_txt})
+
+            if request.query_params.get("supplier_center"):
+                if search_query:
+                    search_query &= Q(society_city=request.query_params.get("supplier_center"))
+                else:
+                    search_query = Q(society_city=request.query_params.get("supplier_center"))
+            print(search_query)
             if vendor:
                 suppliers = model.objects.filter(search_query, representative=vendor)
             else:
                 suppliers = model.objects.filter(search_query)
             serializer_class = ui_utils.get_serializer(supplier_type_code)
             serializer = serializer_class(suppliers, many=True)
-            suppliers = website_utils.manipulate_object_key_values(serializer.data,
-                                                                   supplier_type_code=supplier_type_code,
-                                                                   **{'status': v0_constants.status})
+            suppliers = website_utils.manipulate_object_key_values(serializer.data, supplier_type_code=supplier_type_code, **{'status': v0_constants.status})
 
             return ui_utils.handle_response(class_name, data=suppliers, success=True)
         except ObjectDoesNotExist as e:

@@ -219,10 +219,18 @@ class setResetPasswordAPIView(APIView):
         class_name = self.__class__.__name__
 
         try:
-            email = request.data['email']
+
+            email = request.data['email'] if 'email' in request.data else None
+            password = request.data['password'] if 'password' in request.data else None
+
+            if not email:
+                return ui_utils.handle_response({}, data='EmailId is Mandatory')
+
+            if not password:
+                return ui_utils.handle_response({}, data='Password is Mandatory')
 
             user = BaseUser.objects.get(email=email)
-            new_password = request.data['password']
+            new_password = password
             password_valid = validate_password(new_password)
             if password_valid == 1:
                 user.set_password(new_password)
@@ -242,6 +250,9 @@ class forgotPasswordAPIView(APIView):
     def post(self, request):
         try:
             email = request.query_params.get('email', None)
+
+            if not email:
+                return ui_utils.handle_response({}, data='EmailId is Mandatory')
            
             user = BaseUser.objects.filter(email=email).order_by('-last_login').first()
             if user:
