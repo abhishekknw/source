@@ -267,14 +267,11 @@ class forgotPasswordAPIView(APIView):
                 to_email = [email]
                 subject = "Password reset request"
                 send_mail_generic(subject, to_email, html, None)
-
-                
-
                 return Response({'status': 200, 'msg': 'Email sent to the user', 'code':code, 'url':link}, status=200)
             else:
-                return Response(status =404)
+                return ui_utils.handle_response({}, data='No user found this email.')
         except IndexError:
-            return Response("No user found", status=404)
+            return ui_utils.handle_response({}, data='No user found this email.')
 
 
 def validate_password(new_password):
