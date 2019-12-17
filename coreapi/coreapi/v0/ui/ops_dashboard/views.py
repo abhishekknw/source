@@ -12,7 +12,8 @@ from v0.ui.account.models import ContactDetails
 from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignAssignment
 from v0.constants import (campaign_status, proposal_on_hold, booking_code_to_status,
-                          payment_code_to_status, booking_priority_code_to_status, proposal_not_converted_to_campaign,proposal_finalized )
+                          proposal_not_converted_to_campaign, booking_substatus_code_to_status,
+                          proposal_finalized)
 from .utils import getEachCampaignComments, getSocietyDetails
 
 class GetSocietyAnalytics(APIView):
@@ -436,10 +437,19 @@ class GetCampaignStatusCount(APIView):
                 }
             }
             all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
-                values('proposal_id', 'object_id', 'is_completed','booking_status')
+                values('proposal_id', 'object_id', 'is_completed','booking_status', 'booking_sub_status')
 
             for shortlisted_supplier in all_shortlisted_supplier:
                 booking_status_code = shortlisted_supplier['booking_status']
+                booking_sub_status_code = shortlisted_supplier['booking_sub_status']
+                if booking_sub_status_code:
+                    booking_sub_status = booking_substatus_code_to_status[booking_sub_status_code]
+                    if booking_sub_status not in all_supplier_dict.keys():
+                        all_supplier_dict['booking_sub_status'] = {}
+                        all_supplier_dict['booking_sub_status'][booking_sub_status] = {}
+                        all_supplier_dict['booking_sub_status'][booking_sub_status]['supplier_ids'] = [shortlisted_supplier['object_id']]
+                    else:
+                        all_supplier_dict['booking_sub_status'][booking_sub_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
                 if booking_status_code is not None:
                     booking_status = booking_code_to_status[booking_status_code]
                     if shortlisted_supplier['is_completed'] and booking_status_code == 'BK':
@@ -457,11 +467,18 @@ class GetCampaignStatusCount(APIView):
                         else:
                             all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
             response = {
-                'campaign_id': campaign_id
+                'campaign_id': campaign_id,
+                'booking_sub_status': {}
             }
             for campaign_status, supplier in all_supplier_dict.items():
-                supplier_count = len(supplier['supplier_ids'])
-                response[campaign_status] = supplier_count
+                if campaign_status == 'booking_sub_status':
+                    if bool(campaign_status) is True:
+                        for sub_status, supplier_substatus in supplier.items():
+                            supplier_count = len(supplier_substatus['supplier_ids'])
+                            response['booking_sub_status'][sub_status] = supplier_count
+                else:
+                    supplier_count = len(supplier['supplier_ids'])
+                    response[campaign_status] = supplier_count
             return Response(data={"status": True, "data": response}, status=status.HTTP_200_OK)
         except Exception as e:
             logger.exception(e)
