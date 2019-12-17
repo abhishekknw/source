@@ -20,7 +20,7 @@ class GetMISData(APIView):
             if supplier['supplier_id'] in supplier_id_with_leads_map:
                 supplier['total_leads'] = supplier_id_with_leads_map[supplier['supplier_id']]['total_leads_count']
                 supplier['hot_leads'] = supplier_id_with_leads_map[supplier['supplier_id']]['hot_leads_count']
-                supplier['lead_date'] = supplier_id_with_leads_map[supplier['supplier_id']]['created_at']
+                # supplier['lead_date'] = supplier_id_with_leads_map[supplier['supplier_id']]['created_at']
                 supplier['total_leads_percentage'] = supplier_id_with_leads_map[supplier['supplier_id']][
                                                          'total_leads_count'] / supplier['flat_count'] * 100
                 supplier['hot_leads_percentage'] = supplier_id_with_leads_map[supplier['supplier_id']][

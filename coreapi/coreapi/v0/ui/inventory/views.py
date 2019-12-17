@@ -1204,8 +1204,8 @@ class AssignInventoryActivityDateUsers(APIView):
                         else:
                             # if it's Release/Closure, you only create once instance against release.
                             inv_act_assignment, is_created = InventoryActivityAssignment.objects.get_or_create(
-                                inventory_activity=inventory_activity_instance)
-                            inv_act_assignment.activity_date = ui_utils.get_aware_datetime_from_string(date)
+                                inventory_activity=inventory_activity_instance,
+                                activity_date = ui_utils.get_aware_datetime_from_string(date))
 
                         inv_act_assignment.assigned_to = user_map[int(user)]
                         inv_act_assignment.assigned_by = request.user
