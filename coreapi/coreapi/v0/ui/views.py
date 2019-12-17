@@ -245,6 +245,9 @@ class setResetPasswordAPIView(APIView):
         
 
 
+
+
+
 class forgotPasswordAPIView(APIView):
     permission_classes = (permissions.AllowAny,)
     def post(self, request):
