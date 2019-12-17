@@ -214,7 +214,9 @@ class resetPasswordAPIView(APIView):
 
 
 class setResetPasswordAPIView(APIView):
+    
     permission_classes = (permissions.AllowAny,)
+    
     def post(self, request):
         class_name = self.__class__.__name__
 
@@ -230,26 +232,25 @@ class setResetPasswordAPIView(APIView):
                 return ui_utils.handle_response({}, data='Password is Mandatory')
 
             user = BaseUser.objects.get(email=email)
-            new_password = password
-            password_valid = validate_password(new_password)
-            if password_valid == 1:
-                user.set_password(new_password)
-                user.save()
-                return ui_utils.handle_response(class_name, data='password changed successfully', success=True)
+            
+            if user:
+                new_password = password
+                password_valid = validate_password(new_password)
+                if password_valid == 1:
+                    user.set_password(new_password)
+                    user.save()
+                    return ui_utils.handle_response(class_name, data='password changed successfully', success=True)
+                else:
+                    return ui_utils.handle_response(class_name, data='please make sure to have 1 capital, 1 special character, and total 8 characters', success=False)
             else:
-                return ui_utils.handle_response(class_name, data='please make sure to have 1 capital, 1 special '
-                                                                 'character, and total 8 characters', success=False)
+                return ui_utils.handle_response({}, data='No user found this email.')
         except IndexError:
-            return Response("No user found", status=404)
-
-        
-
-
-
+            return ui_utils.handle_response({}, data='No user found this email.')
 
 
 class forgotPasswordAPIView(APIView):
     permission_classes = (permissions.AllowAny,)
+    
     def post(self, request):
         try:
             email = request.query_params.get('email', None)
@@ -257,7 +258,7 @@ class forgotPasswordAPIView(APIView):
             if not email:
                 return ui_utils.handle_response({}, data='EmailId is Mandatory')
            
-            user = BaseUser.objects.filter(email=email).order_by('-last_login').first()
+            user = BaseUser.objects.filter(email=email).first()
             if user:
                 code = random.randrange(20202, 545850, 3)
                 user.emailVerifyCode = code
@@ -270,7 +271,7 @@ class forgotPasswordAPIView(APIView):
                 to_email = [email]
                 subject = "Password reset request"
                 send_mail_generic(subject, to_email, html, None)
-                return Response({'status': 200, 'msg': 'Email sent to the user', 'code':code, 'url':link}, status=200)
+                return Response({'status': 200, 'msg': 'Email sent to the user', 'code':code, 'url':link, "username": str(user.email)}, status=200)
             else:
                 return ui_utils.handle_response({}, data='No user found this email.')
         except IndexError:
