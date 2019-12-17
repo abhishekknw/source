@@ -248,6 +248,8 @@ class setResetPasswordAPIView(APIView):
             return ui_utils.handle_response({}, data='No user found this email.')
 
 
+
+
 class forgotPasswordAPIView(APIView):
     permission_classes = (permissions.AllowAny,)
     
