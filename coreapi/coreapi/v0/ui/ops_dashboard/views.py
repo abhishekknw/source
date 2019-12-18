@@ -1,4 +1,5 @@
 import logging
+
 logger = logging.getLogger(__name__)
 import datetime
 import dateutil.relativedelta
@@ -10,7 +11,7 @@ from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo, ProposalCenterMapping, HashTagImages, SupplierAssignment
 from v0.ui.account.models import ContactDetails
 from v0.ui.common.models import BaseUser
-from v0.ui.campaign.models import CampaignAssignment
+from v0.ui.campaign.models import CampaignAssignment, CampaignComments
 from v0.constants import (campaign_status, proposal_on_hold, booking_code_to_status,
                           proposal_not_converted_to_campaign, booking_substatus_code_to_status,
                           proposal_finalized)
@@ -238,8 +239,10 @@ class GetCampaignWiseAnalytics(APIView):
                         'all_supplier_ids': [],
                         'all_phase_ids': [],
                         'total_flat_counts': 0,
+                        'contact_name_filled_total': 0,
                         'contact_name_filled': 0,
                         'contact_name_not_filled': 0,
+                        'contact_number_filled_total': 0,
                         'contact_number_filled': 0,
                         'contact_number_not_filled': 0,
                         'flat_count_filled': 0,
@@ -261,6 +264,11 @@ class GetCampaignWiseAnalytics(APIView):
                 except ContactDetails.DoesNotExist:
                     contact_details = None
                 if contact_details:
+                    for contact_detail in contact_details:
+                        if contact_detail['name']:
+                            all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_name_filled_total'] += 1
+                        if contact_detail['mobile']:
+                            all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_number_filled_total'] += 1
                     all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_name_filled'] += 1 if contact_details[0]['name'] else 0
                     all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_number_filled'] += 1 if contact_details[0]['mobile'] else 0
 
@@ -296,8 +304,10 @@ class GetCampaignWiseAnalytics(APIView):
                     "supplier_count": len(all_campaign_dict[campaign_id]['all_supplier_ids']),
                     "flat_count": all_campaign_dict[campaign_id]['total_flat_counts'],
                     "campaign_status": this_campaign_status,
+                    "contact_name_filled_total": all_campaign_dict[campaign_id]['contact_name_filled_total'],
                     "contact_name_filled": all_campaign_dict[campaign_id]['contact_name_filled'],
                     "contact_name_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_name_filled'],
+                    "contact_number_filled_total": all_campaign_dict[campaign_id]['contact_number_filled_total'],
                     "contact_number_filled": all_campaign_dict[campaign_id]['contact_number_filled'],
                     "contact_number_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_number_filled'],
                     "flat_count_details_filled": all_campaign_dict[campaign_id]['flat_count_filled'],
