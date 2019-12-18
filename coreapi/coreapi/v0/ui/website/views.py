@@ -615,6 +615,21 @@ class AssignCampaign(APIView):
         class_name = self.__class__.__name__
 
         try:
+
+            users = BaseUser.objects.all()
+            user_obj = {}
+            if users:
+                for user in users:
+                    row = {
+                        "id": user.id,
+                        "username": user.username
+                    }
+                
+
+                    if not user_obj.get(user.id):
+                        user_obj[user.id] = row
+                
+
             user = request.user
             username_list = BaseUser.objects.filter(profile__organisation=user.profile.organisation.organisation_id). \
                             values_list('username')
@@ -622,7 +637,6 @@ class AssignCampaign(APIView):
             if user.is_superuser:
                 assigned_objects = CampaignAssignment.objects.all()
             else:
-                # assigned_objects = CampaignAssignment.objects.filter(Q(assigned_to=user) | Q(assigned_by=user) | Q(campaign__created_by=user.username))
                 assigned_objects = CampaignAssignment.objects.filter(campaign__created_by__in=username_list)
             campaigns = []
             all_proposal_ids = []
@@ -657,13 +671,12 @@ class AssignCampaign(APIView):
                     campaign_obj[data['campaign']['proposal_id']]["assigned"] = []
                 
                 row = {
-                    "assigned_by":data["assigned_by"],
-                    "assigned_to":data["assigned_to"],
+                    "assigned_by": user_obj[data["assigned_by"]]['username'],
+                    "assigned_to": user_obj[data["assigned_to"]]['username'],
                 }
+
                 campaign_obj[data['campaign']['proposal_id']]["assigned"].append(row)
-
-                # data['campaign']['status'] = 'response.data['data']'
-
+            
             campaign_list = [value for key,value in campaign_obj.items()]
 
             return ui_utils.handle_response(class_name, data=campaign_list, success=True)

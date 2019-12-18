@@ -224,9 +224,13 @@ class setResetPasswordAPIView(APIView):
 
             email = request.data['email'] if 'email' in request.data else None
             password = request.data['password'] if 'password' in request.data else None
+            code = request.data['code'] if 'code' in request.data else None
 
             if not email:
                 return ui_utils.handle_response({}, data='EmailId is Mandatory')
+            
+            if not code:
+                return ui_utils.handle_response({}, data='Code is Mandatory')
 
             if not password:
                 return ui_utils.handle_response({}, data='Password is Mandatory')
@@ -234,14 +238,18 @@ class setResetPasswordAPIView(APIView):
             user = BaseUser.objects.get(email=email)
             
             if user:
-                new_password = password
-                password_valid = validate_password(new_password)
-                if password_valid == 1:
-                    user.set_password(new_password)
-                    user.save()
-                    return ui_utils.handle_response(class_name, data='password changed successfully', success=True)
+                if code == user.emailVerifyCode:
+                    new_password = password
+                    password_valid = validate_password(new_password)
+                    if password_valid == 1:
+                        user.set_password(new_password)
+                        user.emailVerifyCode = ""
+                        user.save()
+                        return ui_utils.handle_response(class_name, data='password changed successfully', success=True)
+                    else:
+                        return ui_utils.handle_response(class_name, data='please make sure to have 1 capital, 1 special character, and total 8 characters', success=False)
                 else:
-                    return ui_utils.handle_response(class_name, data='please make sure to have 1 capital, 1 special character, and total 8 characters', success=False)
+                    return ui_utils.handle_response({}, data='code not valid.')
             else:
                 return ui_utils.handle_response({}, data='No user found this email.')
         except IndexError:
@@ -256,9 +264,13 @@ class forgotPasswordAPIView(APIView):
     def post(self, request):
         try:
             email = request.query_params.get('email', None)
+            host  = request.query_params.get('host', None)
 
             if not email:
                 return ui_utils.handle_response({}, data='EmailId is Mandatory')
+            
+            if not host:
+                return ui_utils.handle_response({}, data='host is Mandatory')
            
             user = BaseUser.objects.filter(email=email).first()
             if user:
@@ -266,7 +278,7 @@ class forgotPasswordAPIView(APIView):
                 user.emailVerifyCode = code
                 user.save()
 
-                link = 'https://dev.machadalo.com/#/reset-password/'+str(code)+'/'+email
+                link = host+str(code)+'/'+email
 
                 email_template = get_template('password_reset_email.html')
                 html = email_template.render({"username": str(user.username), "first_name": str(user.first_name), "link": link})
@@ -289,13 +301,7 @@ def validate_password(new_password):
         valid = 0
     if len(new_password)<8:
         valid = 0
-    # rules = [lambda s: any(x.isupper() for x in s),  # must have at least one uppercase
-    #          lambda s: re.match("[^a-zA-Z0-9_]", s)==False,  # must have at least one special char
-    #          lambda s: len(s) >= 8  # must be at least 8 characters
-    #          ]
-    # if all(rule(new_password) for rule in rules):
-    #     valid = 1
-    #     print 'valid'
+   
     return valid
 
 class deleteUsersAPIView(APIView):
