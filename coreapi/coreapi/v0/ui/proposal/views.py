@@ -11,7 +11,10 @@ from openpyxl import load_workbook
 from requests.exceptions import ConnectionError
 from celery.result import GroupResult
 import shutil
+from random import randint
 import os
+import datetime
+from datetime import timedelta
 import pytz
 import v0.permissions as v0_permissions
 from django.conf import settings
@@ -54,6 +57,9 @@ import v0.ui.website.tasks as tasks
 from v0.ui.email.views import send_email
 from v0.ui.supplier.models import SupplierTypeCorporate
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
+from v0.ui.supplier.supplier_uploads import create_price_mapping_default
+
+from v0.ui.supplier.views import get_flat_count_type, get_state_map, get_city_map, get_city_area_map, get_city_subarea_map
 from v0.ui.base.models import DurationType
 from v0 import errors
 from rest_framework import viewsets
@@ -63,6 +69,7 @@ from v0.ui.utils import handle_response
 from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignComments
 from v0.ui.common.models import mongo_client, mongo_test
+from v0.ui.controller import inventory_summary_insert
 
 
 def convert_date_format(date):
@@ -138,11 +145,12 @@ def create_proposal_object(organisation_id, account_id, user, tentative_cost, na
             [Organisation.objects.get(pk=organisation_id).name, AccountInfo.objects.get(pk=account_id).name]),
         'account': account.account_id,
         'user': user.id,
-        'created_by': user.id,
+        'created_by': user.first_name,
         'tentative_cost': tentative_cost,
         'name': name,
-        'updated_by':user.id,
-        'campaign_state': 'PTC'
+        'updated_by':user.first_name,
+        'campaign_state': 'PTC',
+        'principal_vendor_id': user.profile.organisation_id
     }
 
 def genrate_supplier_data(data):
@@ -296,8 +304,6 @@ def assign_inv_dates(data):
         inv_act_assignement_list = []
         index = 0
         for inv in inv_data:
-            print("Assignment inv : " + str(index))
-            print(inv['supplier_id'])
             index += 1
             assigned_by = None
             assigned_to = None
@@ -450,16 +456,6 @@ class CreateInitialProposal(APIView):
 class CreateDummyProposal(APIView):
     """docstring for CreateDummyProposal"""
     def post(self, request):
-        source_file = request.data['file']
-        wb = load_workbook(source_file)
-        ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
-        proposal_list = []
-        campaign_list = []
-        proposal_data = {}
-        
-
-class CreateInitialProposalBulkBasic(APIView):
-    def post(self, request):
         class_name = self.__class__.__name__
         source_file = request.data['file']
         wb = load_workbook(source_file)
@@ -470,7 +466,7 @@ class CreateInitialProposalBulkBasic(APIView):
         organisation_id = request.data['organisation_id']
         account_id = request.data['account_id']
         user = request.user
-        tentative_cost = request.data['tentative_cost']
+        tentative_cost = randint(20000, 50000)
         name = request.data['name']
         proposal_data = create_proposal_object(organisation_id, account_id, user, tentative_cost, name)
         response = website_utils.create_basic_proposal(proposal_data)
@@ -481,55 +477,41 @@ class CreateInitialProposalBulkBasic(APIView):
 
         for index, row in enumerate(ws.iter_rows()):
             if index > 0:
-                flat_count = int(row[18].value) if row[18].value else None
-                vendor_name = row[0].value if row[0].value else None
-                representative_id = None
-                if vendor_name:
-                    ventor_organisation_all = Organisation.objects.filter(name=vendor_name).all()
-                    if len(ventor_organisation_all):
-                        representative_id = ventor_organisation_all[0].organisation_id
-                flat_count_type = get_flat_count_type(flat_count)
+                flat_count = row[19].value if row[19].value else None
+                representative_id = row[95].value if row[95].value else None
                 society_data_list.append({
                     'representative_id': representative_id,
-                    'society_name': row[3].value if row[3].value else None,
-                    'society_city': str(row[5].value) if row[5].value else None,
-                    'supplier_id': row[10].value if row[10].value else None,
-                    'society_zip': int(row[11].value) if row[11].value else None,
-                    'society_address1' : row[12].value if row[12].value else None,
-                    'landmark' : row[13].value if row[13].value else None,
-                    'society_type_quality' : row[14].value if row[14].value else None,
-                    'society_latitude': float(row[15].value) if row[15].value else None,
-                    'society_longitude': float(row[16].value) if row[16].value else None,
-                    'tower_count': int(row[17].value) if row[17].value else None,
-                    'flat_count': int(row[18].value) if row[18].value else None,
-                    'flat_count_type': flat_count_type,
-                    'vacant_flat_count' : int(row[19].value) if row[19].value else None,
-                    'bachelor_tenants_allowed': row[20].value if row[20].value in ['Y', 'y', 't', 'T', 'true','True'] else False,
-                    'designation': row[21].value if row[21].value else None,
-                    'salutation': row[22].value if row[22].value else None,
-                    'contact_name': row[23].value if row[23].value else None,
-                    'email': row[24].value if row[24].value else None,
-                    'mobile': row[25].value if row[25].value else None,
-                    'landline': row[26].value if row[26].value else None,
-                    'name_for_payment': row[27].value if row[27].value else None,
-                    'ifsc_code': row[28].value if row[28].value else None,
-                    'bank_name': row[29].value if row[29].value else None,
-                    'account_no': row[30].value if row[30].value else None,
-                    'relationship_manager' : row[31].value if row[31].value else None,
-                    'age_of_society' : row[32].value if row[32].value else None,
-                    'stall_allowed': True if row[33].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'total_stall_count': row[34].value if row[34].value else None,
-                    'poster_allowed_nb': True if row[35].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'nb_per_tower': int(row[36].value) if row[36].value else None,
-                    'poster_allowed_lift': True if row[37].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'lift_per_tower': int(row[38].value) if row[38].value else None,
-                    'flier_allowed': True if row[39].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
-                    'flier_frequency': int(row[40].value) if row[40].value else None,
-                    'stall_price': float(row[41].value) if row[41].value else None,
-                    'poster_price': float(row[42].value) if row[42].value else None,
-                    'flier_price': float(row[43].value) if row[43].value else None,
-                    'status': row[44].value,
-                    'comments': row[45].value,
+                    'supplier_id': row[0].value if row[0].value else None,
+                    'supplier_code': row[1].value if row[1].value else None,
+                    'society_name': row[2].value if row[2].value else None,
+                    'society_address1' : row[3].value if row[3].value else None,
+                    'society_zip': row[5].value if row[5].value else None,
+                    'society_city': row[6].value if row[6].value else None,
+                    'society_state': row[7].value if row[7].value else None,
+                    'society_longitude': row[8].value if row[8].value else None,
+                    'society_locality': row[9].value if row[9].value else None,
+                    'society_subarea': row[10].value if row[10].value else None,
+                    'society_latitude': row[11].value if row[11].value else None,
+                    'society_locality_type': row[12].value if row[12].value else None,
+                    'society_type_quality' : row[13].value if row[13].value else None,
+                    'flat_count': row[19].value if row[19].value else None,
+                    'flat_count_type': row[99].value if row[99].value else None,
+                    'vacant_flat_count' : row[21].value if row[21].value else None,
+                    'bachelor_tenants_allowed': row[25].value if row[25].value in ['Y', 'y', 't', 'T', 'true','True'] else False,
+                    'tower_count': row[63].value if row[63].value else None,
+                    'landmark' : row[93].value if row[93].value else None,
+                    'name_for_payment': row[70].value if row[70].value else None,
+                    'ifsc_code': row[71].value if row[71].value else None,
+                    'bank_name': row[72].value if row[72].value else None,  
+                    'account_no': row[73].value if row[73].value else None,
+                    'relationship_manager' : row[98].value if row[98].value else None,
+                    'age_of_society' : row[69].value if row[69].value else None,
+                    'stall_allowed': True if row[83].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'poster_allowed_nb': True if row[79].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'poster_allowed_lift': True if row[80].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'flier_allowed': True if row[82].value in ['Y', 'y', 't', 'T', 'true', 'True'] else False,
+                    'status': row[97].value if row[97].value else None,
+                    'comments': row[96].value if row[96].value else None,
                 })
         all_states_map = get_state_map()
         all_city_map = get_city_map()
@@ -538,31 +520,28 @@ class CreateInitialProposalBulkBasic(APIView):
         for society in society_data_list:
             if society['supplier_code'] is not None:
                 data = {
-                    'city_code': society['society_city_code'],
-                    'area_code': society['society_locality_code'],
-                    'subarea_code': society['society_subarea_code'],
                     'supplier_type': 'RS',
                     'supplier_code': society['supplier_code'],
                     'supplier_name': society['society_name']
                 }
-
+                global  supplier_id
+                all_supplier_ids = []
                 supplier_id = None
                 if society['supplier_id']:
                     supplier_id = society['supplier_id']
+                    all_supplier_ids.append(supplier_id)
                 else:
                     supplier_id = get_supplier_id(data)
 
                 supplier_length = len(SupplierTypeSociety.objects.filter(supplier_id=supplier_id))
                 if len(SupplierTypeSociety.objects.filter(society_name=society['society_name'])):
 
-                    # instance = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
                     instance = SupplierTypeSociety.objects.filter(society_name=society['society_name'])[0]
                     supplier_id = instance.supplier_id
                     instance.society_name = society['society_name']
                     instance.representative_id = society['representative_id']
                     instance.society_locality = society['society_locality']
                     instance.society_city = society['society_city']
-                    instance.society_state = all_states_map[society['society_city_code']]['state_name']
                     instance.society_subarea = society['society_subarea']
                     instance.supplier_code = society['supplier_code']
                     instance.society_zip = society['society_zip']
@@ -594,7 +573,6 @@ class CreateInitialProposalBulkBasic(APIView):
                     instance.representative_id = society['representative_id']
                     instance.society_locality = society['society_locality']
                     instance.society_city = society['society_city']
-                    instance.society_state = all_states_map[society['society_city_code']]['state_name']
                     instance.society_subarea = society['society_subarea']
                     instance.supplier_code = society['supplier_code']
                     instance.society_zip = society['society_zip']
@@ -627,7 +605,6 @@ class CreateInitialProposalBulkBasic(APIView):
                         'representative_id': society['representative_id'],
                         'society_locality': society['society_locality'],
                         'society_city': society['society_city'],
-                        'society_state': all_states_map[society['society_city_code']]['state_name'],
                         'society_subarea': society['society_subarea'],
                         'supplier_code': society['supplier_code'],
                         'society_zip': society['society_zip'],
@@ -652,22 +629,7 @@ class CreateInitialProposalBulkBasic(APIView):
                     })
                     new_society.save()
 
-                new_contact_data = {
-                    'name': society['contact_name'],
-                    'email': society['email'],
-                    'designation': society['designation'],
-                    'salutation': society['salutation'],
-                    'mobile': society['mobile'],
-                    'landline': society['landline'],
-                    'content_type': get_content_type('RS').data['data'],
-                    'object_id': supplier_id
-                }
-                contacts = ContactDetails.objects.filter(mobile=society['mobile'])
-                if not len(contacts):
-                    ContactDetails.objects.create(**new_contact_data)
-
-                rs_content_type = get_content_type('RS').data['data']
-                print(society['society_name'])
+                rs_content_type = ui_utils.get_content_type('RS').data['data']
                 try:
                     create_price_mapping_default('7', "POSTER", "A4", new_society,
                                              society['poster_price'], rs_content_type, supplier_id)
@@ -693,7 +655,7 @@ class CreateInitialProposalBulkBasic(APIView):
                                              0, rs_content_type, supplier_id)
                 except Exception as e:
                     pass
-                save_flyer_locations(0, 1, new_society, society['supplier_code'])
+                ui_utils.save_flyer_locations(0, 1, new_society, society['supplier_code'])
                 try:
                     create_price_mapping_default('1', "FLIER", "Door-to-Door", new_society,
                                              society['flier_price'], rs_content_type, supplier_id)
@@ -707,15 +669,11 @@ class CreateInitialProposalBulkBasic(APIView):
                     'd2d_allowed': True,
                     'poster_allowed_nb': True,
                     'supplier_type_code': 'RS',
-                    'lift_count': society['tower_count'] * society['lift_per_tower'] if society['tower_count'] and society['lift_per_tower'] else None,
                     'stall_allowed': True,
                     'object_id': supplier_id,
                     'flier_allowed': True,
-                    'nb_count': society['tower_count'] * society['nb_per_tower'] if society['tower_count'] and society['nb_per_tower'] else None,
                     'user': 1,
                     'content_type': 46,
-                    'flier_frequency': society['flier_frequency'] if society['flier_frequency'] else None,
-                    'total_stall_count': society['total_stall_count'] if society['total_stall_count'] else None,
                     'poster_allowed_lift': True,
                 }
                 class_name = self.__class__.__name__
@@ -727,38 +685,136 @@ class CreateInitialProposalBulkBasic(APIView):
 
                 supplier_inventory_data = response.data['data']['request_data']
                 final_data = {
-                    'id': get_from_dict(request_data, supplier_id),
-                    'supplier_object': get_from_dict(response.data['data'], 'supplier_object'),
-                    'inventory_object': get_from_dict(response.data['data'], 'inventory_object'),
-                    'supplier_type_code': get_from_dict(request_data, 'supplier_type_code'),
-                    'poster_allowed_nb': get_from_dict(request_data, 'poster_allowed_nb'),
-                    'nb_count': get_from_dict(request_data, 'nb_count'),
-                    'poster_campaign': get_from_dict(request_data, 'poster_campaign'),
-                    'lift_count': get_from_dict(request_data, 'lift_count'),
-                    'poster_allowed_lift': get_from_dict(request_data, 'poster_allowed_lift'),
-                    'standee_allowed': get_from_dict(request_data, 'standee_allowed'),
-                    'total_standee_count': get_from_dict(request_data, 'total_standee_count'),
-                    'stall_allowed': get_from_dict(request_data, 'stall_allowed'),
-                    'total_stall_count': get_from_dict(request_data, 'total_stall_count'),
-                    'flier_allowed': get_from_dict(request_data, 'flier_allowed'),
-                    'flier_frequency': get_from_dict(request_data, 'flier_frequency'),
-                    'flier_campaign': get_from_dict(request_data, 'flier_campaign'),
+                    'id': ui_utils.get_from_dict(request_data, supplier_id),
+                    'supplier_object': ui_utils.get_from_dict(response.data['data'], 'supplier_object'),
+                    'inventory_object': ui_utils.get_from_dict(response.data['data'], 'inventory_object'),
+                    'supplier_type_code': ui_utils.get_from_dict(request_data, 'supplier_type_code'),
+                    'poster_allowed_nb': ui_utils.get_from_dict(request_data, 'poster_allowed_nb'),
+                    'nb_count': ui_utils.get_from_dict(request_data, 'nb_count'),
+                    'poster_campaign': ui_utils.get_from_dict(request_data, 'poster_campaign'),
+                    'lift_count': ui_utils.get_from_dict(request_data, 'lift_count'),
+                    'poster_allowed_lift': ui_utils.get_from_dict(request_data, 'poster_allowed_lift'),
+                    'standee_allowed': ui_utils.get_from_dict(request_data, 'standee_allowed'),
+                    'total_standee_count': ui_utils.get_from_dict(request_data, 'total_standee_count'),
+                    'stall_allowed': ui_utils.get_from_dict(request_data, 'stall_allowed'),
+                    'total_stall_count': ui_utils.get_from_dict(request_data, 'total_stall_count'),
+                    'flier_allowed': ui_utils.get_from_dict(request_data, 'flier_allowed'),
+                    'flier_frequency': ui_utils.get_from_dict(request_data, 'flier_frequency'),
+                    'flier_campaign': ui_utils.get_from_dict(request_data, 'flier_campaign'),
                 }
                 try:
                     inventory_summary_insert(final_data, supplier_inventory_data)
                 except ObjectDoesNotExist as e:
                     print(e)
-                    # return ui_utils.handle_response(class_name, exception_object=e, request=request)
                 except Exception as e:
                     print(e)
-                    # return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
 
+        for society in society_data_list:
+            city_id = City.objects.filter(city_name=society['society_city']).values_list('id', flat=True)
+            centers = [{
+                'isEditProposal': False,
+                'city': city_id,
+                'center': {
+                    'city': society['society_city'],
+                    'address': society['society_address1'],
+                    'codes': society['supplier_code'],
+                    'center_name': society['society_city'],
+                    'area': society['society_city'],
+                    'subarea': society['society_subarea'],
+                    'pincode': society['society_zip'],
+                    'radius': randint(2, 10),
+                    'address': society['society_address1'],
+                }}]
+        proposal_data['centers'] = centers
+        center_response = website_utils.save_center_data(proposal_data, user)
+        center_id = center_response.data['data']['center_id']
+        if not center_response.data['status']:
+            return response
 
+        current_date = datetime.datetime.now().date()
+        end_date = current_date - datetime.timedelta(days=4)
+        start_date = current_date - datetime.timedelta(days=60)
+
+        invoice_no = randint(100, 1000),
+        total_negotiated_price = randint(10000, 30000),
+        proposal_data['tentative_start_date'] = start_date
+        proposal_data['tentative_end_date'] = end_date
+        proposal_data['center_id'] = center_id
+        proposal_data['invoice_number'] = invoice_no
+        proposal_data['total_negotiated_price'] = total_negotiated_price
+        center = ProposalCenterMapping.objects.get(pk=center_id)
+
+        supplier_data = []
+        for s_id in all_supplier_ids:
+            supplier_data.append({
+                'status': 'F',
+                'id': s_id,
+                'total_negotiated_price': total_negotiated_price
+            })
+        center_data = {
+            'RS': {
+                'supplier_data': supplier_data,
+                'filter_codes' : [
+                    { 'id' : 'PO'},
+                    {'id': 'SL'},
+                    {'id': 'ST'},
+                    {'id': 'FL'}
+                ]
+            }
+        }
+        proposal_data['center_data'] = center_data
+        proposal_data['is_import_sheet'] = False
+        proposal = ProposalInfo.objects.get(pk=proposal_data['proposal_id'])
+        for supplier_code in proposal_data['center_data']:
+            response = website_utils.save_filters(center, supplier_code, proposal_data, proposal)
+            if not response.data['status']:
+                return response
+            response = website_utils.save_shortlisted_suppliers_data(center, supplier_code, proposal_data,
+                                                                     proposal)
+            if not response.data['status']:
+                return response
+            response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
+                                                                                     proposal_data, proposal, create_inv_act_data=True)
+            if not response.data['status']:
+                return response
+        response = website_utils.update_proposal_invoice_and_state(proposal_data, proposal)
+        if not response.data['status']:
+            return response
+        response = website_utils.create_generic_export_file_data(proposal)
+        if not response.data['status']:
+            return response
+        return ui_utils.handle_response({}, data=proposal_data, success=True)
+        
+
+class CreateInitialProposalBulkBasic(APIView):
+    def post(self, request):
+        class_name = self.__class__.__name__
+        source_file = request.data['file']
+        wb = load_workbook(source_file)
+        ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+        proposal_list = []
+        campaign_list = []
+        proposal_data = {}
+        organisation_id = request.data['organisation_id']
+        account_id = request.data['account_id']
+        user = request.user
+        tentative_cost = request.data['tentative_cost']
+        name = request.data['name']
+        proposal_data = create_proposal_object(organisation_id, account_id, user, tentative_cost, name)
+        response = website_utils.create_basic_proposal(proposal_data)
+        if not response.data['status']:
+            return response
+        center_name = request.data['center_name']
+        city = request.data['city']
+        area = request.data['area']
+        subarea = request.data['subarea']
+        pincode = request.data['pincode']
+        radius = request.data['radius']
+        address = request.data['address']
         supplier_codes = request.data['codes'].split(',')
         supplier_codes = [x.strip(' ') for x in supplier_codes]
         city_id = City.objects.get(city_name=city).id
-
-        # area_id = CityArea.objects.get(label=area).id
+        area_id = CityArea.objects.get(label=area).id
         all_suppliers = {'RS': 'Societies', 'CP': 'Corporate Parks', 'BS': 'Bus Shelter', 'GY': 'Gym', 'SA': 'Saloon',
                          'RE': 'Retail Shop'}
         suppliers = []
@@ -774,7 +830,7 @@ class CreateInitialProposalBulkBasic(APIView):
         centers = [{
             'isEditProposal': False,
             'city': city_id,
-            # 'area': area_id,
+            'area': area_id,
             'suppliers': suppliers,
             'center': {
                 'city': city,
@@ -782,7 +838,7 @@ class CreateInitialProposalBulkBasic(APIView):
                 'codes': supplier_codes,
                 'center_name': center_name,
                 'subarea': subarea,
-                'pincode': str(pincode),
+                'pincode': pincode,
                 'radius': radius,
                 'address': address
             }}]
