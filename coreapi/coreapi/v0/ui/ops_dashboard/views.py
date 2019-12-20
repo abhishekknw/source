@@ -242,9 +242,13 @@ class GetCampaignWiseAnalytics(APIView):
                         'contact_name_filled_total': 0,
                         'contact_name_filled': 0,
                         'contact_name_not_filled': 0,
+                        'contact_name_filled_suppliers': [],
+                        'contact_name_not_filled_suppliers': [],
                         'contact_number_filled_total': 0,
                         'contact_number_filled': 0,
                         'contact_number_not_filled': 0,
+                        'contact_number_filled_suppliers': [],
+                        'contact_number_not_filled_suppliers': [],
                         'flat_count_filled': 0,
                         'total_payment_details': 0
                     }
@@ -267,8 +271,10 @@ class GetCampaignWiseAnalytics(APIView):
                     for contact_detail in contact_details:
                         if contact_detail['name']:
                             all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_name_filled_total'] += 1
+                            all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_name_filled_suppliers'].append(contact_detail['object_id'])
                         if contact_detail['mobile']:
                             all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_number_filled_total'] += 1
+                            all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_number_filled_suppliers'].append(contact_detail['object_id'])
                     all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_name_filled'] += 1 if contact_details[0]['name'] else 0
                     all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_number_filled'] += 1 if contact_details[0]['mobile'] else 0
 
@@ -306,10 +312,14 @@ class GetCampaignWiseAnalytics(APIView):
                     "campaign_status": this_campaign_status,
                     "contact_name_filled_total": all_campaign_dict[campaign_id]['contact_name_filled_total'],
                     "contact_name_filled": all_campaign_dict[campaign_id]['contact_name_filled'],
+                    "contact_name_filled_suppliers": all_campaign_dict[campaign_id]['contact_name_filled_suppliers'],
+                    "contact_name_not_filled_suppliers": [ele for ele in all_campaign_dict[campaign_id]['all_supplier_ids'] if ele not in all_campaign_dict[campaign_id]['contact_name_filled_suppliers']],
                     "contact_name_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_name_filled'],
                     "contact_number_filled_total": all_campaign_dict[campaign_id]['contact_number_filled_total'],
                     "contact_number_filled": all_campaign_dict[campaign_id]['contact_number_filled'],
+                    "contact_number_filled_suppliers": all_campaign_dict[campaign_id]['contact_number_filled_suppliers'],
                     "contact_number_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_number_filled'],
+                    "contact_number_not_filled_suppliers": [ele for ele in all_campaign_dict[campaign_id]['all_supplier_ids'] if ele not in all_campaign_dict[campaign_id][ 'contact_number_filled_suppliers']],
                     "flat_count_details_filled": all_campaign_dict[campaign_id]['flat_count_filled'],
                     "flat_count_details_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['flat_count_filled'],
                     "payment_details_filled": all_campaign_dict[campaign_id]['total_payment_details'],
@@ -361,8 +371,9 @@ class GetSupplierDetail(APIView):
                     supplier_detail = SupplierTypeSociety.objects.filter(
                         supplier_id=shortlisted_supplier['object_id']).values('society_name', 'society_locality',
                                                                               'society_subarea', 'society_city',
-                                                                              'society_type_quality',
-                                                                              'society_type_quantity')
+                                                                              'society_type_quality','society_address1',
+                                                                              'society_type_quantity', 'society_longitude',
+                                                                              'society_latitude', 'landmark')
                 if booking_status_code is None:
                     continue
                 booking_status = booking_code_to_status[booking_status_code]
