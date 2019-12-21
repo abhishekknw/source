@@ -1,11 +1,13 @@
 from __future__ import print_function
 from __future__ import absolute_import
+
+import datetime
 # python core imports
 import csv
 import json
 import openpyxl
 import re
-
+import v0.views as masterViews 
 # django imports
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
@@ -238,9 +240,24 @@ class setResetPasswordAPIView(APIView):
             user = BaseUser.objects.get(email=email)
             
             if user:
+
+                data1 = user.last_login.replace(tzinfo=None)
+                data2 = datetime.datetime.now()
+
+                diff = data2 - data1
+
+                days, seconds = diff.days, diff.seconds
+                hours = days * 24 + seconds // 3600
+                minutes = (seconds % 3600) // 60
+                seconds = seconds % 60
+
+                if hours>=24:
+                    return ui_utils.handle_response(class_name, data='This link has been expired.', success=False)
+
+                
                 if code == user.emailVerifyCode:
                     new_password = password
-                    password_valid = validate_password(new_password)
+                    password_valid = masterViews.validate_password(new_password)
                     if password_valid == 1:
                         user.set_password(new_password)
                         user.emailVerifyCode = ""
@@ -263,22 +280,26 @@ class forgotPasswordAPIView(APIView):
     
     def post(self, request):
         try:
+
+
             email = request.query_params.get('email', None)
-            host  = request.query_params.get('host', None)
+            link  = request.query_params.get('link', None)
 
             if not email:
                 return ui_utils.handle_response({}, data='EmailId is Mandatory')
             
-            if not host:
-                return ui_utils.handle_response({}, data='host is Mandatory')
+            if not link:
+                return ui_utils.handle_response({}, data='link is Mandatory')
+            
            
             user = BaseUser.objects.filter(email=email).first()
             if user:
                 code = random.randrange(20202, 545850, 3)
                 user.emailVerifyCode = code
+                user.last_login = datetime.datetime.now()
                 user.save()
 
-                link = host+str(code)+'/'+email
+                link = link+'/#/reset-password/'+str(code)+'/'+email
 
                 email_template = get_template('password_reset_email.html')
                 html = email_template.render({"username": str(user.username), "first_name": str(user.first_name), "link": link})
@@ -292,17 +313,6 @@ class forgotPasswordAPIView(APIView):
             return ui_utils.handle_response({}, data='No user found this email.')
 
 
-def validate_password(new_password):
-    # used to check whether the new password is strong enough
-    valid = 1
-    if not any(x.isupper() for x in new_password):
-        valid = 0
-    if re.match("[^a-zA-Z0-9_]", new_password):
-        valid = 0
-    if len(new_password)<8:
-        valid = 0
-   
-    return valid
 
 class deleteUsersAPIView(APIView):
 
@@ -322,6 +332,28 @@ class GetInitialDataAPIView(APIView):
             supplier_code_serializer = SupplierTypeCodeSerializer(items, many=True)
             result = {'cities': city_serializer.data, 'supplier_types': supplier_code_serializer.data}
             return Response(result, status=200)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+
+class getCityAreaAPIView(APIView):
+
+    def get(self, request):
+        class_name = self.__class__.__name__
+        try:
+            search = request.query_params.get('search', None)
+
+            if not search:
+                return ui_utils.handle_response({}, data='search is Mandatory')
+
+            data = []
+            cityData = City.objects.filter(city_name = search).first()
+            if cityData:
+                items1 = CityArea.objects.filter(city_code__id=cityData.id)
+                serializer1 = CityAreaSerializer(items1, many=True)
+                data = serializer1.data
+            return ui_utils.handle_response({}, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
