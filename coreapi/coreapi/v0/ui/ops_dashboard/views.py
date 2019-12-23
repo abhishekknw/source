@@ -369,11 +369,9 @@ class GetSupplierDetail(APIView):
                 supplier_detail = []
                 if shortlisted_supplier['supplier_code'] and shortlisted_supplier['supplier_code'] == 'RS':
                     supplier_detail = SupplierTypeSociety.objects.filter(
-                        supplier_id=shortlisted_supplier['object_id']).values('society_name', 'society_locality',
-                                                                              'society_subarea', 'society_city',
-                                                                              'society_type_quality','society_address1',
-                                                                              'society_type_quantity', 'society_longitude',
-                                                                              'society_latitude', 'landmark')
+                        supplier_id=shortlisted_supplier['object_id']).values('society_name','society_subarea', 'society_city',
+                                                                              'society_type_quality', 'society_longitude',
+                                                                              'society_latitude')
                 if booking_status_code is None:
                     continue
                 booking_status = booking_code_to_status[booking_status_code]
