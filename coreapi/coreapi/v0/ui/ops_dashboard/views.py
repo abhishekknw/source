@@ -359,11 +359,12 @@ class GetSupplierDetail(APIView):
             decision_pending_supplier_ids = []
             booked_supplier_ids = []
             tentative_booked_supplier_ids = []
-            phone_booked_supplier_ids = []
+            new_entity_supplier_ids = []
             not_booked_supplier_ids = []
             rejected_supplier_ids = []
             recce_supplier_ids = []
-            visit_required_supplier_ids = []
+            not_initiated_supplier_ids = []
+            unknown_supplier_ids = []
             for shortlisted_supplier in all_shortlisted_supplier:
                 booking_status_code = shortlisted_supplier['booking_status']
                 supplier_detail = []
@@ -393,8 +394,8 @@ class GetSupplierDetail(APIView):
                     if booking_status in all_supplier_dict.keys():
                         if booking_status_code == 'DP':
                             decision_pending_supplier_ids.append(shortlisted_supplier['object_id'])
-                        elif booking_status_code == 'PB':
-                            phone_booked_supplier_ids.append(shortlisted_supplier['object_id'])
+                        elif booking_status_code == 'NE':
+                            new_entity_supplier_ids.append(shortlisted_supplier['object_id'])
                         elif booking_status_code == 'TB':
                             tentative_booked_supplier_ids.append(shortlisted_supplier['object_id'])
                         elif booking_status_code == 'NB':
@@ -403,8 +404,10 @@ class GetSupplierDetail(APIView):
                             rejected_supplier_ids.append(shortlisted_supplier['object_id'])
                         elif booking_status_code == 'RE':
                             recce_supplier_ids.append(shortlisted_supplier['object_id'])
-                        elif booking_status_code == 'VR':
-                            visit_required_supplier_ids.append(shortlisted_supplier['object_id'])
+                        elif booking_status_code == 'NI':
+                            not_initiated_supplier_ids.append(shortlisted_supplier['object_id'])
+                        elif booking_status_code == 'UN':
+                            unknown_supplier_ids.append(shortlisted_supplier['object_id'])
                     else:
                         all_supplier_dict[booking_status] = {
                             'supplier_ids': [],
@@ -412,6 +415,13 @@ class GetSupplierDetail(APIView):
                         }
                     all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
                     all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_status, supplier_detail[0], shortlisted_supplier)
+            # Remove unwanted booking status
+            if 'Phone Booked' in all_supplier_dict:
+                del all_supplier_dict['Phone Booked']
+            if 'Visit Booked' in all_supplier_dict:
+                del all_supplier_dict['Visit Booked']
+            if 'Visit Required' in all_supplier_dict:
+                del all_supplier_dict['Visit Required']
             # Get supplier count
             for campaign_status, supplier in all_supplier_dict.items():
                 supplier_count = len(supplier['supplier_ids'])
@@ -427,11 +437,12 @@ class GetSupplierDetail(APIView):
                 'CM': completed_supplier_ids,
                 'DP': decision_pending_supplier_ids,
                 'NB': not_booked_supplier_ids,
-                'PB': phone_booked_supplier_ids,
+                'UN': unknown_supplier_ids,
                 'TB': tentative_booked_supplier_ids,
                 'BK': booked_supplier_ids,
                 'SR': rejected_supplier_ids,
-                'VR': visit_required_supplier_ids,
+                'NI': not_initiated_supplier_ids,
+                'NE': new_entity_supplier_ids,
                 'RE': recce_supplier_ids
                 }, all_supplier_dict
             )
@@ -498,6 +509,12 @@ class GetCampaignStatusCount(APIView):
                 else:
                     supplier_count = len(supplier['supplier_ids'])
                     response[campaign_status] = supplier_count
+            if 'Phone Booked' in response:
+                del response['Phone Booked']
+            if 'Visit Booked' in response:
+                del response['Visit Booked']
+            if 'Visit Required' in response:
+                del response['Visit Required']
             return Response(data={"status": True, "data": response}, status=status.HTTP_200_OK)
         except Exception as e:
             logger.exception(e)
