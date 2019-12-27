@@ -7,7 +7,7 @@ import csv
 import json
 import openpyxl
 import re
-import v0.views as masterViews 
+import v0.views as v0_views 
 # django imports
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
@@ -214,10 +214,10 @@ class setResetPasswordAPIView(APIView):
             
             if user:
 
-                data1 = user.emailVerifyDate.replace(tzinfo=None)
-                data2 = datetime.datetime.now()
+                email_code_verificiation_time = user.emailVerifyDate.replace(tzinfo=None)
+                currentTime = datetime.datetime.now()
 
-                diff = data2 - data1
+                diff = currentTime - email_code_verificiation_time
 
                 days, seconds = diff.days, diff.seconds
                 hours = days * 24 + seconds // 3600
@@ -228,7 +228,7 @@ class setResetPasswordAPIView(APIView):
                 
                 if code == user.emailVerifyCode:
                     new_password = password
-                    password_valid = masterViews.validate_password(new_password)
+                    password_valid = v0_views.validate_password(new_password)
                     if password_valid == 1:
                         user.set_password(new_password)
                         user.emailVerifyCode = ""
