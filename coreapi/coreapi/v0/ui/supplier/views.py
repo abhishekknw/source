@@ -2,6 +2,9 @@ from __future__ import print_function
 from __future__ import absolute_import
 import json
 import requests
+
+
+
 from bson.objectid import ObjectId
 from django.urls import reverse
 from django.forms.models import model_to_dict
@@ -2836,39 +2839,65 @@ class SupplierSearch(APIView):
     def get(self, request):
 
         class_name = self.__class__.__name__
-        try:
-            search_txt = request.query_params.get('search')
-            supplier_type_code = request.query_params.get('supplier_type_code')
-            vendor = request.query_params.get('vendor', None)
-            if not supplier_type_code :
-                return ui_utils.handle_response(class_name, data='provide supplier type code')
+       
+        proposal_id = request.query_params.get('proposal_id')
+        all_shortlisted_spaces = []
+        if proposal_id:
+            all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id).values_list('object_id', flat=True)
+            
 
-            if not search_txt:
-                return ui_utils.handle_response(class_name, data=[], success=True)
+        search_txt = request.query_params.get('search')
+        supplier_type_code = request.query_params.get('supplier_type_code')
+        vendor = request.query_params.get('vendor', None)
+        
+        if not supplier_type_code :
+            return ui_utils.handle_response(class_name, data='provide supplier type code')
 
-            model = ui_utils.get_model(supplier_type_code)
-            search_query = Q()
-            for search_field in v0_constants.search_fields[supplier_type_code]:
-                if search_query:
-                    search_query |= Q(**{search_field: search_txt})
-                else:
-                    search_query = Q(**{search_field: search_txt})
-            if vendor:
-                suppliers = model.objects.filter(search_query, representative=vendor)
+        if not search_txt:
+            return ui_utils.handle_response(class_name, data=[], success=True)
+
+        model = ui_utils.get_model(supplier_type_code)
+        
+        search_query = Q()
+        for search_field in v0_constants.search_fields[supplier_type_code]:
+            if search_query:
+                search_query |= Q(**{search_field: search_txt})
             else:
-                suppliers = model.objects.filter(search_query)
-            serializer_class = ui_utils.get_serializer(supplier_type_code)
-            serializer = serializer_class(suppliers, many=True)
-            suppliers = website_utils.manipulate_object_key_values(serializer.data,
-                                                                   supplier_type_code=supplier_type_code,
-                                                                   **{'status': v0_constants.status})
+                search_query = Q(**{search_field: search_txt})
 
-            return ui_utils.handle_response(class_name, data=suppliers, success=True)
-        except ObjectDoesNotExist as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+        if request.query_params.get("supplier_center"):
+            if search_query:
+                search_query &= Q(society_city=request.query_params.get("supplier_center"))
+            else:
+                search_query = Q(society_city=request.query_params.get("supplier_center"))
 
+        if request.query_params.get("supplier_area"):
+            if search_query:
+                search_query &= Q(society_locality__contains=request.query_params.get("supplier_area"))
+            else:
+                search_query = Q(society_locality__contains=request.query_params.get("supplier_area"))
+        
+        if request.query_params.get("supplier_area_subarea"):
+            if search_query:
+                search_query &= Q(society_subarea__contains = request.query_params.get("supplier_area_subarea"))
+            else:
+                search_query = Q(society_subarea__contains = request.query_params.get("supplier_area_subarea"))
+
+
+        if vendor:
+            suppliers = model.objects.filter(search_query, representative=vendor)
+        else:
+            suppliers = model.objects.filter(search_query)
+
+        if len(all_shortlisted_spaces) > 0:
+            suppliers = suppliers.exclude(supplier_id__in=all_shortlisted_spaces)
+
+        serializer_class = ui_utils.get_serializer(supplier_type_code)
+        serializer = serializer_class(suppliers, many=True)
+        suppliers = website_utils.manipulate_object_key_values(serializer.data, supplier_type_code=supplier_type_code, **{'status': v0_constants.status})
+
+        return ui_utils.handle_response(class_name, data=suppliers, success=True)
+        
 
 class SupplierDetails(APIView):
     """

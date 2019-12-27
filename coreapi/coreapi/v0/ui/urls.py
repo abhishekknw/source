@@ -76,6 +76,7 @@ urlpatterns = [
     url(r'^create_supplier/load_initial_data/$', views.GetInitialDataAPIView.as_view()),
     url(r'^(?P<id>[A-Z_a-z0-9]+)/load_initial_data_corporate/$', SaveBasicCorporateDetailsAPIView.as_view(), name='load-initial-corporate-data'),
     url(r'^locations/(?P<id>[A-Z_a-z0-9]+)/$', views.LocationsAPIView.as_view(), name='locations'),
+    url(r'^getCityArea$', views.getCityAreaAPIView.as_view(), name='getCityArea'),
     url(r'^bulk-locations/$', views.AddBulkLocationAPIView.as_view(), name='locations'),
     url(r'^supplier/generate_id/$', GenerateSupplierIdAPIView.as_view(), name='generate-id'),
     url(r'^check_supplier_code/(?P<code>[A-Z0-9]+)$', checkSupplierCodeAPIView.as_view()),
@@ -85,6 +86,10 @@ urlpatterns = [
     url(r'^user_profiles/$', views.UsersProfilesAPIView.as_view()),
     url(r'^user_profiles/(?P<id>[A-Z_a-z0-9]+)$', views.getUserData.as_view()),
     url(r'^users/delete/$', views.deleteUsersAPIView.as_view()),
+   
+    url(r'^setResetPassword$', views.setResetPasswordAPIView.as_view()),
+
+    url(r'^forgotPassword$', views.forgotPasswordAPIView.as_view()),
 
     url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_basic_corporate_details$', SaveBasicCorporateDetailsAPIView.as_view()),
     # url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_contact_details$', views.ContactDetailsGenericAPIView.as_view()),
