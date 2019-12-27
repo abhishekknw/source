@@ -2839,15 +2839,12 @@ class SupplierSearch(APIView):
     def get(self, request):
 
         class_name = self.__class__.__name__
-        # try:
-
+       
         proposal_id = request.query_params.get('proposal_id')
         all_shortlisted_spaces = []
         if proposal_id:
             all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=proposal_id).values_list('object_id', flat=True)
-            #serializer1 = ShortlistedSpacesSerializer(all_shortlisted_spaces, many=True)
             
-
 
         search_txt = request.query_params.get('search')
         supplier_type_code = request.query_params.get('supplier_type_code')
@@ -2887,10 +2884,6 @@ class SupplierSearch(APIView):
                 search_query = Q(society_subarea__contains = request.query_params.get("supplier_area_subarea"))
 
 
-        #search_query = Q(supplier_id__ne = "BENAVNURSCEC")
-
-        print(search_query)
-
         if vendor:
             suppliers = model.objects.filter(search_query, representative=vendor)
         else:
@@ -2904,11 +2897,7 @@ class SupplierSearch(APIView):
         suppliers = website_utils.manipulate_object_key_values(serializer.data, supplier_type_code=supplier_type_code, **{'status': v0_constants.status})
 
         return ui_utils.handle_response(class_name, data=suppliers, success=True)
-        # except ObjectDoesNotExist as e:
-        #     return ui_utils.handle_response(class_name, exception_object=e, request=request)
-        # except Exception as e:
-        #     return ui_utils.handle_response(class_name, exception_object=e, request=request)
-
+        
 
 class SupplierDetails(APIView):
     """

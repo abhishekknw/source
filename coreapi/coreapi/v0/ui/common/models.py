@@ -18,5 +18,6 @@ class BaseUser(AbstractUser):
     role = models.ForeignKey(Role, null=True, blank=True, on_delete=models.CASCADE)
     terms_accepted = models.BooleanField(default=False)
     emailVerifyCode = models.CharField(max_length=20, null=True, blank=True)
+    emailVerifyDate = models.DateTimeField(null=True, blank=True)
     class Meta:
         db_table = 'base_user'

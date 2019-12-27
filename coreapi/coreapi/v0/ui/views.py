@@ -187,33 +187,6 @@ class getUserData(APIView):
 from rest_framework import permissions
 from django.template.loader import get_template
 
-class resetPasswordAPIView(APIView):
-
-    permission_classes = (permissions.AllowAny,)
-
-    def post(self, request):
-        
-        email = request.query_params.get('email', None)
-        try:
-            user = BaseUser.objects.filter(email=email).order_by('-last_login').first()
-            if user:
-                code = random.randrange(20202, 545850, 3)
-                user.emailVerifyCode = code
-                user.save()
-                
-                #to_email = [email]
-                #email_body = "www.machadalo.com"
-                #email_template = get_template('password_reset_email.html')
-                #send_mail_generic("Reset you passowrd", to_email, email_body, None)
-                
-                return Response({'status': 200, 'msg': 'Email sent to the user', 'code':code, 'url':'https://dev.machadalo.com/reset-password/'+str(code)+'/'+request.query_params.get('email', None)})
-            else:
-                return Response(status =404)
-        except IndexError:
-            return Response({'status': 500, 'msg': 'No user found'})
-
-        # userData = UserSerializer(instance=user).data
-
 
 class setResetPasswordAPIView(APIView):
     
@@ -241,16 +214,14 @@ class setResetPasswordAPIView(APIView):
             
             if user:
 
-                data1 = user.last_login.replace(tzinfo=None)
+                data1 = user.emailVerifyDate.replace(tzinfo=None)
                 data2 = datetime.datetime.now()
 
                 diff = data2 - data1
 
                 days, seconds = diff.days, diff.seconds
                 hours = days * 24 + seconds // 3600
-                minutes = (seconds % 3600) // 60
-                seconds = seconds % 60
-
+                
                 if hours>=24:
                     return ui_utils.handle_response(class_name, data='This link has been expired.', success=False)
 
@@ -296,7 +267,7 @@ class forgotPasswordAPIView(APIView):
             if user:
                 code = random.randrange(20202, 545850, 3)
                 user.emailVerifyCode = code
-                user.last_login = datetime.datetime.now()
+                user.emailVerifyDate = datetime.datetime.now()
                 user.save()
 
                 link = link+'/#/reset-password/'+str(code)+'/'+email

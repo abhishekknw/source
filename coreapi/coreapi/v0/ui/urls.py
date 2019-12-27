@@ -87,7 +87,6 @@ urlpatterns = [
     url(r'^user_profiles/(?P<id>[A-Z_a-z0-9]+)$', views.getUserData.as_view()),
     url(r'^users/delete/$', views.deleteUsersAPIView.as_view()),
    
-    url(r'^reset_password$', views.resetPasswordAPIView.as_view()),
     url(r'^setResetPassword$', views.setResetPasswordAPIView.as_view()),
 
     url(r'^forgotPassword$', views.forgotPasswordAPIView.as_view()),

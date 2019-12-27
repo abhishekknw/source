@@ -870,26 +870,6 @@ class UserMinimalList(APIView):
         Args:
             request:
         Returns: returns all users
-            
-            for user in users:
-                row = {
-                    "id": user.id,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "email": user.email,
-                    "username": user.username,
-                    "profile_id": user.profile_id,
-                    "role_id": user.role_id,
-                }
-                user_list.append(row)
-
-                if not user_obj.get(user.id):
-                    user_obj[user.id] = row
-                #user_list.append(row)
-                
-            return ui_utils.handle_response(class_name, data={"user_list":user_list, "user_obj":user_obj}, success=True)
-
-
         """
         class_name = self.__class__.__name__
         try:
