@@ -41,6 +41,9 @@ urlpatterns = [
     url(r'^leads/', include('v0.ui.mis.urls')),
 
 
+
+
+
     # url(r'^website/create_business/load_business_types/',web_views.getBusinessTypesAPIView.as_view()),
     # url(r'^website/subtypes/(?P<id>[A-Z_a-z0-9]+)/$', web_views.getBusinessSubTypesAPIView.as_view()),
 
