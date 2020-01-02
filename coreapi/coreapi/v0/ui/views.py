@@ -233,15 +233,15 @@ class setResetPasswordAPIView(APIView):
                         user.set_password(new_password)
                         user.emailVerifyCode = ""
                         user.save()
-                        return ui_utils.handle_response(class_name, data='password changed successfully', success=True)
+                        return ui_utils.handle_response(class_name, data='Password changed successfully.', success=True)
                     else:
-                        return ui_utils.handle_response(class_name, data='please make sure to have 1 capital, 1 special character, and total 8 characters', success=False)
+                        return ui_utils.handle_response(class_name, data='Please make sure to have 1 capital, 1 special character, and total 8 characters', success=False)
                 else:
-                    return ui_utils.handle_response({}, data='code not valid.')
+                    return ui_utils.handle_response({}, data='This code is not valid.')
             else:
-                return ui_utils.handle_response({}, data='No user found this email.')
+                return ui_utils.handle_response({}, data='User does not exit with this email.')
         except IndexError:
-            return ui_utils.handle_response({}, data='No user found this email.')
+            return ui_utils.handle_response({}, data='User does not exit with this email.')
 
 
 
@@ -277,11 +277,12 @@ class forgotPasswordAPIView(APIView):
                 to_email = [email]
                 subject = "Password reset request"
                 send_mail_generic(subject, to_email, html, None)
-                return Response({'status': 200, 'msg': 'Email sent to the user', 'code':code, 'url':link, "username": str(user.email)}, status=200)
+                return Response({'status': 200, 'msg': 'Email sent to the user'}, status=200)
             else:
-                return ui_utils.handle_response({}, data='No user found this email.')
+                return ui_utils.handle_response({}, data='User does not exit with this email.')
         except IndexError:
-            return ui_utils.handle_response({}, data='No user found this email.')
+            return ui_utils.handle_response({}, data='User does not exit with this email.')
+            
 
 
 

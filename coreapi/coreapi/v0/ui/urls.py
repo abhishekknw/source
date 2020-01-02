@@ -41,6 +41,9 @@ urlpatterns = [
     url(r'^leads/', include('v0.ui.mis.urls')),
 
 
+
+
+
     # url(r'^website/create_business/load_business_types/',web_views.getBusinessTypesAPIView.as_view()),
     # url(r'^website/subtypes/(?P<id>[A-Z_a-z0-9]+)/$', web_views.getBusinessSubTypesAPIView.as_view()),
 
@@ -76,6 +79,7 @@ urlpatterns = [
     url(r'^create_supplier/load_initial_data/$', views.GetInitialDataAPIView.as_view()),
     url(r'^(?P<id>[A-Z_a-z0-9]+)/load_initial_data_corporate/$', SaveBasicCorporateDetailsAPIView.as_view(), name='load-initial-corporate-data'),
     url(r'^locations/(?P<id>[A-Z_a-z0-9]+)/$', views.LocationsAPIView.as_view(), name='locations'),
+    
     url(r'^getCityArea$', views.getCityAreaAPIView.as_view(), name='getCityArea'),
     url(r'^bulk-locations/$', views.AddBulkLocationAPIView.as_view(), name='locations'),
     url(r'^supplier/generate_id/$', GenerateSupplierIdAPIView.as_view(), name='generate-id'),
