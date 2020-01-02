@@ -1,4 +1,5 @@
 import logging
+
 logger = logging.getLogger(__name__)
 import datetime
 import dateutil.relativedelta
@@ -7,11 +8,13 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from v0.ui.supplier.models import SupplierTypeSociety
-from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo, ProposalCenterMapping, HashTagImages
+from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo, ProposalCenterMapping, HashTagImages, SupplierAssignment
 from v0.ui.account.models import ContactDetails
-from v0.ui.campaign.models import CampaignAssignment
+from v0.ui.common.models import BaseUser
+from v0.ui.campaign.models import CampaignAssignment, CampaignComments
 from v0.constants import (campaign_status, proposal_on_hold, booking_code_to_status,
-                          payment_code_to_status, booking_priority_code_to_status, proposal_not_converted_to_campaign,proposal_finalized )
+                          proposal_not_converted_to_campaign, booking_substatus_code_to_status,
+                          proposal_finalized)
 from .utils import getEachCampaignComments, getSocietyDetails
 
 class GetSocietyAnalytics(APIView):
@@ -236,10 +239,16 @@ class GetCampaignWiseAnalytics(APIView):
                         'all_supplier_ids': [],
                         'all_phase_ids': [],
                         'total_flat_counts': 0,
+                        'contact_name_filled_total': 0,
                         'contact_name_filled': 0,
                         'contact_name_not_filled': 0,
+                        'contact_name_filled_suppliers': [],
+                        'contact_name_not_filled_suppliers': [],
+                        'contact_number_filled_total': 0,
                         'contact_number_filled': 0,
                         'contact_number_not_filled': 0,
+                        'contact_number_filled_suppliers': [],
+                        'contact_number_not_filled_suppliers': [],
                         'flat_count_filled': 0,
                         'total_payment_details': 0
                     }
@@ -259,6 +268,13 @@ class GetCampaignWiseAnalytics(APIView):
                 except ContactDetails.DoesNotExist:
                     contact_details = None
                 if contact_details:
+                    for contact_detail in contact_details:
+                        if contact_detail['name']:
+                            all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_name_filled_total'] += 1
+                            all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_name_filled_suppliers'].append(contact_detail['object_id'])
+                        if contact_detail['mobile']:
+                            all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_number_filled_total'] += 1
+                            all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_number_filled_suppliers'].append(contact_detail['object_id'])
                     all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_name_filled'] += 1 if contact_details[0]['name'] else 0
                     all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_number_filled'] += 1 if contact_details[0]['mobile'] else 0
 
@@ -294,10 +310,16 @@ class GetCampaignWiseAnalytics(APIView):
                     "supplier_count": len(all_campaign_dict[campaign_id]['all_supplier_ids']),
                     "flat_count": all_campaign_dict[campaign_id]['total_flat_counts'],
                     "campaign_status": this_campaign_status,
+                    "contact_name_filled_total": all_campaign_dict[campaign_id]['contact_name_filled_total'],
                     "contact_name_filled": all_campaign_dict[campaign_id]['contact_name_filled'],
+                    "contact_name_filled_suppliers": all_campaign_dict[campaign_id]['contact_name_filled_suppliers'],
+                    "contact_name_not_filled_suppliers": [ele for ele in all_campaign_dict[campaign_id]['all_supplier_ids'] if ele not in all_campaign_dict[campaign_id]['contact_name_filled_suppliers']],
                     "contact_name_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_name_filled'],
+                    "contact_number_filled_total": all_campaign_dict[campaign_id]['contact_number_filled_total'],
                     "contact_number_filled": all_campaign_dict[campaign_id]['contact_number_filled'],
+                    "contact_number_filled_suppliers": all_campaign_dict[campaign_id]['contact_number_filled_suppliers'],
                     "contact_number_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_number_filled'],
+                    "contact_number_not_filled_suppliers": [ele for ele in all_campaign_dict[campaign_id]['all_supplier_ids'] if ele not in all_campaign_dict[campaign_id][ 'contact_number_filled_suppliers']],
                     "flat_count_details_filled": all_campaign_dict[campaign_id]['flat_count_filled'],
                     "flat_count_details_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['flat_count_filled'],
                     "payment_details_filled": all_campaign_dict[campaign_id]['total_payment_details'],
@@ -317,6 +339,12 @@ class GetSupplierDetail(APIView):
             campaign_id = request.query_params.get('campaign_id')
             if not campaign_id:
                 return Response(data={"status": False, "error": "Missing campaign id"}, status=status.HTTP_400_BAD_REQUEST)
+            # Get campaign name from campaign id
+            campaign_detail = ProposalInfo.objects.filter(proposal_id=campaign_id).values('name')
+            campaign_name = ''
+            if campaign_detail:
+                campaign_name = campaign_detail[0]['name']
+
             all_supplier_dict = {
                 'completed': {
                     'supplier_ids': [],
@@ -331,20 +359,20 @@ class GetSupplierDetail(APIView):
             decision_pending_supplier_ids = []
             booked_supplier_ids = []
             tentative_booked_supplier_ids = []
-            phone_booked_supplier_ids = []
+            new_entity_supplier_ids = []
             not_booked_supplier_ids = []
             rejected_supplier_ids = []
             recce_supplier_ids = []
-            visit_required_supplier_ids = []
+            not_initiated_supplier_ids = []
+            unknown_supplier_ids = []
             for shortlisted_supplier in all_shortlisted_supplier:
                 booking_status_code = shortlisted_supplier['booking_status']
                 supplier_detail = []
                 if shortlisted_supplier['supplier_code'] and shortlisted_supplier['supplier_code'] == 'RS':
                     supplier_detail = SupplierTypeSociety.objects.filter(
-                        supplier_id=shortlisted_supplier['object_id']).values('society_name', 'society_locality',
-                                                                              'society_subarea', 'society_city',
-                                                                              'society_type_quality',
-                                                                              'society_type_quantity')
+                        supplier_id=shortlisted_supplier['object_id']).values('society_name','society_subarea', 'society_city',
+                                                                              'society_type_quality', 'society_longitude',
+                                                                              'society_latitude')
                 if booking_status_code is None:
                     continue
                 booking_status = booking_code_to_status[booking_status_code]
@@ -366,8 +394,8 @@ class GetSupplierDetail(APIView):
                     if booking_status in all_supplier_dict.keys():
                         if booking_status_code == 'DP':
                             decision_pending_supplier_ids.append(shortlisted_supplier['object_id'])
-                        elif booking_status_code == 'PB':
-                            phone_booked_supplier_ids.append(shortlisted_supplier['object_id'])
+                        elif booking_status_code == 'NE':
+                            new_entity_supplier_ids.append(shortlisted_supplier['object_id'])
                         elif booking_status_code == 'TB':
                             tentative_booked_supplier_ids.append(shortlisted_supplier['object_id'])
                         elif booking_status_code == 'NB':
@@ -376,8 +404,10 @@ class GetSupplierDetail(APIView):
                             rejected_supplier_ids.append(shortlisted_supplier['object_id'])
                         elif booking_status_code == 'RE':
                             recce_supplier_ids.append(shortlisted_supplier['object_id'])
-                        elif booking_status_code == 'VR':
-                            visit_required_supplier_ids.append(shortlisted_supplier['object_id'])
+                        elif booking_status_code == 'NI':
+                            not_initiated_supplier_ids.append(shortlisted_supplier['object_id'])
+                        elif booking_status_code == 'UN':
+                            unknown_supplier_ids.append(shortlisted_supplier['object_id'])
                     else:
                         all_supplier_dict[booking_status] = {
                             'supplier_ids': [],
@@ -385,6 +415,13 @@ class GetSupplierDetail(APIView):
                         }
                     all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
                     all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_status, supplier_detail[0], shortlisted_supplier)
+            # Remove unwanted booking status
+            if 'Phone Booked' in all_supplier_dict:
+                del all_supplier_dict['Phone Booked']
+            if 'Visit Booked' in all_supplier_dict:
+                del all_supplier_dict['Visit Booked']
+            if 'Visit Required' in all_supplier_dict:
+                del all_supplier_dict['Visit Required']
             # Get supplier count
             for campaign_status, supplier in all_supplier_dict.items():
                 supplier_count = len(supplier['supplier_ids'])
@@ -396,15 +433,16 @@ class GetSupplierDetail(APIView):
             all_supplier_dict['completed']['permission_box_count'] = permission_box_count
             all_supplier_dict['completed']['receipt_count'] = receipt_count
             # Get Comments
-            all_supplier_dict = getEachCampaignComments(campaign_id, {
+            all_supplier_dict = getEachCampaignComments(campaign_id, campaign_name, {
                 'CM': completed_supplier_ids,
                 'DP': decision_pending_supplier_ids,
                 'NB': not_booked_supplier_ids,
-                'PB': phone_booked_supplier_ids,
+                'UN': unknown_supplier_ids,
                 'TB': tentative_booked_supplier_ids,
                 'BK': booked_supplier_ids,
                 'SR': rejected_supplier_ids,
-                'VR': visit_required_supplier_ids,
+                'NI': not_initiated_supplier_ids,
+                'NE': new_entity_supplier_ids,
                 'RE': recce_supplier_ids
                 }, all_supplier_dict
             )
@@ -429,10 +467,19 @@ class GetCampaignStatusCount(APIView):
                 }
             }
             all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
-                values('proposal_id', 'object_id', 'is_completed','booking_status')
+                values('proposal_id', 'object_id', 'is_completed','booking_status', 'booking_sub_status')
 
             for shortlisted_supplier in all_shortlisted_supplier:
                 booking_status_code = shortlisted_supplier['booking_status']
+                booking_sub_status_code = shortlisted_supplier['booking_sub_status']
+                if booking_sub_status_code:
+                    booking_sub_status = booking_substatus_code_to_status[booking_sub_status_code]
+                    if booking_sub_status not in all_supplier_dict.keys():
+                        all_supplier_dict['booking_sub_status'] = {}
+                        all_supplier_dict['booking_sub_status'][booking_sub_status] = {}
+                        all_supplier_dict['booking_sub_status'][booking_sub_status]['supplier_ids'] = [shortlisted_supplier['object_id']]
+                    else:
+                        all_supplier_dict['booking_sub_status'][booking_sub_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
                 if booking_status_code is not None:
                     booking_status = booking_code_to_status[booking_status_code]
                     if shortlisted_supplier['is_completed'] and booking_status_code == 'BK':
@@ -450,13 +497,111 @@ class GetCampaignStatusCount(APIView):
                         else:
                             all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
             response = {
-                'campaign_id': campaign_id
+                'campaign_id': campaign_id,
+                'booking_sub_status': {}
             }
             for campaign_status, supplier in all_supplier_dict.items():
-                supplier_count = len(supplier['supplier_ids'])
-                response[campaign_status] = supplier_count
+                if campaign_status == 'booking_sub_status':
+                    if bool(campaign_status) is True:
+                        for sub_status, supplier_substatus in supplier.items():
+                            supplier_count = len(supplier_substatus['supplier_ids'])
+                            response['booking_sub_status'][sub_status] = supplier_count
+                else:
+                    supplier_count = len(supplier['supplier_ids'])
+                    response[campaign_status] = supplier_count
+            if 'Phone Booked' in response:
+                del response['Phone Booked']
+            if 'Visit Booked' in response:
+                del response['Visit Booked']
+            if 'Visit Required' in response:
+                del response['Visit Required']
             return Response(data={"status": True, "data": response}, status=status.HTTP_200_OK)
         except Exception as e:
             logger.exception(e)
             return Response(data={"status": False, "error": "Error getting data"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+
+class GetUserAssignedSuppliersDetailTillToday(APIView):
+    @staticmethod
+    def get(request):
+        try:
+            logged_in_user = BaseUser.objects.filter(id=request.user.id).values('is_superuser')
+            if isinstance(logged_in_user, list) and logged_in_user[0]['is_superuser'] is False:
+                return Response(data={"status": False, "error": "You do not have access to view the page"},
+                                status=status.HTTP_400_BAD_REQUEST)
+            user_id = request.query_params.get('user_id')
+            if not user_id:
+                return Response(data={"status": False, "error": "Missing user id"},
+                                status=status.HTTP_400_BAD_REQUEST)
+            current_date = datetime.datetime.now().date()
+            # Get spaces where given user has been assigned
+            supplier_assignment = SupplierAssignment.objects.filter(assigned_to_id=user_id).values('supplier_id', 'campaign_id', 'updated_at')
+            campaign_list = [supplier['campaign_id'] for supplier in supplier_assignment]
+            campaign_list = list(set(campaign_list))
+            supplier_list = [supplier['supplier_id'] for supplier in supplier_assignment]
+            try:
+                shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list, object_id__in=supplier_list).values('booking_status', 'is_completed', 'object_id', 'proposal_id',
+                    'proposal__name', 'proposal__tentative_start_date','proposal__tentative_end_date', 'proposal__campaign_state', 'booking_sub_status')
+            except SupplierTypeSociety.DoesNotExist:
+                shortlisted_spaces = []
+            all_campaign_dict = {}
+            for shortlisted_supplier in shortlisted_spaces:
+                booking_status_code = shortlisted_supplier['booking_status']
+                booking_status = booking_code_to_status[booking_status_code]
+                if shortlisted_supplier['proposal_id'] not in all_campaign_dict:
+                    all_campaign_dict[shortlisted_supplier['proposal_id']] = {}
+                    all_campaign_dict[shortlisted_supplier['proposal_id']]['suppliers'] = []
+                    all_campaign_dict[shortlisted_supplier['proposal_id']]['suppliers_count'] = 0
+                all_campaign_dict[shortlisted_supplier['proposal_id']]['name'] = shortlisted_supplier['proposal__name']
+                all_campaign_dict[shortlisted_supplier['proposal_id']]['start_date'] = shortlisted_supplier['proposal__tentative_start_date']
+                all_campaign_dict[shortlisted_supplier['proposal_id']]['end_date'] = shortlisted_supplier['proposal__tentative_end_date']
+                all_campaign_dict[shortlisted_supplier['proposal_id']]['campaign_status'] = shortlisted_supplier['proposal__campaign_state']
+                all_campaign_dict[shortlisted_supplier['proposal_id']]['suppliers'].append(shortlisted_supplier['object_id'])
+                all_campaign_dict[shortlisted_supplier['proposal_id']]['suppliers_count'] += 1
+                if booking_status not in all_campaign_dict[shortlisted_supplier['proposal_id']].keys():
+                    all_campaign_dict[shortlisted_supplier['proposal_id']][booking_status] = {}
+                    all_campaign_dict[shortlisted_supplier['proposal_id']][booking_status]['supplier_ids'] = [shortlisted_supplier['object_id']]
+                else:
+                    all_campaign_dict[shortlisted_supplier['proposal_id']][booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
+            all_campaign_summary = []
+            for campaign_id in all_campaign_dict:
+                this_campaign_status = None
+                if all_campaign_dict[campaign_id]['campaign_status'] not in [proposal_on_hold, proposal_not_converted_to_campaign, proposal_finalized]:
+                    if all_campaign_dict[campaign_id]['start_date'].date() > current_date:
+                        this_campaign_status = campaign_status['upcoming_campaigns']
+                    elif all_campaign_dict[campaign_id]['end_date'].date() >= current_date:
+                        this_campaign_status = campaign_status['ongoing_campaigns']
+                    elif all_campaign_dict[campaign_id]['end_date'].date() < current_date:
+                        this_campaign_status = campaign_status['completed_campaigns']
+                elif all_campaign_dict[campaign_id]['campaign_status'] == 'PNC':
+                    this_campaign_status = "rejected"
+                elif all_campaign_dict[campaign_id]['campaign_status'] == 'PF':
+                    this_campaign_status = 'not_initiated'
+                else:
+                    this_campaign_status = "on_hold"
+
+                campaign_keys = all_campaign_dict[campaign_id].keys()
+                all_campaign_summary.append({
+                    "campaign_id": campaign_id,
+                    "name": all_campaign_dict[campaign_id]['name'],
+                    "start_date": all_campaign_dict[campaign_id]['start_date'],
+                    "end_date": all_campaign_dict[campaign_id]['end_date'],
+                    "campaign_status": this_campaign_status,
+                    "suppliers_assigned": all_campaign_dict[campaign_id]["suppliers"],
+                    "suppliers_assigned_count": all_campaign_dict[campaign_id]["suppliers_count"],
+                    "confirmed_booked_count": len(all_campaign_dict[campaign_id]['Confirmed Booking']['supplier_ids']) if 'Confirmed Booking' in campaign_keys else 0,
+                    "rejected_count": len(all_campaign_dict[campaign_id]['Rejected']['supplier_ids']) if 'Rejected' in campaign_keys else 0,
+                    "decision_pending_count": len(all_campaign_dict[campaign_id]['Decision Pending']['supplier_ids']) if 'Decision Pending' in campaign_keys else 0,
+                    "visit_booked_count": len(all_campaign_dict[campaign_id]['Visit Booked']['supplier_ids']) if 'Visit Booked' in campaign_keys else 0,
+                    "visit_required_count": len(all_campaign_dict[campaign_id]['Visit Required']['supplier_ids']) if 'Visit Required' in campaign_keys else 0,
+                    "new_entity_count": len(all_campaign_dict[campaign_id]['New Entity']['supplier_ids']) if 'New Entity' in campaign_keys else 0,
+                    "completed_count": len(all_campaign_dict[campaign_id]['Completed']['supplier_ids']) if 'Completed' in campaign_keys else 0,
+                    "not_initiated_count": len(all_campaign_dict[campaign_id]['Not Initiated']['supplier_ids']) if 'Not Initiated' in campaign_keys else 0,
+                    "not_booked_count": len(all_campaign_dict[campaign_id]['Not Booked']['supplier_ids']) if 'Not Booked' in campaign_keys else 0
+                })
+            return Response(data={'status': True, 'data': all_campaign_summary}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.exception(e)
+            return Response(data={'status': False, 'error': 'Error getting data'},
                             status=status.HTTP_400_BAD_REQUEST)

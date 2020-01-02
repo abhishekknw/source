@@ -3008,6 +3008,46 @@ class SupplierDetails(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
+class MultiSupplierDetails(APIView):
+    """
+    Detail of multi supplier
+    """
+    def post(self, request):
+        """
+        get a particular supplier
+        Args:
+            request:
+        Returns: returns supplier details
+
+        """
+        class_name = self.__class__.__name__
+        try:
+            supplier_ids = request.data.get('supplier_ids', None)
+            supplier_type_code = request.data.get('supplier_type_code', None)
+
+            if not supplier_ids or not supplier_type_code:
+                return Response(data={'status': False, 'error': 'Missing supplier_ids or supplier_type_code'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            try:
+                response = ui_utils.get_content_type(supplier_type_code)
+            except Exception as e:
+                return Response(data={'status': False, 'error': "Please provide valid supplier type code"},
+                                status=status.HTTP_400_BAD_REQUEST)
+            content_type = response.data['data']
+            supplier_model = content_type.model
+            model = apps.get_model(settings.APP_NAME, supplier_model)
+
+            suppliers = model.objects.filter(pk__in=supplier_ids).values('society_name', 'society_address1',
+                                                                         'society_city', 'society_state',
+                                                                         'society_latitude','society_longitude',
+                                                                         'supplier_id')
+            return Response(data={'status': True, 'data': suppliers}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(data={'status': False, 'error': 'Error getting data'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+
 class addSupplierDirectToCampaign(APIView):
     """
 

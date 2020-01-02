@@ -18,13 +18,14 @@ def getCommentsCount(campaign_id, supplier_ids):
         return None
 
 
-def getEachCampaignComments(campaign_id, status_dict, supplier_dict):
+def getEachCampaignComments(campaign_id, campaign_name, status_dict, supplier_dict):
     for key in status_dict.keys():
         comment_count = getCommentsCount(campaign_id, status_dict[key])
         if booking_code_to_status[key] in supplier_dict:
             supplier_dict[booking_code_to_status[key]]['comments_count'] = comment_count
             supplier_dict[booking_code_to_status[key]]['status'] = [booking_code_to_status[key]][0].lower()
             supplier_dict[booking_code_to_status[key]]['campaign_id'] = campaign_id
+            supplier_dict[booking_code_to_status[key]]['campaign_name'] = campaign_name
     return supplier_dict
 
 
@@ -32,12 +33,12 @@ def getSocietyDetails(all_supplier_dict, booking_status, supplier_detail, shortl
     all_supplier_dict[booking_status]['supplier'].append({
         'name': supplier_detail['society_name'],
         'subarea': supplier_detail['society_subarea'],
-        'locality': supplier_detail['society_locality'],
         'city': supplier_detail['society_city'],
         'society_quality': supplier_detail['society_type_quality'],
-        'society_quantity': supplier_detail['society_type_quantity'],
         'supplier_id': shortlisted_supplier['object_id'],
         'payment_method': shortlisted_supplier['payment_method'],
-        'is_completed': shortlisted_supplier['is_completed']
+        'is_completed': shortlisted_supplier['is_completed'],
+        'society_latitude': supplier_detail['society_latitude'],
+        'society_longitude': supplier_detail['society_longitude'],
     })
     return all_supplier_dict

@@ -907,8 +907,44 @@ booking_code_to_status = {
     'NI': 'Not Initiated',
     'RE': 'Recce',
     'MF': 'Meeting Fixed',
-    'CM': 'completed'
+    'CM': 'completed',
+    'UN': 'unknown'
 }
+
+booking_substatus_code_to_status = {
+    'UPNI': 'Phone Number Issue',
+    'UCPI': 'Contact Person Issue',
+    'MWA': 'Meeting with AGM',
+    'MWS': 'Meeting with Secretory',
+    'MWC': 'Meeting with Chairman',
+    'MWT': 'Meeting with Treasurer',
+    'MWO': 'Meeting with Other',
+    'DPRR': 'Recce Required',
+    'RERA': 'Recce Approved',
+    'DPVR': 'Visit Required',
+    'DPCR': 'Call Required',
+    'DPNR': 'Negotiation Required',
+    'DPNA': 'Not Available',
+    'DPP': 'Postponed',
+    'DPDOO': 'Specific Occasion Only',
+    'DPOS': 'Others(Specify)',
+    'RLO': 'Less occupancy',
+    'RLC': 'Less Children',
+    'RUB': 'Under Builder',
+    'RVE': 'Very Expensive',
+    'RCR': 'Client Rejected',
+    'RRS': 'Rejected by Society',
+    'ROS': 'Others(Specify)',
+    'PB': 'Phone Booking',
+    'VB': 'Visit Booking',
+    'NVW': 'Wikimapia',
+    'NVG': 'Google',
+    'NVA': '99Acres',
+    'NVMB': 'Magic Brick',
+    'NVFT': 'First Time Assigned',
+    'NVOS' : 'Others(Specify)'
+}
+
 # different campaign states
 completed = 'COMPLETED'
 running = 'RUNNING'
