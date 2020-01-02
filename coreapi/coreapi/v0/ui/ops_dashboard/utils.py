@@ -32,6 +32,7 @@ def getEachCampaignComments(campaign_id, campaign_name, status_dict, supplier_di
 def getSocietyDetails(all_supplier_dict, booking_status, supplier_detail, shortlisted_supplier):
     all_supplier_dict[booking_status]['supplier'].append({
         'name': supplier_detail['society_name'],
+        'area': supplier_detail['society_locality'],
         'subarea': supplier_detail['society_subarea'],
         'city': supplier_detail['society_city'],
         'society_quality': supplier_detail['society_type_quality'],

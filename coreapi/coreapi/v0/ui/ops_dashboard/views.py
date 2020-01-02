@@ -370,7 +370,7 @@ class GetSupplierDetail(APIView):
                 supplier_detail = []
                 if shortlisted_supplier['supplier_code'] and shortlisted_supplier['supplier_code'] == 'RS':
                     supplier_detail = SupplierTypeSociety.objects.filter(
-                        supplier_id=shortlisted_supplier['object_id']).values('society_name','society_subarea', 'society_city',
+                        supplier_id=shortlisted_supplier['object_id']).values('society_name', 'society_locality', 'society_subarea', 'society_city',
                                                                               'society_type_quality', 'society_longitude',
                                                                               'society_latitude')
                 if booking_status_code is None:
@@ -426,7 +426,6 @@ class GetSupplierDetail(APIView):
             for campaign_status, supplier in all_supplier_dict.items():
                 supplier_count = len(supplier['supplier_ids'])
                 all_supplier_dict[campaign_status]['supplier_count'] = supplier_count
-
             # Get hashtag images
             permission_box_count = HashTagImages.objects.filter(object_id__in=completed_supplier_ids, hashtag__in=['permission_box', 'Permission Box', 'PERMISSION BOX', 'permission box']).values_list('object_id', flat=True).distinct().count()
             receipt_count = HashTagImages.objects.filter(object_id__in=completed_supplier_ids, hashtag__in=['receipt', 'Receipt', 'RECEIPT']).values_list('object_id',flat=True).distinct().count()
