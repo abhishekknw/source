@@ -678,12 +678,6 @@ def get_model(supplier_type_code):
     Returns: loads the right model from supplier_type_code
 
     """
-    if 'R' in supplier_type_code:
-        supplier_type_code = 'RS'
-    if 'C' in supplier_type_code:
-        supplier_type_code = 'CP'
-    if 'S' in supplier_type_code:
-        supplier_type_code = 'RS'
         
     function = get_model.__name__
     try:

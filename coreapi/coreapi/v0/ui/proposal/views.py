@@ -11,11 +11,8 @@ from openpyxl import load_workbook
 from requests.exceptions import ConnectionError
 from celery.result import GroupResult
 import shutil
-from random import randint
 import hashlib
 import os
-import datetime
-from datetime import timedelta
 import pytz
 import v0.permissions as v0_permissions
 from django.conf import settings
@@ -58,9 +55,6 @@ import v0.ui.website.tasks as tasks
 from v0.ui.email.views import send_email
 from v0.ui.supplier.models import SupplierTypeCorporate, SupplierTypeRetailShop
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
-from v0.ui.supplier.supplier_uploads import create_price_mapping_default
-
-from v0.ui.supplier.views import get_flat_count_type, get_state_map, get_city_map, get_city_area_map, get_city_subarea_map
 from v0.ui.base.models import DurationType
 from v0 import errors
 from rest_framework import viewsets
@@ -70,7 +64,6 @@ from v0.ui.utils import handle_response
 from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignComments
 from v0.ui.common.models import mongo_client, mongo_test
-from v0.ui.controller import inventory_summary_insert
 
 
 def convert_date_format(date):

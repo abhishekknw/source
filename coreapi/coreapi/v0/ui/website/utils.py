@@ -1302,7 +1302,7 @@ def calculate_address(center):
     function_name = calculate_address.__name__
     try:
         address = center['address'] + "," + center['subarea'] + ',' + center['area'] + ',' + center['city'] + ',' + \
-                  str(center['pincode'])
+                  center['pincode']
         return ui_utils.handle_response(function_name, data=address, success=True)
 
     except Exception as e:
@@ -6837,7 +6837,7 @@ def update_proposal_invoice_and_state(proposal_data, proposal):
     function_name = update_proposal_invoice_and_state
     try:
         proposal.invoice_number = proposal_data['invoice_number']
-        proposal.campaign_state = v0_constants.proposal_converted_to_campaign
+        proposal.campaign_state = v0_constants.proposal_finalized
         proposal.tentative_start_date = proposal_data['tentative_start_date']
         proposal.tentative_end_date = proposal_data['tentative_end_date']
         proposal.save()
