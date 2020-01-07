@@ -1191,8 +1191,6 @@ class RetailShopViewSet(viewsets.ViewSet):
             serializer = RetailShopSerializer(retail_shop_objects, many=True)
             retail_shop_with_images = get_supplier_image(serializer.data, 'Retail Shop')
 
-            return handle_response(class_name, data=serializer.data, success=True)
-
             # disabling paginators because search cannot be performed in front end in whole data set
             # paginator = PageNumberPagination()
             # result_page = paginator.paginate_queryset(retail_shop_with_images, request)
