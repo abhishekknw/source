@@ -13,7 +13,24 @@ RETAIL_SHOP_TYPE = (
     ('GROCERY_STORE', 'GROCERY_STORE'),
     ('ELECTRONIC_STORE', 'ELECTRONIC_STORE'),
     ('SANITARY_STORE', 'SANITARY_STORE'),
-    ('STATIONARY_STORE', 'STATIONARY_STORE')
+    ('STATIONARY_STORE', 'STATIONARY_STORE'),
+    ('Toy Store', 'Toy Store'),
+    ('Toy Store', 'Toy Store'),
+    ('Sports Goods', 'Sports Goods'),
+    ('Electronic Goods', 'Electronic Goods'),
+    ('Sanitary Goods', 'Sanitary Goods'),
+    ('Grocery Goods', 'Grocery Goods'),
+    ('Stationery Goods', 'Stationery Goods'),
+    ('Merchandise Goods', 'Merchandise Goods'),
+    ('Mobile Store', 'Mobile Store'),
+    ('Mixed Store', 'Mixed Store'),
+    ('Hypermart', 'Hypermart'),
+    ('Jewelry Store', 'Jewelry Store'),
+    ('Auto Dealership Store', 'Auto Dealership Store'),
+    ('Shoes Store', 'Shoes Store'),
+    ('Mall', 'Mall'),
+    ('Gaming Zone', 'Gaming Zone'),
+    ('FND (Food & Dining)', 'FND (Food & Dining)'),
 )
 
 FLAT_COUNT_TYPE = (
