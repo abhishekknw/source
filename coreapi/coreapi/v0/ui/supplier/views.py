@@ -1201,7 +1201,7 @@ class RetailShopViewSet(viewsets.ViewSet):
             }
             return handle_response(class_name, data=data, success=True)
         except Exception as e:
-            return handle_response(class_name, exception_object=e, request=request)
+            return handle_response(class_name, data=str(e), request=request)
 
     def update(self, request, pk):
         class_name = self.__class__.__name__

@@ -455,6 +455,28 @@ class SupplierTypeRetailShop(BasicSupplierDetails):
     is_modern_trade = models.BooleanField(default=False)
     is_traditional = models.BooleanField(default=False)
     category_name = models.CharField(max_length=255, null=True, blank=True)
+
+    
+    
+    store_size = models.CharField(max_length=250, blank=True, null=True)
+    std_code = models.CharField(max_length=250, blank=True, null=True)
+    salutation = models.CharField(max_length=250, blank=True, null=True)
+    
+    average_weekend = models.CharField(max_length=250, blank=True, null=True)
+    average_weekday = models.CharField(max_length=250, blank=True, null=True)
+    contact_name = models.CharField(max_length=250, blank=True, null=True)
+    contact_type = models.CharField(max_length=250, blank=True, null=True)
+    country_code = models.CharField(max_length=250, blank=True, null=True)
+    email = models.CharField(max_length=250, blank=True, null=True)
+    feedback = models.CharField(max_length=250, blank=True, null=True)
+    mobile = models.CharField(max_length=250, blank=True, null=True)
+    phone = models.CharField(max_length=250, blank=True, null=True)
+    landmark = models.CharField(max_length=250, blank=True, null=True)
+
+    
+
+    
+    
     representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
