@@ -239,9 +239,9 @@ class setResetPasswordAPIView(APIView):
                 else:
                     return ui_utils.handle_response({}, data='This code is not valid.')
             else:
-                return ui_utils.handle_response({}, data='User does not exit with this email.')
+                return ui_utils.handle_response({}, data='User does not exist with this email.')
         except IndexError:
-            return ui_utils.handle_response({}, data='User does not exit with this email.')
+            return ui_utils.handle_response({}, data='User does not exist with this email.')
 
 
 
@@ -279,9 +279,9 @@ class forgotPasswordAPIView(APIView):
                 send_mail_generic(subject, to_email, html, None)
                 return Response({'status': 200, 'msg': 'Email sent to the user'}, status=200)
             else:
-                return ui_utils.handle_response({}, data='User does not exit with this email.')
+                return ui_utils.handle_response({}, data='User does not exist with this email.')
         except IndexError:
-            return ui_utils.handle_response({}, data='User does not exit with this email.')
+            return ui_utils.handle_response({}, data='User does not exist with this email.')
             
 
 
