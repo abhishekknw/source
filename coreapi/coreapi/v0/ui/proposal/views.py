@@ -11,6 +11,7 @@ from openpyxl import load_workbook
 from requests.exceptions import ConnectionError
 from celery.result import GroupResult
 import shutil
+import hashlib
 import os
 import pytz
 import v0.permissions as v0_permissions
@@ -52,7 +53,7 @@ from v0.ui.website.utils import return_price
 import v0.constants as v0_constants
 import v0.ui.website.tasks as tasks
 from v0.ui.email.views import send_email
-from v0.ui.supplier.models import SupplierTypeCorporate
+from v0.ui.supplier.models import SupplierTypeCorporate, SupplierTypeRetailShop
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
 from v0.ui.base.models import DurationType
 from v0 import errors
@@ -138,10 +139,12 @@ def create_proposal_object(organisation_id, account_id, user, tentative_cost, na
             [Organisation.objects.get(pk=organisation_id).name, AccountInfo.objects.get(pk=account_id).name]),
         'account': account.account_id,
         'user': user.id,
-        'created_by': user.id,
+        'created_by': user.first_name,
         'tentative_cost': tentative_cost,
-        'name': name
-        # 'campaign_state': 'PTC'
+        'name': name,
+        'updated_by':user.first_name,
+        'campaign_state': 'PTC',
+        'principal_vendor_id': user.profile.organisation_id
     }
 
 def genrate_supplier_data(data):
@@ -295,8 +298,6 @@ def assign_inv_dates(data):
         inv_act_assignement_list = []
         index = 0
         for inv in inv_data:
-            print("Assignment inv : " + str(index))
-            print(inv['supplier_id'])
             index += 1
             assigned_by = None
             assigned_to = None
@@ -446,6 +447,188 @@ class CreateInitialProposal(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+def calculate_hotness_level(multi_level_is_hot):
+    hotness_level = 0
+    for is_hot_level in multi_level_is_hot:
+        if multi_level_is_hot[is_hot_level]:
+            if int(is_hot_level[-1]) > hotness_level:
+                hotness_level = int(is_hot_level[-1])
+    return hotness_level
+
+
+def calculate_is_hot(curr_lead, global_hot_lead_criteria):
+    # checking 'or' global_hot_lead_criteria
+    any_is_hot = False
+    multi_level_is_hot = {is_hot_level: False for is_hot_level in global_hot_lead_criteria}
+    curr_lead_data_dict = {str(item['item_id']): item for item in curr_lead['data']}
+    for is_hot_level in global_hot_lead_criteria:
+        for item_id in global_hot_lead_criteria[is_hot_level]['or']:
+            if item_id in curr_lead_data_dict and curr_lead_data_dict[item_id]['value'] is not None:
+                if str(curr_lead_data_dict[item_id]['value']) in global_hot_lead_criteria[is_hot_level]['or'][item_id]:
+                    multi_level_is_hot[is_hot_level] = True
+                    any_is_hot = True
+                if "AnyValue" in global_hot_lead_criteria[is_hot_level]['or'][item_id] and str(
+                        curr_lead_data_dict[item_id]['value']).lower() != 'na':
+                    multi_level_is_hot[is_hot_level] = True
+                    any_is_hot = True
+    hotness_level = calculate_hotness_level(multi_level_is_hot)
+    return any_is_hot, multi_level_is_hot, hotness_level
+
+
+def create_lead_hash(lead_dict):
+    lead_hash_string = ''
+    lead_hash_string += str(lead_dict['leads_form_id'])
+
+    for item in lead_dict['data']:
+        if item['value']:
+            if isinstance(item["value"], (str,bytes)):
+                lead_hash_string += str(item['value'].strip())
+            else:
+                lead_hash_string += str(item['value'])
+    return hashlib.sha256(lead_hash_string.encode('utf-8')).hexdigest()
+
+def get_supplier_data_by_type(name):
+    suppliers = SupplierTypeSociety.objects.filter(society_name__contains=name).values('supplier_id',
+                                                                                     'society_name').all()
+    if len(suppliers) > 0:
+        return suppliers
+    else:
+        suppliers = SupplierTypeRetailShop.objects.filter(name__contains=name).values('supplier_id', 'name').all()
+        if len(suppliers) > 0:
+            return suppliers
+    return []
+
+
+class CreateDummyProposal(APIView):
+    """docstring for CreateDummyProposal"""
+    def post(self, request):
+        class_name = self.__class__.__name__
+
+        source_file = request.data['file']
+        campaign_id = request.data['campaign_id']
+        user = request.user
+
+        wb = load_workbook(source_file)
+        ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+
+        missing_societies = []
+        not_present_in_shortlisted_societies = []
+        more_than_ones_same_shortlisted_society = []
+        matched_societies = []
+        unmatched_societies = []
+        found_supplier_id = []
+
+        leads_dict = []
+        campaign_lead_form = list(mongo_client.leads_forms.find({"campaign_id": str(campaign_id)}))
+        for leads_id in campaign_lead_form:
+            leads_form_id = leads_id['leads_form_id']
+
+        lead_form = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)})
+        fields = len(lead_form['data'])
+        global_hot_lead_criteria = lead_form['global_hot_lead_criteria']
+        entry_id = lead_form['last_entry_id'] + 1 if 'last_entry_id' in lead_form else 1
+
+        all_sha256 = list(mongo_client.leads.find({"leads_form_id": int(leads_form_id)},{"lead_sha_256": 1, "_id": 0}))
+        all_sha256_list = [str(element['lead_sha_256']) for element in all_sha256]
+        apartment_index = None
+        club_name_index = None
+        for index, row in enumerate(ws.iter_rows()):
+            if index == 0:
+                for idx, i in enumerate(row):
+                    if i.value and 'apartment' in i.value.lower():
+                        apartment_index = idx
+                        break
+                if not apartment_index:
+                    for idx, i in enumerate(row):
+                        if i.value and 'club name' in i.value.strip().lower():
+                            club_name_index = idx
+                            break
+            if apartment_index is None and club_name_index is None:
+                return handle_response('', data="neither apartment nor club found in the sheet", success=False)
+            entity_index = apartment_index if apartment_index else club_name_index
+            if index > 0:
+                if not (row[entity_index].value is None):
+                    society_name = row[entity_index].value
+
+                suppliers = get_supplier_data_by_type(society_name)
+
+                if len(suppliers) == 0:
+                    if society_name not in missing_societies and society_name is not None:
+                        missing_societies.append(society_name)
+                        unmatched_societies.append(society_name)
+                    continue
+                else:
+                    if len(suppliers) == 1:
+                        found_supplier_id = suppliers[0]['supplier_id']
+                        matched_societies.append(society_name)
+                    else:
+                        supplier_ids = []
+                        for s in suppliers:
+                            supplier_ids.append(s['supplier_id'])
+                        shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id,
+                                                                              object_id__in=supplier_ids).values(
+                            'object_id', 'id').all()
+                        if len(shortlisted_spaces) > 1:
+                            more_than_ones_same_shortlisted_society.append(society_name)
+                            continue
+                        if len(shortlisted_spaces) == 0:
+                            not_present_in_shortlisted_societies.append(society_name)
+                            continue
+                        else:
+                            found_supplier_id = shortlisted_spaces[0]['object_id']
+
+                supplier_code = "RS"
+                content_type = ui_utils.fetch_content_type(supplier_code)  
+
+                data = {
+                    'object_id': found_supplier_id,
+                    'proposal_id': campaign_id,
+                    'content_type': content_type,
+                }
+                obj, is_created = ShortlistedSpaces.objects.get_or_create(**data)
+                obj.save()
+
+                shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=found_supplier_id).filter(
+                    proposal_id=campaign_id).all()
+                if len(shortlisted_spaces) == 0:
+                    not_present_in_shortlisted_societies.append(society_name)
+                    continue
+
+                lead_dict = {"data": [], "is_hot": False, "supplier_id": found_supplier_id,
+                             "campaign_id": campaign_id, "leads_form_id": int(leads_form_id), "entry_id": entry_id}
+                for item_id in range(0, fields):
+                    curr_item_id = item_id + 1
+                    curr_form_item_dict = lead_form['data'][str(curr_item_id)]
+                    key_name = curr_form_item_dict['key_name']
+                    value = row[item_id].value if row[item_id].value else None
+                    if isinstance(value, datetime.datetime) or isinstance(value, datetime.time):
+                        value = str(value)
+                    item_dict = {
+                        'key_name': key_name,
+                        'value': value,
+                        'item_id': curr_item_id
+                    }
+                    lead_dict["data"].append(item_dict)
+                lead_sha_256 = create_lead_hash(lead_dict)
+                lead_dict["lead_sha_256"] = lead_sha_256
+                lead_dict["is_hot"], lead_dict["multi_level_is_hot"], lead_dict["hotness_level"] = calculate_is_hot(lead_dict, global_hot_lead_criteria)
+                lead_already_exist = True if lead_sha_256 in all_sha256_list else False
+                if not lead_already_exist:
+                    mongo_client.leads.insert_one(lead_dict)
+                    entry_id = entry_id + 1  # will be saved in the end
+
+        mongo_client.leads_forms.update_one({"leads_form_id": leads_form_id}, {"$set": {"last_entry_id": entry_id}})
+        missing_societies.sort()
+
+        missing_dict = {
+            "missing_societies": missing_societies,
+            "matched_societies": list(set(matched_societies)),
+            "unmatched_societies": list(set(unmatched_societies)),
+            "more_than_ones_same_shortlisted_society": list(set(more_than_ones_same_shortlisted_society)),
+            "not_present_in_shortlisted_societies": list(set(not_present_in_shortlisted_societies))
+        }
+        return handle_response({}, data=missing_dict, success=True)
+        
 
 class CreateInitialProposalBulkBasic(APIView):
     def post(self, request):
