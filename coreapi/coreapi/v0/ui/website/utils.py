@@ -3597,7 +3597,7 @@ def union_suppliers(first_supplier_list, second_supplier_list):
 
         if first_supplier_list:
             for supplier in first_supplier_list:
-                supplier_id = supplier['supplier_id'] if supplier.get('supplier_id') else supplier['object_id']
+                supplier_id = supplier['supplier_id'] if supplier.get('supplier_id') else supplier.get('object_id')
                 first_supplier_list_ids.add(supplier_id)
                 first_supplier_mapping[supplier_id] = supplier
                 supplier['status'] = v0_constants.status

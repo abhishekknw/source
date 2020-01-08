@@ -678,6 +678,7 @@ def get_model(supplier_type_code):
     Returns: loads the right model from supplier_type_code
 
     """
+        
     function = get_model.__name__
     try:
         suppliers = v0_constants.codes_to_model_names
