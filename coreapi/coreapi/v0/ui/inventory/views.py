@@ -17,7 +17,14 @@ from v0.ui.inventory.models import (StallInventory, BannerInventory, AdInventory
                                     PosterInventoryMapping, AD_INVENTORY_CHOICES, InventoryActivityAssignment,
                                     INVENTORY_ACTIVITY_TYPES, InventoryActivityImage, InventoryActivity,
                                     SocietyInventoryBooking)
-from v0.ui.proposal.models import (ProposalInfo)
+
+
+
+from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping)
+from v0.ui.proposal.serializers import (ProposalCenterMappingSerializer)
+
+
+
 import v0.ui.utils as ui_utils
 import v0.constants as v0_constants
 from v0 import errors
@@ -622,10 +629,15 @@ class CampaignInventory(APIView):
             if not response.data['status']:
                 return response
             # cache.set(cache_key, response.data['data'])
+
+            all_city_campaign = ProposalCenterMapping.objects.filter(proposal_id=campaign_id).all()
+            serializer1 = ProposalCenterMappingSerializer(all_city_campaign, many=True)
+            response.data['data']['campaign']['centerData'] = serializer1.data
+
+            #return ui_utils.handle_response(class_name, data=centerData, success=True)
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
 
         except Exception as e:
-            print("e2", e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def put(self, request, campaign_id):

@@ -15,7 +15,6 @@ RETAIL_SHOP_TYPE = (
     ('SANITARY_STORE', 'SANITARY_STORE'),
     ('STATIONARY_STORE', 'STATIONARY_STORE'),
     ('Toy Store', 'Toy Store'),
-    ('Toy Store', 'Toy Store'),
     ('Sports Goods', 'Sports Goods'),
     ('Electronic Goods', 'Electronic Goods'),
     ('Sanitary Goods', 'Sanitary Goods'),
