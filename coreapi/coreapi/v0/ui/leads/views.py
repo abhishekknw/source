@@ -801,7 +801,7 @@ class EditLeadsForm(APIView):
             'global_hot_lead_criteria'] if 'global_hot_lead_criteria' in request.data.keys() else None
         hotness_mapping = request.data[
             'hotness_mapping'] if 'hotness_mapping' in request.data.keys() else None
-        name = request.data['name'] if 'name' in request.data.keys() else None
+        name = request.data['leads_form_name'] if 'leads_form_name' in request.data.keys() else None #changed 'name' to 'leads_form_name' so that edit form works properly.
         set_dict = {}
         if name:
             set_dict["leads_form_name"] = name
