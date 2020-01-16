@@ -20,8 +20,8 @@ from v0.ui.inventory.models import (StallInventory, BannerInventory, AdInventory
 
 
 
-from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping)
-from v0.ui.proposal.serializers import (ProposalCenterMappingSerializer)
+from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping, ProposalCenterSuppliers)
+from v0.ui.proposal.serializers import (ProposalCenterMappingSerializer, ProposalCenterSuppliersSerializer)
 
 
 
@@ -633,6 +633,12 @@ class CampaignInventory(APIView):
             all_city_campaign = ProposalCenterMapping.objects.filter(proposal_id=campaign_id).all()
             serializer1 = ProposalCenterMappingSerializer(all_city_campaign, many=True)
             response.data['data']['campaign']['centerData'] = serializer1.data
+
+
+            suppliersData = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).all()
+            serializer2 = ProposalCenterSuppliersSerializer(suppliersData, many=True)
+            response.data['data']['campaign']['centerSuppliers'] = serializer2.data
+            
 
             #return ui_utils.handle_response(class_name, data=centerData, success=True)
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
