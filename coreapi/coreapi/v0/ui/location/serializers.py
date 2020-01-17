@@ -19,6 +19,7 @@ class CitySerializer(ModelSerializer):
         model = City
         fields = '__all__'
 
+
 class StateSerializer(ModelSerializer):
 
     class Meta:

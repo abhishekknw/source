@@ -2885,9 +2885,9 @@ class SupplierSearch(APIView):
             if request.query_params.get("supplier_area"):
                 if supplier_type_code == "RS" :
                     if search_query:
-                        search_query &= Q(society_locality__contains=request.query_params.get("supplier_area"))
+                        search_query &= Q(society_locality__icontains=request.query_params.get("supplier_area"))
                     else:
-                        search_query = Q(society_locality__contains=request.query_params.get("supplier_area"))
+                        search_query = Q(society_locality__icontains=request.query_params.get("supplier_area"))
                 else:
                     if search_query:
                         search_query &= Q(area__icontains=request.query_params.get("supplier_area"))
@@ -2914,6 +2914,11 @@ class SupplierSearch(APIView):
 
             if len(all_shortlisted_spaces) > 0:
                 suppliers = suppliers.exclude(supplier_id__in=all_shortlisted_spaces)
+               
+
+            print('--------------------')
+            print(all_shortlisted_spaces)
+
             
             serializer_class = ui_utils.get_serializer(supplier_type_code)
             serializer = serializer_class(suppliers, many=True)

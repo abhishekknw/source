@@ -2,7 +2,7 @@ from rest_framework.serializers import ModelSerializer
 from v0.ui.base.serializers import BaseModelPermissionSerializer
 from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMappingVersion, ProposalMasterCost, ProposalInfoVersion,
     ProposalMetrics, ProposalCenterMapping, ImageMapping, SpaceMapping, SpaceMappingVersion, ShortlistedSpacesVersion,
-                                   HashTagImages, SupplierPhase, SupplierAssignment)
+                                   HashTagImages, SupplierPhase, SupplierAssignment, ProposalCenterSuppliers)
 from rest_framework import serializers
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeCorporate
 
@@ -24,6 +24,13 @@ class ProposalCenterMappingSerializer(ModelSerializer):
         model = ProposalCenterMapping
         fields = '__all__'
         # fields = ('proposal', 'center_name', 'id')
+
+
+class ProposalCenterSuppliersSerializer(ModelSerializer):
+    # using this serializer to save the center object
+    class Meta:
+        model = ProposalCenterSuppliers
+        fields = '__all__'
 
 class ProposalCenterMappingVersionSerializer(ModelSerializer):
 
