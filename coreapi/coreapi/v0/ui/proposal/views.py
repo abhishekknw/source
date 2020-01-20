@@ -487,8 +487,10 @@ def create_lead_hash(lead_dict):
                 lead_hash_string += str(item['value'])
     return hashlib.sha256(lead_hash_string.encode('utf-8')).hexdigest()
 
-def get_supplier_data_by_type(name):
-    suppliers = SupplierTypeSociety.objects.filter(society_name__contains=name).values('supplier_id',
+def get_supplier_data_by_type(name, area_name, city_name):
+    suppliers = SupplierTypeSociety.objects.filter(society_name__icontains=name, 
+                                                    society_city__icontains=city_name, 
+                                                    society_locality__icontains=area_name).values('supplier_id',
                                                                                      'society_name').all()
     if len(suppliers) > 0:
         return suppliers
@@ -511,7 +513,6 @@ class CreateDummyProposal(APIView):
         wb = load_workbook(source_file)
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
 
-        missing_societies = []
         not_present_in_shortlisted_societies = []
         more_than_ones_same_shortlisted_society = []
         matched_societies = []
@@ -532,35 +533,99 @@ class CreateDummyProposal(APIView):
         all_sha256_list = [str(element['lead_sha_256']) for element in all_sha256]
         apartment_index = None
         club_name_index = None
+        area_index = None
+        city_index = None
         for index, row in enumerate(ws.iter_rows()):
             if index == 0:
                 for idx, i in enumerate(row):
                     if i.value and 'apartment' in i.value.lower():
                         apartment_index = idx
-                        break
+
+                    if i.value and 'area' in i.value.lower():
+                        area_index = idx
+
+                    if i.value and 'city' in i.value.lower():
+                        city_index = idx
+
                 if not apartment_index:
                     for idx, i in enumerate(row):
                         if i.value and 'club name' in i.value.strip().lower():
                             club_name_index = idx
                             break
-            if apartment_index is None and club_name_index is None:
-                return handle_response('', data="neither apartment nor club found in the sheet", success=False)
-            entity_index = apartment_index if apartment_index else club_name_index
-            if index > 0:
-                if not (row[entity_index].value is None):
-                    society_name = row[entity_index].value
 
-                suppliers = get_supplier_data_by_type(society_name)
+            if apartment_index is None:
+                return handle_response('', data="Apartment column missing in the sheet", success=False)
+            
+            if area_index is None:
+                return handle_response('', data="Could not find Area column in sheet", success=False)
+
+            if city_index is None:
+                return handle_response('', data="Could not find City column in sheet", success=False)
+
+            if index > 0:
+                if not (row[apartment_index].value is None):
+                    society_name = row[apartment_index].value
+
+                if not (row[area_index].value is None):
+                    area_name = row[area_index].value
+
+                if not (row[city_index].value is None):
+                    city_name = row[city_index].value
+
+                suppliers = get_supplier_data_by_type(society_name, area_name, city_name)
 
                 if len(suppliers) == 0:
-                    if society_name not in missing_societies and society_name is not None:
-                        missing_societies.append(society_name)
+                    if society_name not in unmatched_societies and society_name is not None:
                         unmatched_societies.append(society_name)
                     continue
                 else:
                     if len(suppliers) == 1:
                         found_supplier_id = suppliers[0]['supplier_id']
                         matched_societies.append(society_name)
+
+                        supplier_code = "RS"
+                        content_type = ui_utils.fetch_content_type(supplier_code)  
+
+                        data = {
+                            'object_id': found_supplier_id,
+                            'proposal_id': campaign_id,
+                            'content_type': content_type,
+                        }
+                        obj, is_created = ShortlistedSpaces.objects.get_or_create(**data)
+                        obj.save()
+
+                        shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=found_supplier_id).filter(
+                            proposal_id=campaign_id).all()
+                        if len(shortlisted_spaces) == 0:
+                            not_present_in_shortlisted_societies.append(society_name)
+                            continue
+
+                        lead_dict = {"data": [], "is_hot": False, "supplier_id": found_supplier_id,
+                                     "campaign_id": campaign_id, "leads_form_id": int(leads_form_id), "entry_id": entry_id}
+                        for item_id in range(0, fields):
+                            curr_item_id = item_id + 1
+                            curr_form_item_dict = lead_form['data'][str(curr_item_id)]
+                            key_name = curr_form_item_dict['key_name']
+                            value = row[item_id].value if row[item_id].value else None
+                            if isinstance(value, datetime.datetime) or isinstance(value, datetime.time):
+                                value = str(value)
+                            item_dict = {
+                                'key_name': key_name,
+                                'value': value,
+                                'item_id': curr_item_id
+                            }
+                            lead_dict["data"].append(item_dict)
+                        lead_sha_256 = create_lead_hash(lead_dict)
+                        lead_dict["lead_sha_256"] = lead_sha_256
+                        lead_dict["is_hot"], lead_dict["multi_level_is_hot"], lead_dict["hotness_level"] = calculate_is_hot(lead_dict, global_hot_lead_criteria)
+                        lead_already_exist = True if lead_sha_256 in all_sha256_list else False
+                        if not lead_already_exist:
+                            mongo_client.leads.insert_one(lead_dict)
+                            entry_id = entry_id + 1  # will be saved in the end
+
+                        mongo_client.leads_forms.update_one({"leads_form_id": leads_form_id}, {"$set": {"last_entry_id": entry_id}})
+                        unmatched_societies.sort()
+
                     else:
                         supplier_ids = []
                         for s in suppliers:
@@ -577,51 +642,11 @@ class CreateDummyProposal(APIView):
                         else:
                             found_supplier_id = shortlisted_spaces[0]['object_id']
 
-                supplier_code = "RS"
-                content_type = ui_utils.fetch_content_type(supplier_code)  
-
-                data = {
-                    'object_id': found_supplier_id,
-                    'proposal_id': campaign_id,
-                    'content_type': content_type,
-                }
-                obj, is_created = ShortlistedSpaces.objects.get_or_create(**data)
-                obj.save()
-
-                shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=found_supplier_id).filter(
-                    proposal_id=campaign_id).all()
-                if len(shortlisted_spaces) == 0:
-                    not_present_in_shortlisted_societies.append(society_name)
-                    continue
-
-                lead_dict = {"data": [], "is_hot": False, "supplier_id": found_supplier_id,
-                             "campaign_id": campaign_id, "leads_form_id": int(leads_form_id), "entry_id": entry_id}
-                for item_id in range(0, fields):
-                    curr_item_id = item_id + 1
-                    curr_form_item_dict = lead_form['data'][str(curr_item_id)]
-                    key_name = curr_form_item_dict['key_name']
-                    value = row[item_id].value if row[item_id].value else None
-                    if isinstance(value, datetime.datetime) or isinstance(value, datetime.time):
-                        value = str(value)
-                    item_dict = {
-                        'key_name': key_name,
-                        'value': value,
-                        'item_id': curr_item_id
-                    }
-                    lead_dict["data"].append(item_dict)
-                lead_sha_256 = create_lead_hash(lead_dict)
-                lead_dict["lead_sha_256"] = lead_sha_256
-                lead_dict["is_hot"], lead_dict["multi_level_is_hot"], lead_dict["hotness_level"] = calculate_is_hot(lead_dict, global_hot_lead_criteria)
-                lead_already_exist = True if lead_sha_256 in all_sha256_list else False
-                if not lead_already_exist:
-                    mongo_client.leads.insert_one(lead_dict)
-                    entry_id = entry_id + 1  # will be saved in the end
-
-        mongo_client.leads_forms.update_one({"leads_form_id": leads_form_id}, {"$set": {"last_entry_id": entry_id}})
-        missing_societies.sort()
-
+        lead_count_matched=dict(zip(list(matched_societies),[list(matched_societies).count(i) for i in list(matched_societies)]))
+        lead_count_unmatched = dict(zip(list(unmatched_societies),[list(unmatched_societies).count(i) for i in list(unmatched_societies)]))
         missing_dict = {
-            "missing_societies": missing_societies,
+            "lead_count_matched":lead_count_matched,
+            "lead_count_unmatched":lead_count_unmatched,
             "matched_societies": list(set(matched_societies)),
             "unmatched_societies": list(set(unmatched_societies)),
             "more_than_ones_same_shortlisted_society": list(set(more_than_ones_same_shortlisted_society)),
