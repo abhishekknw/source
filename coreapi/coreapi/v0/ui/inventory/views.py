@@ -611,6 +611,11 @@ class CampaignInventory(APIView):
             search = request.query_params.get("search", None)
             start_date = request.query_params.get("start_date", None)
             end_date = request.query_params.get("end_date", None)
+
+            supplier_type_code = request.query_params.get("supplier_type_code", None)
+            booking_status_code = request.query_params.get("booking_status_code", None)
+            phase_id = request.query_params.get("phase_id", None)
+
             username_list = BaseUser.objects.filter(profile__organisation=user.profile.organisation.organisation_id). \
                 values_list('username')
             proposal_list = ProposalInfo.objects.filter(created_by__in=username_list, proposal_id=campaign_id)
@@ -624,8 +629,7 @@ class CampaignInventory(APIView):
             # cache_key = v0_utils.create_cache_key(class_name, campaign_id)
             # cache_value = cache.get(cache_key)
             # cache_value = None
-            response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id, page, user, int(assigned), search,
-                                                                                start_date, end_date)
+            response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id, page, user, int(assigned), search, start_date, end_date, supplier_type_code, booking_status_code, phase_id)
             if not response.data['status']:
                 return response
             # cache.set(cache_key, response.data['data'])
@@ -638,9 +642,7 @@ class CampaignInventory(APIView):
             suppliersData = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).all()
             serializer2 = ProposalCenterSuppliersSerializer(suppliersData, many=True)
             response.data['data']['campaign']['centerSuppliers'] = serializer2.data
-            
 
-            #return ui_utils.handle_response(class_name, data=centerData, success=True)
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
 
         except Exception as e:
