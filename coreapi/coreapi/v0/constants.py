@@ -1392,3 +1392,49 @@ perf_metrics_param = {
 }
 
 MACHADALO_ORG_ID = 'MAC1421'
+
+tableHeaderData = {
+    'RSES' : [
+            {"srNo" : "Sr No"},
+            {"name" : "Supplier Name"},
+            {"supplier_id" : "Supplier Id"},
+            {"supplier_type" : "Supplier Type"},
+            {"area_subArea" : "Area (Sub Area)"},
+            {"address_landmark" : "Address (Landmark)"},
+            {"relationShipData" : "RelationShip Data"},
+            {"flat_count" : "Flat Count"},
+            {"tower_count" : "Tower Count"},
+            {"contacts_Details" : "Contacts Details"},
+            {"assign_user" : "Assign User"},
+            {"booking_priority" : "Booking Priority"},
+            {"booking_status_and_sub_status" : "Booking Status and Sub Status"},
+            {"phase" : "Phase"},
+            {"internal_comments" : "Internal Comments"},
+            {"comments" : "Comments"},
+            {"next_action_date" : "Next Action Date"},
+            {"inventory_type" : "Inventory Type"},
+            {"inventory_count" : "Inventory Count"},
+            {"inventory_days" : "Inventory Days"},
+            {"inventory_supplier_price" : "Inventory Supplier Price"},
+            {"total_supplier_price" : "Total Supplier Price (Per Flat)"},
+            {"negotiated_price" : "Negotiated Price"},
+            {"cost_per_flat" : "Cost Per Flat"},
+            {"freebies" : "Freebies"},
+            {"mode_of_payment" : "Mode Of Payment"},
+            {"transaction_cheque_number" : "Transaction/Cheque Number"},
+            {"payment_status" : "Payment Status"},
+            {"permission_box" : "Permission Box"},
+            {"receipt" : "Receipt"},
+            {"lead_performance_summary" : "Lead Performance Summary"},
+            {"completion_status" : "Completion Status"},
+            {"delete_action" : "Delete Action"}
+        ],
+
+    'RS' : ['Sr No', 'Supplier Name', 'Supplier Id', 'Supplier Type', 'Area (Sub Area)', 'Address (Landmark)', 'RelationShip Data', 'Flat Count', 'Tower Count', 'Contacts Details', 'Assign User', 'Booking Priority', 'Booking Status and Sub Status', 'Phase', 'Internal Comments', 'Comments', 'Next Action Date', 'Inventory Type', 'Inventory Count', 'Inventory Days', 'Inventory Supplier Price', 'Total Supplier Price (Per Flat)', 'Negotiated Price', 'Cost Per Flat', 'Freebies', 'Mode Of Payment', 'Transaction/Cheque Number', 'Payment Status', 'Permission Box', 'Receipt', 'Lead Performance Summary', 'Completion Status', 'Delete Action'],
+    'CP' : ['Sr No', 'Supplier Name', 'Supplier Id', 'Supplier Type', 'Area (Sub Area)', 'Address (Landmark)', 'RelationShip Data', 'Average Weekend(Daily Footfall)', 'Average Weekday(Daily Footfall)', 'Contacts Details', 'Assign User', 'Booking Priority', 'Booking Status and Sub Status', 'Phase', 'Internal Comments', 'Comments', 'Next Action Date', 'Inventory Type', 'Inventory Count', 'Inventory Days', 'Inventory Supplier Price', 'Total Supplier Price Per Footfall (Weekend)', 'Negotiated Price', 'Cost Per Average Daily Footfall', 'Freebies', 'Mode Of Payment', 'Transaction/Cheque Number', 'Payment Status', 'Permission Box', 'Receipt', 'Lead Performance Summary', 'Completion Status', 'Delete Action'],
+    'GY' : ['Sr No', 'Supplier Name', 'Supplier Id', 'Supplier Type', 'Area (Sub Area)', 'Address (Landmark)', 'RelationShip Data', 'Average Weekend(Daily Footfall)', 'Average Weekday(Daily Footfall)', 'Contacts Details', 'Assign User', 'Booking Priority', 'Booking Status and Sub Status', 'Phase', 'Internal Comments', 'Comments', 'Next Action Date', 'Inventory Type', 'Inventory Count', 'Inventory Days', 'Inventory Supplier Price', 'Total Supplier Price Per Footfall (Weekend)', 'Negotiated Price', 'Cost Per Average Daily Footfall', 'Freebies', 'Mode Of Payment', 'Transaction/Cheque Number', 'Payment Status', 'Permission Box', 'Receipt', 'Lead Performance Summary', 'Completion Status', 'Delete Action'],
+    'SA' : ['Sr No', 'Supplier Name', 'Supplier Id', 'Supplier Type', 'Area (Sub Area)', 'Address (Landmark)', 'RelationShip Data', 'Average Weekend(Daily Footfall)', 'Average Weekday(Daily Footfall)', 'Contacts Details', 'Assign User', 'Booking Priority', 'Booking Status and Sub Status', 'Phase', 'Internal Comments', 'Comments', 'Next Action Date', 'Inventory Type', 'Inventory Count', 'Inventory Days', 'Inventory Supplier Price', 'Total Supplier Price Per Footfall (Weekend)', 'Negotiated Price', 'Cost Per Average Daily Footfall', 'Freebies', 'Mode Of Payment', 'Transaction/Cheque Number', 'Payment Status', 'Permission Box', 'Receipt', 'Lead Performance Summary', 'Completion Status', 'Delete Action'],
+    'BS' : ['Sr No', 'Supplier Name', 'Supplier Id', 'Supplier Type', 'Area (Sub Area)', 'Address (Landmark)', 'RelationShip Data', 'Average Weekend(Daily Footfall)', 'Average Weekday(Daily Footfall)', 'Contacts Details', 'Assign User', 'Booking Priority', 'Booking Status and Sub Status', 'Phase', 'Internal Comments', 'Comments', 'Next Action Date', 'Inventory Type', 'Inventory Count', 'Inventory Days', 'Inventory Supplier Price', 'Total Supplier Price Per Footfall (Weekend)', 'Negotiated Price', 'Cost Per Average Daily Footfall', 'Freebies', 'Mode Of Payment', 'Transaction/Cheque Number', 'Payment Status', 'Permission Box', 'Receipt', 'Lead Performance Summary', 'Completion Status', 'Delete Action'],
+    'RE' : ['Sr No', 'Supplier Name', 'Supplier Id', 'Supplier Type', 'Area (Sub Area)', 'Address (Landmark)', 'RelationShip Data', 'Average Weekend(Daily Footfall)', 'Average Weekday(Daily Footfall)', 'Contacts Details', 'Assign User', 'Booking Priority', 'Booking Status and Sub Status', 'Phase', 'Internal Comments', 'Comments', 'Next Action Date', 'Inventory Type', 'Inventory Count', 'Inventory Days', 'Inventory Supplier Price', 'Total Supplier Price Per Footfall (Weekend)', 'Negotiated Price', 'Cost Per Average Daily Footfall', 'Freebies', 'Mode Of Payment', 'Transaction/Cheque Number', 'Payment Status', 'Permission Box', 'Receipt', 'Lead Performance Summary', 'Completion Status', 'Delete Action'],
+    'BD' : ['Sr No', 'Supplier Name', 'Supplier Id', 'Supplier Type', 'Area (Sub Area)', 'Address (Landmark)', 'RelationShip Data', 'Average Weekend(Daily Footfall)', 'Average Weekday(Daily Footfall)', 'Contacts Details', 'Assign User', 'Booking Priority', 'Booking Status and Sub Status', 'Phase', 'Internal Comments', 'Comments', 'Next Action Date', 'Inventory Type', 'Inventory Count', 'Inventory Days', 'Inventory Supplier Price', 'Total Supplier Price Per Footfall (Weekend)', 'Negotiated Price', 'Cost Per Average Daily Footfall', 'Freebies', 'Mode Of Payment', 'Transaction/Cheque Number', 'Payment Status', 'Permission Box', 'Receipt', 'Lead Performance Summary', 'Completion Status', 'Delete Action'],
+}

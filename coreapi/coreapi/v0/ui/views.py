@@ -331,6 +331,16 @@ class getCityAreaAPIView(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
+class getHeaderDataAPIView(APIView):
+
+    def get(self, request):
+        class_name = self.__class__.__name__
+        try:
+            return ui_utils.handle_response({}, data=v0_constants.tableHeaderData, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
 class LocationsAPIView(APIView):
     def get(self, request, id, format=None):
         class_name = self.__class__.__name__

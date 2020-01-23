@@ -94,6 +94,7 @@ urlpatterns = [
     url(r'^setResetPassword$', views.setResetPasswordAPIView.as_view()),
 
     url(r'^forgotPassword$', views.forgotPasswordAPIView.as_view()),
+    url(r'^getHeaderData$', views.getHeaderDataAPIView.as_view(), name='getHeaderData'),
 
     url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_basic_corporate_details$', SaveBasicCorporateDetailsAPIView.as_view()),
     # url(r'^corporate/(?P<id>[A-Z_a-z0-9]+)/save_contact_details$', views.ContactDetailsGenericAPIView.as_view()),

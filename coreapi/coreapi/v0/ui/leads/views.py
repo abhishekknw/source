@@ -273,6 +273,17 @@ class GetLeadsEntriesBySupplier(APIView):
         return handle_response({}, data=supplier_all_lead_entries, success=True)
 
 
+class GetLeadsEntriesBySupplierCount(APIView):
+    @staticmethod
+    def get(request, leads_form_id, supplier_id):
+        page_number = int(request.query_params.get('page_number', 0))
+        supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number)
+        return handle_response({}, data=len(supplier_all_lead_entries['values']), success=True)
+
+
+
+
+
 class GetLeadsEntriesByCampaignId(APIView):
     # it is assumed that a form belongs to a campaign
     @staticmethod
