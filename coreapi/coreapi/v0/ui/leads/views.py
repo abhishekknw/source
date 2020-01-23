@@ -270,7 +270,7 @@ class GetLeadsEntriesBySupplier(APIView):
     def get(request, leads_form_id, supplier_id):
         page_number = int(request.query_params.get('page_number', 0))
         supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number)
-        return handle_response({}, data=supplier_all_lead_entries['headers'], success=True)
+        return handle_response({}, data=supplier_all_lead_entries, success=True)
 
 
 class GetLeadsEntriesBySupplierCount(APIView):
@@ -278,7 +278,7 @@ class GetLeadsEntriesBySupplierCount(APIView):
     def get(request, leads_form_id, supplier_id):
         page_number = int(request.query_params.get('page_number', 0))
         supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number)
-        return handle_response({}, data=len(supplier_all_lead_entries['headers']), success=True)
+        return handle_response({}, data=len(supplier_all_lead_entries['values']), success=True)
 
 
 

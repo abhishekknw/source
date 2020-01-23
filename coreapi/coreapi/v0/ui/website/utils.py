@@ -4086,7 +4086,9 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
                 supplier[key] = value
             # no good way to check if the tuple exist in the dict. Hence resorted to KeyError checking.
             try:
-                supplier['contacts'] = contact_object_per_content_type_per_supplier[supplier_tuple]
+                retail_shop_instance = ContactDetails.objects.filter(object_id=supplier['object_id'])
+                contact_serializer = ContactDetailsSerializer(retail_shop_instance, many=True)
+                supplier['contacts'] = contact_serializer.data
             except KeyError:
                 supplier['contacts'] = []
             try:

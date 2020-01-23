@@ -1206,6 +1206,20 @@ class RetailShopViewSet(viewsets.ViewSet):
     def update(self, request, pk):
         class_name = self.__class__.__name__
         try:
+            basic_contacts = request.data.get('basic_contacts', None)
+            object_id = request.data.get('supplier_id', None)
+
+            
+            for contact in basic_contacts:
+                if 'id' in contact:
+                    item = ContactDetails.objects.filter(pk=contact['id']).first()
+                    contact_serializer = ContactDetailsSerializer(item, data=contact)
+                else:
+                    contact_serializer = ContactDetailsSerializer(data=contact)
+                if contact_serializer.is_valid():
+                    contact_serializer.save()
+
+
             retail_shop_instance = SupplierTypeRetailShop.objects.get(pk=pk)
             serializer = RetailShopSerializer(instance=retail_shop_instance, data=request.data)
             if serializer.is_valid():
@@ -1220,7 +1234,15 @@ class RetailShopViewSet(viewsets.ViewSet):
         try:
             retail_shop_instance = SupplierTypeRetailShop.objects.get(pk=pk)
             serializer = RetailShopSerializer(instance=retail_shop_instance)
-            return handle_response(class_name, data=serializer.data, success=True)
+
+            shopData = serializer.data
+
+            retail_shop_instance = ContactDetails.objects.filter(object_id=pk)
+            contact_serializer = ContactDetailsSerializer(retail_shop_instance, many=True)
+                
+            shopData['contacData'] = contact_serializer.data
+
+            return handle_response(class_name, data=shopData, success=True)
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
 
