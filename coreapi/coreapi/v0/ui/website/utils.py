@@ -4021,6 +4021,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
         if start_date and end_date:
             filter_query &= Q(next_action_date__gte=start_date)
             filter_query &= Q(next_action_date__lte=end_date)
+        
         shortlisted_spaces = ShortlistedSpaces.objects.filter(filter_query).order_by('id')
 
         if page:

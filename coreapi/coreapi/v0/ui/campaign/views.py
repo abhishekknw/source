@@ -937,23 +937,49 @@ class AddDynamicInventoryIds(APIView):
         duration = DurationType.objects.get(id=data['duration_id'])
         content_type = ui_utils.fetch_content_type(str(inv.adinventory_name))
         space = ShortlistedSpaces.objects.get(id=data['space_id'])
-        now_time = timezone.now()
-        shortlisted_inventories = []
-        for inventory in range(data['inv_count']):
-            inventory_id = "TEST" + str(inv.adinventory_name.strip()) + str(random.randint(1,2000)) + str(inventory)
-            data = {
-                'ad_inventory_type': inv,
-                'ad_inventory_duration': duration,
-                'inventory_id': inventory_id,
-                'shortlisted_spaces': space,
-                'created_at': now_time,
-                'updated_at': now_time,
-                'inventory_content_type_id': content_type.id
-            }
 
-            shortlisted_inventories.append(ShortlistedInventoryPricingDetails(**data))
-        ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_inventories)
-        return ui_utils.handle_response({}, data={}, success=True)
+        invDataCount = ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces=space,ad_inventory_type=inv).count()
+
+        remove_count = 0
+
+        if int(data['inv_count']) < invDataCount or int(data['inv_count']) == 0:
+            
+            remove_count = invDataCount-int(data['inv_count'])
+            remove_data = ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces=space,ad_inventory_type=inv)[:remove_count:1]
+
+            for row in remove_data:
+                ShortlistedInventoryPricingDetails.objects.get(id=row.id).delete()
+        else :
+            remove_count = int(data['inv_count'])-invDataCount
+            now_time = timezone.now()
+            shortlisted_inventories = []
+            for inventory in range(remove_count):
+                inventory_id = "TEST" + str(inv.adinventory_name.strip()) + str(random.randint(1,2000)) + str(inventory)
+                data = {
+                    'ad_inventory_type': inv,
+                    'ad_inventory_duration': duration,
+                    'inventory_id': inventory_id,
+                    'shortlisted_spaces': space,
+                    'created_at': now_time,
+                    'updated_at': now_time,
+                    'inventory_content_type_id': content_type.id
+                }
+
+                shortlisted_inventories.append(ShortlistedInventoryPricingDetails(**data))
+            ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_inventories)
+
+
+        campaign_id = request.data["campaign_id"]
+        supplier_id = request.data["supplier_id"]
+        if campaign_id:
+            response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id, 1, '',0, supplier_id, '', '', '', '', '')
+            return ui_utils.handle_response({}, data=response.data['data']['shortlisted_suppliers'][0]['shortlisted_inventories'], success=True)
+        else :
+            return ui_utils.handle_response({}, data={}, success=True)
+        
+
+        
+
 
 class DeleteAdInventoryIds(APIView):
     @staticmethod
