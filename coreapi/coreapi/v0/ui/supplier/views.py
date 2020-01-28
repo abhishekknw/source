@@ -73,6 +73,7 @@ from django.apps import apps
 from django.db import IntegrityError
 from .supplier_uploads import create_price_mapping_default
 from django.db import connection
+from v0.ui.common.pagination import paginate
 
 
 
@@ -678,24 +679,47 @@ class SocietyList(APIView):
             org_id = request.user.profile.organisation.organisation_id
             society_objects = []
             if user.is_superuser:
-                society_objects = SupplierTypeSociety.objects.all().order_by('society_name')
+                society_objects = SupplierTypeSociety.objects
+                #sort list based on state selected.
+                if request.GET["state"]:
+                    society_objects = society_objects.filter(society_state=request.GET["state"])
+
+                #sort list based on search keyword.
+                if request.GET["search"]:
+                    society_objects = society_objects.filter(Q(society_name__icontains=request.GET["search"]) | Q(society_address1__icontains=request.GET["search"]) | Q(society_address2__icontains=request.GET["search"])
+                                      | Q(society_city__icontains=request.GET["search"]) | Q(supplier_id__icontains=request.GET["search"]) | Q(supplier_code__icontains=request.GET["search"]))
+
+                society_objects = society_objects.all().order_by('society_name')
             else:
                 # city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
-                #                                              v0_constants.society)
+                #                                              v0_constants.society)                
                 vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
                 society_objects = SupplierTypeSociety.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
                                                                      & Q(representative__isnull=False))
+                #sort list based on state selected.
+                if request.GET["state"]:
+                    society_objects = society_objects.filter(society_state=request.GET["state"])
+
+                #sort list based on search keyword.
+                if request.GET["search"]:
+                    society_objects = society_objects.filter(Q(society_name__icontains=request.GET["search"]) | Q(society_address1__icontains=request.GET["search"]) | Q(society_address2__icontains=request.GET["search"])
+                                      | Q(society_city__icontains=request.GET["search"]) | Q(supplier_id__icontains=request.GET["search"]) | Q(supplier_code__icontains=request.GET["search"]))
 
             if not society_objects:
                 return handle_response(class_name, data={}, success=True)
 
-            serializer = SupplierTypeSocietySerializer(society_objects, many=True)
-            suppliers = manipulate_object_key_values(serializer.data)
+            # serializer = SupplierTypeSocietySerializer(society_objects, many=True)
+
+            #pagination
+            society_objects_paginate = paginate(society_objects,SupplierTypeSocietySerializer,request)
+            suppliers = manipulate_object_key_values(society_objects_paginate["list"])
             societies_with_images = get_supplier_image(suppliers, v0_constants.society_name)
 
             data = {
-                'count': len(societies_with_images),
-                'societies': societies_with_images
+                'count': society_objects_paginate["count"],
+                'has_next':society_objects_paginate["has_next"],
+                'has_previous':society_objects_paginate["has_previous"],
+                'societies': societies_with_images,
             }
 
             return handle_response(class_name, data=data, success=True)
