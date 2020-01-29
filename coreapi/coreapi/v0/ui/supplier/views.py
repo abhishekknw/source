@@ -681,11 +681,11 @@ class SocietyList(APIView):
             if user.is_superuser:
                 society_objects = SupplierTypeSociety.objects
                 #sort list based on state selected.
-                if request.GET["state"]:
+                if request.GET.get("state"):
                     society_objects = society_objects.filter(society_state=request.GET["state"])
 
                 #sort list based on search keyword.
-                if request.GET["search"]:
+                if request.GET.get("search"):
                     society_objects = society_objects.filter(Q(society_name__icontains=request.GET["search"]) | Q(society_address1__icontains=request.GET["search"]) | Q(society_address2__icontains=request.GET["search"])
                                       | Q(society_city__icontains=request.GET["search"]) | Q(supplier_id__icontains=request.GET["search"]) | Q(supplier_code__icontains=request.GET["search"]))
 
@@ -697,11 +697,11 @@ class SocietyList(APIView):
                 society_objects = SupplierTypeSociety.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
                                                                      & Q(representative__isnull=False))
                 #sort list based on state selected.
-                if request.GET["state"]:
+                if request.GET.get("state"):
                     society_objects = society_objects.filter(society_state=request.GET["state"])
 
                 #sort list based on search keyword.
-                if request.GET["search"]:
+                if request.GET.get("search"):
                     society_objects = society_objects.filter(Q(society_name__icontains=request.GET["search"]) | Q(society_address1__icontains=request.GET["search"]) | Q(society_address2__icontains=request.GET["search"])
                                       | Q(society_city__icontains=request.GET["search"]) | Q(supplier_id__icontains=request.GET["search"]) | Q(supplier_code__icontains=request.GET["search"]))
 
