@@ -1975,6 +1975,51 @@ class SuppliersMeta(APIView):
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
 
+class SuppliersMetaData(APIView):
+    """
+    Fetches meta information about suppliers. Gives Count on the basis of selected state or state name and supplier type.
+    """
+
+    def get(self, request):
+        """
+
+        :param request:
+        :return:
+        """
+        class_name = self.__class__.__name__
+        try:
+            data = {}
+            supplier_type_code = request.query_params.get('supplier_code', None)
+            
+            model_name = get_model(supplier_type_code)
+
+            state = request.GET.get("state")
+            state_name = request.GET.get("state_name")
+            
+            search_query = Q()
+
+            if state:
+                if supplier_type_code == 'RS':
+                    search_query &= Q(society_state__icontains=state)
+                else :
+                    search_query &= Q(state__icontains=state)
+
+
+            if state_name:
+                if supplier_type_code == 'RS':
+                    search_query |= Q(society_state__icontains=state_name)
+                else:
+                    search_query |= Q(state__icontains=state_name)
+
+            count = model_name.objects.filter(search_query).count()
+        
+            data[supplier_type_code] = { 'count': count}
+
+            return handle_response(class_name, data=data, success=True)   
+
+        except Exception as e:
+            return handle_response(class_name, exception_object=e, request=request)
+
 
 class BusDepotViewSet(viewsets.ViewSet):
     """
