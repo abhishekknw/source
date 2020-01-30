@@ -1,6 +1,7 @@
 from __future__ import print_function
 from __future__ import absolute_import
 from v0.ui.dynamic_booking.views import (get_dynamic_booking_data_by_campaign)
+from v0.ui.dynamic_booking.utils import get_dynamic_inventory_data_by_campaign
 import random
 import math
 import numpy as np
@@ -2276,6 +2277,23 @@ class AssignedCampaigns(APIView):
                     campaign['supplier_details']=supplier_details
         return ui_utils.handle_response({}, data=all_assigned_campaigns, success=True)
 
+
+class BookingAttributes(APIView):
+    @staticmethod
+    def get(request, campaign_id):
+        if not campaign_id:
+            return ui_utils.handle_response({}, data='Please provide campaign id', success=False)
+        supplier_details = get_campaign_suppliers(campaign_id)
+        return ui_utils.handle_response({}, data=supplier_details, success=True)
+
+
+class InventoryAttributes(APIView):
+    @staticmethod
+    def get(request, campaign_id):
+        if not campaign_id:
+            return ui_utils.handle_response({}, data='Please provide campaign id', success=False)
+        inventory_count = get_dynamic_inventory_data_by_campaign(campaign_id)
+        return ui_utils.handle_response({}, data=inventory_count, success=True)
 
 class AllCampaigns(APIView):
     @staticmethod

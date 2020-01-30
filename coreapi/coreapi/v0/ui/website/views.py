@@ -614,21 +614,16 @@ class AssignCampaign(APIView):
         class_name = self.__class__.__name__
 
         try:
-
-            users = BaseUser.objects.all()
+            users = BaseUser.objects.all().values('id', 'username')
             user_obj = {}
             if users:
                 for user in users:
                     row = {
-                        "id": user.id,
-                        "username": user.username
+                        "id": user.get('id', None),
+                        "username": user.get('username', None)
                     }
-                
-
-                    if not user_obj.get(user.id):
-                        user_obj[user.id] = row
-                
-
+                    if not user_obj.get(user['id']):
+                        user_obj[user['id']] = row
             user = request.user
             username_list = BaseUser.objects.filter(profile__organisation=user.profile.organisation.organisation_id). \
                             values_list('username')
@@ -646,12 +641,7 @@ class AssignCampaign(APIView):
                 response = website_utils.is_campaign(assign_object.campaign)
                 # if it is a campaign.
                 if response.data['status']:
-                    proposal_id = assign_object.campaign.proposal_id
-                    # if proposal_id not in all_proposal_ids:
-                        # all_proposal_ids.append(proposal_id)
                     campaigns.append(assign_object)
-                    # assign statuses to each of the campaigns.
-
             serializer = CampaignAssignmentSerializerReadOnly(campaigns, many=True)
 
             campaign_obj = {}
@@ -663,12 +653,9 @@ class AssignCampaign(APIView):
                 if not response.data['status']:
                     return response
                 data['campaign']['status'] = response.data['data']
-                
-                
                 if not campaign_obj.get(data['campaign']['proposal_id']):
                     campaign_obj[data['campaign']['proposal_id']] = data
                     campaign_obj[data['campaign']['proposal_id']]["assigned"] = []
-                
                 row = {
                     "assigned_by": user_obj[data["assigned_by"]]['username'],
                     "assigned_to": user_obj[data["assigned_to"]]['username'],

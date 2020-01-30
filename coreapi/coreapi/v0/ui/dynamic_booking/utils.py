@@ -70,6 +70,15 @@ def get_dynamic_booking_data_by_campaign(campaign_id):
     return final_data_list
 
 
+def get_dynamic_inventory_data_by_campaign(campaign_id):
+    data_all = list(BookingData.objects.raw({'campaign_id': campaign_id}))
+    if not data_all or not len(data_all):
+        return []
+    final_data_list = []
+    for data in data_all:
+        final_data_list.append({'inventory_counts': data.inventory_counts})
+    return final_data_list
+
 def get_supplier_attributes(supplier_id, supplier_attributes):
     all_supplier_attribute_names = [supplier['name'] for supplier in supplier_attributes]
     supplier_object_list = list(SupplySupplier.objects.raw({"_id": ObjectId(supplier_id)}))
