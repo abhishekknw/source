@@ -320,12 +320,23 @@ class getCityAreaAPIView(APIView):
                 return ui_utils.handle_response({}, data='search is Mandatory')
 
             data = []
-            cityData = City.objects.filter(city_name = search).first()
-            if cityData:
-                items1 = CityArea.objects.filter(city_code__id=cityData.id)
+            city_ids = City.objects.filter(city_name__icontains = search).values_list('id', flat=True)
+        
+            if city_ids:
+                items1 = CityArea.objects.filter(city_code__in=city_ids)
                 serializer1 = CityAreaSerializer(items1, many=True)
                 data = serializer1.data
             return ui_utils.handle_response({}, data=data, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
+class getHeaderDataAPIView(APIView):
+
+    def get(self, request):
+        class_name = self.__class__.__name__
+        try:
+            return ui_utils.handle_response({}, data=v0_constants.tableHeaderData, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 

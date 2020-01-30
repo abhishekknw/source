@@ -17,7 +17,14 @@ from v0.ui.inventory.models import (StallInventory, BannerInventory, AdInventory
                                     PosterInventoryMapping, AD_INVENTORY_CHOICES, InventoryActivityAssignment,
                                     INVENTORY_ACTIVITY_TYPES, InventoryActivityImage, InventoryActivity,
                                     SocietyInventoryBooking)
-from v0.ui.proposal.models import (ProposalInfo)
+
+
+
+from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping, ProposalCenterSuppliers)
+from v0.ui.proposal.serializers import (ProposalCenterMappingSerializer, ProposalCenterSuppliersSerializer)
+
+
+
 import v0.ui.utils as ui_utils
 import v0.constants as v0_constants
 from v0 import errors
@@ -604,6 +611,11 @@ class CampaignInventory(APIView):
             search = request.query_params.get("search", None)
             start_date = request.query_params.get("start_date", None)
             end_date = request.query_params.get("end_date", None)
+
+            supplier_type_code = request.query_params.get("supplier_type_code", None)
+            booking_status_code = request.query_params.get("booking_status_code", None)
+            phase_id = request.query_params.get("phase_id", None)
+
             username_list = BaseUser.objects.filter(profile__organisation=user.profile.organisation.organisation_id). \
                 values_list('username')
             proposal_list = ProposalInfo.objects.filter(created_by__in=username_list, proposal_id=campaign_id)
@@ -617,15 +629,23 @@ class CampaignInventory(APIView):
             # cache_key = v0_utils.create_cache_key(class_name, campaign_id)
             # cache_value = cache.get(cache_key)
             # cache_value = None
-            response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id, page, user, int(assigned), search,
-                                                                                start_date, end_date)
+            response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id, page, user, int(assigned), search, start_date, end_date, supplier_type_code, booking_status_code, phase_id)
             if not response.data['status']:
                 return response
             # cache.set(cache_key, response.data['data'])
+
+            all_city_campaign = ProposalCenterMapping.objects.filter(proposal_id=campaign_id).all()
+            serializer1 = ProposalCenterMappingSerializer(all_city_campaign, many=True)
+            response.data['data']['campaign']['centerData'] = serializer1.data
+
+
+            suppliersData = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).all()
+            serializer2 = ProposalCenterSuppliersSerializer(suppliersData, many=True)
+            response.data['data']['campaign']['centerSuppliers'] = serializer2.data
+
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
 
         except Exception as e:
-            print("e2", e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     def put(self, request, campaign_id):

@@ -954,6 +954,10 @@ class AddDynamicInventoryIds(APIView):
             shortlisted_inventories.append(ShortlistedInventoryPricingDetails(**data))
         ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_inventories)
         return ui_utils.handle_response({}, data={}, success=True)
+        
+
+        
+
 
 class DeleteAdInventoryIds(APIView):
     @staticmethod

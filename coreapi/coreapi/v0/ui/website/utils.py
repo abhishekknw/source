@@ -3978,7 +3978,7 @@ def is_campaign(proposal):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned, search, start_date, end_date):
+def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned, search, start_date, end_date, supplier_type_code, booking_status_code, phase_id):
     """
 
     Args:
@@ -3998,6 +3998,16 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
 
         filter_query &= Q(proposal_id=proposal_id)
 
+
+        if supplier_type_code:
+            filter_query &= Q(supplier_code=supplier_type_code)
+
+        if booking_status_code:
+            filter_query &= Q(booking_status=booking_status_code)
+
+        if phase_id:
+            filter_query &= Q(phase=phase_id)
+
         if assigned:
             assigned_suppliers_list = SupplierAssignment.objects.filter(campaign=proposal_id,assigned_to=assigned). \
                 values_list('supplier_id')
@@ -4011,6 +4021,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
         if start_date and end_date:
             filter_query &= Q(next_action_date__gte=start_date)
             filter_query &= Q(next_action_date__lte=end_date)
+        
         shortlisted_spaces = ShortlistedSpaces.objects.filter(filter_query).order_by('id')
 
         if page:
@@ -4066,7 +4077,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
 
         # put the extra supplier specific info like name, area, subarea in the final result.
         for supplier in shortlisted_suppliers_list:
-
+            supplier['supplierCode'] = supplier['supplier_code']
             supplier_content_type_id = supplier['content_type']
             supplier_id = supplier['object_id']
             supplier['freebies'] = supplier['freebies'].split(',') if supplier['freebies'] else None
@@ -4076,7 +4087,9 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
                 supplier[key] = value
             # no good way to check if the tuple exist in the dict. Hence resorted to KeyError checking.
             try:
-                supplier['contacts'] = contact_object_per_content_type_per_supplier[supplier_tuple]
+                retail_shop_instance = ContactDetails.objects.filter(object_id=supplier['object_id'])
+                contact_serializer = ContactDetailsSerializer(retail_shop_instance, many=True)
+                supplier['contacts'] = contact_serializer.data
             except KeyError:
                 supplier['contacts'] = []
             try:
@@ -4091,6 +4104,8 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
             supplier['shortlisted_inventories'], total_inventory_supplier_price = response.data['data']
             supplier['total_inventory_supplier_price'] = total_inventory_supplier_price
         cache.set(str(proposal_id), result, timeout=60 * 100)
+
+        
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
         print("e3",e)

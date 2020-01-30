@@ -140,6 +140,11 @@ REST_FRAMEWORK = {
 }
 
 
+GRAPH_MODELS = {
+  'all_applications': True,
+  'group_models': True,
+}
+
 # CORS headers
 CORS_ORIGIN_ALLOW_ALL = True
 

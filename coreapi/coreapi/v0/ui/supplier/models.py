@@ -10,11 +10,10 @@ from v0 import managers
 Q = models.Q
 
 RETAIL_SHOP_TYPE = (
-    ('GROCERY_STORE', 'GROCERY_STORE'),
-    ('ELECTRONIC_STORE', 'ELECTRONIC_STORE'),
-    ('SANITARY_STORE', 'SANITARY_STORE'),
-    ('STATIONARY_STORE', 'STATIONARY_STORE'),
-    ('Toy Store', 'Toy Store'),
+    # ('GROCERY_STORE', 'GROCERY_STORE'),
+    # ('ELECTRONIC_STORE', 'ELECTRONIC_STORE'),
+    # ('SANITARY_STORE', 'SANITARY_STORE'),
+    # ('STATIONARY_STORE', 'STATIONARY_STORE'),
     ('Toy Store', 'Toy Store'),
     ('Sports Goods', 'Sports Goods'),
     ('Electronic Goods', 'Electronic Goods'),

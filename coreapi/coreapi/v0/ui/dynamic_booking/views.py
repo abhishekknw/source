@@ -101,7 +101,6 @@ class BookingTemplateView(APIView):
                                   "supplier_type_id": supplier_type_id}
         (is_valid, validation_msg_dict) = create_validation_msg(dict_of_req_attributes)
         if not is_valid:
-
             return handle_response('', data=validation_msg_dict, success=False)
         booking_template = dict_of_req_attributes
         booking_template["created_at"] = datetime.now()
@@ -424,8 +423,16 @@ class BookingAssignmentByCampaignId(APIView):
             if comments:
                 update_dict["comments"] = comments
             update_dict["updated_at"] = datetime.now()
-            BookingInventoryActivity.objects.raw({"campaign_id": campaign_id,"inventory_name": inventory_name,
-                                                  "supplier_id": supplier_id}).update({"$set": update_dict})
+            try:
+                result = BookingInventoryActivity.objects.raw({
+                    "campaign_id": campaign_id,
+                    "inventory_name": inventory_name,
+                    "supplier_id": supplier_id,
+                    "activity_type": activity_type
+                })
+                result.update({"$set": update_dict}, upsert=True)
+            except Exception as e:
+                print(e)
         return handle_response('', data={"success": True}, success=True)
 
 
