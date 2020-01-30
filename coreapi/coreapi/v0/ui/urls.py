@@ -9,7 +9,7 @@ from v0.ui.supplier.views import SocietyAPIView, SocietyAPIFiltersView, SocietyA
     SupplierImageDetails, CorporateViewSet, GymViewSet, SalonViewSet, RetailShopViewSet, BusShelter, \
     BusShelterSearchView, SaveBasicCorporateDetailsAPIView, SaveBuildingDetailsAPIView, CompanyDetailsAPIView, \
     CorporateCompanyDetailsAPIView, saveBasicSalonDetailsAPIView, saveBasicGymDetailsAPIView, BusShelter, \
-    SuppliersMeta, BusDepotViewSet, SocietyDataImport
+    SuppliersMeta, SuppliersMetaData, BusDepotViewSet, SocietyDataImport
 from v0.ui.supplier.supplier_uploads import CorporateParkDataImport
 
 # from v0.ui.website import views as web_views
@@ -112,6 +112,7 @@ urlpatterns = [
 
     url(r'^(?P<id>[A-Z_a-z0-9]+)/bus-shelter/$', BusShelter.as_view()),
     url(r'^suppliers-meta/$', SuppliersMeta.as_view()),
+    url(r'^suppliers-meta-data/$', SuppliersMetaData.as_view()),
     url(r'^supplier/(?P<id>[A-Z_a-z0-9]+)/image_details/$', SupplierImageDetails.as_view()),
     url(r'^import_society_payment_details/$', views.ImportSocietyPaymentDetails.as_view()),
     url(r'^supplier/society-data-import-excel/$', SocietyDataImport.as_view()),
