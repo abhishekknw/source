@@ -3071,8 +3071,8 @@ class MultiSupplierDetails(APIView):
             supplier_model = content_type.model
             model = apps.get_model(settings.APP_NAME, supplier_model)
 
-            suppliers = model.objects.filter(pk__in=supplier_ids).values('society_name', 'society_address1',
-                                                                         'society_city', 'society_state',
+            suppliers = model.objects.filter(pk__in=supplier_ids).values('society_name', 'society_locality',
+                                                                         'society_city', 'society_subarea', 'society_state',
                                                                          'society_latitude','society_longitude',
                                                                          'supplier_id')
             return Response(data={'status': True, 'data': suppliers}, status=status.HTTP_200_OK)
