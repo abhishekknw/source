@@ -696,9 +696,11 @@ class SocietyList(APIView):
             else:
                 # city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
                 #                                              v0_constants.society)                
-                vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
-                society_objects = SupplierTypeSociety.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
-                                                                     & Q(representative__isnull=False))
+                # vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
+                # society_objects = SupplierTypeSociety.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
+                                                                    #  & Q(representative__isnull=False))
+                """Gives list of suppliers created by the user only."""
+                society_objects = SupplierTypeSociety.objects.filter(user=user)
                 #sort list based on state selected.
                 if state and state_name:
                     society_objects = society_objects.filter(Q(society_state=state) | Q(society_state=state_name))
@@ -708,7 +710,7 @@ class SocietyList(APIView):
                     society_objects = society_objects.filter(Q(society_name__icontains=search) | Q(society_address1__icontains=search) | Q(society_address2__icontains=search)
                                       | Q(society_city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
 
-            # serializer = SupplierTypeSocietySerializer(society_objects, many=True)
+                society_objects = society_objects.all().order_by('society_name')
 
             #pagination
             society_objects_paginate = paginate(society_objects,SupplierTypeSocietySerializer,request)
@@ -755,6 +757,7 @@ class CorporateViewSet(viewsets.ViewSet):
                 # city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
                 #                                              v0_constants.corporate_code)
                 # corporates = SupplierTypeCorporate.objects.filter(city_query)
+                corporate_objects = SupplierTypeCorporate.objects.filter(user_id=user)
 
                 if state and state_name:
                     corporate_objects = corporate_objects.filter(Q(state=state) | Q(state=state_name))
@@ -763,7 +766,8 @@ class CorporateViewSet(viewsets.ViewSet):
                     corporate_objects = corporate_objects.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search) 
                                       | Q(city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
 
-            # serializer = UICorporateSerializer(corporates, many=True)
+                corporate_objects = corporate_objects.all().order_by('name')
+
             #pagination
             corporate_objects_paginate = paginate(corporate_objects,UICorporateSerializer,request)
             corporates_with_images = get_supplier_image(corporate_objects_paginate["list"], 'Corporate')
@@ -892,24 +896,21 @@ class SalonViewSet(viewsets.ViewSet):
  
                 salon_objects = salon_objects.all().order_by('name')
             else:
-                # city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
-                #                                              v0_constants.salon)
-                # salon_objects = SupplierTypeSalon.objects.filter(city_query)
+                salon_objects = SupplierTypeSalon.objects.filter(user=user)
+
                 if state and state_name:
                     salon_objects = salon_objects.filter(Q(state=state) | Q(state=state_name))
 
                 if search:
                     salon_objects = salon_objects.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search) 
                                       | Q(city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
- 
-            # salon_serializer = UISalonSerializer(salon_objects, many=True)
+
+                salon_objects = salon_objects.all().order_by('name')
+
             #pagination
             salon_objects_paginate = paginate(salon_objects,UISalonSerializer,request)
             items = get_supplier_image(salon_objects_paginate["list"], 'Salon')
-            # disabling pagination because search cannot be performed on whole data set
-            # paginator = PageNumberPagination()
-            # result_page = paginator.paginate_queryset(items, request)
-            # paginator_response = paginator.get_paginated_response(result_page)
+
             data = {
                 'count': salon_objects_paginate["count"],
                 'has_next':salon_objects_paginate["has_next"],
@@ -946,8 +947,8 @@ class GymViewSet(viewsets.ViewSet):
 
                 gym_objects = gym_objects.all().order_by('name')
             else:
-                # city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'], v0_constants.gym)
-                # gym_objects = SupplierTypeGym.objects.filter(city_query)
+                gym_objects = SupplierTypeGym.objects.filter(user=user)
+
                 if state and state_name:
                     gym_objects = gym_objects.filter(Q(state=state) | Q(state=state_name))
 
@@ -955,14 +956,12 @@ class GymViewSet(viewsets.ViewSet):
                     gym_objects = gym_objects.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search) 
                                       | Q(city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
 
-            # gym_shelter_serializer = SupplierTypeGymSerializer(gym_objects, many=True)
+                gym_objects = gym_objects.all().order_by('name')
+
             #pagination
             gym_objects_paginate = paginate(gym_objects,SupplierTypeGymSerializer,request)
             items = get_supplier_image(gym_objects_paginate['list'], 'Gym')
-            # disabling pagination because search cannot be performed on whole data set
-            # paginator = PageNumberPagination()
-            # result_page = paginator.paginate_queryset(items, request)
-            # paginator_response = paginator.get_paginated_response(result_page)
+            
             data = {
                 'count': gym_objects_paginate["count"],
                 'has_next':gym_objects_paginate["has_next"],
@@ -1302,9 +1301,8 @@ class RetailShopViewSet(viewsets.ViewSet):
 
                 retail_shop_objects = retail_shop_objects.all().order_by('name')
             else:
-                # city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
-                #                                              v0_constants.retail_shop_code)
-            #     retail_shop_objects = SupplierTypeRetailShop.objects.all().order_by('name')
+                retail_shop_objects = SupplierTypeRetailShop.objects.filter(user=user)
+               
                 if state and state_name:
                     retail_shop_objects = retail_shop_objects.filter(Q(state=state) | Q(state=state_name))
 
@@ -1312,15 +1310,12 @@ class RetailShopViewSet(viewsets.ViewSet):
                     retail_shop_objects = retail_shop_objects.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search) 
                                       | Q(city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
 
-            # serializer = RetailShopSerializer(retail_shop_objects, many=True)
+                retail_shop_objects = retail_shop_objects.all().order_by('name')
+
             #pagination
             retail_shop_objects_paginate = paginate(retail_shop_objects,RetailShopSerializer,request)
             retail_shop_with_images = get_supplier_image(retail_shop_objects_paginate["list"], 'Retail Shop')
 
-            # disabling paginators because search cannot be performed in front end in whole data set
-            # paginator = PageNumberPagination()
-            # result_page = paginator.paginate_queryset(retail_shop_with_images, request)
-            # paginator_response = paginator.get_paginated_response(result_page)
             data = {
                 'count': retail_shop_objects_paginate["count"],
                 'has_next':retail_shop_objects_paginate["has_next"],
@@ -1956,9 +1951,7 @@ class BusShelter(APIView):
 
                 bus_objects = bus_objects.all().order_by('name')
             else:
-                # city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
-                #                                              v0_constants.bus_shelter)
-                # bus_objects = SupplierTypeBusShelter.objects.all().order_by('name')
+                bus_objects = SupplierTypeBusShelter.objects.filter(user=user)
 
                 #sort list based on state selected.
                 if state and state_name:
@@ -1969,8 +1962,8 @@ class BusShelter(APIView):
                     bus_objects = bus_objects.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search)
                                       | Q(city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
 
-
-            # bus_shelter_serializer = BusShelterSerializer(bus_objects, many=True)
+                bus_objects = bus_objects.all().order_by('name')
+                
             #pagination
             bus_objects_paginate = paginate(bus_objects,BusShelterSerializer,request)
             items = get_supplier_image(bus_objects_paginate["list"], 'Bus Shelter')
