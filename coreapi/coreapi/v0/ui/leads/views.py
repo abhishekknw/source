@@ -211,6 +211,9 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
     leads_data_values = []
     missing_suppliers= []
 
+    print('-----------')
+    print(leads_data_list)
+
     for entry in leads_data_list:
         curr_entry = entry['data']
         entry_date = entry['created_at']
@@ -247,7 +250,7 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
                     value = item["value"].strip()
                 value = convertToNumber(item["value"])  # if possible
 
-            new_entry.append({"order_id": item["item_id"], "value": value})
+            new_entry.append({"order_id": item["item_id"], "value": value, "key_type":item["key_type"]})
         leads_data_values.append(new_entry)
 
     final_data = {"hot_leads": hot_leads, "headers": headers, "values": leads_data_values, "missing_suppliers": missing_suppliers}
