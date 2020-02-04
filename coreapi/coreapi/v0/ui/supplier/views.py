@@ -3293,7 +3293,9 @@ class addSupplierDirectToCampaign(APIView):
                     return response
                 response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
                                                             campaign_data, campaign, create_inv_act_data=True)
-            return ui_utils.handle_response(class_name, data={}, success=True)
+
+            response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_data['campaign_id'], 1, '', 0, '', '', '', '', '', '')                                                            
+            return ui_utils.handle_response(class_name, data=response.data['data']['shortlisted_suppliers'], success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
