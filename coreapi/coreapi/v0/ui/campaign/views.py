@@ -2273,8 +2273,8 @@ class AssignedCampaigns(APIView):
             if campaign['proposal_id']:
                 if campaign['proposal_id'] not in all_campaign_ids:
                     all_campaign_ids.append(campaign['proposal_id'])
-                    supplier_details = get_campaign_suppliers(campaign['proposal_id'])
-                    campaign['supplier_details']=supplier_details
+                    # supplier_details = get_campaign_suppliers(campaign['proposal_id'])
+                    # campaign['supplier_details']=supplier_details
         return ui_utils.handle_response({}, data=all_assigned_campaigns, success=True)
 
 
