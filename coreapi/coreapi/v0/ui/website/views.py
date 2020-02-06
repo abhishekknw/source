@@ -549,10 +549,6 @@ class AssignCampaign(APIView):
             if not assigned_to:
                 return ui_utils.handle_response(class_name, data='You must provide a user to which this campaign will be assigned')
 
-            # fetch BaseUser object.
-            for assigned_id in assigned_to:
-                assigned_to = BaseUser.objects.get(id=assigned_id['id'])
-
             # fetch ProposalInfo object.
             proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
 
@@ -561,14 +557,17 @@ class AssignCampaign(APIView):
                 return response
 
             # todo: check for dates also. you should not assign a past campaign to any user. left for later
-
-            # create the object.
-            pre_assignment = CampaignAssignment.objects.filter(campaign_id=campaign_id, assigned_to=assigned_to)
-            if len(pre_assignment) > 0:
-                return ui_utils.handle_response(class_name, data='Campaign Already assigned to this user')
-            instance = CampaignAssignment(
-                **{'campaign_id': campaign_id, 'assigned_by': assigned_by, 'assigned_to': assigned_to})
-            instance.save()
+            # fetch BaseUser object.
+            for assigned_id in assigned_to:
+                assigned_to_user = BaseUser.objects.get(id=assigned_id['id'])
+                if assigned_to_user:
+                    # create the object.
+                    pre_assignment = CampaignAssignment.objects.filter(campaign_id=campaign_id, assigned_to=assigned_to_user)
+                    if len(pre_assignment) <= 0:
+                        # return ui_utils.handle_response(class_name, data='Campaign Already assigned to this user')
+                        instance = CampaignAssignment(
+                            **{'campaign_id': campaign_id, 'assigned_by': assigned_by, 'assigned_to': assigned_to_user})
+                        instance.save()
 
             return ui_utils.handle_response(class_name, data='success', success=True)
 
