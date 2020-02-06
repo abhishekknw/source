@@ -696,11 +696,9 @@ class SocietyList(APIView):
             else:
                 # city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
                 #                                              v0_constants.society)                
-                # vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
-                # society_objects = SupplierTypeSociety.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
-                                                                    #  & Q(representative__isnull=False))
-                """Gives list of suppliers created by the user only."""
-                society_objects = SupplierTypeSociety.objects.filter(user=user)
+                vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
+                society_objects = SupplierTypeSociety.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
+                                                                      & Q(representative__isnull=False))
                 #sort list based on state selected.
                 if state and state_name:
                     society_objects = society_objects.filter(Q(society_state=state) | Q(society_state=state_name))
@@ -737,6 +735,7 @@ class CorporateViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             user = request.user
+            org_id = request.user.profile.organisation.organisation_id
             corporate_objects = []
             state = request.GET.get("state")
             state_name = request.GET.get("state_name")
@@ -754,10 +753,9 @@ class CorporateViewSet(viewsets.ViewSet):
 
                 corporate_objects = corporate_objects.all().order_by('name')    
             else:
-                # city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
-                #                                              v0_constants.corporate_code)
-                # corporates = SupplierTypeCorporate.objects.filter(city_query)
-                corporate_objects = SupplierTypeCorporate.objects.filter(user_id=user)
+                vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
+                corporate_objects = SupplierTypeCorporate.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
+                                                                      & Q(representative__isnull=False))
 
                 if state and state_name:
                     corporate_objects = corporate_objects.filter(Q(state=state) | Q(state=state_name))
@@ -771,10 +769,7 @@ class CorporateViewSet(viewsets.ViewSet):
             #pagination
             corporate_objects_paginate = paginate(corporate_objects,UICorporateSerializer,request)
             corporates_with_images = get_supplier_image(corporate_objects_paginate["list"], 'Corporate')
-            # disabling pagination as search cannot be performed on whole data set
-            # paginator = PageNumberPagination()
-            # result_page = paginator.paginate_queryset(corporates_with_images, request)
-            # paginator_response = paginator.get_paginated_response(result_page)
+
             data = {
                 'count': corporate_objects_paginate["count"],
                 'has_next':corporate_objects_paginate["has_next"],
@@ -879,6 +874,7 @@ class SalonViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             user = request.user
+            org_id = request.user.profile.organisation.organisation_id
             salon_objects = []
             state = request.GET.get("state")
             state_name = request.GET.get("state_name")
@@ -896,7 +892,9 @@ class SalonViewSet(viewsets.ViewSet):
  
                 salon_objects = salon_objects.all().order_by('name')
             else:
-                salon_objects = SupplierTypeSalon.objects.filter(user=user)
+                vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
+                salon_objects = SupplierTypeSalon.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
+                                                                      & Q(representative__isnull=False))
 
                 if state and state_name:
                     salon_objects = salon_objects.filter(Q(state=state) | Q(state=state_name))
@@ -930,6 +928,7 @@ class GymViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             user = request.user
+            org_id = request.user.profile.organisation.organisation_id
             gym_objects = []
             state = request.GET.get("state")
             state_name = request.GET.get("state_name")
@@ -947,7 +946,9 @@ class GymViewSet(viewsets.ViewSet):
 
                 gym_objects = gym_objects.all().order_by('name')
             else:
-                gym_objects = SupplierTypeGym.objects.filter(user=user)
+                vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
+                gym_objects = SupplierTypeGym.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
+                                                                      & Q(representative__isnull=False))
 
                 if state and state_name:
                     gym_objects = gym_objects.filter(Q(state=state) | Q(state=state_name))
@@ -1284,6 +1285,7 @@ class RetailShopViewSet(viewsets.ViewSet):
         try:
             # all retail_shop_objects sorted by name
             user = request.user
+            org_id = request.user.profile.organisation.organisation_id
             retail_shop_objects = []
             state = request.GET.get("state")
             state_name = request.GET.get("state_name")
@@ -1301,7 +1303,9 @@ class RetailShopViewSet(viewsets.ViewSet):
 
                 retail_shop_objects = retail_shop_objects.all().order_by('name')
             else:
-                retail_shop_objects = SupplierTypeRetailShop.objects.filter(user=user)
+                vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
+                retail_shop_objects = SupplierTypeRetailShop.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
+                                                                      & Q(representative__isnull=False))
                
                 if state and state_name:
                     retail_shop_objects = retail_shop_objects.filter(Q(state=state) | Q(state=state_name))
@@ -1933,6 +1937,7 @@ class BusShelter(APIView):
 
         try:
             user = request.user
+            org_id = request.user.profile.organisation.organisation_id
             state = request.GET.get("state")
             state_name = request.GET.get("state_name")
             search = request.GET.get("search")
@@ -1951,8 +1956,9 @@ class BusShelter(APIView):
 
                 bus_objects = bus_objects.all().order_by('name')
             else:
-                bus_objects = SupplierTypeBusShelter.objects.filter(user=user)
-
+                vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
+                bus_objects = SupplierTypeBusShelter.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
+                                                                      & Q(representative__isnull=False))
                 #sort list based on state selected.
                 if state and state_name:
                     bus_objects = bus_objects.filter(Q(state=state) | Q(state=state_name))

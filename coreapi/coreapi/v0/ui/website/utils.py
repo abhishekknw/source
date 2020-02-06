@@ -4083,8 +4083,11 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
             supplier['freebies'] = supplier['freebies'].split(',') if supplier['freebies'] else None
             supplier['stall_locations'] = supplier['stall_locations'].split(',') if supplier['stall_locations'] else None
             supplier_tuple = (supplier_content_type_id, supplier_id)
-            for key, value in supplier_specific_info[supplier_tuple].items():
-                supplier[key] = value
+            try:
+                for key, value in supplier_specific_info[supplier_tuple].items():
+                    supplier[key] = value
+            except:
+                pass   
             # no good way to check if the tuple exist in the dict. Hence resorted to KeyError checking.
             try:
                 retail_shop_instance = ContactDetails.objects.filter(object_id=supplier['object_id'])
@@ -4108,7 +4111,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
         
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
-        print("e3",e)
+        # print("e3",e)
         return ui_utils.handle_response(function, exception_object=e)
 
 

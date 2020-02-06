@@ -211,9 +211,6 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
     leads_data_values = []
     missing_suppliers= []
 
-    print('-----------')
-    print(leads_data_list)
-
     for entry in leads_data_list:
         curr_entry = entry['data']
         entry_date = entry['created_at']
