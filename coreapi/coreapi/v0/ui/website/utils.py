@@ -4336,10 +4336,13 @@ def add_total_price_per_inventory_per_supplier(price_mapping_default_inventories
     function = add_total_price_per_inventory_per_supplier.__name__
     try:
         total_price = 0
+        supplier_price_arr = {}
+
         pmd_inv_to_supplier_price_map = {}
         pmd_inventory_names = set()
 
         for pmd in price_mapping_default_inventories:
+            supplier_price_arr[pmd['inventory_duration']['duration_name']] = pmd
             inventory_name = pmd['inventory_type']['adinventory_name']
             inventory_supplier_price = pmd['actual_supplier_price'] if pmd['actual_supplier_price'] else 0
             if not pmd_inv_to_supplier_price_map.get(inventory_name):
@@ -4350,18 +4353,26 @@ def add_total_price_per_inventory_per_supplier(price_mapping_default_inventories
         for inventory in shortlisted_inventories:
 
             inventory_name = inventory['inventory_type']['adinventory_name']
-
+           
             if not result.get(inventory_name):
                 result[inventory_name] = {}
-                result[inventory_name]['actual_supplier_price'] = pmd_inv_to_supplier_price_map[
-                    inventory_name] if pmd_inv_to_supplier_price_map.get(inventory_name) else 0
+                result[inventory_name]['inventory_duration_name'] = inventory['inventory_duration']['duration_name']
+                
+                if supplier_price_arr.get(inventory['inventory_duration']['duration_name']) and supplier_price_arr[inventory['inventory_duration']['duration_name']]['actual_supplier_price']:
+                    result[inventory_name]['actual_supplier_price'] = supplier_price_arr[inventory['inventory_duration']['duration_name']]['actual_supplier_price']
+                else:
+                    result[inventory_name]['actual_supplier_price'] = 0
+                
+                #result[inventory_name]['actual_supplier_price'] = pmd_inv_to_supplier_price_map[
+                    #inventory_name] if pmd_inv_to_supplier_price_map.get(inventory_name) else 0
                 result[inventory_name]['detail'] = []
                 result[inventory_name]['total_count'] = 0
+
                 total_price += float(result[inventory_name]['actual_supplier_price'])
 
             result[inventory_name]['detail'].append(inventory)
-            result[inventory_name]['total_count'] += 1
-
+            result[inventory_name]['total_count'] += 1            
+            
         return ui_utils.handle_response(function, data=(result, total_price), success=True)
     except Exception as e:
         return ui_utils.handle_response(function, exception_object=e)
