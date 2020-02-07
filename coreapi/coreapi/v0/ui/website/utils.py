@@ -4358,7 +4358,7 @@ def add_total_price_per_inventory_per_supplier(price_mapping_default_inventories
                 result[inventory_name] = {}
                 result[inventory_name]['inventory_duration_name'] = inventory['inventory_duration']['duration_name']
                 
-                if supplier_price_arr.get(inventory['inventory_duration']['duration_name']) and supplier_price_arr[inventory['inventory_duration']['duration_name']]['actual_supplier_price']:
+                if supplier_price_arr.get(inventory['inventory_duration']['duration_name']) and supplier_price_arr[inventory['inventory_duration']['duration_name']].get('actual_supplier_price'):
                     result[inventory_name]['actual_supplier_price'] = supplier_price_arr[inventory['inventory_duration']['duration_name']]['actual_supplier_price']
                 else:
                     result[inventory_name]['actual_supplier_price'] = 0
