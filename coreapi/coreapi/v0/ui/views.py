@@ -1913,6 +1913,19 @@ class ImageMappingViewSet(viewsets.ViewSet):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+    # To delete the image.
+    def delete(self, request, pk):
+        class_name = self.__class__.__name__
+        try:
+            instance = ImageMapping.objects.filter(pk=pk).first()
+            if instance:
+                instance.delete()
+                return ui_utils.handle_response(class_name, data="Success", success=True)
+            else: 
+                return ui_utils.handle_response(class_name, data="Image does not exist.", success=False)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
     @list_route(methods=['POST'])
     def save_image_tag(self, request, pk=None):
         """
