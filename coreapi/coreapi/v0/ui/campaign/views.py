@@ -2270,16 +2270,13 @@ def get_all_assigned_campaigns_dynamic(user_id, vendor):
         serializer = CampaignAssignmentSerializerReadOnly(campaigns, many=True)
         campaign_obj = {}
         for data in serializer.data:
-            data['campaign']['status'] = response.data['data']
             if not campaign_obj.get(data['campaign']['proposal_id']):
                 campaign_obj[data['campaign']['proposal_id']] = data
-                campaign_obj[data['campaign']['proposal_id']]["assigned"] = []
-            row = {
-                "assigned_by": user_obj[data["assigned_by"]]['username'],
-                "assigned_to": user_obj[data["assigned_to"]]['username'],
-            }
+                campaign_state=data['campaign']['campaign_state']
+                data['campaign']['campaign_state']=ui_utils.campaignState(campaign_state)
+                data['campaign']["assigned_to"] = user_obj[data["assigned_to"]]['username']
+                data['campaign']["assigned_by"] = user_obj[data["assigned_by"]]['username']
 
-            campaign_obj[data['campaign']['proposal_id']]["assigned"].append(row)
 
         campaign_list = [value for key,value in campaign_obj.items()]
         return campaign_list
@@ -2298,7 +2295,7 @@ def get_all_assigned_campaigns(user_id, vendor):
     all_campaigns = ProposalInfo.objects.filter(proposal_id__in=campaign_list)
     serialized_proposals = ProposalInfoSerializer(all_campaigns, many=True).data
     return serialized_proposals
-    
+
 def get_campaign_suppliers(campaign_id):
     dynamic_supplier_data = get_dynamic_booking_data_by_campaign(campaign_id)
     if len(dynamic_supplier_data):
@@ -2317,6 +2314,7 @@ class AssignedCampaigns(APIView):
         user_id = request.user.id
         vendor = request.query_params.get('vendor', None)
         all_assigned_campaigns = get_all_assigned_campaigns_dynamic(user_id, vendor)
+        print(all_assigned_campaigns[0])
         all_campaign_ids = []
         for campaign in all_assigned_campaigns:
             if campaign and campaign['campaign'] and campaign['campaign']['proposal_id']:
