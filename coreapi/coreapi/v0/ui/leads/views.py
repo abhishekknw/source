@@ -775,7 +775,7 @@ class AddLeadFormItems(APIView):
         for items_dict in items_dict_list:
             old_form = mongo_client.leads_forms.find_one({"leads_form_id": int(form_id)})
             if not old_form:
-                return handle_response(class_name, data={"status": "No for Found with this id"}, success=True)
+                return handle_response(class_name, data={"status": "No form Found with this id"}, success=True)
             old_form_items = old_form['data']
             max_item_id = 0
             max_order_id = 0
@@ -788,6 +788,7 @@ class AddLeadFormItems(APIView):
                 "key_name": items_dict['key_name'],
                 "campaign_id": old_form['campaign_id'],
                 "hot_lead_criteria": items_dict["hot_lead_criteria"] if "hot_lead_criteria" in items_dict else None,
+                "isHotLead": items_dict["isHotLead"] if "isHotLead" in items_dict else None,
                 "key_type": items_dict["key_type"],
                 "key_options": items_dict["key_options"] if "key_options" in items_dict else None,
                 "leads_form_id": form_id,
