@@ -2275,6 +2275,7 @@ def get_all_assigned_campaigns_dynamic(user_id, vendor):
                 data['campaign']['id']=data['id']          
                 campaign_state=data['campaign']['campaign_state']
                 data['campaign']['campaign_state']=ui_utils.campaignState(campaign_state)
+                data['campaign']['assigned_date'] = data['updated_at']
                 data['campaign']["assigned_to"] = user_obj[data["assigned_to"]]['username']
                 data['campaign']["assigned_by"] = user_obj[data["assigned_by"]]['username']
 
