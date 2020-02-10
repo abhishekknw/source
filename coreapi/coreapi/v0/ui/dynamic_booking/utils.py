@@ -57,7 +57,6 @@ def get_dynamic_booking_data_by_campaign(campaign_id):
     booking_template = BookingTemplate.objects.raw({"_id": ObjectId(booking_template_id)})[0]
     final_data_list = []
     final_data = {}
-    print(campaign_data)
     final_data['campaign_name']= campaign_data[0][0]
     campaign_state = campaign_data[0][1]
     campaign_state = ui_utils.campaignState(campaign_state)
