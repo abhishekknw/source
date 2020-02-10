@@ -4,6 +4,8 @@ from datetime import datetime
 from .models import BaseBookingTemplate, BookingTemplate, BookingData
 from bson.objectid import ObjectId
 from v0.ui.dynamic_suppliers.models import SupplySupplier
+from v0.ui.proposal.models import (ProposalInfo)
+import v0.ui.utils as ui_utils
 
 
 def validate_booking(booking_template):
@@ -48,13 +50,20 @@ def validate_booking(booking_template):
 
 def get_dynamic_booking_data_by_campaign(campaign_id):
     data_all = list(BookingData.objects.raw({'campaign_id': campaign_id}))
+    campaign_data = ProposalInfo.objects.filter(proposal_id=campaign_id).values_list('name', 'campaign_state')
     if not data_all or not len(data_all):
         return []
     booking_template_id = data_all[0].booking_template_id
     booking_template = BookingTemplate.objects.raw({"_id": ObjectId(booking_template_id)})[0]
     final_data_list = []
+    final_data = {}
+    print(campaign_data)
+    final_data['campaign_name']= campaign_data[0][0]
+    campaign_state = campaign_data[0][1]
+    campaign_state = ui_utils.campaignState(campaign_state)
+    final_data['campaign_state']= campaign_state
+
     for data in data_all:
-        final_data = {}
         final_data['booking_attributes'] = data.booking_attributes
         final_data['comments'] = data.comments
         final_data['inventory_counts'] = data.inventory_counts
