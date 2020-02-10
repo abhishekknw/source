@@ -2271,12 +2271,12 @@ def get_all_assigned_campaigns_dynamic(user_id, vendor):
         campaign_obj = {}
         for data in serializer.data:
             if not campaign_obj.get(data['campaign']['proposal_id']):
-                campaign_obj[data['campaign']['proposal_id']] = data
+                campaign_obj[data['campaign']['proposal_id']] = data['campaign']
+                data['campaign']['id']=data['id']          
                 campaign_state=data['campaign']['campaign_state']
                 data['campaign']['campaign_state']=ui_utils.campaignState(campaign_state)
                 data['campaign']["assigned_to"] = user_obj[data["assigned_to"]]['username']
                 data['campaign']["assigned_by"] = user_obj[data["assigned_by"]]['username']
-
 
         campaign_list = [value for key,value in campaign_obj.items()]
         return campaign_list
@@ -2314,14 +2314,6 @@ class AssignedCampaigns(APIView):
         user_id = request.user.id
         vendor = request.query_params.get('vendor', None)
         all_assigned_campaigns = get_all_assigned_campaigns_dynamic(user_id, vendor)
-        print(all_assigned_campaigns[0])
-        all_campaign_ids = []
-        for campaign in all_assigned_campaigns:
-            if campaign and campaign['campaign'] and campaign['campaign']['proposal_id']:
-                proposal = campaign['campaign']['proposal_id']
-                if proposal not in all_campaign_ids:
-                    all_campaign_ids.append(proposal)
-
         return ui_utils.handle_response({}, data=all_assigned_campaigns, success=True)
 
 
