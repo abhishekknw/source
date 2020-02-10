@@ -6,6 +6,7 @@ import random
 import math
 import numpy as np
 from django.db.models import Count, Sum
+from v0.ui.campaign.serializers import CampaignAssignmentSerializerReadOnly
 from dateutil import tz
 from datetime import datetime
 from datetime import timedelta
@@ -2235,20 +2236,105 @@ class CityWiseSummary(APIView):
         campaign_summary['overall'] = get_duration_wise_summary_for_cities(all_city_campaign_mapping, all_campaign_ids, None)
         return ui_utils.handle_response({}, data=campaign_summary, success=True)
 
+def get_all_assigned_campaigns_dynamic(user_id, vendor):
+    try:
+        users = BaseUser.objects.all().values('id', 'username')
+        user_obj = {}
+        if users:
+            for user in users:
+                row = {
+                    "id": user.get('id', None),
+                    "username": user.get('username', None)
+                }
+                if not user_obj.get(user['id']):
+                    user_obj[user['id']] = row
+
+        user = BaseUser.objects.get(id=user_id)
+        username_list = BaseUser.objects.filter(profile__organisation=user.profile.organisation.organisation_id). \
+        values_list('username')
+
+        if user.is_superuser:
+            assigned_objects = CampaignAssignment.objects.all()
+        else:
+            assigned_objects = CampaignAssignment.objects.filter(campaign__created_by__in=username_list)
+        campaigns = []
+        all_proposal_ids = []
+        # check each one of them weather they are campaign or not
+        for assign_object in assigned_objects:
+            if assign_object.campaign.is_disabled:
+                continue
+            response = website_utils.is_campaign(assign_object.campaign)
+            # if it is a campaign.
+            if response.data['status']:
+                campaigns.append(assign_object)
+        serializer = CampaignAssignmentSerializerReadOnly(campaigns, many=True)
+        campaign_obj = {}
+        for data in serializer.data:
+            data['campaign']['status'] = response.data['data']
+            if not campaign_obj.get(data['campaign']['proposal_id']):
+                campaign_obj[data['campaign']['proposal_id']] = data
+                campaign_obj[data['campaign']['proposal_id']]["assigned"] = []
+            row = {
+                "assigned_by": user_obj[data["assigned_by"]]['username'],
+                "assigned_to": user_obj[data["assigned_to"]]['username'],
+            }
+
+            campaign_obj[data['campaign']['proposal_id']]["assigned"].append(row)
+
+        campaign_list = [value for key,value in campaign_obj.items()]
+        return campaign_list
+    except Exception as e:
+        return ui_utils.handle_response('', exception_object=e, request='')
 
 def get_all_assigned_campaigns(user_id, vendor):
-    if vendor:
-        campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
-                                                          campaign__principal_vendor=vendor).values_list(
-            'campaign_id', flat=True).distinct()
-    else:
-        campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
-                                                          ).values_list('campaign_id', flat=True).distinct()
-    campaign_list = [campaign_id for campaign_id in campaign_list]
-    all_campaigns = ProposalInfo.objects.filter(proposal_id__in=campaign_list)
-    serialized_proposals = ProposalInfoSerializer(all_campaigns, many=True).data
-    return serialized_proposals
+    try:
+        users = BaseUser.objects.all().values('id', 'username')
+        user_obj = {}
+        if users:
+            for user in users:
+                row = {
+                    "id": user.get('id', None),
+                    "username": user.get('username', None)
+                }
+                if not user_obj.get(user['id']):
+                    user_obj[user['id']] = row
 
+        user = BaseUser.objects.get(id=user_id)
+        username_list = BaseUser.objects.filter(profile__organisation=user.profile.organisation.organisation_id). \
+        values_list('username')
+
+        if user.is_superuser:
+            assigned_objects = CampaignAssignment.objects.all()
+        else:
+            assigned_objects = CampaignAssignment.objects.filter(campaign__created_by__in=username_list)
+        campaigns = []
+        all_proposal_ids = []
+    	# check each one of them weather they are campaign or not
+        for assign_object in assigned_objects:
+            if assign_object.campaign.is_disabled:
+                continue
+            response = website_utils.is_campaign(assign_object.campaign)
+            # if it is a campaign.
+            if response.data['status']:
+                campaigns.append(assign_object)
+        serializer = CampaignAssignmentSerializerReadOnly(campaigns, many=True)
+        campaign_obj = {}
+        for data in serializer.data:
+            data['campaign']['status'] = response.data['data']
+            if not campaign_obj.get(data['campaign']['proposal_id']):
+                campaign_obj[data['campaign']['proposal_id']] = data
+                campaign_obj[data['campaign']['proposal_id']]["assigned"] = []
+            row = {
+                "assigned_by": user_obj[data["assigned_by"]]['username'],
+                "assigned_to": user_obj[data["assigned_to"]]['username'],
+            }
+
+            campaign_obj[data['campaign']['proposal_id']]["assigned"].append(row)
+
+        campaign_list = [value for key,value in campaign_obj.items()]
+        return campaign_list
+    except Exception as e:
+        return ui_utils.handle_response('', exception_object=e, request='')
 
 def get_campaign_suppliers(campaign_id):
     dynamic_supplier_data = get_dynamic_booking_data_by_campaign(campaign_id)
@@ -2267,14 +2353,14 @@ class AssignedCampaigns(APIView):
     def get(request):
         user_id = request.user.id
         vendor = request.query_params.get('vendor', None)
-        all_assigned_campaigns = get_all_assigned_campaigns(user_id, vendor)
+        all_assigned_campaigns = get_all_assigned_campaigns_dynamic(user_id, vendor)
         all_campaign_ids = []
         for campaign in all_assigned_campaigns:
-            if campaign['proposal_id']:
-                if campaign['proposal_id'] not in all_campaign_ids:
-                    all_campaign_ids.append(campaign['proposal_id'])
-                    # supplier_details = get_campaign_suppliers(campaign['proposal_id'])
-                    # campaign['supplier_details']=supplier_details
+            if campaign and campaign['campaign'] and campaign['campaign']['proposal_id']:
+                proposal = campaign['campaign']['proposal_id']
+                if proposal not in all_campaign_ids:
+                    all_campaign_ids.append(proposal)
+
         return ui_utils.handle_response({}, data=all_assigned_campaigns, success=True)
 
 

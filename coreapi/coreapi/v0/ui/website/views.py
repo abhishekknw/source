@@ -662,7 +662,7 @@ class AssignCampaign(APIView):
                 }
 
                 campaign_obj[data['campaign']['proposal_id']]["assigned"].append(row)
-            
+
             campaign_list = [value for key,value in campaign_obj.items()]
 
             return ui_utils.handle_response(class_name, data=campaign_list, success=True)
