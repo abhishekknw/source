@@ -385,9 +385,10 @@ class BookingAssignmentByCampaignId(APIView):
     def get(request, campaign_id):
         data_all = list(BookingInventoryActivity.objects.raw({'campaign_id': campaign_id}))
         campaign_data = ProposalInfo.objects.filter(proposal_id=campaign_id).values_list('name')
+        final_data = {}
+        final_data['campaign_name']= campaign_data[0][0]
         final_data_list = []
         for data in data_all:
-            final_data = {}
             final_data['booking_inventory_id'] = data.booking_inventory_id
             final_data['inventory_name'] = data.inventory_name
             final_data['supplier_id'] = data.supplier_id
