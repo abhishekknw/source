@@ -384,6 +384,7 @@ class BookingAssignmentByCampaignId(APIView):
     @staticmethod
     def get(request, campaign_id):
         data_all = list(BookingInventoryActivity.objects.raw({'campaign_id': campaign_id}))
+        campaign_data = ProposalInfo.objects.filter(proposal_id=campaign_id).values_list('name')
         final_data_list = []
         for data in data_all:
             final_data = {}
@@ -401,6 +402,8 @@ class BookingAssignmentByCampaignId(APIView):
             final_data['created_at'] = data.created_at
             final_data['id'] = str(data._id)
             final_data_list.append(final_data)
+       if len(final_data_list) == 0:
+            final_data_list.append({'campaign_name': campaign_data[0][0]})  
         return handle_response('', data=final_data_list, success=True)
 
 
