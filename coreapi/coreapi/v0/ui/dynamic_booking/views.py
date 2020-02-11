@@ -328,12 +328,9 @@ class BookingInventoryView(APIView):
     @staticmethod
     def get(request, campaign_id):
         all_inventories = BookingInventory.objects.raw({'campaign_id': campaign_id})
-        campaign_data = ProposalInfo.objects.filter(proposal_id=campaign_id).values_list('name', 'campaign_state')
+        campaign_data = ProposalInfo.objects.filter(proposal_id=campaign_id).values_list('name')
         final_data = dict()
         final_data['campaign_name']= campaign_data[0][0]
-        campaign_state = campaign_data[0][1]
-        campaign_state = ui_utils.campaignState(campaign_state)
-        final_data['campaign_state']= campaign_state
         list_of_inventory_dicts = list()
         for inventory in all_inventories:
             final_data['supplier_id'] = inventory.supplier_id
