@@ -402,7 +402,7 @@ class BookingAssignmentByCampaignId(APIView):
             final_data['created_at'] = data.created_at
             final_data['id'] = str(data._id)
             final_data_list.append(final_data)
-       if len(final_data_list) == 0:
+        if len(final_data_list) == 0:
             final_data_list.append({'campaign_name': campaign_data[0][0]})  
         return handle_response('', data=final_data_list, success=True)
 
