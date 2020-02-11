@@ -331,7 +331,7 @@ class BookingInventoryView(APIView):
         campaign_data = ProposalInfo.objects.filter(proposal_id=campaign_id).values_list('name')
         final_data = dict()
         final_data['campaign_name']= campaign_data[0][0]
-        list_of_inventory_dicts = list()
+        list_of_inventory = list()
         for inventory in all_inventories:
             final_data['supplier_id'] = inventory.supplier_id
             final_data['campaign_id'] = inventory.campaign_id
@@ -340,8 +340,10 @@ class BookingInventoryView(APIView):
             final_data['inventory_images'] = inventory.inventory_images
             final_data['created_at'] = inventory.created_at
             final_data['id'] = str(inventory._id)
-            list_of_inventory_dicts.append(final_data)
-        return handle_response('', data=list_of_inventory_dicts, success=True)
+            list_of_inventory.append(final_data)
+        if len(list_of_inventory) == 0:
+            list_of_inventory.append({'campaign_name': campaign_data[0][0]})    
+        return handle_response('', data=list_of_inventory, success=True)
 
 
 class BookingAssignmentView(APIView):
