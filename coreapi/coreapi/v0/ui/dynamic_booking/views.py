@@ -479,6 +479,7 @@ class UploadInventoryActivityImageGeneric(APIView):
                 time.time()).replace('.', '_') + '.' + extension
             booking_inventory_activity_id = request.data['booking_inventory_activity_id']
             existing_booking_activity = list(BookingInventoryActivity.objects.raw({'_id': ObjectId(booking_inventory_activity_id)}))
+            print('existing_booking_activity',existing_booking_activity)
             s3 = boto3.client(
                 's3',
                 aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
@@ -488,11 +489,13 @@ class UploadInventoryActivityImageGeneric(APIView):
                 contents = f.read()
                 s3.put_object(Body=contents, Bucket=settings.ANDROID_BUCKET_NAME, Key=file_name)
                 os.unlink(file_address)
-                existing_images = existing_booking_activity[0].inventory_images
-                existing_comments = existing_booking_activity[0].comments
+                existing_images = []
                 update_dict = {}
-                if not existing_images:
-                    existing_images = []
+
+                if len(existing_booking_activity):
+                    existing_images = existing_booking_activity[0].inventory_images
+                    existing_comments = existing_booking_activity[0].comments
+
                 existing_images.append({
                     "image_path": file_name,
                     "bucket_name": settings.ANDROID_BUCKET_NAME,
