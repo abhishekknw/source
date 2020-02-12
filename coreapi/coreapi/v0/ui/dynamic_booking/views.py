@@ -489,13 +489,12 @@ class UploadInventoryActivityImageGeneric(APIView):
                 contents = f.read()
                 s3.put_object(Body=contents, Bucket=settings.ANDROID_BUCKET_NAME, Key=file_name)
                 os.unlink(file_address)
-                existing_images = []
-                update_dict = {}
-
                 if len(existing_booking_activity):
                     existing_images = existing_booking_activity[0].inventory_images
                     existing_comments = existing_booking_activity[0].comments
-
+                update_dict = {}
+                if not existing_images:
+                    existing_images = []
                 existing_images.append({
                     "image_path": file_name,
                     "bucket_name": settings.ANDROID_BUCKET_NAME,
