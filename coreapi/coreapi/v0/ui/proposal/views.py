@@ -2780,7 +2780,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     all_supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids)
     all_supplier_dict = {supplier.supplier_id:supplier for supplier in all_supplier_objects}
     for space in shortlisted_spaces_list:
-        supplier_society = all_supplier_dict[space.object_id]
+        supplier_society = all_supplier_dict.get(space.object_id)
+        supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society).data
 
         supplier_inventories = ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces_id=space.id)
         inventory_activity_assignment = InventoryActivityAssignment.objects.filter(
@@ -2812,8 +2813,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     inventory_dates_dict[inventoy_name].append(activity_date)
         inventory_count_dict = {}
         
-        supplier_tower_count = supplier_society.tower_count if supplier_society.tower_count else 0
-        supplier_flat_count = supplier_society.flat_count if supplier_society.flat_count else 0
+        supplier_tower_count = supplier_society.tower_count if supplier_society_serialized.get("tower_count") else 0
+        supplier_flat_count = supplier_society.flat_count if supplier_society_serialized.get("flat_count") else 0
         for inventory in supplier_inventories:
             if inventory.ad_inventory_type.adinventory_name not in inventory_count_dict:
                 inventory_count_dict[inventory.ad_inventory_type.adinventory_name] = 0
@@ -2824,10 +2825,9 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
             if inventory.inventory_number_of_days:
                 inventory_days_dict[inventory.ad_inventory_type.adinventory_name] = inventory.inventory_number_of_days
-            inventory_count_dict['FLIER'] = supplier_society.flat_count if supplier_society.flat_count else 0
-            overall_inventory_count_dict['FLIER'] = supplier_society.flat_count if supplier_society.flat_count else 0
+            inventory_count_dict['FLIER'] = supplier_society.flat_count if supplier_society_serialized.get("flat_count") else 0
+            overall_inventory_count_dict['FLIER'] = supplier_society.flat_count if supplier_society_serialized.get("flat_count") else 0
 
-        supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society).data
         supplier_society_serialized['booking_status'] = space.booking_status
         supplier_society_serialized['booking_sub_status'] = space.booking_sub_status
         supplier_society_serialized['freebies'] = space.freebies.split(",") if space.freebies else None

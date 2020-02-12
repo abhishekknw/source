@@ -166,6 +166,13 @@ class SendBookingDetailMails(APIView):
         send_booking_mails_ctrl('booking_details.html', campaign_id, email_id)
         return ui_utils.handle_response('', data={}, success=True)
 
+    def post(request, campaign_id):
+        email_id = request.POST.get("email", "")
+        emails=email_id.split(',')
+        for email in emails:
+            send_booking_mails_ctrl('recce_email.html', campaign_id, email)
+            return ui_utils.handle_response('', data={}, success=True)
+
 
 class SendRecceMails(APIView):
     @staticmethod
@@ -173,6 +180,13 @@ class SendRecceMails(APIView):
         email_id = request.query_params.get("email", None)
         send_booking_mails_ctrl('recce_email.html', campaign_id, email_id)
         return ui_utils.handle_response('', data={}, success=True)
+
+    def post(request, campaign_id):
+        email_id = request.POST.get("email", "")
+        emails=email_id.split(',')
+        for email in emails:
+            send_booking_mails_ctrl('recce_email.html', campaign_id, email)
+            return ui_utils.handle_response('', data={}, success=True)
 
 
 class SendPreHypeMails(APIView):
@@ -182,12 +196,26 @@ class SendPreHypeMails(APIView):
         send_booking_mails_ctrl('pre_hype_emails.html', campaign_id, email_id)
         return ui_utils.handle_response('', data={}, success=True)
 
+    def post(request, campaign_id):
+        email_id = request.POST.get("email", "")
+        emails=email_id.split(',')
+        for email in emails:
+            send_booking_mails_ctrl('recce_email.html', campaign_id, email)
+            return ui_utils.handle_response('', data={}, success=True)
+
 class SendPipelineDetailMails(APIView):
     @staticmethod
     def get(request, campaign_id):
         email_id = request.query_params.get("email", None)
         send_booking_mails_ctrl('pipeline_details.html', campaign_id, email_id)
         return ui_utils.handle_response('', data={}, success=True)
+
+    def post(request, campaign_id):
+        email_id = request.POST.get("email", "")
+        emails=email_id.split(',')
+        for email in emails:
+            send_booking_mails_ctrl('recce_email.html', campaign_id, email)
+            return ui_utils.handle_response('', data={}, success=True)
 
 
 class SendAdvancedBookingDetailMails(APIView):
