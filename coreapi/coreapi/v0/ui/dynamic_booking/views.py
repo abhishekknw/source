@@ -329,10 +329,11 @@ class BookingInventoryView(APIView):
     def get(request, campaign_id):
         all_inventories = BookingInventory.objects.raw({'campaign_id': campaign_id})
         campaign_data = ProposalInfo.objects.filter(proposal_id=campaign_id).values_list('name')
-        final_data = dict()
-        final_data['campaign_name']= campaign_data[0][0]
+        campaign_name = campaign_data[0][0]
         list_of_inventory = list()
         for inventory in all_inventories:
+            final_data = dict()
+            final_data['campaign_name'] = campaign_name
             final_data['supplier_id'] = inventory.supplier_id
             final_data['campaign_id'] = inventory.campaign_id
             final_data['inventory_name'] = inventory.inventory_name
@@ -342,7 +343,7 @@ class BookingInventoryView(APIView):
             final_data['id'] = str(inventory._id)
             list_of_inventory.append(final_data)
         if len(list_of_inventory) == 0:
-            list_of_inventory.append({'campaign_name': campaign_data[0][0]})    
+            list_of_inventory.append({'campaign_name': campaign_name})    
         return handle_response('', data=list_of_inventory, success=True)
 
 
@@ -385,10 +386,11 @@ class BookingAssignmentByCampaignId(APIView):
     def get(request, campaign_id):
         data_all = list(BookingInventoryActivity.objects.raw({'campaign_id': campaign_id}))
         campaign_data = ProposalInfo.objects.filter(proposal_id=campaign_id).values_list('name')
-        final_data = {}
-        final_data['campaign_name']= campaign_data[0][0]
+        campaign_name = campaign_data[0][0]
         final_data_list = []
         for data in data_all:
+            final_data = {}
+            final_data['campaign_name'] = campaign_name
             final_data['booking_inventory_id'] = data.booking_inventory_id
             final_data['inventory_name'] = data.inventory_name
             final_data['supplier_id'] = data.supplier_id
@@ -404,7 +406,7 @@ class BookingAssignmentByCampaignId(APIView):
             final_data['id'] = str(data._id)
             final_data_list.append(final_data)
         if len(final_data_list) == 0:
-            final_data_list.append({'campaign_name': campaign_data[0][0]})  
+            final_data_list.append({'campaign_name': campaign_name})  
         return handle_response('', data=final_data_list, success=True)
 
 

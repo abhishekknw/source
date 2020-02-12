@@ -52,18 +52,19 @@ def get_dynamic_booking_data_by_campaign(campaign_id):
     data_all = list(BookingData.objects.raw({'campaign_id': campaign_id}))
     campaign_data = ProposalInfo.objects.filter(proposal_id=campaign_id).values_list('name', 'campaign_state')
     final_data_list = []
-    final_data = {}
-    final_data['campaign_name']= campaign_data[0][0]
+    campaign_name = campaign_data[0][0]
     campaign_state = campaign_data[0][1]
     campaign_state = ui_utils.campaignState(campaign_state)
-    final_data['campaign_state']= campaign_state
     if not data_all or not len(data_all):
-        final_data_list.append({'campaign_name': campaign_data[0][0], 'campaign_state': campaign_state})
+        final_data_list.append({'campaign_name': campaign_name, 'campaign_state': campaign_state})
         return final_data_list
 
     booking_template_id = data_all[0].booking_template_id
     booking_template = BookingTemplate.objects.raw({"_id": ObjectId(booking_template_id)})[0]
     for data in data_all:
+        final_data = {}
+        final_data['campaign_name'] = campaign_name
+        final_data['campaign_state'] = campaign_state
         final_data['booking_attributes'] = data.booking_attributes
         final_data['comments'] = data.comments
         final_data['inventory_counts'] = data.inventory_counts
