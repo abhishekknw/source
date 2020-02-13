@@ -2795,14 +2795,17 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     "STANDEE": [],
                     "FLIER": [],
                     "BANNER": [],
-                    "GATEWAY ARCH": []
+                    "GATEWAY ARCH": [],
+                    "SUNBOARD" : [],
                 }
         inventory_days_dict = {
             "POSTER": None,
             "STALL": None,
             "STANDEE": None,
             "FLIER": None,
-            "BANNER": None
+            "BANNER": None,
+            "GATEWAY ARCH": None,
+            "SUNBOARD" : None,
         }
         for inventory_activity in inventory_activity_assignment:
             inventoy_name = inventory_activity.get('inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name')
@@ -2847,7 +2850,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             if space.phase_no_id not in shortlisted_spaces_by_phase_dict:
                 shortlisted_spaces_by_phase_dict[space.phase_no_id] = {'BK': [], 'NB': [], 'PB': [], 'VB': [], 'SR': [], 'NI':[], 'MF':[], 'RERA':[], 'MWS':[], 'MWC':[], 'MWT':[], 'MWO':[],
                                                                        'SE': [], 'VR': [], 'CR': [], 'DPCR':[], 'DPNR':[], 'NE':[], 'UN':[], 'MWA':[], 'UPNI':[], 'UCPI':[], 'TB':[],
-                                                                       'DP': [], 'TB': [], 'MC':[], 'UN':[], 'DPRR': [], 'RLC':[], 'PR': [], 'NVOS':[]}
+                                                                       'DP': [], 'TB': [], 'MC':[], 'UN':[], 'DPRR': [], 'RLC':[], 'PR': [], 'NVOS':[], 'RE': []}
             if space.booking_status:
                 shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(
                     supplier_society_serialized)
