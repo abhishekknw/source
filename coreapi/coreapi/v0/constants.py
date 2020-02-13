@@ -843,6 +843,14 @@ proposal_on_hold = 'POH'
 proposal_requested = 'PR'
 proposal_finalized = 'PF'
 
+campaign_state = {
+    'PTC': 'converted',
+    'PNC': 'not converted',
+    'POH': 'on hold',
+    'PR': 'requested',
+    'PF': 'finalized'
+}
+
 
 # different mode of payments
 payment_method = {

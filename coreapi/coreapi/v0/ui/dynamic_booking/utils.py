@@ -4,6 +4,8 @@ from datetime import datetime
 from .models import BaseBookingTemplate, BookingTemplate, BookingData
 from bson.objectid import ObjectId
 from v0.ui.dynamic_suppliers.models import SupplySupplier
+from v0.ui.proposal.models import (ProposalInfo)
+import v0.ui.utils as ui_utils
 
 
 def validate_booking(booking_template):
@@ -48,13 +50,21 @@ def validate_booking(booking_template):
 
 def get_dynamic_booking_data_by_campaign(campaign_id):
     data_all = list(BookingData.objects.raw({'campaign_id': campaign_id}))
+    campaign_data = ProposalInfo.objects.filter(proposal_id=campaign_id).values_list('name', 'campaign_state')
+    final_data_list = []
+    campaign_name = campaign_data[0][0]
+    campaign_state = campaign_data[0][1]
+    campaign_state = ui_utils.campaignState(campaign_state)
     if not data_all or not len(data_all):
-        return []
+        final_data_list.append({'campaign_name': campaign_name, 'campaign_state': campaign_state})
+        return final_data_list
+
     booking_template_id = data_all[0].booking_template_id
     booking_template = BookingTemplate.objects.raw({"_id": ObjectId(booking_template_id)})[0]
-    final_data_list = []
     for data in data_all:
         final_data = {}
+        final_data['campaign_name'] = campaign_name
+        final_data['campaign_state'] = campaign_state
         final_data['booking_attributes'] = data.booking_attributes
         final_data['comments'] = data.comments
         final_data['inventory_counts'] = data.inventory_counts
@@ -67,8 +77,18 @@ def get_dynamic_booking_data_by_campaign(campaign_id):
         final_data['booking_template_id'] = data.booking_template_id
         final_data['id'] = str(data._id)
         final_data_list.append(final_data)
+
     return final_data_list
 
+
+def get_dynamic_inventory_data_by_campaign(campaign_id):
+    data_all = list(BookingData.objects.raw({'campaign_id': campaign_id}))
+    if not data_all or not len(data_all):
+        return []
+    final_data_list = []
+    for data in data_all:
+        final_data_list.append({'inventory_counts': data.inventory_counts})
+    return final_data_list
 
 def get_supplier_attributes(supplier_id, supplier_attributes):
     all_supplier_attribute_names = [supplier['name'] for supplier in supplier_attributes]
