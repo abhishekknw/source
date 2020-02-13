@@ -1434,9 +1434,9 @@ class CampaignLeads(APIView):
             final_data['last_three_weeks'] = get_leads_data_for_campaign(campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
             final_data['overall_data'] = get_leads_data_for_campaign(campaign_id)['overall_data']
 
-            suppliersData = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).all()
-            serializer2 = ProposalCenterSuppliersSerializer(suppliersData, many=True)
-            final_data['centerSuppliers'] = serializer2.data
+            suppliers_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).all()
+            proposal_center_serializer = ProposalCenterSuppliersSerializer(suppliers_data, many=True)
+            final_data['center_suppliers'] = proposal_center_serializer.data
 
             return ui_utils.handle_response(class_name, data=final_data, success=True)
         except Exception as e:
