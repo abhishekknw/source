@@ -35,7 +35,7 @@ import v0.errors as errors
 import v0.constants as v0_constants
 import v0.ui.serializers as ui_serializers
 from v0.ui.location.models import State, City, CityArea, CitySubArea
-from v0.ui.supplier.serializers import (SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SupplierTypeBusShelterSerializer,
+from v0.ui.supplier.serializers import (SupplierEducationalInstituteSerializer, SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SupplierTypeBusShelterSerializer,
                                         SupplierTypeGymSerializer, SupplierTypeRetailShopSerializer,
                                         SupplierTypeSalonSerializer, BusDepotSerializer)
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -261,6 +261,7 @@ def save_supplier_data(user, master_data):
     """
     function_name = save_supplier_data.__name__
     try:
+        
         supplier_code = master_data['supplier_type_code']
         serializer_class = get_serializer(supplier_code)
         supplier_data = master_data[supplier_code]['data']
@@ -678,6 +679,7 @@ def get_serializer(query):
     try:
         serializers = {
 
+            v0_constants.educational_institute_code: SupplierEducationalInstituteSerializer,
             v0_constants.society_code: SupplierTypeSocietySerializer,
             v0_constants.corporate_code: SupplierTypeCorporateSerializer,
             v0_constants.gym: SupplierTypeGymSerializer,

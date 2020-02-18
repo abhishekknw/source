@@ -813,6 +813,7 @@ class GetAllAmenities(APIView):
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
+
 class SupplierAmenity(APIView):
     """
     Returns all amenities per supplier
@@ -833,9 +834,26 @@ class SupplierAmenity(APIView):
                 return response
             content_type = response.data['data']
 
-            amenities = SupplierAmenitiesMap.objects.filter(object_id=request.query_params['supplier_id'], content_type=content_type)
-            serializer = SupplierAmenitiesMapSerializer(amenities, many=True)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+            result = []
+
+            amenities = Amenity.objects.all()
+
+            for item in amenities:
+                amenitiesData = SupplierAmenitiesMap.objects.filter(object_id=request.query_params['supplier_id'], content_type=content_type, amenity=item.id).first()
+                serializer = SupplierAmenitiesMapSerializer(amenitiesData, many=False)
+
+                result.append({
+                    "itme" : item.id,
+                    "name" : item.name,
+                    "code" : item.code,
+                    "data" : serializer.data
+                })
+
+            
+
+            # amenities = SupplierAmenitiesMap.objects.filter(object_id=request.query_params['supplier_id'], content_type=content_type)
+            # serializer = SupplierAmenitiesMapSerializer(amenities, many=True)
+            return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 

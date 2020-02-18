@@ -24,13 +24,13 @@ from v0.ui.dynamic_booking.models import BookingInventoryActivity
 from v0.ui.dynamic_suppliers.models import SupplySupplier
 from .models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeGym,
                     SupplierTypeRetailShop, CorporateParkCompanyList, CorporateBuilding, SupplierTypeBusDepot,
-                    SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE)
+                    SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE, SupplierEducationalInstitute)
 from .serializers import (UICorporateSerializer, SupplierTypeSocietySerializer, SupplierAmenitiesMapSerializer,
                          UISalonSerializer, SupplierTypeSalon, SupplierTypeGymSerializer, RetailShopSerializer,
                          SupplierInfoSerializer, SupplierInfo, SupplierTypeCorporateSerializer,
                          CorporateBuildingGetSerializer, CorporateParkCompanyListSerializer, CorporateBuildingSerializer,
                          SupplierTypeSalonSerializer, BusDepotSerializer, CorporateParkCompanySerializer,
-                         BusShelterSerializer, SupplierTypeBusShelterSerializer)
+                         BusShelterSerializer, SupplierTypeBusShelterSerializer, SupplierEducationalInstituteSerializer)
 from v0.ui.inventory.serializers import ShortlistedSpacesSerializer
 from v0.ui.location.serializers import CityAreaSerializer
 from v0.ui.account.models import ContactDetails
@@ -1373,6 +1373,72 @@ class RetailShopViewSet(viewsets.ViewSet):
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
 
+class EducationalInstituteViewSet(viewsets.ViewSet):
+    """
+    View Set around EducationalInstitute
+    """
+    def list(self, request):
+        class_name = self.__class__.__name__
+        try:
+           
+            user = request.user
+            org_id = request.user.profile.organisation.organisation_id
+            educational_institute_objects = []
+            state = request.GET.get("state")
+            state_name = request.GET.get("state_name")
+            search = request.GET.get("search")
+
+            if user.is_superuser:
+
+                educational_institute_objects = SupplierEducationalInstitute.objects
+
+                if state and state_name:
+                    educational_institute_objects = educational_institute_objects.filter(Q(state=state) | Q(state=state_name))
+
+                if search:
+                    educational_institute_objects = educational_institute_objects.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search) 
+                                      | Q(city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
+
+                educational_institute_objects = educational_institute_objects.all().order_by('name')
+            else:
+                
+                
+                #vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
+                #educational_institute_objects = SupplierEducationalInstitute.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id)) & Q(representative__isnull=False))
+
+                educational_institute_objects = SupplierEducationalInstitute.objects.filter()
+               
+                if state and state_name:
+                    educational_institute_objects = educational_institute_objects.filter(Q(state=state) | Q(state=state_name))
+
+                if search:
+                    educational_institute_objects = educational_institute_objects.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search) 
+                                      | Q(city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
+               
+                educational_institute_objects = educational_institute_objects.all().order_by('name')
+
+                
+                
+                
+
+            
+
+            # #pagination
+            educational_institute_objects_paginate = paginate(educational_institute_objects,SupplierEducationalInstituteSerializer,request)
+            educational_institute_with_images = get_supplier_image(educational_institute_objects_paginate["list"], 'Educational Institute')
+
+            data = {
+                'count': educational_institute_objects_paginate["count"],
+                'has_next':educational_institute_objects_paginate["has_next"],
+                'has_previous':educational_institute_objects_paginate["has_previous"],
+                'educational_institute_objects': educational_institute_with_images
+            }
+            return handle_response(class_name, data=data, success=True)
+            
+        except Exception as e:
+            return handle_response(class_name, data=str(e), request=request)
+    
+
 class SaveBasicCorporateDetailsAPIView(APIView):
 
     def post(self, request, id, format=None):
@@ -1409,13 +1475,15 @@ class SaveBasicCorporateDetailsAPIView(APIView):
                 CorporateParkCompanyList.objects.filter(supplier_id=corporate_id).values_list('id', flat=True))
 
             for company_name in companies_name:
-                if 'id' in company_name:
+                
+                if 'id' is company_name.get('name'):
                     company = CorporateParkCompanyList.objects.get(id=id)
-                    company.name = company_name
+                    company.name = company_name.get('name')
+                    company.employeeCount = company_name.get('employeeCount')
                     company_ids.remove(company.id)
                     companies.append(company)
                 else:
-                    company = CorporateParkCompanyList(supplier_id_id=corporate_id, name=company_name)
+                    company = CorporateParkCompanyList(supplier_id_id=corporate_id, name=company_name.get('name'), employeeCount=company_name.get('employeeCount'))
                     companies.append(company)
 
             CorporateParkCompanyList.objects.bulk_create(companies)
@@ -1928,6 +1996,19 @@ class BusShelter(APIView):
         basic_details_response = save_basic_supplier_details(supplier_type_code, data)
         if not basic_details_response.data['status']:
             return basic_details_response
+
+        basic_contacts = request.data.get('basic_contacts', None)
+
+        if basic_contacts:
+            for contact in basic_contacts:
+                if 'id' in contact:
+                    item = ContactDetails.objects.filter(pk=contact['id']).first()
+                    contact_serializer = ContactDetailsSerializer(item, data=contact)
+                else:
+                    contact_serializer = ContactDetailsSerializer(data=contact)
+                if contact_serializer.is_valid():
+                    contact_serializer.save()
+        #return handle_response(class_name, data=basic_details_response.data['data'], success=True)
         return handle_response(class_name, data=basic_details_response.data['data'], success=True)
 
     def get(self, request):
@@ -1988,6 +2069,34 @@ class BusShelter(APIView):
             return handle_response(class_name, data='Bus Shelter object does not exist', exception_object=e)
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
+    
+
+
+
+
+class getBusShelter(APIView):
+    """
+    The class provides api's for fetching and saving Bus Shelter details
+    """
+
+    def get(self, request, id):
+        class_name = self.__class__.__name__
+        try:
+            retail_shop_instance = SupplierTypeBusShelter.objects.get(supplier_id=id)
+            serializer = BusShelterSerializer(instance=retail_shop_instance)
+
+            result = serializer.data
+
+            retail_shop_instance = ContactDetails.objects.filter(object_id=id)
+            contact_serializer = ContactDetailsSerializer(retail_shop_instance, many=True)
+                
+            result['contacData'] = contact_serializer.data
+
+            return handle_response(class_name, data=result, success=True)
+            
+        except Exception as e:
+            return handle_response(class_name, exception_object=e, request=request)
+
 
 
 class BusShelterSearchView(APIView):

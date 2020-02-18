@@ -65,6 +65,8 @@ from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignComments
 from v0.ui.common.models import mongo_client, mongo_test
 
+from v0.ui.campaign.models import CampaignAssignment
+
 
 def convert_date_format(date):
     if isinstance(date, datetime.datetime):
@@ -932,7 +934,7 @@ class ProposalViewSet(viewsets.ViewSet):
             file_objects = GenericExportFileName.objects.select_related('proposal', 'user').filter(
                 proposal__invoice_number__isnull=False, is_exported=False,
                 proposal__created_by__in=username_list).order_by('-proposal__created_on')
-
+            
             # we need to make a unique list where proposal_id do not repeat.
             seen = set()
             final_file_objects = []
