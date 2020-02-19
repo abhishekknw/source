@@ -25,7 +25,7 @@ import v0.ui.website.utils as website_utils
 from django.db.models import Q, F
 from .models import (CampaignSocietyMapping, Campaign, CampaignAssignment, CampaignComments)
 from .serializers import (CampaignListSerializer, CampaignSerializer, CampaignAssignmentSerializer)
-from v0.ui.proposal.models import ShortlistedSpaces
+from v0.ui.proposal.models import ShortlistedSpaces, ProposalCenterSuppliers
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2
 from v0.ui.inventory.models import InventoryActivityImage, InventoryActivityAssignment, InventoryActivity, AdInventoryType
 from rest_framework import viewsets
@@ -37,7 +37,7 @@ from v0.ui.leads.models import (get_leads_summary, get_leads_summary_by_campaign
 from v0.ui.base.models import DurationType
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.organisation.models import Organisation
-from v0.ui.proposal.serializers import ProposalInfoSerializer
+from v0.ui.proposal.serializers import ProposalInfoSerializer, ProposalCenterSuppliersSerializer
 from v0.ui.account.models import ContactDetails
 from django.core.cache import cache
 from django.core.cache.backends.base import DEFAULT_TIMEOUT
@@ -1435,6 +1435,11 @@ class CampaignLeads(APIView):
             start_date = datetime.now() - timedelta(days=21)
             final_data['last_three_weeks'] = get_leads_data_for_campaign(campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
             final_data['overall_data'] = get_leads_data_for_campaign(campaign_id)['overall_data']
+
+            suppliers_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).all()
+            proposal_center_serializer = ProposalCenterSuppliersSerializer(suppliers_data, many=True)
+            final_data['center_suppliers'] = proposal_center_serializer.data
+
             return ui_utils.handle_response(class_name, data=final_data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, data=final_data, success=False)

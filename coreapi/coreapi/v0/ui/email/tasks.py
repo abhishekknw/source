@@ -118,7 +118,7 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None, email=None):
         supplier_list_details_by_status = get_supplier_list_by_status_ctrl(campaign_id)
         supplier_list_details_by_status = json.dumps(supplier_list_details_by_status)
         booking_template = get_template(template_name)
-        to_array = [email] if email else campaign_assignement_by_campaign_id[campaign_id]
+        to_array = emailToEmailList(email) if email else campaign_assignement_by_campaign_id[campaign_id]
         supplier_list_details_by_status_json = json.loads(supplier_list_details_by_status)
         html = booking_template.render(
             {"campaign_name": str(all_campaign_name_dict[campaign_id]),
@@ -158,6 +158,9 @@ def send_booking_mails_ctrl(template_name,req_campaign_id=None, email=None):
         send_mail_generic.delay(subject, to_array, html, None,None)
     return
 
+#To split multiple emails by comma
+def emailToEmailList(email):
+    return email.split(',')
 
 class SendBookingDetailMails(APIView):
     @staticmethod
@@ -166,14 +169,12 @@ class SendBookingDetailMails(APIView):
         send_booking_mails_ctrl('booking_details.html', campaign_id, email_id)
         return ui_utils.handle_response('', data={}, success=True)
 
-
 class SendRecceMails(APIView):
     @staticmethod
     def get(request, campaign_id):
         email_id = request.query_params.get("email", None)
         send_booking_mails_ctrl('recce_email.html', campaign_id, email_id)
         return ui_utils.handle_response('', data={}, success=True)
-
 
 class SendPreHypeMails(APIView):
     @staticmethod
@@ -188,7 +189,6 @@ class SendPipelineDetailMails(APIView):
         email_id = request.query_params.get("email", None)
         send_booking_mails_ctrl('pipeline_details.html', campaign_id, email_id)
         return ui_utils.handle_response('', data={}, success=True)
-
 
 class SendAdvancedBookingDetailMails(APIView):
     @staticmethod

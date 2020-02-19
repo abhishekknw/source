@@ -99,6 +99,7 @@ salon = 'SA'
 bus_shelter = 'BS'
 retail_shop_code = 'RE'
 bus_depot_code = 'BD'
+educational_institute = 'EI'
 
 # all supplier codes
 society_code = 'RS'
@@ -1445,8 +1446,7 @@ tableHeaderData = {
         "area_subArea" : "Area (Sub Area)",
         "address_landmark" : "Address (Landmark)",
         "relation_ship_data" : "RelationShip Data",
-        "average_weekend_daily_footfall" : "Average Weekend(Daily Footfall)",
-        "average_weekday_daily_footfall" : "Average Weekday(Daily Footfall)", 
+        "no_of_employees":"No. of Employees",
         "contacts_details" : "Contacts Details",
         "assign_user" : "Assign User",
         "booking_priority" : "Booking Priority",
@@ -1459,7 +1459,7 @@ tableHeaderData = {
         "inventory_count" : "Inventory Count",
         "inventory_days" : "Inventory Days",
         "inventory_supplier_price": "Inventory Supplier Price",
-        "total_supplier_price_per_footfall_weekend" : "Total Supplier Price Per Footfall (Weekend)",
+        "total_supplier_price_per_employee": "Total Supplier Price Per Employee",
         "negotiated_price" : "Negotiated Price",
         "cost_per_average_daily_footfall" : "Cost Per Average Daily Footfall",
         "freebies" : "Freebies",
@@ -1637,6 +1637,40 @@ tableHeaderData = {
         "total_supplier_price_per_footfall_weekend" : "Total Supplier Price Per Footfall (Weekend)",
         "negotiated_price" : "Negotiated Price",
         "cost_per_average_daily_footfall" : "Cost Per Average Daily Footfall",
+        "freebies" : "Freebies",
+        "mode_of_payment" : "Mode Of Payment",
+        "transaction_cheque_number" : "Transaction/Cheque Number",
+        "payment_status" : "Payment Status",
+        "permission_box" : "Permission Box",
+        "receipt" : "Receipt",
+        "lead_performance_summary" : "Lead Performance Summary",
+        "completion_status" : "Completion Status",
+        "delete_action" : "Delete Action"
+    },
+    'EI' : {
+        "srNo" : "Sr No",
+        "name" : "Supplier Name",
+        "supplier_id" : "Supplier Id",
+        "supplier_type" : "Supplier Type",
+        "area_subArea" : "Area (Sub Area)",
+        "address_landmark" : "Address (Landmark)",
+        "relation_ship_data" : "RelationShip Data",
+        "no_of_students" : "No. of Students",
+        "contacts_details" : "Contacts Details",
+        "assign_user" : "Assign User",
+        "booking_priority" : "Booking Priority",
+        "booking_status_and_sub_status" : "Booking Status and Sub Status",
+        "phase" : "Phase",
+        "internal_comments" : "Internal Comments",
+        "comments" : "Comments",
+        "next_action_date" : "Next Action Date",
+        "inventory_type" : "Inventory Type",
+        "inventory_count" : "Inventory Count",
+        "inventory_days" : "Inventory Days",
+        "inventory_supplier_price": "Inventory Supplier Price",
+        "total_supplier_price_per_student" : "Total Supplier Price Per Student",
+        "negotiated_price" : "Negotiated Price",
+        "cost_per_average_student" : "Cost Per Average Student",
         "freebies" : "Freebies",
         "mode_of_payment" : "Mode Of Payment",
         "transaction_cheque_number" : "Transaction/Cheque Number",
