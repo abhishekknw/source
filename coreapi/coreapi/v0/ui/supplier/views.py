@@ -3269,10 +3269,18 @@ class MultiSupplierDetails(APIView):
                                                                          'society_city', 'society_subarea', 'society_state',
                                                                          'society_latitude','society_longitude',
                                                                          'supplier_id')
+            # Get contact name & number
+            contact_details = ContactDetails.objects.filter(object_id__in=supplier_ids).values('object_id', 'name', 'mobile')
+            if contact_details:
+                for supplier in suppliers:
+                    for contact_detail in contact_details:
+                        if contact_detail['object_id'] == supplier['supplier_id']:
+                            supplier['contact_name'] = contact_detail['name']
+                            supplier['contact_number'] = contact_detail['mobile']
             return Response(data={'status': True, 'data': suppliers}, status=status.HTTP_200_OK)
 
         except Exception as e:
-            return Response(data={'status': False, 'error': 'Error getting data'},
+            return Response(data={'status': False, 'error': str(e)},
                             status=status.HTTP_400_BAD_REQUEST)
 
 

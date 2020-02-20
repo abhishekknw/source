@@ -373,6 +373,15 @@ class GetSupplierDetail(APIView):
                         supplier_id=shortlisted_supplier['object_id']).values('society_name', 'society_locality', 'society_subarea', 'society_city',
                                                                               'society_type_quality', 'society_longitude',
                                                                               'society_latitude')
+                    supplier_detail = supplier_detail[0]
+                    supplier_detail['contact_name'] = ''
+                    supplier_detail['contact_number'] = ''
+                    # Get contact name & number
+                    contact_details = ContactDetails.objects.filter(object_id=shortlisted_supplier['object_id']).values('object_id',
+                                                                                                       'name', 'mobile')
+                    if contact_details:
+                        supplier_detail['contact_name'] = contact_details[0]['name']
+                        supplier_detail['contact_number'] = contact_details[0]['mobile']
                 if booking_status_code is None:
                     continue
                 booking_status = booking_code_to_status[booking_status_code]
@@ -380,7 +389,7 @@ class GetSupplierDetail(APIView):
                     booking_category = 'completed'
                     completed_supplier_ids.append(shortlisted_supplier['object_id'])
                     all_supplier_dict[booking_category]['supplier_ids'].append(shortlisted_supplier['object_id'])
-                    all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_category, supplier_detail[0], shortlisted_supplier)
+                    all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_category, supplier_detail, shortlisted_supplier)
                 if booking_status_code == 'BK':
                     booked_supplier_ids.append(shortlisted_supplier['object_id'])
                     if booking_status not in all_supplier_dict.keys():
@@ -389,7 +398,7 @@ class GetSupplierDetail(APIView):
                             'supplier': []
                         }
                     all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
-                    all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_status, supplier_detail[0], shortlisted_supplier)
+                    all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_status, supplier_detail, shortlisted_supplier)
                 else:
                     if booking_status in all_supplier_dict.keys():
                         if booking_status_code == 'DP':
@@ -414,7 +423,7 @@ class GetSupplierDetail(APIView):
                             'supplier': []
                         }
                     all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
-                    all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_status, supplier_detail[0], shortlisted_supplier)
+                    all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_status, supplier_detail, shortlisted_supplier)
             # Remove unwanted booking status
             if 'Phone Booked' in all_supplier_dict:
                 del all_supplier_dict['Phone Booked']
