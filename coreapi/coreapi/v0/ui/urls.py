@@ -6,8 +6,8 @@ from v0.ui import views
 
 from v0.ui.supplier.views import SocietyAPIView, SocietyAPIFiltersView, SocietyAPIFiltersListView, SocietyList, \
     SocietyAPISortedListView, SocietyAPISocietyIdsView, GenerateSupplierIdAPIView, checkSupplierCodeAPIView, \
-    SupplierImageDetails, CorporateViewSet, GymViewSet, SalonViewSet, RetailShopViewSet, BusShelter, \
-    BusShelterSearchView, SaveBasicCorporateDetailsAPIView, SaveBuildingDetailsAPIView, CompanyDetailsAPIView, \
+    SupplierImageDetails, CorporateViewSet, GymViewSet, SalonViewSet, RetailShopViewSet, EducationalInstituteViewSet, BusShelter, \
+    BusShelterSearchView, getBusShelter, SaveBasicCorporateDetailsAPIView, SaveBuildingDetailsAPIView, CompanyDetailsAPIView, \
     CorporateCompanyDetailsAPIView, saveBasicSalonDetailsAPIView, saveBasicGymDetailsAPIView, BusShelter, \
     SuppliersMeta, SuppliersMetaData, BusDepotViewSet, SocietyDataImport
 from v0.ui.supplier.supplier_uploads import CorporateParkDataImport
@@ -111,6 +111,8 @@ urlpatterns = [
     url(r'^(?P<id>[A-Z_a-z0-9]+)/load_initial_data_gym/$', saveBasicGymDetailsAPIView.as_view()),
 
     url(r'^(?P<id>[A-Z_a-z0-9]+)/bus-shelter/$', BusShelter.as_view()),
+    url(r'^(?P<id>[A-Z_a-z0-9]+)/get-bus-shelter/$', getBusShelter.as_view()),
+
     url(r'^suppliers-meta/$', SuppliersMeta.as_view()),
     url(r'^suppliers-meta-data/$', SuppliersMetaData.as_view()),
     url(r'^supplier/(?P<id>[A-Z_a-z0-9]+)/image_details/$', SupplierImageDetails.as_view()),
@@ -132,6 +134,10 @@ router.register(r'^image-mapping', views.ImageMappingViewSet, base_name='image-m
 router.register(r'^state', views.StateViewSet, base_name='state')
 router.register(r'^bus-depot', BusDepotViewSet, base_name='bus-depot')
 
+router.register(r'^educational-institute', EducationalInstituteViewSet, base_name='educational-institute')
+
 
 
 urlpatterns += router.urls
+
+

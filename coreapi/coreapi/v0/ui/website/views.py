@@ -806,11 +806,39 @@ class GetAllAmenities(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            amenities = Amenity.objects.all()
+
+            type = request.query_params.get('type', None)
+
+            if type:
+                amenities = Amenity.objects.filter(type=type)
+            else:
+                amenities = Amenity.objects.all()
+           
             serializer = AmenitySerializer(amenities, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+    def post(self, request):
+        
+        class_name = self.__class__.__name__
+        try:
+
+            id = request.data.get('id', None)
+
+            if id:
+                item = Amenity.objects.filter(pk=id).first()
+                serializer = AmenitySerializer(item, data=request.data)
+            else:
+                serializer = AmenitySerializer(data=request.data)
+
+            if serializer.is_valid():
+                serializer.save()
+
+            return ui_utils.handle_response(class_name, data='success', success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 
 
 class SupplierAmenity(APIView):

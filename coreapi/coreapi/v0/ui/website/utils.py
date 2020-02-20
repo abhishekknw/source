@@ -5361,6 +5361,7 @@ def save_amenities_for_supplier(supplier_type_code, supplier_id, amenities):
                 'object_id': supplier_id,
                 'amenity': amenity_objects_map[amenity_id],
                 'content_type': content_type,
+                'comments': amenity.get('comments')
             }
             total_amenities.append(SupplierAmenitiesMap(**data))
 
