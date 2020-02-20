@@ -9,7 +9,7 @@ from .views import (ShortlistSocietyCountAPIView, BookCampaignAPIView,
                    CampaignLeads, CityWiseMultipleCampaignLeads, PhaseWiseMultipleCampaignLeads, CampaignLeadsCustom,
                    Comment, CampaignLeadsMultiple, GetPermissionBoxImages, CampaignWiseSummary, AssignedCampaigns,
                     VendorWiseSummary, VendorDetails, UserCities, CityWiseSummary, MISReportReceipts, MISReportContacts,
-                    AllCampaigns)
+                    AllCampaigns, BookingAttributes, InventoryAttributes)
 from v0.ui.website.views import (GetAssignedIdImagesListApiView)
 
 urlpatterns = [
@@ -38,6 +38,8 @@ urlpatterns = [
     url(r'^vendor-wise-summary/$', VendorWiseSummary.as_view()),
     url(r'^city-wise-summary/$', CityWiseSummary.as_view()),
     url(r'^assigned-campaigns/$', AssignedCampaigns.as_view()),
+    url(r'^booking-attributes/(?P<campaign_id>[A-Z_a-z0-9-]+)/$', BookingAttributes.as_view()),
+    url(r'^inventory-attributes/(?P<campaign_id>[A-Z_a-z0-9-]+)/$', InventoryAttributes.as_view()),
     url(r'^all-campaigns/$', AllCampaigns.as_view()),
     url(r'^vendors-details/$', VendorDetails.as_view()),
     url(r'^user-cities/$', UserCities.as_view()),
