@@ -1608,7 +1608,12 @@ class GetAssignedIdImagesListApiView(APIView):
             }
 
             for supplier in inv_act_image_objects:
-                supplier_code_list[supplier['supplier_code']].append(supplier)
+                try:
+                    if supplier['object_id']:
+                        supplier['supplier_code'] = 'RS'
+                    supplier_code_list[supplier['supplier_code']].append(supplier)
+                except Exception:
+                    pass
 
             inv_act_image_objects_with_distance = []
             for key, value in supplier_code_list.items():

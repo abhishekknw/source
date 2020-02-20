@@ -2780,15 +2780,17 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     all_supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids)
     all_supplier_dict = {supplier.supplier_id:supplier for supplier in all_supplier_objects}
     for space in shortlisted_spaces_list:
-        supplier_society = all_supplier_dict.get(space.object_id)
-        supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society).data
-
+        try:
+            supplier_society = all_supplier_dict[space.object_id]
+        except KeyError:
+            pass
         supplier_inventories = ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces_id=space.id)
         inventory_activity_assignment = InventoryActivityAssignment.objects.filter(
-            inventory_activity__shortlisted_inventory_details__shortlisted_spaces_id=space.id).values('activity_date',
-                                                                                                      'inventory_activity__activity_type',
-                                                                                                      'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name'
-                                                                                                        )
+            inventory_activity__shortlisted_inventory_details__shortlisted_spaces_id=space.id)\
+            .values('activity_date',
+              'inventory_activity__activity_type',
+              'inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name'
+            )
         inventory_dates_dict = {
                     "POSTER": [],
                     "STALL": [],
