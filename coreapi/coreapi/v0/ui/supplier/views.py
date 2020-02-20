@@ -33,14 +33,14 @@ from .serializers import (UICorporateSerializer, SupplierTypeSocietySerializer, 
                          BusShelterSerializer, SupplierTypeBusShelterSerializer, SupplierEducationalInstituteSerializer)
 from v0.ui.inventory.serializers import ShortlistedSpacesSerializer
 from v0.ui.location.serializers import CityAreaSerializer
-from v0.ui.account.models import ContactDetails
+from v0.ui.account.models import (ContactDetails, OwnershipDetails)
 from v0.ui.inventory.models import AdInventoryType, PosterInventory, StandeeInventory
 from v0.ui.finances.models import PriceMappingDefault, ShortlistedInventoryPricingDetails
 from v0.ui.base.models import DurationType
 from v0.ui.serializers import (UISocietySerializer, SocietyListSerializer)
 from v0.ui.proposal.serializers import ImageMappingSerializer
 from v0.ui.proposal.models import ImageMapping, ShortlistedSpaces
-from v0.ui.account.serializers import (ContactDetailsSerializer, ContactDetailsGenericSerializer)
+from v0.ui.account.serializers import (ContactDetailsSerializer, ContactDetailsGenericSerializer, OwnershipDetailsSerializer)
 from v0.ui.account.models import ContactDetailsGeneric
 from v0.ui.components.models import (SocietyTower, CorporateBuildingWing, CompanyFloor, FlatType, LiftDetails)
 from v0.ui.components.serializers import CorporateBuildingWingSerializer
@@ -1346,6 +1346,19 @@ class RetailShopViewSet(viewsets.ViewSet):
                 if contact_serializer.is_valid():
                     contact_serializer.save()
 
+            
+            ownership = request.data.get('ownership_details', None)
+
+            if ownership:
+                if ownership.get('id'):
+                    item1 = OwnershipDetails.objects.filter(pk=ownership['id']).first()
+                    ownership_serializer = OwnershipDetailsSerializer(item1, data=ownership)
+                else:
+                    ownership_serializer = OwnershipDetailsSerializer(data=ownership)
+                
+                if ownership_serializer.is_valid():
+                    ownership_serializer.save()
+
 
             retail_shop_instance = SupplierTypeRetailShop.objects.get(pk=pk)
             serializer = RetailShopSerializer(instance=retail_shop_instance, data=request.data)
@@ -1368,6 +1381,12 @@ class RetailShopViewSet(viewsets.ViewSet):
             contact_serializer = ContactDetailsSerializer(retail_shop_instance, many=True)
                 
             shopData['contacData'] = contact_serializer.data
+
+
+            ownership_details_instance = OwnershipDetails.objects.filter(object_id=pk).first()
+            ownership_details_serializer = OwnershipDetailsSerializer(ownership_details_instance, many=False)
+                
+            shopData['ownership_details'] = ownership_details_serializer.data
 
             return handle_response(class_name, data=shopData, success=True)
         except Exception as e:
@@ -1909,7 +1928,11 @@ class saveBasicGymDetailsAPIView(APIView):
             serializer = SupplierTypeGymSerializer(data1)
             data2 = ContactDetailsGeneric.objects.filter(object_id=id)
             serializer1 = ContactDetailsGenericSerializer(data2, many=True)
-            result = {'basicData': serializer.data, 'contactData': serializer1.data}
+
+            ownership_details_instance = OwnershipDetails.objects.filter(object_id=id).first()
+            ownership_details_serializer = OwnershipDetailsSerializer(ownership_details_instance, many=False)
+                
+            result = {'basicData': serializer.data, 'contactData': serializer1.data, 'ownership_details':ownership_details_serializer.data}
             return Response(result)
         except SupplierTypeGym.DoesNotExist:
             return Response(status=404)
@@ -1961,6 +1984,20 @@ class saveBasicGymDetailsAPIView(APIView):
                     return Response(status=404)
 
         ContactDetailsGeneric.objects.filter(id__in=contacts_ids).delete()
+
+        ownership = request.data.get('ownership_details', None)
+
+        if ownership:
+            if ownership.get('id'):
+                item1 = OwnershipDetails.objects.filter(pk=ownership['id']).first()
+                ownership_serializer = OwnershipDetailsSerializer(item1, data=ownership)
+            else:
+                ownership_serializer = OwnershipDetailsSerializer(data=ownership)
+            
+            if ownership_serializer.is_valid():
+                ownership_serializer.save()
+
+
         return Response(status=200)
 
         # End of contact Saving
@@ -2008,7 +2045,19 @@ class BusShelter(APIView):
                     contact_serializer = ContactDetailsSerializer(data=contact)
                 if contact_serializer.is_valid():
                     contact_serializer.save()
-        #return handle_response(class_name, data=basic_details_response.data['data'], success=True)
+
+        ownership = request.data.get('ownership_details', None)
+
+        if ownership:
+            if ownership.get('id'):
+                item1 = OwnershipDetails.objects.filter(pk=ownership['id']).first()
+                ownership_serializer = OwnershipDetailsSerializer(item1, data=ownership)
+            else:
+                ownership_serializer = OwnershipDetailsSerializer(data=ownership)
+            
+            if ownership_serializer.is_valid():
+                ownership_serializer.save()            
+        
         return handle_response(class_name, data=basic_details_response.data['data'], success=True)
 
     def get(self, request):
@@ -2091,6 +2140,11 @@ class getBusShelter(APIView):
             contact_serializer = ContactDetailsSerializer(retail_shop_instance, many=True)
                 
             result['contacData'] = contact_serializer.data
+
+            ownership_details_instance = OwnershipDetails.objects.filter(object_id=id).first()
+            ownership_details_serializer = OwnershipDetailsSerializer(ownership_details_instance, many=False)
+
+            result['ownership_details'] = ownership_details_serializer.data
 
             return handle_response(class_name, data=result, success=True)
             

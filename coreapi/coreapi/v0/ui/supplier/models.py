@@ -54,6 +54,7 @@ class CorporateParkCompanyList(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     name = models.CharField(db_column='COMPANY_NAME',max_length=50, blank=True, null=True)
     supplier_id = models.ForeignKey('SupplierTypeCorporate', db_column='CORPORATEPARK_ID', related_name='corporatecompany', blank=True, null=True, on_delete=models.CASCADE)
+    employeeCount = models.IntegerField(db_column='EMPLOYEE_COUNT',null=True, blank=True)
 
     def get_company_details(self):
         return self.companydetails.all()

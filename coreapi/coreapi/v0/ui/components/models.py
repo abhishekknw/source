@@ -12,6 +12,7 @@ class Amenity(BaseModel):
     """
     name = models.CharField(max_length=1000)
     code = models.CharField(max_length=1000, null=True, blank=True)
+    type = models.CharField(choices=(( 'RS', 'RS' ),  ('CP', 'CP'),  ('GY', 'GY'),  ('SA', 'SA'),  ('BS', 'BS'),  ('RE', 'RE'),  ('EI', 'EI')), max_length=10, blank=True, null=True)
 
     class Meta:
         db_table = 'amenities'

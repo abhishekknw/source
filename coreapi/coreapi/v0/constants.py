@@ -1268,8 +1268,10 @@ inventory_name_to_code = {
 tower_count_attribute_mapping = {
     'RS': 'tower_count',
     'CP': 'building_count',
-    'GY': 'none',
-    'SA': 'none'
+    'GY': 'mirrorstrip_count',
+    'SA': 'none',
+    'RE': 'average_weekday',
+    'BS': 'halt_buses_count'
 }
 
 # codes to model names
