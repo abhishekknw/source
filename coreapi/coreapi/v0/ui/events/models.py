@@ -41,6 +41,10 @@ class Events(models.Model):
     content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
+    
+    budget = models.IntegerField(db_column='EVENT_BUDGET', blank=True, null=True)
+    last_year_sponsors = models.CharField(db_column='EVENT_LAST_YEAR_SPONSORS', max_length=255, blank=True, null=True)
+    
     objects = managers.GeneralManager()
 
     class Meta:

@@ -146,11 +146,30 @@ class ContactDetails(BaseModel):
     content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
+    other_contact_type = models.CharField(max_length=255, null=True, blank=True)
     objects = managers.GeneralManager()
 
     class Meta:
 
         db_table = 'contact_details'
+
+class OwnershipDetails(models.Model):
+    """
+    holds Ownership of all kinds.
+    """
+    
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
+    gst_number = models.CharField(max_length=255, blank=True, null=True)
+    pan_number = models.CharField(max_length=100, blank=True, null=True)
+    address = models.CharField(max_length=255, blank=True, null=True)
+    start_date = models.DateTimeField(max_length=50, blank=True, null=True)
+    end_date = models.DateTimeField(max_length=50, blank=True, null=True)
+    payment_terms_condition = models.TextField(max_length=255, blank=True, null=True)
+    food_tasting = models.CharField(choices=(( 'YES', 'YES' ),  ('NO', 'NO')), max_length=10, blank=True, null=True)
+    
+    class Meta:
+        db_table = 'ownership_details'
 
 
 class ContactDetailsGeneric(models.Model):

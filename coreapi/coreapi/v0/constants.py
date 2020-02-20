@@ -105,11 +105,13 @@ educational_institute = 'EI'
 society_code = 'RS'
 corporate_code = 'CP'
 
+educational_institute_code = 'EI'
+
 # yes or no
 positive = ['Yes', 'Y', '1']
 negative = ['No', 'N', '0']
 
-valid_supplier_codes = [society, corporate, gym, salon, bus_shelter, bus_depot_code, retail_shop_code]
+valid_supplier_codes = [society, corporate, gym, salon, bus_shelter, bus_depot_code, retail_shop_code, educational_institute_code]
 
 supplier_keys = [
 
@@ -169,6 +171,10 @@ inventorylist = {
         'DATA': ['supplier_id', 'name', 'subarea', 'quality_rating', 'tower_count', 'flat_count', 'status']
     },
     corporate_code: {
+        'HEADER': ['SUPPLIER_ID', 'CORPORATE NAME', 'CORPORATE SUBAREA', 'STATUS'],
+        'DATA': ['supplier_id', 'name', 'subarea', 'status']
+    },
+    educational_institute_code:{
         'HEADER': ['SUPPLIER_ID', 'CORPORATE NAME', 'CORPORATE SUBAREA', 'STATUS'],
         'DATA': ['supplier_id', 'name', 'subarea', 'status']
     },
@@ -390,6 +396,7 @@ bus_shelter_sheet_name = 'Bus shelter Details'
 retail_shop_sheet_name = 'Retail Shop Details'
 society_sheet_name = 'Society Details'
 corporate_sheet_name = 'Corporate Park Details'
+educational_institute_sheet_name = 'Educational Institute Details'
 
 # export master data. each key represents a list of list. each list in that list forms a row in the sheet
 master_data = {
@@ -423,8 +430,12 @@ master_data = {
         'sheet_name': retail_shop_sheet_name,
         'headers': [],
         'data': []
+    },
+    educational_institute_code:{
+        'sheet_name': educational_institute_sheet_name,
+        'headers': [],
+        'data': []
     }
-
 }
 
 # chose sheet names from just supplier_type_code
@@ -434,7 +445,8 @@ sheet_names = {
     gym: gym_sheet_name,
     salon: salon_sheet_name,
     bus_shelter: bus_shelter_sheet_name,
-    retail_shop_code: retail_shop_sheet_name
+    retail_shop_code: retail_shop_sheet_name,
+    educational_institute_code:educational_institute_sheet_name
 }
 
 # chose codes from supplier sheet names
@@ -445,14 +457,16 @@ sheet_names_to_codes = {
     gym_sheet_name: gym,
     salon_sheet_name: salon,
     bus_shelter_sheet_name: bus_shelter,
-    retail_shop_sheet_name: retail_shop_code
+    retail_shop_sheet_name: retail_shop_code,
+    educational_institute_sheet_name:educational_institute_code
 }
 
 # code to sheet names
 code_to_sheet_names = {
     'RS': 'Society Details',
     'CP': 'Corporate Park Details',
-    'GY': 'Gym details'
+    'GY': 'Gym details',
+    'EI': 'Educational Institute Details'
 }
 
 # supplier keys which you want to be included in the sheet in specific order. do not change this order.
@@ -462,6 +476,7 @@ code_to_sheet_names = {
 export_supplier_database_keys = {
     'RS': ['id', 'proposal', 'center_name', 'supplier_id', 'society_name', 'society_subarea', 'society_type_quality', 'tower_count', 'flat_count', ],
     'CP': ['id', 'proposal', 'center_name', 'supplier_id', 'name', 'subarea'],
+    'EI': ['id', 'proposal', 'center_name', 'supplier_id', 'name', 'subarea'],
     bus_shelter: [],
     gym: [],
     salon: []
@@ -490,7 +505,8 @@ supplier_filters = {
     },
     bus_shelter: {},
     gym: {},
-    salon: {}
+    salon: {},
+    educational_institute: {}
 }
 
 # pi filters which come in range fashion. These filters are used in PI calculation
@@ -503,7 +519,8 @@ pi_range_filters = {
     corporate_code: {},
     bus_shelter: {},
     gym: {},
-    salon: {}
+    salon: {},
+    educational_institute: {}
 }
 
 # Filter names which do not map directly to db field
@@ -618,6 +635,12 @@ query_dict = {
         'quantity': {},
         'quality': {},
         'locality': {}
+    },
+
+    educational_institute_code: {
+        'quantity': {},
+        'quality': {},
+        'locality': {}
     }
 
 }
@@ -646,7 +669,11 @@ search_fields = {
     retail_shop_code:['supplier_id__icontains', 'name__icontains', 'address1__icontains', 'address2__icontains', 'area__icontains',
            'subarea__icontains',
            'city__icontains', 'state__icontains', 'zipcode__icontains'
-           ]
+           ],
+    educational_institute_code:['supplier_id__icontains', 'name__icontains', 'address1__icontains', 'address2__icontains', 'area__icontains',
+           'subarea__icontains',
+           'city__icontains', 'state__icontains', 'zipcode__icontains'
+           ],
 }
 
 # to calculate what cost of each inventory. currently we are using only these. type and duration are used to fetch
@@ -747,7 +774,8 @@ filter_type = {
     bus_shelter: [],
     gym: [],
     salon: [],
-    retail_shop_code: []
+    retail_shop_code: [],
+    educational_institute_code:[]
 
 }
 # to store employee_count
@@ -1248,8 +1276,10 @@ inventory_name_to_code = {
 tower_count_attribute_mapping = {
     'RS': 'tower_count',
     'CP': 'building_count',
-    'GY': 'none',
-    'SA': 'none'
+    'GY': 'mirrorstrip_count',
+    'SA': 'none',
+    'RE': 'average_weekday',
+    'BS': 'halt_buses_count'
 }
 
 # codes to model names
@@ -1259,6 +1289,7 @@ codes_to_model_names = {
     'GY': 'SupplierTypeGym',
     'SA': 'SupplierTypeSalon',
     'BS': 'SupplierTypeBusShelter',
+    'EI': 'SupplierEducationalInstitute',
     bus_depot_code: 'SupplierTypeBusDepot',
     retail_shop: 'SupplierTypeRetailShop',
     stall: 'StallInventory',
@@ -1287,6 +1318,7 @@ model_to_codes = {
     'SupplierTypeSalon': 'SA',
     'SupplierTypeBusShelter': 'BS',
     'SupplierTypeRetailShop': retail_shop,
+    'SupplierEducationalInstitute':'EI',
     'StallInventory': 'SL',
     'StandeeInventory': 'ST',
     'FlyerInventory': 'FL',

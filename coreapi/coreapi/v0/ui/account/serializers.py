@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from rest_framework.serializers import ModelSerializer
-from .models import BusinessAccountContact, AccountInfo, ContactDetails, ContactDetailsGeneric, BusinessTypes,\
+from .models import BusinessAccountContact, AccountInfo, ContactDetails, OwnershipDetails, ContactDetailsGeneric, BusinessTypes,\
     BusinessSubTypes, OperationsInfo, ActivityLog
 from v0.ui.organisation.models import Organisation
 from v0.ui.base.serializers import BaseModelPermissionSerializer
@@ -57,6 +57,12 @@ class ContactDetailsSerializer(ModelSerializer):
     class Meta:
         model = ContactDetails
         fields = '__all__'
+
+class OwnershipDetailsSerializer(ModelSerializer):
+    class Meta:
+        model = OwnershipDetails
+        fields = '__all__'
+        
 
 
 class ContactDetailsGenericSerializer(ModelSerializer):

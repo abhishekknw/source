@@ -9,6 +9,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from v0 import managers
 from v0.ui.inventory.models import AD_INVENTORY_CHOICES
 
+from v0.ui.account.models import Profile
+
+from v0.ui.account.serializers import ProfileSimpleSerializer
+
 
 class CampaignTypes(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
@@ -163,20 +167,36 @@ class GenericExportFileName(BaseModel):
         """
         try:
             instance = CampaignAssignment.objects.filter(campaign=self.proposal).all()
-            if len(instance) > 0:
-                instance = instance[0]
-            else:
-                raise ObjectDoesNotExist
-            # can use caching here to avoid BaseUser calls.
-            return {
-                'assigned_by': BaseUser.objects.get(pk=instance.assigned_by.pk).username,
-                'assigned_to': BaseUser.objects.get(pk=instance.assigned_to.pk).username
-            }
+            
+            assigned = []
+            for row in instance:
+                try:
+                    organisation = {}
+                    if row.assigned_to and row.assigned_to.profile and row.assigned_to.profile.organisation:
+                        organisation = {
+                            'assigned_to_id': row.assigned_to.id,
+                            'assigned_to_name': row.assigned_to.username,
+                            'organisation_name' : row.assigned_to.profile.organisation.name,
+                            'organisation_id' : row.assigned_to.profile.organisation_id
+                        }
+
+                    row1 = {
+                        'assigned_by': row.assigned_by.username,
+                        'assigned_to': organisation
+                    }
+                except:
+                    row1 = {
+                        'assigned_by': 'Nobody',
+                        'assigned_to': 'Nobody'
+                    }
+                assigned.append(row1)
+            return assigned
+            
         except ObjectDoesNotExist:
-            return {
+            return [{
                 'assigned_by': 'Nobody',
                 'assigned_to': 'Nobody'
-            }
+            }]
 
     class Meta:
         db_table = 'generic_export_file_name'

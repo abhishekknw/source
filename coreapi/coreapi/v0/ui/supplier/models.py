@@ -54,6 +54,7 @@ class CorporateParkCompanyList(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     name = models.CharField(db_column='COMPANY_NAME',max_length=50, blank=True, null=True)
     supplier_id = models.ForeignKey('SupplierTypeCorporate', db_column='CORPORATEPARK_ID', related_name='corporatecompany', blank=True, null=True, on_delete=models.CASCADE)
+    employeeCount = models.IntegerField(db_column='EMPLOYEE_COUNT',null=True, blank=True)
 
     def get_company_details(self):
         return self.companydetails.all()
@@ -215,6 +216,7 @@ class SupplierTypeSociety(BaseModel):
     supplier_status = models.CharField(max_length=80, null=True,  choices=SUPPLIER_STATUS)
     comments = models.CharField(max_length=255, null=True, blank=True)
     relationship_manager = models.CharField(max_length=50, null=True, blank=True)
+    rating = models.CharField(max_length=255, null=True, blank=True)
 
     def get_society_image(self):
         try:
@@ -365,6 +367,11 @@ class SupplierTypeGym(BasicSupplierDetails):
     class Meta:
         db_table = 'supplier_gym'
 
+
+class SupplierEducationalInstitute(BasicSupplierDetails):
+    class Meta:
+        db_table = 'supplier_educational_institute'
+
 #Check whether this model is being used or not
 class SupplierInfo(models.Model):
     supplier_id = models.CharField(db_index=True, db_column='SUPPLIER_ID', primary_key=True, max_length=20)  # Field name made lowercase.
@@ -429,7 +436,11 @@ class SupplierTypeCorporate(BasicSupplierDetails):
     comments = models.CharField(max_length=255, null=True, blank=True)
     relationship_manager = models.CharField(max_length=50, null=True, blank=True)
     landmark = models.CharField(max_length=255, null=True, blank=True)
+
+    rating = models.CharField(max_length=255, null=True, blank=True)
+
     feedback = models.CharField(max_length=255, null=True, blank=True)
+
 
     def get_buildings(self):
         return self.corporatebuilding.all()
@@ -459,6 +470,7 @@ class SupplierAmenitiesMap(BaseModel):
     object_id = models.CharField(max_length=1000)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     amenity = models.ForeignKey('Amenity', null=True, blank=True, on_delete=models.CASCADE)
+    comments = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = 'supplier_amenities_map'
@@ -489,6 +501,8 @@ class SupplierTypeRetailShop(BasicSupplierDetails):
     mobile = models.CharField(max_length=250, blank=True, null=True)
     phone = models.CharField(max_length=250, blank=True, null=True)
     landmark = models.CharField(max_length=250, blank=True, null=True)
+    comments = models.CharField(max_length=255, null=True, blank=True)
+    rating = models.CharField(max_length=255, null=True, blank=True)
 
     
 
