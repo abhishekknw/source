@@ -41,5 +41,7 @@ def getSocietyDetails(all_supplier_dict, booking_status, supplier_detail, shortl
         'is_completed': shortlisted_supplier['is_completed'],
         'society_latitude': supplier_detail['society_latitude'],
         'society_longitude': supplier_detail['society_longitude'],
+        'contact_number': supplier_detail['contact_number'],
+        'contact_name': supplier_detail['contact_name']
     })
     return all_supplier_dict

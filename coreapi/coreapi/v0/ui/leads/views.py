@@ -281,9 +281,6 @@ class GetLeadsEntriesBySupplierCount(APIView):
         return handle_response({}, data=len(supplier_all_lead_entries['values']), success=True)
 
 
-
-
-
 class GetLeadsEntriesByCampaignId(APIView):
     # it is assumed that a form belongs to a campaign
     @staticmethod

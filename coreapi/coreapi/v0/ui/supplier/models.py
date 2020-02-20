@@ -274,7 +274,7 @@ class SupplierTypeSociety(BaseModel):
 
 class SupplierTypeCode(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    supplier_type_name = models.CharField(db_column='SUPPLIER_TYPE_NAME', max_length=20, null=True)
+    supplier_type_name = models.CharField(db_column='SUPPLIER_TYPE_NAME', max_length=30, null=True)
     supplier_type_code = models.CharField(db_column='SUPPLIER_TYPE_CODE', max_length=5, null=True)
 
     class Meta:
@@ -436,7 +436,11 @@ class SupplierTypeCorporate(BasicSupplierDetails):
     comments = models.CharField(max_length=255, null=True, blank=True)
     relationship_manager = models.CharField(max_length=50, null=True, blank=True)
     landmark = models.CharField(max_length=255, null=True, blank=True)
+
     rating = models.CharField(max_length=255, null=True, blank=True)
+
+    feedback = models.CharField(max_length=255, null=True, blank=True)
+
 
     def get_buildings(self):
         return self.corporatebuilding.all()
