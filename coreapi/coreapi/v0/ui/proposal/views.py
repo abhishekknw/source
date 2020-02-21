@@ -2819,7 +2819,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 if activity_date not in inventory_dates_dict[inventoy_name]:
                     inventory_dates_dict[inventoy_name].append(activity_date)
         inventory_count_dict = {}
-        
+
+        supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society).data        
         supplier_tower_count = supplier_society.tower_count if supplier_society_serialized.get("tower_count") else 0
         supplier_flat_count = supplier_society.flat_count if supplier_society_serialized.get("flat_count") else 0
         for inventory in supplier_inventories:
