@@ -35,7 +35,7 @@ import v0.errors as errors
 import v0.constants as v0_constants
 import v0.ui.serializers as ui_serializers
 from v0.ui.location.models import State, City, CityArea, CitySubArea
-from v0.ui.supplier.serializers import (SupplierEducationalInstituteSerializer, SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SupplierTypeBusShelterSerializer,
+from v0.ui.supplier.serializers import (SupplierHordingSerializer, SupplierEducationalInstituteSerializer, SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SupplierTypeBusShelterSerializer,
                                         SupplierTypeGymSerializer, SupplierTypeRetailShopSerializer,
                                         SupplierTypeSalonSerializer, BusDepotSerializer)
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -679,6 +679,7 @@ def get_serializer(query):
     try:
         serializers = {
 
+            v0_constants.hording_code: SupplierHordingSerializer,
             v0_constants.educational_institute_code: SupplierEducationalInstituteSerializer,
             v0_constants.society_code: SupplierTypeSocietySerializer,
             v0_constants.corporate_code: SupplierTypeCorporateSerializer,

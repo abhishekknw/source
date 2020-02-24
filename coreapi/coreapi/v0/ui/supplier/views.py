@@ -24,13 +24,13 @@ from v0.ui.dynamic_booking.models import BookingInventoryActivity
 from v0.ui.dynamic_suppliers.models import SupplySupplier
 from .models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeGym,
                     SupplierTypeRetailShop, CorporateParkCompanyList, CorporateBuilding, SupplierTypeBusDepot,
-                    SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE, SupplierEducationalInstitute)
+                    SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE, SupplierEducationalInstitute, SupplierHording)
 from .serializers import (UICorporateSerializer, SupplierTypeSocietySerializer, SupplierAmenitiesMapSerializer,
                          UISalonSerializer, SupplierTypeSalon, SupplierTypeGymSerializer, RetailShopSerializer,
                          SupplierInfoSerializer, SupplierInfo, SupplierTypeCorporateSerializer,
                          CorporateBuildingGetSerializer, CorporateParkCompanyListSerializer, CorporateBuildingSerializer,
                          SupplierTypeSalonSerializer, BusDepotSerializer, CorporateParkCompanySerializer,
-                         BusShelterSerializer, SupplierTypeBusShelterSerializer, SupplierEducationalInstituteSerializer)
+                         BusShelterSerializer, SupplierTypeBusShelterSerializer, SupplierEducationalInstituteSerializer, SupplierHordingSerializer)
 from v0.ui.inventory.serializers import ShortlistedSpacesSerializer
 from v0.ui.location.serializers import CityAreaSerializer
 from v0.ui.account.models import (ContactDetails, OwnershipDetails)
@@ -1391,6 +1391,126 @@ class RetailShopViewSet(viewsets.ViewSet):
             return handle_response(class_name, data=shopData, success=True)
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
+
+
+class HordingViewSet(viewsets.ViewSet):
+    
+    def list(self, request):
+        class_name = self.__class__.__name__
+        try:
+            # all retail_shop_objects sorted by name
+            user = request.user
+            org_id = request.user.profile.organisation.organisation_id
+            hording_objects = []
+            state = request.GET.get("state")
+            state_name = request.GET.get("state_name")
+            search = request.GET.get("search")
+
+            if user.is_superuser:
+                hording_objects = SupplierHording.objects
+
+                if state and state_name:
+                    hording_objects = hording_objects.filter(Q(state=state) | Q(state=state_name))
+
+                if search:
+                    hording_objects = hording_objects.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search) 
+                                      | Q(city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
+
+                hording_objects = hording_objects.all().order_by('name')
+            else:
+
+                hording_objects = SupplierHording.objects
+                
+                if state and state_name:
+                    hording_objects = hording_objects.filter(Q(state=state) | Q(state=state_name))
+
+                if search:
+                    hording_objects = hording_objects.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search) 
+                                      | Q(city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
+
+                hording_objects = hording_objects.all().order_by('name')
+
+            #pagination
+            hording_objects_paginate = paginate(hording_objects, SupplierHordingSerializer, request)
+            hording_with_images = get_supplier_image(hording_objects_paginate["list"], 'Retail Shop')
+
+            data = {
+                'count': hording_objects_paginate["count"],
+                'has_next':hording_objects_paginate["has_next"],
+                'has_previous':hording_objects_paginate["has_previous"],
+                'hording_objects': hording_with_images
+            }
+            return handle_response(class_name, data=data, success=True)
+        except Exception as e:
+            return handle_response(class_name, data=str(e), request=request)
+
+    def retrieve(self, request, pk):
+        class_name = self.__class__.__name__
+        try:
+            hording_instance = SupplierHording.objects.get(pk=pk)
+            serializer = RetailShopSerializer(instance=hording_instance)
+
+            result = serializer.data
+
+            retail_shop_instance = ContactDetails.objects.filter(object_id=pk)
+            contact_serializer = ContactDetailsSerializer(retail_shop_instance, many=True)
+                
+            result['contacData'] = contact_serializer.data
+
+
+            ownership_details_instance = OwnershipDetails.objects.filter(object_id=pk).first()
+            ownership_details_serializer = OwnershipDetailsSerializer(ownership_details_instance, many=False)
+                
+            result['ownership_details'] = ownership_details_serializer.data
+
+            return handle_response(class_name, data=result, success=True)
+        except Exception as e:
+            return handle_response(class_name, exception_object=e, request=request)
+
+    def update(self, request, pk):
+        class_name = self.__class__.__name__
+        try:
+            basic_contacts = request.data.get('basic_contacts', None)
+            object_id = request.data.get('supplier_id', None)
+
+            
+            for contact in basic_contacts:
+                if 'id' in contact:
+                    item = ContactDetails.objects.filter(pk=contact['id']).first()
+                    contact_serializer = ContactDetailsSerializer(item, data=contact)
+                else:
+                    contact_serializer = ContactDetailsSerializer(data=contact)
+                if contact_serializer.is_valid():
+                    contact_serializer.save()
+
+            
+            ownership = request.data.get('ownership_details', None)
+
+            if ownership:
+                if ownership.get('id'):
+                    item1 = OwnershipDetails.objects.filter(pk=ownership['id']).first()
+                    ownership_serializer = OwnershipDetailsSerializer(item1, data=ownership)
+                else:
+                    ownership_serializer = OwnershipDetailsSerializer(data=ownership)
+                
+                if ownership_serializer.is_valid():
+                    ownership_serializer.save()
+
+
+            hording_instance = SupplierHording.objects.get(pk=pk)
+            serializer = SupplierHordingSerializer(instance=hording_instance, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return handle_response(class_name, data=serializer.data, success=True)
+            return handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return handle_response(class_name, exception_object=e, request=request)
+
+
+
+
+
+
 
 class EducationalInstituteViewSet(viewsets.ViewSet):
     """
