@@ -1473,15 +1473,16 @@ class HordingViewSet(viewsets.ViewSet):
             basic_contacts = request.data.get('basic_contacts', None)
             object_id = request.data.get('supplier_id', None)
 
-            
-            for contact in basic_contacts:
-                if 'id' in contact:
-                    item = ContactDetails.objects.filter(pk=contact['id']).first()
-                    contact_serializer = ContactDetailsSerializer(item, data=contact)
-                else:
-                    contact_serializer = ContactDetailsSerializer(data=contact)
-                if contact_serializer.is_valid():
-                    contact_serializer.save()
+
+            if basic_contacts:
+                for contact in basic_contacts:
+                    if 'id' in contact:
+                        item = ContactDetails.objects.filter(pk=contact['id']).first()
+                        contact_serializer = ContactDetailsSerializer(item, data=contact)
+                    else:
+                        contact_serializer = ContactDetailsSerializer(data=contact)
+                    if contact_serializer.is_valid():
+                        contact_serializer.save()
 
             
             ownership = request.data.get('ownership_details', None)
@@ -1650,7 +1651,7 @@ class SaveBasicCorporateDetailsAPIView(APIView):
                 # make the data you want to save in contacts
                 contact_data = {
                     'name': contact.get('name'),
-                    'country_code': contact.get('countrycode'),
+                    'country_code': contact.get('country_code'),
                     'std_code': contact.get('std_code'),
                     'mobile': contact.get('mobile'),
                     'contact_type': contact.get('contact_type'),
