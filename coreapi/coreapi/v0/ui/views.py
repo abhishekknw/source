@@ -1823,6 +1823,7 @@ class EventViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
+            
             event_name = request.data['event_name']
             supplier_id = request.data['supplier_id']
             supplier_type_code = request.data['supplier_type_code']

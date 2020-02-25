@@ -372,6 +372,10 @@ class SupplierEducationalInstitute(BasicSupplierDetails):
     class Meta:
         db_table = 'supplier_educational_institute'
 
+class SupplierHording(BasicSupplierDetails):
+    class Meta:
+        db_table = 'supplier_hording'        
+
 #Check whether this model is being used or not
 class SupplierInfo(models.Model):
     supplier_id = models.CharField(db_index=True, db_column='SUPPLIER_ID', primary_key=True, max_length=20)  # Field name made lowercase.
@@ -458,6 +462,20 @@ class SupplierTypeBusShelter(BasicSupplierDetails):
     lit_status = models.CharField(max_length=255, null=True, blank=True)
     halt_buses_count = models.IntegerField(null=True, blank=True)
     representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
+    
+    direction = models.CharField(max_length=255, null=True, blank=True)
+    comments = models.CharField(max_length=255, null=True, blank=True)
+    average_peak_hour_traffic = models.CharField(max_length=255, null=True, blank=True)
+    average_non_peak_hour_traffic = models.CharField(max_length=255, null=True, blank=True)
+
+    average_footfall_daily_count = models.IntegerField(null=True, blank=True)
+    average_down_boarding_daily_count = models.IntegerField(null=True, blank=True)
+    average_on_boarding_daily_count = models.IntegerField(null=True, blank=True)
+
+    external_number = models.CharField(max_length=255, null=True, blank=True)
+    
+
+
     class Meta:
         db_table = 'supplier_bus_shelter'
 

@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from rest_framework.serializers import ModelSerializer
-from .models import (SupplierEducationalInstitute, SupplierTypeSociety, SupplierTypeCode, SupplierTypeRetailShop, SupplierTypeBusShelter,
+from .models import (SupplierHording, SupplierEducationalInstitute, SupplierTypeSociety, SupplierTypeCode, SupplierTypeRetailShop, SupplierTypeBusShelter,
                     SupplierTypeGym, SupplierTypeSalon, SupplierTypeCorporate, SupplierInfo, CorporateBuilding,
                     CorporateParkCompanyList, CorporateCompanyDetails, SupplierTypeBusDepot, SupplierAmenitiesMap)
 from v0.ui.components.serializers import CompanyFloorSerializer, CorporateBuildingWingSerializer
@@ -8,6 +8,12 @@ from v0.ui.components.serializers import CompanyFloorSerializer, CorporateBuildi
 class SupplierEducationalInstituteSerializer(ModelSerializer):
     class Meta:
         model = SupplierEducationalInstitute
+        fields = '__all__'
+
+
+class SupplierHordingSerializer(ModelSerializer):
+    class Meta:
+        model = SupplierHording
         fields = '__all__'
 
 class UICorporateSerializer(ModelSerializer):
