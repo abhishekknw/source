@@ -100,18 +100,22 @@ bus_shelter = 'BS'
 retail_shop_code = 'RE'
 bus_depot_code = 'BD'
 educational_institute = 'EI'
+hording = 'HO'
 
 # all supplier codes
 society_code = 'RS'
 corporate_code = 'CP'
 
 educational_institute_code = 'EI'
+hording_code = 'HO'
+
+
 
 # yes or no
 positive = ['Yes', 'Y', '1']
 negative = ['No', 'N', '0']
 
-valid_supplier_codes = [society, corporate, gym, salon, bus_shelter, bus_depot_code, retail_shop_code, educational_institute_code]
+valid_supplier_codes = [society, corporate, gym, salon, bus_shelter, bus_depot_code, retail_shop_code, educational_institute_code, hording_code]
 
 supplier_keys = [
 
@@ -175,6 +179,10 @@ inventorylist = {
         'DATA': ['supplier_id', 'name', 'subarea', 'status']
     },
     educational_institute_code:{
+        'HEADER': ['SUPPLIER_ID', 'CORPORATE NAME', 'CORPORATE SUBAREA', 'STATUS'],
+        'DATA': ['supplier_id', 'name', 'subarea', 'status']
+    },
+    hording_code:{
         'HEADER': ['SUPPLIER_ID', 'CORPORATE NAME', 'CORPORATE SUBAREA', 'STATUS'],
         'DATA': ['supplier_id', 'name', 'subarea', 'status']
     },
@@ -397,6 +405,9 @@ retail_shop_sheet_name = 'Retail Shop Details'
 society_sheet_name = 'Society Details'
 corporate_sheet_name = 'Corporate Park Details'
 educational_institute_sheet_name = 'Educational Institute Details'
+hording_sheet_name = 'Hording Details'
+
+
 
 # export master data. each key represents a list of list. each list in that list forms a row in the sheet
 master_data = {
@@ -435,7 +446,12 @@ master_data = {
         'sheet_name': educational_institute_sheet_name,
         'headers': [],
         'data': []
-    }
+    },
+    hording_code:{
+        'sheet_name': educational_institute_sheet_name,
+        'headers': [],
+        'data': []
+    },
 }
 
 # chose sheet names from just supplier_type_code
@@ -446,7 +462,8 @@ sheet_names = {
     salon: salon_sheet_name,
     bus_shelter: bus_shelter_sheet_name,
     retail_shop_code: retail_shop_sheet_name,
-    educational_institute_code:educational_institute_sheet_name
+    educational_institute_code:educational_institute_sheet_name,
+    hording_code:hording_sheet_name
 }
 
 # chose codes from supplier sheet names
@@ -458,7 +475,8 @@ sheet_names_to_codes = {
     salon_sheet_name: salon,
     bus_shelter_sheet_name: bus_shelter,
     retail_shop_sheet_name: retail_shop_code,
-    educational_institute_sheet_name:educational_institute_code
+    educational_institute_sheet_name:educational_institute_code,
+    hording_sheet_name:hording_code
 }
 
 # code to sheet names
@@ -466,7 +484,8 @@ code_to_sheet_names = {
     'RS': 'Society Details',
     'CP': 'Corporate Park Details',
     'GY': 'Gym details',
-    'EI': 'Educational Institute Details'
+    'EI': 'Educational Institute Details',
+    'HO': 'Hording Details'
 }
 
 # supplier keys which you want to be included in the sheet in specific order. do not change this order.
@@ -477,6 +496,7 @@ export_supplier_database_keys = {
     'RS': ['id', 'proposal', 'center_name', 'supplier_id', 'society_name', 'society_subarea', 'society_type_quality', 'tower_count', 'flat_count', ],
     'CP': ['id', 'proposal', 'center_name', 'supplier_id', 'name', 'subarea'],
     'EI': ['id', 'proposal', 'center_name', 'supplier_id', 'name', 'subarea'],
+    'HO': ['id', 'proposal', 'center_name', 'supplier_id', 'name', 'subarea'],
     bus_shelter: [],
     gym: [],
     salon: []
@@ -506,7 +526,8 @@ supplier_filters = {
     bus_shelter: {},
     gym: {},
     salon: {},
-    educational_institute: {}
+    educational_institute: {},
+    hording: {}
 }
 
 # pi filters which come in range fashion. These filters are used in PI calculation
@@ -520,7 +541,8 @@ pi_range_filters = {
     bus_shelter: {},
     gym: {},
     salon: {},
-    educational_institute: {}
+    educational_institute: {},
+    hording: {}
 }
 
 # Filter names which do not map directly to db field
@@ -630,20 +652,23 @@ query_dict = {
         'quality': {},
         'locality': {}
     },
-
     retail_shop_code: {
         'quantity': {},
         'quality': {},
         'locality': {}
     },
-
     educational_institute_code: {
         'quantity': {},
         'quality': {},
         'locality': {}
-    }
-
+    },
+    hording_code: {
+        'quantity': {},
+        'quality': {},
+        'locality': {}
+    },
 }
+
 # searching fields per supplier
 search_fields = {
     society_code: ['supplier_id__icontains', 'society_name__icontains', 'society_address1__icontains',
@@ -674,6 +699,10 @@ search_fields = {
            'subarea__icontains',
            'city__icontains', 'state__icontains', 'zipcode__icontains'
            ],
+    hording_code:['supplier_id__icontains', 'name__icontains', 'address1__icontains', 'address2__icontains', 'area__icontains',
+            'subarea__icontains',
+            'city__icontains', 'state__icontains', 'zipcode__icontains'
+            ],
 }
 
 # to calculate what cost of each inventory. currently we are using only these. type and duration are used to fetch
@@ -775,7 +804,8 @@ filter_type = {
     gym: [],
     salon: [],
     retail_shop_code: [],
-    educational_institute_code:[]
+    educational_institute_code:[],
+    hording_code:[]
 
 }
 # to store employee_count
@@ -871,6 +901,14 @@ proposal_not_converted_to_campaign = 'PNC'
 proposal_on_hold = 'POH'
 proposal_requested = 'PR'
 proposal_finalized = 'PF'
+
+campaign_state = {
+    'PTC': 'converted',
+    'PNC': 'not converted',
+    'POH': 'on hold',
+    'PR': 'requested',
+    'PF': 'finalized'
+}
 
 
 # different mode of payments
@@ -1249,6 +1287,7 @@ gym = 'GY'
 salon = 'SA'
 bus_shelter = 'BS'
 retail_shop = 'RE'
+hording = "HO"
 
 
 inventory_name_to_code = {
@@ -1271,7 +1310,8 @@ tower_count_attribute_mapping = {
     'GY': 'mirrorstrip_count',
     'SA': 'none',
     'RE': 'average_weekday',
-    'BS': 'halt_buses_count'
+    'BS': 'halt_buses_count',
+    'HO': 'tower_count'
 }
 
 # codes to model names
@@ -1282,6 +1322,8 @@ codes_to_model_names = {
     'SA': 'SupplierTypeSalon',
     'BS': 'SupplierTypeBusShelter',
     'EI': 'SupplierEducationalInstitute',
+    'HO': 'SupplierHording',
+  
     bus_depot_code: 'SupplierTypeBusDepot',
     retail_shop: 'SupplierTypeRetailShop',
     stall: 'StallInventory',
@@ -1311,6 +1353,7 @@ model_to_codes = {
     'SupplierTypeBusShelter': 'BS',
     'SupplierTypeRetailShop': retail_shop,
     'SupplierEducationalInstitute':'EI',
+    'SupplierHording' : 'HO',
     'StallInventory': 'SL',
     'StandeeInventory': 'ST',
     'FlyerInventory': 'FL',
@@ -1470,8 +1513,7 @@ tableHeaderData = {
         "area_subArea" : "Area (Sub Area)",
         "address_landmark" : "Address (Landmark)",
         "relation_ship_data" : "RelationShip Data",
-        "average_weekend_daily_footfall" : "Average Weekend(Daily Footfall)",
-        "average_weekday_daily_footfall" : "Average Weekday(Daily Footfall)", 
+        "no_of_employees":"No. of Employees",
         "contacts_details" : "Contacts Details",
         "assign_user" : "Assign User",
         "booking_priority" : "Booking Priority",
@@ -1484,7 +1526,7 @@ tableHeaderData = {
         "inventory_count" : "Inventory Count",
         "inventory_days" : "Inventory Days",
         "inventory_supplier_price": "Inventory Supplier Price",
-        "total_supplier_price_per_footfall_weekend" : "Total Supplier Price Per Footfall (Weekend)",
+        "total_supplier_price_per_employee": "Total Supplier Price Per Employee",
         "negotiated_price" : "Negotiated Price",
         "cost_per_average_daily_footfall" : "Cost Per Average Daily Footfall",
         "freebies" : "Freebies",
@@ -1662,6 +1704,40 @@ tableHeaderData = {
         "total_supplier_price_per_footfall_weekend" : "Total Supplier Price Per Footfall (Weekend)",
         "negotiated_price" : "Negotiated Price",
         "cost_per_average_daily_footfall" : "Cost Per Average Daily Footfall",
+        "freebies" : "Freebies",
+        "mode_of_payment" : "Mode Of Payment",
+        "transaction_cheque_number" : "Transaction/Cheque Number",
+        "payment_status" : "Payment Status",
+        "permission_box" : "Permission Box",
+        "receipt" : "Receipt",
+        "lead_performance_summary" : "Lead Performance Summary",
+        "completion_status" : "Completion Status",
+        "delete_action" : "Delete Action"
+    },
+    'EI' : {
+        "srNo" : "Sr No",
+        "name" : "Supplier Name",
+        "supplier_id" : "Supplier Id",
+        "supplier_type" : "Supplier Type",
+        "area_subArea" : "Area (Sub Area)",
+        "address_landmark" : "Address (Landmark)",
+        "relation_ship_data" : "RelationShip Data",
+        "no_of_students" : "No. of Students",
+        "contacts_details" : "Contacts Details",
+        "assign_user" : "Assign User",
+        "booking_priority" : "Booking Priority",
+        "booking_status_and_sub_status" : "Booking Status and Sub Status",
+        "phase" : "Phase",
+        "internal_comments" : "Internal Comments",
+        "comments" : "Comments",
+        "next_action_date" : "Next Action Date",
+        "inventory_type" : "Inventory Type",
+        "inventory_count" : "Inventory Count",
+        "inventory_days" : "Inventory Days",
+        "inventory_supplier_price": "Inventory Supplier Price",
+        "total_supplier_price_per_student" : "Total Supplier Price Per Student",
+        "negotiated_price" : "Negotiated Price",
+        "cost_per_average_student" : "Cost Per Average Student",
         "freebies" : "Freebies",
         "mode_of_payment" : "Mode Of Payment",
         "transaction_cheque_number" : "Transaction/Cheque Number",

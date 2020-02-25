@@ -26,7 +26,7 @@ class SocietyMajorEvents(BaseModel):
 class Events(models.Model):
     event_id = models.AutoField(db_column='EVENT_ID', primary_key=True)
     supplier = models.ForeignKey('SupplierTypeSociety', related_name='events', db_column='SUPPLIER_ID', blank=True, null=True, on_delete=models.CASCADE)
-    event_name = models.CharField(db_column='EVENT_NAME', max_length=20, blank=True, null=True)
+    event_name = models.CharField(db_column='EVENT_NAME', max_length=255, blank=True, null=True)
     event_location = models.CharField(db_column='EVENT_LOCATION', max_length=50, blank=True, null=True)
     past_gathering_per_event = models.IntegerField(db_column='PAST_GATHERING_PER_EVENT', blank=True, null=True)
     start_day = models.CharField(db_column='START_DAY', max_length=30, blank=True, null=True)

@@ -35,7 +35,7 @@ import v0.errors as errors
 import v0.constants as v0_constants
 import v0.ui.serializers as ui_serializers
 from v0.ui.location.models import State, City, CityArea, CitySubArea
-from v0.ui.supplier.serializers import (SupplierEducationalInstituteSerializer, SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SupplierTypeBusShelterSerializer,
+from v0.ui.supplier.serializers import (SupplierHordingSerializer, SupplierEducationalInstituteSerializer, SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SupplierTypeBusShelterSerializer,
                                         SupplierTypeGymSerializer, SupplierTypeRetailShopSerializer,
                                         SupplierTypeSalonSerializer, BusDepotSerializer)
 from v0.ui.supplier.models import SupplierTypeSociety
@@ -296,40 +296,100 @@ def set_default_pricing(supplier_id, supplier_type_code):
 
         for type in ad_types:
             for duration in duration_types:
-                if (type.adinventory_name == 'POSTER'):
-                    if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (duration.duration_name == 'Campaign Daily')):
-                        if (type.adinventory_type == 'A4'):
+                if (supplier_type_code != 'RS'):
+                    if (type.adinventory_name == 'POSTER'):
+                        if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (duration.duration_name == 'Campaign Daily')):
+                            if (type.adinventory_type == 'A4'):
+                                pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type, adinventory_type=type, duration_type=duration)
+                                price_mapping_list.append(pmdefault)
+
+                    if (type.adinventory_name == 'POSTER LIFT'):
+                        if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (duration.duration_name == 'Campaign Daily')):
+                            if (type.adinventory_type == 'A4'):
+                                pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type, adinventory_type=type, duration_type=duration)
+                                price_mapping_list.append(pmdefault)
+
+                    if (type.adinventory_name == 'STANDEE'):
+                        if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (duration.duration_name == 'Campaign Daily')):
+                            if (type.adinventory_type == 'Small'):
+                                pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type, adinventory_type=type, duration_type=duration)
+                                price_mapping_list.append(pmdefault)
+
+                    if (type.adinventory_name == 'STALL'):
+                        if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (duration.duration_name == 'Campaign Daily')):
+                            if (type.adinventory_type == 'Canopy'):
+                                pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type, adinventory_type=type, duration_type=duration)
+                                price_mapping_list.append(pmdefault)
+
+                    if (type.adinventory_name == 'CAR DISPLAY'):
+                        if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (duration.duration_name == 'Campaign Daily')):
+                            if ((type.adinventory_type == 'Standard') | (type.adinventory_type == 'Premium')):
+                                pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type, adinventory_type=type, duration_type=duration)
+                                price_mapping_list.append(pmdefault)
+
+                    if ((type.adinventory_name == 'FLIER') and (duration.duration_name == 'Unit Daily')):
+                        if ((type.adinventory_type == 'Door-to-Door') | (type.adinventory_type == 'Mailbox') | (type.adinventory_type == 'Lobby')):
                             pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type, adinventory_type=type, duration_type=duration)
                             price_mapping_list.append(pmdefault)
 
-                if (type.adinventory_name == 'POSTER LIFT'):
-                    if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (duration.duration_name == 'Campaign Daily')):
-                        if (type.adinventory_type == 'A4'):
-                            pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type, adinventory_type=type, duration_type=duration)
+                else:
+                    if (type.adinventory_name == 'POSTER'):
+                        if ((duration.duration_name == 'Unit Daily')):
+                            pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                                  adinventory_type=type, duration_type=duration)
                             price_mapping_list.append(pmdefault)
 
-                if (type.adinventory_name == 'STANDEE'):
-                    if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (duration.duration_name == 'Campaign Daily')):
-                        if (type.adinventory_type == 'Small'):
-                            pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type, adinventory_type=type, duration_type=duration)
+                        if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (
+                                    duration.duration_name == 'Unit Monthly') | (duration.duration_name == 'Unit Weekly')):
+                            pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                                    adinventory_type=type, duration_type=duration)
                             price_mapping_list.append(pmdefault)
 
-                if (type.adinventory_name == 'STALL'):
-                    if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (duration.duration_name == 'Campaign Daily')):
-                        if (type.adinventory_type == 'Canopy'):
-                            pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type, adinventory_type=type, duration_type=duration)
+                    if (type.adinventory_name == 'POSTER LIFT'):
+                        if ((duration.duration_name == 'Unit Daily')):
+                            pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                                    adinventory_type=type, duration_type=duration)
+                            price_mapping_list.append(pmdefault)
+                        if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (
+                                    duration.duration_name == 'Unit Monthly') | (duration.duration_name == 'Unit Weekly')):
+                            pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                                    adinventory_type=type, duration_type=duration)
                             price_mapping_list.append(pmdefault)
 
-                if (type.adinventory_name == 'CAR DISPLAY'):
-                    if ((duration.duration_name == 'Campaign Weekly') | (duration.duration_name == 'Campaign Monthly') | (duration.duration_name == 'Campaign Daily')):
-                        if ((type.adinventory_type == 'Standard') | (type.adinventory_type == 'Premium')):
-                            pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type, adinventory_type=type, duration_type=duration)
+                    if (type.adinventory_name == 'STANDEE'):
+                        if ((duration.duration_name == 'Campaign Monthly') | (duration.duration_name == 'Campaign Weekly') | (
+                                    duration.duration_name == 'Unit Weekly') | (duration.duration_name == 'Unit Monthly')):
+                            if (type.adinventory_type == 'Large'):
+                                pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                                        adinventory_type=type, duration_type=duration)
+                                price_mapping_list.append(pmdefault)
+                            else:
+                                pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                                        adinventory_type=type, duration_type=duration)
+                                price_mapping_list.append(pmdefault)
+                    if (type.adinventory_name == 'STALL'):
+                        if ((duration.duration_name == 'Unit Daily') | (duration.duration_name == '2 Days')):
+                            if ((type.adinventory_type == 'Canopy') | (type.adinventory_type == 'Small') | (
+                                        type.adinventory_type == 'Large')):
+                                pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                                        adinventory_type=type, duration_type=duration)
+                                price_mapping_list.append(pmdefault)
+                            if (type.adinventory_type == 'Customize'):
+                                pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                                        adinventory_type=type, duration_type=duration)
+                                price_mapping_list.append(pmdefault)
+                    if (type.adinventory_name == 'CAR DISPLAY'):
+                        if ((duration.duration_name == 'Unit Daily') | (duration.duration_name == '2 Days')):
+                            if ((type.adinventory_type == 'Standard') | (type.adinventory_type == 'Premium')):
+                                pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                                        adinventory_type=type, duration_type=duration)
+                                price_mapping_list.append(pmdefault)
+                    if ((type.adinventory_name == 'FLIER') & (duration.duration_name == 'Unit Daily')):
+                        if ((type.adinventory_type == 'Door-to-Door') | (type.adinventory_type == 'Mailbox') | (
+                                    type.adinventory_type == 'Lobby')):
+                            pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type,
+                                                                    adinventory_type=type, duration_type=duration)
                             price_mapping_list.append(pmdefault)
-
-                if ((type.adinventory_name == 'FLIER') and (duration.duration_name == 'Unit Daily')):
-                    if ((type.adinventory_type == 'Door-to-Door') | (type.adinventory_type == 'Mailbox') | (type.adinventory_type == 'Lobby')):
-                        pmdefault = PriceMappingDefault(object_id=supplier_id, content_type=content_type, adinventory_type=type, duration_type=duration)
-                        price_mapping_list.append(pmdefault)
 
         PriceMappingDefault.objects.bulk_create(price_mapping_list)
         return True
@@ -679,6 +739,7 @@ def get_serializer(query):
     try:
         serializers = {
 
+            v0_constants.hording_code: SupplierHordingSerializer,
             v0_constants.educational_institute_code: SupplierEducationalInstituteSerializer,
             v0_constants.society_code: SupplierTypeSocietySerializer,
             v0_constants.corporate_code: SupplierTypeCorporateSerializer,
@@ -989,3 +1050,8 @@ def is_user_permitted(permission_type, user, **kwargs):
 # Generate random string
 def getRandomString():
     return ''.join((random.choice(string.ascii_letters) for i in range(3)))
+
+def campaignState(state):
+    if state in v0_constants.campaign_state:
+        return v0_constants.campaign_state[state]
+

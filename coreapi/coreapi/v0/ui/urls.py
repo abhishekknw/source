@@ -6,7 +6,7 @@ from v0.ui import views
 
 from v0.ui.supplier.views import SocietyAPIView, SocietyAPIFiltersView, SocietyAPIFiltersListView, SocietyList, \
     SocietyAPISortedListView, SocietyAPISocietyIdsView, GenerateSupplierIdAPIView, checkSupplierCodeAPIView, \
-    SupplierImageDetails, CorporateViewSet, GymViewSet, SalonViewSet, RetailShopViewSet, EducationalInstituteViewSet, BusShelter, \
+    SupplierImageDetails, CorporateViewSet, GymViewSet, SalonViewSet, RetailShopViewSet, EducationalInstituteViewSet, HordingViewSet, BusShelter, \
     BusShelterSearchView, getBusShelter, SaveBasicCorporateDetailsAPIView, SaveBuildingDetailsAPIView, CompanyDetailsAPIView, \
     CorporateCompanyDetailsAPIView, saveBasicSalonDetailsAPIView, saveBasicGymDetailsAPIView, BusShelter, \
     SuppliersMeta, SuppliersMetaData, BusDepotViewSet, SocietyDataImport
@@ -135,6 +135,8 @@ router.register(r'^state', views.StateViewSet, base_name='state')
 router.register(r'^bus-depot', BusDepotViewSet, base_name='bus-depot')
 
 router.register(r'^educational-institute', EducationalInstituteViewSet, base_name='educational-institute')
+
+router.register(r'^hording', HordingViewSet, base_name='hording')
 
 
 

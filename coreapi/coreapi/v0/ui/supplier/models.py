@@ -274,7 +274,7 @@ class SupplierTypeSociety(BaseModel):
 
 class SupplierTypeCode(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    supplier_type_name = models.CharField(db_column='SUPPLIER_TYPE_NAME', max_length=20, null=True)
+    supplier_type_name = models.CharField(db_column='SUPPLIER_TYPE_NAME', max_length=30, null=True)
     supplier_type_code = models.CharField(db_column='SUPPLIER_TYPE_CODE', max_length=5, null=True)
 
     class Meta:
@@ -372,6 +372,10 @@ class SupplierEducationalInstitute(BasicSupplierDetails):
     class Meta:
         db_table = 'supplier_educational_institute'
 
+class SupplierHording(BasicSupplierDetails):
+    class Meta:
+        db_table = 'supplier_hording'        
+
 #Check whether this model is being used or not
 class SupplierInfo(models.Model):
     supplier_id = models.CharField(db_index=True, db_column='SUPPLIER_ID', primary_key=True, max_length=20)  # Field name made lowercase.
@@ -436,7 +440,11 @@ class SupplierTypeCorporate(BasicSupplierDetails):
     comments = models.CharField(max_length=255, null=True, blank=True)
     relationship_manager = models.CharField(max_length=50, null=True, blank=True)
     landmark = models.CharField(max_length=255, null=True, blank=True)
+
     rating = models.CharField(max_length=255, null=True, blank=True)
+
+    feedback = models.CharField(max_length=255, null=True, blank=True)
+
 
     def get_buildings(self):
         return self.corporatebuilding.all()
@@ -454,6 +462,20 @@ class SupplierTypeBusShelter(BasicSupplierDetails):
     lit_status = models.CharField(max_length=255, null=True, blank=True)
     halt_buses_count = models.IntegerField(null=True, blank=True)
     representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
+    
+    direction = models.CharField(max_length=255, null=True, blank=True)
+    comments = models.CharField(max_length=255, null=True, blank=True)
+    average_peak_hour_traffic = models.CharField(max_length=255, null=True, blank=True)
+    average_non_peak_hour_traffic = models.CharField(max_length=255, null=True, blank=True)
+
+    average_footfall_daily_count = models.IntegerField(null=True, blank=True)
+    average_down_boarding_daily_count = models.IntegerField(null=True, blank=True)
+    average_on_boarding_daily_count = models.IntegerField(null=True, blank=True)
+
+    external_number = models.CharField(max_length=255, null=True, blank=True)
+    
+
+
     class Meta:
         db_table = 'supplier_bus_shelter'
 

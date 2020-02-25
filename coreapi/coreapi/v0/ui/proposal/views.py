@@ -2799,14 +2799,17 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     "STANDEE": [],
                     "FLIER": [],
                     "BANNER": [],
-                    "GATEWAY ARCH": []
+                    "GATEWAY ARCH": [],
+                    "SUNBOARD" : [],
                 }
         inventory_days_dict = {
             "POSTER": None,
             "STALL": None,
             "STANDEE": None,
             "FLIER": None,
-            "BANNER": None
+            "BANNER": None,
+            "GATEWAY ARCH": None,
+            "SUNBOARD" : None,
         }
         for inventory_activity in inventory_activity_assignment:
             inventoy_name = inventory_activity.get('inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name')
@@ -2816,9 +2819,10 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 if activity_date not in inventory_dates_dict[inventoy_name]:
                     inventory_dates_dict[inventoy_name].append(activity_date)
         inventory_count_dict = {}
-        
-        supplier_tower_count = supplier_society.tower_count if supplier_society.tower_count else 0
-        supplier_flat_count = supplier_society.flat_count if supplier_society.flat_count else 0
+
+        supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society).data        
+        supplier_tower_count = supplier_society.tower_count if supplier_society_serialized.get("tower_count") else 0
+        supplier_flat_count = supplier_society.flat_count if supplier_society_serialized.get("flat_count") else 0
         for inventory in supplier_inventories:
             if inventory.ad_inventory_type.adinventory_name not in inventory_count_dict:
                 inventory_count_dict[inventory.ad_inventory_type.adinventory_name] = 0
@@ -2829,10 +2833,9 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
             if inventory.inventory_number_of_days:
                 inventory_days_dict[inventory.ad_inventory_type.adinventory_name] = inventory.inventory_number_of_days
-            inventory_count_dict['FLIER'] = supplier_society.flat_count if supplier_society.flat_count else 0
-            overall_inventory_count_dict['FLIER'] = supplier_society.flat_count if supplier_society.flat_count else 0
+            inventory_count_dict['FLIER'] = supplier_society.flat_count if supplier_society_serialized.get("flat_count") else 0
+            overall_inventory_count_dict['FLIER'] = supplier_society.flat_count if supplier_society_serialized.get("flat_count") else 0
 
-        supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society).data
         supplier_society_serialized['booking_status'] = space.booking_status
         supplier_society_serialized['booking_sub_status'] = space.booking_sub_status
         supplier_society_serialized['freebies'] = space.freebies.split(",") if space.freebies else None
@@ -2852,7 +2855,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             if space.phase_no_id not in shortlisted_spaces_by_phase_dict:
                 shortlisted_spaces_by_phase_dict[space.phase_no_id] = {'BK': [], 'NB': [], 'PB': [], 'VB': [], 'SR': [], 'NI':[], 'MF':[], 'RERA':[], 'MWS':[], 'MWC':[], 'MWT':[], 'MWO':[],
                                                                        'SE': [], 'VR': [], 'CR': [], 'DPCR':[], 'DPNR':[], 'NE':[], 'UN':[], 'MWA':[], 'UPNI':[], 'UCPI':[], 'TB':[],
-                                                                       'DP': [], 'TB': [], 'MC':[], 'UN':[], 'DPRR': [], 'RLC':[], 'PR': [], 'NVOS':[]}
+                                                                       'DP': [], 'TB': [], 'MC':[], 'UN':[], 'DPRR': [], 'RLC':[], 'PR': [], 'NVOS':[], 'RE': []}
             if space.booking_status:
                 shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(
                     supplier_society_serialized)
