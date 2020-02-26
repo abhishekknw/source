@@ -227,7 +227,8 @@ class GetCampaignWiseAnalytics(APIView):
             for supplier in all_supplier_society:
                 all_supplier_society_dict[supplier['supplier_id']] = {
                     'flat_count': supplier['flat_count'],
-                    'payment_details_available': supplier['payment_details_available']
+                    'payment_details_available': supplier['payment_details_available'],
+                    'supplier_id': supplier['supplier_id']
                 }
 
             for proposal in all_proposal_city:
@@ -250,6 +251,7 @@ class GetCampaignWiseAnalytics(APIView):
                         'contact_number_filled_suppliers': [],
                         'contact_number_not_filled_suppliers': [],
                         'flat_count_filled': 0,
+                        'flat_count_filled_suppliers': [],
                         'total_payment_details': 0
                     }
                 if shortlisted_supplier['object_id'] not in all_campaign_dict[shortlisted_supplier['proposal_id']]['all_supplier_ids']:
@@ -258,6 +260,8 @@ class GetCampaignWiseAnalytics(APIView):
                         all_campaign_dict[shortlisted_supplier['proposal_id']]['total_flat_counts'] += all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count']
                         all_campaign_dict[shortlisted_supplier['proposal_id']]['flat_count_filled'] += 1 if all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count'] else 0
                         all_campaign_dict[shortlisted_supplier['proposal_id']]['total_payment_details'] += 1 if all_supplier_society_dict[shortlisted_supplier['object_id']]['payment_details_available'] == 1 else 0
+                        if all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count'] is not None:
+                            all_campaign_dict[shortlisted_supplier['proposal_id']]['flat_count_filled_suppliers'].append(all_supplier_society_dict[shortlisted_supplier['object_id']]['supplier_id'])
 
                 if shortlisted_supplier['phase_no_id'] and shortlisted_supplier['phase_no_id'] not in all_campaign_dict[shortlisted_supplier['proposal_id']]['all_phase_ids']:
                     if shortlisted_supplier['proposal__tentative_end_date'].date() < current_date:
@@ -320,8 +324,10 @@ class GetCampaignWiseAnalytics(APIView):
                     "contact_number_filled_suppliers": all_campaign_dict[campaign_id]['contact_number_filled_suppliers'],
                     "contact_number_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_number_filled'],
                     "contact_number_not_filled_suppliers": [ele for ele in all_campaign_dict[campaign_id]['all_supplier_ids'] if ele not in all_campaign_dict[campaign_id][ 'contact_number_filled_suppliers']],
+                    "flat_count_details_filled_suppliers": all_campaign_dict[campaign_id]['flat_count_filled_suppliers'],
                     "flat_count_details_filled": all_campaign_dict[campaign_id]['flat_count_filled'],
                     "flat_count_details_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['flat_count_filled'],
+                    "flat_count_details_not_filled_suppliers": [ele for ele in all_campaign_dict[campaign_id]['all_supplier_ids'] if ele not in all_campaign_dict[campaign_id]['flat_count_filled_suppliers']],
                     "payment_details_filled": all_campaign_dict[campaign_id]['total_payment_details'],
                     "payment_details_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['total_payment_details']
                 })
