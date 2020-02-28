@@ -95,11 +95,9 @@ def writeExcel(return_list):
 	subject = "MIS Report of CAMPAIGNS"
 	to_clients =["prashantgupta888@gmail.com", "kwasi0883@gmail.com"]
 
-	cc_machadalo = ["shailesh.singh@machadalo.com", "sathya.sharma@machadalo.com", "divya.moses@machadalo.com", 
-		            "shyamlee.khanna@machadalo.com","srishti.dhamija@machadalo.com", "nikita.walicha@machadalo.com", 
-		            "madhu.atri@machadalo.com", "tejas.pawar@machadalo.com", "jaya.murugan@machadalo.com", "muvaz.khan@machadalo.com",
-		            "lokesh.kumar@machadalo.com", "vyoma.desai@machadalo.com", "lokesh.kumar@machadalo.com",
-		            "anupam@machadalo.com", "Anmol.prabhu@machadalo.com", "abhishek.chandel@machadalo.com",
+	cc_machadalo = ["shailesh.singh@machadalo.com",
+		            "shyamlee.khanna@machadalo.com","srishti.dhamija@machadalo.com","tejas.pawar@machadalo.com",
+		            "lokesh.kumar@machadalo.com", "anupam@machadalo.com", "anmol.prabhu@machadalo.com", "abhishek.chandel@machadalo.com",
 		            "momi.borah@machadalo.com" 
 		            ]
 
