@@ -1503,7 +1503,8 @@ tableHeaderData = {
         "receipt" : "Receipt",
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
-        "delete_action" : "Delete Action"
+        "delete_action" : "Delete Action",
+        "brand":"brand"
     },
     'CP' : {
         "srNo" : "Sr No",
@@ -1537,7 +1538,8 @@ tableHeaderData = {
         "receipt" : "Receipt",
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
-        "delete_action" : "Delete Action"
+        "delete_action" : "Delete Action",
+        "brand":"brand"
     },
     'GY' : {
         "srNo" : "Sr No",
@@ -1572,7 +1574,8 @@ tableHeaderData = {
         "receipt" : "Receipt",
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
-        "delete_action" : "Delete Action"
+        "delete_action" : "Delete Action",
+        "brand":"brand"
     },
     'SA' : {
         "srNo" : "Sr No",
@@ -1607,7 +1610,8 @@ tableHeaderData = {
         "receipt" : "Receipt",
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
-        "delete_action" : "Delete Action"
+        "delete_action" : "Delete Action",
+        "brand":"brand"
     },
     'BS' : {
         "srNo" : "Sr No",
@@ -1642,7 +1646,8 @@ tableHeaderData = {
         "receipt" : "Receipt",
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
-        "delete_action" : "Delete Action"
+        "delete_action" : "Delete Action",
+        "brand":"brand"
     },
     'RE' : {
         "srNo" : "Sr No",
@@ -1677,7 +1682,8 @@ tableHeaderData = {
         "receipt" : "Receipt",
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
-        "delete_action" : "Delete Action"
+        "delete_action" : "Delete Action",
+        "brand":"brand"
     }, 
     'BD' : {
         "srNo" : "Sr No",
@@ -1712,7 +1718,8 @@ tableHeaderData = {
         "receipt" : "Receipt",
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
-        "delete_action" : "Delete Action"
+        "delete_action" : "Delete Action",
+        "brand":"brand"
     },
     'EI' : {
         "srNo" : "Sr No",
@@ -1746,6 +1753,7 @@ tableHeaderData = {
         "receipt" : "Receipt",
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
-        "delete_action" : "Delete Action"
+        "delete_action" : "Delete Action",
+        "brand":"brand"
     }
 }

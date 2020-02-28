@@ -1448,12 +1448,12 @@ class HordingViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             hording_instance = SupplierHording.objects.get(pk=pk)
-            serializer = RetailShopSerializer(instance=hording_instance)
+            serializer = SupplierHordingSerializer(instance=hording_instance)
 
             result = serializer.data
 
-            retail_shop_instance = ContactDetails.objects.filter(object_id=pk)
-            contact_serializer = ContactDetailsSerializer(retail_shop_instance, many=True)
+            contact_instance = ContactDetails.objects.filter(object_id=pk)
+            contact_serializer = ContactDetailsSerializer(contact_instance, many=True)
                 
             result['contacData'] = contact_serializer.data
 
