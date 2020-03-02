@@ -4006,7 +4006,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
             filter_query &= Q(booking_status=booking_status_code)
 
         if phase_id:
-            filter_query &= Q(phase=phase_id)
+            filter_query &= Q(phase_no=phase_id)
 
         if assigned:
             assigned_suppliers_list = SupplierAssignment.objects.filter(campaign=proposal_id,assigned_to=assigned). \
