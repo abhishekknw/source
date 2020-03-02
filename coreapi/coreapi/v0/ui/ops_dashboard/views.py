@@ -437,29 +437,19 @@ class GetSupplierDetail(APIView):
                 del all_supplier_dict['Visit Booked']
             if 'Visit Required' in all_supplier_dict:
                 del all_supplier_dict['Visit Required']
+            if 'Meeting Fixed' in all_supplier_dict:
+                del all_supplier_dict['Meeting Fixed']
             # Get supplier count
-            for campaign_status, supplier in all_supplier_dict.items():
+            for booking_status, supplier in all_supplier_dict.items():
                 supplier_count = len(supplier['supplier_ids'])
-                all_supplier_dict[campaign_status]['supplier_count'] = supplier_count
+                all_supplier_dict[booking_status]['supplier_count'] = supplier_count
             # Get hashtag images
             permission_box_count = HashTagImages.objects.filter(object_id__in=completed_supplier_ids, hashtag__in=['permission_box', 'Permission Box', 'PERMISSION BOX', 'permission box']).values_list('object_id', flat=True).distinct().count()
             receipt_count = HashTagImages.objects.filter(object_id__in=completed_supplier_ids, hashtag__in=['receipt', 'Receipt', 'RECEIPT']).values_list('object_id',flat=True).distinct().count()
             all_supplier_dict['completed']['permission_box_count'] = permission_box_count
             all_supplier_dict['completed']['receipt_count'] = receipt_count
             # Get Comments
-            all_supplier_dict = getEachCampaignComments(campaign_id, campaign_name, {
-                'CM': completed_supplier_ids,
-                'DP': decision_pending_supplier_ids,
-                'NB': not_booked_supplier_ids,
-                'UN': unknown_supplier_ids,
-                'TB': tentative_booked_supplier_ids,
-                'BK': booked_supplier_ids,
-                'SR': rejected_supplier_ids,
-                'NI': not_initiated_supplier_ids,
-                'NE': new_entity_supplier_ids,
-                'RE': recce_supplier_ids
-                }, all_supplier_dict
-            )
+            all_supplier_dict = getEachCampaignComments(campaign_id, campaign_name, all_supplier_dict)
             return Response(data={"status": True, "data": all_supplier_dict}, status=status.HTTP_200_OK)
         except Exception as e:
             logger.exception(e)
