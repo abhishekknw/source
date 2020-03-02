@@ -1504,7 +1504,7 @@ tableHeaderData = {
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
         "delete_action" : "Delete Action",
-        "brand":"brand"
+        "brand":"Brand"
     },
     'CP' : {
         "srNo" : "Sr No",
@@ -1539,7 +1539,7 @@ tableHeaderData = {
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
         "delete_action" : "Delete Action",
-        "brand":"brand"
+        "brand":"Brand"
     },
     'GY' : {
         "srNo" : "Sr No",
@@ -1575,7 +1575,7 @@ tableHeaderData = {
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
         "delete_action" : "Delete Action",
-        "brand":"brand"
+        "brand":"Brand"
     },
     'SA' : {
         "srNo" : "Sr No",
@@ -1611,7 +1611,7 @@ tableHeaderData = {
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
         "delete_action" : "Delete Action",
-        "brand":"brand"
+        "brand":"Brand"
     },
     'BS' : {
         "srNo" : "Sr No",
@@ -1647,7 +1647,7 @@ tableHeaderData = {
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
         "delete_action" : "Delete Action",
-        "brand":"brand"
+        "brand":"Brand"
     },
     'RE' : {
         "srNo" : "Sr No",
@@ -1683,7 +1683,7 @@ tableHeaderData = {
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
         "delete_action" : "Delete Action",
-        "brand":"brand"
+        "brand":"Brand"
     }, 
     'BD' : {
         "srNo" : "Sr No",
@@ -1719,7 +1719,7 @@ tableHeaderData = {
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
         "delete_action" : "Delete Action",
-        "brand":"brand"
+        "brand":"Brand"
     },
     'EI' : {
         "srNo" : "Sr No",
@@ -1754,6 +1754,6 @@ tableHeaderData = {
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
         "delete_action" : "Delete Action",
-        "brand":"brand"
+        "brand":"Brand"
     }
 }
