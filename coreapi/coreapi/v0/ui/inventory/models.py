@@ -418,9 +418,9 @@ class InventoryLocation(models.Model):
 
 class AdInventoryType(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
-    adinventory_name = models.CharField(db_column='ADINVENTORY_NAME', max_length=20,
+    adinventory_name = models.CharField(db_column='ADINVENTORY_NAME', max_length=255,
                                         choices=AD_INVENTORY_CHOICES, default='POSTER')
-    adinventory_type = models.CharField(db_column='ADINVENTORY_TYPE', max_length=20)  # Field name made lowercase.
+    adinventory_type = models.CharField(db_column='ADINVENTORY_TYPE', max_length=255)  # Field name made lowercase.
 
     def __str__(self):
         return self.adinventory_name
