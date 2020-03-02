@@ -12,6 +12,7 @@ from requests.exceptions import ConnectionError
 from celery.result import GroupResult
 import shutil
 import hashlib
+import dateutil.parser
 import os
 import pytz
 import v0.permissions as v0_permissions
@@ -601,8 +602,9 @@ class CreateDummyProposal(APIView):
                         if len(shortlisted_spaces) == 0:
                             not_present_in_shortlisted_societies.append(society_name)
                             continue
-
-                        lead_dict = {"data": [], "is_hot": False, "supplier_id": found_supplier_id,
+                        current_date = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f%z')
+                        current_date = dateutil.parser.parse(current_date)
+                        lead_dict = {"data": [], "is_hot": False, "created_at": current_date, "supplier_id": found_supplier_id,
                                      "campaign_id": campaign_id, "leads_form_id": int(leads_form_id), "entry_id": entry_id}
                         for item_id in range(0, fields):
                             curr_item_id = item_id + 1

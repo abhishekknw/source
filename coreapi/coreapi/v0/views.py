@@ -1423,8 +1423,7 @@ class UserViewSet(viewsets.ViewSet):
                 user.save()
                 return ui_utils.handle_response(class_name, data='password changed successfully', success=True)
             else:
-                return ui_utils.handle_response(class_name, data='please make sure to have 1 capital, 1 special '
-                                                                 'character, and total 8 characters', success=False)
+                return ui_utils.handle_response(class_name, data='please make sure to have 1 capital and total 8 characters', success=False)
         except ObjectDoesNotExist as e:
             return ui_utils.handle_response(class_name, data=pk, exception_object=e)
         except Exception as e:

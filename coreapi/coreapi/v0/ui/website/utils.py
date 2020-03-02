@@ -4006,7 +4006,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
             filter_query &= Q(booking_status=booking_status_code)
 
         if phase_id:
-            filter_query &= Q(phase=phase_id)
+            filter_query &= Q(phase_no=phase_id)
 
         if assigned:
             assigned_suppliers_list = SupplierAssignment.objects.filter(campaign=proposal_id,assigned_to=assigned). \
@@ -6758,7 +6758,10 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
                         Q(object_id=supplier_id))
                     if not inventory_objects or str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL' or str(
                             filter_code['id']) == 'GA':
-                        inventory_objects = create_inventory_ids(supplier_objects_mapping[supplier_id], filter_code)
+                        try:
+                            inventory_objects = create_inventory_ids(supplier_objects_mapping[supplier_id], filter_code)
+                        except KeyError as e:
+                            pass
                 response = make_final_list(filter_code, inventory_objects, shortlisted_suppliers_mapping[supplier_id])
                 if not response.data['status']:
                     return response

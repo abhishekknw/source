@@ -470,7 +470,7 @@ class SupplierTypeCorporate(BasicSupplierDetails):
 
     rating = models.CharField(max_length=255, null=True, blank=True)
 
-    feedback = models.CharField(max_length=255, null=True, blank=True)
+    feedback = models.CharField(max_length=250, null=True, blank=True)
 
 
     def get_buildings(self):
