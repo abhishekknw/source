@@ -53,7 +53,8 @@ INSTALLED_APPS = [
     'v0',
     'drf_generators',
     'rest_framework_swagger',
-    'djcelery'
+    'djcelery',
+    'reset_migrations',
 ]
 
 
