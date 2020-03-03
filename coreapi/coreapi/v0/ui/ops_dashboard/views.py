@@ -439,15 +439,25 @@ class GetSupplierDetail(APIView):
                 del all_supplier_dict['Visit Required']
             if 'Meeting Fixed' in all_supplier_dict:
                 del all_supplier_dict['Meeting Fixed']
+            if 'Call Required' in all_supplier_dict:
+                del all_supplier_dict['Call Required']
             # Get supplier count
             for booking_status, supplier in all_supplier_dict.items():
                 supplier_count = len(supplier['supplier_ids'])
                 all_supplier_dict[booking_status]['supplier_count'] = supplier_count
             # Get hashtag images
-            permission_box_count = HashTagImages.objects.filter(object_id__in=completed_supplier_ids, hashtag__in=['permission_box', 'Permission Box', 'PERMISSION BOX', 'permission box']).values_list('object_id', flat=True).distinct().count()
-            receipt_count = HashTagImages.objects.filter(object_id__in=completed_supplier_ids, hashtag__in=['receipt', 'Receipt', 'RECEIPT']).values_list('object_id',flat=True).distinct().count()
-            all_supplier_dict['completed']['permission_box_count'] = permission_box_count
-            all_supplier_dict['completed']['receipt_count'] = receipt_count
+            permission_box_filled_suppliers = HashTagImages.objects.filter(object_id__in=completed_supplier_ids, hashtag__in=['permission_box', 'Permission Box', 'PERMISSION BOX', 'permission box']).values_list('object_id', flat=True).distinct()
+            permission_box_not_filled_suppliers = list(set(completed_supplier_ids) - set(permission_box_filled_suppliers))
+            receipt_filled_suppliers = HashTagImages.objects.filter(object_id__in=completed_supplier_ids, hashtag__in=['receipt', 'Receipt', 'RECEIPT']).values_list('object_id',flat=True).distinct()
+            receipt_not_filled_suppliers = list(set(completed_supplier_ids) - set(receipt_filled_suppliers))
+            all_supplier_dict['completed']['permission_box_filled_count'] = len(permission_box_filled_suppliers)
+            all_supplier_dict['completed']['permission_box_not_filled_count'] = len(permission_box_not_filled_suppliers)
+            all_supplier_dict['completed']['permission_box_filled_suppliers'] = permission_box_filled_suppliers
+            all_supplier_dict['completed']['permission_box_not_filled_suppliers'] = permission_box_not_filled_suppliers
+            all_supplier_dict['completed']['receipt_filled_suppliers'] = receipt_filled_suppliers
+            all_supplier_dict['completed']['receipt_not_filled_suppliers'] = receipt_not_filled_suppliers
+            all_supplier_dict['completed']['receipt_filled_count'] = len(receipt_filled_suppliers)
+            all_supplier_dict['completed']['receipt_not_filled_count'] = len(receipt_not_filled_suppliers)
             # Get Comments
             all_supplier_dict = getEachCampaignComments(campaign_id, campaign_name, all_supplier_dict)
             return Response(data={"status": True, "data": all_supplier_dict}, status=status.HTTP_200_OK)
