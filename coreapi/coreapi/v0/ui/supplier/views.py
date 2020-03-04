@@ -3551,7 +3551,7 @@ class MultiSupplierDetails(APIView):
 
             suppliers = model.objects.filter(pk__in=supplier_ids).values('society_name', 'society_locality',
                                                                          'society_city', 'society_subarea', 'society_state',
-                                                                         'society_latitude','society_longitude',
+                                                                         'society_latitude','society_longitude','society_address1',
                                                                          'supplier_id')
             # Get contact name & number
             contact_details = ContactDetails.objects.filter(object_id__in=supplier_ids).values('object_id', 'name', 'mobile')
