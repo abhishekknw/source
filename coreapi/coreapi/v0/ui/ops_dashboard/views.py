@@ -15,7 +15,7 @@ from v0.ui.campaign.models import CampaignAssignment, CampaignComments
 from v0.constants import (campaign_status, proposal_on_hold, booking_code_to_status,
                           proposal_not_converted_to_campaign, booking_substatus_code_to_status,
                           proposal_finalized)
-from .utils import getEachCampaignComments, getSocietyDetails
+from .utils import getEachCampaignComments
 
 class GetSocietyAnalytics(APIView):
     @staticmethod
@@ -303,7 +303,13 @@ class GetCampaignWiseAnalytics(APIView):
                     this_campaign_status = 'not_initiated'
                 else:
                     this_campaign_status = "on_hold"
-
+                total_suppliers = len(all_campaign_dict[campaign_id]['all_supplier_ids'])
+                flat_count_filled = all_campaign_dict[campaign_id]['flat_count_filled']
+                contact_name_filled = all_campaign_dict[campaign_id]['contact_name_filled']
+                contact_name_not_filled = len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_name_filled']
+                contact_number_filled = all_campaign_dict[campaign_id]['contact_number_filled']
+                contact_number_not_filled = len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_number_filled']
+                flat_count_not_filled = len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['flat_count_filled']
                 all_campaign_summary.append({
                     "campaign_id": campaign_id,
                     "name": all_campaign_dict[campaign_id]['name'],
@@ -311,22 +317,28 @@ class GetCampaignWiseAnalytics(APIView):
                     "start_date": all_campaign_dict[campaign_id]['start_date'],
                     "end_date": all_campaign_dict[campaign_id]['end_date'],
                     "phase_complete": len(all_campaign_dict[campaign_id]['all_phase_ids']),
-                    "supplier_count": len(all_campaign_dict[campaign_id]['all_supplier_ids']),
+                    "supplier_count": total_suppliers,
                     "flat_count": all_campaign_dict[campaign_id]['total_flat_counts'],
                     "campaign_status": this_campaign_status,
                     "contact_name_filled_total": all_campaign_dict[campaign_id]['contact_name_filled_total'],
-                    "contact_name_filled": all_campaign_dict[campaign_id]['contact_name_filled'],
+                    "contact_name_filled": contact_name_filled,
+                    "contact_name_filled_percentage": round((contact_name_filled/total_suppliers)*100, 2),
                     "contact_name_filled_suppliers": all_campaign_dict[campaign_id]['contact_name_filled_suppliers'],
                     "contact_name_not_filled_suppliers": [ele for ele in all_campaign_dict[campaign_id]['all_supplier_ids'] if ele not in all_campaign_dict[campaign_id]['contact_name_filled_suppliers']],
-                    "contact_name_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_name_filled'],
+                    "contact_name_not_filled": contact_name_not_filled,
+                    "contact_name_not_filled_percentage": round((contact_name_not_filled/total_suppliers)*100, 2),
                     "contact_number_filled_total": all_campaign_dict[campaign_id]['contact_number_filled_total'],
                     "contact_number_filled": all_campaign_dict[campaign_id]['contact_number_filled'],
+                    "contact_number_filled_percentage": round((contact_number_filled/total_suppliers) * 100, 2),
                     "contact_number_filled_suppliers": all_campaign_dict[campaign_id]['contact_number_filled_suppliers'],
-                    "contact_number_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_number_filled'],
+                    "contact_number_not_filled": contact_number_not_filled,
+                    "contact_number_not_filled_percentage": round((contact_number_not_filled/total_suppliers)*100, 2),
                     "contact_number_not_filled_suppliers": [ele for ele in all_campaign_dict[campaign_id]['all_supplier_ids'] if ele not in all_campaign_dict[campaign_id][ 'contact_number_filled_suppliers']],
                     "flat_count_details_filled_suppliers": all_campaign_dict[campaign_id]['flat_count_filled_suppliers'],
                     "flat_count_details_filled": all_campaign_dict[campaign_id]['flat_count_filled'],
-                    "flat_count_details_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['flat_count_filled'],
+                    "flat_count_details_filled_percentage": round((flat_count_filled/total_suppliers) * 100, 2),
+                    "flat_count_details_not_filled": flat_count_not_filled,
+                    "flat_count_details_not_filled_percentage": round((flat_count_not_filled/total_suppliers)*100, 2),
                     "flat_count_details_not_filled_suppliers": [ele for ele in all_campaign_dict[campaign_id]['all_supplier_ids'] if ele not in all_campaign_dict[campaign_id]['flat_count_filled_suppliers']],
                     "payment_details_filled": all_campaign_dict[campaign_id]['total_payment_details'],
                     "payment_details_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['total_payment_details']
@@ -353,8 +365,7 @@ class GetSupplierDetail(APIView):
 
             all_supplier_dict = {
                 'completed': {
-                    'supplier_ids': [],
-                    'supplier': []
+                    'supplier_ids': []
                 }
             }
             all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
@@ -395,16 +406,13 @@ class GetSupplierDetail(APIView):
                     booking_category = 'completed'
                     completed_supplier_ids.append(shortlisted_supplier['object_id'])
                     all_supplier_dict[booking_category]['supplier_ids'].append(shortlisted_supplier['object_id'])
-                    all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_category, supplier_detail, shortlisted_supplier)
                 if booking_status_code == 'BK':
                     booked_supplier_ids.append(shortlisted_supplier['object_id'])
                     if booking_status not in all_supplier_dict.keys():
                         all_supplier_dict[booking_status] = {
-                            'supplier_ids': [],
-                            'supplier': []
+                            'supplier_ids': []
                         }
                     all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
-                    all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_status, supplier_detail, shortlisted_supplier)
                 else:
                     if booking_status in all_supplier_dict.keys():
                         if booking_status_code == 'DP':
@@ -425,11 +433,9 @@ class GetSupplierDetail(APIView):
                             unknown_supplier_ids.append(shortlisted_supplier['object_id'])
                     else:
                         all_supplier_dict[booking_status] = {
-                            'supplier_ids': [],
-                            'supplier': []
+                            'supplier_ids': []
                         }
                     all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
-                    all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_status, supplier_detail, shortlisted_supplier)
             # Remove unwanted booking status
             if 'Phone Booked' in all_supplier_dict:
                 del all_supplier_dict['Phone Booked']
@@ -458,6 +464,15 @@ class GetSupplierDetail(APIView):
             all_supplier_dict['completed']['receipt_not_filled_suppliers'] = receipt_not_filled_suppliers
             all_supplier_dict['completed']['receipt_filled_count'] = len(receipt_filled_suppliers)
             all_supplier_dict['completed']['receipt_not_filled_count'] = len(receipt_not_filled_suppliers)
+            if len(completed_supplier_ids) > 0:
+                all_supplier_dict['completed']['permission_box_filled_percentage'] = round(
+                    (len(permission_box_filled_suppliers) / len(completed_supplier_ids)) * 100, 2)
+                all_supplier_dict['completed']['receipt_filled_percentage'] = round(
+                    (len(receipt_filled_suppliers) / len(completed_supplier_ids)) * 100, 2)
+                all_supplier_dict['completed']['receipt_not_filled_percentage'] = round(
+                    (len(receipt_not_filled_suppliers) / len(completed_supplier_ids)) * 100, 2)
+                all_supplier_dict['completed']['permission_box_not_filled_percentage'] = round(
+                    (len(permission_box_not_filled_suppliers) / len(completed_supplier_ids)) * 100, 2)
             # Get Comments
             all_supplier_dict = getEachCampaignComments(campaign_id, campaign_name, all_supplier_dict)
             return Response(data={"status": True, "data": all_supplier_dict}, status=status.HTTP_200_OK)
