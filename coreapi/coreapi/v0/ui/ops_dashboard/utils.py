@@ -40,22 +40,31 @@ def getEachCampaignComments(campaign_id, campaign_name, supplier_dict):
             supplier_dict[key]['status'] = key
             supplier_dict[key]['campaign_id'] = campaign_id
             supplier_dict[key]['campaign_name'] = campaign_name
+            if total_suppliers > 0:
+                supplier_dict[key]['internal_comments_filled_percentage'] = round(
+                    (internal_comments_filled_count / total_suppliers) * 100, 2)
+                supplier_dict[key]['internal_comments_not_filled_percentage'] = round(
+                    ((total_suppliers - internal_comments_filled_count) / total_suppliers) * 100, 2)
+                supplier_dict[key]['external_comments_filled_percentage'] = round(
+                    (external_comments_filled_count / total_suppliers) * 100, 2)
+                supplier_dict[key]['external_comments_not_filled_percentage'] = round(
+                    ((total_suppliers - external_comments_filled_count) / total_suppliers) * 100, 2)
     return supplier_dict
 
 
 def getSocietyDetails(all_supplier_dict, booking_status, supplier_detail, shortlisted_supplier):
     all_supplier_dict[booking_status]['supplier'].append({
-        'name': supplier_detail['society_name'],
-        'area': supplier_detail['society_locality'],
-        'subarea': supplier_detail['society_subarea'],
-        'city': supplier_detail['society_city'],
-        'society_quality': supplier_detail['society_type_quality'],
-        'supplier_id': shortlisted_supplier['object_id'],
-        'payment_method': shortlisted_supplier['payment_method'],
-        'is_completed': shortlisted_supplier['is_completed'],
-        'society_latitude': supplier_detail['society_latitude'],
-        'society_longitude': supplier_detail['society_longitude'],
-        'contact_number': supplier_detail['contact_number'],
-        'contact_name': supplier_detail['contact_name']
+        'name': supplier_detail['society_name'] if supplier_detail else '',
+        'area': supplier_detail['society_locality'] if supplier_detail else '',
+        'subarea': supplier_detail['society_subarea'] if supplier_detail else '',
+        'city': supplier_detail['society_city'] if supplier_detail else '',
+        'society_quality': supplier_detail['society_type_quality'] if supplier_detail else '',
+        'supplier_id': shortlisted_supplier['object_id'] if shortlisted_supplier else '',
+        'payment_method': shortlisted_supplier['payment_method'] if shortlisted_supplier else '',
+        'is_completed': shortlisted_supplier['is_completed'] if shortlisted_supplier else '',
+        'society_latitude': supplier_detail['society_latitude'] if supplier_detail else '',
+        'society_longitude': supplier_detail['society_longitude'] if supplier_detail else '',
+        'contact_number': supplier_detail['contact_number'] if supplier_detail else '',
+        'contact_name': supplier_detail['contact_name'] if supplier_detail else  ''
     })
     return all_supplier_dict
