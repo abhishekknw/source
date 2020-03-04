@@ -15,7 +15,7 @@ from v0.ui.campaign.models import CampaignAssignment, CampaignComments
 from v0.constants import (campaign_status, proposal_on_hold, booking_code_to_status,
                           proposal_not_converted_to_campaign, booking_substatus_code_to_status,
                           proposal_finalized)
-from .utils import getEachCampaignComments, getSocietyDetails
+from .utils import getEachCampaignComments
 
 class GetSocietyAnalytics(APIView):
     @staticmethod
@@ -365,8 +365,7 @@ class GetSupplierDetail(APIView):
 
             all_supplier_dict = {
                 'completed': {
-                    'supplier_ids': [],
-                    'supplier': []
+                    'supplier_ids': []
                 }
             }
             all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
@@ -407,16 +406,13 @@ class GetSupplierDetail(APIView):
                     booking_category = 'completed'
                     completed_supplier_ids.append(shortlisted_supplier['object_id'])
                     all_supplier_dict[booking_category]['supplier_ids'].append(shortlisted_supplier['object_id'])
-                    all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_category, supplier_detail, shortlisted_supplier)
                 if booking_status_code == 'BK':
                     booked_supplier_ids.append(shortlisted_supplier['object_id'])
                     if booking_status not in all_supplier_dict.keys():
                         all_supplier_dict[booking_status] = {
-                            'supplier_ids': [],
-                            'supplier': []
+                            'supplier_ids': []
                         }
                     all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
-                    all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_status, supplier_detail, shortlisted_supplier)
                 else:
                     if booking_status in all_supplier_dict.keys():
                         if booking_status_code == 'DP':
@@ -437,11 +433,9 @@ class GetSupplierDetail(APIView):
                             unknown_supplier_ids.append(shortlisted_supplier['object_id'])
                     else:
                         all_supplier_dict[booking_status] = {
-                            'supplier_ids': [],
-                            'supplier': []
+                            'supplier_ids': []
                         }
                     all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
-                    all_supplier_dict = getSocietyDetails(all_supplier_dict, booking_status, supplier_detail, shortlisted_supplier)
             # Remove unwanted booking status
             if 'Phone Booked' in all_supplier_dict:
                 del all_supplier_dict['Phone Booked']

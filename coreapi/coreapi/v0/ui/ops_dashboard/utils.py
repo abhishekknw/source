@@ -65,6 +65,6 @@ def getSocietyDetails(all_supplier_dict, booking_status, supplier_detail, shortl
         'society_latitude': supplier_detail['society_latitude'] if supplier_detail else '',
         'society_longitude': supplier_detail['society_longitude'] if supplier_detail else '',
         'contact_number': supplier_detail['contact_number'] if supplier_detail else '',
-        'contact_name': supplier_detail['contact_name'] if supplier_detail else  ''
+        'contact_name': supplier_detail['contact_name'] if supplier_detail else ''
     })
     return all_supplier_dict
