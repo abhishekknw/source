@@ -994,14 +994,14 @@ booking_substatus_code_to_status = {
     'DPNA': 'Not Available',
     'DPP': 'Postponed',
     'DPDOO': 'Specific Occasion Only',
-    'DPOS': 'Others(Specify)',
+    'DPOS': 'DP Others',
     'RLO': 'Less occupancy',
     'RLC': 'Less Children',
     'RUB': 'Under Builder',
     'RVE': 'Very Expensive',
     'RCR': 'Client Rejected',
     'RRS': 'Rejected by Society',
-    'ROS': 'Others(Specify)',
+    'ROS': 'Rejected Others',
     'PB': 'Phone Booking',
     'VB': 'Visit Booking',
     'NVW': 'Wikimapia',
@@ -1009,7 +1009,7 @@ booking_substatus_code_to_status = {
     'NVA': '99Acres',
     'NVMB': 'Magic Brick',
     'NVFT': 'First Time Assigned',
-    'NVOS' : 'Others(Specify)'
+    'NVOS' : 'NE Others'
 }
 
 # different campaign states
