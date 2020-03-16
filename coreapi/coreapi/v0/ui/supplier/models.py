@@ -515,7 +515,8 @@ class SupplierAmenitiesMap(BaseModel):
     object_id = models.CharField(max_length=1000)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     amenity = models.ForeignKey('Amenity', null=True, blank=True, on_delete=models.CASCADE)
-    comments = models.CharField(max_length=255, null=True, blank=True)
+    comments = models.TextField(blank=True, null=True)
+    
 
     class Meta:
         db_table = 'supplier_amenities_map'
