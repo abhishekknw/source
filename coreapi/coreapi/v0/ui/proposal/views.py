@@ -40,7 +40,7 @@ from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMa
                                         SpaceMappingSerializer, ProposalCenterMappingSpaceSerializer,
                                         ProposalCenterMappingVersionSpaceSerializer, SpaceMappingVersionSerializer,
                                         ProposalSocietySerializer, ProposalCorporateSerializer, HashtagImagesSerializer,
-                                        SupplierAssignmentSerializer)
+                                        SupplierAssignmentSerializer, ShortlistedSpacesVersionSerializer)
 from v0.ui.inventory.models import (SupplierTypeSociety, AdInventoryType, InventorySummary)
 from .models import (ProposalInfo, ProposalCenterMapping, ProposalCenterMappingVersion, SpaceMappingVersion,
                     SpaceMapping, ShortlistedSpacesVersion, ShortlistedSpaces, SupplierPhase)
@@ -67,6 +67,7 @@ from v0.ui.campaign.models import CampaignComments
 from v0.ui.common.models import mongo_client, mongo_test
 
 from v0.ui.campaign.models import CampaignAssignment
+
 
 
 def convert_date_format(date):
@@ -3266,6 +3267,23 @@ class SupplierAssignmentViewSet(viewsets.ViewSet):
             result_obj[supplier_obj.supplier_id]["supplier_id"] = supplier_obj.supplier_id
         result_list = [result_obj[supplier] for supplier in result_obj]
         return ui_utils.handle_response(class_name, data=result_list, success=True)
+
+
+class BrandAssignmentViewSet(viewsets.ViewSet):
+
+    def create(self, request):
+        class_name = self.__class__.__name__
+        try:
+
+            if request.data["id"]:
+                item = ShortlistedSpaces.objects.filter(id=request.data["id"]).first()
+                if item:
+                    item.brand_organisation_id = request.data["brand_organisation_id"]
+                    item.save()
+               
+            return ui_utils.handle_response(class_name, data={}, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class ConvertProposalToCampaign(APIView):

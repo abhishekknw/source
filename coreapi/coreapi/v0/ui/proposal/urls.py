@@ -7,7 +7,7 @@ from .views import (CreateInitialProposalBulkBasic, HashtagImagesViewSet, Initia
                    FinalProposalAPIView, CreateProposalAPIView, ProposalImagesPath, convertDirectProposalToCampaign,
                    CampaignToProposal, SupplierPhaseViewSet, getSupplierListByStatus, ImportSheetInExistingCampaign,
                    GetOngoingSuppliersOfCampaign, GetExtraLead, HashtagImagesNewViewSet, SupplierAssignmentViewSet,
-                    ConvertProposalToCampaign, CreateDummyProposal)
+                   BrandAssignmentViewSet, ConvertProposalToCampaign, CreateDummyProposal)
 
 urlpatterns = [
     url(r'^create-dummy-proposal/$', CreateDummyProposal.as_view()),
@@ -44,5 +44,7 @@ router.include_format_suffixes = False
 router.register(r'^hashtag-images', HashtagImagesViewSet, base_name='hashtag-images')
 router.register(r'^proposal', ProposalViewSet, base_name='Proposal')
 router.register(r'^supplier-assignment', SupplierAssignmentViewSet, base_name='supplier-assignment')
+
+router.register(r'^brand-assignment', BrandAssignmentViewSet, base_name='supplier-assignment')
 
 urlpatterns += router.urls

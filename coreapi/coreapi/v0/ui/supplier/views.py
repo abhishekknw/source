@@ -3367,6 +3367,8 @@ class SupplierSearch(APIView):
             
             search_query = Q()
 
+            search_query &= Q(supplier_code__isnull=False)
+
             if search_txt :
                 for search_field in v0_constants.search_fields[supplier_type_code]:
                     if search_query:
@@ -3422,9 +3424,6 @@ class SupplierSearch(APIView):
             if len(all_shortlisted_spaces) > 0:
                 suppliers = suppliers.exclude(supplier_id__in=all_shortlisted_spaces)
                
-
-            print('--------------------')
-            print(all_shortlisted_spaces)
 
             
             serializer_class = ui_utils.get_serializer(supplier_type_code)
