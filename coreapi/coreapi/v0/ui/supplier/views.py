@@ -3554,13 +3554,14 @@ class MultiSupplierDetails(APIView):
                                                                          'society_latitude','society_longitude','society_address1',
                                                                          'supplier_id')
             # Get contact name & number
-            contact_details = ContactDetails.objects.filter(object_id__in=supplier_ids).values('object_id', 'name', 'mobile')
+            contact_details = ContactDetails.objects.filter(object_id__in=supplier_ids).values('object_id', 'name', 'mobile', 'contact_type')
             if contact_details:
                 for supplier in suppliers:
                     for contact_detail in contact_details:
                         if contact_detail['object_id'] == supplier['supplier_id']:
                             supplier['contact_name'] = contact_detail['name']
                             supplier['contact_number'] = contact_detail['mobile']
+                            supplier['contact_type'] = contact_detail['contact_type']
             return Response(data={'status': True, 'data': suppliers}, status=status.HTTP_200_OK)
 
         except Exception as e:
