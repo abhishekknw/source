@@ -268,15 +268,15 @@ class GetCampaignWiseAnalytics(APIView):
                         all_campaign_dict[shortlisted_supplier['proposal_id']]['all_phase_ids'].append(
                             shortlisted_supplier['phase_no_id'])
                 try:
-                    contact_details = ContactDetails.objects.filter(object_id=shortlisted_supplier['object_id']).values()
+                    contact_details = ContactDetails.objects.filter(object_id=shortlisted_supplier['object_id']).values('name', 'mobile', 'object_id')
                 except ContactDetails.DoesNotExist:
                     contact_details = None
                 if contact_details:
                     for contact_detail in contact_details:
-                        if contact_detail['name']:
+                        if contact_detail['name'] and contact_detail['name'] is not None:
                             all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_name_filled_total'] += 1
                             all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_name_filled_suppliers'].append(contact_detail['object_id'])
-                        if contact_detail['mobile']:
+                        if contact_detail['mobile'] and contact_detail['mobile'] is not None:
                             all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_number_filled_total'] += 1
                             all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_number_filled_suppliers'].append(contact_detail['object_id'])
                     all_campaign_dict[shortlisted_supplier['proposal_id']]['contact_name_filled'] += 1 if contact_details[0]['name'] else 0

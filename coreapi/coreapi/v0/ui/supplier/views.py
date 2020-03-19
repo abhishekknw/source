@@ -3536,6 +3536,10 @@ class MultiSupplierDetails(APIView):
         try:
             supplier_ids = request.data.get('supplier_ids', None)
             supplier_type_code = request.data.get('supplier_type_code', None)
+            is_multiple_contact_number = request.data.get('is_multiple_contact_number', False)
+            is_multiple_contact_name = request.data.get('is_multiple_contact_name', False)
+            is_contact_name = request.data.get('is_contact_name', False)
+            is_contact_number = request.data.get('is_contact_number', False)
 
             if not supplier_ids or not supplier_type_code:
                 return Response(data={'status': False, 'error': 'Missing supplier_ids or supplier_type_code'},
@@ -3555,15 +3559,47 @@ class MultiSupplierDetails(APIView):
                                                                          'supplier_id')
             # Get contact name & number
             contact_details = ContactDetails.objects.filter(object_id__in=supplier_ids).values('object_id', 'name', 'mobile', 'contact_type')
-            if contact_details:
-                for supplier in suppliers:
+            multiple_supplier_details_with_contact = []
+            supplier_list = []
+            for supplier in suppliers:
+                index = 0
+                if contact_details:
                     for contact_detail in contact_details:
+                        # For duplicate contact numbers
+                        if not is_multiple_contact_name and is_multiple_contact_number and contact_detail['mobile'] is None:
+                            continue
+                        if not is_multiple_contact_number and is_multiple_contact_name and contact_detail['name'] is None:
+                            continue
                         if contact_detail['object_id'] == supplier['supplier_id']:
                             supplier['contact_name'] = contact_detail['name']
                             supplier['contact_number'] = contact_detail['mobile']
                             supplier['contact_type'] = contact_detail['contact_type']
-            return Response(data={'status': True, 'data': suppliers}, status=status.HTTP_200_OK)
-
+                            multiple_supplier_details_with_contact.append({
+                                'id': index,
+                                'society_name': supplier['society_name'],
+                                'society_locality': supplier['society_locality'],
+                                'society_city': supplier['society_city'],
+                                'society_subarea': supplier['society_subarea'],
+                                'society_latitude': supplier['society_latitude'],
+                                'society_longitude': supplier['society_longitude'],
+                                'supplier_id': supplier['supplier_id'],
+                                'society_state': supplier['society_state'],
+                                'society_address1': supplier['society_address1'],
+                                'contact_name': contact_detail['name'],
+                                'contact_number': contact_detail['mobile'],
+                                'contact_type': contact_detail['contact_type']
+                            })
+                    index += 1
+                if not is_contact_number and not is_contact_name:
+                    supplier_list.append(supplier)
+                if not is_contact_number and is_contact_name and (supplier['contact_name'] is not None or not supplier['contact_name']):
+                    supplier_list.append(supplier)
+                if not is_contact_name and is_contact_number and (supplier['contact_number'] is not None or not supplier['contact_number']):
+                    supplier_list.append(supplier)
+            if is_multiple_contact_name or is_multiple_contact_number:
+                return Response(data={'status': True, 'data': multiple_supplier_details_with_contact}, status=status.HTTP_200_OK)
+            else:
+                return Response(data={'status': True, 'data': supplier_list}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(data={'status': False, 'error': str(e)},
                             status=status.HTTP_400_BAD_REQUEST)
