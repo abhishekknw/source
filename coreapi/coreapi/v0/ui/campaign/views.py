@@ -552,7 +552,13 @@ class DashBoardViewSet(viewsets.ViewSet):
                 }
             }
         }
-        return ui_utils.handle_response(class_name, data=data, success=True)
+        center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
+
+        supplier_type_code = []
+        supplier_type_code = center_data
+
+        return Response({'status': True, 'data': data, 'supplier_type_code':supplier_type_code})
+        # return ui_utils.handle_response(class_name, data=data, success=True)
 
     @list_route()
     def get_campaign_filters(self, request):
