@@ -554,10 +554,7 @@ class DashBoardViewSet(viewsets.ViewSet):
         }
         center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
 
-        supplier_type_code = []
-        supplier_type_code = center_data
-
-        return Response({'status': True, 'data': data, 'supplier_type_code':supplier_type_code})
+        return Response({'status': True, 'data': data, 'supplier_type_code':center_data})
         # return ui_utils.handle_response(class_name, data=data, success=True)
 
     @list_route()
@@ -1011,10 +1008,8 @@ class CampaignLeadsMultiple(APIView):
         campaign_list = request.data
         multi_campaign_return_data = get_leads_data_for_multiple_campaigns(campaign_list)
         center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
-        supplier_type_code = []
-        supplier_type_code = center_data
 
-        return Response({'status': True, 'data': multi_campaign_return_data, 'supplier_type_code':supplier_type_code})
+        return Response({'status': True, 'data': multi_campaign_return_data, 'supplier_type_code':center_data})
         # return ui_utils.handle_response(class_name, data=multi_campaign_return_data, success=True)
 
 
