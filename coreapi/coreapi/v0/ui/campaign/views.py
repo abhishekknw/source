@@ -1007,10 +1007,7 @@ class CampaignLeadsMultiple(APIView):
         class_name = self.__class__.__name__
         campaign_list = request.data
         multi_campaign_return_data = get_leads_data_for_multiple_campaigns(campaign_list)
-        center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
-
-        return Response({'status': True, 'data': multi_campaign_return_data, 'supplier_type_code':center_data})
-        # return ui_utils.handle_response(class_name, data=multi_campaign_return_data, success=True)
+        return ui_utils.handle_response(class_name, data=multi_campaign_return_data, success=True)
 
 
 def calculate_mode(num_list,window_size=3):
@@ -1446,7 +1443,9 @@ class CampaignLeads(APIView):
             proposal_center_serializer = ProposalCenterSuppliersSerializer(suppliers_data, many=True)
             final_data['center_suppliers'] = proposal_center_serializer.data
 
-            return ui_utils.handle_response(class_name, data=final_data, success=True)
+            center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
+            return Response({'status': True, 'data': final_data, 'supplier_type_code':center_data})
+            # return ui_utils.handle_response(class_name, data=final_data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, data=final_data, success=False)
 
