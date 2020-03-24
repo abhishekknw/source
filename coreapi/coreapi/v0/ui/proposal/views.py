@@ -3103,7 +3103,6 @@ class getSupplierListByStatus(APIView):
         center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
         shortlisted_spaces_by_phase_list = get_supplier_list_by_status_ctrl(campaign_id)
         return Response({'status': True, 'data': shortlisted_spaces_by_phase_list, 'supplier_type_code':center_data})
-        # return ui_utils.handle_response({}, data=shortlisted_spaces_by_phase_list, success=True)
 
 class ImportSheetInExistingCampaign(APIView):
     """

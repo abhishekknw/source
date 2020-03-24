@@ -555,7 +555,6 @@ class DashBoardViewSet(viewsets.ViewSet):
         center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
 
         return Response({'status': True, 'data': data, 'supplier_type_code':center_data})
-        # return ui_utils.handle_response(class_name, data=data, success=True)
 
     @list_route()
     def get_campaign_filters(self, request):
@@ -1445,7 +1444,6 @@ class CampaignLeads(APIView):
 
             center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
             return Response({'status': True, 'data': final_data, 'supplier_type_code':center_data})
-            # return ui_utils.handle_response(class_name, data=final_data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, data=final_data, success=False)
 
