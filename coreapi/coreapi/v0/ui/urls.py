@@ -23,7 +23,7 @@ urlpatterns = [
     url(r'^dynamic-location/', include('v0.ui.dynamic_location.urls')),
     url(r'^notifications/', include('v0.ui.notifications.urls')),
     url(r'^ops/', include('v0.ui.campaign_analytics.urls')),
-    url(r'^ops/', include('v0.ui.citywise_analytics.urls')),
+    url(r'^ops/', include('v0.ui.supplier_analytics.urls')),
     url(r'^users/', include('v0.ui.user.urls')),
     url(r'^accounts/', include('v0.ui.account.urls')),
     url(r'^website/', include('v0.ui.account.urls')),
