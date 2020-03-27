@@ -552,7 +552,9 @@ class DashBoardViewSet(viewsets.ViewSet):
                 }
             }
         }
-        return ui_utils.handle_response(class_name, data=data, success=True)
+        center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
+
+        return Response({'status': True, 'data': data, 'supplier_type_code':center_data})
 
     @list_route()
     def get_campaign_filters(self, request):
@@ -1440,7 +1442,8 @@ class CampaignLeads(APIView):
             proposal_center_serializer = ProposalCenterSuppliersSerializer(suppliers_data, many=True)
             final_data['center_suppliers'] = proposal_center_serializer.data
 
-            return ui_utils.handle_response(class_name, data=final_data, success=True)
+            center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
+            return Response({'status': True, 'data': final_data, 'supplier_type_code':center_data})
         except Exception as e:
             return ui_utils.handle_response(class_name, data=final_data, success=False)
 
