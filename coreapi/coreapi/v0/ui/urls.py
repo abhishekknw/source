@@ -22,7 +22,8 @@ urlpatterns = [
     url(r'^dynamic-booking/', include('v0.ui.dynamic_booking.urls')),
     url(r'^dynamic-location/', include('v0.ui.dynamic_location.urls')),
     url(r'^notifications/', include('v0.ui.notifications.urls')),
-    url(r'^ops/', include('v0.ui.ops_dashboard.urls')),
+    url(r'^ops/', include('v0.ui.campaign_analytics.urls')),
+    url(r'^ops/', include('v0.ui.supplier_analytics.urls')),
     url(r'^users/', include('v0.ui.user.urls')),
     url(r'^accounts/', include('v0.ui.account.urls')),
     url(r'^website/', include('v0.ui.account.urls')),
@@ -40,9 +41,8 @@ urlpatterns = [
     url(r'^mis/', include('v0.ui.mis.urls')),
     url(r'^leads/', include('v0.ui.mis.urls')),
 
-
-
-
+    # Script urls
+    url(r'^scripts/', include(('v0.scripts.urls'))),
 
     # url(r'^website/create_business/load_business_types/',web_views.getBusinessTypesAPIView.as_view()),
     # url(r'^website/subtypes/(?P<id>[A-Z_a-z0-9]+)/$', web_views.getBusinessSubTypesAPIView.as_view()),
@@ -119,7 +119,6 @@ urlpatterns = [
     url(r'^import_society_payment_details/$', views.ImportSocietyPaymentDetails.as_view()),
     url(r'^supplier/society-data-import-excel/$', SocietyDataImport.as_view()),
     url(r'^supplier/corporate-park-data-import-excel/$', CorporateParkDataImport.as_view()),
-
 ]
 
 
