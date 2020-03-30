@@ -7,7 +7,7 @@ from .views import (CreateInitialProposalBulkBasic, HashtagImagesViewSet, Initia
                    FinalProposalAPIView, CreateProposalAPIView, ProposalImagesPath, convertDirectProposalToCampaign,
                    CampaignToProposal, SupplierPhaseViewSet, getSupplierListByStatus, ImportSheetInExistingCampaign,
                    GetOngoingSuppliersOfCampaign, GetExtraLead, HashtagImagesNewViewSet, SupplierAssignmentViewSet,
-                    ConvertProposalToCampaign, CreateDummyProposal)
+                    ConvertProposalToCampaign, CreateDummyProposal, BookingAssignmentViewSet)
 
 urlpatterns = [
     url(r'^create-dummy-proposal/$', CreateDummyProposal.as_view()),
@@ -35,6 +35,7 @@ urlpatterns = [
     url(r'^get-ongoing-suppliers/(?P<campaign_id>[A-Z_a-z0-9-]+)/$', GetOngoingSuppliersOfCampaign.as_view()),
     url(r'^get-extra-leads/(?P<campaign_id>[A-Z_a-z0-9-]+)/(?P<form_id>[A-Z_a-z0-9-]+)/(?P<supplier_id>[A-Z_a-z0-9-]+)/$', GetExtraLead.as_view()),
     url(r'^hashtag-images-new/$', HashtagImagesNewViewSet.as_view()),
+    url(r'^booking-assignment/$', BookingAssignmentViewSet.as_view()),
     url(r'^proposal-to-campaign/(?P<proposal_id>[A-Z_a-z0-9-]+)/$', ConvertProposalToCampaign.as_view()),
 ]
 
@@ -44,5 +45,4 @@ router.include_format_suffixes = False
 router.register(r'^hashtag-images', HashtagImagesViewSet, base_name='hashtag-images')
 router.register(r'^proposal', ProposalViewSet, base_name='Proposal')
 router.register(r'^supplier-assignment', SupplierAssignmentViewSet, base_name='supplier-assignment')
-
 urlpatterns += router.urls
