@@ -276,6 +276,10 @@ class SupplierTypeCode(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     supplier_type_name = models.CharField(db_column='SUPPLIER_TYPE_NAME', max_length=30, null=True)
     supplier_type_code = models.CharField(db_column='SUPPLIER_TYPE_CODE', max_length=5, null=True)
+    unit_count_type = models.CharField(max_length=30, null=True, blank=True)
+    lower = models.CharField(max_length=30, null=True, blank=True)  #range for suppliers unit count
+    middle = models.CharField(max_length=30, null=True, blank=True)
+    upper = models.CharField(max_length=30, null=True, blank=True)
 
     class Meta:
 
@@ -544,3 +548,34 @@ class SupplierTypeBusDepot(BasicSupplierDetails):
 
     class Meta:
         db_table = 'supplier_type_bus_depot'
+
+class SupplierMaster(BaseModel):
+    """
+    Master table for storing supplier ids of all type of suppliers and other common basic fileds
+    """
+
+    supplier_id = models.CharField(db_index=True, primary_key=True, max_length=20)
+    supplier_name = models.CharField(max_length=70, null=True, blank=True)
+    supplier_type = models.CharField(max_length=20, null=True, blank=True)
+    unit_count = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'supplier_master'
+
+class AddressMaster(BaseModel):
+    """
+    Address table for storing addresses of all suppliers
+    """
+    supplier_id = models.ForeignKey('SupplierMaster', db_index=True, max_length=20, on_delete=models.CASCADE)
+    address1 = models.CharField(max_length=250, null=True, blank=True)
+    address2 = models.CharField(max_length=250, null=True, blank=True)
+    area = models.CharField(max_length=255, null=True, blank=True)
+    subarea = models.CharField(max_length=30, null=True, blank=True)
+    city = models.CharField(max_length=250, null=True, blank=True)
+    state = models.CharField(max_length=250, null=True, blank=True)
+    zipcode = models.IntegerField(null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True, default=0.0)
+    longitude = models.FloatField(null=True, blank=True, default=0.0)
+
+    class Meta:
+        db_table = 'address_master'
