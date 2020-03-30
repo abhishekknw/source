@@ -3576,6 +3576,7 @@ class MultiSupplierDetails(APIView):
                             supplier['contact_type'] = contact_detail['contact_type']
                             multiple_supplier_details_with_contact.append({
                                 'id': index,
+                                'supplier_id': supplier['supplier_id'],
                                 'society_name': supplier['society_name'],
                                 'society_locality': supplier['society_locality'],
                                 'society_city': supplier['society_city'],
