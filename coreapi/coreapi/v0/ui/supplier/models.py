@@ -280,6 +280,8 @@ class SupplierTypeCode(models.Model):
     lower = models.CharField(max_length=30, null=True, blank=True)  #range for suppliers unit count
     middle = models.CharField(max_length=30, null=True, blank=True)
     upper = models.CharField(max_length=30, null=True, blank=True)
+    created_at = models.DateTimeField(editable=False, default=settings.DEFAULT_DATE)
+    updated_at = models.DateTimeField(editable=False, default=settings.DEFAULT_DATE)
 
     class Meta:
 
