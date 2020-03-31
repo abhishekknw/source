@@ -78,16 +78,63 @@ class GetSupplierCitywiseCount(APIView):
                 model = get_model(supplier_type)
             except Exception:
                 return Response(data={"status": False, "error": 'Error getting model'}, status=status.HTTP_400_BAD_REQUEST)
+            is_society = False
             if supplier_type == 'RS':
+                is_society = True
                 # Query Supplier Society
-                supplier_count_list = SupplierTypeSociety.objects.values('society_city').annotate(dcount=Count('supplier_id'))
+                suppliers = SupplierTypeSociety.objects.values('supplier_id', 'society_city', 'flat_count')
             else:
-                supplier_count_list = model.objects.values('city').annotate(dcount=Count('supplier_id'))
-            if len(supplier_count_list) > 0:
-                for supplier in supplier_count_list:
-                    supplier['type'] = supplier_type
-                    supplier['name'] = supplier_code_to_names[supplier_type]
-            return Response(data={"status": True, "data": supplier_count_list}, status=status.HTTP_200_OK)
+                suppliers = model.objects.values('supplier_id', 'city')
+
+            supplier_dict_with_cities = {}
+
+            for supplier in suppliers:
+                city = supplier['society_city'] if is_society else supplier['city']
+
+                if city not in supplier_dict_with_cities:
+                    supplier_dict_with_cities[city] = {}
+                    supplier_dict_with_cities[city]['count'] = 1
+                    supplier_dict_with_cities[city]['supplier_ids'] = []
+                    supplier_dict_with_cities[city]['contact_details'] = []
+                    supplier_dict_with_cities[city]['supplier_ids'].append(supplier['supplier_id'])
+                else:
+                    supplier_dict_with_cities[city]['count'] += 1
+                    supplier_dict_with_cities[city]['supplier_ids'].append(supplier['supplier_id'])
+
+                # Add type & name
+                supplier_dict_with_cities[city]['type'] = supplier_type
+                supplier_dict_with_cities[city]['name'] = supplier_code_to_names[supplier_type]
+
+            for city in supplier_dict_with_cities.keys():
+                supplier_dict_with_cities[city]['contact_details'] = []
+                supplier_dict_with_cities[city]['contact_name_total_filled_suppliers'] = []
+                supplier_dict_with_cities[city]['contact_number_total_filled_suppliers'] = []
+                # Get contact details
+                contact_details = ContactDetails.objects.filter(object_id__in=supplier_dict_with_cities[city]['supplier_ids']).values('name', 'mobile', 'object_id')
+                if contact_details:
+                    supplier_dict_with_cities[city]['contact_details'].append(contact_details)
+                    for contact_detail in contact_details:
+                        if contact_detail['name']:
+                            supplier_dict_with_cities[city]['contact_name_total_filled_suppliers'].append(contact_detail['object_id'])
+                        if contact_detail['mobile']:
+                            supplier_dict_with_cities[city]['contact_number_total_filled_suppliers'].append(contact_detail['object_id'])
+                contact_name_filled_suppliers = list(set(supplier_dict_with_cities[city]['contact_name_total_filled_suppliers']))
+                contact_number_filled_suppliers = list(set(supplier_dict_with_cities[city]['contact_number_total_filled_suppliers']))
+                contact_name_not_filled_suppliers = [item for item in supplier_dict_with_cities[city]['supplier_ids'] if item not in contact_name_filled_suppliers]
+                contact_number_not_filled_suppliers = [item for item in supplier_dict_with_cities[city]['supplier_ids'] if item not in contact_number_filled_suppliers]
+
+                supplier_dict_with_cities[city]['contact_name_filled_suppliers'] = contact_name_filled_suppliers
+                supplier_dict_with_cities[city]['contact_number_filled_suppliers'] = contact_number_filled_suppliers
+                supplier_dict_with_cities[city]['contact_name_not_filled_suppliers'] = contact_name_not_filled_suppliers
+                supplier_dict_with_cities[city]['contact_number_not_filled_suppliers'] = contact_number_not_filled_suppliers
+                supplier_dict_with_cities[city]['contact_name_filled_count'] = len(contact_name_filled_suppliers)
+                supplier_dict_with_cities[city]['contact_number_filled_count'] = len(contact_number_filled_suppliers)
+                supplier_dict_with_cities[city]['contact_name_not_filled_count'] = len(contact_name_not_filled_suppliers)
+                supplier_dict_with_cities[city]['contact_number_not_filled_count'] = len(contact_number_not_filled_suppliers)
+                supplier_dict_with_cities[city]['contact_number_total_filled_count'] = len(supplier_dict_with_cities[city]['contact_number_total_filled_suppliers'])
+                supplier_dict_with_cities[city]['contact_name_total_filled_count'] = len(supplier_dict_with_cities[city]['contact_name_total_filled_suppliers'])
+
+            return Response(data={"status": True, "data": supplier_dict_with_cities}, status=status.HTTP_200_OK)
         except Exception as e:
             logger.exception(e)
             return Response(data={"status": False, "error": "Error getting data"}, status=status.HTTP_400_BAD_REQUEST)
