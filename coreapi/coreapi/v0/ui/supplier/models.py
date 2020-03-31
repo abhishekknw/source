@@ -373,6 +373,33 @@ class SupplierEducationalInstitute(BasicSupplierDetails):
         db_table = 'supplier_educational_institute'
 
 class SupplierHording(BasicSupplierDetails):
+
+    owner_name = models.CharField(max_length=255, null=True, blank=True)
+    external_Number = models.CharField(max_length=255, null=True, blank=True)
+    length = models.IntegerField(blank=True, null=True)
+    width = models.IntegerField(blank=True, null=True)
+    height = models.IntegerField(blank=True, null=True)
+    length_of_gantry = models.IntegerField(blank=True, null=True)
+    width_of_gantry = models.IntegerField(blank=True, null=True)
+    height_of_gantry = models.IntegerField(blank=True, null=True)
+    force_majeure_clause = models.CharField(choices=(( 'YES', 'YES' ),  ('NO', 'NO')), max_length=10, blank=True, null=True)
+    terms_around_print_mount = models.IntegerField(blank=True, null=True)
+    cost_per_sqft = models.IntegerField(blank=True, null=True)
+    cost_of_branding_space = models.IntegerField(blank=True, null=True)
+    printing_and_mounting_cost = models.IntegerField(blank=True, null=True)
+    contact_number = models.CharField(max_length=255, null=True, blank=True)
+    cluster_of_hording = models.CharField(choices=(( 'YES', 'YES' ),  ('NO', 'NO')), max_length=10, blank=True, null=True)
+    traffic_junction = models.CharField(max_length=255, null=True, blank=True)
+    comments = models.CharField(max_length=255, null=True, blank=True)
+    average_peakHourTraffic = models.CharField(max_length=255, null=True, blank=True)
+    average_nonPeakHourTraffic = models.CharField(max_length=255, null=True, blank=True)
+    average_pedestrianDailyCount = models.CharField(max_length=255, null=True, blank=True)
+    lit_status = models.CharField(choices=(( 'YES', 'YES' ),  ('NO', 'NO')), max_length=10, blank=True, null=True)
+    buses_count = models.IntegerField(blank=True, null=True)
+
+    sequence_number = models.IntegerField(blank=True, null=True)
+    signal_waiting_time = models.IntegerField(blank=True, null=True)
+
     class Meta:
         db_table = 'supplier_hording'        
 
@@ -488,7 +515,8 @@ class SupplierAmenitiesMap(BaseModel):
     object_id = models.CharField(max_length=1000)
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     amenity = models.ForeignKey('Amenity', null=True, blank=True, on_delete=models.CASCADE)
-    comments = models.CharField(max_length=255, null=True, blank=True)
+    comments = models.TextField(blank=True, null=True)
+    
 
     class Meta:
         db_table = 'supplier_amenities_map'

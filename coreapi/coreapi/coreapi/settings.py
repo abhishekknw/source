@@ -34,7 +34,7 @@ if Config:
     ENV = Config.ENV
 
 ALLOWED_HOSTS = ['13.232.210.224', 'localhost','13.127.154.33', 'api.machadalo.com', 'platform.machadalo.com',
-                 '127.0.0.1', 'devapi.machadalo.com','13.232.145.84', '192.168.0.113']
+                 '127.0.0.1', 'devapi.machadalo.com','13.232.145.84', '192.168.0.102']
 
 
 # Application definition
@@ -53,7 +53,8 @@ INSTALLED_APPS = [
     'v0',
     'drf_generators',
     'rest_framework_swagger',
-    'djcelery'
+    'djcelery',
+    'reset_migrations',
 ]
 
 

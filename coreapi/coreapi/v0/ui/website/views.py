@@ -647,6 +647,17 @@ class AssignCampaign(APIView):
             campaign_obj = {}
 
             for data in serializer.data:
+
+                accountResult = AccountInfo.objects.filter(pk=data['campaign']['account']).first()
+                data['campaign']['accountName'] = accountResult.name
+
+
+                organisationResult = Organisation.objects.filter(organisation_id=data['campaign']['principal_vendor']).first()
+                if organisationResult:
+                    data['campaign']['organisationName'] = organisationResult.name
+                else:
+                    data['campaign']['organisationName'] = ''
+
                 proposal_start_date = parse_datetime(data['campaign']['tentative_start_date'])
                 proposal_end_date = parse_datetime(data['campaign']['tentative_end_date'])
                 response = website_utils.get_campaign_status(proposal_start_date, proposal_end_date)
