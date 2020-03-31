@@ -155,6 +155,8 @@ class ProposalInfo(BaseModel):
     is_disabled = models.BooleanField(default=False)
     invoice_number = models.CharField(max_length=1000, null=True, blank=True)
     principal_vendor = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
+    brand = models.CharField(choices=(( 'single_brand', 'single_brand' ),  ('multi_brand', 'multi_brand')), max_length=50, blank=True, null=True)
+    
 
     def get_centers(self):
         try:
@@ -232,7 +234,7 @@ class ImageMapping(BaseModel):
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='images', blank=True,
                                  null=True, on_delete=models.CASCADE)
     image_url = models.CharField(db_column='IMAGE_URL', max_length=100)
-    comments = models.CharField(db_column='COMMENTS', max_length=100, blank=True, null=True)
+    comments = models.TextField(db_column='COMMENTS', blank=True, null=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True, null=True)
     content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
@@ -291,6 +293,7 @@ class ShortlistedSpaces(BaseModel):
     booking_priority = models.CharField(max_length=10,null=True,blank=True)
     sunboard_location = models.CharField(max_length=50,null=True,blank=True)
     next_action_date = models.DateTimeField(null=True)
+    brand_organisation_id =  models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = 'shortlisted_spaces'

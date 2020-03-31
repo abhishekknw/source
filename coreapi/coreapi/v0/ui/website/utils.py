@@ -80,6 +80,9 @@ from v0.ui.inventory.models import Filters
 from v0.ui.inventory.serializers import FiltersSerializer
 from v0.ui.dynamic_suppliers.utils import (get_dynamic_suppliers_by_campaign)
 
+from v0.ui.organisation.models import Organisation
+from v0.ui.organisation.serializers import OrganisationSerializer
+
 fonts_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fonts')
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
@@ -4006,7 +4009,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
             filter_query &= Q(booking_status=booking_status_code)
 
         if phase_id:
-            filter_query &= Q(phase=phase_id)
+            filter_query &= Q(phase_no=phase_id)
 
         if assigned:
             assigned_suppliers_list = SupplierAssignment.objects.filter(campaign=proposal_id,assigned_to=assigned). \
@@ -4078,6 +4081,8 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
         # put the extra supplier specific info like name, area, subarea in the final result.
         for supplier in shortlisted_suppliers_list:
             supplier['supplierCode'] = supplier['supplier_code']
+            supplier['brand_organisation_id'] = supplier['brand_organisation_id']
+            
             supplier_content_type_id = supplier['content_type']
             supplier_id = supplier['object_id']
             supplier['freebies'] = supplier['freebies'].split(',') if supplier['freebies'] else None
@@ -4095,6 +4100,14 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
                 supplier['contacts'] = contact_serializer.data
             except KeyError:
                 supplier['contacts'] = []
+
+            try:
+                brand_organisation_instance = Organisation.objects.filter(pk=supplier['brand_organisation_id']).first()
+                brand_organisation_instance_serializer = OrganisationSerializer(brand_organisation_instance, many=False)
+                supplier['brand_organisation_data'] = brand_organisation_instance_serializer.data
+            except KeyError:
+                supplier['brand_organisation_data'] = []
+
             try:
                 pmd_objects_per_supplier = supplier_price_per_content_type_per_supplier[supplier_tuple]
             except KeyError:
