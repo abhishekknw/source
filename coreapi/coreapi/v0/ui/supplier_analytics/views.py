@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-import v0.constants as v0_constants
+from v0.constants import supplier_code_to_names
 from v0.ui.utils import get_model
 from v0.ui.supplier.models import (SupplierTypeSociety, SupplierTypeRetailShop,
                                    SupplierTypeSalon, SupplierTypeGym,
@@ -29,7 +29,6 @@ class GetSupplierSummary(APIView):
                 try:
                     model_name = get_model(supplier_type_code)
                     suppliers = model_name.objects.all().values('supplier_id')
-
                 except Exception:
                     error = True
                 supplier_ids = [supplier['supplier_id'] for supplier in suppliers]
@@ -75,35 +74,19 @@ class GetSupplierCitywiseCount(APIView):
     def get(request, supplier_type):
         try:
             supplier_count_list = []
-            supplier_mapping = {
-                'RS': {'name': 'Residential'},
-                'RE': {
-                    'model': SupplierTypeRetailShop,
-                    'name': 'Retail Shop'
-                },
-                'CP': {
-                    'model': SupplierTypeCorporate,
-                    'name': 'Corporate Park'
-                },
-                'BS': {
-                    'model': SupplierTypeBusShelter,
-                    'name': 'Bus Shelter'
-                },
-                'SA': {
-                    'model': SupplierTypeSalon,
-                    'name': 'Salon'
-                }
-            }
+            try:
+                model = get_model(supplier_type)
+            except Exception:
+                return Response(data={"status": False, "error": 'Error getting model'}, status=status.HTTP_400_BAD_REQUEST)
             if supplier_type == 'RS':
                 # Query Supplier Society
                 supplier_count_list = SupplierTypeSociety.objects.values('society_city').annotate(dcount=Count('supplier_id'))
-            if supplier_type in ['RE', 'CP', 'BS']:
-                model = supplier_mapping[supplier_type]['model']
+            else:
                 supplier_count_list = model.objects.values('city').annotate(dcount=Count('supplier_id'))
             if len(supplier_count_list) > 0:
                 for supplier in supplier_count_list:
                     supplier['type'] = supplier_type
-                    supplier['name'] = supplier_mapping[supplier_type]['name']
+                    supplier['name'] = supplier_code_to_names[supplier_type]
             return Response(data={"status": True, "data": supplier_count_list}, status=status.HTTP_200_OK)
         except Exception as e:
             logger.exception(e)
