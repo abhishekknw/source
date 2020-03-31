@@ -6,10 +6,68 @@ from django.db.models import Count
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+
+import v0.constants as v0_constants
+from v0.ui.utils import get_model
 from v0.ui.supplier.models import (SupplierTypeSociety, SupplierTypeRetailShop,
                                    SupplierTypeSalon, SupplierTypeGym,
-                                   SupplierTypeCorporate, SupplierTypeBusShelter)
+                                   SupplierTypeCorporate, SupplierTypeBusShelter,
+                                   SupplierTypeCode, RETAIL_SHOP_TYPE)
 from v0.ui.account.models import ContactDetails
+
+
+class GetSupplierSummary(APIView):
+    @staticmethod
+    def get(request):
+        try:
+            valid_supplier_type_code_instances = SupplierTypeCode.objects.all()
+            data = {}
+
+            for instance in valid_supplier_type_code_instances:
+                supplier_type_code = instance.supplier_type_code
+                error = False
+                try:
+                    model_name = get_model(supplier_type_code)
+                    suppliers = model_name.objects.all().values('supplier_id')
+
+                except Exception:
+                    error = True
+                supplier_ids = [supplier['supplier_id'] for supplier in suppliers]
+                contact_name_total_filled_suppliers = []
+                contact_number_total_filled_suppliers = []
+
+                # Get contact details
+                contact_details = ContactDetails.objects.filter(object_id__in=supplier_ids).values('name', 'mobile','object_id')
+                if contact_details and len(contact_details) > 0:
+                    for contact_detail in contact_details:
+                        if contact_detail['name']:
+                            contact_name_total_filled_suppliers.append(contact_detail['object_id'])
+                        if contact_detail['mobile']:
+                            contact_number_total_filled_suppliers.append(contact_detail['object_id'])
+                contact_name_filled_suppliers = list(set(contact_name_total_filled_suppliers))
+                contact_number_filled_suppliers = list(set(contact_number_total_filled_suppliers))
+                data[supplier_type_code] = {
+                    'supplier_count': len(supplier_ids),
+                    'supplier_ids': supplier_ids,
+                    'name': instance.supplier_type_name,
+                    'contact_name_filled_count': len(contact_name_filled_suppliers),
+                    'contact_number_filled_count': len(contact_number_filled_suppliers),
+                    'contact_name_not_filled_count': len(supplier_ids) - len(contact_name_filled_suppliers),
+                    'contact_number_not_filled_count': len(supplier_ids) - len(contact_name_filled_suppliers),
+                    'contact_name_filled_suppliers': contact_name_filled_suppliers,
+                    'contact_number_filled_suppliers': contact_number_filled_suppliers,
+                    'contact_name_not_filled_suppliers': [item for item in supplier_ids if item not in contact_name_filled_suppliers],
+                    'contact_number_not_filled_suppliers': [item for item in supplier_ids if item not in contact_number_filled_suppliers],
+                    'contact_name_total_filled_suppliers': contact_name_total_filled_suppliers,
+                    'contact_number_total_filled_suppliers': contact_number_total_filled_suppliers,
+                    'contact_name_total_filled_count': len(contact_name_total_filled_suppliers),
+                    'contact_number_total_filled_count': len(contact_number_total_filled_suppliers),
+                    'error': error,
+                }
+            return Response(data={"status": True, "data": data}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.exception(e)
+            return Response(data={"status": False, "error": "Error getting data"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GetSupplierCitywiseCount(APIView):
