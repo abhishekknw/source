@@ -24,13 +24,13 @@ from v0.ui.dynamic_booking.models import BookingInventoryActivity
 from v0.ui.dynamic_suppliers.models import SupplySupplier
 from .models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeGym,
                     SupplierTypeRetailShop, CorporateParkCompanyList, CorporateBuilding, SupplierTypeBusDepot,
-                    SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE, SupplierEducationalInstitute, SupplierHording)
+                    SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE, SupplierEducationalInstitute, SupplierHording, SupplierMaster)
 from .serializers import (UICorporateSerializer, SupplierTypeSocietySerializer, SupplierAmenitiesMapSerializer,
                          UISalonSerializer, SupplierTypeSalon, SupplierTypeGymSerializer, RetailShopSerializer,
                          SupplierInfoSerializer, SupplierInfo, SupplierTypeCorporateSerializer,
                          CorporateBuildingGetSerializer, CorporateParkCompanyListSerializer, CorporateBuildingSerializer,
                          SupplierTypeSalonSerializer, BusDepotSerializer, CorporateParkCompanySerializer,
-                         BusShelterSerializer, SupplierTypeBusShelterSerializer, SupplierEducationalInstituteSerializer, SupplierHordingSerializer)
+                         BusShelterSerializer, SupplierTypeBusShelterSerializer, SupplierEducationalInstituteSerializer, SupplierHordingSerializer, SupplierMasterSerializer)
 from v0.ui.inventory.serializers import ShortlistedSpacesSerializer
 from v0.ui.location.serializers import CityAreaSerializer
 from v0.ui.account.models import (ContactDetails, OwnershipDetails)
@@ -1336,6 +1336,24 @@ class RetailShopViewSet(viewsets.ViewSet):
             basic_contacts = request.data.get('basic_contacts', None)
             object_id = request.data.get('supplier_id', None)
 
+            masterData = {
+                "supplier_id" : object_id,
+                "supplier_name" : request.data.get('name', None),
+                "supplier_type" : 'RE',
+                "unit_count" : 10
+            }
+
+
+            supllerMasterData = SupplierMaster.objects.filter(supplier_id=object_id).first()
+            
+            if supllerMasterData and supllerMasterData.supplier_id:
+                supller_master_serializer = SupplierMasterSerializer(supllerMasterData, data=masterData)
+            else:
+                supller_master_serializer = SupplierMasterSerializer(data=masterData)
+
+            if supller_master_serializer.is_valid():
+                supller_master_serializer.save()
+
             
             for contact in basic_contacts:
                 if 'id' in contact:
@@ -1347,17 +1365,17 @@ class RetailShopViewSet(viewsets.ViewSet):
                     contact_serializer.save()
 
             
-            ownership = request.data.get('ownership_details', None)
+            # ownership = request.data.get('ownership_details', None)
 
-            if ownership:
-                if ownership.get('id'):
-                    item1 = OwnershipDetails.objects.filter(pk=ownership['id']).first()
-                    ownership_serializer = OwnershipDetailsSerializer(item1, data=ownership)
-                else:
-                    ownership_serializer = OwnershipDetailsSerializer(data=ownership)
+            # if ownership:
+            #     if ownership.get('id'):
+            #         item1 = OwnershipDetails.objects.filter(pk=ownership['id']).first()
+            #         ownership_serializer = OwnershipDetailsSerializer(item1, data=ownership)
+            #     else:
+            #         ownership_serializer = OwnershipDetailsSerializer(data=ownership)
                 
-                if ownership_serializer.is_valid():
-                    ownership_serializer.save()
+            #     if ownership_serializer.is_valid():
+            #         ownership_serializer.save()
 
 
             retail_shop_instance = SupplierTypeRetailShop.objects.get(pk=pk)
