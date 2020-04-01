@@ -588,6 +588,7 @@ class SupplierMaster(BaseModel):
     supplier_name = models.CharField(max_length=70, null=True, blank=True)
     supplier_type = models.CharField(max_length=20, null=True, blank=True)
     unit_count = models.IntegerField(null=True, blank=True)
+    representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'supplier_master'

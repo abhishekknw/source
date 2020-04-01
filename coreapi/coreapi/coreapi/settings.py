@@ -224,10 +224,10 @@ AUTH_USER_MODEL = 'v0.BaseUser'  # refer all references to User model by this na
 # datetime because when the Model instance is saved, this value is checked. if found, that means it was NULL
 # and hence the
 
-# date_string = '2016-12-1'
-# format = '%Y-%m-%d'
-# DEFAULT_DATE = timezone.make_aware(datetime.datetime.strptime(date_string, format), timezone.get_default_timezone())
-DEFAULT_DATE = timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
+date_string = '2016-12-1'
+format = '%Y-%m-%d'
+DEFAULT_DATE = timezone.make_aware(datetime.datetime.strptime(date_string, format), timezone.get_default_timezone())
+# DEFAULT_DATE = timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
 
 # AWS settings.
 AWS_ACCESS_KEY_ID = 'AKIAJITJYDRLJ5N5CG5Q'
