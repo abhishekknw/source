@@ -69,11 +69,48 @@ class GetSupplierList(APIView):
             }
             if supplier_type == 'RS':
                 # Query Supplier Society
-                supplier_list = SupplierTypeSociety.objects.filter(society_city__icontains=city).values('society_name','society_locality', 'society_subarea','society_address1','society_city', 'supplier_id')
+                supplier_list = SupplierTypeSociety.objects.filter(society_city__icontains=city).values('society_name','society_locality', 'society_subarea',
+                                                                                                      'society_address1','society_city', 'supplier_id',
+                                                                                                        'society_locality', 'society_longitude', 'society_latitude', 'society_state')
+
+            is_society = False
+            if supplier_type == 'RS':
+                is_society = True
+
             if supplier_type in ['RE', 'CP', 'BS']:
                 model = supplier_mapping[supplier_type]
-                supplier_list = model.objects.filter(city__icontains=city).values('name', 'area','subarea','city', 'supplier_id')
-            return Response(data={"status": True, "data": supplier_list}, status=status.HTTP_200_OK)
+                supplier_list = model.objects.filter(city__icontains=city).values('name', 'area','subarea','city', 'supplier_id', 'latitude', 'longitude', 'state', 'address1')
+
+            supplier_details_with_contact = []
+            for supplier in supplier_list:
+                index = 0
+                # Get contact details
+                contact_details = ContactDetails.objects.filter(object_id=supplier['supplier_id'])\
+                    .values('object_id', 'name', 'mobile','contact_type')
+                if contact_details:
+                    contact_detail = contact_details[0]
+                    supplier['contact_name'] = contact_detail['name']
+                    supplier['contact_number'] = contact_detail['mobile']
+                    supplier['contact_type'] = contact_detail['contact_type']
+                    supplier_details_with_contact.append({
+                        'id': index,
+                        'name': supplier['society_name'] if is_society else supplier['name'],
+                        'area': supplier['society_locality'] if is_society else supplier['area'],
+                        'city': supplier['society_city'] if is_society else supplier['city'],
+                        'subarea': supplier['society_subarea'] if is_society else supplier['subarea'],
+                        'latitude': supplier['society_latitude'] if is_society else supplier['latitude'],
+                        'longitude': supplier['society_longitude'] if is_society else supplier['longitude'],
+                        'supplier_id': supplier['supplier_id'],
+                        'state': supplier['society_state'] if is_society else supplier['state'],
+                        'address': supplier['society_address1'] if is_society else supplier['address1'],
+                        'contact_name': contact_detail['name'],
+                        'contact_number': contact_detail['mobile'],
+                        'contact_type': contact_detail['contact_type']
+                    })
+                else:
+                    supplier_details_with_contact.append(supplier)
+                    index += 1
+            return Response(data={"status": True, "data": supplier_details_with_contact}, status=status.HTTP_200_OK)
         except Exception as e:
             logger.exception(e)
             return Response(data={"status": False, "error": "Error getting data"}, status=status.HTTP_400_BAD_REQUEST)

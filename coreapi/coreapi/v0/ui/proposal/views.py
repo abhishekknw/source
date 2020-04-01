@@ -3218,6 +3218,43 @@ class GetExtraLead(APIView):
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
+class BookingAssignmentViewSet(APIView):
+
+    def post(self, request):
+        class_name = self.__class__.__name__
+        try:
+            print('handle_response')
+            data = {}
+            campaign_id = request.data["campaign_id"]
+            user_ids = request.data["assigned_to_ids"]
+            supplier_ids = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('object_id')
+
+            for supplier in supplier_ids:
+                user_ids_old = SupplierAssignment.objects.filter(campaign=campaign_id, supplier_id=supplier['object_id'],
+                                                             assigned_to__in=user_ids).values()
+                user_ids_old = [user_id['assigned_to_id'] for user_id in user_ids_old]
+                assigned_by_user = BaseUser.objects.get(id=request.data["assigned_by"])
+                user_ids_new = list(set(user_ids) - set(user_ids_old))
+                user_ids_new_objects = BaseUser.objects.filter(id__in=user_ids_new)
+                data = []
+                now_time = timezone.now()
+                for user_id in user_ids_new_objects:
+                    data.append(SupplierAssignment(**{
+                        "campaign_id": campaign_id,
+                        "supplier_id": supplier['object_id'],
+                        "assigned_by": assigned_by_user,
+                        "assigned_to": user_id,
+                        "created_at": now_time,
+                        "updated_at": now_time
+                    }))
+
+            SupplierAssignment.objects.bulk_create(data)
+                
+            return ui_utils.handle_response(class_name, data={}, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
+
 class SupplierAssignmentViewSet(viewsets.ViewSet):
 
 
