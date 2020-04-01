@@ -24,13 +24,13 @@ from v0.ui.dynamic_booking.models import BookingInventoryActivity
 from v0.ui.dynamic_suppliers.models import SupplySupplier
 from .models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeGym,
                     SupplierTypeRetailShop, CorporateParkCompanyList, CorporateBuilding, SupplierTypeBusDepot,
-                    SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE, SupplierEducationalInstitute, SupplierHording)
+                    SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE, SupplierEducationalInstitute, SupplierHording, SupplierMaster, AddressMaster)
 from .serializers import (UICorporateSerializer, SupplierTypeSocietySerializer, SupplierAmenitiesMapSerializer,
                          UISalonSerializer, SupplierTypeSalon, SupplierTypeGymSerializer, RetailShopSerializer,
                          SupplierInfoSerializer, SupplierInfo, SupplierTypeCorporateSerializer,
                          CorporateBuildingGetSerializer, CorporateParkCompanyListSerializer, CorporateBuildingSerializer,
                          SupplierTypeSalonSerializer, BusDepotSerializer, CorporateParkCompanySerializer,
-                         BusShelterSerializer, SupplierTypeBusShelterSerializer, SupplierEducationalInstituteSerializer, SupplierHordingSerializer)
+                         BusShelterSerializer, SupplierTypeBusShelterSerializer, SupplierEducationalInstituteSerializer, SupplierHordingSerializer, SupplierMasterSerializer, AddressMasterSerializer)
 from v0.ui.inventory.serializers import ShortlistedSpacesSerializer
 from v0.ui.location.serializers import CityAreaSerializer
 from v0.ui.account.models import (ContactDetails, OwnershipDetails)
@@ -125,6 +125,92 @@ def get_flat_count_type(flat_count):
     else:
         flat_type = '401+'
     return flat_type
+
+def update_contact_and_ownership_detail(data):
+
+    basic_contacts = data.get('basic_contacts', None)
+    object_id = data.get('supplier_id', None)
+
+    addressData = {
+        "supplier_id" : object_id,
+        "address1" : data.get('address1', None),
+        "address2" : data.get('address2', None),
+        "area" : data.get('area', None),
+        "subarea" : data.get('subarea', None),
+        "city" : data.get('city', None),
+        "state" : data.get('state', None),
+        "zipcode" : data.get('zipcode', None),
+        "latitude" : data.get('latitude', None),
+        "longitude": data.get('longitude', None),
+    }
+
+    addressMasterData = AddressMaster.objects.filter(supplier_id=object_id).first()
+    
+    if addressMasterData and addressMasterData.supplier_id:
+        address_master_serializer = AddressMasterSerializer(addressMasterData, data=addressData)
+    else:
+        address_master_serializer = AddressMasterSerializer(data=addressData)
+
+    if address_master_serializer.is_valid():
+        address_master_serializer.save()
+
+
+    masterData = {
+        "supplier_id" : object_id,
+        "supplier_name" : data.get('name', None),
+        "supplier_type" : 'RE',
+        "unit_count" : 10
+    }
+
+    supllerMasterData = SupplierMaster.objects.filter(supplier_id=object_id).first()
+    if supllerMasterData and supllerMasterData.supplier_id:
+        supller_master_serializer = SupplierMasterSerializer(supllerMasterData, data=masterData)
+    else:
+        supller_master_serializer = SupplierMasterSerializer(data=masterData)
+
+    if supller_master_serializer.is_valid():
+        supller_master_serializer.save()
+
+
+
+
+    if basic_contacts:
+        for contact in basic_contacts:
+            if 'id' in contact:
+                contact_detail = ContactDetails.objects.filter(pk=contact['id']).first()
+                contact_serializer = ContactDetailsSerializer(contact_detail, data=contact)
+            else:
+                contact_serializer = ContactDetailsSerializer(data=contact)
+            if contact_serializer.is_valid():
+                contact_serializer.save()
+
+    ownership = data.get('ownership_details', None)
+
+    if ownership:
+        if ownership.get('id'):
+            ownership_detail = OwnershipDetails.objects.filter(pk=ownership['id']).first()
+            ownership_serializer = OwnershipDetailsSerializer(ownership_detail, data=ownership)
+        else:
+            ownership_serializer = OwnershipDetailsSerializer(data=ownership)
+        
+        if ownership_serializer.is_valid():
+            ownership_serializer.save()
+
+    return True
+
+def retrieve_contact_and_ownership_detail(pk):
+
+    retail_shop_instance = ContactDetails.objects.filter(object_id=pk)
+    contact_serializer = ContactDetailsSerializer(retail_shop_instance, many=True)
+        
+    contactData = contact_serializer.data
+
+    ownership_details_instance = OwnershipDetails.objects.filter(object_id=pk).first()
+    ownership_details_serializer = OwnershipDetailsSerializer(ownership_details_instance, many=False)
+        
+    ownership_details = ownership_details_serializer.data
+
+    return contactData,ownership_details
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -627,6 +713,7 @@ class SocietyAPIView(APIView):
         object_id = serializer.data.get('supplier_id')
         content_type = ContentType.objects.get_for_model(SupplierTypeSociety)
 
+        not_remove_contacts = []
         # here we will start storing contacts
         if basic_contact_available:
             for contact in basic_contacts:
@@ -637,15 +724,20 @@ class SocietyAPIView(APIView):
                     contact_serializer = ContactDetailsSerializer(data=contact)
                 if contact_serializer.is_valid():
                     contact_serializer.save(object_id=object_id, content_type=content_type)
-
+                    not_remove_contacts.append(contact_serializer.data['id'])
+  
         if basic_reference_available and basic_reference_contacts:
-            if 'id' in basic_reference_contacts:
-                item = ContactDetails.objects.filter(pk=basic_reference_contacts['id']).first()
-                contact_serializer = ContactDetailsSerializer(item, data=basic_reference_contacts)
-            else:
-                contact_serializer = ContactDetailsSerializer(data=basic_reference_contacts)
-            if contact_serializer.is_valid():
-                contact_serializer.save(contact_type="Reference", object_id=object_id, content_type=content_type)
+            for basic_reference_contact in basic_reference_contacts:
+                if 'id' in basic_reference_contact:
+                    item = ContactDetails.objects.filter(pk=basic_reference_contact['id']).first()
+                    contact_serializer = ContactDetailsSerializer(item, data=basic_reference_contact)
+                else:
+                    contact_serializer = ContactDetailsSerializer(data=basic_reference_contact)
+                if contact_serializer.is_valid():
+                    contact_serializer.save(contact_type="Reference", object_id=object_id, content_type=content_type)
+                    not_remove_contacts.append(contact_serializer.data['id'])
+        
+        ContactDetails.objects.filter(object_id=supplier_id).exclude(pk__in=not_remove_contacts).delete()
 
         society_tower_count = SocietyTower.objects.filter(supplier=society).count()
         difference_of_tower_count = 0
@@ -1333,32 +1425,11 @@ class RetailShopViewSet(viewsets.ViewSet):
     def update(self, request, pk):
         class_name = self.__class__.__name__
         try:
+
             basic_contacts = request.data.get('basic_contacts', None)
             object_id = request.data.get('supplier_id', None)
 
-            
-            for contact in basic_contacts:
-                if 'id' in contact:
-                    item = ContactDetails.objects.filter(pk=contact['id']).first()
-                    contact_serializer = ContactDetailsSerializer(item, data=contact)
-                else:
-                    contact_serializer = ContactDetailsSerializer(data=contact)
-                if contact_serializer.is_valid():
-                    contact_serializer.save()
-
-            
-            ownership = request.data.get('ownership_details', None)
-
-            if ownership:
-                if ownership.get('id'):
-                    item1 = OwnershipDetails.objects.filter(pk=ownership['id']).first()
-                    ownership_serializer = OwnershipDetailsSerializer(item1, data=ownership)
-                else:
-                    ownership_serializer = OwnershipDetailsSerializer(data=ownership)
-                
-                if ownership_serializer.is_valid():
-                    ownership_serializer.save()
-
+            contact_and_ownership = update_contact_and_ownership_detail(request.data)
 
             retail_shop_instance = SupplierTypeRetailShop.objects.get(pk=pk)
             serializer = RetailShopSerializer(instance=retail_shop_instance, data=request.data)
@@ -1377,16 +1448,7 @@ class RetailShopViewSet(viewsets.ViewSet):
 
             shopData = serializer.data
 
-            retail_shop_instance = ContactDetails.objects.filter(object_id=pk)
-            contact_serializer = ContactDetailsSerializer(retail_shop_instance, many=True)
-                
-            shopData['contacData'] = contact_serializer.data
-
-
-            ownership_details_instance = OwnershipDetails.objects.filter(object_id=pk).first()
-            ownership_details_serializer = OwnershipDetailsSerializer(ownership_details_instance, many=False)
-                
-            shopData['ownership_details'] = ownership_details_serializer.data
+            shopData['contactData'],shopData['ownership_details'] = retrieve_contact_and_ownership_detail(pk)
 
             return handle_response(class_name, data=shopData, success=True)
         except Exception as e:
@@ -1448,20 +1510,11 @@ class HordingViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             hording_instance = SupplierHording.objects.get(pk=pk)
-            serializer = RetailShopSerializer(instance=hording_instance)
+            serializer = SupplierHordingSerializer(instance=hording_instance)
 
             result = serializer.data
 
-            retail_shop_instance = ContactDetails.objects.filter(object_id=pk)
-            contact_serializer = ContactDetailsSerializer(retail_shop_instance, many=True)
-                
-            result['contacData'] = contact_serializer.data
-
-
-            ownership_details_instance = OwnershipDetails.objects.filter(object_id=pk).first()
-            ownership_details_serializer = OwnershipDetailsSerializer(ownership_details_instance, many=False)
-                
-            result['ownership_details'] = ownership_details_serializer.data
+            result['contactData'],result['ownership_details'] = retrieve_contact_and_ownership_detail(pk)
 
             return handle_response(class_name, data=result, success=True)
         except Exception as e:
@@ -1470,34 +1523,7 @@ class HordingViewSet(viewsets.ViewSet):
     def update(self, request, pk):
         class_name = self.__class__.__name__
         try:
-            basic_contacts = request.data.get('basic_contacts', None)
-            object_id = request.data.get('supplier_id', None)
-
-
-            if basic_contacts:
-                for contact in basic_contacts:
-                    if 'id' in contact:
-                        item = ContactDetails.objects.filter(pk=contact['id']).first()
-                        contact_serializer = ContactDetailsSerializer(item, data=contact)
-                    else:
-                        contact_serializer = ContactDetailsSerializer(data=contact)
-                    if contact_serializer.is_valid():
-                        contact_serializer.save()
-
-            
-            ownership = request.data.get('ownership_details', None)
-
-            if ownership:
-                if ownership.get('id'):
-                    item1 = OwnershipDetails.objects.filter(pk=ownership['id']).first()
-                    ownership_serializer = OwnershipDetailsSerializer(item1, data=ownership)
-                else:
-                    ownership_serializer = OwnershipDetailsSerializer(data=ownership)
-                
-                if ownership_serializer.is_valid():
-                    ownership_serializer.save()
-
-
+            contact_and_ownership = update_contact_and_ownership_detail(request.data)
             hording_instance = SupplierHording.objects.get(pk=pk)
             serializer = SupplierHordingSerializer(instance=hording_instance, data=request.data)
             if serializer.is_valid():
@@ -3367,6 +3393,8 @@ class SupplierSearch(APIView):
             
             search_query = Q()
 
+            search_query &= Q(supplier_code__isnull=False)
+
             if search_txt :
                 for search_field in v0_constants.search_fields[supplier_type_code]:
                     if search_query:
@@ -3422,9 +3450,6 @@ class SupplierSearch(APIView):
             if len(all_shortlisted_spaces) > 0:
                 suppliers = suppliers.exclude(supplier_id__in=all_shortlisted_spaces)
                
-
-            print('--------------------')
-            print(all_shortlisted_spaces)
 
             
             serializer_class = ui_utils.get_serializer(supplier_type_code)

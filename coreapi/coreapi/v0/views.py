@@ -1268,19 +1268,22 @@ class PopulateAmenities(APIView):
 def validate_password(new_password):
     # used to check whether the new password is strong enough
     valid = 1
-    if not any(x.isupper() for x in new_password):
-        valid = 0
-    if re.match("[^a-zA-Z0-9_]", new_password):
-        valid = 0
+    # if not any(x.isupper() for x in new_password):
+    #     valid = 0
+    # if re.match("[^a-zA-Z0-9_]", new_password):
+    #     valid = 0
     if len(new_password)<8:
         valid = 0
-    # rules = [lambda s: any(x.isupper() for x in s),  # must have at least one uppercase
-    #          lambda s: re.match("[^a-zA-Z0-9_]", s)==False,  # must have at least one special char
-    #          lambda s: len(s) >= 8  # must be at least 8 characters
-    #          ]
-    # if all(rule(new_password) for rule in rules):
-    #     valid = 1
-    #     print 'valid'
+    elif not re.search("[a-z]", new_password):         #Password should have lowercase letters.
+        valid = 0
+    elif not re.search("[A-Z]", new_password):         #Password should have uppercase letters.
+        valid = 0
+    elif not re.search("[0-9]", new_password):         #Password should have numbers.
+        valid = 0
+    elif not re.search("[_@$#%&*]", new_password):     #Password should have special characters like _ @ $ # % & *
+        valid = 0
+    elif re.search("\s", new_password):                #Password should not contain spaces.
+        valid = 0
     return valid
 
 
@@ -1421,10 +1424,9 @@ class UserViewSet(viewsets.ViewSet):
             if password_valid == 1:
                 user.set_password(new_password)
                 user.save()
-                return ui_utils.handle_response(class_name, data='password changed successfully', success=True)
+                return ui_utils.handle_response(class_name, data='Password changed successfully', success=True)
             else:
-                return ui_utils.handle_response(class_name, data='please make sure to have 1 capital, 1 special '
-                                                                 'character, and total 8 characters', success=False)
+                return ui_utils.handle_response(class_name, data='Please make sure to have at least 1 capital letter, 1 small letter, 1 special character and minimum 8 characters.', success=False)
         except ObjectDoesNotExist as e:
             return ui_utils.handle_response(class_name, data=pk, exception_object=e)
         except Exception as e:

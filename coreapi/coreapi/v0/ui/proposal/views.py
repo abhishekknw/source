@@ -21,7 +21,7 @@ import datetime
 import time
 import random
 import string
-from .models import ProposalInfo, ProposalCenterMapping
+from .models import ProposalInfo, ProposalCenterMapping, ProposalCenterSuppliers
 from .serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer, ProposalCenterMappingSpaceSerializer,
                          ProposalCenterMappingVersionSpaceSerializer)
 from rest_framework.decorators import detail_route, list_route
@@ -40,7 +40,7 @@ from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMa
                                         SpaceMappingSerializer, ProposalCenterMappingSpaceSerializer,
                                         ProposalCenterMappingVersionSpaceSerializer, SpaceMappingVersionSerializer,
                                         ProposalSocietySerializer, ProposalCorporateSerializer, HashtagImagesSerializer,
-                                        SupplierAssignmentSerializer)
+                                        SupplierAssignmentSerializer, ShortlistedSpacesVersionSerializer)
 from v0.ui.inventory.models import (SupplierTypeSociety, AdInventoryType, InventorySummary)
 from .models import (ProposalInfo, ProposalCenterMapping, ProposalCenterMappingVersion, SpaceMappingVersion,
                     SpaceMapping, ShortlistedSpacesVersion, ShortlistedSpaces, SupplierPhase)
@@ -67,6 +67,7 @@ from v0.ui.campaign.models import CampaignComments
 from v0.ui.common.models import mongo_client, mongo_test
 
 from v0.ui.campaign.models import CampaignAssignment
+
 
 
 def convert_date_format(date):
@@ -3099,8 +3100,9 @@ def get_supplier_list_by_status_ctrl(campaign_id):
 class getSupplierListByStatus(APIView):
     @staticmethod
     def get(request, campaign_id):
+        center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
         shortlisted_spaces_by_phase_list = get_supplier_list_by_status_ctrl(campaign_id)
-        return ui_utils.handle_response({}, data=shortlisted_spaces_by_phase_list, success=True)
+        return Response({'status': True, 'data': shortlisted_spaces_by_phase_list, 'supplier_type_code':center_data})
 
 class ImportSheetInExistingCampaign(APIView):
     """
@@ -3303,6 +3305,23 @@ class SupplierAssignmentViewSet(viewsets.ViewSet):
             result_obj[supplier_obj.supplier_id]["supplier_id"] = supplier_obj.supplier_id
         result_list = [result_obj[supplier] for supplier in result_obj]
         return ui_utils.handle_response(class_name, data=result_list, success=True)
+
+
+class BrandAssignmentViewSet(viewsets.ViewSet):
+
+    def create(self, request):
+        class_name = self.__class__.__name__
+        try:
+
+            if request.data["id"]:
+                item = ShortlistedSpaces.objects.filter(id=request.data["id"]).first()
+                if item:
+                    item.brand_organisation_id = request.data["brand_organisation_id"]
+                    item.save()
+               
+            return ui_utils.handle_response(class_name, data={}, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class ConvertProposalToCampaign(APIView):
