@@ -33,8 +33,7 @@ if Config:
     DEBUG = Config.DEBUG if hasattr(Config, 'DEBUG') else True
     ENV = Config.ENV
 
-ALLOWED_HOSTS = ['13.232.210.224', 'localhost','13.127.154.33', 'api.machadalo.com', 'platform.machadalo.com',
-                 '127.0.0.1', 'devapi.machadalo.com','13.232.145.84', '192.168.0.113']
+ALLOWED_HOSTS = ['localhost','.machadalo.com']
 
 
 # Application definition
