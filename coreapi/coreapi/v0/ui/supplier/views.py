@@ -3867,3 +3867,61 @@ class GetLocationDataInSheet(APIView):
             book.save(resp)
             return resp
         return ()
+
+class SupplierGenericViewSet(viewsets.ViewSet):
+    """
+    View Set around RetailShop
+    """ 
+
+    def list(self, request):
+        class_name = self.__class__.__name__
+        try:
+            user = request.user
+            org_id = request.user.profile.organisation.organisation_id
+            retail_shop_objects = []
+            supplier_type_code = request.GET.get("supplier_type_code")
+            state = request.GET.get("state")
+            state_name = request.GET.get("state_name")
+            search = request.GET.get("search")
+
+            if user.is_superuser:
+                supplier_objects = SupplierMaster.objects
+                model_name = get_model(supplier_type_code)
+                serializer_name = get_serializer(supplier_type_code)
+
+                if state and state_name:
+                    
+                    supplier_objects = model_name.filter(Q(state=state) | Q(state=state_name))
+
+                if search:
+                    supplier_objects = model_name.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search) 
+                                        | Q(city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
+
+                supplier_objects = model_name.objects.all().order_by('name')
+            else:
+                vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
+                supplier_objects = model_name.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
+                                                                        & Q(representative__isnull=False))
+                
+                if state and state_name:
+                    supplier_objects = model_name.filter(Q(state=state) | Q(state=state_name))
+
+                if search:
+                    supplier_objects = model_name.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search) 
+                                        | Q(city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
+
+                supplier_objects = model_name.all().order_by('name')
+
+            #pagination
+            supplier_objects_paginate = paginate(supplier_objects,serializer_name,request)
+            supplier_with_images = get_supplier_image(supplier_objects_paginate["list"], 'Supplier')
+
+            data = {
+                'count': supplier_objects_paginate["count"],
+                'has_next':supplier_objects_paginate["has_next"],
+                'has_previous':supplier_objects_paginate["has_previous"],
+                'supplier_objects': supplier_with_images
+            }
+            return handle_response(class_name, data=data, success=True)
+        except Exception as e:
+            return handle_response(class_name, data=str(e), request=request)

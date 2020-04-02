@@ -9,7 +9,7 @@ from v0.ui.supplier.views import SocietyAPIView, SocietyAPIFiltersView, SocietyA
     SupplierImageDetails, CorporateViewSet, GymViewSet, SalonViewSet, RetailShopViewSet, EducationalInstituteViewSet, HordingViewSet, BusShelter, \
     BusShelterSearchView, getBusShelter, SaveBasicCorporateDetailsAPIView, SaveBuildingDetailsAPIView, CompanyDetailsAPIView, \
     CorporateCompanyDetailsAPIView, saveBasicSalonDetailsAPIView, saveBasicGymDetailsAPIView, BusShelter, \
-    SuppliersMeta, SuppliersMetaData, BusDepotViewSet, SocietyDataImport
+    SuppliersMeta, SuppliersMetaData, BusDepotViewSet, SocietyDataImport, SupplierGenericViewSet
 from v0.ui.supplier.supplier_uploads import CorporateParkDataImport
 
 # from v0.ui.website import views as web_views
@@ -124,6 +124,7 @@ urlpatterns = [
 
 router = DefaultRouter()
 router.include_format_suffixes = False
+router.register(r'^supplier-generic', SupplierGenericViewSet, base_name='supplier-generic')
 router.register(r'^event', views.EventViewSet, base_name='event')
 router.register(r'^corporate', CorporateViewSet, base_name='corporate')
 router.register(r'^gym', GymViewSet, base_name='gym')
