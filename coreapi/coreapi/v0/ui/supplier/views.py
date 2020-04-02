@@ -22,7 +22,7 @@ import v0.ui.website.utils as website_utils
 
 from v0.ui.dynamic_booking.models import BookingInventoryActivity
 from v0.ui.dynamic_suppliers.models import SupplySupplier
-from .models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeGym,
+from .models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeGym, SupplierMaster,
                     SupplierTypeRetailShop, CorporateParkCompanyList, CorporateBuilding, SupplierTypeBusDepot,
                     SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE, SupplierEducationalInstitute, SupplierHording, SupplierMaster, AddressMaster)
 from .serializers import (UICorporateSerializer, SupplierTypeSocietySerializer, SupplierAmenitiesMapSerializer,
@@ -2367,48 +2367,46 @@ class SocietyAPIListView(APIView):
 
 class SuppliersMeta(APIView):
     """
-    Fetches meta information about suppliers. How many are there in the system, count of each one of them how many
-    of them have pricing, how many don't
+    Fetches meta information about suppliers. How many are there in the system, count of each one of them.
     """
 
     def get(self, request):
-        """
-
-        :param request:
-        :return:
-        """
         class_name = self.__class__.__name__
         try:
             valid_supplier_type_code_instances = SupplierTypeCode.objects.all()
-            data = {}
             org_id= request.user.profile.organisation.organisation_id
+            data = {}
 
             for instance in valid_supplier_type_code_instances:
                 supplier_type_code = instance.supplier_type_code
                 error = False
                 try:
-                    model_name = get_model(supplier_type_code)
                     if request.user.is_superuser:
-                        count = model_name.objects.all().count()
+                        if instance.supplier_type_code == 'RS':
+                            count = SupplierTypeSociety.objects.all().count()
+                        else :
+                            count = SupplierMaster.objects.filter(supplier_type = instance.supplier_type_code).count()
                     else:
                         vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
-                        count = model_name.objects.all().filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
-                                                            & Q(representative__isnull=False)).count()
+                        if instance.supplier_type_code == 'RS':
+                            count = SupplierTypeSociety.objects.all().filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
+                                                                    & Q(representative__isnull=False)).count()
+                        else :
+                            count = SupplierMaster.objects.filter(Q(supplier_type = instance.supplier_type_code) & (Q(representative__in=vendor_ids) | Q(representative=org_id))
+                                                                & Q(representative__isnull=False)).count()
                 except Exception:
                     count = 0
                     error = True
-
+               
                 data[supplier_type_code] = {
                     'count': count,
                     'name': instance.supplier_type_name,
                     'error': error
                 }
-                if supplier_type_code == v0_constants.retail_shop_code:
-                    data[supplier_type_code]['retail_shop_types'] = [tup[0] for tup in RETAIL_SHOP_TYPE]
-
             return handle_response(class_name, data=data, success=True)
-        except Exception as e:
-            return handle_response(class_name, exception_object=e, request=request)
+
+        except Exception :
+            return handle_response(class_name, data='Something went wrong please try again later', success=False)
 
 class SuppliersMetaData(APIView):
     """
