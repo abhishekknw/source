@@ -2403,8 +2403,10 @@ class SuppliersMeta(APIView):
                     'name': instance.supplier_type_name,
                     'error': error
                 }
+            return handle_response(class_name, data=data, success=True)
+
         except Exception :
-            return handle_response(class_name, data='Something went wrong please try again later.', success=False)
+            return handle_response(class_name, data='Something went wrong please try again later', success=False)
 
 class SuppliersMetaData(APIView):
     """
