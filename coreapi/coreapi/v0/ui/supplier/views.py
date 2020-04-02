@@ -3583,7 +3583,6 @@ class MultiSupplierDetails(APIView):
                                 'society_subarea': supplier['society_subarea'],
                                 'society_latitude': supplier['society_latitude'],
                                 'society_longitude': supplier['society_longitude'],
-                                'supplier_id': supplier['supplier_id'],
                                 'society_state': supplier['society_state'],
                                 'society_address1': supplier['society_address1'],
                                 'contact_name': contact_detail['name'],

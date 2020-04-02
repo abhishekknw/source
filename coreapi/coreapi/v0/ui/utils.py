@@ -1047,11 +1047,12 @@ def is_user_permitted(permission_type, user, **kwargs):
             validation_msg_dict['msg'] = 'not_permitted'
             return is_permitted, validation_msg_dict
 
+
 # Generate random string
 def getRandomString():
     return ''.join((random.choice(string.ascii_letters) for i in range(3)))
 
+
 def campaignState(state):
     if state in v0_constants.campaign_state:
         return v0_constants.campaign_state[state]
-
