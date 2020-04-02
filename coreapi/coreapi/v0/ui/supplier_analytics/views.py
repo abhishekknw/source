@@ -145,28 +145,21 @@ class GetSupplierList(APIView):
     def get(request, supplier_type):
         try:
             city = request.query_params.get('city', '')
+            is_society = False
             if not city:
                 return Response(data={"status": False, "error": "City is mandatory"},
                                 status=status.HTTP_400_BAD_REQUEST)
-            supplier_list = []
-            supplier_mapping = {
-                'RE': SupplierTypeRetailShop,
-                'CP': SupplierTypeCorporate,
-                'BS': SupplierTypeBusShelter,
-                'SA': SupplierTypeSalon
-            }
-            if supplier_type == 'RS':
-                # Query Supplier Society
-                supplier_list = SupplierTypeSociety.objects.filter(society_city__icontains=city).values('society_name','society_locality', 'society_subarea',
-                                                                                                      'society_address1','society_city', 'supplier_id',
-                                                                                                        'society_locality', 'society_longitude', 'society_latitude', 'society_state')
-
-            is_society = False
+            try:
+                model = get_model(supplier_type)
+            except Exception:
+                return Response(data={"status": False, "error": 'Error getting model'}, status=status.HTTP_400_BAD_REQUEST)
             if supplier_type == 'RS':
                 is_society = True
-
-            if supplier_type in ['RE', 'CP', 'BS']:
-                model = supplier_mapping[supplier_type]
+                # Query Supplier Society
+                supplier_list = model.objects.filter(society_city__icontains=city).values('society_name','society_locality', 'society_subarea',
+                                                                                                      'society_address1','society_city', 'supplier_id',
+                                                                                                        'society_locality', 'society_longitude', 'society_latitude', 'society_state')
+            else:
                 supplier_list = model.objects.filter(city__icontains=city).values('name', 'area','subarea','city', 'supplier_id', 'latitude', 'longitude', 'state', 'address1')
 
             supplier_details_with_contact = []
