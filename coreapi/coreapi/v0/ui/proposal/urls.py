@@ -45,4 +45,10 @@ router.include_format_suffixes = False
 router.register(r'^hashtag-images', HashtagImagesViewSet, base_name='hashtag-images')
 router.register(r'^proposal', ProposalViewSet, base_name='Proposal')
 router.register(r'^supplier-assignment', SupplierAssignmentViewSet, base_name='supplier-assignment')
+
+
+
+router.register(r'^brand-assignment', BrandAssignmentViewSet, base_name='supplier-assignment')
+
+
 urlpatterns += router.urls

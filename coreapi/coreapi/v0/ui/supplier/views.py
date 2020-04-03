@@ -1355,6 +1355,7 @@ class SupplierTypeSocietyAPIView(APIView):
         item.delete()
         return Response(status=204)
 
+
 class RetailShopViewSet(viewsets.ViewSet):
     """
     View Set around RetailShop
@@ -1429,14 +1430,25 @@ class RetailShopViewSet(viewsets.ViewSet):
             basic_contacts = request.data.get('basic_contacts', None)
             object_id = request.data.get('supplier_id', None)
 
-            contact_and_ownership = update_contact_and_ownership_detail(request.data)
+            supplier_type_code = request.data.get('supplier_type_code', None)
 
-            retail_shop_instance = SupplierTypeRetailShop.objects.get(pk=pk)
-            serializer = RetailShopSerializer(instance=retail_shop_instance, data=request.data)
+            if not supplier_type_code:
+                return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
+
+            model_name = get_model(supplier_type_code)
+            serializer_name = get_serializer(supplier_type_code)
+
+
+            instance = model_name.objects.get(pk=pk)
+            serializer = serializer_name(instance=instance, data=request.data)
+            
             if serializer.is_valid():
                 serializer.save()
+                contact_and_ownership = update_contact_and_ownership_detail(request.data)
                 return handle_response(class_name, data=serializer.data, success=True)
+            
             return handle_response(class_name, data=serializer.data, success=True)
+        
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
 
