@@ -126,53 +126,49 @@ def get_flat_count_type(flat_count):
         flat_type = '401+'
     return flat_type
 
-def update_contact_and_ownership_detail(data):
 
+def update_contact_and_ownership_detail(data):
     basic_contacts = data.get('basic_contacts', None)
     object_id = data.get('supplier_id', None)
 
-    addressData = {
-        "supplier_id" : object_id,
-        "address1" : data.get('address1', None),
-        "address2" : data.get('address2', None),
-        "area" : data.get('area', None),
-        "subarea" : data.get('subarea', None),
-        "city" : data.get('city', None),
-        "state" : data.get('state', None),
-        "zipcode" : data.get('zipcode', None),
-        "latitude" : data.get('latitude', None),
+    address_data = {
+        "supplier_id": object_id,
+        "address1": data.get('address1', None),
+        "address2": data.get('address2', None),
+        "area": data.get('area', None),
+        "subarea": data.get('subarea', None),
+        "city": data.get('city', None),
+        "state": data.get('state', None),
+        "zipcode": data.get('zipcode', None),
+        "latitude": data.get('latitude', None),
         "longitude": data.get('longitude', None),
     }
 
-    addressMasterData = AddressMaster.objects.filter(supplier_id=object_id).first()
+    address_master_data = AddressMaster.objects.filter(supplier_id=object_id).first()
     
-    if addressMasterData and addressMasterData.supplier_id:
-        address_master_serializer = AddressMasterSerializer(addressMasterData, data=addressData)
+    if address_master_data and address_master_data.supplier_id:
+        address_master_serializer = AddressMasterSerializer(address_master_data, data=address_data)
     else:
-        address_master_serializer = AddressMasterSerializer(data=addressData)
+        address_master_serializer = AddressMasterSerializer(data=address_data)
 
     if address_master_serializer.is_valid():
         address_master_serializer.save()
 
-
-    masterData = {
-        "supplier_id" : object_id,
-        "supplier_name" : data.get('name', None),
-        "supplier_type" : 'RE',
-        "unit_count" : 10
+    master_data = {
+        "supplier_id": object_id,
+        "supplier_name": data.get('name', None),
+        "supplier_type": 'RE',
+        "unit_count": 10
     }
 
-    supllerMasterData = SupplierMaster.objects.filter(supplier_id=object_id).first()
-    if supllerMasterData and supllerMasterData.supplier_id:
-        supller_master_serializer = SupplierMasterSerializer(supllerMasterData, data=masterData)
+    supplier_master_data = SupplierMaster.objects.filter(supplier_id=object_id).first()
+    if supplier_master_data and supplier_master_data.supplier_id:
+        supplier_master_serializer = SupplierMasterSerializer(supplier_master_data, data=master_data)
     else:
-        supller_master_serializer = SupplierMasterSerializer(data=masterData)
+        supplier_master_serializer = SupplierMasterSerializer(data=master_data)
 
-    if supller_master_serializer.is_valid():
-        supller_master_serializer.save()
-
-
-
+    if supplier_master_serializer.is_valid():
+        supplier_master_serializer.save()
 
     if basic_contacts:
         for contact in basic_contacts:
@@ -198,19 +194,20 @@ def update_contact_and_ownership_detail(data):
 
     return True
 
+
 def retrieve_contact_and_ownership_detail(pk):
 
     retail_shop_instance = ContactDetails.objects.filter(object_id=pk)
     contact_serializer = ContactDetailsSerializer(retail_shop_instance, many=True)
         
-    contactData = contact_serializer.data
+    contact_data = contact_serializer.data
 
     ownership_details_instance = OwnershipDetails.objects.filter(object_id=pk).first()
     ownership_details_serializer = OwnershipDetailsSerializer(ownership_details_instance, many=False)
         
     ownership_details = ownership_details_serializer.data
 
-    return contactData,ownership_details
+    return contact_data, ownership_details
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -3879,3 +3876,116 @@ class GetLocationDataInSheet(APIView):
             book.save(resp)
             return resp
         return ()
+
+class SupplierGenericViewSet(viewsets.ViewSet):
+    """
+    View Set around All Suppliers
+    """ 
+
+    def list(self, request):
+        class_name = self.__class__.__name__
+        try:
+            user = request.user
+            org_id = request.user.profile.organisation.organisation_id
+            retail_shop_objects = []
+            supplier_type_code = request.GET.get("supplier_type_code", None)
+            state = request.GET.get("state")
+            state_name = request.GET.get("state_name")
+            search = request.GET.get("search")
+
+            if not supplier_type_code:
+                return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
+
+            if user.is_superuser:
+                supplier_objects = SupplierMaster.objects
+                model_name = get_model(supplier_type_code)
+                serializer_name = get_serializer(supplier_type_code)
+
+                if state and state_name:
+                    
+                    supplier_objects = model_name.filter(Q(state=state) | Q(state=state_name))
+
+                if search:
+                    supplier_objects = model_name.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search) 
+                                        | Q(city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
+
+                supplier_objects = model_name.objects.all().order_by('name')
+            else:
+                vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
+                supplier_objects = model_name.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
+                                                                        & Q(representative__isnull=False))
+                
+                if state and state_name:
+                    supplier_objects = model_name.filter(Q(state=state) | Q(state=state_name))
+
+                if search:
+                    supplier_objects = model_name.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search) 
+                                        | Q(city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
+
+                supplier_objects = model_name.all().order_by('name')
+
+            #pagination
+            supplier_objects_paginate = paginate(supplier_objects,serializer_name,request)
+            supplier_with_images = get_supplier_image(supplier_objects_paginate["list"], 'Supplier')
+
+            data = {
+                'count': supplier_objects_paginate["count"],
+                'has_next':supplier_objects_paginate["has_next"],
+                'has_previous':supplier_objects_paginate["has_previous"],
+                'supplier_objects': supplier_with_images
+            }
+            return handle_response(class_name, data=data, success=True)
+        except Exception as e:
+            return handle_response(class_name, data="Something went wrong please try again later.", request=request)
+
+    def retrieve(self, request, pk):
+        class_name = self.__class__.__name__
+        
+        supplier_instance = SupplierMaster.objects.filter(pk=pk).first()
+        supplier_type_code = request.GET.get("supplier_type_code", None)
+        try:
+            if not supplier_type_code:
+                return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
+
+            if supplier_instance:
+                serializer_name = get_serializer(supplier_type_code)
+                serializer = serializer_name(instance=supplier_instance)
+
+                shopData = serializer.data
+
+                shopData['contactData'],shopData['ownership_details'] = retrieve_contact_and_ownership_detail(pk)
+
+                return handle_response(class_name, data=shopData, success=True)
+            else:
+                return handle_response(class_name, data="Supplier Id does not exist.", success=True)
+        except Exception as e:
+            return handle_response(class_name, data="Something went wrong please try again later.", request=request)
+
+    def update(self, request, pk):
+        class_name = self.__class__.__name__
+        try:
+
+            basic_contacts = request.data.get('basic_contacts', None)
+            object_id = request.data.get('supplier_id', None)
+
+            supplier_type_code = request.data.get('supplier_type_code', None)
+
+            if not supplier_type_code:
+                return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
+
+            model_name = get_model(supplier_type_code)
+            serializer_name = get_serializer(supplier_type_code)
+
+
+            instance = model_name.objects.get(pk=pk)
+            serializer = serializer_name(instance=instance, data=request.data)
+            
+            if serializer.is_valid():
+                serializer.save()
+                contact_and_ownership = update_contact_and_ownership_detail(request.data)
+                return handle_response(class_name, data=serializer.data, success=True)
+            
+            return handle_response(class_name, data=serializer.data, success=True)
+        
+        except Exception as e:
+            return handle_response(class_name, exception_object=e, request=request)
