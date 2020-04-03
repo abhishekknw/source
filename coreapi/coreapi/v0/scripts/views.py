@@ -10,27 +10,30 @@ from v0.ui.proposal.models import ShortlistedSpaces
 
 
 class UpdateSupplierContactDataImport(APIView):
-    def get(self, request):
+    def post(self, request):
         try:
-            this_folder = os.path.dirname(os.path.abspath(__file__))
-            my_file = os.path.join(this_folder, 'contact_details.csv')
-            with open(my_file, 'r') as file:
-                reader = csv.reader(file)
-                for row in reader:
-                    supplier_id = row[0] if row[0] else None
-                    contact_number = row[1] if row[1] else None
-                    contact_name = row[2] if row[2] else None
-                    designation = row[3] if row[3] else None
-                    print(supplier_id, contact_number, contact_name, designation)
-                    if contact_number and supplier_id:
-                        # Check contact number in contact details
-                        contact_details = ContactDetails.objects.filter(mobile=contact_number, object_id=supplier_id)
-                        if contact_details:
-                            if contact_name:
-                                contact_details.update(name=contact_name, contact_type=designation)
-                        else:
-                            contact_details = ContactDetails(object_id=supplier_id, name=contact_name, contact_type=designation, mobile=contact_number)
-                            contact_details.save()
+            data = request.data
+            updated_contact_file = open(os.path.join(sys.path[0], "updated_contact.txt"), "a")
+            new_contact_file = open(os.path.join(sys.path[0], "new_contact.txt"), "a")
+            for supplier in data:
+                supplier_id = supplier['supplier_id']
+                contact_number = supplier['contact_number']
+                contact_name = supplier['contact_name'].title()
+                designation = supplier['designation'].title()
+                print(supplier_id, contact_number, contact_name, designation)
+                if contact_number and supplier_id:
+                    # Check contact number in contact details
+                    contact_details = ContactDetails.objects.filter(mobile=contact_number, object_id=supplier_id)
+                    if contact_details:
+                        if contact_name:
+                            contact_details.update(name=contact_name, contact_type=designation)
+                            updated_contact_file.write(
+                                "{mobile},{name},{id}\n".format(mobile=contact_number, name=contact_name, id=supplier_id))
+                    else:
+                        contact_details = ContactDetails(object_id=supplier_id, name=contact_name, contact_type=designation, mobile=contact_number)
+                        contact_details.save()
+                        new_contact_file.write(
+                            "{mobile},{name},{id}\n".format(mobile=contact_number, name=contact_name, id=supplier_id))
         except Exception as e:
             print(e)
         return handle_response({}, data='Data updated successfully', success=True)
@@ -101,7 +104,7 @@ class DeleteDuplicateSocieties(APIView):
             societies_not_deleted_file = open(os.path.join(sys.path[0], "societies_not_deleted.txt"), "a")
             for supplier in data:
                 supplier_id = supplier['supplier_id']
-                supplier_name = supplier['supplier_name']
+                supplier_name = supplier.get('supplier_name', '')
                 if supplier_id:
                     supplier_society = SupplierTypeSociety.objects.filter(supplier_id=supplier_id)
                     if not supplier_society:
@@ -110,12 +113,12 @@ class DeleteDuplicateSocieties(APIView):
                     # Supplier in proposal
                     shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=supplier_id)
                     if shortlisted_spaces:
-                        societies_not_deleted_file.write("{name} - {id}\n".format(name=supplier_name, id=supplier_id))
+                        societies_not_deleted_file.write("{name},{id}\n".format(name=supplier_name, id=supplier_id))
                         print('Linked to proposal :', supplier_id)
                     else:
                         supplier_society = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).delete()
                         if supplier_society:
-                            deleted_societies_file.write("{name} - {id}\n".format(name=supplier_name, id=supplier_id))
+                            deleted_societies_file.write("{name},{id}\n".format(name=supplier_name, id=supplier_id))
         except Exception as e:
             print(e)
         return handle_response({}, data='Societies deleted successfully', success=True)
