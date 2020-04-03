@@ -3870,7 +3870,7 @@ class GetLocationDataInSheet(APIView):
 
 class SupplierGenericViewSet(viewsets.ViewSet):
     """
-    View Set around RetailShop
+    View Set around All Suppliers
     """ 
 
     def list(self, request):
@@ -3879,10 +3879,13 @@ class SupplierGenericViewSet(viewsets.ViewSet):
             user = request.user
             org_id = request.user.profile.organisation.organisation_id
             retail_shop_objects = []
-            supplier_type_code = request.GET.get("supplier_type_code")
+            supplier_type_code = request.GET.get("supplier_type_code", None)
             state = request.GET.get("state")
             state_name = request.GET.get("state_name")
             search = request.GET.get("search")
+
+            if not supplier_type_code:
+                return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
 
             if user.is_superuser:
                 supplier_objects = SupplierMaster.objects
@@ -3924,4 +3927,27 @@ class SupplierGenericViewSet(viewsets.ViewSet):
             }
             return handle_response(class_name, data=data, success=True)
         except Exception as e:
-            return handle_response(class_name, data=str(e), request=request)
+            return handle_response(class_name, data="Something went wrong please try again later.", request=request)
+
+    def retrieve(self, request, pk):
+        class_name = self.__class__.__name__
+        
+        supplier_instance = SupplierMaster.objects.filter(pk=pk).first()
+        supplier_type_code = request.GET.get("supplier_type_code")
+        try:
+            if not supplier_type_code:
+                return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
+
+            if supplier_instance:
+                serializer_name = get_serializer(supplier_type_code)
+                serializer = serializer_name(instance=supplier_instance)
+
+                shopData = serializer.data
+
+                shopData['contactData'],shopData['ownership_details'] = retrieve_contact_and_ownership_detail(pk)
+
+                return handle_response(class_name, data=shopData, success=True)
+            else:
+                return handle_response(class_name, data="Supplier Id does not exist.", success=True)
+        except Exception as e:
+            return handle_response(class_name, data="Something went wrong please try again later.", request=request)
