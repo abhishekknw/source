@@ -3930,7 +3930,7 @@ class SupplierGenericViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         
         supplier_instance = SupplierMaster.objects.filter(pk=pk).first()
-        supplier_type_code = request.GET.get("supplier_type_code")
+        supplier_type_code = request.GET.get("supplier_type_code", None)
         try:
             if not supplier_type_code:
                 return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
@@ -3948,3 +3948,32 @@ class SupplierGenericViewSet(viewsets.ViewSet):
                 return handle_response(class_name, data="Supplier Id does not exist.", success=True)
         except Exception as e:
             return handle_response(class_name, data="Something went wrong please try again later.", request=request)
+
+    def update(self, request, pk):
+        class_name = self.__class__.__name__
+        try:
+
+            basic_contacts = request.data.get('basic_contacts', None)
+            object_id = request.data.get('supplier_id', None)
+
+            supplier_type_code = request.data.get('supplier_type_code', None)
+
+            if not supplier_type_code:
+                return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
+
+            model_name = get_model(supplier_type_code)
+            serializer_name = get_serializer(supplier_type_code)
+
+
+            instance = model_name.objects.get(pk=pk)
+            serializer = serializer_name(instance=instance, data=request.data)
+            
+            if serializer.is_valid():
+                serializer.save()
+                contact_and_ownership = update_contact_and_ownership_detail(request.data)
+                return handle_response(class_name, data=serializer.data, success=True)
+            
+            return handle_response(class_name, data=serializer.data, success=True)
+        
+        except Exception as e:
+            return handle_response(class_name, exception_object=e, request=request)
