@@ -3535,11 +3535,12 @@ class MultiSupplierDetails(APIView):
         class_name = self.__class__.__name__
         try:
             supplier_ids = request.data.get('supplier_ids', None)
-            supplier_type_code = request.data.get('supplier_type_code', None)
+            supplier_type_code = request.data.get('supplier_type_code', 'RS')
             is_multiple_contact_number = request.data.get('is_multiple_contact_number', False)
             is_multiple_contact_name = request.data.get('is_multiple_contact_name', False)
             is_contact_name = request.data.get('is_contact_name', False)
             is_contact_number = request.data.get('is_contact_number', False)
+            is_society = False
 
             if not supplier_ids or not supplier_type_code:
                 return Response(data={'status': False, 'error': 'Missing supplier_ids or supplier_type_code'},
@@ -3553,16 +3554,32 @@ class MultiSupplierDetails(APIView):
             supplier_model = content_type.model
             model = apps.get_model(settings.APP_NAME, supplier_model)
 
-            suppliers = model.objects.filter(pk__in=supplier_ids).values('society_name', 'society_locality',
-                                                                         'society_city', 'society_subarea', 'society_state',
-                                                                         'society_latitude','society_longitude','society_address1',
-                                                                         'supplier_id')
+            if supplier_type_code == 'RS':
+                is_society = True
+                suppliers = model.objects.filter(pk__in=supplier_ids).values('society_name', 'society_locality',
+                                                                             'society_city', 'society_subarea', 'society_state',
+                                                                             'society_latitude','society_longitude','society_address1',
+                                                                             'supplier_id')
+            else:
+                suppliers = model.objects.filter(pk__in=supplier_ids).values('name', 'area','city', 'subarea','state','latitude', 'longitude',
+                                                                             'address1','supplier_id')
             # Get contact name & number
             contact_details = ContactDetails.objects.filter(object_id__in=supplier_ids).values('object_id', 'name', 'mobile', 'contact_type')
             multiple_supplier_details_with_contact = []
             supplier_list = []
             for supplier in suppliers:
                 index = 0
+                supplier_object = {
+                    'supplier_id': supplier['supplier_id'],
+                    'name': supplier['society_name'] if is_society else supplier['name'],
+                    'area': supplier['society_locality'] if is_society else supplier['area'],
+                    'city': supplier['society_city'] if is_society else supplier['city'],
+                    'subarea': supplier['society_subarea'] if is_society else supplier['subarea'],
+                    'latitude': supplier['society_latitude'] if is_society else supplier['latitude'],
+                    'longitude': supplier['society_longitude'] if is_society else supplier['longitude'],
+                    'state': supplier['society_state'] if is_society else supplier['state'],
+                    'address': supplier['society_address1'] if is_society else supplier['address1'],
+                }
                 if contact_details:
                     for contact_detail in contact_details:
                         # For duplicate contact numbers
@@ -3571,32 +3588,31 @@ class MultiSupplierDetails(APIView):
                         if not is_multiple_contact_number and is_multiple_contact_name and contact_detail['name'] is None:
                             continue
                         if contact_detail['object_id'] == supplier['supplier_id']:
-                            supplier['contact_name'] = contact_detail['name']
-                            supplier['contact_number'] = contact_detail['mobile']
-                            supplier['contact_type'] = contact_detail['contact_type']
+                            supplier_object['contact_name'] = contact_detail['name'],
+                            supplier_object['contact_number'] = contact_detail['mobile'],
+                            supplier_object['contact_type'] = contact_detail['contact_type']
                             multiple_supplier_details_with_contact.append({
                                 'id': index,
                                 'supplier_id': supplier['supplier_id'],
-                                'society_name': supplier['society_name'],
-                                'society_locality': supplier['society_locality'],
-                                'society_city': supplier['society_city'],
-                                'society_subarea': supplier['society_subarea'],
-                                'society_latitude': supplier['society_latitude'],
-                                'society_longitude': supplier['society_longitude'],
-                                'supplier_id': supplier['supplier_id'],
-                                'society_state': supplier['society_state'],
-                                'society_address1': supplier['society_address1'],
+                                'name': supplier['society_name'] if is_society else supplier['name'],
+                                'area': supplier['society_locality'] if is_society else supplier['area'],
+                                'city': supplier['society_city'] if is_society else supplier['city'],
+                                'subarea': supplier['society_subarea'] if is_society else supplier['subarea'],
+                                'latitude': supplier['society_latitude'] if is_society else supplier['latitude'],
+                                'longitude': supplier['society_longitude'] if is_society else supplier['longitude'],
+                                'state': supplier['society_state'] if is_society else supplier['state'],
+                                'address': supplier['society_address1'] if is_society else supplier['address1'],
                                 'contact_name': contact_detail['name'],
                                 'contact_number': contact_detail['mobile'],
                                 'contact_type': contact_detail['contact_type']
                             })
                     index += 1
                 if not is_contact_number and not is_contact_name:
-                    supplier_list.append(supplier)
-                if not is_contact_number and is_contact_name and (supplier['contact_name'] is not None or not supplier['contact_name']):
-                    supplier_list.append(supplier)
-                if not is_contact_name and is_contact_number and (supplier['contact_number'] is not None or not supplier['contact_number']):
-                    supplier_list.append(supplier)
+                    supplier_list.append(supplier_object)
+                if not is_contact_number and is_contact_name and (supplier_object['contact_name'] is not None or not supplier_object['contact_name']):
+                    supplier_list.append(supplier_object)
+                if not is_contact_name and is_contact_number and (supplier_object['contact_number'] is not None or not supplier_object['contact_number']):
+                    supplier_list.append(supplier_object)
             if is_multiple_contact_name or is_multiple_contact_number:
                 return Response(data={'status': True, 'data': multiple_supplier_details_with_contact}, status=status.HTTP_200_OK)
             else:

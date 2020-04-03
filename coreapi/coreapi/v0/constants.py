@@ -1344,6 +1344,17 @@ codes_to_model_names = {
     'BA': 'BannerInventory',
     'BANNER': 'BannerInventory'
 }
+
+supplier_code_to_names = {
+    'RS': 'Residential',
+    'RE': 'Retail Shop',
+    'CP': 'Corporate Park',
+    'BS': 'Bus Shelter',
+    'SA': 'Salon',
+    'GY': 'Gym',
+    'EI': 'Educational Institute',
+}
+
 # model to codes
 model_to_codes = {
     'SupplierTypeSociety': 'RS',
@@ -1366,7 +1377,6 @@ model_to_codes = {
     'SupplierTypeBusDepot': bus_depot_code,
     'SB': 'SunBoardInventory',
     'BA': 'BannerInventory'
-
 }
 
 # default state and state codes. used to fetch state object in various import api's.
