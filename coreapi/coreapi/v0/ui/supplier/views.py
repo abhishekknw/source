@@ -126,53 +126,49 @@ def get_flat_count_type(flat_count):
         flat_type = '401+'
     return flat_type
 
-def update_contact_and_ownership_detail(data):
 
+def update_contact_and_ownership_detail(data):
     basic_contacts = data.get('basic_contacts', None)
     object_id = data.get('supplier_id', None)
 
-    addressData = {
-        "supplier_id" : object_id,
-        "address1" : data.get('address1', None),
-        "address2" : data.get('address2', None),
-        "area" : data.get('area', None),
-        "subarea" : data.get('subarea', None),
-        "city" : data.get('city', None),
-        "state" : data.get('state', None),
-        "zipcode" : data.get('zipcode', None),
-        "latitude" : data.get('latitude', None),
+    address_data = {
+        "supplier_id": object_id,
+        "address1": data.get('address1', None),
+        "address2": data.get('address2', None),
+        "area": data.get('area', None),
+        "subarea": data.get('subarea', None),
+        "city": data.get('city', None),
+        "state": data.get('state', None),
+        "zipcode": data.get('zipcode', None),
+        "latitude": data.get('latitude', None),
         "longitude": data.get('longitude', None),
     }
 
-    addressMasterData = AddressMaster.objects.filter(supplier_id=object_id).first()
+    address_master_data = AddressMaster.objects.filter(supplier_id=object_id).first()
     
-    if addressMasterData and addressMasterData.supplier_id:
-        address_master_serializer = AddressMasterSerializer(addressMasterData, data=addressData)
+    if address_master_data and address_master_data.supplier_id:
+        address_master_serializer = AddressMasterSerializer(address_master_data, data=address_data)
     else:
-        address_master_serializer = AddressMasterSerializer(data=addressData)
+        address_master_serializer = AddressMasterSerializer(data=address_data)
 
     if address_master_serializer.is_valid():
         address_master_serializer.save()
 
-
-    masterData = {
-        "supplier_id" : object_id,
-        "supplier_name" : data.get('name', None),
-        "supplier_type" : 'RE',
-        "unit_count" : 10
+    master_data = {
+        "supplier_id": object_id,
+        "supplier_name": data.get('name', None),
+        "supplier_type": 'RE',
+        "unit_count": 10
     }
 
-    supllerMasterData = SupplierMaster.objects.filter(supplier_id=object_id).first()
-    if supllerMasterData and supllerMasterData.supplier_id:
-        supller_master_serializer = SupplierMasterSerializer(supllerMasterData, data=masterData)
+    supplier_master_data = SupplierMaster.objects.filter(supplier_id=object_id).first()
+    if supplier_master_data and supplier_master_data.supplier_id:
+        supplier_master_serializer = SupplierMasterSerializer(supplier_master_data, data=master_data)
     else:
-        supller_master_serializer = SupplierMasterSerializer(data=masterData)
+        supplier_master_serializer = SupplierMasterSerializer(data=master_data)
 
-    if supller_master_serializer.is_valid():
-        supller_master_serializer.save()
-
-
-
+    if supplier_master_serializer.is_valid():
+        supplier_master_serializer.save()
 
     if basic_contacts:
         for contact in basic_contacts:
@@ -198,19 +194,20 @@ def update_contact_and_ownership_detail(data):
 
     return True
 
+
 def retrieve_contact_and_ownership_detail(pk):
 
     retail_shop_instance = ContactDetails.objects.filter(object_id=pk)
     contact_serializer = ContactDetailsSerializer(retail_shop_instance, many=True)
         
-    contactData = contact_serializer.data
+    contact_data = contact_serializer.data
 
     ownership_details_instance = OwnershipDetails.objects.filter(object_id=pk).first()
     ownership_details_serializer = OwnershipDetailsSerializer(ownership_details_instance, many=False)
         
     ownership_details = ownership_details_serializer.data
 
-    return contactData,ownership_details
+    return contact_data, ownership_details
 
 
 @method_decorator(csrf_exempt, name='dispatch')
