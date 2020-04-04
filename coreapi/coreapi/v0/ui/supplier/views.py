@@ -3885,32 +3885,32 @@ class SupplierGenericViewSet(viewsets.ViewSet):
                 return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
 
             if user.is_superuser:
-                supplier_objects = SupplierMaster.objects
                 model_name = get_model(supplier_type_code)
                 serializer_name = get_serializer(supplier_type_code)
+                supplier_objects = model_name.objects
 
                 if state and state_name:
                     
-                    supplier_objects = model_name.filter(Q(state=state) | Q(state=state_name))
+                    supplier_objects = supplier_objects.filter(Q(state=state) | Q(state=state_name))
 
                 if search:
-                    supplier_objects = model_name.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search) 
-                                        | Q(city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
+                    supplier_objects = supplier_objects.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search) 
+                                        | Q(city__icontains=search) | Q(supplier_id__icontains=search))
 
-                supplier_objects = model_name.objects.all().order_by('name')
+                supplier_objects = supplier_objects.all().order_by('name')
             else:
                 vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
-                supplier_objects = model_name.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
+                supplier_objects = supplier_objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
                                                                         & Q(representative__isnull=False))
                 
                 if state and state_name:
-                    supplier_objects = model_name.filter(Q(state=state) | Q(state=state_name))
+                    supplier_objects = supplier_objects.filter(Q(state=state) | Q(state=state_name))
 
                 if search:
-                    supplier_objects = model_name.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search) 
-                                        | Q(city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
+                    supplier_objects = supplier_objects.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search) 
+                                        | Q(city__icontains=search) | Q(supplier_id__icontains=search))
 
-                supplier_objects = model_name.all().order_by('name')
+                supplier_objects = supplier_objects.all().order_by('name')
 
             #pagination
             supplier_objects_paginate = paginate(supplier_objects,serializer_name,request)
@@ -3928,9 +3928,11 @@ class SupplierGenericViewSet(viewsets.ViewSet):
 
     def retrieve(self, request, pk):
         class_name = self.__class__.__name__
-        
-        supplier_instance = SupplierMaster.objects.filter(pk=pk).first()
+
         supplier_type_code = request.GET.get("supplier_type_code", None)
+        model_name = get_model(supplier_type_code)
+        supplier_instance = model_name.objects.filter(pk=pk).first()
+        
         try:
             if not supplier_type_code:
                 return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
