@@ -37,7 +37,7 @@ import v0.ui.serializers as ui_serializers
 from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.supplier.serializers import (SupplierHordingSerializer, SupplierEducationalInstituteSerializer, SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SupplierTypeBusShelterSerializer,
                                         SupplierTypeGymSerializer, SupplierTypeRetailShopSerializer,
-                                        SupplierTypeSalonSerializer, BusDepotSerializer)
+                                        SupplierTypeSalonSerializer, BusDepotSerializer, SupplierMasterSerializer, AddressMasterSerializer)
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.finances.serializers import (IdeationDesignCostSerializer, DataSciencesCostSerializer, EventStaffingCostSerializer,
                                         LogisticOperationsCostSerializer, SpaceBookingCostSerializer, PrintingCostSerializer)
@@ -266,9 +266,36 @@ def save_supplier_data(user, master_data):
         serializer_class = get_serializer(supplier_code)
         supplier_data = master_data[supplier_code]['data']
         serializer = serializer_class(data=supplier_data)
+
+        
         if serializer.is_valid():
             serializer.save(user=user)
             set_default_pricing(serializer.data['supplier_id'], supplier_code)
+
+            sup_master_data = {
+                "supplier_id" : supplier_data.get('supplier_id'),
+                "supplier_name" : supplier_data.get('name'),
+                "supplier_type" : supplier_code,
+                "unit_count" : 0
+            }
+            supller_master_serializer = SupplierMasterSerializer(data=sup_master_data)
+            if supller_master_serializer.is_valid():
+                supller_master_serializer.save()
+
+
+            address_master_data = {
+                "supplier_id" : supplier_data.get('supplier_id'),
+                "area" : supplier_data.get('area'),
+                "subarea" : supplier_data.get('subarea'),
+                "city" : supplier_data.get('city'),
+                "state" : supplier_data.get('state'),
+                "latitude" : 0,
+                "longitude": 0,
+            }
+            address_master_serializer = AddressMasterSerializer(data=address_master_data)
+            if address_master_serializer.is_valid():
+                address_master_serializer.save()
+
             return serializer.data
         else:
             raise Exception(function_name, serializer.errors)
