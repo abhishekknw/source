@@ -169,6 +169,7 @@ def get_supplier_id(data):
             subarea_object = CitySubArea.objects.get(subarea_code=data.get('subarea_code'), area_code=area_object)
 
         except ObjectDoesNotExist as e:
+
             city_object = City.objects.get(id=data['city_id'])
             area_object = CityArea.objects.get(id=data['area_id'])
             subarea_object = CitySubArea.objects.get(id=data['subarea_id'],
