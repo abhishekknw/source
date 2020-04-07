@@ -3927,9 +3927,11 @@ class SupplierGenericViewSet(viewsets.ViewSet):
             #pagination
             supplier_objects_paginate = paginate(supplier_objects,serializer_name,request)
             supplier_with_images = get_supplier_image(supplier_objects_paginate["list"], 'Supplier')
+            
+            count = SupplierMaster.objects.filter(supplier_type=supplier_type_code).count()
 
             data = {
-                'count': supplier_objects_paginate["count"],
+                'count': count,
                 'has_next':supplier_objects_paginate["has_next"],
                 'has_previous':supplier_objects_paginate["has_previous"],
                 'supplier_objects': supplier_with_images
