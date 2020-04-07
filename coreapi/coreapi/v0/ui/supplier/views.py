@@ -2417,6 +2417,8 @@ class SuppliersMeta(APIView):
         except Exception :
             return handle_response(class_name, data='Something went wrong please try again later', success=False)
 
+from django.db.models import Prefetch
+
 class SuppliersMetaData(APIView):
     """
     Fetches meta information about suppliers. Gives Count on the basis of selected state or state name and supplier type.
@@ -2432,6 +2434,9 @@ class SuppliersMetaData(APIView):
         try:
             data = {}
             supplier_type_code = request.query_params.get('supplier_code', None)
+
+            if not supplier_type_code:
+                return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
             
             model_name = get_model(supplier_type_code)
 
@@ -2453,8 +2458,16 @@ class SuppliersMetaData(APIView):
                 else:
                     search_query |= Q(state=state_name)
 
-            count = model_name.objects.filter(search_query).count()
-        
+            if supplier_type_code == 'RS':
+                count = model_name.objects.filter(search_query).count()
+            else:
+                address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
+
+                if state_name:
+                    count = SupplierMaster.objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code,address_supplier__state__icontains=state).count()
+                else:
+                    count = SupplierMaster.objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code).count()
+            
             data[supplier_type_code] = {'count': count}
 
             return handle_response(class_name, data=data, success=True)   
@@ -3896,15 +3909,12 @@ class SupplierGenericViewSet(viewsets.ViewSet):
             if not supplier_type_code:
                 return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
 
+
+            model_name = get_model(supplier_type_code)
+            serializer_name = get_serializer(supplier_type_code)
+            supplier_objects = model_name.objects
+
             if user.is_superuser:
-                model_name = get_model(supplier_type_code)
-                serializer_name = get_serializer(supplier_type_code)
-                supplier_objects = model_name.objects
-
-                if state and state_name:
-                    
-                    supplier_objects = supplier_objects.filter(Q(state=state) | Q(state=state_name))
-
                 if search:
                     supplier_objects = supplier_objects.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search) 
                                         | Q(city__icontains=search) | Q(supplier_id__icontains=search))

@@ -16,6 +16,7 @@ class AddressMasterSerializer(ModelSerializer):
         fields = '__all__'
 
 class SupplierMasterSerializer(ModelSerializer):
+    address_supplier = AddressMasterSerializer()
     class Meta:
         model = SupplierMaster
         fields = '__all__'
