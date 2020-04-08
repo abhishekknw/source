@@ -276,7 +276,10 @@ class SupplierTypeCode(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     supplier_type_name = models.CharField(db_column='SUPPLIER_TYPE_NAME', max_length=30, null=True)
     supplier_type_code = models.CharField(db_column='SUPPLIER_TYPE_CODE', max_length=5, null=True)
-    unit_count_type = models.CharField(max_length=30, null=True, blank=True)
+    unit_primary_count = models.CharField(max_length=30, null=True, blank=True)
+    unit_secondary_count = models.CharField(max_length=30, null=True, blank=True)
+    unit_tertiary_count = models.CharField(max_length=30, null=True, blank=True)
+    comments = models.CharField(max_length=255, null=True, blank=True)
     lower = models.CharField(max_length=30, null=True, blank=True)  #range for suppliers unit count
     middle = models.CharField(max_length=30, null=True, blank=True)
     upper = models.CharField(max_length=30, null=True, blank=True)
@@ -607,6 +610,7 @@ class AddressMaster(BaseModel):
     zipcode = models.IntegerField(null=True, blank=True)
     latitude = models.FloatField(null=True, blank=True, default=0.0)
     longitude = models.FloatField(null=True, blank=True, default=0.0)
+    nearest_landmark = models.CharField(max_length=30, null=True, blank=True)
 
     class Meta:
         db_table = 'address_master'
