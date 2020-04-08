@@ -627,6 +627,7 @@ class SocietyAPIView(APIView):
         object_id = serializer.data.get('supplier_id')
         content_type = ContentType.objects.get_for_model(SupplierTypeSociety)
 
+        not_remove_contacts = []
         # here we will start storing contacts
         if basic_contact_available:
             for contact in basic_contacts:
@@ -637,15 +638,20 @@ class SocietyAPIView(APIView):
                     contact_serializer = ContactDetailsSerializer(data=contact)
                 if contact_serializer.is_valid():
                     contact_serializer.save(object_id=object_id, content_type=content_type)
-
+                    not_remove_contacts.append(contact_serializer.data['id'])
+  
         if basic_reference_available and basic_reference_contacts:
-            if 'id' in basic_reference_contacts:
-                item = ContactDetails.objects.filter(pk=basic_reference_contacts['id']).first()
-                contact_serializer = ContactDetailsSerializer(item, data=basic_reference_contacts)
-            else:
-                contact_serializer = ContactDetailsSerializer(data=basic_reference_contacts)
-            if contact_serializer.is_valid():
-                contact_serializer.save(contact_type="Reference", object_id=object_id, content_type=content_type)
+            for basic_reference_contact in basic_reference_contacts:
+                if 'id' in basic_reference_contact:
+                    item = ContactDetails.objects.filter(pk=basic_reference_contact['id']).first()
+                    contact_serializer = ContactDetailsSerializer(item, data=basic_reference_contact)
+                else:
+                    contact_serializer = ContactDetailsSerializer(data=basic_reference_contact)
+                if contact_serializer.is_valid():
+                    contact_serializer.save(contact_type="Reference", object_id=object_id, content_type=content_type)
+                    not_remove_contacts.append(contact_serializer.data['id'])
+        
+        ContactDetails.objects.filter(object_id=supplier_id).exclude(pk__in=not_remove_contacts).delete()
 
         society_tower_count = SocietyTower.objects.filter(supplier=society).count()
         difference_of_tower_count = 0
