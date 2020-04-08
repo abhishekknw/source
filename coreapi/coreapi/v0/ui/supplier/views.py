@@ -640,6 +640,7 @@ class SocietyAPIView(APIView):
                     contact_serializer.save(object_id=object_id, content_type=content_type)
                     not_remove_contacts.append(contact_serializer.data['id'])
   
+  
         if basic_reference_available and basic_reference_contacts:
             for basic_reference_contact in basic_reference_contacts:
                 if 'id' in basic_reference_contact:
