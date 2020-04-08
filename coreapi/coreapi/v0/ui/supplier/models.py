@@ -607,6 +607,7 @@ class AddressMaster(BaseModel):
     zipcode = models.IntegerField(null=True, blank=True)
     latitude = models.FloatField(null=True, blank=True, default=0.0)
     longitude = models.FloatField(null=True, blank=True, default=0.0)
+    nearest_landmark = models.CharField(max_length=30, null=True, blank=True)
 
     class Meta:
         db_table = 'address_master'

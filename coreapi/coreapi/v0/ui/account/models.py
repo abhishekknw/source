@@ -136,6 +136,7 @@ class ContactDetails(BaseModel):
     landline = models.CharField(blank=True, null=True, max_length=30)
     std_code = models.CharField(max_length=6, blank=True, null=True)
     mobile = models.BigIntegerField(blank=True, null=True)
+    alternate_number = models.BigIntegerField(blank=True, null=True)
     country_code = models.CharField(max_length=10, blank=True, null=True)
     email = models.CharField(max_length=50, blank=True, null=True)
     spoc = models.CharField(max_length=5, blank=True, null=True)
@@ -170,7 +171,10 @@ class OwnershipDetails(models.Model):
     start_date = models.DateTimeField(max_length=50, blank=True, null=True)
     end_date = models.DateTimeField(max_length=50, blank=True, null=True)
     payment_terms_condition = models.TextField(max_length=255, blank=True, null=True)
-    food_tasting = models.CharField(choices=(( 'YES', 'YES' ),  ('NO', 'NO')), max_length=10, blank=True, null=True)
+    bank_account_name = models.CharField(max_length=250, blank=True, null=True)
+    bank_name = models.CharField(max_length=250, blank=True, null=True)
+    ifsc_code = models.CharField(max_length=30, blank=True, null=True)
+    account_number = models.CharField(max_length=250, blank=True, null=True)
     
     class Meta:
         db_table = 'ownership_details'
