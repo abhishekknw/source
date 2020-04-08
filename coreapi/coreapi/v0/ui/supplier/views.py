@@ -2464,7 +2464,7 @@ class SuppliersMetaData(APIView):
                 address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
 
                 if state_name:
-                    count = SupplierMaster.objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code,address_supplier__state__icontains=state).count()
+                    count = SupplierMaster.objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code,address_supplier__state__icontains=state_name).count()
                 else:
                     count = SupplierMaster.objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code).count()
             
@@ -3898,6 +3898,7 @@ class SupplierGenericViewSet(viewsets.ViewSet):
     def list(self, request):
         class_name = self.__class__.__name__
         try:
+            
             user = request.user
             org_id = request.user.profile.organisation.organisation_id
             retail_shop_objects = []
@@ -3910,43 +3911,37 @@ class SupplierGenericViewSet(viewsets.ViewSet):
                 return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
 
 
-            model_name = get_model(supplier_type_code)
-            serializer_name = get_serializer(supplier_type_code)
-            supplier_objects = model_name.objects
+            search_query = Q()
+            search_query &= Q(supplier_type=supplier_type_code)
 
-            if user.is_superuser:
-                if search:
-                    supplier_objects = supplier_objects.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search) 
-                                        | Q(city__icontains=search) | Q(supplier_id__icontains=search))
+            if search:
+                search_query &= (
+                    Q(address_supplier__state__icontains=search)
+                    | Q(address_supplier__address1__icontains=search) 
+                    | Q(address_supplier__address2__icontains=search) 
+                    | Q(address_supplier__city__icontains=search) 
+                    | Q(supplier_id=search)
+                )
 
-                supplier_objects = supplier_objects.all().order_by('name')
-            else:
+            if not user.is_superuser:
                 vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
-                supplier_objects = supplier_objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
-                                                                        & Q(representative__isnull=False))
-                
-                if state and state_name:
-                    supplier_objects = supplier_objects.filter(Q(state=state) | Q(state=state_name))
+                search_query &= ((Q(representative__in=vendor_ids) | Q(representative=org_id)) & Q(representative__isnull=False))
 
-                if search:
-                    supplier_objects = supplier_objects.filter(Q(name__icontains=search) | Q(address1__icontains=search) | Q(address2__icontains=search) 
-                                        | Q(city__icontains=search) | Q(supplier_id__icontains=search))
-
-                supplier_objects = supplier_objects.all().order_by('name')
-
-            #pagination
-            supplier_objects_paginate = paginate(supplier_objects,serializer_name,request)
+            address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
+            master_supplier_objects = SupplierMaster.objects.prefetch_related(address_supplier).filter(search_query).order_by('supplier_name')
+        
+            supplier_objects_paginate = paginate(master_supplier_objects, SupplierMasterSerializer, request)
             supplier_with_images = get_supplier_image(supplier_objects_paginate["list"], 'Supplier')
-            
             count = SupplierMaster.objects.filter(supplier_type=supplier_type_code).count()
 
             data = {
-                'count': count,
+                'count': supplier_objects_paginate["count"],
                 'has_next':supplier_objects_paginate["has_next"],
                 'has_previous':supplier_objects_paginate["has_previous"],
                 'supplier_objects': supplier_with_images
             }
             return handle_response(class_name, data=data, success=True)
+        
         except Exception as e:
             return handle_response(class_name, data="Something went wrong please try again later.", request=request)
 
