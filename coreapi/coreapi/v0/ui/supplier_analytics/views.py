@@ -1,7 +1,5 @@
 import logging
-
 logger = logging.getLogger(__name__)
-from django.db.models import Count
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -14,6 +12,7 @@ from v0.ui.supplier.models import (SupplierTypeSociety, SupplierTypeRetailShop,
                                    SupplierTypeCorporate, SupplierTypeBusShelter,
                                    SupplierTypeCode, RETAIL_SHOP_TYPE)
 from v0.ui.account.models import ContactDetails
+from .utils import get_last_week, get_last_month, get_last_3_months
 
 
 class GetSupplierSummary(APIView):
@@ -22,13 +21,12 @@ class GetSupplierSummary(APIView):
         try:
             valid_supplier_type_code_instances = SupplierTypeCode.objects.all()
             data = {}
-
             for instance in valid_supplier_type_code_instances:
                 supplier_type_code = instance.supplier_type_code
                 error = False
                 try:
                     model_name = get_model(supplier_type_code)
-                    suppliers = model_name.objects.all().values('supplier_id')
+                    suppliers = model_name.objects.all().values('supplier_id', 'created_at')
                 except Exception:
                     error = True
                 supplier_ids = [supplier['supplier_id'] for supplier in suppliers]
@@ -82,12 +80,16 @@ class GetSupplierCitywiseCount(APIView):
             if supplier_type == 'RS':
                 is_society = True
                 # Query Supplier Society
-                suppliers = SupplierTypeSociety.objects.values('supplier_id', 'society_city', 'flat_count')
+                suppliers = SupplierTypeSociety.objects.values('supplier_id', 'society_city', 'flat_count', 'created_at')
             else:
-                suppliers = model.objects.values('supplier_id', 'city')
+                suppliers = model.objects.values('supplier_id', 'city', 'created_at')
 
             supplier_dict_with_cities = {}
 
+            # Get last monday
+            last_monday, last_sunday, this_monday, today = get_last_week()
+            last_month_start, last_month_end, this_month_start = get_last_month()
+            first_month_start = get_last_3_months()
             for supplier in suppliers:
                 city = supplier['society_city'] if is_society else supplier['city']
 
@@ -97,7 +99,38 @@ class GetSupplierCitywiseCount(APIView):
                     supplier_dict_with_cities[city]['supplier_ids'] = []
                     supplier_dict_with_cities[city]['contact_details'] = []
                     supplier_dict_with_cities[city]['supplier_ids'].append(supplier['supplier_id'])
+                    supplier_dict_with_cities[city]['this_month_count'] = 0
+                    supplier_dict_with_cities[city]['this_week_count'] = 0
+                    supplier_dict_with_cities[city]['last_week_count'] = 0
+                    supplier_dict_with_cities[city]['last_month_count'] = 0
+                    supplier_dict_with_cities[city]['last_3_month_count'] = 0
+                    if supplier['created_at']:
+                        if last_monday <= supplier['created_at'].date() <= last_sunday:
+                            supplier_dict_with_cities[city]['last_week_count'] += 1
+                        if this_monday <= supplier['created_at'].date() <= today:
+                            supplier_dict_with_cities[city]['this_week_count'] += 1
+                        # Get monthwise data
+                        if last_month_start <= supplier['created_at'].date() <= last_month_end:
+                            supplier_dict_with_cities[city]['last_month_count'] += 1
+                        if this_month_start <= supplier['created_at'].date() <= today:
+                            supplier_dict_with_cities[city]['this_month_count'] += 1
+                        # Get last 3 months data
+                        if first_month_start <= supplier['created_at'].date() <= last_month_end:
+                            supplier_dict_with_cities[city]['last_3_month_count'] += 1
                 else:
+                    if supplier['created_at']:
+                        if last_monday <= supplier['created_at'].date() <= last_sunday:
+                            supplier_dict_with_cities[city]['last_week_count'] += 1
+                        if this_monday <= supplier['created_at'].date() <= today:
+                            supplier_dict_with_cities[city]['this_week_count'] += 1
+                        # Get monthwise data
+                        if last_month_start <= supplier['created_at'].date() <= last_month_end:
+                            supplier_dict_with_cities[city]['last_month_count'] += 1
+                        if this_month_start <= supplier['created_at'].date() <= today:
+                            supplier_dict_with_cities[city]['this_month_count'] += 1
+                        # Get last 3 months data
+                        if first_month_start <= supplier['created_at'].date() <= last_month_end:
+                            supplier_dict_with_cities[city]['last_3_month_count'] += 1
                     supplier_dict_with_cities[city]['count'] += 1
                     supplier_dict_with_cities[city]['supplier_ids'].append(supplier['supplier_id'])
 
@@ -165,14 +198,26 @@ class GetSupplierList(APIView):
             supplier_details_with_contact = []
             for supplier in supplier_list:
                 index = 0
+                supplier_object = {
+                    'id': index,
+                    'supplier_id': supplier['supplier_id'],
+                    'name': supplier['society_name'] if is_society else supplier['name'],
+                    'area': supplier['society_locality'] if is_society else supplier['area'],
+                    'city': supplier['society_city'] if is_society else supplier['city'],
+                    'subarea': supplier['society_subarea'] if is_society else supplier['subarea'],
+                    'latitude': supplier['society_latitude'] if is_society else supplier['latitude'],
+                    'longitude': supplier['society_longitude'] if is_society else supplier['longitude'],
+                    'state': supplier['society_state'] if is_society else supplier['state'],
+                    'address': supplier['society_address1'] if is_society else supplier['address1'],
+                }
                 # Get contact details
                 contact_details = ContactDetails.objects.filter(object_id=supplier['supplier_id'])\
                     .values('object_id', 'name', 'mobile','contact_type')
                 if contact_details:
                     contact_detail = contact_details[0]
-                    supplier['contact_name'] = contact_detail['name']
-                    supplier['contact_number'] = contact_detail['mobile']
-                    supplier['contact_type'] = contact_detail['contact_type']
+                    supplier_object['contact_name'] = contact_detail['name']
+                    supplier_object['contact_number'] = contact_detail['mobile']
+                    supplier_object['contact_type'] = contact_detail['contact_type']
                     supplier_details_with_contact.append({
                         'id': index,
                         'name': supplier['society_name'] if is_society else supplier['name'],
@@ -189,7 +234,7 @@ class GetSupplierList(APIView):
                         'contact_type': contact_detail['contact_type']
                     })
                 else:
-                    supplier_details_with_contact.append(supplier)
+                    supplier_details_with_contact.append(supplier_object)
                     index += 1
             return Response(data={"status": True, "data": supplier_details_with_contact}, status=status.HTTP_200_OK)
         except Exception as e:

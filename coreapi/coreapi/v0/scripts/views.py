@@ -21,19 +21,22 @@ class UpdateSupplierContactDataImport(APIView):
                 contact_name = supplier['contact_name'].title()
                 designation = supplier['designation'].title()
                 print(supplier_id, contact_number, contact_name, designation)
-                if contact_number and supplier_id:
-                    # Check contact number in contact details
-                    contact_details = ContactDetails.objects.filter(mobile=contact_number, object_id=supplier_id)
-                    if contact_details:
-                        if contact_name:
-                            contact_details.update(name=contact_name, contact_type=designation)
-                            updated_contact_file.write(
+                try:
+                    if contact_number and supplier_id:
+                        # Check contact number in contact details
+                        contact_details = ContactDetails.objects.filter(mobile=contact_number, object_id=supplier_id)
+                        if contact_details:
+                            if contact_name and designation:
+                                contact_details.update(name=contact_name, contact_type=designation)
+                                updated_contact_file.write(
+                                    "{mobile},{name},{id}\n".format(mobile=contact_number, name=contact_name, id=supplier_id))
+                        else:
+                            contact_details = ContactDetails(object_id=supplier_id, name=contact_name, contact_type=designation, mobile=contact_number)
+                            contact_details.save()
+                            new_contact_file.write(
                                 "{mobile},{name},{id}\n".format(mobile=contact_number, name=contact_name, id=supplier_id))
-                    else:
-                        contact_details = ContactDetails(object_id=supplier_id, name=contact_name, contact_type=designation, mobile=contact_number)
-                        contact_details.save()
-                        new_contact_file.write(
-                            "{mobile},{name},{id}\n".format(mobile=contact_number, name=contact_name, id=supplier_id))
+                except Exception as e:
+                    print(e)
         except Exception as e:
             print(e)
         return handle_response({}, data='Data updated successfully', success=True)
