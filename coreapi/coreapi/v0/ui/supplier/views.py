@@ -3577,6 +3577,7 @@ class MultiSupplierDetails(APIView):
             for supplier in suppliers:
                 index = 0
                 supplier_object = {
+                    'supplier_type_code': supplier_type_code,
                     'supplier_id': supplier['supplier_id'],
                     'name': supplier['society_name'] if is_society else supplier['name'],
                     'area': supplier['society_locality'] if is_society else supplier['area'],
@@ -3600,6 +3601,7 @@ class MultiSupplierDetails(APIView):
                             supplier_object['contact_type'] = contact_detail['contact_type']
                             multiple_supplier_details_with_contact.append({
                                 'id': index,
+                                'supplier_type_code': supplier_type_code,
                                 'supplier_id': supplier['supplier_id'],
                                 'name': supplier['society_name'] if is_society else supplier['name'],
                                 'area': supplier['society_locality'] if is_society else supplier['area'],
