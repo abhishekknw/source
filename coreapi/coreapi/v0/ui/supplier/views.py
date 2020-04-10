@@ -24,7 +24,7 @@ from v0.ui.dynamic_booking.models import BookingInventoryActivity
 from v0.ui.dynamic_suppliers.models import SupplySupplier
 from .models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeGym, SupplierMaster,
                     SupplierTypeRetailShop, CorporateParkCompanyList, CorporateBuilding, SupplierTypeBusDepot,
-                    SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE, SupplierEducationalInstitute, SupplierHordings, SupplierMaster, AddressMaster)
+                    SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE, SupplierEducationalInstitute, SupplierHording, SupplierMaster, AddressMaster)
 from .serializers import (UICorporateSerializer, SupplierTypeSocietySerializer, SupplierAmenitiesMapSerializer,
                          UISalonSerializer, SupplierTypeSalon, SupplierTypeGymSerializer, RetailShopSerializer,
                          SupplierInfoSerializer, SupplierInfo, SupplierTypeCorporateSerializer,
@@ -1483,7 +1483,7 @@ class HordingViewSet(viewsets.ViewSet):
             search = request.GET.get("search")
 
             if user.is_superuser:
-                hording_objects = SupplierHordings.objects
+                hording_objects = SupplierHording.objects
 
                 if state and state_name:
                     hording_objects = hording_objects.filter(Q(state=state) | Q(state=state_name))
@@ -1495,7 +1495,7 @@ class HordingViewSet(viewsets.ViewSet):
                 hording_objects = hording_objects.all().order_by('name')
             else:
 
-                hording_objects = SupplierHordings.objects
+                hording_objects = SupplierHording.objects
                 
                 if state and state_name:
                     hording_objects = hording_objects.filter(Q(state=state) | Q(state=state_name))
@@ -1523,7 +1523,7 @@ class HordingViewSet(viewsets.ViewSet):
     def retrieve(self, request, pk):
         class_name = self.__class__.__name__
         try:
-            hording_instance = SupplierHordings.objects.get(pk=pk)
+            hording_instance = SupplierHording.objects.get(pk=pk)
             serializer = SupplierHordingSerializer(instance=hording_instance)
 
             result = serializer.data
@@ -1538,7 +1538,7 @@ class HordingViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             contact_and_ownership = update_contact_and_ownership_detail(request.data)
-            hording_instance = SupplierHordings.objects.get(pk=pk)
+            hording_instance = SupplierHording.objects.get(pk=pk)
             serializer = SupplierHordingSerializer(instance=hording_instance, data=request.data)
             if serializer.is_valid():
                 serializer.save()

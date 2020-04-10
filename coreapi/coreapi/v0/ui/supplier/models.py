@@ -88,24 +88,6 @@ class BasicSupplierDetails(BaseModel):
     sales_allowed = models.BooleanField(default=False)
     objects = managers.GeneralManager()
 
-
-
-    address1 = models.CharField(max_length=252, null=True, blank=True)
-    address2 = models.CharField(max_length=252, null=True, blank=True)
-    area = models.CharField(max_length=252, null=True, blank=True)
-    subarea = models.CharField(max_length=32, null=True, blank=True)
-    city = models.CharField(max_length=252, null=True, blank=True)
-    state = models.CharField(max_length=252, null=True, blank=True)
-    zipcode = models.IntegerField(null=True, max_length=252, blank=True)
-    latitude = models.FloatField(null=True, blank=True, default=0.0)
-    longitude = models.FloatField(null=True, max_length=252, blank=True, default=0.0)
-    bank_account_name = models.CharField(max_length=252, blank=True, null=True)
-    bank_name = models.CharField(max_length=252, blank=True, null=True)
-    ifsc_code = models.CharField(max_length=32, blank=True, null=True)
-    account_number = models.CharField(max_length=252, blank=True, null=True)
-    food_tasting_allowed = models.BooleanField(default=False, null=True)
-    sales_allowed = models.BooleanField(default=False, null=True)
-
     class Meta:
         abstract = True
 
@@ -382,7 +364,7 @@ class SupplierEducationalInstitute(BasicSupplierDetails):
     class Meta:
         db_table = 'supplier_educational_institute'
 
-class SupplierHordings(BasicSupplierDetails):
+class SupplierHording(BasicSupplierDetails):
 
     owner_name = models.CharField(max_length=255, null=True, blank=True)
     external_Number = models.CharField(max_length=255, null=True, blank=True)
@@ -496,15 +478,12 @@ class SupplierTypeBusShelter(BasicSupplierDetails):
     halt_buses_count = models.IntegerField(null=True, blank=True)
     representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
     
-    direction = models.CharField(max_length=255, null=True, blank=True)
-    comments = models.CharField(max_length=255, null=True, blank=True)
-    average_peak_hour_traffic = models.CharField(max_length=255, null=True, blank=True)
-    average_non_peak_hour_traffic = models.CharField(max_length=255, null=True, blank=True)
-    average_down_boarding_daily_count = models.IntegerField(null=True, blank=True)
-    average_on_boarding_daily_count = models.IntegerField(null=True, blank=True)
+    average_down_boarding_daily_count = models.IntegerField(null=True, max_length=200, blank=True)
+    average_on_boarding_daily_count = models.IntegerField(null=True, max_length=200, blank=True)
 
-    external_number = models.CharField(max_length=255, null=True, blank=True)
+    external_number = models.CharField(max_length=200, null=True, blank=True)
     
+
 
 
     class Meta:
