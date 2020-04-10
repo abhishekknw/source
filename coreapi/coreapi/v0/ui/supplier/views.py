@@ -3953,35 +3953,35 @@ class SupplierGenericViewSet(viewsets.ViewSet):
     def retrieve(self, request, pk):
         class_name = self.__class__.__name__
 
-        #try:
+        try:
 
-        supplier_type_code = request.GET.get("supplier_type_code", None)
-        
-        if not supplier_type_code:
-            return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
+            supplier_type_code = request.GET.get("supplier_type_code", None)
+            
+            if not supplier_type_code:
+                return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
 
-        
-        master_supplier_objects = SupplierMaster.objects.filter(pk=pk).first()
-        supplier_master_serializer = SupplierMasterSerializer(master_supplier_objects, many=False)
+            
+            master_supplier_objects = SupplierMaster.objects.filter(pk=pk).first()
+            supplier_master_serializer = SupplierMasterSerializer(master_supplier_objects, many=False)
 
-        model_name = get_model(supplier_type_code)
-        supplier_instance = model_name.objects.filter(pk=pk).first()
+            model_name = get_model(supplier_type_code)
+            supplier_instance = model_name.objects.filter(pk=pk).first()
 
-        if supplier_instance:
-            serializer_name = get_serializer(supplier_type_code)
-            serializer = serializer_name(instance=supplier_instance)
+            if supplier_instance:
+                serializer_name = get_serializer(supplier_type_code)
+                serializer = serializer_name(instance=supplier_instance)
 
-            shopData = serializer.data
+                shopData = serializer.data
 
-            shopData['master_data'] = supplier_master_serializer.data
+                shopData['master_data'] = supplier_master_serializer.data
 
-            shopData['contactData'],shopData['ownership_details'] = retrieve_contact_and_ownership_detail(pk)
+                shopData['contactData'],shopData['ownership_details'] = retrieve_contact_and_ownership_detail(pk)
 
-            return handle_response(class_name, data=shopData, success=True)
-        #     else:
-        #         return handle_response(class_name, data="Supplier Id does not exist.", success=True)
-        # except Exception as e:
-        #     return handle_response(class_name, data="Something went wrong please try again later.", request=request)
+                return handle_response(class_name, data=shopData, success=True)
+            else:
+                return handle_response(class_name, data="Supplier Id does not exist.", success=True)
+        except Exception as e:
+            return handle_response(class_name, data="Something went wrong please try again later.", request=request)
 
     def update(self, request, pk):
         class_name = self.__class__.__name__
