@@ -82,23 +82,9 @@ class BasicSupplierDetails(BaseModel):
     supplier_id = models.CharField(db_index=True, max_length=20, primary_key=True)
     supplier_code = models.CharField(max_length=3, null=True)
     name = models.CharField(max_length=70, null=True, blank=True)
-    address1 = models.CharField(max_length=250, null=True, blank=True)
-    address2 = models.CharField(max_length=250, null=True, blank=True)
-    area = models.CharField(max_length=255, null=True, blank=True)
-    subarea = models.CharField(max_length=30, null=True, blank=True)
-    city = models.CharField(max_length=250, null=True, blank=True)
-    state = models.CharField(max_length=250, null=True, blank=True)
-    zipcode = models.IntegerField(null=True, blank=True)
-    latitude = models.FloatField(null=True, blank=True, default=0.0)
-    longitude = models.FloatField(null=True, blank=True, default=0.0)
     locality_rating = models.CharField(max_length=50, null=True, blank=True)
     quality_rating = models.CharField(max_length=50, null=True, blank=True)
     machadalo_index = models.CharField(max_length=30, null=True, blank=True)
-    bank_account_name = models.CharField(max_length=250, blank=True, null=True)
-    bank_name = models.CharField(max_length=250, blank=True, null=True)
-    ifsc_code = models.CharField(max_length=30, blank=True, null=True)
-    account_number = models.CharField(max_length=250, blank=True, null=True)
-    food_tasting_allowed = models.BooleanField(default=False)
     sales_allowed = models.BooleanField(default=False)
     objects = managers.GeneralManager()
 
@@ -296,8 +282,6 @@ class SupplierTypeSalon(BasicSupplierDetails):
     category = models.CharField(db_column='CATEGORY', max_length=30, blank=True, null=True)
     salon_type_chain = models.CharField(db_column='SALON_TYPE_CHAIN', max_length=30, blank=True, null=True)
     footfall_day = models.IntegerField(db_column='FOOTFALL_DAY', blank=True, null=True)
-    footfall_week = models.IntegerField(db_column='FOOTFALL_WEEK', blank=True, null=True)
-    footfall_weekend = models.IntegerField(db_column='FOOTFALL_WEEKEND', blank=True, null=True)
     isspaavailable = models.BooleanField(db_column='ISSPAAVAILABLE', default=False)
     advertising_media = models.CharField(db_column='AD_MEDIA', max_length=30, blank=True, null=True)
     shop_size = models.CharField(db_column='SHOP_SIZE', max_length=30, blank=True, null=True)
@@ -343,7 +327,6 @@ class SupplierTypeGym(BasicSupplierDetails):
     chain_origin = models.CharField(max_length=30, blank=True, null=True)
     totalmembership_perannum = models.IntegerField(blank=True, null=True)
     footfall_day = models.IntegerField(blank=True, null=True)
-    footfall_weekend = models.IntegerField(blank=True, null=True)
     advertising_media = models.CharField(max_length=30, blank=True, null=True)
     dietchart_price = models.IntegerField(blank=True, null=True)
     stall_price_day = models.IntegerField(blank=True, null=True)
@@ -446,7 +429,6 @@ class SupplierTypeCorporate(BasicSupplierDetails):
     building_count = models.IntegerField(blank=True, null=True)
     floorperbuilding_count = models.IntegerField(blank=True, null=True)
     totalcompanies_count = models.IntegerField(blank=True, null=True)
-    totalemployees_count = models.IntegerField(blank=True, null=True)
     isrealestateallowed = models.BooleanField(default=False)
     total_area = models.FloatField(blank=True, null=True, default=0.0)
     quantity_rating = models.CharField(max_length=50, blank=True, null=True)
@@ -475,10 +457,7 @@ class SupplierTypeCorporate(BasicSupplierDetails):
     supplier_status = models.CharField(max_length=80, null=True, choices=SUPPLIER_STATUS)
     comments = models.CharField(max_length=255, null=True, blank=True)
     relationship_manager = models.CharField(max_length=50, null=True, blank=True)
-    landmark = models.CharField(max_length=255, null=True, blank=True)
-
     rating = models.CharField(max_length=255, null=True, blank=True)
-
     feedback = models.CharField(max_length=250, null=True, blank=True)
 
 
@@ -503,8 +482,6 @@ class SupplierTypeBusShelter(BasicSupplierDetails):
     comments = models.CharField(max_length=255, null=True, blank=True)
     average_peak_hour_traffic = models.CharField(max_length=255, null=True, blank=True)
     average_non_peak_hour_traffic = models.CharField(max_length=255, null=True, blank=True)
-
-    average_footfall_daily_count = models.IntegerField(null=True, blank=True)
     average_down_boarding_daily_count = models.IntegerField(null=True, blank=True)
     average_on_boarding_daily_count = models.IntegerField(null=True, blank=True)
 
@@ -539,15 +516,9 @@ class SupplierTypeRetailShop(BasicSupplierDetails):
     is_modern_trade = models.BooleanField(default=False)
     is_traditional = models.BooleanField(default=False)
     category_name = models.CharField(max_length=255, null=True, blank=True)
-
-    
-    
     store_size = models.CharField(max_length=250, blank=True, null=True)
     std_code = models.CharField(max_length=250, blank=True, null=True)
     salutation = models.CharField(max_length=250, blank=True, null=True)
-    
-    average_weekend = models.CharField(max_length=250, blank=True, null=True)
-    average_weekday = models.CharField(max_length=250, blank=True, null=True)
     contact_name = models.CharField(max_length=250, blank=True, null=True)
     contact_type = models.CharField(max_length=250, blank=True, null=True)
     country_code = models.CharField(max_length=250, blank=True, null=True)
@@ -558,11 +529,7 @@ class SupplierTypeRetailShop(BasicSupplierDetails):
     landmark = models.CharField(max_length=250, blank=True, null=True)
     comments = models.CharField(max_length=255, null=True, blank=True)
     rating = models.CharField(max_length=255, null=True, blank=True)
-
-    
-
-    
-    
+    food_tasting_allowed = models.BooleanField(default=False)
     representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
