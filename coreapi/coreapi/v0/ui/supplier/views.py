@@ -131,6 +131,26 @@ def update_contact_and_ownership_detail(data):
     basic_contacts = data.get('basic_contacts', None)
     object_id = data.get('supplier_id', None)
 
+    master_data = {
+        "supplier_id": object_id,
+        "supplier_name": data.get('name', None),
+        "supplier_type": 'RE',
+        "unit_primary_count" : data.get('unit_primary_count') if data.get('unit_primary_count') else 0,
+        "unit_secondary_count" : data.get('unit_secondary_count') if data.get('unit_secondary_count') else 0,
+        "unit_tertiary_count" : data.get('unit_tertiary_count') if data.get('unit_tertiary_count') else 0,
+        "representative": data.get('representative', None)
+    }
+
+    supplier_master_data = SupplierMaster.objects.filter(supplier_id=object_id).first()
+    if supplier_master_data and supplier_master_data.supplier_id:
+        supplier_master_serializer = SupplierMasterSerializer(supplier_master_data, data=master_data)
+    else:
+        supplier_master_serializer = SupplierMasterSerializer(data=master_data)
+
+    if supplier_master_serializer.is_valid():
+        supplier_master_serializer.save()
+
+    
     address_data = {
         "supplier_id": object_id,
         "address1": data.get('address1', None),
@@ -142,6 +162,7 @@ def update_contact_and_ownership_detail(data):
         "zipcode": data.get('zipcode', None),
         "latitude": data.get('latitude', None),
         "longitude": data.get('longitude', None),
+        "nearest_landmark": data.get('nearest_landmark', None),
     }
 
     address_master_data = AddressMaster.objects.filter(supplier_id=object_id).first()
@@ -153,22 +174,6 @@ def update_contact_and_ownership_detail(data):
 
     if address_master_serializer.is_valid():
         address_master_serializer.save()
-
-    master_data = {
-        "supplier_id": object_id,
-        "supplier_name": data.get('name', None),
-        "supplier_type": 'RE',
-        "unit_count": 10
-    }
-
-    supplier_master_data = SupplierMaster.objects.filter(supplier_id=object_id).first()
-    if supplier_master_data and supplier_master_data.supplier_id:
-        supplier_master_serializer = SupplierMasterSerializer(supplier_master_data, data=master_data)
-    else:
-        supplier_master_serializer = SupplierMasterSerializer(data=master_data)
-
-    if supplier_master_serializer.is_valid():
-        supplier_master_serializer.save()
 
     if basic_contacts:
         for contact in basic_contacts:
@@ -3932,7 +3937,7 @@ class SupplierGenericViewSet(viewsets.ViewSet):
         
             supplier_objects_paginate = paginate(master_supplier_objects, SupplierMasterSerializer, request)
             supplier_with_images = get_supplier_image(supplier_objects_paginate["list"], 'Supplier')
-            count = SupplierMaster.objects.filter(supplier_type=supplier_type_code).count()
+            
 
             data = {
                 'count': supplier_objects_paginate["count"],
@@ -3948,19 +3953,27 @@ class SupplierGenericViewSet(viewsets.ViewSet):
     def retrieve(self, request, pk):
         class_name = self.__class__.__name__
 
-        supplier_type_code = request.GET.get("supplier_type_code", None)
-        model_name = get_model(supplier_type_code)
-        supplier_instance = model_name.objects.filter(pk=pk).first()
-        
         try:
+
+            supplier_type_code = request.GET.get("supplier_type_code", None)
+            
             if not supplier_type_code:
                 return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
+
+            
+            master_supplier_objects = SupplierMaster.objects.filter(pk=pk).first()
+            supplier_master_serializer = SupplierMasterSerializer(master_supplier_objects, many=False)
+
+            model_name = get_model(supplier_type_code)
+            supplier_instance = model_name.objects.filter(pk=pk).first()
 
             if supplier_instance:
                 serializer_name = get_serializer(supplier_type_code)
                 serializer = serializer_name(instance=supplier_instance)
 
                 shopData = serializer.data
+
+                shopData['master_data'] = supplier_master_serializer.data
 
                 shopData['contactData'],shopData['ownership_details'] = retrieve_contact_and_ownership_detail(pk)
 
