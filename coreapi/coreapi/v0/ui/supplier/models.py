@@ -364,7 +364,7 @@ class SupplierEducationalInstitute(BasicSupplierDetails):
     class Meta:
         db_table = 'supplier_educational_institute'
 
-class SupplierHording(BasicSupplierDetails):
+class SupplierHordings(BasicSupplierDetails):
 
     owner_name = models.CharField(max_length=255, null=True, blank=True)
     external_Number = models.CharField(max_length=255, null=True, blank=True)
