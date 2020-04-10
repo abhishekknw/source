@@ -276,8 +276,7 @@ def save_supplier_data(user, master_data):
             sup_master_data = {
                 "supplier_id" : supplier_data.get('supplier_id'),
                 "supplier_name" : supplier_data.get('name'),
-                "supplier_type" : supplier_code,
-                "unit_count" : 0
+                "supplier_type" : supplier_code
             }
             supller_master_serializer = SupplierMasterSerializer(data=sup_master_data)
             if supller_master_serializer.is_valid():
