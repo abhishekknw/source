@@ -82,11 +82,26 @@ class BasicSupplierDetails(BaseModel):
     supplier_id = models.CharField(db_index=True, max_length=20, primary_key=True)
     supplier_code = models.CharField(max_length=3, null=True)
     name = models.CharField(max_length=70, null=True, blank=True)
+    address1 = models.CharField(max_length=250, null=True, blank=True)
+    address2 = models.CharField(max_length=250, null=True, blank=True)
+    area = models.CharField(max_length=255, null=True, blank=True)
+    subarea = models.CharField(max_length=30, null=True, blank=True)
+    city = models.CharField(max_length=250, null=True, blank=True)
+    state = models.CharField(max_length=250, null=True, blank=True)
+    zipcode = models.IntegerField(null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True, default=0.0)
+    longitude = models.FloatField(null=True, blank=True, default=0.0)
     locality_rating = models.CharField(max_length=50, null=True, blank=True)
     quality_rating = models.CharField(max_length=50, null=True, blank=True)
     machadalo_index = models.CharField(max_length=30, null=True, blank=True)
+    bank_account_name = models.CharField(max_length=250, blank=True, null=True)
+    bank_name = models.CharField(max_length=250, blank=True, null=True)
+    ifsc_code = models.CharField(max_length=30, blank=True, null=True)
+    account_number = models.CharField(max_length=250, blank=True, null=True)
+    food_tasting_allowed = models.BooleanField(default=False)
     sales_allowed = models.BooleanField(default=False)
     objects = managers.GeneralManager()
+
 
     class Meta:
         abstract = True
@@ -478,15 +493,12 @@ class SupplierTypeBusShelter(BasicSupplierDetails):
     halt_buses_count = models.IntegerField(null=True, blank=True)
     representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
     
-    direction = models.CharField(max_length=255, null=True, blank=True)
-    comments = models.CharField(max_length=255, null=True, blank=True)
-    average_peak_hour_traffic = models.CharField(max_length=255, null=True, blank=True)
-    average_non_peak_hour_traffic = models.CharField(max_length=255, null=True, blank=True)
-    average_down_boarding_daily_count = models.IntegerField(null=True, blank=True)
-    average_on_boarding_daily_count = models.IntegerField(null=True, blank=True)
+    average_down_boarding_daily_count = models.IntegerField(null=True, max_length=200, blank=True)
+    average_on_boarding_daily_count = models.IntegerField(null=True, max_length=200, blank=True)
 
-    external_number = models.CharField(max_length=255, null=True, blank=True)
+    external_number = models.CharField(max_length=200, null=True, blank=True)
     
+
 
 
     class Meta:
