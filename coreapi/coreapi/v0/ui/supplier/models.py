@@ -478,15 +478,12 @@ class SupplierTypeBusShelter(BasicSupplierDetails):
     halt_buses_count = models.IntegerField(null=True, blank=True)
     representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
     
-    direction = models.CharField(max_length=255, null=True, blank=True)
-    comments = models.CharField(max_length=255, null=True, blank=True)
-    average_peak_hour_traffic = models.CharField(max_length=255, null=True, blank=True)
-    average_non_peak_hour_traffic = models.CharField(max_length=255, null=True, blank=True)
-    average_down_boarding_daily_count = models.IntegerField(null=True, blank=True)
-    average_on_boarding_daily_count = models.IntegerField(null=True, blank=True)
+    average_down_boarding_daily_count = models.IntegerField(null=True, max_length=200, blank=True)
+    average_on_boarding_daily_count = models.IntegerField(null=True, max_length=200, blank=True)
 
-    external_number = models.CharField(max_length=255, null=True, blank=True)
+    external_number = models.CharField(max_length=200, null=True, blank=True)
     
+
 
 
     class Meta:
