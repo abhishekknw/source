@@ -134,7 +134,6 @@ def update_contact_and_ownership_detail(data):
     master_data = {
         "supplier_id": object_id,
         "supplier_name": data.get('name', None),
-        "supplier_type": 'RE',
         "unit_primary_count" : data.get('unit_primary_count') if data.get('unit_primary_count') else 0,
         "unit_secondary_count" : data.get('unit_secondary_count') if data.get('unit_secondary_count') else 0,
         "unit_tertiary_count" : data.get('unit_tertiary_count') if data.get('unit_tertiary_count') else 0,
@@ -2609,15 +2608,11 @@ class FilteredSuppliers(APIView):
             inventory_type_query_suppliers = []
 
             # this is the main list. if no filter is selected this is what is returned by default
-            # cache_key = create_cache_key(class_name, proposal_id, supplier_type_code, common_filters_query)
-            # cache_key = None
-            #
-            #
-            # if cache.get(cache_key):
-            #     master_suppliers_list = cache.get(cache_key)
-            # else:
-            master_suppliers_list = set(list(supplier_model.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
-            # cache.set(cache_key, master_suppliers_list)
+            if supplier_type_code == 'RS':
+                master_suppliers_list = set(list(supplier_model.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
+            else :
+                master_suppliers_list = set(list(AddressMaster.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
+            
             # now fetch all inventory_related suppliers
             # handle inventory related filters. it involves quite an involved logic hence it is in another function.
             response = website_utils.handle_inventory_filters(inventory_filters)
@@ -2626,17 +2621,8 @@ class FilteredSuppliers(APIView):
             inventory_type_query = response.data['data']
 
             if inventory_type_query.__len__():
-
                 inventory_type_query &= Q(content_type=content_type)
-
-                # cache_key = create_cache_key(class_name, proposal_id, supplier_type_code, inventory_type_query)
-                # cache_key = None
-                # if cache.get(cache_key):
-                #     inventory_type_query_suppliers = cache.get(cache_key)
-                # else:
-                #
                 inventory_type_query_suppliers = set(list(InventorySummary.objects.filter(inventory_type_query).values_list('object_id', flat=True)))
-                # cache.set(cache_key, inventory_type_query_suppliers)
 
             # if inventory query was non zero in length, set final_suppliers_id_list to inventory_type_query_suppliers.
             if inventory_type_query.__len__():
@@ -2649,17 +2635,13 @@ class FilteredSuppliers(APIView):
 
             result = {}
 
-            # query now for real objects for supplier_id in the list
-            # cache_key = create_cache_key(class_name, final_suppliers_id_list)
-            # if cache.get(cache_key):
-            #     import pdb
-            #     pdb.set_trace()
-            #     filtered_suppliers = cache.get(cache_key)
-            #
-            filtered_suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_id_list,
+            if supplier_type_code == 'RS':
+                filtered_suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_id_list,
                                                                representative=proposal.principal_vendor)
+            else: 
+                filtered_suppliers = SupplierMaster.objects.filter(supplier_id__in=final_suppliers_id_list,
+                                                            representative=proposal.principal_vendor)
 
-            # cache.set(cache_key, filtered_suppliers)
             supplier_serializer = ui_utils.get_serializer(supplier_type_code)
             serializer = supplier_serializer(filtered_suppliers, many=True)
 
@@ -2680,14 +2662,8 @@ class FilteredSuppliers(APIView):
             # because some suppliers can be outside the given radius, we need to recalculate list of
             # supplier_id's.
             final_suppliers_id_list = list(total_suppliers.keys())
-
-            # cache_key = create_cache_key(class_name, proposal_id, supplier_type_code, priority_index_filters, final_suppliers_id_list)
-            # cache_key = None
-            # if cache.get(cache_key):
-            #     pi_index_map = cache.get(cache_key)
-            # else:
-            #     # We are applying ranking on combined list of previous saved suppliers plus the new suppliers if any. now the suppliers are filtered. we have to rank these suppliers. Get the ranking by calling this function.
-
+            
+            # We are applying ranking on combined list of previous saved suppliers plus the new suppliers if any. now the suppliers are filtered. we have to rank these suppliers. Get the ranking by calling this function.
             pi_index_map = {}
             supplier_id_to_pi_map = {}
 

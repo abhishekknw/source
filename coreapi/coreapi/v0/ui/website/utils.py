@@ -2626,7 +2626,7 @@ def handle_common_filters(common_filters, supplier_type_code, proposal):
             query['longitude__lt'] = max_longitude
             query['longitude__gt'] = min_longitude
 
-        query['representative'] = proposal.principal_vendor
+        # query['representative'] = proposal.principal_vendor
 
         # the keys like 'locality', 'quantity', 'quality' we receive from front end are already defined in constants
         predefined_common_filter_keys = list(v0_constants.query_dict[supplier_type_code].keys())
