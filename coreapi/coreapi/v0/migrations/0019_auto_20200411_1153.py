@@ -10,6 +10,78 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RemoveField(
+            model_name='suppliereducationalinstitute',
+            name='account_number',
+        ),
+        migrations.RemoveField(
+            model_name='suppliereducationalinstitute',
+            name='address1',
+        ),
+        migrations.RemoveField(
+            model_name='suppliereducationalinstitute',
+            name='address2',
+        ),
+        migrations.RemoveField(
+            model_name='suppliereducationalinstitute',
+            name='area',
+        ),
+        migrations.RemoveField(
+            model_name='suppliereducationalinstitute',
+            name='bank_account_name',
+        ),
+        migrations.RemoveField(
+            model_name='suppliereducationalinstitute',
+            name='bank_name',
+        ),
+        migrations.RemoveField(
+            model_name='suppliereducationalinstitute',
+            name='city',
+        ),
+        migrations.RemoveField(
+            model_name='suppliereducationalinstitute',
+            name='food_tasting_allowed',
+        ),
+        migrations.RemoveField(
+            model_name='suppliereducationalinstitute',
+            name='ifsc_code',
+        ),
+        migrations.RemoveField(
+            model_name='suppliereducationalinstitute',
+            name='latitude',
+        ),
+        migrations.RemoveField(
+            model_name='suppliereducationalinstitute',
+            name='longitude',
+        ),
+        migrations.RemoveField(
+            model_name='suppliereducationalinstitute',
+            name='state',
+        ),
+        migrations.RemoveField(
+            model_name='suppliereducationalinstitute',
+            name='subarea',
+        ),
+        migrations.RemoveField(
+            model_name='suppliereducationalinstitute',
+            name='zipcode',
+        ),
+        migrations.RemoveField(
+            model_name='suppliertypebusshelter',
+            name='address1',
+        ),
+        migrations.RemoveField(
+            model_name='suppliertypebusshelter',
+            name='account_number',
+        ),
+        migrations.RemoveField(
+            model_name='suppliertypebusshelter',
+            name='address2',
+        ),
+        migrations.RemoveField(
+            model_name='suppliertypebusshelter',
+            name='address2',
+        ),
 
         migrations.RemoveField(
             model_name='suppliertypebusshelter',
@@ -50,6 +122,10 @@ class Migration(migrations.Migration):
         migrations.RemoveField(
             model_name='suppliertypebusshelter',
             name='zipcode',
+        ),
+        migrations.RemoveField(
+            model_name='suppliertypebusshelter',
+            name='area',
         ),
         migrations.RemoveField(
             model_name='suppliertypecorporate',
