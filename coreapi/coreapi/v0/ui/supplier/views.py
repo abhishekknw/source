@@ -3811,6 +3811,35 @@ class listCampaignSuppliers(APIView):
         all_societies = [dict(society) for society in all_societies]
         return ui_utils.handle_response({}, data=all_societies, success=True)
 
+class ListCampaignSuppliers(APIView):
+    # inserts flat count type to society on the basis of number of flats it has
+    @staticmethod
+    def get(request, campaign_id):
+        all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
+            values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name',
+                   'proposal__tentative_start_date',
+                   'proposal__tentative_end_date', 'proposal__campaign_state')
+        all_supplier_ids = [supplier['object_id'] for supplier in all_shortlisted_supplier]
+        all_campaign_societies = SupplierMaster.objects.filter(supplier_id__in=all_supplier_ids).all()
+        serializer = SupplierMasterSerializer(all_campaign_societies, many=True)
+        all_societies = manipulate_object_key_values(serializer.data)
+        booking_inv_activities = BookingInventoryActivity.objects.raw({"campaign_id": campaign_id})
+        supplier_ids = [ObjectId(supplier.supplier_id) for supplier in booking_inv_activities]
+        suppliers = SupplySupplier.objects.raw({'_id': {'$in': (supplier_ids)}})
+        dynamic_suppliers = []
+        if suppliers.count() > 0:
+            for supplier in suppliers:
+                data = {
+                    "name": supplier.name,
+                    "supplier_id": str(supplier._id)
+                }
+                for attr in supplier.supplier_attributes:
+                    data[attr['name']] = attr['value'] if 'value' in attr else None
+                dynamic_suppliers.append(data)
+        all_societies = all_societies + dynamic_suppliers
+        all_societies = [dict(society) for society in all_societies]
+        return ui_utils.handle_response({}, data=all_societies, success=True)
+
 class CreateSupplierPriceMappingObjects(APIView):
     def get(self, request):
         suppliers = SupplierTypeSociety.objects.all()
