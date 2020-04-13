@@ -3317,18 +3317,16 @@ def get_suppliers_within_circle(suppliers, coordinates, supplier_type_code):
 
         for supplier in suppliers:
 
-            # include only those suppliers that lie within the circle of radius given
-            if supplier_type_code == "RS":
-                supplier_latitude = get_dict_value(supplier, ['society_latitude', 'latitude'])
-                supplier_longitude = get_dict_value(supplier, ['society_longitude', 'longitude'])
-            else:
+            if supplier_type_code != "RS":
                 address_supplier = supplier.get('address_supplier')
                 if address_supplier:
                     supplier['latitude'] = address_supplier.get('latitude')
                     supplier['longitude'] = address_supplier.get('longitude')
-            
-                supplier_latitude = get_dict_value(supplier, ['society_latitude', 'latitude'])
-                supplier_longitude = get_dict_value(supplier, ['society_longitude', 'longitude'])
+
+            # include only those suppliers that lie within the circle of radius given
+            supplier_latitude = get_dict_value(supplier, ['society_latitude', 'latitude'])
+            supplier_longitude = get_dict_value(supplier, ['society_longitude', 'longitude'])
+           
 
             if space_on_circle(latitude, longitude, radius, supplier_latitude, supplier_longitude):
                 result.append(supplier)
