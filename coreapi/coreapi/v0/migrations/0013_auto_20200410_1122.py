@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
+        migrations.AddField(
             model_name='proposalinfo',
             name='brand',
             field=models.CharField(blank=True, choices=[('single_brand', 'single_brand'), ('multi_brand', 'multi_brand')], max_length=60, null=True),
