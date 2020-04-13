@@ -1255,8 +1255,12 @@ class SocietyAPISortedListView(APIView):
 
 class SocietyAPISocietyIdsView(APIView):
     def get(self, request, format=None):
-        society_ids = SupplierTypeSociety.objects.all().values_list('supplier_id', flat=True)
-        return Response({'society_ids': society_ids}, status=200)
+        supplier_type_code = request.query_params.get('supplier_type_code', None)
+        if supplier_type_code == 'RS':
+            supplier_ids = SupplierTypeSociety.objects.all().values_list('supplier_id', flat=True)
+        else:
+            supplier_ids = SupplierMaster.objects.all().values_list('supplier_id', flat=True)
+        return Response({'supplier_ids': supplier_ids}, status=200)
 
 class SupplierInfoAPIView(APIView):
 
