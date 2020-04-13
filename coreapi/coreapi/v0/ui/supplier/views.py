@@ -134,7 +134,6 @@ def update_contact_and_ownership_detail(data):
     master_data = {
         "supplier_id": object_id,
         "supplier_name": data.get('name', None),
-        "supplier_type": 'RE',
         "unit_primary_count" : data.get('unit_primary_count') if data.get('unit_primary_count') else 0,
         "unit_secondary_count" : data.get('unit_secondary_count') if data.get('unit_secondary_count') else 0,
         "unit_tertiary_count" : data.get('unit_tertiary_count') if data.get('unit_tertiary_count') else 0,
@@ -3414,75 +3413,87 @@ class SupplierSearch(APIView):
             if not supplier_type_code :
                 return ui_utils.handle_response(class_name, data='provide supplier type code')
 
-            model = ui_utils.get_model(supplier_type_code)
             
-            search_query = Q()
+            if supplier_type_code == "RS" :
 
-            search_query &= Q(supplier_code__isnull=False)
+                model = ui_utils.get_model(supplier_type_code)
+                search_query = Q()
+                search_query &= Q(supplier_code__isnull=False)
 
-            if search_txt :
-                for search_field in v0_constants.search_fields[supplier_type_code]:
-                    if search_query:
-                        search_query |= Q(**{search_field: search_txt})
-                    else:
-                        search_query = Q(**{search_field: search_txt})
+                if search_txt :
+                    for search_field in v0_constants.search_fields[supplier_type_code]:
+                        if search_query:
+                            search_query |= Q(**{search_field: search_txt})
+                        else:
+                            search_query = Q(**{search_field: search_txt})
 
-
-            if request.query_params.get("supplier_center"):
-                
-                if supplier_type_code == "RS" :
+                if request.query_params.get("supplier_center"):
                     if search_query:
                         search_query &= Q(society_city__icontains=request.query_params.get("supplier_center"))
                     else:
                         search_query = Q(society_city__icontains=request.query_params.get("supplier_center"))
-                else:
-                    if search_query:
-                        search_query &= Q(city__icontains=request.query_params.get("supplier_center"))
-                    else:
-                        search_query = Q(city__icontains=request.query_params.get("supplier_center"))
                 
-
-            if request.query_params.get("supplier_area"):
-                if supplier_type_code == "RS" :
+                if request.query_params.get("supplier_area"):
                     if search_query:
                         search_query &= Q(society_locality__icontains=request.query_params.get("supplier_area"))
                     else:
                         search_query = Q(society_locality__icontains=request.query_params.get("supplier_area"))
-                else:
-                    if search_query:
-                        search_query &= Q(area__icontains=request.query_params.get("supplier_area"))
-                    else:
-                        search_query = Q(area__icontains=request.query_params.get("supplier_area"))
-
-
-            if request.query_params.get("supplier_area_subarea"):
-                if supplier_type_code == "RS" :
+                
+                if request.query_params.get("supplier_area_subarea"):
+                    
                     if search_query:
                         search_query &= Q(society_subarea__contains = request.query_params.get("supplier_area_subarea"))
                     else:
                         search_query = Q(society_subarea__contains = request.query_params.get("supplier_area_subarea"))
-                else:
-                    if search_query:
-                        search_query &= Q(subarea__icontains = request.query_params.get("supplier_area_subarea"))
-                    else:
-                        search_query = Q(subarea__icontains = request.query_params.get("supplier_area_subarea"))
                 
-            if vendor:
-                suppliers = model.objects.filter(search_query, representative=vendor)
-            else:
-                suppliers = model.objects.filter(search_query)
+                
+                if vendor:
+                    suppliers = model.objects.filter(search_query, representative=vendor)
+                else:
+                    suppliers = model.objects.filter(search_query)
 
-            if len(all_shortlisted_spaces) > 0:
-                suppliers = suppliers.exclude(supplier_id__in=all_shortlisted_spaces)
-               
-
+                if len(all_shortlisted_spaces) > 0:
+                    suppliers = suppliers.exclude(supplier_id__in=all_shortlisted_spaces)
+                
+                
             
-            serializer_class = ui_utils.get_serializer(supplier_type_code)
-            serializer = serializer_class(suppliers, many=True)
-            suppliers = website_utils.manipulate_object_key_values(serializer.data, supplier_type_code=supplier_type_code, **{'status': v0_constants.status})
+                serializer_class = ui_utils.get_serializer(supplier_type_code)
+                serializer = serializer_class(suppliers, many=True)
+                suppliers = website_utils.manipulate_object_key_values(serializer.data, supplier_type_code=supplier_type_code, **{'status': v0_constants.status})
 
-            return ui_utils.handle_response(class_name, data=suppliers, success=True)
-        
+                
+                return ui_utils.handle_response(class_name, data=suppliers, success=True)
+            else : 
+
+                search_query = Q()
+                search_query &= Q(supplier_type=supplier_type_code)
+
+                if search_txt:
+                    search_query &= (
+                        Q(address_supplier__state__icontains=search_txt)
+                        | Q(supplier_name__icontains=search_txt) 
+                        | Q(address_supplier__address1__icontains=search_txt) 
+                        | Q(address_supplier__address2__icontains=search_txt) 
+                        | Q(address_supplier__city__icontains=search_txt) 
+                    )
+                
+                if request.query_params.get("supplier_center"):
+                    if search_txt:
+                        search_query &= Q(address_supplier__city__icontains = request.query_params.get("supplier_center"))
+                    
+                if request.query_params.get("supplier_area"):
+                    search_query &= Q(address_supplier__area__icontains = request.query_params.get("supplier_area"))
+                
+                if request.query_params.get("supplier_area_subarea"):
+                    search_query &= Q(address_supplier__subarea__icontains = request.query_params.get("supplier_area_subarea"))
+
+                address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
+                master_supplier_objects = SupplierMaster.objects.prefetch_related(address_supplier).filter(search_query).order_by('supplier_name')
+
+                supplier_master_serializer = SupplierMasterSerializer(master_supplier_objects, many=True)
+
+                return ui_utils.handle_response(class_name, data=supplier_master_serializer.data, success=True)
+            
         except:
             return ui_utils.handle_response(class_name, data='something went wrong please try again later.')
         
