@@ -2612,15 +2612,11 @@ class FilteredSuppliers(APIView):
             inventory_type_query_suppliers = []
 
             # this is the main list. if no filter is selected this is what is returned by default
-            # cache_key = create_cache_key(class_name, proposal_id, supplier_type_code, common_filters_query)
-            # cache_key = None
-            #
-            #
-            # if cache.get(cache_key):
-            #     master_suppliers_list = cache.get(cache_key)
-            # else:
-            master_suppliers_list = set(list(supplier_model.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
-            # cache.set(cache_key, master_suppliers_list)
+            if supplier_type_code == 'RS':
+                master_suppliers_list = set(list(supplier_model.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
+            else :
+                master_suppliers_list = set(list(AddressMaster.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
+            
             # now fetch all inventory_related suppliers
             # handle inventory related filters. it involves quite an involved logic hence it is in another function.
             response = website_utils.handle_inventory_filters(inventory_filters)
@@ -2629,17 +2625,8 @@ class FilteredSuppliers(APIView):
             inventory_type_query = response.data['data']
 
             if inventory_type_query.__len__():
-
                 inventory_type_query &= Q(content_type=content_type)
-
-                # cache_key = create_cache_key(class_name, proposal_id, supplier_type_code, inventory_type_query)
-                # cache_key = None
-                # if cache.get(cache_key):
-                #     inventory_type_query_suppliers = cache.get(cache_key)
-                # else:
-                #
                 inventory_type_query_suppliers = set(list(InventorySummary.objects.filter(inventory_type_query).values_list('object_id', flat=True)))
-                # cache.set(cache_key, inventory_type_query_suppliers)
 
             # if inventory query was non zero in length, set final_suppliers_id_list to inventory_type_query_suppliers.
             if inventory_type_query.__len__():
@@ -2650,21 +2637,19 @@ class FilteredSuppliers(APIView):
             # when the final supplier list is prepared. we need to take intersection with master list.
             final_suppliers_id_list = final_suppliers_id_list.intersection(master_suppliers_list)
 
+            
             result = {}
 
-            # query now for real objects for supplier_id in the list
-            # cache_key = create_cache_key(class_name, final_suppliers_id_list)
-            # if cache.get(cache_key):
-            #     import pdb
-            #     pdb.set_trace()
-            #     filtered_suppliers = cache.get(cache_key)
-            #
-            filtered_suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_id_list,
-                                                               representative=proposal.principal_vendor)
-
-            # cache.set(cache_key, filtered_suppliers)
-            supplier_serializer = ui_utils.get_serializer(supplier_type_code)
+            if supplier_type_code == 'RS':
+                filtered_suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_id_list, representative=proposal.principal_vendor)
+                supplier_serializer = ui_utils.get_serializer(supplier_type_code)
+            else: 
+                filtered_suppliers = SupplierMaster.objects.filter(supplier_type=supplier_type_code, supplier_id__in=final_suppliers_id_list)
+                supplier_serializer = SupplierMasterSerializer
+           
             serializer = supplier_serializer(filtered_suppliers, many=True)
+
+            
 
             # to include only those suppliers that lie within radius, we need to send coordinates
             coordinates = {
@@ -2672,10 +2657,11 @@ class FilteredSuppliers(APIView):
                 'latitude': common_filters['latitude'],
                 'longitude': common_filters['longitude']
             }
-
+            
             # set initial value of total_suppliers. if we do not find suppliers which were saved initially, this is the final list
             initial_suppliers = website_utils.get_suppliers_within_circle(serializer.data, coordinates, supplier_type_code)
 
+            
             # adding earlier saved shortlisted suppliers in the results for this center only
             shortlisted_suppliers = website_utils.get_shortlisted_suppliers_map(proposal_id, content_type, center_id)
             total_suppliers = website_utils.union_suppliers(initial_suppliers, shortlisted_suppliers.values())
@@ -2683,14 +2669,8 @@ class FilteredSuppliers(APIView):
             # because some suppliers can be outside the given radius, we need to recalculate list of
             # supplier_id's.
             final_suppliers_id_list = list(total_suppliers.keys())
-
-            # cache_key = create_cache_key(class_name, proposal_id, supplier_type_code, priority_index_filters, final_suppliers_id_list)
-            # cache_key = None
-            # if cache.get(cache_key):
-            #     pi_index_map = cache.get(cache_key)
-            # else:
-            #     # We are applying ranking on combined list of previous saved suppliers plus the new suppliers if any. now the suppliers are filtered. we have to rank these suppliers. Get the ranking by calling this function.
-
+            
+            # We are applying ranking on combined list of previous saved suppliers plus the new suppliers if any. now the suppliers are filtered. we have to rank these suppliers. Get the ranking by calling this function.
             pi_index_map = {}
             supplier_id_to_pi_map = {}
 
@@ -3808,6 +3788,35 @@ class listCampaignSuppliers(APIView):
         all_supplier_ids = [supplier['object_id'] for supplier in all_shortlisted_supplier]
         all_campaign_societies = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).all()
         serializer = SupplierTypeSocietySerializer(all_campaign_societies, many=True)
+        all_societies = manipulate_object_key_values(serializer.data)
+        booking_inv_activities = BookingInventoryActivity.objects.raw({"campaign_id": campaign_id})
+        supplier_ids = [ObjectId(supplier.supplier_id) for supplier in booking_inv_activities]
+        suppliers = SupplySupplier.objects.raw({'_id': {'$in': (supplier_ids)}})
+        dynamic_suppliers = []
+        if suppliers.count() > 0:
+            for supplier in suppliers:
+                data = {
+                    "name": supplier.name,
+                    "supplier_id": str(supplier._id)
+                }
+                for attr in supplier.supplier_attributes:
+                    data[attr['name']] = attr['value'] if 'value' in attr else None
+                dynamic_suppliers.append(data)
+        all_societies = all_societies + dynamic_suppliers
+        all_societies = [dict(society) for society in all_societies]
+        return ui_utils.handle_response({}, data=all_societies, success=True)
+
+class ListCampaignSuppliers(APIView):
+    # inserts flat count type to society on the basis of number of flats it has
+    @staticmethod
+    def get(request, campaign_id):
+        all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
+            values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name',
+                   'proposal__tentative_start_date',
+                   'proposal__tentative_end_date', 'proposal__campaign_state')
+        all_supplier_ids = [supplier['object_id'] for supplier in all_shortlisted_supplier]
+        all_campaign_societies = SupplierMaster.objects.filter(supplier_id__in=all_supplier_ids).all()
+        serializer = SupplierMasterSerializer(all_campaign_societies, many=True)
         all_societies = manipulate_object_key_values(serializer.data)
         booking_inv_activities = BookingInventoryActivity.objects.raw({"campaign_id": campaign_id})
         supplier_ids = [ObjectId(supplier.supplier_id) for supplier in booking_inv_activities]
