@@ -125,3 +125,21 @@ class DeleteDuplicateSocieties(APIView):
         except Exception as e:
             print(e)
         return handle_response({}, data='Societies deleted successfully', success=True)
+
+
+class storeS3UrlToCSV(APIView):
+    def post(self, request):
+        try:
+            data = request.data
+            import csv
+            with open('milk-basket-products.csv', mode='a') as products_file:
+                writer = csv.writer(products_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                writer.writerow(['product_id', 'url'])
+                for product in data:
+                    product_id = product['product_id']
+                    url = 'https://milkbasket-product-images.s3.ap-south-1.amazonaws.com/{product_id}.jpg'.format(
+                        product_id=product_id)
+                    writer.writerow([product_id, url])
+        except Exception as e:
+            print(e)
+        return handle_response({}, data='File created', success=True)
