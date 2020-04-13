@@ -2633,17 +2633,19 @@ class FilteredSuppliers(APIView):
             # when the final supplier list is prepared. we need to take intersection with master list.
             final_suppliers_id_list = final_suppliers_id_list.intersection(master_suppliers_list)
 
+            
             result = {}
 
             if supplier_type_code == 'RS':
-                filtered_suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_id_list,
-                                                               representative=proposal.principal_vendor)
+                filtered_suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_id_list, representative=proposal.principal_vendor)
+                supplier_serializer = ui_utils.get_serializer(supplier_type_code)
             else: 
-                filtered_suppliers = SupplierMaster.objects.filter(supplier_id__in=final_suppliers_id_list,
-                                                            representative=proposal.principal_vendor)
-
-            supplier_serializer = ui_utils.get_serializer(supplier_type_code)
+                filtered_suppliers = SupplierMaster.objects.filter(supplier_type=supplier_type_code, supplier_id__in=final_suppliers_id_list)
+                supplier_serializer = SupplierMasterSerializer
+           
             serializer = supplier_serializer(filtered_suppliers, many=True)
+
+            
 
             # to include only those suppliers that lie within radius, we need to send coordinates
             coordinates = {
@@ -2651,10 +2653,11 @@ class FilteredSuppliers(APIView):
                 'latitude': common_filters['latitude'],
                 'longitude': common_filters['longitude']
             }
-
+            
             # set initial value of total_suppliers. if we do not find suppliers which were saved initially, this is the final list
             initial_suppliers = website_utils.get_suppliers_within_circle(serializer.data, coordinates, supplier_type_code)
 
+            
             # adding earlier saved shortlisted suppliers in the results for this center only
             shortlisted_suppliers = website_utils.get_shortlisted_suppliers_map(proposal_id, content_type, center_id)
             total_suppliers = website_utils.union_suppliers(initial_suppliers, shortlisted_suppliers.values())
@@ -3455,8 +3458,7 @@ class SupplierSearch(APIView):
                     )
                 
                 if request.query_params.get("supplier_center"):
-                    if search_txt:
-                        search_query &= Q(address_supplier__city__icontains = request.query_params.get("supplier_center"))
+                    search_query &= Q(address_supplier__city__icontains = request.query_params.get("supplier_center"))
                     
                 if request.query_params.get("supplier_area"):
                     search_query &= Q(address_supplier__area__icontains = request.query_params.get("supplier_area"))
