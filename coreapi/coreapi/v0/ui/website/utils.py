@@ -68,8 +68,8 @@ from v0.ui.finances.models import (RatioDetails, PrintingCost, LogisticOperation
                                    SpaceBookingCost, EventStaffingCost, DataSciencesCost,
                                    ShortlistedInventoryPricingDetails, PriceMappingDefault)
 from v0.ui.finances.serializers import ShortlistedSpacesSerializerReadOnly
-from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeSociety
-from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
+from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeSociety, SupplierMaster, AddressMaster
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierMasterSerializer, AddressMasterSerializer
 from v0.ui.permissions.models import Role
 from v0.ui.permissions.serializers import RoleHierarchySerializer
 from v0.ui.events.models import Events
@@ -1645,15 +1645,28 @@ def get_suppliers(query, supplier_type_code, coordinates):
         longitude = coordinates.get('longitude', 0)
 
         # get the suppliers data within that radius
-        supplier_model = ui_utils.get_model(supplier_type_code)
-        supplier_objects = supplier_model.objects.filter(query)
+        # supplier_model = ui_utils.get_model(supplier_type_code)
+        # supplier_objects = supplier_model.objects.filter(query)
+        if supplier_type_code == 'RS':
+            supplier_objects = SupplierTypeSociety.objects.filter(query)
+            serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
+
+        else:
+            supplier_objects = SupplierMaster.objects.filter(query)
+            serializer = SupplierMasterSerializer(supplier_objects, many=True)
 
         # need to set shortlisted=True for every supplier
-        serializer = ui_utils.get_serializer(supplier_type_code)(supplier_objects, many=True)
+        # serializer = ui_utils.get_serializer(supplier_type_code)(supplier_objects, many=True)
         # result to store final suppliers
         result = []
         for supplier in serializer.data:
             # replace all society specific keys with common supplier keys
+            if supplier_type_code != "RS":
+                address_supplier = supplier.get('address_supplier')
+                if address_supplier:
+                    supplier['latitude'] = address_supplier.get('latitude')
+                    supplier['longitude'] = address_supplier.get('longitude')
+
             for society_key, actual_key in v0_constants.society_common_keys.items():
                 if society_key in list(supplier.keys()):
                     value = supplier[society_key]
@@ -3732,9 +3745,14 @@ def get_shortlisted_suppliers(proposal_id, user):
             if not shortlisted_suppliers_center_content_type_wise[center_id].get(supplier_type_code):
                 shortlisted_suppliers_center_content_type_wise[center_id][supplier_type_code] = []
 
-            supplier_object = shortlisted_spaces_content_type_wise[supplier_type_code][supplier_id]
-            supplier_object['status'] = status
-            shortlisted_suppliers_center_content_type_wise[center_id][supplier_type_code].append(supplier_object)
+            # print(shortlisted_spaces_content_type_wise, supplier_type_code, supplier_id)
+
+            if supplier_id and shortlisted_spaces_content_type_wise.get(supplier_type_code) and shortlisted_spaces_content_type_wise[supplier_type_code].get(supplier_id) :
+                supplier_object = shortlisted_spaces_content_type_wise[supplier_type_code][supplier_id]
+                if supplier_object:
+                    supplier_object['status'] = status
+                    shortlisted_suppliers_center_content_type_wise[center_id][supplier_type_code].append(supplier_object)
+
 
         return ui_utils.handle_response(function, data=shortlisted_suppliers_center_content_type_wise, success=True)
     except KeyError as e:
