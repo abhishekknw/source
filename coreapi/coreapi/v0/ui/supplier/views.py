@@ -3476,7 +3476,9 @@ class SupplierSearch(APIView):
 
                 supplier_master_serializer = SupplierMasterSerializer(master_supplier_objects, many=True)
 
-                return ui_utils.handle_response(class_name, data=supplier_master_serializer.data, success=True)
+                suppliers = website_utils.manipulate_object_key_values(supplier_master_serializer.data, supplier_type_code=supplier_type_code, **{'status': v0_constants.status})
+
+                return ui_utils.handle_response(class_name, data=suppliers, success=True)
             
         except:
             return ui_utils.handle_response(class_name, data='something went wrong please try again later.')
