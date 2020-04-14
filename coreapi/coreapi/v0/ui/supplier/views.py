@@ -184,19 +184,23 @@ def update_contact_and_ownership_detail(data):
 
     if basic_contacts:
         for contact in basic_contacts:
+
+            contact['object_id'] = object_id
+
             if 'id' in contact:
                 contact_detail = ContactDetails.objects.filter(pk=contact['id']).first()
                 contact_serializer = ContactDetailsSerializer(contact_detail, data=contact)
             else:
                 contact_serializer = ContactDetailsSerializer(data=contact)
 
-            print(contact_serializer.is_valid())
             if contact_serializer.is_valid():
                 contact_serializer.save()
 
     ownership = data.get('ownership_details', None)
 
     if ownership:
+
+        contact['object_id'] = object_id
         if ownership.get('id'):
             ownership_detail = OwnershipDetails.objects.filter(pk=ownership['id']).first()
             ownership_serializer = OwnershipDetailsSerializer(ownership_detail, data=ownership)
