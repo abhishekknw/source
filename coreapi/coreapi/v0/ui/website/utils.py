@@ -3773,6 +3773,36 @@ def manipulate_object_key_values(suppliers, supplier_type_code=v0_constants.soci
         raise Exception(function, ui_utils.get_system_error(e))
 
 
+
+def master_manipulate_object_key_values(suppliers):
+    
+    function = manipulate_object_key_values.__name__
+    try:
+        
+        for supplier in suppliers:
+            if supplier['address_supplier']:
+                
+                address_supplier = supplier['address_supplier']
+                supplier['address1'] = address_supplier['address1'] if address_supplier['address1'] else ''
+                supplier['address2'] = address_supplier['address2']
+                supplier['area'] = address_supplier['area']
+                supplier['subarea'] = address_supplier['subarea']
+                supplier['city'] = address_supplier['city']
+                supplier['state'] = address_supplier['state']
+                supplier['zipcode'] = address_supplier['zipcode']
+                supplier['latitude'] = address_supplier['latitude']
+                supplier['longitude'] = address_supplier['longitude']
+
+                
+                del supplier['address_supplier']
+            
+           
+        return suppliers
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+
+
 def setup_generic_export(data, user, proposal_id):
     """
     data: Request.data
