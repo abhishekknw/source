@@ -3756,6 +3756,20 @@ def manipulate_object_key_values(suppliers, supplier_type_code=v0_constants.soci
     try:
         for supplier in suppliers:
 
+            if supplier['address_supplier']:      
+                address_supplier = supplier['address_supplier']
+                supplier['address1'] = address_supplier['address1'] if address_supplier['address1'] else ''
+                supplier['address2'] = address_supplier['address2']
+                supplier['area'] = address_supplier['area']
+                supplier['subarea'] = address_supplier['subarea']
+                supplier['city'] = address_supplier['city']
+                supplier['state'] = address_supplier['state']
+                supplier['zipcode'] = address_supplier['zipcode']
+                supplier['latitude'] = address_supplier['latitude']
+                supplier['longitude'] = address_supplier['longitude']
+                supplier['name'] = supplier['supplier_name']
+                del supplier['address_supplier']
+
             # replace all society specific keys with common supplier keys
             if supplier_type_code == v0_constants.society:
                 for society_key, actual_key in v0_constants.society_common_keys.items():
@@ -3771,41 +3785,6 @@ def manipulate_object_key_values(suppliers, supplier_type_code=v0_constants.soci
         return suppliers
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
-
-
-
-def master_manipulate_object_key_values(suppliers):
-    
-    function = manipulate_object_key_values.__name__
-    try:
-        
-        for supplier in suppliers:
-            if supplier['address_supplier']:
-                
-                address_supplier = supplier['address_supplier']
-                supplier['address1'] = address_supplier['address1'] if address_supplier['address1'] else ''
-                supplier['address2'] = address_supplier['address2']
-                supplier['area'] = address_supplier['area']
-                supplier['subarea'] = address_supplier['subarea']
-                supplier['city'] = address_supplier['city']
-                supplier['state'] = address_supplier['state']
-                supplier['zipcode'] = address_supplier['zipcode']
-                supplier['latitude'] = address_supplier['latitude']
-                supplier['longitude'] = address_supplier['longitude']
-
-                supplier['name'] = supplier['supplier_name']
-
-                
-
-                
-                del supplier['address_supplier']
-            
-           
-        return suppliers
-    except Exception as e:
-        raise Exception(function, ui_utils.get_system_error(e))
-
-
 
 def setup_generic_export(data, user, proposal_id):
     """
