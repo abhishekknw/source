@@ -3793,6 +3793,10 @@ def master_manipulate_object_key_values(suppliers):
                 supplier['latitude'] = address_supplier['latitude']
                 supplier['longitude'] = address_supplier['longitude']
 
+                supplier['name'] = supplier['supplier_name']
+
+                
+
                 
                 del supplier['address_supplier']
             
