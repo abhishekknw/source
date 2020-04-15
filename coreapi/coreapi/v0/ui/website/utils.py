@@ -68,8 +68,8 @@ from v0.ui.finances.models import (RatioDetails, PrintingCost, LogisticOperation
                                    SpaceBookingCost, EventStaffingCost, DataSciencesCost,
                                    ShortlistedInventoryPricingDetails, PriceMappingDefault)
 from v0.ui.finances.serializers import ShortlistedSpacesSerializerReadOnly
-from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeSociety
-from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
+from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeSociety, AddressMaster, SupplierMaster
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierMasterSerializer
 from v0.ui.permissions.models import Role
 from v0.ui.permissions.serializers import RoleHierarchySerializer
 from v0.ui.events.models import Events
@@ -79,6 +79,7 @@ from v0.ui.campaign.serializers import GenericExportFileSerializer
 from v0.ui.inventory.models import Filters
 from v0.ui.inventory.serializers import FiltersSerializer
 from v0.ui.dynamic_suppliers.utils import (get_dynamic_suppliers_by_campaign)
+from django.db.models import Prefetch
 
 from v0.ui.organisation.models import Organisation
 from v0.ui.organisation.serializers import OrganisationSerializer
@@ -1645,15 +1646,29 @@ def get_suppliers(query, supplier_type_code, coordinates):
         longitude = coordinates.get('longitude', 0)
 
         # get the suppliers data within that radius
-        supplier_model = ui_utils.get_model(supplier_type_code)
-        supplier_objects = supplier_model.objects.filter(query)
 
-        # need to set shortlisted=True for every supplier
-        serializer = ui_utils.get_serializer(supplier_type_code)(supplier_objects, many=True)
+        if supplier_type_code == 'RS':
+            supplier_objects = SupplierTypeSociety.objects.filter(query)
+            serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
+
+        else:
+            search_query = Q()
+            search_query &= Q(supplier_type=supplier_type_code)
+
+            address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
+            supplier_objects = SupplierMaster.objects.prefetch_related(address_supplier).filter(search_query).order_by('supplier_name')
+            serializer = SupplierMasterSerializer(supplier_objects, many=True)
+
         # result to store final suppliers
         result = []
         for supplier in serializer.data:
             # replace all society specific keys with common supplier keys
+            if supplier_type_code != "RS":
+                address_supplier = supplier.get('address_supplier')
+                if address_supplier:
+                    supplier['latitude'] = address_supplier.get('latitude')
+                    supplier['longitude'] = address_supplier.get('longitude')
+
             for society_key, actual_key in v0_constants.society_common_keys.items():
                 if society_key in list(supplier.keys()):
                     value = supplier[society_key]
@@ -1673,21 +1688,6 @@ def get_suppliers(query, supplier_type_code, coordinates):
 
     except Exception as e:
         return ui_utils.handle_response(function_name, exception_object=e)
-
-
-def get_filters(data):
-    """
-    Args:
-        proposal_id: The proposal id
-        center_id: The center id
-        content_type: The content type
-
-    Returns: Filters data
-
-    """
-    function_name = get_filters.__name__
-    try:
-
         proposal_id = data['proposal_id']
         center_id = data['center_id']
         supplier_content_type = data['content_type']
