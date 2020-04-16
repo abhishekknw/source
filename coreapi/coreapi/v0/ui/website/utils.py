@@ -2195,10 +2195,12 @@ def add_shortlisted_suppliers(supplier_type_code_list, shortlisted_suppliers, in
             supplier_to_filter_object_mapping[supplier_id] = supplier
 
         for code in supplier_type_code_list:
-            supplier_model = ui_utils.get_model(code)
-            supplier_serializer = ui_utils.get_serializer(code)
-            suppliers = supplier_model.objects.filter(supplier_id__in=supplier_ids)
-            serializer = supplier_serializer(suppliers, many=True)
+            if code == 'RS':
+                supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
+                serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
+            else:
+                supplier_objects = SupplierMaster.objects.filter(supplier_id__in=supplier_ids)
+                serializer = SupplierMasterSerializer(supplier_objects, many=True)
 
             # adding status information to each supplier which is stored in shorlisted_spaces table
             for supplier in serializer.data:
@@ -3755,7 +3757,34 @@ def manipulate_object_key_values(suppliers, supplier_type_code=v0_constants.soci
     function = manipulate_object_key_values.__name__
     try:
         for supplier in suppliers:
+            # replace all society specific keys with common supplier keys
+            if supplier_type_code == v0_constants.society:
+                for society_key, actual_key in v0_constants.society_common_keys.items():
+                    if society_key in list(supplier.keys()):
+                        value = supplier[society_key]
+                        del supplier[society_key]
+                        supplier[actual_key] = value
 
+            if kwargs:
+                # set extra key, value sent in kwargs
+                for key, item in kwargs.items():
+                    supplier[key] = item
+        return suppliers
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+
+def manipulate_object_key_values_generic(suppliers, supplier_type_code=v0_constants.society, **kwargs):
+    """
+    Args:
+        suppliers: list of all suppliers
+        supplier_type_code: by default 'RS'.
+        kwargs: key,value pairs meant to set in each supplier.
+    Returns:
+        return list of suppliers by changing some keys in supplier object
+    """
+    function = manipulate_object_key_values_generic.__name__
+    try:
+        for supplier in suppliers:
             if supplier['address_supplier']:      
                 address_supplier = supplier['address_supplier']
                 supplier['address1'] = address_supplier['address1'] if address_supplier['address1'] else ''
