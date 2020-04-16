@@ -3461,7 +3461,7 @@ class SupplierSearch(APIView):
             
                 serializer_class = ui_utils.get_serializer(supplier_type_code)
                 serializer = serializer_class(suppliers, many=True)
-                suppliers = website_utils.manipulate_object_key_values(serializer.data, supplier_type_code=supplier_type_code, **{'status': v0_constants.status})
+                suppliers = website_utils.manipulate_object_key_values_generic(serializer.data, supplier_type_code=supplier_type_code, **{'status': v0_constants.status})
 
                 
                 return ui_utils.handle_response(class_name, data=suppliers, success=True)
@@ -3495,7 +3495,7 @@ class SupplierSearch(APIView):
                 supplier_master_serializer = SupplierMasterSerializer(master_supplier_objects, many=True)
 
 
-                suppliers = website_utils.manipulate_object_key_values(supplier_master_serializer.data, supplier_type_code=supplier_type_code, **{'status': v0_constants.status})
+                suppliers = website_utils.manipulate_object_key_values_generic(supplier_master_serializer.data, supplier_type_code=supplier_type_code, **{'status': v0_constants.status})
                
 
                 return ui_utils.handle_response(class_name, data=supplier_master_serializer.data, success=True)
