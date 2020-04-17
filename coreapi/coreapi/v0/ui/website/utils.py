@@ -3401,7 +3401,7 @@ def get_file_name(user, proposal_id, is_exported=True):
             'organisation': organisation,
             'account': account,
             'proposal': proposal,
-            'date': now_time,
+            # 'date': now_time,
             'file_name': file_name,
             'is_exported': is_exported
         }
@@ -3885,9 +3885,10 @@ def setup_generic_export(data, user, proposal_id):
         for supplier_code, detail in inventory_summary_map.items():
             # detail is inventory_summary mapping.
             supplier_pricing_map = {}
-            supplier_pricing_map = merge_two_dicts(
-                set_inventory_pricing(total_suppliers_map[supplier_code], supplier_code, detail, stats),
-                supplier_pricing_map)
+            if len(total_suppliers_map.keys()) > 0 and supplier_code in total_suppliers_map :
+                supplier_pricing_map = merge_two_dicts(
+                    set_inventory_pricing(total_suppliers_map[supplier_code], supplier_code, detail, stats),
+                    supplier_pricing_map)
 
         # make the call to generate data in the result. center_error and supplier_no_pricing_error is logged in this function
         result, stats = make_export_final_response(result, data, inventory_summary_map, supplier_pricing_map, stats)
