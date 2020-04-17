@@ -576,40 +576,25 @@ class GenerateSupplierIdAPIView(APIView):
         class_name = self.__class__.__name__
         try:
             user = request.user
-            supplier_type_code = request.data['supplier_type']
-
-            data = {
+            data = dict({
                 'city_id': request.data['city_id'],
                 'area_id': request.data['area_id'],
                 'subarea_id': request.data['subarea_id'],
                 'supplier_type': request.data['supplier_type'],
-                'supplier_code': request.data['supplier_code'],
                 'supplier_name': request.data['supplier_name'],
-            }
-
-            # city_object = City.objects.get(id=data['city_id'])
-            # city_code = city_object.city_code
-
-            #check supplier code in db, if exists, it will throw error, else, it'll add new supplier code.
-            check_supplier_code = SupplierTypeSociety.objects.filter(supplier_code = request.data['supplier_code'])
-
+            })
+            data['supplier_code'] = request.data['supplier_name'][:3].upper()
             data['supplier_id'] = get_supplier_id(data)
             data['supplier_type_code'] = request.data['supplier_type']
             data['current_user'] = request.user
             response = make_supplier_data(data)
-            if not check_supplier_code:
-                if not response.data['status']:
-                    return response
-                all_supplier_data = response.data['data']
-                return handle_response(class_name, data=save_supplier_data(user, all_supplier_data),
-                                            success=True)
-            else:
-                return handle_response(class_name,data="Supplier code already exists.", #displaying error externally
-                                            success=False)
+            all_supplier_data = response.data['data']
+            return handle_response(class_name, data=save_supplier_data(user, all_supplier_data), success=True)
         except ObjectDoesNotExist as e:
             return handle_response(class_name, exception_object=e)
         except Exception as e:
             return handle_response(class_name, exception_object=e)
+
 
 class SupplierImageDetails(APIView):
     """
