@@ -12,13 +12,10 @@ def inventory_summary_insert(data, supplier_inventory_data):
     supplier_object = get_from_dict(data, 'supplier_object')
     inventory_object = get_from_dict(data, 'inventory_object')
     supplier_type_code = get_from_dict(data, 'supplier_type_code')
-    # supplier_type_code = 'CP'
-    # society = SupplierTypeSociety.objects.get(pk=id)
-    # item = InventorySummary.objects.get(supplier=society)
     tower_response = ui_utils.get_tower_count(supplier_object, supplier_type_code)
-    if not tower_response.data['status']:
-        return tower_response
-    towercount = tower_response.data['data']
+    tower_count = 1
+    if tower_response.data['status']:
+        tower_count = tower_response.data['data']
 
     poster_campaign = 0
     standee_campaign = 0
@@ -105,7 +102,7 @@ def inventory_summary_insert(data, supplier_inventory_data):
         if 'id' in data:
             flag = False
             if get_from_dict(data, 'stall_allowed'):
-                if get_from_dict(data, 'total_stall_count')and inventory_object.total_stall_count < data['total_stall_count']:
+                if get_from_dict(data, 'total_stall_count') and inventory_object.total_stall_count < data['total_stall_count']:
                     if not inventory_object.total_stall_count:
                         ui_utils.save_stall_locations(0, data['total_stall_count'], supplier_object,
                                                       supplier_type_code)
@@ -143,7 +140,7 @@ def inventory_summary_insert(data, supplier_inventory_data):
                     price = PriceMappingDefault.objects.get_price_mapping_object(
                         ui_utils.make_dict_manager(adinventory_dict['poster_a3'],
                                                    duration_type_dict['unit_weekly']), id, supplier_type_code)
-                    ui_utils.save_price_data(price, posPrice / towercount)
+                    ui_utils.save_price_data(price, posPrice / tower_count)
 
                 if get_from_dict(data, 'nb_A4_allowed'):
                     price = PriceMappingDefault.objects.get_price_mapping_object(
@@ -155,7 +152,7 @@ def inventory_summary_insert(data, supplier_inventory_data):
                     price = PriceMappingDefault.objects.get_price_mapping_object(
                         ui_utils.make_dict_manager(adinventory_dict['poster_a4'],
                                                    duration_type_dict['unit_weekly']), id, supplier_type_code)
-                    ui_utils.save_price_data(price, posPrice / towercount)
+                    ui_utils.save_price_data(price, posPrice / tower_count)
 
         if get_from_dict(data, 'poster_price_week_lift'):
             posPrice = int(get_from_dict(data, 'poster_price_week_lift'))
@@ -168,7 +165,7 @@ def inventory_summary_insert(data, supplier_inventory_data):
                 price = PriceMappingDefault.objects.get_price_mapping_object(
                     ui_utils.make_dict_manager(adinventory_dict['poster_lift_a3'],
                                                duration_type_dict['unit_weekly']), id, supplier_type_code)
-                ui_utils.save_price_data(price, posPrice / towercount)
+                ui_utils.save_price_data(price, posPrice / tower_count)
 
                 price = PriceMappingDefault.objects.get_price_mapping_object(
                     ui_utils.make_dict_manager(adinventory_dict['poster_lift_a4'],
@@ -178,7 +175,7 @@ def inventory_summary_insert(data, supplier_inventory_data):
                 price = PriceMappingDefault.objects.get_price_mapping_object(
                     ui_utils.make_dict_manager(adinventory_dict['poster_lift_a4'],
                                                duration_type_dict['unit_weekly']), id, supplier_type_code)
-                ui_utils.save_price_data(price, posPrice / towercount)
+                ui_utils.save_price_data(price, posPrice / tower_count)
 
         if get_from_dict(data, 'standee_price_week'):
             stanPrice = int(get_from_dict(data, 'standee_price_week'))
@@ -194,7 +191,7 @@ def inventory_summary_insert(data, supplier_inventory_data):
                     price = PriceMappingDefault.objects.get_price_mapping_object(
                         ui_utils.make_dict_manager(adinventory_dict['standee_small'],
                                                    duration_type_dict['unit_weekly']), id, supplier_type_code)
-                    ui_utils.save_price_data(price, stanPrice / towercount)
+                    ui_utils.save_price_data(price, stanPrice / tower_count)
 
                 if get_from_dict(data, 'standee_medium'):
                     price = PriceMappingDefault.objects.get_price_mapping_object(
@@ -207,7 +204,7 @@ def inventory_summary_insert(data, supplier_inventory_data):
                     price = PriceMappingDefault.objects.get_price_mapping_object(
                         ui_utils.make_dict_manager(adinventory_dict['standee_medium'],
                                                    duration_type_dict['unit_weekly']), id, supplier_type_code)
-                    ui_utils.save_price_data(price, stanPrice / towercount)
+                    ui_utils.save_price_data(price, stanPrice / tower_count)
 
         if get_from_dict(data, 'stall_allowed'):
             if get_from_dict(data, 'stall_small'):

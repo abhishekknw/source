@@ -38,7 +38,7 @@ from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.supplier.serializers import (SupplierHordingSerializer, SupplierEducationalInstituteSerializer, SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SupplierTypeBusShelterSerializer,
                                         SupplierTypeGymSerializer, SupplierTypeRetailShopSerializer,
                                         SupplierTypeSalonSerializer, BusDepotSerializer, SupplierMasterSerializer, AddressMasterSerializer)
-from v0.ui.supplier.models import SupplierTypeSociety
+from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster
 from v0.ui.finances.serializers import (IdeationDesignCostSerializer, DataSciencesCostSerializer, EventStaffingCostSerializer,
                                         LogisticOperationsCostSerializer, SpaceBookingCostSerializer, PrintingCostSerializer)
 from v0.ui.proposal.serializers import ProposalMetricsSerializer, ProposalMasterCostSerializer
@@ -488,17 +488,20 @@ def get_supplier_inventory(data, id):
 
     try:
         supplier_code = data['supplier_type_code']
-        # supplier_code = 'CP' #todo: change this when get clearity
         if not supplier_code or not id:
             return Response(data={"status": False, "error": "provide supplier code and  supplier id"},
                             status=status.HTTP_400_BAD_REQUEST)
+        # Get supplier from supplier master if it is not Society
+        supplier_class = SupplierMaster
+        if supplier_code == 'RS':
+            supplier_class = SupplierTypeSociety
+        try:
+            supplier_object = supplier_class.objects.get(pk=id)
+        except Exception as e:
+            return Response(data={"status": False, "error": "Supplier id {id} does not exists for {supplier_type_code}".format(id=id,supplier_type_code=supplier_code)},
+                            status=status.HTTP_400_BAD_REQUEST)
 
-        # supplier_class = v0_constants.suppliers[supplier_code]
-        supplier_class = get_model(supplier_code)
-        supplier_object = supplier_class.objects.get(pk=id)
         content_type = ContentType.objects.get_for_model(supplier_class)
-#       inventory_object = InventorySummary.objects.get(content_object=supplier_object, object_id=id, content_type=content_type)
-
         (inventory_object, is_created) = InventorySummary.objects.get_or_create(object_id=id, content_type=content_type)
         data['object_id'] = id
         data['content_type'] = content_type.id
