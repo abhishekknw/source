@@ -864,7 +864,6 @@ class PostInventorySummary(APIView):
 
 
 class BasicPricingAPIView(APIView):
-
     def get(self, request, id, format=None):
         response = {}
         try:
@@ -880,15 +879,18 @@ class BasicPricingAPIView(APIView):
                 return None
             content_type = content_type_response.data['data']
 
-            basic_prices = PriceMappingDefault.objects.filter(object_id=id, content_type=content_type).values()
-            selected_prices = PriceMappingDefault.objects.select_related('supplier', 'adinventory_type',
-                                                                         'duration_type').filter(object_id=id,
-                                                                                                 content_type=content_type)
             try:
                 if supplier_type_code == 'RS':
                     supplier_object = SupplierTypeSociety.objects.get(pk=id)
+                    basic_prices = PriceMappingDefault.objects.filter(object_id=id, content_type=content_type).values()
+                    selected_prices = PriceMappingDefault.objects.select_related('supplier', 'adinventory_type',
+                                                                                 'duration_type').filter(object_id=id,
+                                                                                                         content_type=content_type)
                 else:
                     supplier_object = SupplierMaster.objects.get(pk=id)
+                    basic_prices = PriceMappingDefault.objects.filter(object_id=id).values()
+                    selected_prices = PriceMappingDefault.objects.select_related('supplier', 'adinventory_type',
+                                                                                 'duration_type').filter(object_id=id)
             except Exception as e:
                 return Response({'status': False, 'error': 'Supplier does not exists'},
                                 status=status.HTTP_400_BAD_REQUEST)
