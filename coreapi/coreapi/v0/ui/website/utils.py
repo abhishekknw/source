@@ -3763,7 +3763,6 @@ def manipulate_object_key_values(suppliers, supplier_type_code=v0_constants.soci
     try:
         for supplier in suppliers:
 
-
             if supplier.get('address_supplier'):
                 address_supplier = supplier.get('address_supplier')
                 supplier['address1'] = address_supplier['address1'] if address_supplier['address1'] else ''
