@@ -3350,25 +3350,11 @@ class ImportSupplierData(APIView):
             # # data for this supplier is made. populate the shortlisted_inventory_details table before hitting the urls
             message = website_utils.populate_shortlisted_inventory_pricing_details(result, proposal_id, request.user)
 
-            # hit metric url to save metric data. current m sending the entire file, though only first sheet sending
-            # is required.
+            website_utils.import_proposal_cost_data(my_file,proposal_id)
 
-            url = reverse('import-metric-data', kwargs={'proposal_id': proposal_id})
-            url = BASE_URL + url[1:]
-
-            # set the pointer to zero to be read again in next api
-            my_file.seek(0)
-            files = {
-                'file': my_file
-            }
-            headers = {
-                'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
-            }
-            response = requests.post(url, files=files, headers=headers)
-
-            if response.status_code != status.HTTP_200_OK:
-                return Response({'status': False, 'error in import-metric-data api ': response.text},
-                                status=status.HTTP_400_BAD_REQUEST)
+            # if response.status_code != status.HTTP_200_OK:
+            #     return Response({'status': False, 'error in import-metric-data api ': response.text},
+            #                     status=status.HTTP_400_BAD_REQUEST)
 
             # prepare a new name for this file and save it in the required table
             file_name = website_utils.get_file_name(request.user, proposal_id, is_exported=False)
