@@ -3734,8 +3734,7 @@ def get_shortlisted_suppliers(proposal_id, user):
             if not shortlisted_suppliers_center_content_type_wise[center_id].get(supplier_type_code):
                 shortlisted_suppliers_center_content_type_wise[center_id][supplier_type_code] = []
 
-            # print(shortlisted_spaces_content_type_wise, supplier_type_code, supplier_id)
-
+            
             if supplier_id and shortlisted_spaces_content_type_wise.get(supplier_type_code) and shortlisted_spaces_content_type_wise[supplier_type_code].get(supplier_id) :
                 supplier_object = shortlisted_spaces_content_type_wise[supplier_type_code][supplier_id]
                 if supplier_object:
