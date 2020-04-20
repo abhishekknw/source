@@ -84,6 +84,9 @@ from django.db.models import Prefetch
 from v0.ui.organisation.models import Organisation
 from v0.ui.organisation.serializers import OrganisationSerializer
 
+from django.db import transaction
+import openpyxl
+
 fonts_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fonts')
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
@@ -7488,3 +7491,43 @@ def add_string_to_image(image,message):
         im.save(str(destination))
         return str(destination)
 
+def import_proposal_cost_data(file,proposal_id):
+    function = import_proposal_cost_data.__name__
+    # load the workbook
+    wb = openpyxl.load_workbook(file)
+    # read the sheet
+    ws = wb.get_sheet_by_name(v0_constants.metric_sheet_name)
+
+    # before inserting delete all previous data as we don't want to duplicate things.
+    response = delete_proposal_cost_data(proposal_id)
+    if not response.data['status']:
+        return response
+
+    with transaction.atomic():
+        try:
+            count = 0
+            master_data = {}
+            # DATA COLLECTION  in order to  collect data in master_data, initialize with proper data structures
+            master_data = initialize_master_data(master_data)
+            for index, row in enumerate(ws.iter_rows()):
+
+                # ignore empty rows
+                if is_empty_row(row):
+                    continue
+                # send one row for processing
+                response = handle_offline_pricing_row(row, master_data)
+                if not response.data['status']:
+                    return response
+                # update master_data with response
+                master_data = response.data['data']
+                count += 1
+
+            # DATA INSERTION time to save the data
+            master_data['proposal_master_cost']['proposal'] = proposal_id
+            response = save_master_data(master_data)
+            if not response.data['status']:
+                return response
+            
+            return True
+        except Exception as e:
+            return ui_utils.handle_response(function, exception_object=e)
