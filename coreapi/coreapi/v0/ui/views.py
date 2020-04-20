@@ -48,7 +48,7 @@ from .inventory.models import (PosterInventory, InventorySummary, StreetFurnitur
 from .inventory.serializers import PosterInventorySerializer
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeCorporate, SupplierAmenitiesMap, SupplierTypeCode, \
     SupplierTypeSalon, SupplierTypeGym, SupplierTypeBusShelter, CorporateBuilding, CorporateParkCompanyList, \
-    RETAIL_SHOP_TYPE
+    RETAIL_SHOP_TYPE, SupplierMaster
 from v0.ui.supplier.serializers import (SupplierTypeCorporateSerializer, SupplierTypeSalonSerializer,
                         SupplierTypeGymSerializer, SupplierTypeBusShelterSerializer, UICorporateSerializer, UISalonSerializer,
                         SupplierTypeCodeSerializer, SupplierTypeSocietySerializer, CorporateCompanyDetails,
@@ -709,14 +709,12 @@ class InventorySummaryAPIView(APIView):
         try:
             # Start: code added and changed for getting supplier_type_code
             supplier_type_code = request.query_params.get('supplierTypeCode', None)
-            # supplier_type_code = 'CP'
             data = request.data.copy()
             data['supplier_type_code'] = supplier_type_code
             inventory_object = InventorySummary.objects.get_supplier_type_specific_object(data, id)
             # End: code added and changed for getting supplier_type_code
             if not inventory_object:
-                return Response(data={},
-                                status=status.HTTP_200_OK)
+                return Response(data={}, status=status.HTTP_200_OK)
             result = {}
             result['inventory'] = model_to_dict(inventory_object)
             inventory_allowed_codes = website_utils.get_inventories_allowed(inventory_object)
@@ -793,19 +791,16 @@ class InventorySummaryAPIView(APIView):
           description : flier lobby allowed or not
 
         """
-        print(request.data)
-        class_name = self.__class__.__name__
-        response = ui_utils.get_supplier_inventory(request.data.copy(), id)
+        supplier_inventory = ui_utils.get_supplier_inventory(request.data.copy(), id)
+        if not supplier_inventory.data['status']:
+            return supplier_inventory
 
-        if not response.data['status']:
-            return response
-
-        supplier_inventory_data = response.data['data']['request_data']
+        supplier_inventory_data = supplier_inventory.data['data']['request_data']
 
         final_data = {
             'id': get_from_dict(request.data, 'id'),
-            'supplier_object': get_from_dict(response.data['data'], 'supplier_object'),
-            'inventory_object': get_from_dict(response.data['data'], 'inventory_object'),
+            'supplier_object': get_from_dict(supplier_inventory.data['data'], 'supplier_object'),
+            'inventory_object': get_from_dict(supplier_inventory.data['data'], 'inventory_object'),
             'supplier_type_code': get_from_dict(request.data, 'supplier_type_code'),
             'poster_allowed_nb': get_from_dict(request.data, 'poster_allowed_nb'),
             'nb_count': get_from_dict(request.data, 'nb_count'),
@@ -843,11 +838,7 @@ class InventorySummaryAPIView(APIView):
             'gateway_arch_allowed': get_from_dict(request.data, 'gateway_arch_allowed'),
         }
         return inventory_summary_insert(final_data,supplier_inventory_data)
-        # try:
-        # except ObjectDoesNotExist as e:
-        #     return ui_utils.handle_response(class_name, exception_object=e, request=request)
-        # except Exception as e:
-        #     return Response(data={"status": False, "error": str(e.message)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class PostInventorySummary(APIView):
     """
@@ -873,15 +864,11 @@ class PostInventorySummary(APIView):
 
 
 class BasicPricingAPIView(APIView):
-
     def get(self, request, id, format=None):
         response = {}
         try:
-
             # get the supplier_type_code
             supplier_type_code = request.query_params.get('supplierTypeCode', None)
-            # supplier_type_code = request.data.get('supplier_type_code')
-            # supplier_type_code = 'RS' #todo: change this when get supplier_type_code
             if not supplier_type_code:
                 return Response({'status': False, 'error': 'Provide supplier_type_code'},
                                 status=status.HTTP_400_BAD_REQUEST)
@@ -892,15 +879,27 @@ class BasicPricingAPIView(APIView):
                 return None
             content_type = content_type_response.data['data']
 
-            basic_prices = PriceMappingDefault.objects.filter(object_id=id, content_type=content_type).values()
-            selected_prices = PriceMappingDefault.objects.select_related('supplier', 'adinventory_type',
-                                                                         'duration_type').filter(object_id=id,
-                                                                                                 content_type=content_type)
-            supplier_object = ui_utils.get_model(supplier_type_code).objects.get(pk=id)
-            towercount_response = ui_utils.get_tower_count(supplier_object, supplier_type_code)
-            if not towercount_response.data['status']:
-                return towercount_response
-            tower_count = towercount_response.data['data']
+            try:
+                if supplier_type_code == 'RS':
+                    supplier_object = SupplierTypeSociety.objects.get(pk=id)
+                    basic_prices = PriceMappingDefault.objects.filter(object_id=id, content_type=content_type).values()
+                    selected_prices = PriceMappingDefault.objects.select_related('supplier', 'adinventory_type',
+                                                                                 'duration_type').filter(object_id=id,
+                                                                                                         content_type=content_type)
+                else:
+                    supplier_object = SupplierMaster.objects.get(pk=id)
+                    basic_prices = PriceMappingDefault.objects.filter(object_id=id).values()
+                    selected_prices = PriceMappingDefault.objects.select_related('supplier', 'adinventory_type',
+                                                                                 'duration_type').filter(object_id=id)
+            except Exception as e:
+                return Response({'status': False, 'error': 'Supplier does not exists'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            tower_count_response = ui_utils.get_tower_count(supplier_object, supplier_type_code)
+            tower_count = 1
+            if tower_count_response.data['status']:
+                tower_count = tower_count_response.data['data']
+
             for basic_item, basic_select_item in zip(basic_prices, selected_prices):
                 if basic_select_item.supplier:
                     basic_item['supplier'] = basic_select_item.supplier.__dict__

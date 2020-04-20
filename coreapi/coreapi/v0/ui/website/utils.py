@@ -68,8 +68,8 @@ from v0.ui.finances.models import (RatioDetails, PrintingCost, LogisticOperation
                                    SpaceBookingCost, EventStaffingCost, DataSciencesCost,
                                    ShortlistedInventoryPricingDetails, PriceMappingDefault)
 from v0.ui.finances.serializers import ShortlistedSpacesSerializerReadOnly
-from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeSociety, SupplierMaster, AddressMaster
-from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierMasterSerializer, AddressMasterSerializer
+from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeSociety, AddressMaster, SupplierMaster
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierMasterSerializer
 from v0.ui.permissions.models import Role
 from v0.ui.permissions.serializers import RoleHierarchySerializer
 from v0.ui.events.models import Events
@@ -79,6 +79,7 @@ from v0.ui.campaign.serializers import GenericExportFileSerializer
 from v0.ui.inventory.models import Filters
 from v0.ui.inventory.serializers import FiltersSerializer
 from v0.ui.dynamic_suppliers.utils import (get_dynamic_suppliers_by_campaign)
+from django.db.models import Prefetch
 
 from v0.ui.organisation.models import Organisation
 from v0.ui.organisation.serializers import OrganisationSerializer
@@ -1645,18 +1646,19 @@ def get_suppliers(query, supplier_type_code, coordinates):
         longitude = coordinates.get('longitude', 0)
 
         # get the suppliers data within that radius
-        # supplier_model = ui_utils.get_model(supplier_type_code)
-        # supplier_objects = supplier_model.objects.filter(query)
+
         if supplier_type_code == 'RS':
             supplier_objects = SupplierTypeSociety.objects.filter(query)
             serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
 
         else:
-            supplier_objects = SupplierMaster.objects.filter(query)
+            search_query = Q()
+            search_query &= Q(supplier_type=supplier_type_code)
+
+            address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
+            supplier_objects = SupplierMaster.objects.prefetch_related(address_supplier).filter(search_query).order_by('supplier_name')
             serializer = SupplierMasterSerializer(supplier_objects, many=True)
 
-        # need to set shortlisted=True for every supplier
-        # serializer = ui_utils.get_serializer(supplier_type_code)(supplier_objects, many=True)
         # result to store final suppliers
         result = []
         for supplier in serializer.data:
@@ -1686,21 +1688,6 @@ def get_suppliers(query, supplier_type_code, coordinates):
 
     except Exception as e:
         return ui_utils.handle_response(function_name, exception_object=e)
-
-
-def get_filters(data):
-    """
-    Args:
-        proposal_id: The proposal id
-        center_id: The center id
-        content_type: The content type
-
-    Returns: Filters data
-
-    """
-    function_name = get_filters.__name__
-    try:
-
         proposal_id = data['proposal_id']
         center_id = data['center_id']
         supplier_content_type = data['content_type']
@@ -2208,10 +2195,12 @@ def add_shortlisted_suppliers(supplier_type_code_list, shortlisted_suppliers, in
             supplier_to_filter_object_mapping[supplier_id] = supplier
 
         for code in supplier_type_code_list:
-            supplier_model = ui_utils.get_model(code)
-            supplier_serializer = ui_utils.get_serializer(code)
-            suppliers = supplier_model.objects.filter(supplier_id__in=supplier_ids)
-            serializer = supplier_serializer(suppliers, many=True)
+            if code == 'RS':
+                supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
+                serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
+            else:
+                supplier_objects = SupplierMaster.objects.filter(supplier_id__in=supplier_ids)
+                serializer = SupplierMasterSerializer(supplier_objects, many=True)
 
             # adding status information to each supplier which is stored in shorlisted_spaces table
             for supplier in serializer.data:
@@ -3412,7 +3401,7 @@ def get_file_name(user, proposal_id, is_exported=True):
             'organisation': organisation,
             'account': account,
             'proposal': proposal,
-            'date': now_time,
+            # 'date': now_time,
             'file_name': file_name,
             'is_exported': is_exported
         }
@@ -3774,6 +3763,21 @@ def manipulate_object_key_values(suppliers, supplier_type_code=v0_constants.soci
     try:
         for supplier in suppliers:
 
+
+            if supplier.get('address_supplier'):
+                address_supplier = supplier.get('address_supplier')
+                supplier['address1'] = address_supplier['address1'] if address_supplier['address1'] else ''
+                supplier['address2'] = address_supplier['address2']
+                supplier['area'] = address_supplier['area']
+                supplier['subarea'] = address_supplier['subarea']
+                supplier['city'] = address_supplier['city']
+                supplier['state'] = address_supplier['state']
+                supplier['zipcode'] = address_supplier['zipcode']
+                supplier['latitude'] = address_supplier['latitude']
+                supplier['longitude'] = address_supplier['longitude']
+                supplier['name'] = supplier['supplier_name']
+                #del supplier['address_supplier']
+
             # replace all society specific keys with common supplier keys
             if supplier_type_code == v0_constants.society:
                 for society_key, actual_key in v0_constants.society_common_keys.items():
@@ -3790,6 +3794,47 @@ def manipulate_object_key_values(suppliers, supplier_type_code=v0_constants.soci
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
 
+def manipulate_object_key_values_generic(suppliers, supplier_type_code=v0_constants.society, **kwargs):
+    """
+    Args:
+        suppliers: list of all suppliers
+        supplier_type_code: by default 'RS'.
+        kwargs: key,value pairs meant to set in each supplier.
+    Returns:
+        return list of suppliers by changing some keys in supplier object
+    """
+    function = manipulate_object_key_values_generic.__name__
+    try:
+        for supplier in suppliers:
+            if supplier['address_supplier']:      
+                address_supplier = supplier['address_supplier']
+                supplier['address1'] = address_supplier['address1'] if address_supplier['address1'] else ''
+                supplier['address2'] = address_supplier['address2']
+                supplier['area'] = address_supplier['area']
+                supplier['subarea'] = address_supplier['subarea']
+                supplier['city'] = address_supplier['city']
+                supplier['state'] = address_supplier['state']
+                supplier['zipcode'] = address_supplier['zipcode']
+                supplier['latitude'] = address_supplier['latitude']
+                supplier['longitude'] = address_supplier['longitude']
+                supplier['name'] = supplier['supplier_name']
+                del supplier['address_supplier']
+
+            # replace all society specific keys with common supplier keys
+            if supplier_type_code == v0_constants.society:
+                for society_key, actual_key in v0_constants.society_common_keys.items():
+                    if society_key in list(supplier.keys()):
+                        value = supplier[society_key]
+                        del supplier[society_key]
+                        supplier[actual_key] = value
+
+            if kwargs:
+                # set extra key, value sent in kwargs
+                for key, item in kwargs.items():
+                    supplier[key] = item
+        return suppliers
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
 
 def setup_generic_export(data, user, proposal_id):
     """
@@ -3861,9 +3906,10 @@ def setup_generic_export(data, user, proposal_id):
         for supplier_code, detail in inventory_summary_map.items():
             # detail is inventory_summary mapping.
             supplier_pricing_map = {}
-            supplier_pricing_map = merge_two_dicts(
-                set_inventory_pricing(total_suppliers_map[supplier_code], supplier_code, detail, stats),
-                supplier_pricing_map)
+            if len(total_suppliers_map.keys()) > 0 and supplier_code in total_suppliers_map :
+                supplier_pricing_map = merge_two_dicts(
+                    set_inventory_pricing(total_suppliers_map[supplier_code], supplier_code, detail, stats),
+                    supplier_pricing_map)
 
         # make the call to generate data in the result. center_error and supplier_no_pricing_error is logged in this function
         result, stats = make_export_final_response(result, data, inventory_summary_map, supplier_pricing_map, stats)
