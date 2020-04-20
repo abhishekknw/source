@@ -1666,8 +1666,20 @@ def get_suppliers(query, supplier_type_code, coordinates):
             if supplier_type_code != "RS":
                 address_supplier = supplier.get('address_supplier')
                 if address_supplier:
-                    supplier['latitude'] = address_supplier.get('latitude')
-                    supplier['longitude'] = address_supplier.get('longitude')
+                    address_supplier = supplier.get('address_supplier')
+                    
+                    supplier['address1'] = address_supplier['address1'] if address_supplier['address1'] else ''
+                    supplier['address2'] = address_supplier['address2']
+                    supplier['area'] = address_supplier['area']
+                    supplier['subarea'] = address_supplier['subarea']
+                    supplier['city'] = address_supplier['city']
+                    supplier['state'] = address_supplier['state']
+                    supplier['zipcode'] = address_supplier['zipcode']
+                    supplier['latitude'] = address_supplier['latitude']
+                    supplier['longitude'] = address_supplier['longitude']
+                    supplier['name'] = supplier['supplier_name']
+
+                    
 
             for society_key, actual_key in v0_constants.society_common_keys.items():
                 if society_key in list(supplier.keys()):
@@ -2199,7 +2211,7 @@ def add_shortlisted_suppliers(supplier_type_code_list, shortlisted_suppliers, in
                 supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
                 serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
             else:
-                supplier_objects = SupplierMaster.objects.filter(supplier_id__in=supplier_ids)
+                supplier_objects = SupplierMaster.objects.filter(supplier_id__in=supplier_ids, supplier_type=code)
                 serializer = SupplierMasterSerializer(supplier_objects, many=True)
 
             # adding status information to each supplier which is stored in shorlisted_spaces table
@@ -2237,6 +2249,7 @@ def proposal_shortlisted_spaces(data):
 
         shortlisted_suppliers = manipulate_object_key_values(shortlisted_suppliers)
 
+
         # collect all supplier_id's
         supplier_ids = [supplier['object_id'] for supplier in shortlisted_suppliers]
 
@@ -2249,6 +2262,8 @@ def proposal_shortlisted_spaces(data):
 
         shortlisted_suppliers_centerwise = {}
 
+        
+
         # populate the dict with object_id's now
         for supplier in shortlisted_suppliers:
 
@@ -2258,6 +2273,8 @@ def proposal_shortlisted_spaces(data):
 
             shortlisted_suppliers_centerwise[center_id].append(supplier)
 
+        
+       
         # construction of proposal response is isolated
         response = construct_proposal_response(proposal_id)
         if not response.data['status']:
