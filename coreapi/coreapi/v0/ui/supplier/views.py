@@ -3492,6 +3492,9 @@ class SupplierSearch(APIView):
                 address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
                 master_supplier_objects = SupplierMaster.objects.prefetch_related(address_supplier).filter(search_query).order_by('supplier_name')
 
+                if len(all_shortlisted_spaces) > 0:
+                    master_supplier_objects = master_supplier_objects.exclude(supplier_id__in=all_shortlisted_spaces)
+
                 supplier_master_serializer = SupplierMasterSerializer(master_supplier_objects, many=True)
 
 

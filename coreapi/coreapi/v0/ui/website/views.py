@@ -1032,10 +1032,16 @@ class DeleteFileFromSystem(APIView):
         try:
             file_name = request.data['file_name']
             file_extension = file_name.split('.')[1]
+
             if file_extension not in v0_constants.valid_extensions:
                 return ui_utils.handle_response(class_name, data=errors.DELETION_NOT_PERMITTED.format(file_extension), success=False)
                 #raise Exception(class_name, errors.DELETION_NOT_PERMITTED.format(file_extension))
-            os.remove(os.path.join(settings.BASE_DIR, file_name))
+
+            file_path = os.path.join(settings.BASE_DIR, file_name) 
+
+            if os.path.exists(file_path):
+               os.remove(os.path.join(settings.BASE_DIR, file_name))
+            
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, data=str(e), success=False)
