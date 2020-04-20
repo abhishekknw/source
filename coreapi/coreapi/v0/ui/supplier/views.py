@@ -583,7 +583,14 @@ class GenerateSupplierIdAPIView(APIView):
                 'supplier_type': request.data['supplier_type'],
                 'supplier_name': request.data['supplier_name'],
             })
-            data['supplier_code'] = request.data['supplier_name'][:3].upper()
+            supplier_name = request.data['supplier_name']
+            if len(supplier_name) == 0:
+                return handle_response(class_name, data='Supplier Name is required', success=False)
+            data['supplier_code'] = supplier_name.upper()
+
+            if len(supplier_name) > 2:
+                data['supplier_code'] = supplier_name[:3].upper()
+
             data['supplier_id'] = get_supplier_id(data)
             data['supplier_type_code'] = request.data['supplier_type']
             data['current_user'] = request.user
@@ -636,6 +643,7 @@ class SupplierImageDetails(APIView):
 
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
+
 
 class SocietyAPIView(APIView):
     # permission_classes = (permissions.IsAuthenticated, IsOwnerOrManager,)
