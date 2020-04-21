@@ -508,7 +508,7 @@ def get_supplier_inventory(data, id):
                             status=status.HTTP_400_BAD_REQUEST)
 
         content_type = ContentType.objects.get_for_model(supplier_class)
-        (inventory_object, is_created) = InventorySummary.objects.get_or_create(object_id=id, content_type=content_type)
+        inventory_object, is_created = InventorySummary.objects.get_or_create(object_id=id, content_type=content_type)
         data['object_id'] = id
         data['content_type'] = content_type.id
 
