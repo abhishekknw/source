@@ -3824,8 +3824,8 @@ def manipulate_object_key_values_generic(suppliers, supplier_type_code=v0_consta
     function = manipulate_object_key_values_generic.__name__
     try:
         for supplier in suppliers:
-            if supplier['address_supplier']:      
-                address_supplier = supplier['address_supplier']
+            if supplier_type_code != 'RS' and supplier.get('address_supplier'):      
+                address_supplier = supplier.get('address_supplier')
                 supplier['address1'] = address_supplier['address1'] if address_supplier['address1'] else ''
                 supplier['address2'] = address_supplier['address2']
                 supplier['area'] = address_supplier['area']
@@ -3836,7 +3836,7 @@ def manipulate_object_key_values_generic(suppliers, supplier_type_code=v0_consta
                 supplier['latitude'] = address_supplier['latitude']
                 supplier['longitude'] = address_supplier['longitude']
                 supplier['name'] = supplier['supplier_name']
-                del supplier['address_supplier']
+                #del supplier.get('address_supplier')
 
             # replace all society specific keys with common supplier keys
             if supplier_type_code == v0_constants.society:
