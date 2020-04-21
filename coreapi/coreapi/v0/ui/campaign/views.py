@@ -1900,9 +1900,6 @@ class Comment(APIView):
         try:
             user_id = request.user.id
             comment = request.data['comment']
-            # shortlisted_spaces_id = request.data['shortlisted_spaces_id'] if 'shortlisted_spaces_id' in request.data else None
-            # if not shortlisted_spaces_id:
-            #     return ui_utils.handle_response({}, data='Shortlisted Space Id is Mandatory')
 
             shortlisted_spaces_id = ShortlistedSpaces.objects.filter(proposal_id = campaign_id).values_list('id', flat=True).first()
 
@@ -1924,7 +1921,6 @@ class Comment(APIView):
     def get(request, campaign_id):
         from_zone = tz.gettz('UTC')
         to_zone = tz.gettz('Asia/Kolkata')
-        # shortlisted_spaces_id = request.query_params.get('shortlisted_spaces_id', None)
         shortlisted_spaces_id = CampaignComments.objects.filter(campaign_id = campaign_id).values_list('shortlisted_spaces_id', flat=True).first()
         related_to = request.query_params.get('related_to', None)
         inventory_type = request.query_params.get('inventory_type', None)
