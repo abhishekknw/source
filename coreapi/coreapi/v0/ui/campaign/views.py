@@ -1897,32 +1897,31 @@ class PhaseWiseMultipleCampaignLeads(APIView):
 class Comment(APIView):
     @staticmethod
     def post(request, campaign_id):
-        user_id = request.user.id
-        comment = request.data['comment']
-        # shortlisted_spaces_id = request.data['shortlisted_spaces_id'] if 'shortlisted_spaces_id' in request.data else None
-        # if not shortlisted_spaces_id:
-        #     return ui_utils.handle_response({}, data='Shortlisted Space Id is Mandatory')
+        try:
+            user_id = request.user.id
+            comment = request.data['comment']
 
-        shortlisted_spaces_id = ShortlistedSpaces.objects.filter(proposal_id = campaign_id).values_list('id', flat=True).first()
+            shortlisted_spaces_id = ShortlistedSpaces.objects.filter(proposal_id = campaign_id).values_list('id', flat=True).first()
 
-        related_to = request.data['related_to'] if 'related_to' in request.data else None
-        inventory_type = request.data['inventory_type'] if 'inventory_type' in request.data else None
-        inventory_comment = CampaignComments(**{
-            "user_id": user_id,
-            "shortlisted_spaces_id": shortlisted_spaces_id,
-            "comment": comment,
-            "campaign_id": campaign_id,
-            "related_to": related_to,
-            "inventory_type": inventory_type
-        })
-        inventory_comment.save()
-        return ui_utils.handle_response({}, data='success', success=True)
-
+            related_to = request.data['related_to'] if 'related_to' in request.data else None
+            inventory_type = request.data['inventory_type'] if 'inventory_type' in request.data else None
+            inventory_comment = CampaignComments(**{
+                "user_id": user_id,
+                "shortlisted_spaces_id": shortlisted_spaces_id,
+                "comment": comment,
+                "campaign_id": campaign_id,
+                "related_to": related_to,
+                "inventory_type": inventory_type
+            })
+            inventory_comment.save()
+            return ui_utils.handle_response({}, data='success', success=True)
+        except :
+            return ui_utils.handle_response({}, data='Comment not saved', success=False)
     @staticmethod
     def get(request, campaign_id):
         from_zone = tz.gettz('UTC')
         to_zone = tz.gettz('Asia/Kolkata')
-        shortlisted_spaces_id = request.query_params.get('shortlisted_spaces_id', None)
+        shortlisted_spaces_id = CampaignComments.objects.filter(campaign_id = campaign_id).values_list('shortlisted_spaces_id', flat=True).first()
         related_to = request.query_params.get('related_to', None)
         inventory_type = request.query_params.get('inventory_type', None)
         all_campaign_comments = CampaignComments.objects.filter(campaign_id=campaign_id).all()
