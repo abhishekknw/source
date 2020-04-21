@@ -1899,9 +1899,11 @@ class Comment(APIView):
     def post(request, campaign_id):
         user_id = request.user.id
         comment = request.data['comment']
-        shortlisted_spaces_id = request.data['shortlisted_spaces_id'] if 'shortlisted_spaces_id' in request.data else None
-        if not shortlisted_spaces_id:
-            return ui_utils.handle_response({}, data='Shortlisted Space Id is Mandatory')
+        # shortlisted_spaces_id = request.data['shortlisted_spaces_id'] if 'shortlisted_spaces_id' in request.data else None
+        # if not shortlisted_spaces_id:
+        #     return ui_utils.handle_response({}, data='Shortlisted Space Id is Mandatory')
+
+        shortlisted_spaces_id = ShortlistedSpaces.objects.filter(proposal_id = campaign_id).values_list('id', flat=True).first()
 
         related_to = request.data['related_to'] if 'related_to' in request.data else None
         inventory_type = request.data['inventory_type'] if 'inventory_type' in request.data else None
