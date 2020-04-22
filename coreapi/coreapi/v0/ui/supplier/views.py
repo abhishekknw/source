@@ -3,12 +3,12 @@ from __future__ import absolute_import
 import json
 import requests
 
-
-
 from bson.objectid import ObjectId
 from django.urls import reverse
 from django.forms.models import model_to_dict
 from django.http import HttpResponse
+from django.db.models import Prefetch
+
 from openpyxl import load_workbook, Workbook
 import csv
 from rest_framework.views import APIView
@@ -130,50 +130,51 @@ def get_flat_count_type(flat_count):
 def update_contact_and_ownership_detail(data):
     basic_contacts = data.get('contactData', None)
     object_id = data.get('supplier_id', None)
-
     master_supplier_data = data.get('master_data', None)
+    supplier_address_data = master_supplier_data.get('address_supplier')
 
     if master_supplier_data:
-
-
         master_data = {
             "supplier_id": object_id,
             "supplier_name": master_supplier_data.get('supplier_name', None),
             "supplier_type": master_supplier_data.get('supplier_type', None),
-            "unit_primary_count" : master_supplier_data.get('unit_primary_count') if master_supplier_data.get('unit_primary_count') else 0,
-            "unit_secondary_count" : master_supplier_data.get('unit_secondary_count') if master_supplier_data.get('unit_secondary_count') else 0,
-            "unit_tertiary_count" : master_supplier_data.get('unit_tertiary_count') if master_supplier_data.get('unit_tertiary_count') else 0,
-            "representative": master_supplier_data.get('representative', None)
+            "unit_primary_count": master_supplier_data.get('unit_primary_count') if master_supplier_data.get('unit_primary_count') else 0,
+            "unit_secondary_count": master_supplier_data.get('unit_secondary_count') if master_supplier_data.get('unit_secondary_count') else 0,
+            "unit_tertiary_count": master_supplier_data.get('unit_tertiary_count') if master_supplier_data.get('unit_tertiary_count') else 0,
+            "representative": master_supplier_data.get('representative', None),
+            "area": supplier_address_data.get('area', None),
+            "subarea": supplier_address_data.get('subarea', None),
+            "city": supplier_address_data.get('city', None),
+            "state": supplier_address_data.get('state', None),
+            "zipcode": supplier_address_data.get('zipcode', None),
+            "latitude": supplier_address_data.get('latitude', None),
+            "longitude": supplier_address_data.get('longitude', None),
+            "landmark": supplier_address_data.get('nearest_landmark', None),
         }
-
         supplier_master_data = SupplierMaster.objects.filter(supplier_id=object_id).first()
         if supplier_master_data and supplier_master_data.supplier_id:
-           supplier_master_serializer = SupplierMasterSerializer(supplier_master_data, data=master_data)
+            supplier_master_serializer = SupplierMasterSerializer(supplier_master_data, data=master_data)
         else:
             supplier_master_serializer = SupplierMasterSerializer(data=master_data)
         
         if supplier_master_serializer.is_valid():
             supplier_master_serializer.save()
 
-    
-        addressData =  master_supplier_data.get('address_supplier')
-
         address_data = {
             "supplier_id": object_id,
-            "address1": addressData.get('address1', None),
-            "address2": addressData.get('address2', None),
-            "area": addressData.get('area', None),
-            "subarea": addressData.get('subarea', None),
-            "city": addressData.get('city', None),
-            "state": addressData.get('state', None),
-            "zipcode": addressData.get('zipcode', None),
-            "latitude": addressData.get('latitude', None),
-            "longitude": addressData.get('longitude', None),
-            "nearest_landmark": addressData.get('nearest_landmark', None),
+            "address1": supplier_address_data.get('address1', None),
+            "address2": supplier_address_data.get('address2', None),
+            "area": supplier_address_data.get('area', None),
+            "subarea": supplier_address_data.get('subarea', None),
+            "city": supplier_address_data.get('city', None),
+            "state": supplier_address_data.get('state', None),
+            "zipcode": supplier_address_data.get('zipcode', None),
+            "latitude": supplier_address_data.get('latitude', None),
+            "longitude": supplier_address_data.get('longitude', None),
+            "nearest_landmark": supplier_address_data.get('nearest_landmark', None),
         }
-
         address_master_data = AddressMaster.objects.filter(supplier_id=object_id).first()
-        
+
         if address_master_data and address_master_data.supplier_id:
             address_master_serializer = AddressMasterSerializer(address_master_data, data=address_data)
         else:
@@ -184,22 +185,18 @@ def update_contact_and_ownership_detail(data):
 
     if basic_contacts:
         for contact in basic_contacts:
-
             contact['object_id'] = object_id
-
             if 'id' in contact:
                 contact_detail = ContactDetails.objects.filter(pk=contact['id']).first()
                 contact_serializer = ContactDetailsSerializer(contact_detail, data=contact)
             else:
                 contact_serializer = ContactDetailsSerializer(data=contact)
-
             if contact_serializer.is_valid():
                 contact_serializer.save()
 
     ownership = data.get('ownership_details', None)
 
     if ownership:
-
         contact['object_id'] = object_id
         if ownership.get('id'):
             ownership_detail = OwnershipDetails.objects.filter(pk=ownership['id']).first()
@@ -209,7 +206,6 @@ def update_contact_and_ownership_detail(data):
         
         if ownership_serializer.is_valid():
             ownership_serializer.save()
-
     return True
 
 
@@ -598,7 +594,7 @@ class GenerateSupplierIdAPIView(APIView):
             all_supplier_data = response.data['data']
             return handle_response(class_name, data=save_supplier_data(user, all_supplier_data), success=True)
         except ObjectDoesNotExist as e:
-            return handle_response(class_name, exception_object=e)
+            return handle_response(class_name, data='Supplier {supplier_code} does not exists'.format(supplier_code=request.data['supplier_type']))
         except Exception as e:
             return handle_response(class_name, exception_object=e)
 
@@ -971,10 +967,9 @@ class CorporateViewSet(viewsets.ViewSet):
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
 
+
 class SalonViewSet(viewsets.ViewSet):
-
     def list(self, request):
-
         class_name = self.__class__.__name__
         try:
             user = request.user
@@ -1562,11 +1557,6 @@ class HordingViewSet(viewsets.ViewSet):
             return handle_response(class_name, exception_object=e, request=request)
 
 
-
-
-
-
-
 class EducationalInstituteViewSet(viewsets.ViewSet):
     """
     View Set around EducationalInstitute
@@ -1595,8 +1585,6 @@ class EducationalInstituteViewSet(viewsets.ViewSet):
 
                 educational_institute_objects = educational_institute_objects.all().order_by('name')
             else:
-                
-                
                 #vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
                 #educational_institute_objects = SupplierEducationalInstitute.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id)) & Q(representative__isnull=False))
 
@@ -1610,14 +1598,7 @@ class EducationalInstituteViewSet(viewsets.ViewSet):
                                       | Q(city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
                
                 educational_institute_objects = educational_institute_objects.all().order_by('name')
-
-                
-                
-                
-
-            
-
-            # #pagination
+          # #pagination
             educational_institute_objects_paginate = paginate(educational_institute_objects,SupplierEducationalInstituteSerializer,request)
             educational_institute_with_images = get_supplier_image(educational_institute_objects_paginate["list"], 'Educational Institute')
 
@@ -1628,21 +1609,16 @@ class EducationalInstituteViewSet(viewsets.ViewSet):
                 'educational_institute_objects': educational_institute_with_images
             }
             return handle_response(class_name, data=data, success=True)
-            
         except Exception as e:
             return handle_response(class_name, data=str(e), request=request)
     
 
 class SaveBasicCorporateDetailsAPIView(APIView):
-
     def post(self, request, id, format=None):
         class_name = self.__class__.__name__
-
         try:
-
             companies = []
             error = {}
-
             # Round 1 Saving basic data
             if 'supplier_id' in request.data:
                 corporate = SupplierTypeCorporate.objects.filter(pk=request.data['supplier_id']).first()
@@ -1663,13 +1639,11 @@ class SaveBasicCorporateDetailsAPIView(APIView):
             # Round 2 Saving List of companies
 
             corporate_id = request.data['supplier_id']
-
             companies_name = request.data.get('list1')
             company_ids = list(
                 CorporateParkCompanyList.objects.filter(supplier_id=corporate_id).values_list('id', flat=True))
 
             for company_name in companies_name:
-                
                 if 'id' is company_name.get('name'):
                     company = CorporateParkCompanyList.objects.get(id=id)
                     company.name = company_name.get('name')
@@ -1682,9 +1656,7 @@ class SaveBasicCorporateDetailsAPIView(APIView):
 
             CorporateParkCompanyList.objects.bulk_create(companies)
             CorporateParkCompanyList.objects.filter(id__in=company_ids).delete()
-
             # Round 3 - Saving contacts
-
             try:
                 instance = SupplierTypeCorporate.objects.get(supplier_id=id)
             except SupplierTypeCorporate.DoesNotExist:
@@ -1701,7 +1673,6 @@ class SaveBasicCorporateDetailsAPIView(APIView):
             contact_detail_ids = set([contact_id for contact_id in contact_detail_objects.keys()])
 
             for contact in request.data.get('contacts'):
-
                 # make the data you want to save in contacts
                 contact_data = {
                     'name': contact.get('name'),
@@ -1724,7 +1695,6 @@ class SaveBasicCorporateDetailsAPIView(APIView):
 
                 if contact_instance:
                     contact_detail_ids.remove(contact['id'])
-
                 # save the data
                 serializer = ContactDetailsSerializer(contact_instance, data=contact_data)
 
@@ -1792,7 +1762,6 @@ class SaveBasicCorporateDetailsAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-
             supplier = SupplierTypeCorporate.objects.get(supplier_id=id)
             serializer = SupplierTypeCorporateSerializer(supplier)
             companies = CorporateParkCompanyList.objects.filter(supplier_id=id)
@@ -1827,14 +1796,11 @@ class SaveBuildingDetailsAPIView(APIView):
         return Response(building_serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, id, format=None):
-
         try:
             corporate_object = SupplierTypeCorporate.objects.get(supplier_id=id)
         except SupplierTypeCorporate.DoesNotExist:
             return Response({'message': 'Invalid Corporate ID'}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-
             building_count = len(request.data)
             if corporate_object.building_count != building_count:
                 corporate_object.building_count = building_count
@@ -2056,7 +2022,7 @@ class saveBasicSalonDetailsAPIView(APIView):
         else:
             error['message'] = 'Invalid Salon Info data'
             error = json.dumps(error)
-            return Response(response, status=406)
+            return Response(error, status=406)
 
         # Now saving contacts
         try:
@@ -2079,7 +2045,6 @@ class saveBasicSalonDetailsAPIView(APIView):
                     serializer.save()
                 else:
                     return Response(status=404)
-
             else:
                 contact['object_id'] = instance.supplier_id
                 serializer = ContactDetailsGenericSerializer(data=contact)
@@ -2090,9 +2055,7 @@ class saveBasicSalonDetailsAPIView(APIView):
 
         ContactDetailsGeneric.objects.filter(id__in=contacts_ids).delete()
         return Response(status=200)
-
         # End of contact saving
-
 
 # Saving and fetching basic data of a gym.
 class saveBasicGymDetailsAPIView(APIView):
@@ -2171,12 +2134,8 @@ class saveBasicGymDetailsAPIView(APIView):
             
             if ownership_serializer.is_valid():
                 ownership_serializer.save()
-
-
         return Response(status=200)
-
         # End of contact Saving
-
 
 class BusShelter(APIView):
     """
@@ -2295,9 +2254,6 @@ class BusShelter(APIView):
             return handle_response(class_name, exception_object=e, request=request)
     
 
-
-
-
 class getBusShelter(APIView):
     """
     The class provides api's for fetching and saving Bus Shelter details
@@ -2325,7 +2281,6 @@ class getBusShelter(APIView):
             
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
-
 
 
 class BusShelterSearchView(APIView):
@@ -2359,7 +2314,6 @@ class BusShelterSearchView(APIView):
 
 
 class SocietyAPIListView(APIView):
-
     def get(self, request):
         class_name = self.__class__.__name__
         try:
@@ -2436,7 +2390,6 @@ class SuppliersMeta(APIView):
         except Exception :
             return handle_response(class_name, data='Something went wrong please try again later', success=False)
 
-from django.db.models import Prefetch
 
 class SuppliersMetaData(APIView):
     """
@@ -3934,6 +3887,7 @@ class GetLocationDataInSheet(APIView):
             return resp
         return ()
 
+
 class SupplierGenericViewSet(viewsets.ViewSet):
     """
     View Set around All Suppliers
@@ -3953,7 +3907,6 @@ class SupplierGenericViewSet(viewsets.ViewSet):
 
             if not supplier_type_code:
                 return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
-
 
             search_query = Q()
             search_query &= Q(supplier_type=supplier_type_code)
@@ -3976,16 +3929,14 @@ class SupplierGenericViewSet(viewsets.ViewSet):
         
             supplier_objects_paginate = paginate(master_supplier_objects, SupplierMasterSerializer, request)
             supplier_with_images = get_supplier_image(supplier_objects_paginate["list"], 'Supplier')
-            
 
             data = {
                 'count': supplier_objects_paginate["count"],
-                'has_next':supplier_objects_paginate["has_next"],
-                'has_previous':supplier_objects_paginate["has_previous"],
+                'has_next': supplier_objects_paginate["has_next"],
+                'has_previous': supplier_objects_paginate["has_previous"],
                 'supplier_objects': supplier_with_images
             }
             return handle_response(class_name, data=data, success=True)
-        
         except Exception as e:
             return handle_response(class_name, data="Something went wrong please try again later.", request=request)
 
@@ -3993,13 +3944,11 @@ class SupplierGenericViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
 
         try:
-
             supplier_type_code = request.GET.get("supplier_type_code", None)
             
             if not supplier_type_code:
                 return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
 
-            
             master_supplier_objects = SupplierMaster.objects.filter(pk=pk).first()
             supplier_master_serializer = SupplierMasterSerializer(master_supplier_objects, many=False)
 
@@ -4009,13 +3958,9 @@ class SupplierGenericViewSet(viewsets.ViewSet):
             if supplier_instance:
                 serializer_name = get_serializer(supplier_type_code)
                 serializer = serializer_name(instance=supplier_instance)
-
                 shopData = serializer.data
-
                 shopData['master_data'] = supplier_master_serializer.data
-
                 shopData['contactData'],shopData['ownership_details'] = retrieve_contact_and_ownership_detail(pk)
-
                 return handle_response(class_name, data=shopData, success=True)
             else:
                 return handle_response(class_name, data="Supplier Id does not exist.", success=True)
@@ -4025,30 +3970,21 @@ class SupplierGenericViewSet(viewsets.ViewSet):
     def update(self, request, pk):
         class_name = self.__class__.__name__
         try:
-
             basic_contacts = request.data.get('basic_contacts', None)
             object_id = request.data.get('supplier_id', None)
-
             supplier_type_code = request.data.get('supplier_type_code', None)
 
             if not supplier_type_code:
-                return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
+                return handle_response({}, data='supplier_type_code is Mandatory')
 
             model_name = get_model(supplier_type_code)
             serializer_name = get_serializer(supplier_type_code)
-
-
             instance = model_name.objects.get(pk=pk)
             serializer = serializer_name(instance=instance, data=request.data)
-
-            
-            
             if serializer.is_valid():
                 serializer.save()
-                contact_and_ownership = update_contact_and_ownership_detail(request.data)
+                update_contact_and_ownership_detail(request.data)
                 return handle_response(class_name, data=serializer.data, success=True)
-            
             return handle_response(class_name, data=serializer.data, success=True)
-        
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)

@@ -102,8 +102,6 @@ SUPPLIER_STATUS = (
 
 
 class SupplierTypeSociety(BaseModel):
-
-
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, on_delete=models.CASCADE)
     objects = managers.GeneralManager()
     supplier_id = models.CharField(db_index=True, db_column='SUPPLIER_ID', primary_key=True, max_length=20)  # Field name made lowercase.
@@ -255,7 +253,6 @@ class SupplierTypeSociety(BaseModel):
         return False
 
     class Meta:
-
         db_table = 'supplier_society'
 
 
@@ -274,11 +271,10 @@ class SupplierTypeCode(models.Model):
     updated_at = models.DateTimeField(editable=False, default=settings.DEFAULT_DATE)
 
     class Meta:
-
         db_table = 'supplier_type_code'
 
-class SupplierTypeSalon(BasicSupplierDetails):
 
+class SupplierTypeSalon(BasicSupplierDetails):
     salon_type = models.CharField(db_column='SALON_TYPE', max_length=30, blank=True, null=True)
     category = models.CharField(db_column='CATEGORY', max_length=30, blank=True, null=True)
     salon_type_chain = models.CharField(db_column='SALON_TYPE_CHAIN', max_length=30, blank=True, null=True)
@@ -308,6 +304,7 @@ class SupplierTypeSalon(BasicSupplierDetails):
     class Meta:
         db_table = 'supplier_salon'
 
+
 class CorporateBuilding(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
     building_name = models.CharField(db_column='BUILDING_NAME', max_length=50, null=True, blank=True)
@@ -320,8 +317,8 @@ class CorporateBuilding(models.Model):
     class Meta:
         db_table='corporate_building'
 
-class SupplierTypeGym(BasicSupplierDetails):
 
+class SupplierTypeGym(BasicSupplierDetails):
     gym_type = models.CharField(max_length=30, blank=True, null=True)
     category = models.CharField(max_length=30, blank=True, null=True)
     gym_type_chain = models.CharField(max_length=30, blank=True, null=True)
@@ -365,8 +362,8 @@ class SupplierEducationalInstitute(BasicSupplierDetails):
     class Meta:
         db_table = 'supplier_educational_institute'
 
-class SupplierHording(BasicSupplierDetails):
 
+class SupplierHording(BasicSupplierDetails):
     owner_name = models.CharField(max_length=255, null=True, blank=True)
     external_Number = models.CharField(max_length=255, null=True, blank=True)
     length = models.IntegerField(blank=True, null=True)
@@ -389,7 +386,6 @@ class SupplierHording(BasicSupplierDetails):
     average_pedestrianDailyCount = models.CharField(max_length=255, null=True, blank=True)
     lit_status = models.CharField(choices=(( 'YES', 'YES' ),  ('NO', 'NO')), max_length=10, blank=True, null=True)
     buses_count = models.IntegerField(blank=True, null=True)
-
     sequence_number = models.IntegerField(blank=True, null=True)
     signal_waiting_time = models.IntegerField(blank=True, null=True)
 
@@ -419,11 +415,10 @@ class SupplierInfo(models.Model):
     current_status = models.DateField(db_column='CURRENT_STATUS', blank=True, null=True)  # Field name made lowercase.
 
     class Meta:
-
         db_table = 'supplier_info'
 
-class SupplierTypeCorporate(BasicSupplierDetails):
 
+class SupplierTypeCorporate(BasicSupplierDetails):
     corporate_type = models.CharField(max_length=25,blank=True, null= True)
     industry_segment = models.CharField(max_length=30, blank=True, null=True)
     possession_year = models.CharField(max_length=5, blank=True, null=True)
@@ -461,7 +456,6 @@ class SupplierTypeCorporate(BasicSupplierDetails):
     rating = models.CharField(max_length=255, null=True, blank=True)
     feedback = models.CharField(max_length=250, null=True, blank=True)
 
-
     def get_buildings(self):
         return self.corporatebuilding.all()
 
@@ -470,6 +464,7 @@ class SupplierTypeCorporate(BasicSupplierDetails):
 
     class Meta:
         db_table = 'supplier_corporate'
+
 
 class SupplierTypeBusShelter(BasicSupplierDetails):
     """
@@ -483,12 +478,10 @@ class SupplierTypeBusShelter(BasicSupplierDetails):
     average_on_boarding_daily_count = models.IntegerField(null=True, max_length=200, blank=True)
 
     external_number = models.CharField(max_length=200, null=True, blank=True)
-    
-
-
 
     class Meta:
         db_table = 'supplier_bus_shelter'
+
 
 class SupplierAmenitiesMap(BaseModel):
     """
@@ -547,6 +540,7 @@ class SupplierTypeBusDepot(BasicSupplierDetails):
     class Meta:
         db_table = 'supplier_type_bus_depot'
 
+
 class SupplierMaster(BaseModel):
     """
     Master table for storing supplier ids of all type of suppliers and other common basic fileds
@@ -559,9 +553,18 @@ class SupplierMaster(BaseModel):
     unit_secondary_count = models.IntegerField(null=True, blank=True)
     unit_tertiary_count = models.IntegerField(null=True, blank=True)
     representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
+    area = models.CharField(max_length=50, null=True, blank=True)
+    subarea = models.CharField(max_length=50, null=True, blank=True)
+    city = models.CharField(max_length=50, null=True, blank=True)
+    state = models.CharField(max_length=50, null=True, blank=True)
+    landmark = models.CharField(max_length=50, null=True, blank=True)
+    zipcode = models.IntegerField(null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True, default=0.0)
+    longitude = models.FloatField(null=True, blank=True, default=0.0)
 
     class Meta:
         db_table = 'supplier_master'
+
 
 class AddressMaster(BaseModel):
     """

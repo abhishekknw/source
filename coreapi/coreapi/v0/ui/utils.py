@@ -279,34 +279,47 @@ def save_supplier_data(user, master_data):
         if serializer.is_valid():
             serializer.save(user=user)
             set_default_pricing(serializer.data['supplier_id'], supplier_code)
-
+            supplier_id = supplier_data.get('supplier_id')
+            area = supplier_data.get('area', None)
+            subarea = supplier_data.get('subarea', None)
+            city = supplier_data.get('city', None)
+            state = supplier_data.get('state', None)
+            landmark = supplier_data.get('landmark', None)
+            longitude = supplier_data.get('longitude', 0.0)
+            latitude = supplier_data.get('latitude', 0.0)
             supplier_master_data = {
-                "supplier_id": supplier_data.get('supplier_id'),
-                "supplier_name": supplier_data.get('name'),
-                "supplier_type": supplier_code
+                "supplier_id": supplier_id,
+                "supplier_name": supplier_data.get('name', None),
+                "supplier_type": supplier_code,
+                "area": area,
+                "subarea": subarea,
+                "city": city,
+                "state": state,
+                "landmark": landmark,
+                "latitude": latitude,
+                "longitude": longitude
             }
             supplier_master_serializer = SupplierMasterSerializer(data=supplier_master_data)
             if supplier_master_serializer.is_valid():
                 supplier_master_serializer.save()
 
             address_master_data = {
-                "supplier_id": supplier_data.get('supplier_id'),
-                "area": supplier_data.get('area'),
-                "subarea": supplier_data.get('subarea'),
-                "city": supplier_data.get('city'),
-                "state": supplier_data.get('state'),
-                "latitude": 0,
-                "longitude": 0,
+                "supplier_id": supplier_id,
+                "area": area,
+                "subarea": subarea,
+                "city": city,
+                "state": state,
+                "latitude": latitude,
+                "longitude": longitude
             }
             address_master_serializer = AddressMasterSerializer(data=address_master_data)
             if address_master_serializer.is_valid():
                 address_master_serializer.save()
-
             return serializer.data
         else:
             raise Exception(function_name, serializer.errors)
     except Exception as e:
-        raise Exception(function_name, get_system_error(e))
+       raise Exception(function_name, get_system_error(e))
 
 
 def set_default_pricing(supplier_id, supplier_type_code):
@@ -792,7 +805,6 @@ def get_serializer(query):
             'printing_cost': PrintingCostSerializer,
             'proposal_metrics': ProposalMetricsSerializer,
             'proposal_master_cost': ProposalMasterCostSerializer
-
         }
         return serializers[query]
     except Exception as e:
