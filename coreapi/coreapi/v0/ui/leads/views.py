@@ -4,6 +4,7 @@ from __future__ import absolute_import
 import difflib
 
 from rest_framework.views import APIView
+from rest_framework.response import Response
 from openpyxl import load_workbook, Workbook
 from .models import (get_leads_summary, LeadsPermissions, ExcelDownloadHash, CampaignExcelDownloadHash)
 from v0.ui.analytics.views import (get_data_analytics, get_details_by_higher_level,
@@ -1572,21 +1573,20 @@ class CampaignDataInExcelSheet(APIView):
     @staticmethod
     def get(request, one_time_hash):
         excel_download_hash = list(CampaignExcelDownloadHash.objects.raw({"one_time_hash": one_time_hash}))
+        data = {}
+        data["shortlisted_suppliers"] = []
         if len(excel_download_hash) > 0:
             campaign_id = excel_download_hash[0].campaign_id
             response = prepare_shortlisted_spaces_and_inventories(campaign_id, None, request.user, 0, None, None, None)
             if response.data['status']:
                 data = response.data['data']
-                excel_book = prepare_campaign_specific_data_in_excel(data)
-                resp = HttpResponse(
-                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-                resp['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
-                excel_book.save(resp)
-                return resp
 
-
-
-        return handle_response({}, data=response.data, success=True)
+        excel_book = prepare_campaign_specific_data_in_excel(data)
+        resp = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        resp['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
+        excel_book.save(resp)
+        return resp
 
 class GenerateCampaignExcelDownloadHash(APIView):
     @staticmethod
