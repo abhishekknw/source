@@ -68,14 +68,12 @@ def handle_response(object_name, data=None, headers=None, content_type=None, exc
 
     """
     if not success:
-
         # prepare the object to be sent in error response
         data = {
             'general_error': data,
             'system_error': get_system_error(exception_object),
             'culprit_module': object_name,
         }
-
         if request:
             # fill the data with more information about request
             data['request_data'] = request.data
@@ -86,8 +84,8 @@ def handle_response(object_name, data=None, headers=None, content_type=None, exc
             data['virtual_env'] = request.META.get('VIRTUAL_ENV')
             data['server_port'] = request.META.get('SERVER_PORT')
             data['user'] = request.user.username if request.user else None
-        if isinstance(exception_object, PermissionDenied):
 
+        if isinstance(exception_object, PermissionDenied):
             return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_403_FORBIDDEN)
         else:
             return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_400_BAD_REQUEST)
@@ -106,7 +104,8 @@ def get_system_error(exception_object):
     """
     if not exception_object:
         return []
-    return str(exception_object.message) if exception_object.message else str(exception_object.args) if exception_object.args else ""
+    return str(exception_object.args) if exception_object.args else str(
+        exception_object) if exception_object else ""
 
 
 def save_basic_supplier_details(supplier_type_code, data):
@@ -150,6 +149,12 @@ def save_basic_supplier_details(supplier_type_code, data):
         return handle_response(function_name, exception_object=e)
 
 
+def generate_random_string(stringLength=5):
+    """Generate a random string of fixed length """
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(stringLength)).upper()
+
+
 def get_supplier_id(data):
     """
     :param request: request parameter
@@ -176,9 +181,14 @@ def get_supplier_id(data):
                                                      area_code=area_object)
 
         supplier_id = city_object.city_code + area_object.area_code + subarea_object.subarea_code + data[
-            'supplier_type'] + data[
-                          'supplier_code']
-        return supplier_id
+            'supplier_type'] + data['supplier_code']
+        supplier_id = generate_random_string(len(supplier_id))
+        # Check supplier id in suppliers
+        supplier_society = SupplierTypeSociety.objects.filter(pk=supplier_id)
+        supplier_master = SupplierMaster.objects.filter(pk=supplier_id)
+        if supplier_society or supplier_master:
+            supplier_id = generate_random_string(len(supplier_id))
+        return supplier_id.strip()
 
     except KeyError as e:
         raise Exception(function, get_system_error(e))
@@ -213,15 +223,15 @@ def make_supplier_data(data):
                 all_supplier_data[code] = {
 
                     'data': {
-                             'supplier_code': data['supplier_code'],
-                             'society_name': data['supplier_name'],
-                             'supplier_id': data['supplier_id'],
-                             'created_by': current_user.id,
-                             'society_city': city.city_name,
-                             'society_subarea': subarea.subarea_name,
-                             'society_locality': area.label,
-                             'society_state': city.state_code.state_name,
-                             'society_location_type': subarea.locality_rating
+                         'supplier_code': data['supplier_code'],
+                         'society_name': data['supplier_name'],
+                         'supplier_id': data['supplier_id'],
+                         'created_by': current_user.id,
+                         'society_city': city.city_name,
+                         'society_subarea': subarea.subarea_name,
+                         'society_locality': area.label,
+                         'society_state': city.state_code.state_name,
+                         'society_location_type': subarea.locality_rating
                     },
 
                     'serializer': get_serializer(code)
@@ -262,45 +272,54 @@ def save_supplier_data(user, master_data):
     """
     function_name = save_supplier_data.__name__
     try:
-        
         supplier_code = master_data['supplier_type_code']
         serializer_class = get_serializer(supplier_code)
         supplier_data = master_data[supplier_code]['data']
         serializer = serializer_class(data=supplier_data)
-
-        
         if serializer.is_valid():
             serializer.save(user=user)
             set_default_pricing(serializer.data['supplier_id'], supplier_code)
-
-            sup_master_data = {
-                "supplier_id" : supplier_data.get('supplier_id'),
-                "supplier_name" : supplier_data.get('name'),
-                "supplier_type" : supplier_code
+            supplier_id = supplier_data.get('supplier_id')
+            area = supplier_data.get('area', None)
+            subarea = supplier_data.get('subarea', None)
+            city = supplier_data.get('city', None)
+            state = supplier_data.get('state', None)
+            landmark = supplier_data.get('landmark', None)
+            longitude = supplier_data.get('longitude', 0.0)
+            latitude = supplier_data.get('latitude', 0.0)
+            supplier_master_data = {
+                "supplier_id": supplier_id,
+                "supplier_name": supplier_data.get('name', None),
+                "supplier_type": supplier_code,
+                "area": area,
+                "subarea": subarea,
+                "city": city,
+                "state": state,
+                "landmark": landmark,
+                "latitude": latitude,
+                "longitude": longitude
             }
-            supller_master_serializer = SupplierMasterSerializer(data=sup_master_data)
-            if supller_master_serializer.is_valid():
-                supller_master_serializer.save()
-
+            supplier_master_serializer = SupplierMasterSerializer(data=supplier_master_data)
+            if supplier_master_serializer.is_valid():
+                supplier_master_serializer.save()
 
             address_master_data = {
-                "supplier_id" : supplier_data.get('supplier_id'),
-                "area" : supplier_data.get('area'),
-                "subarea" : supplier_data.get('subarea'),
-                "city" : supplier_data.get('city'),
-                "state" : supplier_data.get('state'),
-                "latitude" : 0,
-                "longitude": 0,
+                "supplier_id": supplier_id,
+                "area": area,
+                "subarea": subarea,
+                "city": city,
+                "state": state,
+                "latitude": latitude,
+                "longitude": longitude
             }
             address_master_serializer = AddressMasterSerializer(data=address_master_data)
             if address_master_serializer.is_valid():
                 address_master_serializer.save()
-
             return serializer.data
         else:
             raise Exception(function_name, serializer.errors)
     except Exception as e:
-        raise Exception(function_name, get_system_error(e))
+       raise Exception(function_name, get_system_error(e))
 
 
 def set_default_pricing(supplier_id, supplier_type_code):
@@ -502,7 +521,7 @@ def get_supplier_inventory(data, id):
                             status=status.HTTP_400_BAD_REQUEST)
 
         content_type = ContentType.objects.get_for_model(supplier_class)
-        (inventory_object, is_created) = InventorySummary.objects.get_or_create(object_id=id, content_type=content_type)
+        inventory_object, is_created = InventorySummary.objects.get_or_create(object_id=id, content_type=content_type)
         data['object_id'] = id
         data['content_type'] = content_type.id
 
@@ -786,7 +805,6 @@ def get_serializer(query):
             'printing_cost': PrintingCostSerializer,
             'proposal_metrics': ProposalMetricsSerializer,
             'proposal_master_cost': ProposalMasterCostSerializer
-
         }
         return serializers[query]
     except Exception as e:
