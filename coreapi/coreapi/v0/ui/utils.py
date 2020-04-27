@@ -304,7 +304,7 @@ def save_supplier_data(user, master_data):
                 supplier_master_serializer.save()
 
             address_master_data = {
-                "supplier_id": supplier_id,
+                "supplier": supplier_id,
                 "area": area,
                 "subarea": subarea,
                 "city": city,

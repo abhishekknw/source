@@ -570,7 +570,7 @@ class AddressMaster(BaseModel):
     """
     Address table for storing addresses of all suppliers
     """
-    supplier_id = models.OneToOneField('SupplierMaster', db_index=True, max_length=20, on_delete=models.CASCADE, related_name="address_supplier")
+    supplier = models.OneToOneField('SupplierMaster', db_index=True, max_length=20, on_delete=models.CASCADE, related_name="address_supplier")
     address1 = models.CharField(max_length=250, null=True, blank=True)
     address2 = models.CharField(max_length=250, null=True, blank=True)
     area = models.CharField(max_length=255, null=True, blank=True)
