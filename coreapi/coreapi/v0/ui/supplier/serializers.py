@@ -15,7 +15,11 @@ class SupplierEducationalInstituteSerializer(ModelSerializer):
 class AddressMasterSerializer(ModelSerializer):
     class Meta:
         model = AddressMaster
-        fields = '__all__'
+        fields = (
+            'supplier_id', 'latitude', 'longitude', 'address1',
+            'address2', 'area', 'subarea', 'city',
+            'state', 'zipcode'
+        )
 
 
 class SupplierMasterSerializer(ModelSerializer):
