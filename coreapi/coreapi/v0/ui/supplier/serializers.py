@@ -18,7 +18,7 @@ class AddressMasterSerializer(ModelSerializer):
         fields = (
             'supplier_id', 'latitude', 'longitude', 'address1',
             'address2', 'area', 'subarea', 'city',
-            'state', 'zipcode'
+            'state', 'zipcode',  'id', 'created_at','updated_at'
         )
 
 
