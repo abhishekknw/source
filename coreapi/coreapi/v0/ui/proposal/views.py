@@ -1053,6 +1053,7 @@ class ProposalViewSet(viewsets.ViewSet):
             response = website_utils.proposal_shortlisted_spaces(data)
             if not response.data['status']:
                 return response
+            
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)

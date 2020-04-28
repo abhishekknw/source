@@ -264,6 +264,7 @@ class InventoryTypeVersion(models.Model):
     class Meta:
         db_table = 'inventory_type_version'
 
+
 class InventorySummary(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID,on_delete=models.CASCADE)
@@ -337,10 +338,27 @@ class InventorySummary(BaseModel):
     sun_board_length = models.FloatField(blank=True, null=True)
     sun_board_breadth = models.FloatField(blank=True, null=True)
     sun_board_height = models.FloatField(blank=True, null=True)
+    hoarding = models.BooleanField(default=False)
+    hoarding_lit = models.BooleanField(default=False)
+    gantry = models.BooleanField(default=False)
+    bus_shelter = models.BooleanField(default=False)
+    bus_back = models.BooleanField(default=False)
+    bus_right = models.BooleanField(default=False)
+    bus_left = models.BooleanField(default=False)
+    bus_wrap = models.BooleanField(default=False)
+    floor_inventory = models.BooleanField(default=False)
+    ceiling_inventory = models.BooleanField(default=False)
+    billing_inventory = models.BooleanField(default=False)
+    counter_display = models.BooleanField(default=False)
+    tent_card = models.BooleanField(default=False)
+    table_inventory = models.BooleanField(default=False)
+    wall_inventory = models.BooleanField(default=False)
+    bus_shelter_lit = models.BooleanField(default=False)
+    gantry_lit = models.BooleanField(default=False)
 
     class Meta:
-
         db_table = 'inventory_summary'
+
 
 class InventoryActivityAssignment(BaseModel):
     """

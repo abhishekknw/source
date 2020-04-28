@@ -1669,8 +1669,20 @@ def get_suppliers(query, supplier_type_code, coordinates):
             if supplier_type_code != "RS":
                 address_supplier = supplier.get('address_supplier')
                 if address_supplier:
-                    supplier['latitude'] = address_supplier.get('latitude')
-                    supplier['longitude'] = address_supplier.get('longitude')
+                    address_supplier = supplier.get('address_supplier')
+                    
+                    supplier['address1'] = address_supplier['address1'] if address_supplier['address1'] else ''
+                    supplier['address2'] = address_supplier['address2']
+                    supplier['area'] = address_supplier['area']
+                    supplier['subarea'] = address_supplier['subarea']
+                    supplier['city'] = address_supplier['city']
+                    supplier['state'] = address_supplier['state']
+                    supplier['zipcode'] = address_supplier['zipcode']
+                    supplier['latitude'] = address_supplier['latitude']
+                    supplier['longitude'] = address_supplier['longitude']
+                    supplier['name'] = supplier['supplier_name']
+
+                    
 
             for society_key, actual_key in v0_constants.society_common_keys.items():
                 if society_key in list(supplier.keys()):
@@ -2202,7 +2214,7 @@ def add_shortlisted_suppliers(supplier_type_code_list, shortlisted_suppliers, in
                 supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
                 serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
             else:
-                supplier_objects = SupplierMaster.objects.filter(supplier_id__in=supplier_ids)
+                supplier_objects = SupplierMaster.objects.filter(supplier_id__in=supplier_ids, supplier_type=code)
                 serializer = SupplierMasterSerializer(supplier_objects, many=True)
 
             # adding status information to each supplier which is stored in shorlisted_spaces table
@@ -2240,6 +2252,7 @@ def proposal_shortlisted_spaces(data):
 
         shortlisted_suppliers = manipulate_object_key_values(shortlisted_suppliers)
 
+
         # collect all supplier_id's
         supplier_ids = [supplier['object_id'] for supplier in shortlisted_suppliers]
 
@@ -2252,6 +2265,8 @@ def proposal_shortlisted_spaces(data):
 
         shortlisted_suppliers_centerwise = {}
 
+        
+
         # populate the dict with object_id's now
         for supplier in shortlisted_suppliers:
 
@@ -2261,6 +2276,8 @@ def proposal_shortlisted_spaces(data):
 
             shortlisted_suppliers_centerwise[center_id].append(supplier)
 
+        
+       
         # construction of proposal response is isolated
         response = construct_proposal_response(proposal_id)
         if not response.data['status']:
@@ -3737,9 +3754,13 @@ def get_shortlisted_suppliers(proposal_id, user):
             if not shortlisted_suppliers_center_content_type_wise[center_id].get(supplier_type_code):
                 shortlisted_suppliers_center_content_type_wise[center_id][supplier_type_code] = []
 
-            supplier_object = shortlisted_spaces_content_type_wise[supplier_type_code][supplier_id]
-            supplier_object['status'] = status
-            shortlisted_suppliers_center_content_type_wise[center_id][supplier_type_code].append(supplier_object)
+            
+            if supplier_id and shortlisted_spaces_content_type_wise.get(supplier_type_code) and shortlisted_spaces_content_type_wise[supplier_type_code].get(supplier_id) :
+                supplier_object = shortlisted_spaces_content_type_wise[supplier_type_code][supplier_id]
+                if supplier_object:
+                    supplier_object['status'] = status
+                    shortlisted_suppliers_center_content_type_wise[center_id][supplier_type_code].append(supplier_object)
+
 
         return ui_utils.handle_response(function, data=shortlisted_suppliers_center_content_type_wise, success=True)
     except KeyError as e:
@@ -3760,6 +3781,21 @@ def manipulate_object_key_values(suppliers, supplier_type_code=v0_constants.soci
     function = manipulate_object_key_values.__name__
     try:
         for supplier in suppliers:
+
+            if supplier.get('address_supplier'):
+                address_supplier = supplier.get('address_supplier')
+                supplier['address1'] = address_supplier['address1'] if address_supplier['address1'] else ''
+                supplier['address2'] = address_supplier['address2']
+                supplier['area'] = address_supplier['area']
+                supplier['subarea'] = address_supplier['subarea']
+                supplier['city'] = address_supplier['city']
+                supplier['state'] = address_supplier['state']
+                supplier['zipcode'] = address_supplier['zipcode']
+                supplier['latitude'] = address_supplier['latitude']
+                supplier['longitude'] = address_supplier['longitude']
+                supplier['name'] = supplier['supplier_name']
+                #del supplier['address_supplier']
+
             # replace all society specific keys with common supplier keys
             if supplier_type_code == v0_constants.society:
                 for society_key, actual_key in v0_constants.society_common_keys.items():
@@ -3788,8 +3824,8 @@ def manipulate_object_key_values_generic(suppliers, supplier_type_code=v0_consta
     function = manipulate_object_key_values_generic.__name__
     try:
         for supplier in suppliers:
-            if supplier['address_supplier']:      
-                address_supplier = supplier['address_supplier']
+            if supplier_type_code != 'RS' and supplier.get('address_supplier'):      
+                address_supplier = supplier.get('address_supplier')
                 supplier['address1'] = address_supplier['address1'] if address_supplier['address1'] else ''
                 supplier['address2'] = address_supplier['address2']
                 supplier['area'] = address_supplier['area']
@@ -3800,7 +3836,7 @@ def manipulate_object_key_values_generic(suppliers, supplier_type_code=v0_consta
                 supplier['latitude'] = address_supplier['latitude']
                 supplier['longitude'] = address_supplier['longitude']
                 supplier['name'] = supplier['supplier_name']
-                del supplier['address_supplier']
+                #del supplier.get('address_supplier')
 
             # replace all society specific keys with common supplier keys
             if supplier_type_code == v0_constants.society:

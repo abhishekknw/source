@@ -1032,10 +1032,16 @@ class DeleteFileFromSystem(APIView):
         try:
             file_name = request.data['file_name']
             file_extension = file_name.split('.')[1]
+
             if file_extension not in v0_constants.valid_extensions:
                 return ui_utils.handle_response(class_name, data=errors.DELETION_NOT_PERMITTED.format(file_extension), success=False)
                 #raise Exception(class_name, errors.DELETION_NOT_PERMITTED.format(file_extension))
-            os.remove(os.path.join(settings.BASE_DIR, file_name))
+
+            file_path = os.path.join(settings.BASE_DIR, file_name) 
+
+            if os.path.exists(file_path):
+               os.remove(os.path.join(settings.BASE_DIR, file_name))
+            
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, data=str(e), success=False)
@@ -1740,24 +1746,20 @@ class GetRelationshipAndPastCampaignsData(APIView):
             
             supplier_data = supplier_model.objects.filter(supplier_id=supplier_id).values('feedback','representative__name')
             campaign_data = website_utils.get_past_campaigns_data(supplier_id,campaign_id)
-
-            
-
             result = {
-                'campaign_data' : campaign_data,
-                'supplier_data' : supplier_data,
-                'contacts' : {}
+                'campaign_data': campaign_data,
+                'supplier_data': supplier_data,
+                'contacts': {}
             }
-
-            retail_shop_instance = ContactDetails.objects.filter(object_id=supplier_id).first()
-            if retail_shop_instance:
-                contact_serializer = ContactDetailsSerializer(retail_shop_instance, many=False)
+            contact_details = ContactDetails.objects.filter(object_id=supplier_id).first()
+            if contact_details:
+                contact_serializer = ContactDetailsSerializer(contact_details, many=False)
                 result['contacts'] = contact_serializer.data
            
             return ui_utils.handle_response(class_name, data=result, success=True)
-
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 
 class CheckExstingSuppliers(APIView):
     def post(self, request):
@@ -1771,22 +1773,17 @@ class CheckExstingSuppliers(APIView):
             rcount = 0
             for index, row in enumerate(ws.iter_rows()):
                 if index > 0:
-
                     name = row[0].value
                     id = row[1].value
                     if SupplierTypeSociety.objects.filter(society_name=name) or SupplierTypeSociety.objects.filter(supplier_id=id):
                         count = count + 1
                         s = str(count) + " " + name
-                        print(s)
                     else:
                         rcount = rcount + 1
-                        print(name)
-                print(str(count) + "and" + str(rcount))
             data = {
-                'on_platform' : count,
-                'not_on_platform' : rcount
+                'on_platform': count,
+                'not_on_platform': rcount
             }
-
             return ui_utils.handle_response({}, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response({}, exception_object=e, request=request)
