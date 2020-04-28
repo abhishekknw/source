@@ -2745,6 +2745,8 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
         try:
             SupplierPhase.objects.get(pk=pk).delete()
             return ui_utils.handle_response(class_name, data=True, success=True)
+        except ValueError:
+            return ui_utils.handle_response(class_name, data='Phase is required getting undefined')
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 

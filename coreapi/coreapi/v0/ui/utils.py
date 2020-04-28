@@ -106,7 +106,8 @@ def get_system_error(exception_object):
     """
     if not exception_object:
         return []
-    return str(exception_object.message) if exception_object.message else str(exception_object.args) if exception_object.args else ""
+    return str(exception_object.args) if exception_object.args else str(
+        exception_object) if exception_object else ""
 
 
 def save_basic_supplier_details(supplier_type_code, data):
