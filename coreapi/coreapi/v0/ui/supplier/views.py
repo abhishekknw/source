@@ -3792,11 +3792,19 @@ class listCampaignSuppliers(APIView):
         all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
             values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name',
                    'proposal__tentative_start_date',
-                   'proposal__tentative_end_date', 'proposal__campaign_state')
-        all_supplier_ids = [supplier['object_id'] for supplier in all_shortlisted_supplier]
+                   'proposal__tentative_end_date', 'proposal__campaign_state','supplier_code')
+        all_supplier_ids = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] == "RS"]
         all_campaign_societies = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).all()
         serializer = SupplierTypeSocietySerializer(all_campaign_societies, many=True)
+
+        all_supplier_master_ids = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] != "RS"]
+        all_campaign_master_societies = SupplierMaster.objects.filter(supplier_id__in=all_supplier_master_ids).all()
+        master_serializer = SupplierMasterSerializer(all_campaign_master_societies, many=True)
+
         all_societies = manipulate_object_key_values(serializer.data)
+        master_suppliers = manipulate_object_key_values(master_serializer.data)
+        all_societies.extend(master_suppliers)
+
         booking_inv_activities = BookingInventoryActivity.objects.raw({"campaign_id": campaign_id})
         supplier_ids = [ObjectId(supplier.supplier_id) for supplier in booking_inv_activities]
         suppliers = SupplySupplier.objects.raw({'_id': {'$in': (supplier_ids)}})
