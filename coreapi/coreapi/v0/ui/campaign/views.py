@@ -1901,7 +1901,13 @@ class Comment(APIView):
             user_id = request.user.id
             comment = request.data['comment']
 
-            shortlisted_spaces_id = ShortlistedSpaces.objects.filter(proposal_id = campaign_id).values_list('id', flat=True).first()
+            shortlisted_spaces_id = None
+            if request.data.get('shortlisted_spaces_id'):
+                shortlisted_spaces_id = request.data['shortlisted_spaces_id']
+            else:
+                shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id = campaign_id).first()
+                if shortlisted_spaces : 
+                    shortlisted_spaces_id = shortlisted_spaces.id
 
             related_to = request.data['related_to'] if 'related_to' in request.data else None
             inventory_type = request.data['inventory_type'] if 'inventory_type' in request.data else None
