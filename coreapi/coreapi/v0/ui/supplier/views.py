@@ -161,7 +161,7 @@ def update_contact_and_ownership_detail(data):
             supplier_master_serializer.save()
 
         address_data = {
-            "supplier_id": object_id,
+            "supplier": object_id,
             "address1": supplier_address_data.get('address1', None),
             "address2": supplier_address_data.get('address2', None),
             "area": supplier_address_data.get('area', None),
@@ -174,7 +174,6 @@ def update_contact_and_ownership_detail(data):
             "nearest_landmark": supplier_address_data.get('nearest_landmark', None),
         }
         address_master_data = AddressMaster.objects.filter(supplier_id=object_id).first()
-
         if address_master_data and address_master_data.supplier_id:
             address_master_serializer = AddressMasterSerializer(address_master_data, data=address_data)
         else:
