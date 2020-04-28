@@ -456,13 +456,14 @@ def AddState(state):
             print('Failed to add State :', state)
     return state_id
 
+
 def AddCity(city, state_id):
     city_detail = City.objects.filter(city_name__icontains=city, state_code=state_id).values('id')
     if city_detail and len(city_detail) > 0:
         city_id = city_detail[0]['id']
     else:
         city_code = ui_utils.getRandomString()
-        cityInserted = City.objects.create(city_name=city, city_code=city_code.upper(), state_code_id=state_id)
+        cityInserted = City.objects.create(city_name=city.title(), city_code=city_code.upper(), state_code_id=state_id)
         if cityInserted:
             city_id = cityInserted.id
         else:
@@ -476,7 +477,7 @@ def AddArea(area, city_id):
         area_id = area_detail[0]['id']
     else:
         area_code = ui_utils.getRandomString()
-        areaInserted = CityArea.objects.create(label=area, area_code=area_code.upper(), city_code_id=city_id)
+        areaInserted = CityArea.objects.create(label=area.title(), area_code=area_code.upper(), city_code_id=city_id)
         if areaInserted:
             area_id = areaInserted.id
         else:
@@ -490,12 +491,13 @@ def AddSubArea(subarea, area_id):
         subarea_id = subarea_detail[0]['id']
     else:
         subarea_code = ui_utils.getRandomString()
-        subareaInserted = CitySubArea.objects.create(subarea_name=subarea, subarea_code=subarea_code.upper(), area_code_id=area_id, locality_rating='Standard')
+        subareaInserted = CitySubArea.objects.create(subarea_name=subarea.title(), subarea_code=subarea_code.upper(), area_code_id=area_id, locality_rating='Standard')
         if subareaInserted:
             subarea_id = subareaInserted.id
         else:
             print('Failed to add Subarea :', subarea)
     return subarea_id
+
 
 class SocietyAPIFilterSubAreaView(APIView):
     def post(self, request, format=None):
