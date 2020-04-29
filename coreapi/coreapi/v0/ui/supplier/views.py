@@ -17,7 +17,7 @@ from rest_framework.decorators import list_route
 from v0.ui.utils import (get_supplier_id, handle_response, get_content_type, save_flyer_locations, make_supplier_data,
                          get_model, get_serializer, save_supplier_data, get_region_based_query, get_supplier_image,
                          save_basic_supplier_details)
-from v0.ui.website.utils import manipulate_object_key_values, return_price
+from v0.ui.website.utils import manipulate_object_key_values, return_price, manipulate_master_to_rs
 import v0.ui.website.utils as website_utils
 
 from v0.ui.dynamic_booking.models import BookingInventoryActivity
@@ -3740,11 +3740,19 @@ class listCampaignSuppliers(APIView):
         all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
             values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name',
                    'proposal__tentative_start_date',
-                   'proposal__tentative_end_date', 'proposal__campaign_state')
-        all_supplier_ids = [supplier['object_id'] for supplier in all_shortlisted_supplier]
+                   'proposal__tentative_end_date', 'proposal__campaign_state','supplier_code')
+        all_supplier_ids = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] == "RS"]
         all_campaign_societies = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).all()
         serializer = SupplierTypeSocietySerializer(all_campaign_societies, many=True)
+
+        all_supplier_master_ids = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] != "RS"]
+        all_campaign_master_societies = SupplierMaster.objects.filter(supplier_id__in=all_supplier_master_ids).all()
+        master_serializer = SupplierMasterSerializer(all_campaign_master_societies, many=True)
+
         all_societies = manipulate_object_key_values(serializer.data)
+        master_suppliers = manipulate_master_to_rs(master_serializer.data)
+        all_societies.extend(master_suppliers)
+
         booking_inv_activities = BookingInventoryActivity.objects.raw({"campaign_id": campaign_id})
         supplier_ids = [ObjectId(supplier.supplier_id) for supplier in booking_inv_activities]
         suppliers = SupplySupplier.objects.raw({'_id': {'$in': (supplier_ids)}})
