@@ -3853,6 +3853,38 @@ def manipulate_object_key_values_generic(suppliers, supplier_type_code=v0_consta
         return suppliers
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
+    
+def manipulate_master_to_rs(suppliers):
+    """
+    Args:
+        suppliers: list of all suppliers
+        supplier_type_code: by default 'RS'.
+        kwargs: key,value pairs meant to set in each supplier.
+    Returns:
+        return list of suppliers by changing some keys in supplier object
+    """
+    function = manipulate_master_to_rs.__name__
+    try:
+        for supplier in suppliers:
+            if supplier.get('address_supplier'):      
+                address_supplier = supplier.get('address_supplier')
+                supplier['address1'] = address_supplier['address1'] if address_supplier['address1'] else ''
+                supplier['address2'] = address_supplier['address2']
+                supplier['area'] = address_supplier['area']
+                supplier['subarea'] = address_supplier['subarea']
+                supplier['city'] = address_supplier['city']
+                supplier['state'] = address_supplier['state']
+                supplier['zipcode'] = address_supplier['zipcode']
+                supplier['latitude'] = address_supplier['latitude']
+                supplier['longitude'] = address_supplier['longitude']
+                #del supplier.get('address_supplier')
+
+            supplier['name'] = supplier.get("supplier_name")
+            supplier['supplier_code'] = supplier.get("supplier_type")
+                
+        return suppliers
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
 
 def setup_generic_export(data, user, proposal_id):
     """

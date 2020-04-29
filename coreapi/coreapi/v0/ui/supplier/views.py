@@ -17,7 +17,7 @@ from rest_framework.decorators import list_route
 from v0.ui.utils import (get_supplier_id, handle_response, get_content_type, save_flyer_locations, make_supplier_data,
                          get_model, get_serializer, save_supplier_data, get_region_based_query, get_supplier_image,
                          save_basic_supplier_details)
-from v0.ui.website.utils import manipulate_object_key_values, return_price
+from v0.ui.website.utils import manipulate_object_key_values, return_price, manipulate_master_to_rs
 import v0.ui.website.utils as website_utils
 
 from v0.ui.dynamic_booking.models import BookingInventoryActivity
@@ -3750,7 +3750,7 @@ class listCampaignSuppliers(APIView):
         master_serializer = SupplierMasterSerializer(all_campaign_master_societies, many=True)
 
         all_societies = manipulate_object_key_values(serializer.data)
-        master_suppliers = manipulate_object_key_values(master_serializer.data)
+        master_suppliers = manipulate_master_to_rs(master_serializer.data)
         all_societies.extend(master_suppliers)
 
         booking_inv_activities = BookingInventoryActivity.objects.raw({"campaign_id": campaign_id})
