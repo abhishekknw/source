@@ -3793,8 +3793,10 @@ def manipulate_object_key_values(suppliers, supplier_type_code=v0_constants.soci
                 supplier['zipcode'] = address_supplier['zipcode']
                 supplier['latitude'] = address_supplier['latitude']
                 supplier['longitude'] = address_supplier['longitude']
-                supplier['name'] = supplier['supplier_name']
                 #del supplier['address_supplier']
+
+            if supplier.get("supplier_name"):
+                supplier['name'] = supplier['supplier_name']
 
             # replace all society specific keys with common supplier keys
             if supplier_type_code == v0_constants.society:
