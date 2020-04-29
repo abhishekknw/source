@@ -1777,7 +1777,7 @@ class HashtagImagesViewSet(viewsets.ViewSet):
                 return ui_utils.handle_response(class_name, data='Please pass campaign Id', success=False)
             images = HashTagImages.objects.filter(campaign_id=campaign_id, hashtag__in=['Permission Box','RECEIPT']).order_by('-updated_at')
             if not images:
-                return ui_utils.handle_response(class_name, data='No images found', success=False) 
+                return ui_utils.handle_response(class_name, data='No images found', success=True) 
             result_obj = {}
             for image in images:
                 image.hashtag = image.hashtag.lower()
