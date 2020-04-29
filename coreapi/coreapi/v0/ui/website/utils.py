@@ -3793,8 +3793,10 @@ def manipulate_object_key_values(suppliers, supplier_type_code=v0_constants.soci
                 supplier['zipcode'] = address_supplier['zipcode']
                 supplier['latitude'] = address_supplier['latitude']
                 supplier['longitude'] = address_supplier['longitude']
-                supplier['name'] = supplier['supplier_name']
                 #del supplier['address_supplier']
+
+            if supplier.get("supplier_name"):
+                supplier['name'] = supplier['supplier_name']
 
             # replace all society specific keys with common supplier keys
             if supplier_type_code == v0_constants.society:
@@ -3850,6 +3852,38 @@ def manipulate_object_key_values_generic(suppliers, supplier_type_code=v0_consta
                 # set extra key, value sent in kwargs
                 for key, item in kwargs.items():
                     supplier[key] = item
+        return suppliers
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+    
+def manipulate_master_to_rs(suppliers):
+    """
+    Args:
+        suppliers: list of all suppliers
+        supplier_type_code: by default 'RS'.
+        kwargs: key,value pairs meant to set in each supplier.
+    Returns:
+        return list of suppliers by changing some keys in supplier object
+    """
+    function = manipulate_master_to_rs.__name__
+    try:
+        for supplier in suppliers:
+            if supplier.get('address_supplier'):      
+                address_supplier = supplier.get('address_supplier')
+                supplier['address1'] = address_supplier['address1'] if address_supplier['address1'] else ''
+                supplier['address2'] = address_supplier['address2']
+                supplier['area'] = address_supplier['area']
+                supplier['subarea'] = address_supplier['subarea']
+                supplier['city'] = address_supplier['city']
+                supplier['state'] = address_supplier['state']
+                supplier['zipcode'] = address_supplier['zipcode']
+                supplier['latitude'] = address_supplier['latitude']
+                supplier['longitude'] = address_supplier['longitude']
+                #del supplier.get('address_supplier')
+
+            supplier['name'] = supplier.get("supplier_name")
+            supplier['supplier_code'] = supplier.get("supplier_type")
+                
         return suppliers
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
@@ -4134,7 +4168,6 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
         # set the campaign data
         proposal_serializer = ProposalInfoSerializer(proposal)
         result['campaign'] = proposal_serializer.data
-
         # set the shortlisted spaces data. it maps various supplier ids to their respective content_types
         response = get_objects_per_content_type_by_instance(spaces.object_list)
 
@@ -4144,7 +4177,6 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
 
         # converts the ids store in previous step to actual objects and adds additional information which is
         # supplier specific  like area, name, subarea etc.
-
         response = map_objects_ids_to_objects(content_type_supplier_id_map)
         if not response.data['status']:
             return response
@@ -4152,13 +4184,11 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
         # the returned response is a dict in which key is (content_type, supplier_id) and value is a dict of extra
         # information for that supplier
         supplier_specific_info = response.data['data']
-
         response = get_contact_information(content_type_id_set, supplier_id_set)
         if not response.data['status']:
             return response
 
         contact_object_per_content_type_per_supplier = response.data['data']
-
         response = get_supplier_price_information(content_type_id_set, supplier_id_set)
         if not response.data['status']:
             return response
@@ -4191,19 +4221,18 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
                 supplier['contacts'] = contact_serializer.data
             except KeyError:
                 supplier['contacts'] = []
-
             try:
                 brand_organisation_instance = Organisation.objects.filter(pk=supplier['brand_organisation_id']).first()
                 brand_organisation_instance_serializer = OrganisationSerializer(brand_organisation_instance, many=False)
                 supplier['brand_organisation_data'] = brand_organisation_instance_serializer.data
             except KeyError:
                 supplier['brand_organisation_data'] = []
-
+                
             try:
                 pmd_objects_per_supplier = supplier_price_per_content_type_per_supplier[supplier_tuple]
             except KeyError:
                 pmd_objects_per_supplier = []
-
+                
             shortlisted_inventories = supplier['shortlisted_inventories']
             response = add_total_price_per_inventory_per_supplier(pmd_objects_per_supplier, shortlisted_inventories)
             if not response.data['status']:
@@ -4577,7 +4606,11 @@ def map_objects_ids_to_objects(mapping):
             # fetch all content_type_object
             content_type_object = content_type_object_mapping[content_type_id]
             # fetch the model class.
-            model_class = apps.get_model(settings.APP_NAME, content_type_object.model)
+            model_class = SupplierTypeSociety
+            
+            if content_type_object.model != 'SupplierTypeSociety':
+                model_class = SupplierMaster
+            
             # fetch all objects.
             my_objects = model_class.objects.filter(supplier_id__in=object_ids).values()
             # set the new mapping
@@ -4588,8 +4621,9 @@ def map_objects_ids_to_objects(mapping):
             content_type_object = content_type_object_mapping[content_type_id]
             model_name = content_type_object.model
             # we need to change the keys when we encounter a society
-            if model_name == v0_constants.society_model_name:
-                supplier_objects = manipulate_object_key_values(supplier_objects)
+            # if model_name == v0_constants.society_model_name:
+            supplier_objects = manipulate_object_key_values(supplier_objects)
+            
             # map the extra supplier_specific attributes to content_type, supplier_id
             for supplier in supplier_objects:
                 extra_data = {'area': supplier['area'], 'name': supplier['name'], 'subarea': supplier['subarea']}

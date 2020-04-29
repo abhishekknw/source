@@ -26,9 +26,7 @@ class GeneralManager(models.Manager):
             supplier_code = data['supplier_type_code']
             content_type = self.get_content_type(supplier_code)
             inventory_object = self.get(object_id=id, content_type=content_type)
-
             return inventory_object
-
         except ObjectDoesNotExist as e:
             return None
         except Exception as e:
@@ -118,7 +116,10 @@ class GeneralManager(models.Manager):
         try:
             ContentType = apps.get_model('contenttypes', 'ContentType')
             suppliers = constants.codes_to_model_names
-            load_model = apps.get_model('v0', suppliers[supplier_type_code])
+            supplier_model = 'SupplierMaster'
+            if supplier_type_code == 'RS':
+                supplier_model = suppliers[supplier_type_code]
+            load_model = apps.get_model('v0', supplier_model)
             content_type = ContentType.objects.get_for_model(load_model)
             return content_type
         except Exception as e:
