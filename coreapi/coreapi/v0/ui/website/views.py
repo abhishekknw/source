@@ -51,7 +51,7 @@ from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMa
     ProposalCenterMappingSpaceSerializer, ProposalMasterCostSerializer, ProposalMetricsSerializer,
     ProposalCenterMappingVersionSpaceSerializer, SpaceMappingVersionSerializer, ProposalSocietySerializer,
                                         ProposalCorporateSerializer, HashtagImagesSerializer)
-from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeSociety, SupplierTypeBusShelter
+from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeSociety, SupplierTypeBusShelter, SupplierMaster
 from v0.ui.supplier.serializers import (SupplierAmenitiesMapSerializer, SupplierTypeCorporateSerializer,
                                         SupplierTypeSocietySerializer, SupplierTypeBusShelterSerializer)
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails, PriceMappingDefault, getPriceDict
@@ -1742,9 +1742,13 @@ class GetRelationshipAndPastCampaignsData(APIView):
             supplier_type_code = request.query_params.get('supplier_code',None)
             supplier_id = request.query_params.get('supplier_id',None)
             campaign_id = request.query_params.get('campaign_id', None)
-            supplier_model = ui_utils.get_model(supplier_type_code)
+            print(supplier_type_code)
+            # supplier_model = ui_utils.get_model(supplier_type_code)
             
-            supplier_data = supplier_model.objects.filter(supplier_id=supplier_id).values('feedback','representative__name')
+            if supplier_type_code == 'RS':
+                supplier_data = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).values('feedback','representative__name')
+            else:
+                supplier_data = SupplierMaster.objects.filter(supplier_id=supplier_id).values('feedback','representative__name')
             campaign_data = website_utils.get_past_campaigns_data(supplier_id,campaign_id)
             result = {
                 'campaign_data': campaign_data,
