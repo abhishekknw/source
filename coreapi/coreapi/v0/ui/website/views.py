@@ -1742,8 +1742,6 @@ class GetRelationshipAndPastCampaignsData(APIView):
             supplier_type_code = request.query_params.get('supplier_code',None)
             supplier_id = request.query_params.get('supplier_id',None)
             campaign_id = request.query_params.get('campaign_id', None)
-            print(supplier_type_code)
-            # supplier_model = ui_utils.get_model(supplier_type_code)
             
             if supplier_type_code == 'RS':
                 supplier_data = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).values('feedback','representative__name')
