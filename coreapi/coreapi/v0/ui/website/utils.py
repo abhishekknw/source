@@ -4607,8 +4607,7 @@ def map_objects_ids_to_objects(mapping):
             content_type_object = content_type_object_mapping[content_type_id]
             # fetch the model class.
             model_class = SupplierTypeSociety
-            
-            if content_type_object.model != 'SupplierTypeSociety':
+            if content_type_object.model != 'suppliertypesociety':
                 model_class = SupplierMaster
             
             # fetch all objects.

@@ -157,6 +157,7 @@ def genrate_supplier_data(data,user):
         society_data_list = []
         contact_data_list = []
         total_society_id_list = []
+        total_society_id_list_obj = {}
         source_file = data['file']
         wb = load_workbook(source_file)
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
@@ -254,17 +255,10 @@ def genrate_supplier_data(data,user):
                     'rl_count' : 0,
                     'cl_count' : 0,
                 }
-                total_society_id_list.append(temp_data)
-
-        try:
-            ContactDetails.objects.bulk_create(contact_data_list)
-        except Exception as e:
-            return ui_utils.handle_response(function_name, data="error in bulk create contact")
-        try:
-            result = {
-                'center_data' : {
-                    'RS' : {
-                        'supplier_data' : total_society_id_list,
+                # total_society_id_list.append(temp_data)
+                if not total_society_id_list_obj.get(supplier_type_code):
+                    total_society_id_list_obj[supplier_type_code] = {
+                        'supplier_data' : [],
                         'filter_codes' : [
                             { 'id' : 'PO'},
                             {'id': 'SL'},
@@ -272,7 +266,17 @@ def genrate_supplier_data(data,user):
                             {'id': 'FL'}
                         ]
                     }
-                },
+                
+                total_society_id_list_obj[supplier_type_code]["supplier_data"].append(temp_data)
+                
+
+        try:
+            ContactDetails.objects.bulk_create(contact_data_list)
+        except Exception as e:
+            return ui_utils.handle_response(function_name, data="error in bulk create contact")
+        try:
+            result = {
+                'center_data' : total_society_id_list_obj,
                 'proposal_id' : data['proposal_id'],
                 'center_id' : data['center_id'],
                 'invoice_number' : data['invoice_number'],
