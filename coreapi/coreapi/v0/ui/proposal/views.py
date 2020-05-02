@@ -226,13 +226,14 @@ def genrate_supplier_data(data,user):
                         'longitude': float(row[7].value) if row[7].value else None,
                         'landmark' : row[13].value if row[13].value else None,
                         'zipcode': int(row[5].value) if row[5].value else None,
+                        'address1': row[12].value.strip() if row[12].value else None,
                         'supplier_code': supplier_code,
                         'supplier_type_code': supplier_type_code,
                         'supplier_name': row[0].value.strip(),
                         'supplier_id': supplier_id,
                         'current_user': user,
-                        'unit_primary_count': int(row[8].value) if row[8].value else None, #tower_count
-                        'unit_secondary_count': int(row[9].value) if row[9].value else None, #flat_count
+                        'unit_primary_count': int(row[8].value) if row[8].value else None, #flat_count
+                        'unit_secondary_count': int(row[9].value) if row[9].value else None, #tower_count
                     }
 
                     response = ui_utils.make_supplier_data(submit_data)

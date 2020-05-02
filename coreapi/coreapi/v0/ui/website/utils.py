@@ -4611,7 +4611,11 @@ def map_objects_ids_to_objects(mapping):
                 model_class = SupplierMaster
             
             # fetch all objects.
-            my_objects = model_class.objects.filter(supplier_id__in=object_ids).values()
+            my_objects = model_class.objects.filter(supplier_id__in=object_ids)
+            if content_type_object.model != 'suppliertypesociety':
+                my_objects = SupplierMasterSerializer(my_objects, many=True).data
+            else:
+                my_objects = SupplierTypeSocietySerializer(my_objects, many=True).data
             # set the new mapping
             result[content_type_id] = my_objects
 
