@@ -151,10 +151,9 @@ def create_proposal_object(organisation_id, account_id, user, tentative_cost, na
         'principal_vendor_id': user.profile.organisation_id
     }
 
-def genrate_supplier_data(data):
+def genrate_supplier_data(data,user):
     function_name = genrate_supplier_data.__name__
     try:
-        supplier_data = SupplierTypeSociety.objects.all()
         society_data_list = []
         contact_data_list = []
         total_society_id_list = []
@@ -163,11 +162,12 @@ def genrate_supplier_data(data):
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
         for index, row in enumerate(ws.iter_rows()):
             if index > 0:
-                print("row is " + str(index))
+                print("row is " + str(index),row[1].value.strip())
+                
                 try:
                     if not row[1].value:
                         continue
-                    city = City.objects.get(city_name=row[1].value.strip())
+                    city = City.objects.filter(city_name__icontains=row[1].value.strip()).first()
                     city_code = city.city_code
                 except ObjectDoesNotExist as e:
                     error = 'No City Found at - ' + str(index) + ',' + str(row[1].value)
@@ -175,7 +175,7 @@ def genrate_supplier_data(data):
                 try:
                     if not row[2].value:
                         continue
-                    area = CityArea.objects.filter(label=row[2].value.strip())[0]
+                    area = CityArea.objects.filter(label=row[2].value.strip()).first()
                     area_code = area.area_code
                 except ObjectDoesNotExist as e:
                     error = 'No Area Found at - ' + str(index) + ',' + str(row[2].value)
@@ -183,7 +183,7 @@ def genrate_supplier_data(data):
                 try:
                     if not row[3].value:
                         continue
-                    subarea = CitySubArea.objects.filter(subarea_name=row[3].value.strip())[0]
+                    subarea = CitySubArea.objects.filter(subarea_name=row[3].value.strip()).first()
                     subarea_code = subarea.subarea_code
                 except ObjectDoesNotExist as e:
                     error = 'No SubArea Found at - ' + str(index) + ',' + str(row[3].value)
@@ -191,66 +191,71 @@ def genrate_supplier_data(data):
                 try:
                     error = 'No Supplier Code - ' + str(index) + ',' + str(row[3].value)
                     if row[4].value:
-                        supplier_code = row[4].value.strip()
+                        supplier_type_code = row[4].value.strip()
                     else:
                         return ui_utils.handle_response(function_name, data=error)
                 except ObjectDoesNotExist as e:
                     error = 'supplier code error - ' + str(index) + ',' + str(row[3].value)
                     return ui_utils.handle_response(function_name, data=error)
-                supplier_id = city_code + area_code + subarea_code + 'RS' + supplier_code
-                content_type = ui_utils.get_content_type('RS').data['data']
-                try:
-                    supplier = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
-                except ObjectDoesNotExist as e:
-                    society_data_list.append(SupplierTypeSociety(**{
+                
+                supplier_code = row[0].value.strip().upper()
+
+                if len(supplier_code) > 2:
+                    supplier_code = supplier_code[:3]
+                    
+                supplier_id_dict = {
+                    'city_code': city_code,
+                    'area_code': area_code,
+                    'subarea_code': subarea_code,
+                    'supplier_type': supplier_type_code,
+                    'supplier_code': supplier_code,
+                }
+                supplier_id = ui_utils.get_supplier_id(supplier_id_dict)
+                
+                content_type = ui_utils.get_content_type(supplier_type_code).data['data']
+
+                supplier = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).first()
+                
+                if not supplier:
+                    submit_data = {
+                        'city_id': city.id,
+                        'area_id': area.id,
+                        'subarea_id': subarea.id,
+                        'latitude': float(row[6].value) if row[6].value else None,
+                        'longitude': float(row[7].value) if row[7].value else None,
+                        'landmark' : row[13].value if row[13].value else None,
+                        'zipcode': int(row[5].value) if row[5].value else None,
+                        'supplier_code': supplier_code,
+                        'supplier_type_code': supplier_type_code,
+                        'supplier_name': row[0].value.strip(),
                         'supplier_id': supplier_id,
-                        'society_name': row[0].value.strip() if row[0].value else None,
-                        'society_city': city.city_name,
-                        'society_locality': area.label,
-                        'society_subarea': subarea.subarea_name,
-                        'supplier_code': str(supplier_code),
-                        'society_zip': int(row[5].value) if row[5].value else None,
-                        'society_latitude': float(row[6].value) if row[6].value else None,
-                        'society_longitude': float(row[7].value) if row[7].value else None,
-                        'tower_count': int(row[8].value) if row[8].value else None,
-                        'flat_count': int(row[9].value) if row[9].value else None,
-                        'address1' : row[20].value if row[20].value else None,
-                        'society_type_quality' : row[21].value if row[21].value else None,
-                        'landmark' : row[22].value if row[22].value else None,
-                    }))
+                        'current_user': user,
+                        'unit_primary_count': int(row[8].value) if row[8].value else None, #tower_count
+                        'unit_secondary_count': int(row[9].value) if row[9].value else None, #flat_count
+                    }
+
+                    response = ui_utils.make_supplier_data(submit_data)
+                    all_supplier_data = response.data['data']
+                    ui_utils.save_supplier_data(user, all_supplier_data)
+                    
                     contact_data_list.append(ContactDetails(**{
-                        'name': row[18].value.strip() if row[18].value else None,
+                        'name': row[10].value.strip() if row[10].value else None,
                         'designation': 'Manager',
                         'salutation': 'Mr',
-                        'mobile': row[19].value if row[19].value else None,
+                        'mobile': row[11].value if row[11].value else None,
                         'object_id': supplier_id,
                         'content_type': content_type
                     }))
 
                 temp_data =  {
                     'id': supplier_id,
-                    'PO': int(row[10].value) if row[10].value else row[8].value,
-                    'SL': int(row[13].value) if row[13].value else None,
-                    'ST': int(row[17].value) if row[17].value else None,
-                    'FL': 1,
-                    'inv_code' : {
-                        'POSTER' : convert_date_format(row[12].value) if row[12].value else None,
-                        'FLIER' : convert_date_format(row[16].value) if row[16].value else None,
-                        'STALL' : get_Date_Values(row[15].value)if row[15].value else None,
-                        'STANDEE': get_Date_Values(row[15].value)[0] if row[15].value else None,
-                    },
                     'status' : 'F',
                     'index' : 0,
                     'rl_count' : 0,
                     'cl_count' : 0,
                 }
-                temp_data['index'] = len(temp_data['inv_code']['STALL']) if temp_data['inv_code']['STALL'] else None
                 total_society_id_list.append(temp_data)
 
-        try:
-            SupplierTypeSociety.objects.bulk_create(society_data_list)
-        except Exception as e:
-            return ui_utils.handle_response(function_name, data="error in bulk create society")
         try:
             ContactDetails.objects.bulk_create(contact_data_list)
         except Exception as e:
@@ -2614,7 +2619,7 @@ class convertDirectProposalToCampaign(APIView):
             is_import_sheet = data['is_import_sheet']
 
             if is_import_sheet:
-                response = genrate_supplier_data(data)
+                response = genrate_supplier_data(data,request.user)
                 if not response.data['status']:
                     return response
                 proposal_data = response.data['data']
@@ -3121,9 +3126,9 @@ class ImportSheetInExistingCampaign(APIView):
             data = request.data.copy()
 
             is_import_sheet = data['is_import_sheet']
-
+    
             if is_import_sheet:
-                response = genrate_supplier_data(data)
+                response = genrate_supplier_data(data,request.user)
                 if not response.data['status']:
                     return response
                 proposal_data = response.data['data']
@@ -3133,9 +3138,6 @@ class ImportSheetInExistingCampaign(APIView):
             proposal = ProposalInfo.objects.get(pk=proposal_data['proposal_id'])
             center = ProposalCenterMapping.objects.get(pk=center_id)
             for supplier_code in proposal_data['center_data']:
-                # response = website_utils.save_filters(center, supplier_code, proposal_data, proposal)
-                # if not response.data['status']:
-                #     return response
 
                 old_shortlisted_suppliers = ShortlistedSpaces.objects.filter(proposal_id=proposal_data['proposal_id'])
                 old_shortlisted_suppliers_map = {}
@@ -3145,19 +3147,6 @@ class ImportSheetInExistingCampaign(APIView):
                 response = website_utils.save_shortlisted_suppliers_data(center, supplier_code, proposal_data, proposal)
                 if not response.data['status']:
                     return response
-                if is_import_sheet:
-                    create_inv_act_data = True
-                    response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
-                                                                 proposal_data, proposal,create_inv_act_data , old_shortlisted_suppliers_map)
-                    if not response.data['status']:
-                        return response
-
-                    response = assign_inv_dates(proposal_data)
-                    if not response.data['status']:
-                        return response
-                # else:
-                #     response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
-                #                                                                          proposal_data, proposal)
 
             return ui_utils.handle_response(class_name, data={}, success=True)
         except Exception as e:
