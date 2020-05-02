@@ -236,8 +236,9 @@ def make_supplier_data(data):
                          "society_latitude": data.get("latitude"),
                          "society_longitude": data.get("longitude"),
                          "society_zip": data.get("zipcode"),
-                         "tower_count": data.get("unit_primary_count"),
-                         "flat_count": data.get("unit_secondary_count")
+                         "society_address1": data.get("address1"),
+                         "flat_count": data.get("unit_primary_count"),
+                         "tower_count": data.get("unit_secondary_count")
                     },
 
                     'serializer': get_serializer(code)
@@ -256,6 +257,7 @@ def make_supplier_data(data):
                         "latitude": data.get("latitude"),
                         "longitude": data.get("longitude"),
                         "zipcode": data.get("zipcode"),
+                        "address1": data.get("address1"),
                         "unit_primary_count": data.get("unit_primary_count"),
                         "unit_secondary_count": data.get("unit_secondary_count")
                     },
@@ -301,6 +303,9 @@ def save_supplier_data(user, master_data):
                 longitude = supplier_data.get('longitude', 0.0)
                 latitude = supplier_data.get('latitude', 0.0)
                 zipcode = supplier_data.get('zipcode', 0)
+                address1 = supplier_data.get('address1', "")
+                unit_primary_count = supplier_data.get('unit_primary_count', 0)
+                unit_secondary_count = supplier_data.get('unit_secondary_count', 0)
                 supplier_master_data = {
                     "supplier_id": supplier_id,
                     "supplier_name": supplier_data.get('name', None),
@@ -312,7 +317,10 @@ def save_supplier_data(user, master_data):
                     "landmark": landmark,
                     "latitude": latitude,
                     "longitude": longitude,
-                    "zipcode": zipcode
+                    "zipcode": zipcode,
+                    "address1": address1,
+                    "unit_primary_count": unit_primary_count,
+                    "unit_secondary_count": unit_secondary_count
                 }
                 supplier_master_serializer = SupplierMasterSerializer(data=supplier_master_data)
                 if supplier_master_serializer.is_valid():
@@ -326,7 +334,8 @@ def save_supplier_data(user, master_data):
                     "state": state,
                     "latitude": latitude,
                     "longitude": longitude,
-                    "zipcode": zipcode
+                    "zipcode": zipcode,
+                    "address1": address1
                 }
                 address_master_serializer = AddressMasterSerializer(data=address_master_data)
                 if address_master_serializer.is_valid():
