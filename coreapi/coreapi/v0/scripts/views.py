@@ -1,11 +1,14 @@
 import csv
 import os, sys
+
+from django.db.models import Q
 from rest_framework.views import APIView
 
-from .utils import create_supplier_id, create_random_supplier_id
+from .utils import create_new_society
 from v0.ui.utils import handle_response, get_model, fetch_content_type
 from v0.ui.account.models import ContactDetails
-from v0.ui.supplier.models import SupplierTypeSociety
+from v0.ui.supplier.models import (SupplierTypeSociety, SupplierTypeSalon, SupplierTypeGym, SupplierHording,
+SupplierTypeCorporate, SupplierTypeBusShelter, SupplierTypeRetailShop, SupplierTypeBusDepot)
 from v0.ui.proposal.models import ShortlistedSpaces
 
 
@@ -45,58 +48,135 @@ class UpdateSupplierContactDataImport(APIView):
 class CreateSupplierWithContactDetails(APIView):
     def post(self, request):
         try:
-            supplier_ids = request.data['supplier_ids']
+            data = request.data
             not_updated_file = open(os.path.join(sys.path[0], "supplier_not_created.txt"), "a")
 
-            supplier_type_code = request.data['supplier_type_code']
+            supplier_type_code = 'RS'
             model = get_model(supplier_type_code)
             content_type = fetch_content_type(supplier_type_code)
+            supplier_ids = []
             # Get sheet
-            this_folder = os.path.dirname(os.path.abspath(__file__))
-            my_file = os.path.join(this_folder, 'contact_details.csv')
-            with open(my_file, 'r') as file:
-                reader = csv.reader(file)
-                for row in reader:
-                    supplier_name = row[0] if row[0] else None
-                    city = row[1] if row[1] else None
-                    area = row[2] if row[2] else None
-                    subarea = row[3] if row[3] else None
-                    contact_name = row[4] if row[4] else None
-                    contact_number = row[5] if row[5] else None
-                    designation = row[6] if row[6] else None
-                    supplier_type_code = row[7] if row[7] else None
+            with open('supplier_created.csv', mode='a') as supplier_file:
+                writer = csv.writer(supplier_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                # writer.writerow(['supplier_id', 'name'])
+                for supplier in data:
+                    supplier_name = supplier['supplier_name'].title()
+                    city = supplier['city'].strip()
+                    area = supplier['area'].title()
+                    subarea = supplier['subarea'].title()
+                    contact_name = supplier.get('contact_name', None)
+                    contact_number = supplier.get('contact_number', None)
+                    designation = supplier.get('designation', '').title()
+                    latitude = supplier['latitude']
+                    longitude = supplier['longitude']
+                    tower_count = supplier.get('tower_count', 1)
+                    flat_count = supplier.get('flat_count', 1)
+                    address = supplier.get('address','').title()
+                    zipcode = supplier.get('zipcode', None)
+
+                    supplier_name = supplier_name.strip().lstrip('"').rstrip('"').lstrip(',').rstrip(',')
+                    area = area.strip().rstrip(',').lstrip(',')
+                    subarea = subarea.strip().rstrip(',').lstrip(',')
+
+                    if len(subarea) == 0:
+                        print('insdie')
+                        subarea = None
+                        print(subarea)
+                    print(supplier_name)
+                    if latitude and type(latitude) == str:
+                        latitude = latitude.replace(',', '')
+                    latitude = float(latitude)
+                    if longitude and type(longitude) == str:
+                        longitude = longitude.replace(',', '')
+                    longitude = float(longitude)
+
+                    if zipcode and type(zipcode) == str:
+                        zipcode = zipcode.replace(',', '')
+                        zipcode = int(zipcode)
+
+                    if contact_number and type(contact_number) == str:
+                        contact_number = contact_number.replace('-','')
+                        contact_number = contact_number.replace(' ', '')
+                        contact_number = contact_number.split('\n')[0]
+                        contact_number = contact_number.split('&')[0]
+                        contact_number = contact_number.split(',')[0]
+                        contact_number = contact_number.split('/')[0]
+                    contact_number = int(contact_number)
+
+                    if designation and len(designation) == 0:
+                        designation = 'Manager'
+
+                    if tower_count == '':
+                        tower_count = 1
+                    if flat_count == '':
+                        flat_count = 1
+
+                    if contact_name is not None:
+                        contact_name = contact_name.title()
+
+                    if contact_number is not None:
+                        contact_number = int(contact_number)
                     # First check supplier id in list of supplier ids
-                    if not supplier_name or not city or not area or not subarea:
+                    if not supplier_name or not city or not area:
                         # Write suppliers which are not created
-                        not_updated_file.write(str(row) + '\n')
-                    supplier_id = create_supplier_id(supplier_name, city, area, subarea, supplier_type_code)
-                    if supplier_id not in supplier_ids:
-                        already_existing_supplier_id = model.objects.filter(supplier_id=supplier_id).values('supplier_id')
-                    if already_existing_supplier_id:
-                        # create new supplier id
-                        supplier_id = create_random_supplier_id(supplier_name, city, area, subarea, supplier_type_code)
-                    print(supplier_id)
-                    # Append supplier id in supplier ids
-                    supplier_ids.append(supplier_id)
-                    print(supplier_ids)
-                    # Create data in supplier & contact details
-                    if supplier_type_code == 'RS':
-                        supplier_details = model(supplier_id=supplier_id,
-                                                 society_name=supplier_name,
-                                                 society_city=city,
-                                                 society_locality=area,
-                                                 society_subarea=subarea)
-                        supplier_details.save()
-                        if supplier_details:
-                            # Update contact details
-                            contact_details = ContactDetails(supplier_id=supplier_id,
-                                                             name=contact_name,
-                                                             mobile=contact_number,
-                                                             contact_type=designation)
-                            contact_details.save()
+                        return handle_response({}, data='Missing fields', success=False)
+
+                    existing_supplier = model.objects.filter(society_name=supplier_name).values('society_locality', 'society_subarea','supplier_id').distinct()
+
+                    # supplier_name = model.objects.filter(Q(society_name=supplier_name) & Q(society_locality=area) | Q(society_subarea=subarea) | Q(society_latitude=latitude) | Q(society_longitude=longitude)).values('society_name', 'supplier_id')
+                    # If supplier name, update contact details
+                    if len(existing_supplier) > 0:
+                        print('society exists')
+                        for society in existing_supplier:
+                            print(society)
+                            print(society['society_locality'])
+                            if (society['society_locality'] == area) and (society['society_subarea'] == subarea):
+                                # Update contact details
+                                contacts = ContactDetails.objects.filter(
+                                    object_id=society['supplier_id']).values('mobile')
+                                print(contacts)
+                                if len(contacts) == 0:
+                                    print('no contacts found')
+                                    contact_details = ContactDetails(object_id=society['supplier_id'],
+                                                                     name=contact_name.strip().rstrip(',').lstrip(','),
+                                                                     mobile=contact_number,
+                                                                     contact_type=designation.strip().rstrip(',').lstrip(',')
+                                                                     )
+                                    contact_details.save()
+                                else:
+                                    if len(contacts) > 0:
+                                        is_contact = False
+                                        for contact in contacts:
+                                            if contact['mobile'] == contact_number:
+                                                is_contact = True
+                                                print('contact already exists')
+                                                continue
+                                        if not is_contact:
+                                            contact_details = ContactDetails(
+                                                object_id=society['supplier_id'],
+                                                name=contact_name.strip().rstrip(',').lstrip(','),
+                                                mobile=contact_number,
+                                                contact_type=designation.strip().rstrip(',').lstrip(',')
+                                            )
+                                            contact_details.save()
+                            else:
+                                supplier_details = create_new_society(model, supplier_name, city, area, subarea,
+                                                                      supplier_type_code, tower_count, flat_count,
+                                                                      latitude, longitude, address, zipcode,
+                                                                      supplier_ids, contact_name, contact_number,
+                                                                      designation)
+                                writer.writerow(supplier_details)
+                    else:
+                        supplier_details = create_new_society(model, supplier_name, city, area, subarea,
+                                                              supplier_type_code, tower_count, flat_count,
+                                                              latitude, longitude, address, zipcode, supplier_ids,
+                                                              contact_name, contact_number, designation)
+                        writer.writerow(supplier_details)
+
+            return handle_response({}, data=supplier_ids, success=True)
         except Exception as e:
-            print(e)
-        return handle_response({}, data='Supplier created successfully', success=True)
+            print('Catching error :', e)
+            return handle_response({}, data="Error creating societies", success=False)
 
 
 class DeleteDuplicateSocieties(APIView):
@@ -133,7 +213,6 @@ class storeS3UrlToCSV(APIView):
     def post(self, request):
         try:
             data = request.data
-            import csv
             with open('milk-basket-products.csv', mode='a') as products_file:
                 writer = csv.writer(products_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 writer.writerow(['product_id', 'url'])

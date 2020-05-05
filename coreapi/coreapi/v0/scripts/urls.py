@@ -4,7 +4,7 @@ from .views import UpdateSupplierContactDataImport, CreateSupplierWithContactDet
 
 urlpatterns = [
     url(r'^import-supplier-contact-data-from-sheet/$', UpdateSupplierContactDataImport.as_view()),
-    url(r'^import-suppliers-from-sheet/$', CreateSupplierWithContactDetails.as_view()),
+    url(r'^create-multiple-suppliers/$', CreateSupplierWithContactDetails.as_view()),
     url(r'^delete-duplicate-societies/$', DeleteDuplicateSocieties.as_view()),
     url(r'^store-product_ids/$', storeS3UrlToCSV.as_view())
 ]
