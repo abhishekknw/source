@@ -10,12 +10,12 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
+        migrations.AddField(
             model_name='suppliertypebusshelter',
             name='average_down_boarding_daily_count',
             field=models.IntegerField(blank=True, max_length=500, null=True),
         ),
-        migrations.AlterField(
+        migrations.AddField(
             model_name='suppliertypebusshelter',
             name='average_on_boarding_daily_count',
             field=models.IntegerField(blank=True, max_length=500, null=True),
