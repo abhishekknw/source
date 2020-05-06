@@ -470,12 +470,12 @@ class SupplierTypeBusShelter(BasicSupplierDetails):
     """
     model inherits basic supplier fields from abstract model BasicSupplierDetails
     """
-    lit_status = models.CharField(max_length=255, null=True, blank=True)
-    halt_buses_count = models.IntegerField(null=True, blank=True)
+    lit_status = models.CharField(max_length=250, null=True, blank=True)
+    halt_buses_count = models.IntegerField(null=True, blank=True, max_length=500)
     representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
     
-    average_down_boarding_daily_count = models.IntegerField(null=True, max_length=200, blank=True)
-    average_on_boarding_daily_count = models.IntegerField(null=True, max_length=200, blank=True)
+    average_down_boarding_daily_count = models.IntegerField(null=True, max_length=500, blank=True)
+    average_on_boarding_daily_count = models.IntegerField(null=True, max_length=500, blank=True)
 
     external_number = models.CharField(max_length=200, null=True, blank=True)
 
