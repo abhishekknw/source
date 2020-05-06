@@ -520,7 +520,47 @@ def adinventory_func():
                 adinventory_dict['banner_medium'] = adinventory
             elif adinventory.adinventory_type == 'Large':
                 adinventory_dict['banner_large'] = adinventory
-
+        elif adinventory.adinventory_name == 'BANNER':
+            if adinventory.adinventory_type == 'Small':
+                adinventory_dict['banner_small'] = adinventory
+            elif adinventory.adinventory_type == 'Medium':
+                adinventory_dict['banner_medium'] = adinventory
+            elif adinventory.adinventory_type == 'Large':
+                adinventory_dict['banner_large'] = adinventory
+        elif adinventory.adinventory_name == 'Hoarding':
+            adinventory_dict['hoarding'] = adinventory
+        elif adinventory.adinventory_name == 'Gantry':
+            adinventory_dict['gantry'] = adinventory
+        elif adinventory.adinventory_name == 'Bus shelter':
+            adinventory_dict['bus_shelter'] = adinventory
+        elif adinventory.adinventory_name == 'Bus back':
+            adinventory_dict['bus_back'] = adinventory
+        elif adinventory.adinventory_name == 'Bus right':
+            adinventory_dict['bus_right'] = adinventory
+        elif adinventory.adinventory_name == 'Bus left':
+            adinventory_dict['bus_left'] = adinventory
+        elif adinventory.adinventory_name == 'Bus wrap':
+            adinventory_dict['bus_wrap'] = adinventory
+        elif adinventory.adinventory_name == 'Floor':
+            adinventory_dict['floor'] = adinventory
+        elif adinventory.adinventory_name == 'Ceiling':
+            adinventory_dict['ceiling'] = adinventory
+        elif adinventory.adinventory_name == 'Billing':
+            adinventory_dict['billing'] = adinventory
+        elif adinventory.adinventory_name == 'Counter display':
+            adinventory_dict['counter_display'] = adinventory
+        elif adinventory.adinventory_name == 'Tent card':
+            adinventory_dict['tent_card'] = adinventory
+        elif adinventory.adinventory_name == 'Table':
+            adinventory_dict['table'] = adinventory
+        elif adinventory.adinventory_name == 'Wall':
+            adinventory_dict['wall'] = adinventory
+        elif adinventory.adinventory_name == 'Hoarding lit':
+            adinventory_dict['hoarding_lit'] = adinventory
+        elif adinventory.adinventory_name == 'Bus shelter lit':
+            adinventory_dict['bus_shelter_lit'] = adinventory
+        elif adinventory.adinventory_name == 'Gantry lit':
+            adinventory_dict['gantry_lit'] = adinventory
     return adinventory_dict
 
 
@@ -1129,3 +1169,15 @@ def getRandomString():
 def campaignState(state):
     if state in v0_constants.campaign_state:
         return v0_constants.campaign_state[state]
+
+
+def create_pricing_mapping_default(data, inventory_type, supplier_type_code, supplier_id, adinventory, duration_type):
+    if get_from_dict(data, inventory_type):
+        price = PriceMappingDefault.objects.create_price_mapping_object(
+            make_dict_manager(adinventory,duration_type), supplier_id,
+            supplier_type_code)
+        save_price_data(price, 1)
+
+        price = PriceMappingDefault.objects.create_price_mapping_object(
+            make_dict_manager(adinventory,duration_type), supplier_id, supplier_type_code)
+        save_price_data(price, 1)
