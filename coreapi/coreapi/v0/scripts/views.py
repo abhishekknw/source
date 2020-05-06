@@ -79,10 +79,7 @@ class CreateSupplierWithContactDetails(APIView):
                     subarea = subarea.strip().rstrip(',').lstrip(',')
 
                     if len(subarea) == 0:
-                        print('insdie')
                         subarea = None
-                        print(subarea)
-                    print(supplier_name)
                     if latitude and type(latitude) == str:
                         latitude = latitude.replace(',', '')
                     latitude = float(latitude)
@@ -95,13 +92,19 @@ class CreateSupplierWithContactDetails(APIView):
                         zipcode = int(zipcode)
 
                     if contact_number and type(contact_number) == str:
+                        print('inside')
+                        if len(contact_number) == 0:
+                            contact_number = None
                         contact_number = contact_number.replace('-','')
                         contact_number = contact_number.replace(' ', '')
                         contact_number = contact_number.split('\n')[0]
                         contact_number = contact_number.split('&')[0]
                         contact_number = contact_number.split(',')[0]
                         contact_number = contact_number.split('/')[0]
-                    contact_number = int(contact_number)
+
+                    if not contact_number:
+                        contact_number = None
+                        print(contact_number)
 
                     if designation and len(designation) == 0:
                         designation = 'Manager'
@@ -109,7 +112,7 @@ class CreateSupplierWithContactDetails(APIView):
                     if tower_count == '':
                         tower_count = 1
                     if flat_count == '':
-                        flat_count = 1
+                        flat_count = None
 
                     if contact_name is not None:
                         contact_name = contact_name.title()
