@@ -956,7 +956,14 @@ booking_status = {
     'new_entity': 'NE',
     'not_initiated': 'NI',
     'recce':'RE',
-    'meeting_fixed':'MF'
+    'meeting_fixed':'MF',
+    'Complete Lockdown': 'LCL',
+    'Partial Lockdown': 'LPL',
+    'Open Lockdown': 'LOL',
+    'Emergency System': 'LES',
+    'Essential Required': 'LER',
+    'Medicine Required': 'LMR',
+    'Vegetables & Fruits Required': 'LVR'
 }
 
 booking_code_to_status = {
@@ -975,7 +982,14 @@ booking_code_to_status = {
     'RE': 'Recce',
     'MF': 'Meeting Fixed',
     'CM': 'completed',
-    'UN': 'unknown'
+    'UN': 'unknown',
+    'LCL': 'Complete Lockdown',
+    'LPL': 'Partial Lockdown',
+    'LOL': 'Open Lockdown',
+    'LES': 'Emergency System',
+    'LER': 'Essential Required',
+    'LMR': 'Medicine Required',
+    'LVR': 'Vegetables & Fruits Required'
 }
 
 booking_substatus_code_to_status = {
