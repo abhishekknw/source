@@ -190,8 +190,9 @@ class GetSupplierList(APIView):
                 is_society = True
                 # Query Supplier Society
                 supplier_list = model.objects.filter(society_city__icontains=city).values('society_name','society_locality', 'society_subarea',
-                                                                                                      'society_address1','society_city', 'supplier_id',
-                                                                                                        'society_locality', 'society_longitude', 'society_latitude', 'society_state')
+                                                                                          'society_address1','society_city', 'supplier_id',
+                                                                                          'society_locality', 'society_longitude', 'society_latitude',
+                                                                                          'society_state', 'society_type_quality', 'flat_count')
             else:
                 supplier_list = model.objects.filter(city__icontains=city).values('name', 'area','subarea','city', 'supplier_id', 'latitude', 'longitude', 'state', 'address1')
 
@@ -209,6 +210,9 @@ class GetSupplierList(APIView):
                     'longitude': supplier['society_longitude'] if is_society else supplier['longitude'],
                     'state': supplier['society_state'] if is_society else supplier['state'],
                     'address': supplier['society_address1'] if is_society else supplier['address1'],
+                    'flat_count': supplier['flat_count'] if is_society else None,
+                    'society_type': supplier['society_type_quality'] if is_society else None,
+                    'is_society': is_society if is_society else False
                 }
                 # Get contact details
                 contact_details = ContactDetails.objects.filter(object_id=supplier['supplier_id'])\
@@ -229,9 +233,12 @@ class GetSupplierList(APIView):
                         'supplier_id': supplier['supplier_id'],
                         'state': supplier['society_state'] if is_society else supplier['state'],
                         'address': supplier['society_address1'] if is_society else supplier['address1'],
+                        'flat_count': supplier['flat_count'] if is_society else None,
+                        'society_type': supplier['society_type_quality'] if is_society else None,
                         'contact_name': contact_detail['name'],
                         'contact_number': contact_detail['mobile'],
-                        'contact_type': contact_detail['contact_type']
+                        'contact_type': contact_detail['contact_type'],
+                        'is_society': is_society if is_society else False
                     })
                 else:
                     supplier_details_with_contact.append(supplier_object)
