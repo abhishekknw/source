@@ -957,13 +957,13 @@ booking_status = {
     'not_initiated': 'NI',
     'recce':'RE',
     'meeting_fixed':'MF',
-    'Complete Lockdown': 'LCL',
-    'Partial Lockdown': 'LPL',
-    'Open Lockdown': 'LOL',
-    'Emergency System': 'LES',
-    'Essential Required': 'LER',
-    'Medicine Required': 'LMR',
-    'Vegetables & Fruits Required': 'LVR'
+    'complete_lockdown': 'LCL',
+    'partial_lockdown': 'LPL',
+    'open_lockdown': 'LOL',
+    'emergency_system': 'LES',
+    'essential_required': 'LER',
+    'medicine_required': 'LMR',
+    'vegetables_fruits_required': 'LVR'
 }
 
 booking_code_to_status = {
