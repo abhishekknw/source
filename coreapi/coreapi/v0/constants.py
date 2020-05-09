@@ -1343,6 +1343,7 @@ codes_to_model_names = {
     'SB': 'SunBoardInventory',
     'BA': 'BannerInventory',
     'BANNER': 'BannerInventory',
+    'POSTER LIFT': 'PosterLiftInventory'
     'HOARDING' : 'HordingInventory',
     'GANTRY' : 'GantryInventory',
     'Bus shelter' : 'BusShelterInventory',
