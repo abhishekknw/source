@@ -1342,7 +1342,24 @@ codes_to_model_names = {
     'SUNBOARD': 'SunBoardInventory',
     'SB': 'SunBoardInventory',
     'BA': 'BannerInventory',
-    'BANNER': 'BannerInventory'
+    'BANNER': 'BannerInventory',
+    'HOARDING' : 'HordingInventory',
+    'GANTRY' : 'GantryInventory',
+    'Bus shelter' : 'BusShelterInventory',
+    'Bus back' : 'BusBackInventory',
+    'Bus right' : 'BusRightInventory',
+    'Bus left' : 'BusLeftInventory',
+    'Bus wrap' : 'BusWrapInventory',
+    'Floor' : 'FloorInventory',
+    'Ceiling' : 'CeilingInventory',
+    'Billing' : 'BillingInventory',
+    'Counter display' : 'CounterDisplayInventory',
+    'Tent card' : 'TentCardInventory',
+    'Table' : 'TableInventory',
+    'Hording lit' : 'HordingLitInventory',
+    'Bus shelter lit' : 'BusShelterLitInventory',
+    'Gantry lit' : 'GantryLitInventory',
+    'Wall' : 'WallInventory'
 }
 
 supplier_code_to_names = {
