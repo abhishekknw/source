@@ -2249,7 +2249,7 @@ def proposal_shortlisted_spaces(data):
         # fetch all shortlisted suppliers object id's for this proposal
         shortlisted_suppliers = ShortlistedSpaces.objects.filter(proposal_id=proposal_id).select_related(
             'content_object').values()
-
+        print("shortlisted_suppliers",shortlisted_suppliers)
         shortlisted_suppliers = manipulate_object_key_values(shortlisted_suppliers)
 
 

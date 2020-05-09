@@ -21,7 +21,7 @@ import os
 import datetime
 from bulk_update.helper import bulk_update
 from v0.ui.common.models import BaseUser
-from v0.ui.campaign.models import CampaignAssignment
+from v0.ui.campaign.models import CampaignAssignment, CampaignComments
 from v0.constants import (campaign_status, proposal_on_hold, booking_code_to_status,
                           payment_code_to_status, booking_priority_code_to_status )
 from django.http import HttpResponse
@@ -1478,12 +1478,13 @@ class UpdateLeadsEntry(APIView):
                           "hotness_level": lead_dict["hotness_level"]}})
         return handle_response('', data={"success": True}, success=True)
 
-def prepare_campaign_specific_data_in_excel(data):
+def prepare_campaign_specific_data_in_excel(data, comment_list):
     header_list = [
-        'Index', 'Supplier Name', 'Subarea', 'Area', 'City', 'Address',
-        'Landmark', 'PinCode', 'Flat Count', 'Tower Count', 'Society Type',
-        'Cost Per Flat', 'Booking Priority', 'Booking Status', 'Next Action Date',
-        'Payment Method', 'Payment Status', 'Completion Status', 'Tota Price',
+        'Index', 'Proposal Id', 'Supplier Id', 'Supplier Name', 'Supplier Type' , 'Subarea', 'Area', 'City', 'Address',
+        'Landmark', 'PinCode', 'Unit Primary Count / Flat Count', 'Unit Secondary Count / Tower Count',
+        'Cost Per Unit', 'Booking Priority', 'Booking Status', 'Next Action Date',
+        'Payment Method', 'Payment Status', 'Completion Status', 'Total Price',
+        'Internal Comment', 'External Comment',
         'Poster Allowed', 'Poster Count', 'Poster Price',
         'Standee Allowed', 'Standee Count', 'Standee Price',
         'Stall Allowed', 'Stall Count', 'Stall Price',
@@ -1500,7 +1501,10 @@ def prepare_campaign_specific_data_in_excel(data):
 
         supplier_data.append(index)
 
+        supplier_data.append(supplier['proposal'])
+        supplier_data.append(supplier['object_id'])
         supplier_data.append(supplier['name'])
+        supplier_data.append(supplier['supplier_type'])
         supplier_data.append(supplier['subarea'])
         supplier_data.append(supplier['area'])
         supplier_data.append(supplier['city'])
@@ -1508,9 +1512,17 @@ def prepare_campaign_specific_data_in_excel(data):
 
         supplier_data.append(supplier['landmark'])
         supplier_data.append(supplier['zipcode'])
-        supplier_data.append(supplier['flat_count'])
-        supplier_data.append(supplier['tower_count'])
-        supplier_data.append(supplier['society_location_type'])
+
+        primary_count = supplier.get('flat_count')
+        secondary_count = supplier.get('tower_count')
+        if supplier.get('unit_primary_count'):
+            primary_count = supplier.get('unit_primary_count')
+
+        if supplier.get('unit_secondary_count'):
+            secondary_count = supplier.get('unit_secondary_count')
+
+        supplier_data.append(primary_count)
+        supplier_data.append(secondary_count)
 
         supplier_data.append(supplier['cost_per_flat'])
         supplier_data.append(
@@ -1522,6 +1534,18 @@ def prepare_campaign_specific_data_in_excel(data):
         supplier_data.append(payment_code_to_status[supplier['payment_status']] if supplier['payment_status'] else None)
         supplier_data.append('Yes' if supplier['is_completed'] else 'No')
         supplier_data.append(supplier['total_negotiated_price'])
+
+        internal_comment = ""
+        external_comment = ""
+        
+        if comment_list["INTERNAL"].get(supplier["id"]):
+            internal_comment = "\n".join(comment_list["INTERNAL"][supplier["id"]])
+        
+        if comment_list["EXTERNAL"].get(supplier["id"]):
+            external_comment = "\n".join(comment_list["EXTERNAL"][supplier["id"]])
+
+        supplier_data.append(internal_comment)
+        supplier_data.append(external_comment)
 
         supplier_data.append('Yes' if 'POSTER' in supplier['shortlisted_inventories'] else 'No')
         supplier_data.append(
@@ -1581,7 +1605,19 @@ class CampaignDataInExcelSheet(APIView):
             if response.data['status']:
                 data = response.data['data']
 
-        excel_book = prepare_campaign_specific_data_in_excel(data)
+        comments = CampaignComments.objects.filter(campaign_id=campaign_id)
+        comment_list = {
+            "INTERNAL":{},
+            "EXTERNAL":{}
+        }
+        for row in comments:
+            if row.related_to in comment_list:
+                if not comment_list[row.related_to].get(row.shortlisted_spaces_id):
+                    comment_list[row.related_to][row.shortlisted_spaces_id] = []
+
+                comment_list[row.related_to][row.shortlisted_spaces_id].append(row.comment)
+
+        excel_book = prepare_campaign_specific_data_in_excel(data, comment_list)
         resp = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         resp['Content-Disposition'] = 'attachment; filename=mydata.xlsx'

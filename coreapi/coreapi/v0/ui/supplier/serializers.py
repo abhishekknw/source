@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
 from .models import (AddressMaster, SupplierMaster, SupplierHording, SupplierEducationalInstitute, SupplierTypeSociety, SupplierTypeCode, SupplierTypeRetailShop, SupplierTypeBusShelter,
                     SupplierTypeGym, SupplierTypeSalon, SupplierTypeCorporate, SupplierInfo, CorporateBuilding,
                     CorporateParkCompanyList, CorporateCompanyDetails, SupplierTypeBusDepot, SupplierAmenitiesMap)
@@ -101,15 +102,23 @@ class CorporateBuildingGetSerializer(ModelSerializer):
 
 
 class SupplierTypeSocietySerializer(ModelSerializer):
+    supplier_type = serializers.SerializerMethodField()
     class Meta:
         model = SupplierTypeSociety
         fields = '__all__'
+    
+    def get_supplier_type(self, obj):
+        return 'RS'
 
 
 class SupplierTypeSocietySerializer2(ModelSerializer):
+    supplier_type = serializers.SerializerMethodField()
     class Meta:
         model = SupplierTypeSociety
         fields = '__all__'
+    
+    def get_supplier_type(self, obj):
+        return 'RS'
 
 
 class CorporateBuildingSerializer(ModelSerializer):
