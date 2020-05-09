@@ -1484,7 +1484,7 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
         'Landmark', 'PinCode', 'Unit Primary Count / Flat Count', 'Unit Secondary Count / Tower Count',
         'Cost Per Unit', 'Booking Priority', 'Booking Status', 'Next Action Date',
         'Payment Method', 'Payment Status', 'Completion Status', 'Total Price',
-        'Internal Comment', 'External Comment',
+        'Internal Comment', 'External Comment', 'Rating',
         'Poster Allowed', 'Poster Count', 'Poster Price',
         'Standee Allowed', 'Standee Count', 'Standee Price',
         'Stall Allowed', 'Stall Count', 'Stall Price',
@@ -1546,6 +1546,8 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
 
         supplier_data.append(internal_comment)
         supplier_data.append(external_comment)
+
+        supplier_data.append(supplier["quality_rating"])
 
         supplier_data.append('Yes' if 'POSTER' in supplier['shortlisted_inventories'] else 'No')
         supplier_data.append(
