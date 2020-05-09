@@ -956,7 +956,6 @@ class BulkDownloadImagesAmazon(APIView):
         """
         class_name = self.__class__.__name__
         try:
-            print(1111111111111)
             proposal_id = request.query_params['proposal_id']
             proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
             response = website_utils.is_campaign(proposal)
@@ -969,7 +968,7 @@ class BulkDownloadImagesAmazon(APIView):
             )
             if not inventory_images:
                 return ui_utils.handle_response(class_name, data=errors.NO_IMAGES_FOR_THIS_PROPOSAL_MESSAGE.format(proposal_id))
-            print(22222222222)
+
             # store images per supplier_id, content_type
             image_map = {}
             for detail in inventory_images:
@@ -981,10 +980,8 @@ class BulkDownloadImagesAmazon(APIView):
                     reference.append(image_name)
                 except KeyError:
                     image_map[supplier_id + '_' + str(content_type)] = [image_name]
-            print(333333333333333333)
             # initiate the task and return the task id.
             result = website_utils.start_download_from_amazon(proposal_id, json.dumps(image_map))
-            print(444444444444444)
             return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
