@@ -53,6 +53,20 @@ class GatewayArchInventory(BaseModel):
     class Meta:
         db_table = 'gateway_arch_inventory'
 
+class PosterLiftInventory(BaseModel):
+    """
+    This model defines the inventory of Gantry Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'poster_lift_inventory'
+
 class GantryInventory(BaseModel):
     """
     This model defines the inventory of Gantry Inventory
