@@ -561,6 +561,7 @@ class SupplierMaster(BaseModel):
     latitude = models.FloatField(null=True, blank=True, default=0.0)
     longitude = models.FloatField(null=True, blank=True, default=0.0)
     feedback = models.CharField(null=True, blank=True, max_length=250)
+    quality_rating = models.CharField(max_length=50, null=True, blank=True)
 
     class Meta:
         db_table = 'supplier_master'
