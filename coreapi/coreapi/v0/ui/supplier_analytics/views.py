@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from v0.constants import supplier_code_to_names
-from v0.ui.utils import get_model
+from v0.ui.utils import get_model, get_user_organisation_id
 from v0.ui.supplier.models import (SupplierTypeSociety, SupplierTypeRetailShop,
                                    SupplierTypeSalon, SupplierTypeGym,
                                    SupplierTypeCorporate, SupplierTypeBusShelter,
@@ -19,6 +19,11 @@ class GetSupplierSummary(APIView):
     @staticmethod
     def get(request):
         try:
+            organisation_id = get_user_organisation_id(request.user)
+            # Visible only for machadalo users
+            if organisation_id != 'MAC1421':
+                return Response(data={"status": False, "error": "Permission Error"},
+                                status=status.HTTP_400_BAD_REQUEST)
             valid_supplier_type_code_instances = SupplierTypeCode.objects.all()
             data = {}
             for instance in valid_supplier_type_code_instances:
@@ -72,6 +77,11 @@ class GetSupplierCitywiseCount(APIView):
     def get(request, supplier_type):
         try:
             supplier_count_list = []
+            organisation_id = get_user_organisation_id(request.user)
+            # Visible only for machadalo users
+            if organisation_id != 'MAC1421':
+                return Response(data={"status": False, "error": "Permission Error"},
+                                status=status.HTTP_400_BAD_REQUEST)
             try:
                 model = get_model(supplier_type)
             except Exception:
@@ -177,6 +187,11 @@ class GetSupplierList(APIView):
     @staticmethod
     def get(request, supplier_type):
         try:
+            organisation_id = get_user_organisation_id(request.user)
+            # Visible only for machadalo users
+            if organisation_id != 'MAC1421':
+                return Response(data={"status": False, "error": "Permission Error"},
+                                status=status.HTTP_400_BAD_REQUEST)
             city = request.query_params.get('city', '')
             is_society = False
             if not city:
