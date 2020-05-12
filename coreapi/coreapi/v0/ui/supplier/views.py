@@ -3,8 +3,6 @@ from __future__ import absolute_import
 import json
 import requests
 
-
-
 from bson.objectid import ObjectId
 from django.urls import reverse
 from django.forms.models import model_to_dict
@@ -16,7 +14,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import list_route
 from v0.ui.utils import (get_supplier_id, handle_response, get_content_type, save_flyer_locations, make_supplier_data,
                          get_model, get_serializer, save_supplier_data, get_region_based_query, get_supplier_image,
-                         save_basic_supplier_details)
+                         save_basic_supplier_details, get_user_organisation_id)
 from v0.ui.website.utils import manipulate_object_key_values, return_price
 import v0.ui.website.utils as website_utils
 
@@ -3541,6 +3539,11 @@ class MultiSupplierDetails(APIView):
         """
         class_name = self.__class__.__name__
         try:
+            organisation_id = get_user_organisation_id(request.user)
+            # Visible only for machadalo users
+            if organisation_id != 'MAC1421':
+                return Response(data={"status": False, "error": "Permission Error"},
+                                status=status.HTTP_400_BAD_REQUEST)
             supplier_ids = request.data.get('supplier_ids', None)
             supplier_type_code = request.data.get('supplier_type_code', 'RS')
             is_multiple_contact_number = request.data.get('is_multiple_contact_number', False)
