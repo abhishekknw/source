@@ -3978,7 +3978,7 @@ def is_campaign(proposal):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned, search, start_date, end_date, supplier_type_code, booking_status_code, phase_id):
+def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned, search, start_date, end_date, supplier_type_code=None, booking_status_code=None, phase_id=None):
     """
 
     Args:
