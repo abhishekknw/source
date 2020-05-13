@@ -1603,7 +1603,7 @@ class CampaignDataInExcelSheet(APIView):
         data["shortlisted_suppliers"] = []
         if len(excel_download_hash) > 0:
             campaign_id = excel_download_hash[0].campaign_id
-            response = prepare_shortlisted_spaces_and_inventories(campaign_id, None, request.user, 0, None, None, None)
+            response = prepare_shortlisted_spaces_and_inventories(campaign_id, None, request.user, 0, None, None, None, space_status='F')
             if response.data['status']:
                 data = response.data['data']
 
