@@ -1356,7 +1356,9 @@ codes_to_model_names = {
     'SUNBOARD': 'SunBoardInventory',
     'SB': 'SunBoardInventory',
     'BA': 'BannerInventory',
-    'BANNER': 'BannerInventory'
+    'BANNER': 'BannerInventory',
+    'WHATSAPP INDIVIDUAL': 'WhatsAppIndividualInventory',
+    'WHATSAPP GROUP': 'WhatsAppGroupInventory'
 }
 
 supplier_code_to_names = {
