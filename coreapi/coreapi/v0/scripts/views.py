@@ -103,6 +103,7 @@ class DeleteDuplicateSocieties(APIView):
     def post(self, request):
         try:
             data = request.data
+            societies_not_deleted = []
             deleted_societies_file = open(os.path.join(sys.path[0], "deleted_societies.txt"), "a")
             societies_not_deleted_file = open(os.path.join(sys.path[0], "societies_not_deleted.txt"), "a")
             for supplier in data:
@@ -117,6 +118,7 @@ class DeleteDuplicateSocieties(APIView):
                     shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=supplier_id)
                     if shortlisted_spaces:
                         societies_not_deleted_file.write("{name},{id}\n".format(name=supplier_name, id=supplier_id))
+                        societies_not_deleted.append(supplier_id)
                         print('Linked to proposal :', supplier_id)
                     else:
                         supplier_society = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).delete()
@@ -124,7 +126,7 @@ class DeleteDuplicateSocieties(APIView):
                             deleted_societies_file.write("{name},{id}\n".format(name=supplier_name, id=supplier_id))
         except Exception as e:
             print(e)
-        return handle_response({}, data='Societies deleted successfully', success=True)
+        return handle_response({}, data=societies_not_deleted, success=True)
 
 
 class storeS3UrlToCSV(APIView):
