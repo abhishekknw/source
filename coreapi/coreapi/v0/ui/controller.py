@@ -71,6 +71,8 @@ def inventory_summary_insert(data, supplier_inventory_data):
 
         if get_from_dict(data, 'hoarding'):
             supplier_object.hoarding = data['hoarding']
+        if get_from_dict(data, 'hoarding_lit'):
+            supplier_object.hoarding = data['hoarding_lit']
         if get_from_dict(data, 'gantry'):
             supplier_object.gantry = data['gantry']
         if get_from_dict(data, 'bus_shelter'):
@@ -91,6 +93,8 @@ def inventory_summary_insert(data, supplier_inventory_data):
             supplier_object.billing = data['billing']
         if get_from_dict(data, 'counter_display'):
             supplier_object.counter_display = data['counter_display']
+        if get_from_dict(data, 'tent_card'):
+            supplier_object.table = data['tent_card']
         if get_from_dict(data, 'table'):
             supplier_object.table = data['table']
         if get_from_dict(data, 'wall'):
@@ -311,6 +315,19 @@ def inventory_summary_insert(data, supplier_inventory_data):
             ui_utils.create_pricing_mapping_default(data, 'hoarding', supplier_type_code, supplier_id,
                                                     adinventory_dict['hoarding'],
                                                     duration_type_dict['campaign_monthly'])
+            ui_utils.create_pricing_mapping_default(data, 'hoarding', supplier_type_code, supplier_id,
+                                                    adinventory_dict['hoarding'],
+                                                    duration_type_dict['campaign_daily'])
+
+        if get_from_dict(data, 'hoarding_lit'):
+            ui_utils.create_pricing_mapping_default(data, 'hoarding_lit', supplier_type_code, supplier_id, adinventory_dict['hoarding_lit'],
+                                           duration_type_dict['campaign_weekly'])
+            ui_utils.create_pricing_mapping_default(data, 'hoarding_lit', supplier_type_code, supplier_id,
+                                                    adinventory_dict['hoarding_lit'],
+                                                    duration_type_dict['campaign_monthly'])
+            ui_utils.create_pricing_mapping_default(data, 'hoarding_lit', supplier_type_code, supplier_id,
+                                                    adinventory_dict['hoarding_lit'],
+                                                    duration_type_dict['campaign_daily'])
 
         if get_from_dict(data, 'wall'):
             ui_utils.create_pricing_mapping_default(data, 'wall', supplier_type_code, supplier_id, adinventory_dict['wall'],
@@ -318,96 +335,150 @@ def inventory_summary_insert(data, supplier_inventory_data):
             ui_utils.create_pricing_mapping_default(data, 'wall', supplier_type_code, supplier_id,
                                                     adinventory_dict['wall'],
                                                     duration_type_dict['campaign_monthly'])
+            ui_utils.create_pricing_mapping_default(data, 'wall', supplier_type_code, supplier_id,
+                                                    adinventory_dict['wall'],
+                                                    duration_type_dict['campaign_daily'])
+
         if get_from_dict(data, 'table'):
             ui_utils.create_pricing_mapping_default(data, 'table', supplier_type_code, supplier_id, adinventory_dict['table'],
                                            duration_type_dict['campaign_weekly'])
             ui_utils.create_pricing_mapping_default(data, 'table', supplier_type_code, supplier_id,
                                                     adinventory_dict['table'],
                                                     duration_type_dict['campaign_monthly'])
+            ui_utils.create_pricing_mapping_default(data, 'table', supplier_type_code, supplier_id,
+                                                    adinventory_dict['table'],
+                                                    duration_type_dict['campaign_daily'])
+
 
         if get_from_dict(data, 'counter_display'):
-            ui_utils.create_pricing_mapping_default(data, 'counter_display', supplier_type_code, supplier_id, adinventory_dict['table'],
+            ui_utils.create_pricing_mapping_default(data, 'counter_display', supplier_type_code, supplier_id, adinventory_dict['counter_display'],
                                            duration_type_dict['campaign_weekly'])
             ui_utils.create_pricing_mapping_default(data, 'counter_display', supplier_type_code, supplier_id,
                                                     adinventory_dict['counter_display'],
                                                     duration_type_dict['campaign_monthly'])
+            ui_utils.create_pricing_mapping_default(data, 'counter_display', supplier_type_code, supplier_id,
+                                                    adinventory_dict['counter_display'],
+                                                    duration_type_dict['campaign_daily'])
 
         if get_from_dict(data, 'billing'):
-            ui_utils.create_pricing_mapping_default(data, 'billing', supplier_type_code, supplier_id, adinventory_dict['table'],
+            ui_utils.create_pricing_mapping_default(data, 'billing', supplier_type_code, supplier_id, adinventory_dict['billing'],
                                            duration_type_dict['campaign_weekly'])
             ui_utils.create_pricing_mapping_default(data, 'billing', supplier_type_code, supplier_id,
                                                     adinventory_dict['billing'],
                                                     duration_type_dict['campaign_monthly'])
+            ui_utils.create_pricing_mapping_default(data, 'billing', supplier_type_code, supplier_id,
+                                                    adinventory_dict['billing'],
+                                                    duration_type_dict['campaign_daily'])
 
         if get_from_dict(data, 'ceiling'):
-            ui_utils.create_pricing_mapping_default(data, 'ceiling', supplier_type_code, supplier_id, adinventory_dict['table'],
+            ui_utils.create_pricing_mapping_default(data, 'ceiling', supplier_type_code, supplier_id, adinventory_dict['ceiling'],
                                            duration_type_dict['campaign_weekly'])
             ui_utils.create_pricing_mapping_default(data, 'ceiling', supplier_type_code, supplier_id,
                                                     adinventory_dict['ceiling'],
                                                     duration_type_dict['campaign_monthly'])
+            ui_utils.create_pricing_mapping_default(data, 'ceiling', supplier_type_code, supplier_id,
+                                                    adinventory_dict['ceiling'],
+                                                    duration_type_dict['campaign_daily'])
 
         if get_from_dict(data, 'bus_shelter_lit'):
-            ui_utils.create_pricing_mapping_default(data, 'bus_shelter_lit', supplier_type_code, supplier_id, adinventory_dict['table'],
+            ui_utils.create_pricing_mapping_default(data, 'bus_shelter_lit', supplier_type_code, supplier_id, adinventory_dict['bus_shelter_lit'],
                                            duration_type_dict['campaign_weekly'])
             ui_utils.create_pricing_mapping_default(data, 'bus_shelter_lit', supplier_type_code, supplier_id,
                                                     adinventory_dict['bus_shelter_lit'],
                                                     duration_type_dict['campaign_monthly'])
+            ui_utils.create_pricing_mapping_default(data, 'bus_shelter_lit', supplier_type_code, supplier_id,
+                                                    adinventory_dict['bus_shelter_lit'],
+                                                    duration_type_dict['campaign_daily'])
 
         if get_from_dict(data, 'gantry_lit'):
-            ui_utils.create_pricing_mapping_default(data, 'gantry_lit', supplier_type_code, supplier_id, adinventory_dict['table'],
+            ui_utils.create_pricing_mapping_default(data, 'gantry_lit', supplier_type_code, supplier_id, adinventory_dict['gantry_lit'],
                                            duration_type_dict['campaign_weekly'])
             ui_utils.create_pricing_mapping_default(data, 'gantry_lit', supplier_type_code, supplier_id,
                                                     adinventory_dict['gantry_lit'],
                                                     duration_type_dict['campaign_monthly'])
+            ui_utils.create_pricing_mapping_default(data, 'gantry_lit', supplier_type_code, supplier_id,
+                                                    adinventory_dict['gantry_lit'],
+                                                    duration_type_dict['campaign_daily'])
 
         if get_from_dict(data, 'floor'):
-            ui_utils.create_pricing_mapping_default(data, 'floor', supplier_type_code, supplier_id, adinventory_dict['table'],
+            ui_utils.create_pricing_mapping_default(data, 'floor', supplier_type_code, supplier_id, adinventory_dict['floor'],
                                            duration_type_dict['campaign_weekly'])
             ui_utils.create_pricing_mapping_default(data, 'floor', supplier_type_code, supplier_id,
                                                     adinventory_dict['floor'],
                                                     duration_type_dict['campaign_monthly'])
+            ui_utils.create_pricing_mapping_default(data, 'floor', supplier_type_code, supplier_id,
+                                                    adinventory_dict['floor'],
+                                                    duration_type_dict['campaign_daily'])
 
         if get_from_dict(data, 'bus_wrap'):
-            ui_utils.create_pricing_mapping_default(data, 'bus_wrap', supplier_type_code, supplier_id, adinventory_dict['table'],
+            ui_utils.create_pricing_mapping_default(data, 'bus_wrap', supplier_type_code, supplier_id, adinventory_dict['bus_wrap'],
                                            duration_type_dict['campaign_weekly'])
             ui_utils.create_pricing_mapping_default(data, 'bus_wrap', supplier_type_code, supplier_id,
                                                     adinventory_dict['bus_wrap'],
                                                     duration_type_dict['campaign_monthly'])
+            ui_utils.create_pricing_mapping_default(data, 'bus_wrap', supplier_type_code, supplier_id,
+                                                    adinventory_dict['bus_wrap'],
+                                                    duration_type_dict['campaign_daily'])
 
         if get_from_dict(data, 'bus_left'):
-            ui_utils.create_pricing_mapping_default(data, 'bus_left', supplier_type_code, supplier_id, adinventory_dict['table'],
+            ui_utils.create_pricing_mapping_default(data, 'bus_left', supplier_type_code, supplier_id, adinventory_dict['bus_left'],
                                            duration_type_dict['campaign_weekly'])
             ui_utils.create_pricing_mapping_default(data, 'bus_left', supplier_type_code, supplier_id,
                                                     adinventory_dict['bus_left'],
                                                     duration_type_dict['campaign_monthly'])
+            ui_utils.create_pricing_mapping_default(data, 'bus_left', supplier_type_code, supplier_id,
+                                                    adinventory_dict['bus_left'],
+                                                    duration_type_dict['campaign_daily'])
 
         if get_from_dict(data, 'bus_right'):
-            ui_utils.create_pricing_mapping_default(data, 'bus_right', supplier_type_code, supplier_id, adinventory_dict['table'],
+            ui_utils.create_pricing_mapping_default(data, 'bus_right', supplier_type_code, supplier_id, adinventory_dict['bus_right'],
                                            duration_type_dict['campaign_weekly'])
             ui_utils.create_pricing_mapping_default(data, 'bus_right', supplier_type_code, supplier_id,
                                                     adinventory_dict['bus_right'],
                                                     duration_type_dict['campaign_monthly'])
+            ui_utils.create_pricing_mapping_default(data, 'bus_right', supplier_type_code, supplier_id,
+                                                    adinventory_dict['bus_right'],
+                                                    duration_type_dict['campaign_daily'])
 
         if get_from_dict(data, 'bus_back'):
-            ui_utils.create_pricing_mapping_default(data, 'bus_back', supplier_type_code, supplier_id, adinventory_dict['table'],
+            ui_utils.create_pricing_mapping_default(data, 'bus_back', supplier_type_code, supplier_id, adinventory_dict['bus_back'],
                                            duration_type_dict['campaign_weekly'])
             ui_utils.create_pricing_mapping_default(data, 'bus_back', supplier_type_code, supplier_id,
                                                     adinventory_dict['bus_back'],
                                                     duration_type_dict['campaign_monthly'])
+            ui_utils.create_pricing_mapping_default(data, 'bus_back', supplier_type_code, supplier_id,
+                                                    adinventory_dict['bus_back'],
+                                                    duration_type_dict['campaign_daily'])
 
         if get_from_dict(data, 'bus_shelter'):
-            ui_utils.create_pricing_mapping_default(data, 'bus_shelter', supplier_type_code, supplier_id, adinventory_dict['table'],
+            ui_utils.create_pricing_mapping_default(data, 'bus_shelter', supplier_type_code, supplier_id, adinventory_dict['bus_shelter'],
                                            duration_type_dict['campaign_weekly'])
             ui_utils.create_pricing_mapping_default(data, 'bus_shelter', supplier_type_code, supplier_id,
                                                     adinventory_dict['bus_shelter'],
                                                     duration_type_dict['campaign_monthly'])
+            ui_utils.create_pricing_mapping_default(data, 'bus_shelter', supplier_type_code, supplier_id,
+                                                    adinventory_dict['bus_shelter'],
+                                                    duration_type_dict['campaign_daily'])
+
+        if get_from_dict(data, 'tent_card'):
+            ui_utils.create_pricing_mapping_default(data, 'tent_card', supplier_type_code, supplier_id, adinventory_dict['tent_card'],
+                                           duration_type_dict['campaign_weekly'])
+            ui_utils.create_pricing_mapping_default(data, 'tent_card', supplier_type_code, supplier_id,
+                                                    adinventory_dict['tent_card'],
+                                                    duration_type_dict['campaign_monthly'])
+            ui_utils.create_pricing_mapping_default(data, 'tent_card', supplier_type_code, supplier_id,
+                                                    adinventory_dict['tent_card'],
+                                                    duration_type_dict['campaign_daily'])
 
         if get_from_dict(data, 'gantry'):
-            ui_utils.create_pricing_mapping_default(data, 'gantry', supplier_type_code, supplier_id, adinventory_dict['table'],
+            ui_utils.create_pricing_mapping_default(data, 'gantry', supplier_type_code, supplier_id, adinventory_dict['gantry'],
                                            duration_type_dict['campaign_weekly'])
             ui_utils.create_pricing_mapping_default(data, 'gantry', supplier_type_code, supplier_id,
                                                     adinventory_dict['gantry'],
                                                     duration_type_dict['campaign_monthly'])
+            ui_utils.create_pricing_mapping_default(data, 'gantry', supplier_type_code, supplier_id,
+                                                    adinventory_dict['gantry'],
+                                                    duration_type_dict['campaign_daily'])
 
         serializer = InventorySummarySerializer(inventory_object, data=supplier_inventory_data)
 

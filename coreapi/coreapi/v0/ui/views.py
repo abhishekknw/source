@@ -837,6 +837,7 @@ class InventorySummaryAPIView(APIView):
             'cd_standard': get_from_dict(request.data, 'cd_standard'),
             'cd_price_day_standard': get_from_dict(request.data, 'cd_price_day_standard'),
             'hoarding': get_from_dict(request.data, 'hoarding'),
+            'hoarding_lit': get_from_dict(request.data, 'hoarding_lit'),
             'gantry': get_from_dict(request.data, 'gantry'),
             'bus_shelter': get_from_dict(request.data, 'bus_shelter'),
             'bus_back': get_from_dict(request.data, 'bus_back'),
@@ -851,6 +852,7 @@ class InventorySummaryAPIView(APIView):
             'wall': get_from_dict(request.data, 'wall_inventory'),
             'bus_shelter_lit': get_from_dict(request.data, 'bus_shelter_lit'),
             'gantry_lit': get_from_dict(request.data, 'gantry_lit'),
+            'tent_card': get_from_dict(request.data, 'tent_card'),
         }
         return inventory_summary_insert(final_data,supplier_inventory_data)
 
