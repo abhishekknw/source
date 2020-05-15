@@ -3569,7 +3569,7 @@ class MultiSupplierDetails(APIView):
                 suppliers = model.objects.filter(pk__in=supplier_ids).values('society_name', 'society_locality',
                                                                              'society_city', 'society_subarea', 'society_state',
                                                                              'society_latitude','society_longitude','society_address1',
-                                                                             'supplier_id')
+                                                                             'supplier_id', 'flat_count', 'society_type_quality')
             else:
                 suppliers = model.objects.filter(pk__in=supplier_ids).values('name', 'area','city', 'subarea','state','latitude', 'longitude',
                                                                              'address1','supplier_id')
@@ -3590,6 +3590,9 @@ class MultiSupplierDetails(APIView):
                     'longitude': supplier['society_longitude'] if is_society else supplier['longitude'],
                     'state': supplier['society_state'] if is_society else supplier['state'],
                     'address': supplier['society_address1'] if is_society else supplier['address1'],
+                    'flat_count': supplier['flat_count'] if is_society else None,
+                    'society_type': supplier['society_type_quality'] if is_society else None,
+                    'is_society': is_society if is_society else False
                 }
                 if contact_details:
                     for contact_detail in contact_details:
@@ -3616,7 +3619,10 @@ class MultiSupplierDetails(APIView):
                                 'address': supplier['society_address1'] if is_society else supplier['address1'],
                                 'contact_name': contact_detail['name'],
                                 'contact_number': contact_detail['mobile'],
-                                'contact_type': contact_detail['contact_type']
+                                'contact_type': contact_detail['contact_type'],
+                                'flat_count': supplier['flat_count'] if is_society else None,
+                                'society_type': supplier['society_type_quality'] if is_society else None,
+                                'is_society': is_society if is_society else False
                             })
                     index += 1
                 if not is_contact_number and not is_contact_name:
