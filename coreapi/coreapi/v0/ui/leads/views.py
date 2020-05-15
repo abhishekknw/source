@@ -1479,18 +1479,32 @@ class UpdateLeadsEntry(APIView):
         return handle_response('', data={"success": True}, success=True)
 
 def prepare_campaign_specific_data_in_excel(data, comment_list):
+    
+    inventory_list = []
+    for supplier in data['shortlisted_suppliers']:
+        if supplier['shortlisted_inventories']:
+            for key,value in supplier['shortlisted_inventories'].items():
+                if key not in inventory_list:
+                    inventory_list.append(key)
+
     header_list = [
         'Index', 'Proposal Id', 'Supplier Id', 'Supplier Name', 'Supplier Type' , 'Subarea', 'Area', 'City', 'Address',
         'Landmark', 'PinCode', 'Unit Primary Count / Flat Count', 'Unit Secondary Count / Tower Count',
         'Cost Per Unit', 'Booking Priority', 'Booking Status', 'Next Action Date',
         'Payment Method', 'Payment Status', 'Completion Status', 'Total Price',
         'Internal Comment', 'External Comment', 'Rating',
-        'Poster Allowed', 'Poster Count', 'Poster Price',
-        'Standee Allowed', 'Standee Count', 'Standee Price',
-        'Stall Allowed', 'Stall Count', 'Stall Price',
-        'Flier Allowed', 'Flier Count', 'Flier Price',
-        'Banner Allowed', 'Banner Count', 'Banner Price',
+        # 'Poster Allowed', 'Poster Count', 'Poster Price',
+        # 'Standee Allowed', 'Standee Count', 'Standee Price',
+        # 'Stall Allowed', 'Stall Count', 'Stall Price',
+        # 'Flier Allowed', 'Flier Count', 'Flier Price',
+        # 'Banner Allowed', 'Banner Count', 'Banner Price',
     ]
+
+    for inventory in inventory_list:
+        header_list.append(inventory+" Allowed")
+        header_list.append(inventory+" Count")
+        header_list.append(inventory+" Price")
+
     book = Workbook()
     sheet = book.active
     sheet.append(header_list)
@@ -1549,45 +1563,14 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
 
         supplier_data.append(supplier["quality_rating"])
 
-        supplier_data.append('Yes' if 'POSTER' in supplier['shortlisted_inventories'] else 'No')
-        supplier_data.append(
-            supplier['shortlisted_inventories']['POSTER']['total_count'] if 'POSTER' in supplier[
-                'shortlisted_inventories'] else None)
-        supplier_data.append(
-            supplier['shortlisted_inventories']['POSTER']['actual_supplier_price'] if 'POSTER' in supplier[
-                'shortlisted_inventories'] else None)
-
-        supplier_data.append('Yes' if 'STANDEE' in supplier['shortlisted_inventories'] else 'No')
-        supplier_data.append(
-            supplier['shortlisted_inventories']['STANDEE']['total_count'] if 'STANDEE' in supplier[
-                'shortlisted_inventories'] else None)
-        supplier_data.append(
-            supplier['shortlisted_inventories']['STANDEE']['actual_supplier_price'] if 'STANDEE' in supplier[
-                'shortlisted_inventories'] else None)
-
-        supplier_data.append('Yes' if 'STALL' in supplier['shortlisted_inventories'] else 'No')
-        supplier_data.append(
-            supplier['shortlisted_inventories']['STALL']['total_count'] if 'STALL' in supplier[
-                'shortlisted_inventories'] else None)
-        supplier_data.append(
-            supplier['shortlisted_inventories']['STALL']['actual_supplier_price'] if 'STALL' in supplier[
-                'shortlisted_inventories'] else None)
-
-        supplier_data.append('Yes' if 'FLIER' in supplier['shortlisted_inventories'] else 'No')
-        supplier_data.append(
-            supplier['shortlisted_inventories']['FLIER']['total_count'] if 'FLIER' in supplier[
-                'shortlisted_inventories'] else None)
-        supplier_data.append(
-            supplier['shortlisted_inventories']['FLIER']['actual_supplier_price'] if 'FLIER' in supplier[
-                'shortlisted_inventories'] else None)
-
-        supplier_data.append('Yes' if 'BANNER' in supplier['shortlisted_inventories'] else 'No')
-        supplier_data.append(
-            supplier['shortlisted_inventories']['BANNER']['total_count'] if 'BANNER' in supplier[
-                'shortlisted_inventories'] else None)
-        supplier_data.append(
-            supplier['shortlisted_inventories']['BANNER']['actual_supplier_price'] if 'BANNER' in supplier[
-                'shortlisted_inventories'] else None)
+        for row in inventory_list:
+            supplier_data.append('Yes' if row in supplier['shortlisted_inventories'] else 'No')
+            supplier_data.append(
+                supplier['shortlisted_inventories'][row]['total_count'] if row in supplier[
+                    'shortlisted_inventories'] else None)
+            supplier_data.append(
+                supplier['shortlisted_inventories'][row]['actual_supplier_price'] if row in supplier[
+                    'shortlisted_inventories'] else None)
 
         sheet.append(supplier_data)
 
