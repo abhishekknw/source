@@ -528,6 +528,8 @@ def adinventory_func():
                 adinventory_dict['banner_medium'] = adinventory
             elif adinventory.adinventory_type == 'Large':
                 adinventory_dict['banner_large'] = adinventory
+        elif adinventory.adinventory_name == 'SUNBOARD':
+            adinventory_dict['sun_board_allowed'] = adinventory
         elif adinventory.adinventory_name == 'Hoarding':
             adinventory_dict['hoarding'] = adinventory
         elif adinventory.adinventory_name == 'Gantry':
