@@ -69,7 +69,7 @@ from v0.constants import keys, decision
 from .website.utils import save_price_mapping_default
 import v0.constants as v0_constants
 from .utils import get_from_dict
-from .controller import inventory_summary_insert
+from .controller import inventory_summary_insert, inventory_summary_insert_generic
 from v0.ui.email.views import send_email, send_mail_generic
 
 import random
@@ -827,16 +827,29 @@ class InventorySummaryAPIView(APIView):
             'poster_price_week_nb': get_from_dict(request.data, 'poster_price_week_nb'),
             'nb_A3_allowed': get_from_dict(request.data, 'nb_A3_allowed'),
             'nb_A4_allowed': get_from_dict(request.data, 'nb_A4_allowed'),
+            'poster_allowed_lift_A3': get_from_dict(request.data, 'poster_allowed_lift_A3'),
+            'poster_allowed_lift_A4': get_from_dict(request.data, 'poster_allowed_lift_A4'),
             'poster_price_week_lift': get_from_dict(request.data, 'poster_price_week_lift'),
             'standee_price_week': get_from_dict(request.data, 'standee_price_week'),
             'standee_small': get_from_dict(request.data, 'standee_small'),
+            'standee_large': get_from_dict(request.data, 'standee_large'),
             'standee_medium': get_from_dict(request.data, 'standee_medium'),
+            'banner_large': get_from_dict(request.data, 'banner_large'),
+            'banner_medium': get_from_dict(request.data, 'banner_medium'),
+            'banner_small': get_from_dict(request.data, 'banner_small'),
             'stall_price_day_small': get_from_dict(request.data, 'stall_price_day_small'),
             'stall_large': get_from_dict(request.data, 'stall_large'),
+            'stall_canopy': get_from_dict(request.data, 'stall_canopy'),
+            'stall_customize': get_from_dict(request.data, 'stall_customize'),
+            'stall_small': get_from_dict(request.data, 'stall_small'),
+            'lit': get_from_dict(request.data, 'lit'),
+            'non_lit': get_from_dict(request.data, 'non_lit'),
+            'sun_board_allowed': get_from_dict(request.data, 'sun_board_allowed'),
             'stall_price_day_large': get_from_dict(request.data, 'stall_price_day_large'),
             'cd_standard': get_from_dict(request.data, 'cd_standard'),
             'cd_price_day_standard': get_from_dict(request.data, 'cd_price_day_standard'),
             'hoarding': get_from_dict(request.data, 'hoarding'),
+            'hoarding_lit': get_from_dict(request.data, 'hoarding_lit'),
             'gantry': get_from_dict(request.data, 'gantry'),
             'bus_shelter': get_from_dict(request.data, 'bus_shelter'),
             'bus_back': get_from_dict(request.data, 'bus_back'),
@@ -851,8 +864,12 @@ class InventorySummaryAPIView(APIView):
             'wall': get_from_dict(request.data, 'wall_inventory'),
             'bus_shelter_lit': get_from_dict(request.data, 'bus_shelter_lit'),
             'gantry_lit': get_from_dict(request.data, 'gantry_lit'),
+            'tent_card': get_from_dict(request.data, 'tent_card'),
         }
-        return inventory_summary_insert(final_data,supplier_inventory_data)
+        if final_data['supplier_type_code'] == 'RS':
+            return inventory_summary_insert(final_data,supplier_inventory_data)
+        else :
+            return inventory_summary_insert_generic(final_data,supplier_inventory_data)
 
 
 class PostInventorySummary(APIView):
