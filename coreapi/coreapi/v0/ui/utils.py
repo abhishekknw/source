@@ -292,7 +292,8 @@ def save_supplier_data(user, master_data):
         serializer = serializer_class(data=supplier_data)
         if serializer.is_valid():
             serializer.save(user=user)
-            set_default_pricing(serializer.data['supplier_id'], supplier_code)
+            if supplier_code == 'RS':
+                set_default_pricing(serializer.data['supplier_id'], supplier_code)
             if supplier_code != v0_constants.society_code:
                 supplier_id = supplier_data.get('supplier_id')
                 area = supplier_data.get('area', None)
@@ -583,6 +584,8 @@ def adinventory_func():
                 adinventory_dict['banner_medium'] = adinventory
             elif adinventory.adinventory_type == 'Large':
                 adinventory_dict['banner_large'] = adinventory
+        elif adinventory.adinventory_name == 'SUNBOARD':
+            adinventory_dict['sun_board_allowed'] = adinventory
         elif adinventory.adinventory_name == 'Hoarding':
             adinventory_dict['hoarding'] = adinventory
         elif adinventory.adinventory_name == 'Gantry':
@@ -691,7 +694,9 @@ def duration_type_func():
         if duration_type.duration_name == 'Campaign Weekly':
             duration_type_dict['campaign_weekly'] = duration_type
         elif duration_type.duration_name == 'Campaign Monthly':
-            duration_type_dict['campaign_montly'] = duration_type
+            duration_type_dict['campaign_monthly'] = duration_type
+        elif duration_type.duration_name == 'Campaign Daily':
+            duration_type_dict['campaign_daily'] = duration_type
         elif duration_type.duration_name == 'Unit Weekly':
             duration_type_dict['unit_weekly'] = duration_type
         elif duration_type.duration_name == 'Unit Monthly':
