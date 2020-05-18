@@ -1352,7 +1352,7 @@ class ProfileViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            instances = Profile.objects.filter(is_standard=True, organisation__category=ORGANIZATION_CATEGORY[0][0])
+            instances = Profile.objects.filter(is_standard=True)
             serializer = ProfileSimpleSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
