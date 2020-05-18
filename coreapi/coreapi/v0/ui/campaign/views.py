@@ -1424,7 +1424,6 @@ class CampaignLeads(APIView):
             user_start_date_str = request.query_params.get('start_date', None)
             user_end_date_str = request.query_params.get('end_date', None)
             campaign_id = request.query_params.get('campaign_id', None)
-
             # if 'NOB' in campaign_id:
             #     final_data = {}
             #     start_date = datetime.now() - timedelta(days=7)
@@ -1439,7 +1438,7 @@ class CampaignLeads(APIView):
             # else:
             final_data = get_leads_data_for_campaign(campaign_id, user_start_date_str, user_end_date_str)
             if not final_data:
-                return ui_utils.handle_response(class_name, data=final_data, success=False)
+                return ui_utils.handle_response({}, data='No Leads present for this campaign', success=False)
             start_date = datetime.now() - timedelta(days=7)
             final_data['last_week'] = get_leads_data_for_campaign(campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
             start_date = datetime.now() - timedelta(days=14)
@@ -1452,10 +1451,10 @@ class CampaignLeads(APIView):
             proposal_center_serializer = ProposalCenterSuppliersSerializer(suppliers_data, many=True)
             final_data['center_suppliers'] = proposal_center_serializer.data
 
-            return ui_utils.handle_response(class_name, data=final_data, success=True)
+            return ui_utils.handle_response({}, data=final_data, success=True)
         except Exception as e:
             print(e)
-            return ui_utils.handle_response(class_name, data=final_data, success=False)
+            return ui_utils.handle_response({}, data=final_data, success=False)
 
 
 @shared_task()
