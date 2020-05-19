@@ -1340,18 +1340,16 @@ class RetailShopViewSet(viewsets.ViewSet):
         try:
             basic_contacts = request.data.get('basic_contacts', None)
             object_id = request.data.get('supplier_id', None)
+            if basic_contacts is not None:
+                for contact in basic_contacts:
+                    if 'id' in contact:
+                        item = ContactDetails.objects.filter(pk=contact['id']).first()
+                        contact_serializer = ContactDetailsSerializer(item, data=contact)
+                    else:
+                        contact_serializer = ContactDetailsSerializer(data=contact)
+                    if contact_serializer.is_valid():
+                        contact_serializer.save()
 
-            
-            for contact in basic_contacts:
-                if 'id' in contact:
-                    item = ContactDetails.objects.filter(pk=contact['id']).first()
-                    contact_serializer = ContactDetailsSerializer(item, data=contact)
-                else:
-                    contact_serializer = ContactDetailsSerializer(data=contact)
-                if contact_serializer.is_valid():
-                    contact_serializer.save()
-
-            
             ownership = request.data.get('ownership_details', None)
 
             if ownership:
@@ -1363,7 +1361,6 @@ class RetailShopViewSet(viewsets.ViewSet):
                 
                 if ownership_serializer.is_valid():
                     ownership_serializer.save()
-
 
             retail_shop_instance = SupplierTypeRetailShop.objects.get(pk=pk)
             serializer = RetailShopSerializer(instance=retail_shop_instance, data=request.data)
