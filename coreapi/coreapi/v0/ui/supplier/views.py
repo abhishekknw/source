@@ -1386,13 +1386,15 @@ class RetailShopViewSet(viewsets.ViewSet):
             contact_serializer = ContactDetailsSerializer(retail_shop_instance, many=True)
                 
             shopData['contacData'] = contact_serializer.data
-
-
-            ownership_details_instance = OwnershipDetails.objects.filter(object_id=pk).first()
-            ownership_details_serializer = OwnershipDetailsSerializer(ownership_details_instance, many=False)
-                
-            shopData['ownership_details'] = ownership_details_serializer.data
-
+            try:
+                ownership_details_instance = OwnershipDetails.objects.filter(object_id=pk).first()
+                if ownership_details_instance:
+                    ownership_details_serializer = OwnershipDetailsSerializer(ownership_details_instance, many=False)
+                    shopData['ownership_details'] = ownership_details_serializer.data
+                else:
+                    return handle_response(class_name, data=shopData, success=True)
+            except Exception as e:
+                return handle_response(class_name, data=shopData, success=True)
             return handle_response(class_name, data=shopData, success=True)
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
