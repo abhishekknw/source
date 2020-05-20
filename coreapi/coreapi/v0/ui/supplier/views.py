@@ -75,7 +75,8 @@ from .supplier_uploads import create_price_mapping_default
 from django.db import connection
 from v0.ui.common.pagination import paginate
 
-
+import logging
+logger = logging.getLogger(__name__)
 
 def get_values(list_name,key):
     values = []
@@ -2671,6 +2672,7 @@ class FilteredSuppliers(APIView):
             return ui_utils.handle_response(class_name, data=result, success=True)
 
         except Exception as e:
+            logger.exception(e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
