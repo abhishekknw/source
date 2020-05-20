@@ -2004,7 +2004,7 @@ class ProposalVersion(APIView):
             email_data = {
                 'subject': v0_constants.subjects['bd_head'],
                 'body': bd_body,
-                'to': ['dev@machadalo.com', 'anmol.prabhu@machadalo.com', 'anupam@machadalo.com', 'abhishek.chandel@machadalo.com', 'prateek.kumar@machadalo.com','sarvesh.patel@synergytop.com', 'akshay.sahu@synergytop.com', 'bheema.gowda@machadalo.com', 'shyamlee.khanna@machadalo.com']
+                'to': ['dev@machadalo.com', 'anmol.prabhu@machadalo.com', 'anupam@machadalo.com', 'abhishek.chandel@machadalo.com', 'sarvesh.patel@synergytop.com', 'akshay.sahu@synergytop.com', 'bheema.gowda@machadalo.com', 'shyamlee.khanna@machadalo.com']
             }
 
             #  email_data = {
