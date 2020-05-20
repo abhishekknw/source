@@ -22,7 +22,8 @@ from v0.ui.dynamic_booking.models import BookingInventoryActivity
 from v0.ui.dynamic_suppliers.models import SupplySupplier
 from .models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeGym,
                     SupplierTypeRetailShop, CorporateParkCompanyList, CorporateBuilding, SupplierTypeBusDepot,
-                    SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE, SupplierEducationalInstitute, SupplierHording)
+                    SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE,
+                     SupplierEducationalInstitute, SupplierHording, SupplierRetailShopMapping)
 from .serializers import (UICorporateSerializer, SupplierTypeSocietySerializer, SupplierAmenitiesMapSerializer,
                          UISalonSerializer, SupplierTypeSalon, SupplierTypeGymSerializer, RetailShopSerializer,
                          SupplierInfoSerializer, SupplierInfo, SupplierTypeCorporateSerializer,
@@ -3861,3 +3862,17 @@ class GetLocationDataInSheet(APIView):
             book.save(resp)
             return resp
         return ()
+
+
+class SupplierRetailShop(APIView):
+    @staticmethod
+    def post(request):
+        try:
+            data = request.data
+            society_id = data['society_id']
+            retail_shop_id = data['retail_shop_id']
+            SupplierRetailShopMapping(society_id=society_id, retail_shop_id=retail_shop_id).save()
+            return ui_utils.handle_response({}, data='Retails Shop added sucessfully', success=True)
+        except Exception as e:
+            print(e)
+            return ui_utils.handle_response({}, exception_object=e)

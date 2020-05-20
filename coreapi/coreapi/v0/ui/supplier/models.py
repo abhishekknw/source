@@ -115,8 +115,6 @@ SUPPLIER_STATUS = (
 
 
 class SupplierTypeSociety(BaseModel):
-
-
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID, on_delete=models.CASCADE)
     objects = managers.GeneralManager()
     supplier_id = models.CharField(db_index=True, db_column='SUPPLIER_ID', primary_key=True, max_length=20)  # Field name made lowercase.
@@ -521,15 +519,9 @@ class SupplierTypeRetailShop(BasicSupplierDetails):
     landmark = models.CharField(max_length=250, blank=True, null=True)
     comments = models.CharField(max_length=255, null=True, blank=True)
     rating = models.CharField(max_length=255, null=True, blank=True)
-
-    
-
-    
-    
     representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
-
         db_table = 'supplier_type_retail_shop'
 
 class SupplierTypeBusDepot(BasicSupplierDetails):
@@ -544,3 +536,17 @@ class SupplierTypeBusDepot(BasicSupplierDetails):
 
     class Meta:
         db_table = 'supplier_type_bus_depot'
+
+
+class SupplierRetailShopMapping(BaseModel):
+    """
+    Stores info about Suppliers who has retail shops inside them
+    """
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now_add=True)
+    society = models.ForeignKey('SupplierTypeSociety', db_column='society_id', on_delete=models.CASCADE)
+    retail_shop = models.ForeignKey('SupplierTypeRetailShop', db_column='retail_shop_id', on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'supplier_retail_shop_mapping'
+        unique_together = ('society', 'retail_shop',)
