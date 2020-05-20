@@ -2,6 +2,9 @@ from __future__ import print_function
 from __future__ import absolute_import
 import json
 import requests
+import logging
+
+logger = logging.getLogger(__name__)
 
 from bson.objectid import ObjectId
 from django.urls import reverse
@@ -3874,5 +3877,5 @@ class SupplierRetailShop(APIView):
             SupplierRetailShopMapping(society_id=society_id, retail_shop_id=retail_shop_id).save()
             return ui_utils.handle_response({}, data='Retails Shop added sucessfully', success=True)
         except Exception as e:
-            print(e)
+            logger.exception(e)
             return ui_utils.handle_response({}, exception_object=e)
