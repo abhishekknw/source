@@ -3872,10 +3872,12 @@ class SupplierRetailShop(APIView):
     def post(request):
         try:
             data = request.data
-            society_id = data['society_id']
-            retail_shop_id = data['retail_shop_id']
-            SupplierRetailShopMapping(society_id=society_id, retail_shop_id=retail_shop_id).save()
-            return ui_utils.handle_response({}, data='Retails Shop added sucessfully', success=True)
+            supplier_id = data.get('supplier_id', None)
+            retail_shop_id = data.get('retail_shop_id', None)
+            if not supplier_id or not retail_shop_id:
+                return ui_utils.handle_response({}, data={'message':'Please provide supplier id & retail shop id'}, success=False)
+            SupplierRetailShopMapping(society_id=supplier_id, retail_shop_id=retail_shop_id, supplier_id=supplier_id).save()
+            return ui_utils.handle_response({}, data='Retails Shop added sucsessfully', success=True)
         except Exception as e:
             logger.exception(e)
             return ui_utils.handle_response({}, exception_object=e)

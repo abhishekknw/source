@@ -546,6 +546,7 @@ class SupplierRetailShopMapping(BaseModel):
     updated_at = models.DateTimeField(auto_now_add=True)
     society = models.ForeignKey('SupplierTypeSociety', db_column='society_id', on_delete=models.CASCADE)
     retail_shop = models.ForeignKey('SupplierTypeRetailShop', db_column='retail_shop_id', on_delete=models.CASCADE)
+    supplier_id = models.CharField(max_length=50, null=True)
 
     class Meta:
         db_table = 'supplier_retail_shop_mapping'
