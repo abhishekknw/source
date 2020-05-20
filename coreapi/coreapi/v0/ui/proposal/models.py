@@ -284,7 +284,7 @@ class ShortlistedSpaces(BaseModel):
     beneficiary_name = models.CharField(max_length=255, null=True, blank=True)
     ifsc_code = models.CharField(max_length=30, blank=True, null=True)
     account_number = models.CharField(max_length=250, blank=True, null=True)
-    message = models.CharField(max_length=255, null=True, blank=True)
+    payment_message = models.CharField(max_length=255, null=True, blank=True)
     total_negotiated_price = models.CharField(max_length=255, null=True, blank=True)
     booking_status = models.CharField(max_length=10, null=True, blank=True)
     booking_sub_status = models.CharField(max_length=15, null=True, blank=True)
