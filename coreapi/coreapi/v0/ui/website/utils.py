@@ -4294,6 +4294,10 @@ def handle_update_campaign_inventories(user, data):
                 'phase_no': supplier['phase_no'],
                 'payment_status': supplier['payment_status'],
                 'payment_method': supplier['payment_method'],
+                'ifsc_code': supplier['ifsc_code'],
+                'beneficiary_name': supplier['beneficiary_name'],
+                'account_number': supplier['account_number'],
+                'payment_message': supplier['payment_message'],
                 'total_negotiated_price': supplier['total_negotiated_price'],
                 'booking_status': supplier['booking_status'],
                 'booking_sub_status': supplier['booking_sub_status'],
@@ -4384,6 +4388,10 @@ def update_campaign_inventories(data):
             obj.phase = shortlisted_spaces[ss_global_id]['phase']
             obj.payment_status = shortlisted_spaces[ss_global_id]['payment_status']
             obj.payment_method = shortlisted_spaces[ss_global_id]['payment_method']
+            obj.ifsc_code = shortlisted_spaces[ss_global_id]['ifsc_code']
+            obj.beneficiary_name = shortlisted_spaces[ss_global_id]['beneficiary_name']
+            obj.account_number = shortlisted_spaces[ss_global_id]['account_number']
+            obj.payment_message = shortlisted_spaces[ss_global_id]['payment_message']
             obj.total_negotiated_price = shortlisted_spaces[ss_global_id]['total_negotiated_price']
             obj.booking_status = shortlisted_spaces[ss_global_id]['booking_status']
             obj.booking_sub_status = shortlisted_spaces[ss_global_id]['booking_sub_status']
