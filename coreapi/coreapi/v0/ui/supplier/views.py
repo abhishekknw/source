@@ -3881,3 +3881,23 @@ class SupplierRetailShop(APIView):
         except Exception as e:
             logger.exception(e)
             return ui_utils.handle_response({}, exception_object=e)
+
+
+class ListRetailShop(APIView):
+    @staticmethod
+    def get(request):
+        try:
+            city = request.query_params.get('city', None)
+            area = request.query_params.get('area', None)
+            if not city or not area:
+                return ui_utils.handle_response({}, exception_object='Please provide city & area')
+            model = get_model('RE')
+            print(model)
+            supplier_list = model.objects.filter(city__icontains=city).values('name', 'area', 'subarea', 'city',
+                                                                              'supplier_id', 'latitude', 'longitude',
+                                                                              'state', 'address1')
+            print(supplier_list)
+            return ui_utils.handle_response({}, data=supplier_list, success=True)
+        except Exception as e:
+            logger.exception(e)
+            return ui_utils.handle_response({}, exception_object=e)
