@@ -3895,8 +3895,12 @@ class ListSuppliers(APIView):
             area = request.query_params.get('area', None)
             if not city or not area or not supplier_type:
                 return Response(data={"status": False, "error": "Missing paramaters city, area, type"}, status=status.HTTP_400_BAD_REQUEST)
-            model = get_model('RE')
-            supplier_list = model.objects.filter(city__icontains=city, area__icontains=area).values('name', 'area', 'subarea', 'city', 'supplier_id')
+            model = get_model(supplier_type)
+            if supplier_type == 'RS':
+                supplier_list = model.objects.filter(society_city__icontains=city).values('society_name','society_locality','society_subarea',
+                                                                                          'society_city', 'supplier_id')
+            else:
+                supplier_list = model.objects.filter(city__icontains=city, area__icontains=area).values('name', 'area', 'subarea', 'city', 'supplier_id')
             return ui_utils.handle_response({}, data=supplier_list, success=True)
         except Exception as e:
             logger.exception(e)

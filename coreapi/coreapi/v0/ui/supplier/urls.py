@@ -29,6 +29,6 @@ urlpatterns = [
     url(r'^get-location-data-in-sheet/$', GetLocationDataInSheet.as_view()),
     url(r'^multi-supplier-details/$', MultiSupplierDetails.as_view()),
     url(r'^society-supplier-mapping/(?P<supplier_type>[A-Z]{2})/$', CreateSocietySupplierMapping.as_view()),
-    url(r'^society/list-suppliers/$', ListSuppliers.as_view()),
+    url(r'^list-suppliers/citywise/$', ListSuppliers.as_view()),
 ]
 
