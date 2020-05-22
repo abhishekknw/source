@@ -586,39 +586,39 @@ def adinventory_func():
                 adinventory_dict['banner_large'] = adinventory
         elif adinventory.adinventory_name == 'SUNBOARD':
             adinventory_dict['sun_board_allowed'] = adinventory
-        elif adinventory.adinventory_name == 'Hoarding':
+        elif adinventory.adinventory_name == 'HOARDING':
             adinventory_dict['hoarding'] = adinventory
-        elif adinventory.adinventory_name == 'Gantry':
+        elif adinventory.adinventory_name == 'GANTRY':
             adinventory_dict['gantry'] = adinventory
-        elif adinventory.adinventory_name == 'Bus shelter':
+        elif adinventory.adinventory_name == 'BUS SHELTER':
             adinventory_dict['bus_shelter'] = adinventory
-        elif adinventory.adinventory_name == 'Bus back':
+        elif adinventory.adinventory_name == 'BUS BACK':
             adinventory_dict['bus_back'] = adinventory
-        elif adinventory.adinventory_name == 'Bus right':
+        elif adinventory.adinventory_name == 'BUS RIGHT':
             adinventory_dict['bus_right'] = adinventory
-        elif adinventory.adinventory_name == 'Bus left':
+        elif adinventory.adinventory_name == 'BUS LEFT':
             adinventory_dict['bus_left'] = adinventory
-        elif adinventory.adinventory_name == 'Bus wrap':
+        elif adinventory.adinventory_name == 'BUS WRAP':
             adinventory_dict['bus_wrap'] = adinventory
-        elif adinventory.adinventory_name == 'Floor':
+        elif adinventory.adinventory_name == 'FLOOR':
             adinventory_dict['floor'] = adinventory
-        elif adinventory.adinventory_name == 'Ceiling':
+        elif adinventory.adinventory_name == 'CEILING':
             adinventory_dict['ceiling'] = adinventory
-        elif adinventory.adinventory_name == 'Billing':
+        elif adinventory.adinventory_name == 'BILLING':
             adinventory_dict['billing'] = adinventory
-        elif adinventory.adinventory_name == 'Counter display':
+        elif adinventory.adinventory_name == 'COUNTER DISPLAY':
             adinventory_dict['counter_display'] = adinventory
-        elif adinventory.adinventory_name == 'Tent card':
+        elif adinventory.adinventory_name == 'TENT CARD':
             adinventory_dict['tent_card'] = adinventory
-        elif adinventory.adinventory_name == 'Table':
+        elif adinventory.adinventory_name == 'TABLE':
             adinventory_dict['table'] = adinventory
-        elif adinventory.adinventory_name == 'Wall':
+        elif adinventory.adinventory_name == 'WALL':
             adinventory_dict['wall'] = adinventory
-        elif adinventory.adinventory_name == 'Hoarding lit':
+        elif adinventory.adinventory_name == 'HOARDING LIT':
             adinventory_dict['hoarding_lit'] = adinventory
-        elif adinventory.adinventory_name == 'Bus shelter lit':
+        elif adinventory.adinventory_name == 'BUS SHELTER LIT':
             adinventory_dict['bus_shelter_lit'] = adinventory
-        elif adinventory.adinventory_name == 'Gantry lit':
+        elif adinventory.adinventory_name == 'GANTRY LIT':
             adinventory_dict['gantry_lit'] = adinventory
     return adinventory_dict
 
