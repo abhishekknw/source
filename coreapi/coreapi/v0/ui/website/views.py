@@ -1291,7 +1291,18 @@ class ProfileViewSet(viewsets.ViewSet):
             serializer = ProfileSimpleSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
-                return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+                for row in request.data.get("general_user_permission"):
+                    GeneralUserPermission(
+                        codename=row["codename"],
+                        description=row["description"],
+                        is_allowed=False,
+                        name=row["name"],
+                        profile_id=serializer.data["id"],
+                    ).save()
+
+                instance = Profile.objects.get(pk=serializer.data["id"])
+                serializer1 = ProfileNestedSerializer(instance)
+                return ui_utils.handle_response(class_name, data=serializer1.data, success=True)
             return ui_utils.handle_response(class_name, data=serializer.errors, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -1352,7 +1363,7 @@ class ProfileViewSet(viewsets.ViewSet):
         """
         class_name = self.__class__.__name__
         try:
-            instances = Profile.objects.filter(is_standard=True, organisation__category=ORGANIZATION_CATEGORY[0][0])
+            instances = Profile.objects.filter(is_standard=True)
             serializer = ProfileSimpleSerializer(instances, many=True)
             return ui_utils.handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:

@@ -87,7 +87,11 @@ from v0.ui.organisation.serializers import OrganisationSerializer
 from django.db import transaction
 import openpyxl
 
+import logging
+
 fonts_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fonts')
+
+logger = logging.getLogger(__name__)
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
     """
@@ -3643,7 +3647,7 @@ def union_suppliers(first_supplier_list, second_supplier_list):
         for supplier_id in total_supplier_ids:
             if first_supplier_mapping.get(supplier_id):
                 result[supplier_id] = first_supplier_mapping[supplier_id]
-            if second_supplier_mapping.get(supplier_id):
+            if second_supplier_mapping.get(supplier_id) and not result.get(supplier_id):
                 result[supplier_id] = second_supplier_mapping[supplier_id]
 
             if supplier_id in suppliers_not_in_second_set:
@@ -3651,6 +3655,7 @@ def union_suppliers(first_supplier_list, second_supplier_list):
             result[supplier_id]['supplier_id'] = supplier_id
         return result
     except Exception as e:
+        logger.exception(e)
         raise Exception(function, ui_utils.get_system_error(e))
 
 
@@ -4106,7 +4111,7 @@ def is_campaign(proposal):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned, search, start_date, end_date, supplier_type_code=None, booking_status_code=None, phase_id=None):
+def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned, search, start_date, end_date, supplier_type_code=None, booking_status_code=None, phase_id=None, space_status=None):
     """
 
     Args:
@@ -4149,6 +4154,9 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
         if start_date and end_date:
             filter_query &= Q(next_action_date__gte=start_date)
             filter_query &= Q(next_action_date__lte=end_date)
+        
+        if space_status:
+            filter_query &= Q(status=space_status)
         
         shortlisted_spaces = ShortlistedSpaces.objects.filter(filter_query).order_by('-id')
 

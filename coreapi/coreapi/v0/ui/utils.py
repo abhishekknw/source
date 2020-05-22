@@ -38,7 +38,7 @@ from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.supplier.serializers import (SupplierHordingSerializer, SupplierEducationalInstituteSerializer, SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SupplierTypeBusShelterSerializer,
                                         SupplierTypeGymSerializer, SupplierTypeRetailShopSerializer,
                                         SupplierTypeSalonSerializer, BusDepotSerializer, SupplierMasterSerializer, AddressMasterSerializer)
-from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster
+from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster, AddressMaster
 from v0.ui.finances.serializers import (IdeationDesignCostSerializer, DataSciencesCostSerializer, EventStaffingCostSerializer,
                                         LogisticOperationsCostSerializer, SpaceBookingCostSerializer, PrintingCostSerializer)
 from v0.ui.proposal.serializers import ProposalMetricsSerializer, ProposalMasterCostSerializer
@@ -347,6 +347,62 @@ def save_supplier_data(user, master_data):
     except Exception as e:
        raise Exception(function_name, get_system_error(e))
 
+def update_supplier_master(request_data):
+    supplier_master_fields = {
+        "supplier_id": "supplier_id",
+        "supplier_name": "name", 
+        "area": "area",
+        "subarea": "subarea", 
+        "city": "city", 
+        "state": "state", 
+        "landmark": "landmark",
+        "latitude": "latitude",
+        "longitude": "longitude", 
+        "zipcode": "zipcode", 
+        "address1": "address1", 
+        "address2": "address2",
+        "unit_primary_count": "unit_primary_count", 
+        "unit_secondary_count": "unit_secondary_count",
+        "unit_tertiary_count": "unit_tertiary_count",
+        "feedback": "feedback", 
+        "quality_rating": "quality_rating",
+        "locality_rating": "locality_rating",
+        "representative": "representative"
+    }
+    supplier_master_data = {}
+    for key, value in supplier_master_fields.items():
+        if request_data.get(value):
+            supplier_master_data[key] = request_data[value]
+
+    supplier_master = SupplierMaster.objects.filter(supplier_id=request_data["supplier_id"]).first()
+    supplier_master_serializer = SupplierMasterSerializer(supplier_master, data=supplier_master_data)
+
+    if supplier_master_serializer.is_valid():
+        supplier_master_serializer.save()
+        
+    address_master_fields = {
+        "supplier": "supplier_id",
+        "area": "area",
+        "subarea": "subarea",
+        "city": "city",
+        "state": "state",
+        "latitude": "latitude",
+        "longitude": "longitude",
+        "zipcode": "zipcode",
+        "address1": "address1",
+        "address2": "address2",
+        "nearest_landmark": "nearest_landmark"
+    }
+
+    address_master_data = {}
+    for key, value in address_master_fields.items():
+        if request_data.get(value):
+            address_master_data[key] = request_data[value]
+
+    address_master = AddressMaster.objects.filter(supplier_id=request_data["supplier_id"]).first()
+    address_master_serializer = AddressMasterSerializer(address_master, data=address_master_data)
+    if address_master_serializer.is_valid():
+        address_master_serializer.save()
 
 def set_default_pricing(supplier_id, supplier_type_code):
     """
