@@ -9,7 +9,9 @@ from v0.ui.utils import handle_response, get_model, fetch_content_type
 from v0.ui.account.models import ContactDetails
 from v0.ui.supplier.models import (SupplierTypeSociety, SupplierTypeSalon, SupplierTypeGym, SupplierHording,
 SupplierTypeCorporate, SupplierTypeBusShelter, SupplierTypeRetailShop, SupplierTypeBusDepot)
-from v0.ui.proposal.models import ShortlistedSpaces
+from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo
+
+from ..ui.common.models import BaseUser
 
 
 class UpdateSupplierContactDataImport(APIView):
@@ -24,6 +26,8 @@ class UpdateSupplierContactDataImport(APIView):
                 contact_name = supplier['contact_name'].title()
                 designation = supplier['designation'].title()
                 print(supplier_id, contact_number, contact_name, designation)
+                if len(designation) == 0:
+                    designation = 'Office'
                 try:
                     if contact_number and supplier_id:
                         # Check contact number in contact details
@@ -73,6 +77,7 @@ class CreateSupplierWithContactDetails(APIView):
                     flat_count = supplier.get('flat_count', 1)
                     address = supplier.get('address','').title()
                     zipcode = supplier.get('zipcode', None)
+                    contact_email = supplier.get('contact_email', None)
 
                     supplier_name = supplier_name.strip().lstrip('"').rstrip('"').lstrip(',').rstrip(',')
                     area = area.strip().rstrip(',').lstrip(',')
@@ -107,7 +112,12 @@ class CreateSupplierWithContactDetails(APIView):
                         print(contact_number)
 
                     if designation and len(designation) == 0:
-                        designation = 'Manager'
+                        designation = 'Office'
+
+                    if not contact_email or len(contact_email) == 0:
+                        contact_email = None
+                    else:
+                        contact_email = contact_email.strip().rstrip(',').lstrip(',')
 
                     if tower_count == '':
                         tower_count = 1
@@ -143,7 +153,8 @@ class CreateSupplierWithContactDetails(APIView):
                                     contact_details = ContactDetails(object_id=society['supplier_id'],
                                                                      name=contact_name.strip().rstrip(',').lstrip(','),
                                                                      mobile=contact_number,
-                                                                     contact_type=designation.strip().rstrip(',').lstrip(',')
+                                                                     contact_type=designation.strip().rstrip(',').lstrip(','),
+                                                                     email=contact_email
                                                                      )
                                     contact_details.save()
                                 else:
@@ -186,9 +197,7 @@ class DeleteDuplicateSocieties(APIView):
     def post(self, request):
         try:
             data = request.data
-            societies_not_deleted = []
-            deleted_societies_file = open(os.path.join(sys.path[0], "deleted_societies.txt"), "a")
-            societies_not_deleted_file = open(os.path.join(sys.path[0], "societies_not_deleted.txt"), "a")
+            response = []
             for supplier in data:
                 supplier_id = supplier['supplier_id']
                 supplier_name = supplier.get('supplier_name', '')
@@ -200,16 +209,31 @@ class DeleteDuplicateSocieties(APIView):
                     # Supplier in proposal
                     shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=supplier_id)
                     if shortlisted_spaces:
-                        societies_not_deleted_file.write("{name},{id}\n".format(name=supplier_name, id=supplier_id))
-                        societies_not_deleted.append(supplier_id)
-                        print('Linked to proposal :', supplier_id)
+                        for space in shortlisted_spaces:
+                            proposal = ProposalInfo.objects.filter(proposal_id=space.proposal_id)
+                            response.append({
+                                'supplier_id': supplier_id,
+                                'supplier_name': supplier_name,
+                                'proposal': proposal[0].name,
+                            })
                     else:
-                        supplier_society = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).delete()
-                        if supplier_society:
-                            deleted_societies_file.write("{name},{id}\n".format(name=supplier_name, id=supplier_id))
+                        SupplierTypeSociety.objects.filter(supplier_id=supplier_id).delete()
         except Exception as e:
             print(e)
-        return handle_response({}, data=societies_not_deleted, success=True)
+        return handle_response({}, data=response, success=True)
+
+
+class DeleteUser(APIView):
+    def post(self, request):
+        try:
+            data = request.data
+            print(data)
+            for user in data:
+                BaseUser.objects.filter(id=user['user_id']).delete()
+            return handle_response({}, data={"message": "successfull"}, success=True)
+        except Exception as e:
+            print(e)
+            return handle_response({}, exception_object=e, success=False)
 
 
 class storeS3UrlToCSV(APIView):
