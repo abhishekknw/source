@@ -26,7 +26,7 @@ from v0.ui.dynamic_suppliers.models import SupplySupplier
 from .models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeGym,
                     SupplierTypeRetailShop, CorporateParkCompanyList, CorporateBuilding, SupplierTypeBusDepot,
                     SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE,
-                     SupplierEducationalInstitute, SupplierHording, SupplierRetailShopMapping)
+                     SupplierEducationalInstitute, SupplierHording, SocietySupplierMapping)
 from .serializers import (UICorporateSerializer, SupplierTypeSocietySerializer, SupplierAmenitiesMapSerializer,
                          UISalonSerializer, SupplierTypeSalon, SupplierTypeGymSerializer, RetailShopSerializer,
                          SupplierInfoSerializer, SupplierInfo, SupplierTypeCorporateSerializer,
@@ -3867,36 +3867,36 @@ class GetLocationDataInSheet(APIView):
         return ()
 
 
-class SupplierRetailShop(APIView):
+class CreateSocietySupplierMapping(APIView):
     @staticmethod
-    def post(request):
+    def post(request, supplier_type):
         try:
-            data = request.data
-            supplier_id = data.get('supplier_id', None)
-            retail_shop_id = data.get('retail_shop_id', None)
-            if not supplier_id or not retail_shop_id:
-                return ui_utils.handle_response({}, data={'message':'Please provide supplier id & retail shop id'}, success=False)
-            SupplierRetailShopMapping(society_id=supplier_id, retail_shop_id=retail_shop_id, supplier_id=supplier_id).save()
-            return ui_utils.handle_response({}, data='Retails Shop added sucsessfully', success=True)
+            data = request.data.get('data', None)
+            if not supplier_type:
+                return ui_utils.handle_response({}, data={'message': 'Missing supplier type'}, success=False)
+            if not data:
+                return ui_utils.handle_response({}, data={'message':'Please provide data'}, success=False)
+            for supplier in data:
+                supplier_id = supplier['supplier_id']
+                society_id = supplier['society_id']
+                SocietySupplierMapping(society_id=society_id, supplier_id=supplier_id, supplier_type=supplier_type).save()
+            return ui_utils.handle_response({}, data='Supplier added successfully', success=True)
         except Exception as e:
             logger.exception(e)
             return ui_utils.handle_response({}, exception_object=e)
 
 
-class ListRetailShop(APIView):
+class ListSuppliers(APIView):
     @staticmethod
     def get(request):
         try:
+            supplier_type = request.query_params.get('type', None)
             city = request.query_params.get('city', None)
             area = request.query_params.get('area', None)
-            if not city or not area:
-                return ui_utils.handle_response({}, exception_object='Please provide city & area')
+            if not city or not area or not supplier_type:
+                return Response(data={"status": False, "error": "Missing paramaters city, area, type"}, status=status.HTTP_400_BAD_REQUEST)
             model = get_model('RE')
-            print(model)
-            supplier_list = model.objects.filter(city__icontains=city).values('name', 'area', 'subarea', 'city',
-                                                                              'supplier_id', 'latitude', 'longitude',
-                                                                              'state', 'address1')
-            print(supplier_list)
+            supplier_list = model.objects.filter(city__icontains=city, area__icontains=area).values('name', 'area', 'subarea', 'city', 'supplier_id')
             return ui_utils.handle_response({}, data=supplier_list, success=True)
         except Exception as e:
             logger.exception(e)

@@ -534,16 +534,16 @@ class SupplierTypeBusDepot(BasicSupplierDetails):
         db_table = 'supplier_type_bus_depot'
 
 
-class SupplierRetailShopMapping(BaseModel):
+class SocietySupplierMapping(BaseModel):
     """
     Stores info about Suppliers who has retail shops inside them
     """
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now_add=True)
     society = models.ForeignKey('SupplierTypeSociety', db_column='society_id', on_delete=models.CASCADE)
-    retail_shop = models.ForeignKey('SupplierTypeRetailShop', db_column='retail_shop_id', on_delete=models.CASCADE)
-    supplier_id = models.CharField(max_length=50, null=True)
+    supplier_id = models.CharField(max_length=50, null=False)
+    supplier_type = models.CharField(max_length=3, null=False)
 
     class Meta:
-        db_table = 'supplier_retail_shop_mapping'
-        unique_together = ('society', 'retail_shop',)
+        db_table = 'society_supplier_mapping'
+        unique_together = ('society', 'supplier_id',)
