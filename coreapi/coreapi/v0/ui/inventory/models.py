@@ -593,6 +593,13 @@ class InventorySummary(BaseModel):
     wall_inventory = models.BooleanField(default=False)
     bus_shelter_lit = models.BooleanField(default=False)
     gantry_lit = models.BooleanField(default=False)
+    poster_allowed_lift_A4 = models.BooleanField(default=False)
+    poster_allowed_lift_A3 = models.BooleanField(default=False)
+    standee_large = models.BooleanField(default=False)
+    stall_customize = models.BooleanField(default=False)
+    banner_small = models.BooleanField(default=False)
+    banner_medium = models.BooleanField(default=False)
+    banner_large = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'inventory_summary'
