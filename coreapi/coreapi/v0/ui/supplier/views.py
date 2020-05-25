@@ -26,7 +26,7 @@ from v0.ui.dynamic_suppliers.models import SupplySupplier
 from .models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeGym,
                     SupplierTypeRetailShop, CorporateParkCompanyList, CorporateBuilding, SupplierTypeBusDepot,
                     SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE,
-                     SupplierEducationalInstitute, SupplierHording, SocietySupplierMapping)
+                     SupplierEducationalInstitute, SupplierHording, SupplierRelationship)
 from .serializers import (UICorporateSerializer, SupplierTypeSocietySerializer, SupplierAmenitiesMapSerializer,
                          UISalonSerializer, SupplierTypeSalon, SupplierTypeGymSerializer, RetailShopSerializer,
                          SupplierInfoSerializer, SupplierInfo, SupplierTypeCorporateSerializer,
@@ -3867,20 +3867,40 @@ class GetLocationDataInSheet(APIView):
         return ()
 
 
-class CreateSocietySupplierMapping(APIView):
+class SocietySupplierRelationship(APIView):
     @staticmethod
-    def post(request, supplier_type):
+    def post(request):
         try:
-            data = request.data.get('data', None)
+            supplier_type = request.query_params.get('type', 'RE')
+            society_id = request.query_params.get('society_id', None)
+            supplier_ids = request.data.get('supplier_ids', None)
             if not supplier_type:
                 return ui_utils.handle_response({}, data={'message': 'Missing supplier type'}, success=False)
-            if not data:
+            if not supplier_ids:
                 return ui_utils.handle_response({}, data={'message':'Please provide data'}, success=False)
-            for supplier in data:
-                supplier_id = supplier['supplier_id']
-                society_id = supplier['society_id']
-                SocietySupplierMapping(society_id=society_id, supplier_id=supplier_id, supplier_type=supplier_type).save()
+            for supplier_id in supplier_ids:
+                SupplierRelationship(society_id=society_id, supplier_id=supplier_id, supplier_type=supplier_type).save()
             return ui_utils.handle_response({}, data='Supplier added successfully', success=True)
+        except Exception as e:
+            logger.exception(e)
+            return ui_utils.handle_response({}, exception_object=e)
+
+    @staticmethod
+    def get(request):
+        try:
+            society_id = request.query_params.get('society_id', None)
+            supplier_type = request.query_params.get('type', 'RE')
+            if not society_id:
+                return Response(data={"status": False, "error": "Missing supplier_id"},
+                                status=status.HTTP_400_BAD_REQUEST)
+            supplier_list = SupplierRelationship.objects.filter(society_id=society_id)
+            supplier_model = get_model(supplier_type)
+            supplier_ids = [supplier.supplier_id for supplier in supplier_list]
+            if supplier_type == 'RS':
+                supplier_details = supplier_model.objects.filter(supplier_id__in=supplier_ids).values('society_name', 'supplier_id')
+            else:
+                supplier_details = supplier_model.objects.filter(supplier_id__in=supplier_ids).values('name','supplier_id')
+            return ui_utils.handle_response({}, data=supplier_details, success=True)
         except Exception as e:
             logger.exception(e)
             return ui_utils.handle_response({}, exception_object=e)

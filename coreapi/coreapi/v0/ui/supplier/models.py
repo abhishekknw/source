@@ -534,7 +534,7 @@ class SupplierTypeBusDepot(BasicSupplierDetails):
         db_table = 'supplier_type_bus_depot'
 
 
-class SocietySupplierMapping(BaseModel):
+class SupplierRelationship(BaseModel):
     """
     Stores info about Suppliers who has retail shops inside them
     """
@@ -545,5 +545,5 @@ class SocietySupplierMapping(BaseModel):
     supplier_type = models.CharField(max_length=3, null=False)
 
     class Meta:
-        db_table = 'society_supplier_mapping'
+        db_table = 'supplier_relationship'
         unique_together = ('society', 'supplier_id',)
