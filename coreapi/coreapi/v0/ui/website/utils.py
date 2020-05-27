@@ -3645,10 +3645,11 @@ def union_suppliers(first_supplier_list, second_supplier_list):
 
         result = {}
         for supplier_id in total_supplier_ids:
-            if first_supplier_mapping.get(supplier_id):
-                result[supplier_id] = first_supplier_mapping[supplier_id]
             if second_supplier_mapping.get(supplier_id) and not result.get(supplier_id):
                 result[supplier_id] = second_supplier_mapping[supplier_id]
+
+            elif first_supplier_mapping.get(supplier_id):
+                result[supplier_id] = first_supplier_mapping[supplier_id]
 
             if supplier_id in suppliers_not_in_second_set:
                 result[supplier_id]['status'] = v0_constants.status
@@ -4242,13 +4243,17 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
                 pmd_objects_per_supplier = []
                 
             shortlisted_inventories = supplier['shortlisted_inventories']
+
             response = add_total_price_per_inventory_per_supplier(pmd_objects_per_supplier, shortlisted_inventories)
             if not response.data['status']:
                 return response
             supplier['shortlisted_inventories'], total_inventory_supplier_price = response.data['data']
             supplier['total_inventory_supplier_price'] = total_inventory_supplier_price
-        cache.set(str(proposal_id), result, timeout=60 * 100)
 
+        try:
+            cache.set(str(proposal_id), result, timeout=60 * 100)
+        except:
+            pass
         
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
