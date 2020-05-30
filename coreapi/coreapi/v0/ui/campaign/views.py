@@ -19,14 +19,14 @@ from rest_framework.views import APIView
 from v0.ui.proposal.models import (ProposalInfo)
 import v0.ui.utils as ui_utils
 import v0.constants as v0_constants
-from v0.ui.supplier.models import (SupplierTypeSociety)
+from v0.ui.supplier.models import (SupplierTypeSociety, SupplierMaster)
 import v0.ui.website.utils as website_utils
 
 from django.db.models import Q, F
 from .models import (CampaignSocietyMapping, Campaign, CampaignAssignment, CampaignComments)
 from .serializers import (CampaignListSerializer, CampaignSerializer, CampaignAssignmentSerializer)
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalCenterSuppliers
-from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2, SupplierMasterSerializer
 from v0.ui.inventory.models import InventoryActivityImage, InventoryActivityAssignment, InventoryActivity, AdInventoryType
 from rest_framework import viewsets
 from rest_framework.decorators import detail_route, list_route
@@ -772,7 +772,12 @@ class DashBoardViewSet(viewsets.ViewSet):
             for imageInstance in result:
                 imageInstance['object_id'] = supplier_id
 
-            supplier = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).values()
+            master_supplier = SupplierMaster.objects.filter(supplier_id=supplier_id)
+            master_serializer = SupplierMasterSerializer(master_supplier, many=True)
+            supplier = website_utils.manipulate_master_to_rs(master_serializer.data)
+
+            if not supplier:
+                supplier = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).values()
 
             inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(
                 result, supplier)
