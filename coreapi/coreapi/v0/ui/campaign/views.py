@@ -19,14 +19,15 @@ from rest_framework.views import APIView
 from v0.ui.proposal.models import (ProposalInfo)
 import v0.ui.utils as ui_utils
 import v0.constants as v0_constants
-from v0.ui.supplier.models import (SupplierTypeSociety)
+from v0.ui.supplier.models import (SupplierTypeSociety, SupplierMaster)
 import v0.ui.website.utils as website_utils
+from v0.ui.website.utils import manipulate_object_key_values, return_price, manipulate_master_to_rs
 
 from django.db.models import Q, F
 from .models import (CampaignSocietyMapping, Campaign, CampaignAssignment, CampaignComments)
 from .serializers import (CampaignListSerializer, CampaignSerializer, CampaignAssignmentSerializer)
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalCenterSuppliers
-from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2, SupplierMasterSerializer
 from v0.ui.inventory.models import InventoryActivityImage, InventoryActivityAssignment, InventoryActivity, AdInventoryType
 from rest_framework import viewsets
 from rest_framework.decorators import detail_route, list_route
@@ -823,7 +824,16 @@ class DashBoardViewSet(viewsets.ViewSet):
 
             # need to do by different supplier wise
             suppliers = SupplierTypeSociety.objects.filter(supplier_id__in=list(assigned_objects_map.keys())).values()
-            suppliers_map = {supplier['supplier_id']:supplier for supplier in suppliers}
+            supplier_serializer = SupplierTypeSocietySerializer(suppliers, many=True)
+
+            master_suppliers = SupplierMaster.objects.filter(supplier_id__in=list(assigned_objects_map.keys())).values()
+            master_supplier_serializer = SupplierMasterSerializer(master_suppliers, many=True)
+
+            all_suppliers = manipulate_object_key_values(supplier_serializer.data)
+            all_master_suppliers = manipulate_master_to_rs(master_supplier_serializer.data)
+            all_suppliers.extend(all_master_suppliers)
+
+            suppliers_map = {supplier['supplier_id']:supplier for supplier in all_suppliers}
             result = {}
             for supplier in assigned_objects:
                 if supplier['supplier_id'] not in result:

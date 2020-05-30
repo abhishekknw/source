@@ -1323,6 +1323,8 @@ codes_to_model_names = {
     'BS': 'SupplierTypeBusShelter',
     'EI': 'SupplierEducationalInstitute',
     'HO': 'SupplierHording',
+    'WI': 'WhatsAppIndividualInventory',
+    'WG': 'WhatsAppGroupInventory',
   
     bus_depot_code: 'SupplierTypeBusDepot',
     retail_shop: 'SupplierTypeRetailShop',
