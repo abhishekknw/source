@@ -53,7 +53,7 @@ from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMa
                                         ProposalCorporateSerializer, HashtagImagesSerializer)
 from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeSociety, SupplierTypeBusShelter, SupplierMaster
 from v0.ui.supplier.serializers import (SupplierAmenitiesMapSerializer, SupplierTypeCorporateSerializer,
-                                        SupplierTypeSocietySerializer, SupplierTypeBusShelterSerializer)
+                                        SupplierTypeSocietySerializer, SupplierTypeBusShelterSerializer, SupplierMasterSerializer)
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails, PriceMappingDefault, getPriceDict
 from v0.ui.permissions.models import ObjectLevelPermission, GeneralUserPermission, Role, RoleHierarchy
 from v0.ui.base.serializers import ContentTypeSerializer
@@ -1656,48 +1656,23 @@ class GetAssignedIdImagesListApiView(APIView):
                          supplier_code=F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__supplier_code')). \
                 values('name','inv_id','object_id','latitude','longitude','updated_at','created_at','actual_activity_date','proposal_id','image_path','comment','supplier_code')
 
-
-            supplier_code_list = {
-                'RS' : [],
-                'BS' : [],
-                'RE' : []
-            }
-
+            supplier_id_list = []
             for supplier in inv_act_image_objects:
-                try:
-                    if supplier['object_id']:
-                        supplier['supplier_code'] = 'RS'
-                    supplier_code_list[supplier['supplier_code']].append(supplier)
-                except Exception:
-                    pass
+                supplier_id_list.append(supplier["object_id"])
 
-            inv_act_image_objects_with_distance = []
-            for key, value in supplier_code_list.items():
-                supplier_id_list = []
-                if key == 'RS':
-                    for supplier in value:
-                        supplier_id_list.append(supplier['object_id'])
-                    if supplier_id_list:
-                        supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
-                        serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
-                        suppliers = serializer.data
-                        inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(
-                            inv_act_image_objects, suppliers)
-                if key == 'BS':
-                    for supplier in value:
-                        supplier_id_list.append(supplier['object_id'])
-                    if supplier_id_list:
-                        supplier_objects = SupplierTypeBusShelter.objects.filter(supplier_id__in=supplier_id_list)
-                        serializer = SupplierTypeBusShelterSerializer(supplier_objects, many=True)
-                        suppliers = serializer.data
-                        inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(
-                            inv_act_image_objects, suppliers)
-            # supplier_id_list = [object['object_id'] for object in inv_act_image_objects]
-            # supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
-            # serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
-            # suppliers = serializer.data
+            supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
+            society_serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
 
-            # inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(inv_act_image_objects, suppliers)
+            master_supplier = SupplierMaster.objects.filter(supplier_id__in=supplier_id_list)
+            master_serializer = SupplierMasterSerializer(master_supplier, many=True)
+
+            all_societies = website_utils.manipulate_object_key_values(society_serializer.data)
+            master_suppliers = website_utils.manipulate_master_to_rs(master_serializer.data)
+            all_societies.extend(master_suppliers)
+
+            inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(
+                            inv_act_image_objects, all_societies)
+            
             inv_act_image_objects_with_distance_map = {}
             if inv_act_image_objects_with_distance:
                 inv_act_image_objects_with_distance_map = {inv['inv_id'] : inv for inv in inv_act_image_objects_with_distance}
