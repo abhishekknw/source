@@ -543,7 +543,8 @@ class SupplierRelationship(BaseModel):
     society = models.ForeignKey('SupplierTypeSociety', db_column='society_id', on_delete=models.CASCADE)
     supplier_id = models.CharField(max_length=50, null=False)
     supplier_type = models.CharField(max_length=3, null=False)
+    type = models.CharField(max_length=10, null=False, default='PREFERRED')
 
     class Meta:
         db_table = 'supplier_relationship'
-        unique_together = ('society', 'supplier_id',)
+        unique_together = ('society', 'supplier_id','type')

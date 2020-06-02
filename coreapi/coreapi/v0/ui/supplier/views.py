@@ -3874,12 +3874,13 @@ class SocietySupplierRelationship(APIView):
             supplier_type = request.query_params.get('type', 'RE')
             society_id = request.query_params.get('society_id', None)
             supplier_ids = request.data.get('supplier_ids', None)
+            type = request.data.get('type', 'PREFERRED')
             if not supplier_type:
                 return ui_utils.handle_response({}, data={'message': 'Missing supplier type'}, success=False)
             if not supplier_ids:
-                return ui_utils.handle_response({}, data={'message':'Please provide data'}, success=False)
+                return ui_utils.handle_response({}, data={'message': 'Please provide data'}, success=False)
             for supplier_id in supplier_ids:
-                SupplierRelationship(society_id=society_id, supplier_id=supplier_id, supplier_type=supplier_type).save()
+                SupplierRelationship(society_id=society_id, supplier_id=supplier_id, supplier_type=supplier_type, type=type).save()
             return ui_utils.handle_response({}, data='Supplier added successfully', success=True)
         except Exception as e:
             logger.exception(e)
@@ -3889,11 +3890,12 @@ class SocietySupplierRelationship(APIView):
     def get(request):
         try:
             society_id = request.query_params.get('society_id', None)
-            supplier_type = request.query_params.get('type', 'RE')
-            if not society_id:
-                return Response(data={"status": False, "error": "Missing supplier_id"},
+            supplier_type = request.query_params.get('supplier_type', 'RE')
+            type = request.query_params.get('type', None)
+            if not society_id and not type:
+                return Response(data={"status": False, "error": "Missing supplier_id and type"},
                                 status=status.HTTP_400_BAD_REQUEST)
-            supplier_list = SupplierRelationship.objects.filter(society_id=society_id)
+            supplier_list = SupplierRelationship.objects.filter(society_id=society_id, type=type)
             supplier_model = get_model(supplier_type)
             supplier_ids = [supplier.supplier_id for supplier in supplier_list]
             if supplier_type == 'RS':
@@ -3913,6 +3915,8 @@ class ListSuppliers(APIView):
             type = request.query_params.get('type', 'RE')
             supplier_id = request.query_params.get('supplier_id', None)
             supplier_type = request.query_params.get('supplier_type', 'RS')
+            city = None
+            area = None
             if not supplier_id:
                 return Response(data={"status": False, "error": "Missing supplier_id"}, status=status.HTTP_400_BAD_REQUEST)
             # Get area, subarea using supplier id
@@ -3934,7 +3938,7 @@ class ListSuppliers(APIView):
                 supplier_list = model.objects.filter(society_city__icontains=city, society_locality__icontains=area).values('society_name','society_locality','society_subarea',
                                                                                           'society_city', 'supplier_id')
             else:
-                supplier_list = model.objects.filter(city__icontains=city, area__icontains=area).values('name', 'area', 'subarea', 'city', 'supplier_id')
+                supplier_list = model.objects.filter(city__icontains=city, area__icontains=area).values('name','supplier_id')
             return ui_utils.handle_response({}, data=supplier_list, success=True)
         except Exception as e:
             logger.exception(e)
