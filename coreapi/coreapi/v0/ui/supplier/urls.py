@@ -30,6 +30,5 @@ urlpatterns = [
     url(r'^multi-supplier-details/$', MultiSupplierDetails.as_view()),
     url(r'^society-supplier-relationship/$', SocietySupplierRelationship.as_view()),
     url(r'^list-suppliers/citywise/$', ListSuppliers.as_view()),
-    # url(r'^society-supplier-mapping',GetSocietySupplierRelationship.as_view(()))
 ]
 

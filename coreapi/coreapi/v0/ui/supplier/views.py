@@ -3873,14 +3873,13 @@ class SocietySupplierRelationship(APIView):
         try:
             supplier_type = request.query_params.get('type', 'RE')
             society_id = request.query_params.get('society_id', None)
-            supplier_ids = request.data.get('supplier_ids', None)
-            type = request.data.get('type', 'PREFERRED')
+            suppliers = request.data.get('suppliers', None)
             if not supplier_type:
                 return ui_utils.handle_response({}, data={'message': 'Missing supplier type'}, success=False)
-            if not supplier_ids:
+            if not suppliers:
                 return ui_utils.handle_response({}, data={'message': 'Please provide data'}, success=False)
-            for supplier_id in supplier_ids:
-                SupplierRelationship(society_id=society_id, supplier_id=supplier_id, supplier_type=supplier_type, type=type).save()
+            for supplier in suppliers:
+                SupplierRelationship(society_id=society_id, supplier_id=supplier['supplier_id'], supplier_type=supplier_type, type=supplier['type']).save()
             return ui_utils.handle_response({}, data='Supplier added successfully', success=True)
         except Exception as e:
             logger.exception(e)
