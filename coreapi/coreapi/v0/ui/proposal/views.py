@@ -1683,10 +1683,18 @@ class HashtagImagesViewSet(viewsets.ViewSet):
             except ObjectDoesNotExist:
                 return ui_utils.handle_response(class_name, data={}, success=True)
             for image in images:
-                #This is static, need to change by supplier code
+
                 supplier = SupplierTypeSociety.objects.get(supplier_id=image['object_id'])
                 serializer = SupplierTypeSocietySerializer(supplier)
-                image['supplier_data'] = serializer.data
+
+                master_supplier = SupplierMaster.objects.get(supplier_id=image['object_id'])
+                master_serializer = SupplierMasterSerializer(master_supplier)
+
+                all_suppliers = manipulate_object_key_values(serializer.data)
+                all_master_suppliers = manipulate_master_to_rs(master_serializer.data)
+                all_suppliers.extend(all_master_suppliers)
+
+                image['supplier_data'] = all_suppliers.data
             return ui_utils.handle_response(class_name, data=images, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
