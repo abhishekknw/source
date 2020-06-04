@@ -1149,15 +1149,16 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
             }
         lead_form = mongo_client.leads_forms.find({"campaign_id": campaign_id})
         campaign_hot_leads_dict = lead_counter(campaign_id, leads_form_data, user_start_datetime, user_end_datetime, lead_form[0])
-        for key in lead_form[0]['hotness_mapping']:
-            if 'is_hot_level_1' in key:
-               overall_data['key_hot_level_1'] = lead_form[0]['hotness_mapping']['is_hot_level_1']
-            if 'is_hot_level_2' in key:
-                overall_data['key_hot_level_2'] = lead_form[0]['hotness_mapping']['is_hot_level_2']
-            if 'is_hot_level_3' in key:
-                overall_data['key_hot_level_3'] = lead_form[0]['hotness_mapping']['is_hot_level_3']
-            if 'is_hot_level_4' in key:
-                overall_data['key_hot_level_4'] = lead_form[0]['hotness_mapping']['is_hot_level_4']
+        if lead_form and lead_form[0] and 'hotness_mapping' in lead_form[0]:
+            for key in lead_form[0]['hotness_mapping'] and 'hotness_mapping' in lead_form[0]:
+                if 'is_hot_level_1' in key:
+                   overall_data['key_hot_level_1'] = lead_form[0]['hotness_mapping']['is_hot_level_1']
+                if 'is_hot_level_2' in key:
+                    overall_data['key_hot_level_2'] = lead_form[0]['hotness_mapping']['is_hot_level_2']
+                if 'is_hot_level_3' in key:
+                    overall_data['key_hot_level_3'] = lead_form[0]['hotness_mapping']['is_hot_level_3']
+                if 'is_hot_level_4' in key:
+                    overall_data['key_hot_level_4'] = lead_form[0]['hotness_mapping']['is_hot_level_4']
 
         for curr_supplier_data in supplier_data:
             supplier_id = curr_supplier_data['supplier_id']
