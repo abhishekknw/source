@@ -9,7 +9,7 @@ from openpyxl import load_workbook, Workbook
 from .models import (get_leads_summary, LeadsPermissions, ExcelDownloadHash, CampaignExcelDownloadHash)
 from v0.ui.analytics.views import (get_data_analytics, get_details_by_higher_level,
                                    get_details_by_higher_level_geographical, geographical_parent_details)
-from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeRetailShop
+from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeRetailShop, SupplierMaster
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
@@ -965,15 +965,23 @@ class LeadsSummary(APIView):
         campaign_list = [campaign_id for campaign_id in campaign_list]
         all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).\
             values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name', 'proposal__tentative_start_date',
-                   'proposal__tentative_end_date', 'proposal__campaign_state')
+                   'proposal__tentative_end_date', 'proposal__campaign_state', 'supplier_code')
 
         all_campaign_dict = {}
-        all_shortlisted_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier]
+        all_shortlisted_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] == 'RS']
         all_supplier_society = SupplierTypeSociety.objects.filter(supplier_id__in=all_shortlisted_supplier_id).values('supplier_id', 'flat_count')
+
+        all_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] != 'RS']
+        all_supplier_master = SupplierMaster.objects.filter(supplier_id__in=all_supplier_id).values('supplier_id', 'unit_primary_count')
+
         all_supplier_society_dict = {}
         current_date = datetime.datetime.now().date()
         for supplier in all_supplier_society:
             all_supplier_society_dict[supplier['supplier_id']] = {'flat_count': supplier['flat_count']}
+
+        for supplier in all_supplier_master:
+            all_supplier_society_dict[supplier['supplier_id']] = {'flat_count': supplier['unit_primary_count']}
+
         for shortlisted_supplier in all_shortlisted_supplier:
             if shortlisted_supplier['proposal_id'] not in all_campaign_dict:
                 all_campaign_dict[shortlisted_supplier['proposal_id']] = {
