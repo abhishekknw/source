@@ -68,7 +68,8 @@ from v0.ui.common.models import mongo_client, mongo_test
 
 from v0.ui.campaign.models import CampaignAssignment
 
-
+import logging
+logger = logging.getLogger(__name__)
 
 def convert_date_format(date):
     if isinstance(date, datetime.datetime):
@@ -464,6 +465,7 @@ class CreateInitialProposal(APIView):
                 proposal_id = proposal_data['proposal_id']
                 return ui_utils.handle_response(class_name, data=proposal_id, success=True)
         except Exception as e:
+            logger.exception("Something bad happened in CreateInitialProposal")
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 def calculate_hotness_level(multi_level_is_hot):
