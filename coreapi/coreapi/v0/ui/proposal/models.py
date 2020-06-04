@@ -156,7 +156,7 @@ class ProposalInfo(BaseModel):
     invoice_number = models.CharField(max_length=1000, null=True, blank=True)
     principal_vendor = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
     brand = models.CharField(choices=(( 'single_brand', 'single_brand' ),  ('multi_brand', 'multi_brand')), max_length=60, blank=True, null=True)
-    
+    is_mix = models.BooleanField(default=False)
 
     def get_centers(self):
         try:
