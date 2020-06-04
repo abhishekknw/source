@@ -50,6 +50,9 @@ from celery import shared_task
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 from v0.ui.common.models import mongo_client
 from django.db import connection, connections
+import logging
+
+logger = logging.getLogger(__name__)
 
 class CampaignAPIView(APIView):
 
@@ -1470,6 +1473,7 @@ class CampaignLeads(APIView):
             center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
             return Response({'status': True, 'data': final_data, 'supplier_type_code':center_data})
         except Exception as e:
+            logger.exception(e)
             return ui_utils.handle_response(class_name, data=final_data, success=False)
 
 
