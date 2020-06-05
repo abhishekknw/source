@@ -68,7 +68,8 @@ from v0.ui.common.models import mongo_client, mongo_test
 
 from v0.ui.campaign.models import CampaignAssignment
 
-
+import logging
+logger = logging.getLogger(__name__)
 
 def convert_date_format(date):
     if isinstance(date, datetime.datetime):
@@ -442,7 +443,12 @@ class CreateInitialProposal(APIView):
                 if parent:
                     proposal_data['parent'] = ProposalInfo.objects.get_permission(user=user,
                                                                                   proposal_id=parent).proposal_id
-
+                
+                proposal_data['is_mix'] = False
+                if request.data.get('centers') and request.data["centers"][0].get("suppliers"):
+                    supplier_type_count = len([row for row in request.data["centers"][0]["suppliers"] if row["selected"] == True or row["selected"] == "True"])
+                    proposal_data['is_mix'] = True if supplier_type_count > 1 else False
+                
                 # call the function that saves basic proposal information
                 proposal_data['created_by'] = user.username
                 proposal_data['updated_by'] = user.username
@@ -459,6 +465,7 @@ class CreateInitialProposal(APIView):
                 proposal_id = proposal_data['proposal_id']
                 return ui_utils.handle_response(class_name, data=proposal_id, success=True)
         except Exception as e:
+            logger.exception("Something bad happened in CreateInitialProposal")
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 def calculate_hotness_level(multi_level_is_hot):
