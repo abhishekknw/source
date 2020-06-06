@@ -54,6 +54,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+import logging
+logger = logging.getLogger(__name__)
+
 class CampaignAPIView(APIView):
 
     def get(self, request, format=None):
@@ -139,12 +142,11 @@ class campaignListAPIVIew(APIView):
             vendor = request.query_params.get('vendor',None)
             result = []
             category = request.query_params['category']
-            if user.is_superuser:
-                result = website_utils.get_campaigns_with_status(category, user, vendor)
-            else:
-                result = website_utils.get_campaigns_with_status(category, user, vendor)
+            result = website_utils.get_campaigns_with_status(category, user, vendor, request)
+
             return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
+            logger.exception(e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
