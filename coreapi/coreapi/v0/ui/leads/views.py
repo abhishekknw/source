@@ -969,13 +969,12 @@ class LeadsSummary(APIView):
             if request.query_params.get('supplier_code') == "mix":
                 campaign_list = ProposalInfo.objects.filter(proposal_id__in=campaign_list,is_mix=True).values_list('proposal_id', flat=True)
 
+            if request.query_params.get('supplier_code') and request.query_params.get('supplier_code') != "mix" and request.query_params.get('supplier_code') != "all":
+                campaign_list = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list,supplier_code=request.query_params.get('supplier_code')).values_list('proposal_id', flat=True).distinct()
+            
             campaign_list = [campaign_id for campaign_id in campaign_list]
 
-            query_filter = {"proposal_id__in":campaign_list}
-            if request.query_params.get('supplier_code') and request.query_params.get('supplier_code') != "mix" and request.query_params.get('supplier_code') != "all":
-                query_filter = {"proposal_id__in":campaign_list,"supplier_code":request.query_params.get('supplier_code')}
-
-            all_shortlisted_supplier = ShortlistedSpaces.objects.filter(**query_filter).\
+            all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).\
                 values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name', 'proposal__tentative_start_date',
                     'proposal__tentative_end_date', 'proposal__campaign_state', 'supplier_code')
 

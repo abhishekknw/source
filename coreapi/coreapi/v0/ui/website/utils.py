@@ -3889,6 +3889,9 @@ def manipulate_master_to_rs(suppliers):
 
             supplier['name'] = supplier.get("supplier_name")
             supplier['supplier_code'] = supplier.get("supplier_type")
+
+            if not supplier.get("flat_count"):
+                supplier["flat_count"] = supplier.get("unit_primary_count")
                 
         return suppliers
     except Exception as e:
