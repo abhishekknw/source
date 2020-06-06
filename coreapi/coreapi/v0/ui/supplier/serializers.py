@@ -26,6 +26,12 @@ class SupplierMasterSerializer(ModelSerializer):
         fields = '__all__'
 
 
+class SupplierMasterSerializerLeads(ModelSerializer):
+    class Meta:
+        model = SupplierMaster
+        fields = 'supplier_id','supplier_name'
+
+
 class SupplierHordingSerializer(ModelSerializer):
     class Meta:
         model = SupplierHording
