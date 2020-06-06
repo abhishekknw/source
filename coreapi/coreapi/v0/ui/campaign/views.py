@@ -362,6 +362,13 @@ class DashBoardViewSet(viewsets.ViewSet):
         suppliers_instances = SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_suppliers_id_list)
         supplier_serializer = SupplierTypeSocietySerializer(suppliers_instances, many=True)
         suppliers = supplier_serializer.data
+
+        master_supplier = SupplierMaster.objects.filter(supplier_id__in=shortlisted_suppliers_id_list)
+        master_serializer = SupplierMasterSerializer(master_supplier, many=True)
+        master_supplier_data = website_utils.manipulate_master_to_rs(master_serializer.data)
+
+        suppliers.extend(master_supplier_data)
+
         flat_count = 0
         supplier_objects_id_list = {supplier['supplier_id']: supplier for supplier in suppliers}
         all_leads_count = get_leads_summary(campaign_id)
