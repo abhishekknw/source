@@ -50,6 +50,12 @@ from celery import shared_task
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 from v0.ui.common.models import mongo_client
 from django.db import connection, connections
+import logging
+
+logger = logging.getLogger(__name__)
+
+import logging
+logger = logging.getLogger(__name__)
 
 class CampaignAPIView(APIView):
 
@@ -136,12 +142,11 @@ class campaignListAPIVIew(APIView):
             vendor = request.query_params.get('vendor',None)
             result = []
             category = request.query_params['category']
-            if user.is_superuser:
-                result = website_utils.get_campaigns_with_status(category, user, vendor)
-            else:
-                result = website_utils.get_campaigns_with_status(category, user, vendor)
+            result = website_utils.get_campaigns_with_status(category, user, vendor, request)
+
             return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
+            logger.exception(e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
@@ -361,6 +366,13 @@ class DashBoardViewSet(viewsets.ViewSet):
         suppliers_instances = SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_suppliers_id_list)
         supplier_serializer = SupplierTypeSocietySerializer(suppliers_instances, many=True)
         suppliers = supplier_serializer.data
+
+        master_supplier = SupplierMaster.objects.filter(supplier_id__in=shortlisted_suppliers_id_list)
+        master_serializer = SupplierMasterSerializer(master_supplier, many=True)
+        master_supplier_data = website_utils.manipulate_master_to_rs(master_serializer.data)
+
+        suppliers.extend(master_supplier_data)
+
         flat_count = 0
         supplier_objects_id_list = {supplier['supplier_id']: supplier for supplier in suppliers}
         all_leads_count = get_leads_summary(campaign_id)
@@ -773,7 +785,12 @@ class DashBoardViewSet(viewsets.ViewSet):
             for imageInstance in result:
                 imageInstance['object_id'] = supplier_id
 
-            supplier = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).values()
+            master_supplier = SupplierMaster.objects.filter(supplier_id=supplier_id)
+            master_serializer = SupplierMasterSerializer(master_supplier, many=True)
+            supplier = website_utils.manipulate_master_to_rs(master_serializer.data)
+
+            if not supplier:
+                supplier = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).values()
 
             inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(
                 result, supplier)
@@ -1144,15 +1161,16 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
             }
         lead_form = mongo_client.leads_forms.find({"campaign_id": campaign_id})
         campaign_hot_leads_dict = lead_counter(campaign_id, leads_form_data, user_start_datetime, user_end_datetime, lead_form[0])
-        for key in lead_form[0]['hotness_mapping']:
-            if 'is_hot_level_1' in key:
-               overall_data['key_hot_level_1'] = lead_form[0]['hotness_mapping']['is_hot_level_1']
-            if 'is_hot_level_2' in key:
-                overall_data['key_hot_level_2'] = lead_form[0]['hotness_mapping']['is_hot_level_2']
-            if 'is_hot_level_3' in key:
-                overall_data['key_hot_level_3'] = lead_form[0]['hotness_mapping']['is_hot_level_3']
-            if 'is_hot_level_4' in key:
-                overall_data['key_hot_level_4'] = lead_form[0]['hotness_mapping']['is_hot_level_4']
+        if lead_form and lead_form[0] and 'hotness_mapping' in lead_form[0]:
+            for key in lead_form[0]['hotness_mapping'] and 'hotness_mapping' in lead_form[0]:
+                if 'is_hot_level_1' in key:
+                   overall_data['key_hot_level_1'] = lead_form[0]['hotness_mapping']['is_hot_level_1']
+                if 'is_hot_level_2' in key:
+                    overall_data['key_hot_level_2'] = lead_form[0]['hotness_mapping']['is_hot_level_2']
+                if 'is_hot_level_3' in key:
+                    overall_data['key_hot_level_3'] = lead_form[0]['hotness_mapping']['is_hot_level_3']
+                if 'is_hot_level_4' in key:
+                    overall_data['key_hot_level_4'] = lead_form[0]['hotness_mapping']['is_hot_level_4']
 
         for curr_supplier_data in supplier_data:
             supplier_id = curr_supplier_data['supplier_id']
@@ -1464,6 +1482,7 @@ class CampaignLeads(APIView):
             center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
             return Response({'status': True, 'data': final_data, 'supplier_type_code':center_data})
         except Exception as e:
+            logger.exception(e)
             return ui_utils.handle_response(class_name, data=final_data, success=False)
 
 

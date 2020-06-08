@@ -3645,10 +3645,11 @@ def union_suppliers(first_supplier_list, second_supplier_list):
 
         result = {}
         for supplier_id in total_supplier_ids:
-            if first_supplier_mapping.get(supplier_id):
-                result[supplier_id] = first_supplier_mapping[supplier_id]
             if second_supplier_mapping.get(supplier_id) and not result.get(supplier_id):
                 result[supplier_id] = second_supplier_mapping[supplier_id]
+
+            elif first_supplier_mapping.get(supplier_id):
+                result[supplier_id] = first_supplier_mapping[supplier_id]
 
             if supplier_id in suppliers_not_in_second_set:
                 result[supplier_id]['status'] = v0_constants.status
@@ -3888,6 +3889,9 @@ def manipulate_master_to_rs(suppliers):
 
             supplier['name'] = supplier.get("supplier_name")
             supplier['supplier_code'] = supplier.get("supplier_type")
+
+            if not supplier.get("flat_count"):
+                supplier["flat_count"] = supplier.get("unit_primary_count")
                 
         return suppliers
     except Exception as e:
@@ -4242,13 +4246,17 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
                 pmd_objects_per_supplier = []
                 
             shortlisted_inventories = supplier['shortlisted_inventories']
+
             response = add_total_price_per_inventory_per_supplier(pmd_objects_per_supplier, shortlisted_inventories)
             if not response.data['status']:
                 return response
             supplier['shortlisted_inventories'], total_inventory_supplier_price = response.data['data']
             supplier['total_inventory_supplier_price'] = total_inventory_supplier_price
-        cache.set(str(proposal_id), result, timeout=60 * 100)
 
+        try:
+            cache.set(str(proposal_id), result, timeout=60 * 100)
+        except:
+            pass
         
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
@@ -6516,7 +6524,7 @@ def create_entry_in_role_hierarchy(role):
         return Exception(function, ui_utils.get_system_error(e))
 
 
-def get_campaigns_with_status(category, user, vendor):
+def get_campaigns_with_status(category, user, vendor, request):
     """
     return campaigns list by arranging in ongoing, upcoming and completed keys
 
@@ -6534,31 +6542,37 @@ def get_campaigns_with_status(category, user, vendor):
         }
         campaign_query = Q()
         vendor_query = Q()
+        supplier_code_query = Q()
         if vendor:
             vendor_query = Q(campaign__principal_vendor=vendor)
         if not user.is_superuser:
             campaign_query = get_query_by_organisation_category(category,
                                                                 v0_constants.category_query_status['campaign_query'],
                                                                 user)
+        if request.query_params.get('supplier_code') == 'mix':
+            supplier_code_query = Q(campaign__is_mix=True)
+        elif request.query_params.get('supplier_code') and request.query_params.get('supplier_code') != 'mix' and request.query_params.get('supplier_code') != 'all':
+            shortlisted_spaces_ids = ShortlistedSpaces.objects.filter(supplier_code=request.query_params.get('supplier_code')).values_list('proposal', flat=True)
+            supplier_code_query = Q(campaign_id__in=shortlisted_spaces_ids)
+
         campaign_data['completed_campaigns'] = CampaignAssignment.objects. \
-            filter(campaign_query, vendor_query, campaign__tentative_end_date__lt=current_date, campaign__campaign_state='PTC',
-                   ). \
+            filter(campaign_query, vendor_query, supplier_code_query, campaign__tentative_end_date__lt=current_date, campaign__campaign_state='PTC'). \
             annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
                      organisation=F('campaign__account__organisation__name'), vendor_id=F('campaign__principal_vendor')). \
             values('campaign', 'name', 'principal_vendor', 'organisation','vendor_id').distinct()
         campaign_data['upcoming_campaigns'] = CampaignAssignment.objects. \
-            filter(campaign_query, vendor_query, campaign__tentative_start_date__gt=current_date, campaign__campaign_state='PTC'). \
+            filter(campaign_query, vendor_query, supplier_code_query, campaign__tentative_start_date__gt=current_date, campaign__campaign_state='PTC'). \
             annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
                      organisation=F('campaign__account__organisation__name'), vendor_id=F('campaign__principal_vendor')). \
             values('campaign', 'name', 'principal_vendor', 'organisation', 'vendor_id').distinct()
         campaign_data['ongoing_campaigns'] = CampaignAssignment.objects. \
-            filter(campaign_query, vendor_query, Q(campaign__tentative_start_date__lte=current_date) & Q(
+            filter(campaign_query, vendor_query, supplier_code_query, Q(campaign__tentative_start_date__lte=current_date) & Q(
             campaign__tentative_end_date__gte=current_date), campaign__campaign_state='PTC'). \
             annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
                      organisation=F('campaign__account__organisation__name'), vendor_id=F('campaign__principal_vendor')). \
             values('campaign', 'name', 'principal_vendor', 'organisation', 'vendor_id').distinct()
         campaign_data['onhold_campaigns'] = CampaignAssignment.objects. \
-            filter(campaign_query, vendor_query, campaign__campaign_state='POH'). \
+            filter(campaign_query, vendor_query, supplier_code_query, campaign__campaign_state='POH'). \
             annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
                      organisation=F('campaign__account__organisation__name'), vendor_id=F('campaign__principal_vendor')). \
             values('campaign', 'name', 'principal_vendor', 'organisation', 'vendor_id').distinct()
