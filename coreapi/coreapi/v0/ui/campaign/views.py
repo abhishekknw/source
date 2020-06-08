@@ -365,7 +365,7 @@ class DashBoardViewSet(viewsets.ViewSet):
 
         suppliers_instances = SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_suppliers_id_list)
         supplier_serializer = SupplierTypeSocietySerializer(suppliers_instances, many=True)
-        suppliers = supplier_serializer.data
+        suppliers = manipulate_object_key_values(supplier_serializer.data)
 
         master_supplier = SupplierMaster.objects.filter(supplier_id__in=shortlisted_suppliers_id_list)
         master_serializer = SupplierMasterSerializer(master_supplier, many=True)
