@@ -41,7 +41,6 @@ from bson.objectid import ObjectId
 from v0.ui.proposal.models import ProposalInfo, ProposalCenterSuppliers
 from v0.ui.account.models import Profile
 from v0.ui.dynamic_suppliers.utils import get_dynamic_single_supplier_data
-import logging
 
 import logging
 logger = logging.getLogger(__name__)
