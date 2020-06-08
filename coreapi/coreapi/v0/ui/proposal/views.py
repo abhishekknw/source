@@ -54,8 +54,8 @@ from v0.ui.website.utils import return_price
 import v0.constants as v0_constants
 import v0.ui.website.tasks as tasks
 from v0.ui.email.views import send_email
-from v0.ui.supplier.models import SupplierTypeCorporate, SupplierTypeRetailShop
-from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
+from v0.ui.supplier.models import SupplierTypeCorporate, SupplierTypeRetailShop, SupplierMaster
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierMasterSerializer
 from v0.ui.base.models import DurationType
 from v0 import errors
 from rest_framework import viewsets
@@ -2800,11 +2800,18 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     no_phase_suppliers = []
     no_status_suppliers = []
     all_supplier_ids = list(set([space.object_id for space in shortlisted_spaces_list]))
-    all_supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids)
-    all_supplier_dict = {supplier.supplier_id:supplier for supplier in all_supplier_objects}
+
+    all_supplier_objects = SupplierMaster.objects.filter(supplier_id__in=all_supplier_ids)
+    all_supplier_data_serializer = SupplierMasterSerializer(all_supplier_objects,many=True).data
+    all_supplier_data = website_utils.manipulate_master_to_rs(all_supplier_data_serializer)
+    if len(all_supplier_data) < 1:
+        all_supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids)
+        all_supplier_data = SupplierTypeSocietySerializer(all_supplier_objects,many=True).data
+
+    all_supplier_dict = {supplier['supplier_id']:supplier for supplier in all_supplier_data}
     for space in shortlisted_spaces_list:
         try:
-            supplier_society = all_supplier_dict[space.object_id]
+            supplier_society_serialized = all_supplier_dict[space.object_id]
         except KeyError:
             pass
         supplier_inventories = ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces_id=space.id)
@@ -2841,9 +2848,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     inventory_dates_dict[inventoy_name].append(activity_date)
         inventory_count_dict = {}
 
-        supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society).data        
-        supplier_tower_count = supplier_society.tower_count if supplier_society_serialized.get("tower_count") else 0
-        supplier_flat_count = supplier_society.flat_count if supplier_society_serialized.get("flat_count") else 0
+        supplier_tower_count = supplier_society_serialized["tower_count"] if supplier_society_serialized.get("tower_count") else 0
+        supplier_flat_count = supplier_society_serialized["flat_count"] if supplier_society_serialized.get("flat_count") else 0
         for inventory in supplier_inventories:
             if inventory.ad_inventory_type.adinventory_name not in inventory_count_dict:
                 inventory_count_dict[inventory.ad_inventory_type.adinventory_name] = 0
@@ -2854,8 +2860,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
             if inventory.inventory_number_of_days:
                 inventory_days_dict[inventory.ad_inventory_type.adinventory_name] = inventory.inventory_number_of_days
-            inventory_count_dict['FLIER'] = supplier_society.flat_count if supplier_society_serialized.get("flat_count") else 0
-            overall_inventory_count_dict['FLIER'] = supplier_society.flat_count if supplier_society_serialized.get("flat_count") else 0
+            inventory_count_dict['FLIER'] = supplier_society_serialized["flat_count"] if supplier_society_serialized.get("flat_count") else 0
+            overall_inventory_count_dict['FLIER'] = supplier_society_serialized["flat_count"] if supplier_society_serialized.get("flat_count") else 0
 
         supplier_society_serialized['booking_status'] = space.booking_status
         supplier_society_serialized['booking_sub_status'] = space.booking_sub_status
