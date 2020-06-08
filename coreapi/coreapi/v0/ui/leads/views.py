@@ -267,8 +267,6 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
 
     return final_data
 
-logger = logging.getLogger(__name__)
-
 class GetLeadsEntries(APIView):
     @staticmethod
     def get(request, leads_form_id):
