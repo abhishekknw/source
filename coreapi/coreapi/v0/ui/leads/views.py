@@ -10,7 +10,7 @@ from .models import (get_leads_summary, LeadsPermissions, ExcelDownloadHash, Cam
 from v0.ui.analytics.views import (get_data_analytics, get_details_by_higher_level,
                                    get_details_by_higher_level_geographical, geographical_parent_details)
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeRetailShop, SupplierMaster
-from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierMasterSerializer
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.inventory.models import (InventoryActivityAssignment, InventoryActivity)
@@ -31,7 +31,7 @@ from v0.ui.common.models import mongo_client, mongo_test
 import pprint
 from random import randint
 import random, string
-from v0.ui.website.utils import prepare_shortlisted_spaces_and_inventories
+from v0.ui.website.utils import prepare_shortlisted_spaces_and_inventories, manipulate_object_key_values, return_price, manipulate_master_to_rs
 
 from v0.ui.proposal.views import convert_date_format
 
@@ -141,9 +141,9 @@ def get_data_by_supplier_type_code(lead_form, supplier_id):
             if code == 'RS':
                 supplier_data = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
                 return supplier_data, supplier_data.society_name
-            elif code == 'RE':
-                supplier_data = SupplierTypeRetailShop.objects.get(supplier_id=supplier_id)
-                return supplier_data, supplier_data.name
+            else:
+                supplier_data = SupplierMaster.objects.get(supplier_id=supplier_id)
+                return supplier_data, supplier_data.supplier_name
         except Exception as e:
             supplier_data = {}
             supplier_data = get_dynamic_single_supplier_data(supplier_id)
@@ -167,7 +167,13 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
         suppliers_list = list(set(suppliers_list))
         suppliers_names = SupplierTypeSociety.objects.filter(supplier_id__in=suppliers_list).values_list(
             'supplier_id','society_name')
-        supplier_id_names = dict((x, y) for x, y in suppliers_names)
+
+        master_suppliers_names = SupplierMaster.objects.filter(supplier_id__in=suppliers_list).values_list(
+             'supplier_id','supplier_name')
+
+        all_supplier_names = list(suppliers_names) + list(master_suppliers_names)
+
+        supplier_id_names = dict((x, y) for x, y in all_supplier_names)
     else:
         leads_data = mongo_client.leads.find({"$and": [{"leads_form_id": int(leads_form_id)}, {"supplier_id": supplier_id},
                                                        {"status": {"$ne": "inactive"}}]}, {"_id": 0})
@@ -249,24 +255,30 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
                 if isinstance(item["value"], (str,bytes)):
                     value = item["value"].strip()
                 value = convertToNumber(item["value"])  # if possible
-
-            new_entry.append({"order_id": item["item_id"], "value": value, "key_type":item["key_type"]})
+            
+            key_name = item.get("key_name","")
+            key_type = item.get("key_type","")
+           
+            new_entry.append({"order_id": item["item_id"], "value": value, "key_name":key_name, "key_type":key_type})
         leads_data_values.append(new_entry)
 
     final_data = {"hot_leads": hot_leads, "headers": headers, "values": leads_data_values, "missing_suppliers": missing_suppliers}
 
     return final_data
 
-
 class GetLeadsEntries(APIView):
     @staticmethod
     def get(request, leads_form_id):
-        supplier_id = str(request.query_params.get('supplier_id')) if request.query_params.get('supplier_id'
-                                                                                              ) is not None else 'All'
+        try:
+            supplier_id = str(request.query_params.get('supplier_id')) if request.query_params.get('supplier_id'
+                                                                                                ) is not None else 'All'
 
-        page_number = int(request.query_params.get('page_number',0))
-        supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id,page_number)
-        return handle_response({}, data=supplier_all_lead_entries, success=True)
+            page_number = int(request.query_params.get('page_number',0))
+            supplier_all_lead_entries = get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number)
+            return handle_response({}, data=supplier_all_lead_entries, success=True)
+        except Exception as e:
+            logger.exception(e)
+            return handle_response({}, data="No Leads Found", success=False)
 
 class GetLeadsEntriesBySupplier(APIView):
     @staticmethod
@@ -372,7 +384,7 @@ def get_supplier_data_by_type(name):
     if len(suppliers) > 0:
         return suppliers
     else:
-        suppliers = SupplierTypeRetailShop.objects.filter(name=name).values('supplier_id', 'name').all()
+        suppliers = SupplierMaster.objects.filter(supplier_name=name).values('supplier_id', 'supplier_name').all()
         if len(suppliers) > 0:
             return suppliers
     return []
