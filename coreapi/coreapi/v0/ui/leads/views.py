@@ -10,7 +10,7 @@ from .models import (get_leads_summary, LeadsPermissions, ExcelDownloadHash, Cam
 from v0.ui.analytics.views import (get_data_analytics, get_details_by_higher_level,
                                    get_details_by_higher_level_geographical, geographical_parent_details)
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeRetailShop, SupplierMaster
-from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierMasterSerializer, SupplierMasterSerializerLeads
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierMasterSerializer
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.inventory.models import (InventoryActivityAssignment, InventoryActivity)
@@ -166,17 +166,13 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
         suppliers_list = list(set(suppliers_list))
         suppliers_names = SupplierTypeSociety.objects.filter(supplier_id__in=suppliers_list).values_list(
             'supplier_id','society_name')
-        supplier_serializer = SupplierTypeSocietySerializer(suppliers_names, many=True)
 
         master_suppliers_names = SupplierMaster.objects.filter(supplier_id__in=suppliers_list).values_list(
-            'supplier_id','supplier_name')
-        master_supplier_serializer = SupplierMasterSerializerLeads(master_suppliers_names, many=True)
+             'supplier_id','supplier_name')
 
-        all_suppliers = manipulate_object_key_values(supplier_serializer.data)
-        all_master_suppliers = manipulate_master_to_rs(master_supplier_serializer.data)
-        all_suppliers.extend(all_master_suppliers)
+        all_supplier_names = list(suppliers_names) + list(master_suppliers_names)
 
-        supplier_id_names = dict((x, y) for x, y in all_suppliers)
+        supplier_id_names = dict((x, y) for x, y in all_supplier_names)
     else:
         leads_data = mongo_client.leads.find({"$and": [{"leads_form_id": int(leads_form_id)}, {"supplier_id": supplier_id},
                                                        {"status": {"$ne": "inactive"}}]}, {"_id": 0})
