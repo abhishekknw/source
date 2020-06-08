@@ -3132,9 +3132,13 @@ def get_supplier_list_by_status_ctrl(campaign_id):
 class getSupplierListByStatus(APIView):
     @staticmethod
     def get(request, campaign_id):
-        center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
-        shortlisted_spaces_by_phase_list = get_supplier_list_by_status_ctrl(campaign_id)
-        return Response({'status': True, 'data': shortlisted_spaces_by_phase_list, 'supplier_type_code':center_data})
+        try:
+            center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
+            shortlisted_spaces_by_phase_list = get_supplier_list_by_status_ctrl(campaign_id)
+            return Response({'status': True, 'data': shortlisted_spaces_by_phase_list, 'supplier_type_code':center_data})
+        except Exception as e:
+            logger.exception(e)
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 class ImportSheetInExistingCampaign(APIView):
     """
