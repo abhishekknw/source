@@ -2814,7 +2814,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     all_supplier_data = website_utils.manipulate_master_to_rs(all_supplier_data_serializer)
     if len(all_supplier_data) < 1:
         all_supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids)
-        all_supplier_data = SupplierTypeSocietySerializer(all_supplier_objects,many=True).data
+        all_supplier_data_serializer = SupplierTypeSocietySerializer(all_supplier_objects,many=True).data
+        all_supplier_data = website_utils.manipulate_object_key_values_generic(all_supplier_data_serializer)
 
     all_supplier_dict = {supplier['supplier_id']:supplier for supplier in all_supplier_data}
     for space in shortlisted_spaces_list:
