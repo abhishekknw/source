@@ -50,9 +50,6 @@ from celery import shared_task
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 from v0.ui.common.models import mongo_client
 from django.db import connection, connections
-import logging
-
-logger = logging.getLogger(__name__)
 
 import logging
 logger = logging.getLogger(__name__)
@@ -1946,7 +1943,8 @@ class Comment(APIView):
             })
             inventory_comment.save()
             return ui_utils.handle_response({}, data='success', success=True)
-        except :
+        except Exception as e:
+            logger.exception(e)
             return ui_utils.handle_response({}, data='Comment not saved', success=False)
     @staticmethod
     def get(request, campaign_id):
