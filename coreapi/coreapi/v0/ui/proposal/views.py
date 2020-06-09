@@ -3139,7 +3139,7 @@ class getSupplierListByStatus(APIView):
             return Response({'status': True, 'data': shortlisted_spaces_by_phase_list, 'supplier_type_code':center_data})
         except Exception as e:
             logger.exception(e)
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+            return ui_utils.handle_response("", exception_object=e, request=request)
 
 class ImportSheetInExistingCampaign(APIView):
     """
