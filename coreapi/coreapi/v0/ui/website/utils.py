@@ -3891,8 +3891,10 @@ def manipulate_master_to_rs(suppliers):
             supplier['supplier_code'] = supplier.get("supplier_type")
 
             if not supplier.get("flat_count"):
-                supplier["flat_count"] = supplier.get("unit_primary_count")
-                
+                supplier["flat_count"] = supplier["unit_primary_count"] if supplier.get("unit_primary_count") else 0
+            if not supplier.get("tower_count"):
+                supplier["tower_count"] = supplier["unit_secondary_count"] if supplier.get("unit_secondary_count") else 0
+
         return suppliers
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
