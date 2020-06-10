@@ -50,9 +50,6 @@ from celery import shared_task
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 from v0.ui.common.models import mongo_client
 from django.db import connection, connections
-import logging
-
-logger = logging.getLogger(__name__)
 
 import logging
 logger = logging.getLogger(__name__)
@@ -1933,10 +1930,6 @@ class Comment(APIView):
             shortlisted_spaces_id = None
             if request.data.get('shortlisted_spaces_id'):
                 shortlisted_spaces_id = request.data['shortlisted_spaces_id']
-            else:
-                shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id = campaign_id).first()
-                if shortlisted_spaces : 
-                    shortlisted_spaces_id = shortlisted_spaces.id
 
             related_to = request.data['related_to'] if 'related_to' in request.data else None
             inventory_type = request.data['inventory_type'] if 'inventory_type' in request.data else None
@@ -1950,7 +1943,8 @@ class Comment(APIView):
             })
             inventory_comment.save()
             return ui_utils.handle_response({}, data='success', success=True)
-        except :
+        except Exception as e:
+            logger.exception(e)
             return ui_utils.handle_response({}, data='Comment not saved', success=False)
     @staticmethod
     def get(request, campaign_id):
