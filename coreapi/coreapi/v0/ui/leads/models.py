@@ -88,11 +88,13 @@ def add_extra_leads(leads_summary, campaign_list=None, user_start_datetime=None,
     return leads_summary
 
 
-def get_leads_summary(campaign_list=None, user_start_datetime=None,user_end_datetime=None, with_extra=True):
+def get_leads_summary(campaign_list=None, user_start_datetime=None,user_end_datetime=None, with_extra=True, all_supplier_ids=None):
     if campaign_list:
         if not isinstance(campaign_list, list):
             campaign_list = [campaign_list]
         match_constraint = [{"campaign_id": {"$in": campaign_list}}]
+        if all_supplier_ids:
+            match_constraint.append({"supplier_id":{"$in": all_supplier_ids}})
         if user_start_datetime:
             match_constraint.append({"created_at": {"$gte": user_start_datetime}})
         if user_end_datetime:
