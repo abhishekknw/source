@@ -1003,34 +1003,46 @@ class DeleteAdInventoryIds(APIView):
 
 
 @shared_task()
-def get_leads_data_for_multiple_campaigns(campaign_list):
+def get_leads_data_for_multiple_campaigns(supplier_code, campaign_list):
     multi_campaign_return_data = {}
     campaign_objects = ProposalInfo.objects.filter(proposal_id__in=campaign_list).values()
     campaign_objects_list = {campaign['proposal_id']: campaign for campaign in campaign_objects}
     valid_campaign_list = list(campaign_objects_list.keys())
     for campaign_id in valid_campaign_list:
-        shortlisted_supplier_ids = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values_list(
-            'object_id')
-        flat_count = SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_supplier_ids). \
-            values('flat_count').aggregate(Sum('flat_count'))['flat_count__sum']
-        leads_form_summary_data = get_leads_summary_by_campaign(campaign_id)[0]
-        multi_campaign_return_data[campaign_id] = {
-            'total': leads_form_summary_data['total_leads_count'],
-            'hot_lead_ratio': leads_form_summary_data['hot_leads_percentage']/100,
-            'data': campaign_objects_list[campaign_id],
-            'interested': leads_form_summary_data['hot_leads_count'],
-            'campaign': campaign_id,
-            'flat_count': flat_count
-        }
+        shortlisted_supplier_ids = ShortlistedSpaces.objects.filter(proposal_id=campaign_id, supplier_code=supplier_code).values('object_id')
+        all_supplier_ids = [supplier_ids['object_id'] for supplier_ids in shortlisted_supplier_ids]
+        if supplier_code == "RS":
+            flat_count = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids). \
+                values('flat_count').aggregate(Sum('flat_count'))['flat_count__sum']
+        else:
+            flat_count = SupplierMaster.objects.filter(supplier_id__in=all_supplier_ids). \
+                values('unit_primary_count').aggregate(Sum('unit_primary_count'))['unit_primary_count__sum']
+
+        leads_form_summary_data = get_leads_summary_by_campaign(campaign_id, all_supplier_ids)
+
+        for leads_data in leads_form_summary_data:
+            multi_campaign_return_data[campaign_id] = {
+                'total': leads_data['total_leads_count'],
+                'hot_lead_ratio': leads_data['hot_leads_percentage']/100,
+                'data': campaign_objects_list[campaign_id],
+                'interested': leads_data['hot_leads_count'],
+                'campaign': campaign_id,
+                'flat_count': flat_count
+            }
     return multi_campaign_return_data
 
 
 class CampaignLeadsMultiple(APIView):
     def post(self, request, pk=None):
-        class_name = self.__class__.__name__
-        campaign_list = request.data
-        multi_campaign_return_data = get_leads_data_for_multiple_campaigns(campaign_list)
-        return ui_utils.handle_response(class_name, data=multi_campaign_return_data, success=True)
+        try:
+            class_name = self.__class__.__name__
+            campaign_list = request.data
+            supplier_code = request.query_params.get('supplier_code')
+            multi_campaign_return_data = get_leads_data_for_multiple_campaigns(supplier_code, campaign_list)
+            return ui_utils.handle_response(class_name, data=multi_campaign_return_data, success=True)
+        except Exception as e:
+            logger.exception(e)
+            return ui_utils.handle_response({}, data="Supplier code does not exist", success=False)
 
 
 def calculate_mode(num_list,window_size=3):

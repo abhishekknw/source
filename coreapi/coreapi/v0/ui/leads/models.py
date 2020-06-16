@@ -138,11 +138,14 @@ def get_leads_summary(campaign_list=None, user_start_datetime=None,user_end_date
     return leads_summary
 
 
-def get_leads_summary_by_campaign(campaign_list=None):
+def get_leads_summary_by_campaign(campaign_list=None, all_supplier_ids=None):
     if campaign_list:
         if not isinstance(campaign_list, list):
             campaign_list = [campaign_list]
-        match_dict = {"campaign_id": {"$in": campaign_list}}
+        match_constraint = [{"campaign_id": {"$in": campaign_list}}]
+        if all_supplier_ids:
+            match_constraint.append({"supplier_id":{"$in": all_supplier_ids}})
+        match_dict = {"$and": match_constraint}       
     else:
         match_dict = {}
     leads_summary = mongo_client.leads.aggregate(
@@ -153,8 +156,9 @@ def get_leads_summary_by_campaign(campaign_list=None):
                 {
                     "$group":
                         {
-                            "_id": {"campaign_id": "$campaign_id"},
+                            "_id": {"campaign_id": "$campaign_id", "supplier_id": "$supplier_id"},
                             "campaign_id": {"$first": '$campaign_id'},
+                            "supplier_id": {"$first": '$supplier_id'},
                             "total_leads_count": {"$sum": 1},
                             "hot_leads_count": {"$sum": {"$cond": ["$is_hot", 1, 0]}},
                         }
