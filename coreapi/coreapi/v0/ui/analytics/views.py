@@ -1,7 +1,7 @@
 from __future__ import print_function
 from __future__ import absolute_import
 from .utils import (level_name_by_model_id, convert_date_to_days, merge_dict_array_dict_single,
-                    convert_dict_arrays_keys_to_standard_names, get_similar_structure_keys, geographical_parent_details,
+                    convert_dict_arrays_keys_to_standard_names, get_similar_structure_keys, geographical_parent_details, geographical_parent_details_master,
                     count_details_parent_map, find_level_sequence, binary_operation, count_details_direct_match_multiple,
                     sum_array_by_key, z_calculator_array_multiple, get_metrics_from_code, reverse_direct_match,
                     count_details_parent_map_time, date_to_other_groups, merge_dict_array_array_multiple_keys,
@@ -16,7 +16,7 @@ from .utils import (level_name_by_model_id, convert_date_to_days, merge_dict_arr
                     cumulative_distribution_from_array_day, adder)
 from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo, ProposalCenterMapping
-from v0.ui.supplier.models import SupplierTypeSociety
+from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster
 import copy
 from rest_framework.views import APIView
 from v0.ui.utils import handle_response, get_user_organisation_id
@@ -53,17 +53,12 @@ def get_reverse_dict(original_dict):
 # full_query = first_part_query + parent_model_name + '__in=match_list)'
 # add_query = '.filter(' + add_variable_name + '__in=add_match_list)'
 # add_match_list = add_match_list["exact"]
-def get_campaigns_from_vendors(vendor_list):
-    model_name = 'ProposalInfo'
-    parent_name_model = 'principal_vendor_id'
-    self_name_model = 'proposal_id'
-    match_list = vendor_list
-    full_query = model_name + '.objects.filter(' + parent_name_model + '__in=match_list)'
-    #ProposalInfo.objects.filter(principal_vendor_id__in=['1', 'v2'])
-    final_query = eval(full_query)
+def get_campaigns_from_vendors(vendor_list, campaign_ids):
+    final_query = ProposalInfo.objects.filter(principal_vendor_id__in=vendor_list, proposal_id__in=campaign_ids)
+
     if not final_query:
         return [{},[]]
-    final_dict = dict(final_query.values_list(self_name_model, parent_name_model))
+    final_dict = dict(final_query.values_list('proposal_id', 'principal_vendor_id'))
     next_level_array = list(final_dict.keys())
     final_result = [final_dict, next_level_array]
     return final_result
@@ -71,7 +66,7 @@ def get_campaigns_from_vendors(vendor_list):
 
 def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
                        higher_level_statistical_information, bivariate_statistical_information,
-                       custom_functions = []):
+                       custom_functions = [], supplier_code = "RS"):
     unilevel_constraints = {}
     supplier_constraints = {}
     data_scope_first = {}
@@ -110,11 +105,17 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     range_type = data_point.get('range_type',0)
     data_scope_category = data_scope_first['category'] if not data_scope_first == {} else data_point_category
     highest_level_original = highest_level
+
+    shortlisted_spaces = ShortlistedSpaces.objects.filter(supplier_code = supplier_code).values('proposal_id', 'object_id')
+
+    campaign_ids = [row["proposal_id"] for row in shortlisted_spaces]
+    supplier_ids = [row["object_id"] for row in shortlisted_spaces]
+
     if highest_level == 'vendor':
         highest_level_original = 'vendor'
         values = data_scope_first['values']['exact'] if 'values' in data_scope_first \
                                                         and 'exact' in data_scope_first['values'] else []
-        [vendor_values_dict, vendor_level_values_list] = get_campaigns_from_vendors(values)
+        [vendor_values_dict, vendor_level_values_list] = get_campaigns_from_vendors(values, campaign_ids)
         if vendor_values_dict == {}:
             return "vendors do not exist"
         highest_level_values = vendor_level_values_list
@@ -147,14 +148,14 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             if data_point_category == 'geographical':
                 results_by_lowest_level = False if grouping_level_first == lowest_geographical_level else True
                 result_dict = get_details_by_higher_level_geographical(
-                    highest_level, highest_level_values, grouping_level_first, results_by_lowest_level)
+                    highest_level, highest_level_values, grouping_level_first, results_by_lowest_level, supplier_code=supplier_code)
                 curr_dict = result_dict['final_dict']
                 curr_highest_level_values = result_dict['single_list']
             else:
                 value_type = 'supplier'
                 lowest_geographical_level = geographical_parent_details['base']
                 result_dict = get_details_by_higher_level_geographical(
-                    highest_level, highest_level_values, lowest_geographical_level, 0)
+                    highest_level, highest_level_values, lowest_geographical_level, 0, supplier_code=supplier_code)
                 curr_dict = result_dict['final_dict']
                 curr_highest_level_values = result_dict['single_list']
             lgl = lowest_geographical_level
@@ -169,7 +170,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 
             curr_output_all = get_details_by_higher_level(hl, lowest_level, curr_highest_level_values, lgl, grouping_level,
                                                       curr_dict, unilevel_constraints, grouping_category, value_ranges,
-                                                          zero_filter= zero_filter)
+                                                          zero_filter= zero_filter, supplier_ids=supplier_ids, supplier_code=supplier_code)
             curr_output = curr_output_all[0]
             supplier_list = curr_output_all[1]
             # add missing key, if needed
@@ -199,10 +200,9 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_output_all = get_details_by_higher_level(highest_level, lowest_level, highest_level_values,
                           default_value_type, grouping_level.copy(), [],unilevel_constraints, grouping_category,
                           value_ranges, supplier_constraints, supplier_list = supplier_list, zero_filter = zero_filter,
-                                                          custom_functions = custom_functions)
+                                                          custom_functions = custom_functions, supplier_ids=supplier_ids, supplier_code=supplier_code)
             curr_output = curr_output_all[0]
             supplier_list = curr_output_all[1]
-
             if curr_output == []:
                 continue
             if highest_level_original == 'vendor':
@@ -224,6 +224,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             print("summarizing data")
             final_value = sum([x[curr_metric] for x in curr_output])
             curr_output = final_value
+        
         individual_metric_output[lowest_level] = curr_output
 
     for curr_metric in raw_data_original:
@@ -298,6 +299,10 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
     derived_array = derived_array_original
     additional_fields_list = list(related_fields_dict.keys())
     for curr_field in additional_fields_list:
+        if curr_field == "supplier" and supplier_code != "RS":
+            continue
+        if curr_field == "supplier_master" and supplier_code == "RS":
+            continue
         derived_array = add_related_field(derived_array, *(related_fields_dict[curr_field]))
 
     metric_parents = {}
@@ -491,7 +496,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
 def get_details_by_higher_level(highest_level, lowest_level, highest_level_list, default_value_type=None,
                                 grouping_level=None, all_results = [], unilevel_constraints = {},
                                 grouping_category = "", value_ranges = {}, supplier_constraints = {},
-                                supplier_list = [], zero_filter = False, custom_functions = []):
+                                supplier_list = [], zero_filter = False, custom_functions = [], supplier_ids = [], supplier_code = 'RS'):
     incrementing_value = None
     if lowest_level == None:
         return []
@@ -587,6 +592,11 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
         (model_name, database_type, self_model_name, parent_model_name, storage_type) = (
             entity_details['model_name'], entity_details['database_type'], entity_details['self_name_model'],
             entity_details['parent_name_model'], entity_details['storage_type'])
+        
+        if model_name == 'SupplierTypeSociety' and supplier_code != 'RS':
+            model_name = 'SupplierMaster'
+            if self_model_name == 'flat_count':
+                self_model_name = 'unit_primary_count'
 
         if parent_type == 'multiple':
             if default_value_type in parents:
@@ -597,8 +607,10 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
 
         if curr_level_id == 0:
             match_list = highest_level_list
-        else:
-            match_list = next_level_match_list
+
+        if parent_model_name == "supplier_id":
+            match_list = supplier_ids
+
         query = []
 
         # so far, only for restricting date in data scope
@@ -631,6 +643,10 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             else:
                 match_constraint = [{parent_model_name: {"$in": match_list}}]
                 match_dict = {"$and": match_constraint}
+
+            if entity_details.get("supplier_id"):
+                match_constraint.append({"supplier_id": {"$in": supplier_ids}})
+                
             if next_level == lowest_level and not unilevel_constraints == {}:
                 project_dict = {add_variable_name:1}
                 if add_match_type == 0:
@@ -657,12 +673,23 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 else:
                     add_query = '.filter(' + add_variable_name + '__range=add_match_list)'
                     add_match_list = add_match_list["range"]
+
+            next_query = ''
+            
+            if entity_details.get("supplier_id"):
+                next_query = '.filter(supplier_id__in=supplier_ids)'
+            if entity_details.get("supplier_code"):
+                next_query = '.filter(supplier_code=supplier_code)'
+            if entity_details.get("supplier_type") and model_name != "SupplierTypeSociety":
+                next_query = '.filter(supplier_type=supplier_code)'
+
             if highest_level_list == [] or highest_level_list is None:
                 full_query = model_name + '.objects.all()'
             else:
                 first_part_query = model_name + '.objects.filter('
                 full_query = first_part_query + parent_model_name + '__in=match_list)'
-            full_query = full_query + add_query
+            full_query = full_query + add_query + next_query
+
             query = list(eval(full_query).values(self_model_name, parent_model_name))
         else:
             return "database does not exist"
@@ -761,15 +788,23 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 if 'other_grouping_column' in entity_details:
                     other_column = entity_details['other_grouping_column']
                     all_values.append(other_column)
+                
                 query = list(eval(full_query).values(*all_values))
-
+                
                 if 'other_grouping_column' in entity_details:
                     other_column_list = [x[other_column] for x in query]
                 if self_model_name == 'cost_per_flat' and grouping_levels == ['campaign']:
-                    model_name = 'SupplierTypeSociety'
+                    model_name = 'SupplierMaster'
+                    if supplier_code == "RS":
+                        model_name = 'SupplierTypeSociety'
                     col_name = 'supplier_id'
                     joining_data_query = model_name + '.objects.filter('+ col_name + '__in=other_column_list)'
-                    joining_data = dict(eval(joining_data_query).values_list(col_name, 'flat_count'))
+                    
+                    if supplier_code == "RS":
+                        joining_data = dict(eval(joining_data_query).values_list(col_name, 'flat_count'))
+                    else:
+                        joining_data = dict(eval(joining_data_query).values_list(col_name, 'unit_primary_count'))
+                        joining_data["flat_count"] = joining_data["unit_primary_count"]
                     query_new = []
                     for curr_dict in query:
                         self_value = curr_dict[self_model_name]
@@ -784,7 +819,10 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                             query_new.append(new_dict)
                     query = query_new
                 query_grouped = sum_array_by_key(query,parent_model_names, self_model_name)
-
+                if "unit_primary_count" in all_values:
+                    for row in query_grouped:
+                        row["flat_count"] = row["unit_primary_count"]
+                        
                 query=query_grouped
                 if not query==[]:
                     if not all_results == [] and isinstance(all_results[0], dict) == True:
@@ -814,7 +852,6 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             single_array_results = merge_dict_array_array_multiple_keys(new_results, grouping_levels)
         except:
             single_array_results = merge_dict_array_array_multiple_keys(new_results, ['supplier'])
-
         if zero_filter:
             filtered_results = [x for x in single_array_results if x[lowest_level]>0]
             single_array_results = filtered_results
@@ -862,11 +899,15 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
 
 
 def get_details_by_higher_level_geographical(highest_level, highest_level_list, lowest_level='supplier',
-                                             results_by_lowest_level=0):
+                                             results_by_lowest_level=0, supplier_code = 'RS'):
     # highest_level = request.data['highest_level']
     # lowest_level = request.data['lowest_level'] if 'lowest_level' in request.data else 'supplier'
     if highest_level_list == [] or highest_level is None or highest_level == '':
         return {'final_dict':{}, 'single_list':[]}
+    
+    if supplier_code != "RS":
+        geographical_parent_details = geographical_parent_details_master
+
     model_name = geographical_parent_details['model_name']
     parent_name_model = geographical_parent_details['member_names'][highest_level]
     self_name_model = geographical_parent_details['member_names'][lowest_level]
@@ -926,9 +967,10 @@ class GetLeadsDataGeneric(APIView):
             'higher_level_statistical_information' in all_data else {}
         bivariate_statistical_information = all_data.get('bivariate_statistical_information',{})
         custom_functions = all_data.get('custom_functions', [])
+        supplier_code = request.query_params.get("supplier_code")
         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
                                          higher_level_statistical_information, bivariate_statistical_information,
-                                         custom_functions)
+                                         custom_functions, supplier_code=supplier_code)
         if type(mongo_query) == str:
             success = False
         return handle_response('', data=mongo_query, success=success)
