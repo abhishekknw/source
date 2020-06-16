@@ -16,6 +16,7 @@ from v0.ui.supplier.supplier_uploads import CorporateParkDataImport
 urlpatterns = [
 
     url(r'^leads/', include('v0.ui.leads.urls')),
+    url(r'^resident/', include('v0.ui.society_resident_details.urls')),
     url(r'^checklists/', include('v0.ui.checklists.urls')),
     url(r'^dynamic-suppliers/', include('v0.ui.dynamic_suppliers.urls')),
     url(r'^dynamic-inventory/', include('v0.ui.dynamic_inventory.urls')),
