@@ -2072,13 +2072,16 @@ class GetPermissionBoxImages(APIView):
 #         return ui_utils.handle_response(class_name, data={}, success=True)
 
 
-def get_campaign_wise_summary(all_campaign_ids, user_start_datetime=None, user_end_datetime=None):
+def get_campaign_wise_summary(supplier_code, all_campaign_ids, user_start_datetime=None, user_end_datetime=None):
+    all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id__in=all_campaign_ids, supplier_code=supplier_code).values('object_id', 'supplier_code', 'proposal_id')
+    campaign_mapping = {supplier['object_id']: supplier['proposal_id'] for supplier in all_shortlisted_spaces}
+    all_supplier_ids = [supplier_ids['object_id'] for supplier_ids in all_shortlisted_spaces]
+
     all_campaign_objects = ProposalInfo.objects.filter(proposal_id__in=all_campaign_ids).all()
     all_campaign_id_name_map = {campaign.proposal_id: campaign.name for campaign in all_campaign_objects}
-    leads_summary_by_supplier = get_leads_summary(campaign_list=all_campaign_ids,user_start_datetime=user_start_datetime, user_end_datetime=user_end_datetime)
+    leads_summary_by_supplier = get_leads_summary(campaign_list=all_campaign_ids,user_start_datetime=user_start_datetime, user_end_datetime=user_end_datetime, all_supplier_ids=all_supplier_ids)
     campaign_supplier_map = {}
     reverse_campaign_supplier_map = {}
-    all_supplier_ids = []
     campaign_wise_leads = {}
     for summary_point in leads_summary_by_supplier:
         if summary_point["campaign_id"] not in campaign_supplier_map:
@@ -2096,14 +2099,27 @@ def get_campaign_wise_summary(all_campaign_ids, user_start_datetime=None, user_e
 
         reverse_campaign_supplier_map[summary_point["supplier_id"]] = summary_point["campaign_id"]
     campaign_summary = {"campaign_wise": {}, "all_campaigns": {}}
-    all_society_flat_counts = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).values(
-        "supplier_id", "flat_count")
+
+    all_supplier_society_dict = {}
+
+    if supplier_code == "RS":
+        all_society_flat_counts = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).values(
+            "supplier_id", "flat_count")
+        for supplier in all_society_flat_counts:
+            all_supplier_society_dict[supplier['supplier_id']] = {'flat_count': supplier['flat_count']}
+    else:
+        all_supplier_flat_counts = SupplierMaster.objects.filter(supplier_id__in=all_supplier_ids).values(
+            "supplier_id", "unit_primary_count")
+        for supplier in all_supplier_flat_counts:
+            all_supplier_society_dict[supplier['supplier_id']] = {'flat_count': supplier['unit_primary_count']}
+
     campaign_flat_count_map = {}
     supplier_flat_count_map = {}
-    for society in all_society_flat_counts:
-        supplier_flat_count_map[society["supplier_id"]] = society["flat_count"]
-        campaign_id = reverse_campaign_supplier_map[society["supplier_id"]]
-        if campaign_id not in campaign_flat_count_map:
+    for key, society in all_supplier_society_dict.items():
+        supplier_flat_count_map[key] = society["flat_count"]
+        campaign_id = campaign_mapping[key]
+
+        if not campaign_flat_count_map.get(campaign_id):
             campaign_flat_count_map[campaign_id] = 0
         if society["flat_count"]:
             campaign_flat_count_map[campaign_id] += society["flat_count"]
@@ -2178,78 +2194,88 @@ def get_campaign_wise_summary(all_campaign_ids, user_start_datetime=None, user_e
     return campaign_summary
 
 
-def get_campaign_wise_summary_by_user(user_id, user_start_datetime=None, user_end_datetime=None):
+def get_campaign_wise_summary_by_user(supplier_code, user_id, user_start_datetime=None, user_end_datetime=None):
     all_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id).all()
     all_campaign_ids = [campaign.campaign_id for campaign in all_campaigns]
-    campaign_wise_summary = get_campaign_wise_summary(all_campaign_ids, user_start_datetime, user_end_datetime)
+    campaign_wise_summary = get_campaign_wise_summary(supplier_code, all_campaign_ids, user_start_datetime, user_end_datetime)
     return campaign_wise_summary
 
 
 class CampaignWiseSummary(APIView):
     @staticmethod
     def get(request):
-        user_id = request.user.id
-        user_start_date_str = request.query_params.get('start_date', None)
-        user_end_date_str = request.query_params.get('end_date', None)
-        campaign_summary = {}
-        start_date = datetime.now() - timedelta(days=7)
-        if user_start_date_str == None:
-            campaign_summary['last_week'] = get_campaign_wise_summary_by_user(user_id, start_date)
-            start_date = datetime.now() - timedelta(days=14)
-            campaign_summary['last_two_weeks'] = get_campaign_wise_summary_by_user(user_id, start_date)
-            start_date = datetime.now() - timedelta(days=21)
-            campaign_summary['last_three_weeks'] = get_campaign_wise_summary_by_user(user_id, start_date)
-            campaign_summary['overall'] = get_campaign_wise_summary_by_user(user_id)
-        else:
-            format_str = '%d/%m/%Y'
-            user_start_datetime = datetime.strptime(user_start_date_str,format_str) if user_start_date_str is not None else None
-            user_end_datetime = datetime.strptime(user_end_date_str,format_str) if user_end_date_str is not None else None
-            campaign_summary['last_week'] = get_campaign_wise_summary_by_user(user_id, user_start_datetime, user_end_datetime)
-            campaign_summary['last_two_weeks'] = get_campaign_wise_summary_by_user(user_id, user_start_datetime, user_end_datetime)
-            campaign_summary['last_three_weeks'] = get_campaign_wise_summary_by_user(user_id, user_start_datetime, user_end_datetime)
-            campaign_summary['overall'] = get_campaign_wise_summary_by_user(user_id, user_start_datetime, user_end_datetime)
+        try:
+            user_id = request.user.id
+            supplier_code = request.query_params.get('supplier_code')
+            user_start_date_str = request.query_params.get('start_date', None)
+            user_end_date_str = request.query_params.get('end_date', None)
+            campaign_summary = {}
+            start_date = datetime.now() - timedelta(days=7)
+            if user_start_date_str == None:
+                campaign_summary['last_week'] = get_campaign_wise_summary_by_user(supplier_code, user_id, start_date)
+                start_date = datetime.now() - timedelta(days=14)
+                campaign_summary['last_two_weeks'] = get_campaign_wise_summary_by_user(supplier_code, user_id, start_date)
+                start_date = datetime.now() - timedelta(days=21)
+                campaign_summary['last_three_weeks'] = get_campaign_wise_summary_by_user(supplier_code, user_id, start_date)
+                campaign_summary['overall'] = get_campaign_wise_summary_by_user(supplier_code, user_id)
+            else:
+                format_str = '%d/%m/%Y'
+                user_start_datetime = datetime.strptime(user_start_date_str,format_str) if user_start_date_str is not None else None
+                user_end_datetime = datetime.strptime(user_end_date_str,format_str) if user_end_date_str is not None else None
+                campaign_summary['last_week'] = get_campaign_wise_summary_by_user(supplier_code, user_id, user_start_datetime, user_end_datetime)
+                campaign_summary['last_two_weeks'] = get_campaign_wise_summary_by_user(supplier_code, user_id, user_start_datetime, user_end_datetime)
+                campaign_summary['last_three_weeks'] = get_campaign_wise_summary_by_user(supplier_code, user_id, user_start_datetime, user_end_datetime)
+                campaign_summary['overall'] = get_campaign_wise_summary_by_user(supplier_code, user_id, user_start_datetime, user_end_datetime)
 
-        return ui_utils.handle_response({}, data=campaign_summary, success=True)
+            return ui_utils.handle_response({}, data=campaign_summary, success=True)
+        except Exception as e:
+            logger.exception(e)
+            return ui_utils.handle_response({}, data="Supplier code does not exist", success=False)
 
 
-def get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, days):
+def get_duration_wise_summary_for_vendors(supplier_code, vendor_campaign_map, all_campaign_ids, days):
     start_date = None
     if days:
         start_date = datetime.now() - timedelta(days=days)
     campaign_summary_map = {}
     for vendor in vendor_campaign_map:
-        campaign_summary_map[vendor] = get_campaign_wise_summary(vendor_campaign_map[vendor], start_date)[
+        campaign_summary_map[vendor] = get_campaign_wise_summary(supplier_code, vendor_campaign_map[vendor], start_date)[
             "all_campaigns"]
-    campaign_summary_map['overall'] = get_campaign_wise_summary(all_campaign_ids, start_date)["all_campaigns"]
+    campaign_summary_map['overall'] = get_campaign_wise_summary(supplier_code, all_campaign_ids, start_date)["all_campaigns"]
     return campaign_summary_map
 
 
 class VendorWiseSummary(APIView):
     @staticmethod
     def get(request):
-        user_id = request.user.id
-        all_assigned_campaigns = get_all_assigned_campaigns(user_id, None)
-        vendor_campaign_map = {}
-        all_campaign_ids = []
-        all_vendor_ids = []
-        for campaign in all_assigned_campaigns:
-            if campaign['principal_vendor']:
-                if campaign['principal_vendor'] not in vendor_campaign_map:
-                    vendor_campaign_map[campaign['principal_vendor']] = []
-                vendor_campaign_map[campaign['principal_vendor']].append(campaign["proposal_id"])
-                all_campaign_ids.append(campaign["proposal_id"])
-                if campaign['principal_vendor'] not in all_campaign_ids:
-                    all_vendor_ids.append(campaign['principal_vendor'])
-        all_vendors = Organisation.objects.filter(organisation_id__in=all_vendor_ids).all()
-        campaign_summary = {}
-        campaign_summary['last_week'] = get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, 7)
-        campaign_summary['last_two_week'] = get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, 14)
-        campaign_summary['last_three_week'] = get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, 21)
-        campaign_summary['overall'] = get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, None)
-        campaign_summary['vendor_details'] = {}
-        for vendor in all_vendors:
-            campaign_summary['vendor_details'][vendor.organisation_id] = {'name': vendor.name}
-        return ui_utils.handle_response({}, data=campaign_summary, success=True)
+        try:
+            user_id = request.user.id
+            supplier_code = request.query_params.get('supplier_code')        
+            all_assigned_campaigns = get_all_assigned_campaigns(user_id, None)
+            vendor_campaign_map = {}
+            all_campaign_ids = []
+            all_vendor_ids = []
+            for campaign in all_assigned_campaigns:
+                if campaign['principal_vendor']:
+                    if campaign['principal_vendor'] not in vendor_campaign_map:
+                        vendor_campaign_map[campaign['principal_vendor']] = []
+                    vendor_campaign_map[campaign['principal_vendor']].append(campaign["proposal_id"])
+                    all_campaign_ids.append(campaign["proposal_id"])
+                    if campaign['principal_vendor'] not in all_campaign_ids:
+                        all_vendor_ids.append(campaign['principal_vendor'])
+            all_vendors = Organisation.objects.filter(organisation_id__in=all_vendor_ids).all()
+            campaign_summary = {}
+            campaign_summary['last_week'] = get_duration_wise_summary_for_vendors(supplier_code, vendor_campaign_map, all_campaign_ids, 7)
+            campaign_summary['last_two_week'] = get_duration_wise_summary_for_vendors(supplier_code, vendor_campaign_map, all_campaign_ids, 14)
+            campaign_summary['last_three_week'] = get_duration_wise_summary_for_vendors(supplier_code, vendor_campaign_map, all_campaign_ids, 21)
+            campaign_summary['overall'] = get_duration_wise_summary_for_vendors(supplier_code, vendor_campaign_map, all_campaign_ids, None)
+            campaign_summary['vendor_details'] = {}
+            for vendor in all_vendors:
+                campaign_summary['vendor_details'][vendor.organisation_id] = {'name': vendor.name}
+            return ui_utils.handle_response({}, data=campaign_summary, success=True)
+        except Exception as e:
+            logger.exception(e)
+            return ui_utils.handle_response({}, data="Supplier code does not exist", success=False)
 
 
 def get_duration_wise_summary_for_cities(all_city_campaign_mapping, all_campaign_ids, days):
