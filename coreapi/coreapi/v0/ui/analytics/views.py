@@ -432,6 +432,10 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
                 curr_dict[new_name] = round_sig_min(result_value, 7) if result_value is not None else result_value
         higher_level_list_old = append_array_by_keys(derived_array,grouping_level,stat_metrics+raw_data)
         for curr_field in additional_fields_list:
+            if curr_field == "supplier" and supplier_code != "RS":
+                continue
+            if curr_field == "supplier_master" and supplier_code == "RS":
+                continue
             higher_level_list_test = add_related_field(higher_level_list_old, *(related_fields_dict[curr_field]))
 
         higher_level_list = []
@@ -462,7 +466,6 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             if curr_stat[:len(pfix)] == pfix:
                 curr_stat = curr_stat[len(pfix):]
                 weighted = 1
-            print(statistics_map[curr_stat])
             higher_level_list = statistics_map[curr_stat](higher_level_list,stat_metrics, weighted=weighted)
 
     custom_function_output = {}
