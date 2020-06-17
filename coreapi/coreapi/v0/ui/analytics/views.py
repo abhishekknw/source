@@ -906,15 +906,17 @@ def get_details_by_higher_level_geographical(highest_level, highest_level_list, 
         return {'final_dict':{}, 'single_list':[]}
     
     if supplier_code != "RS":
-        geographical_parent_details = geographical_parent_details_master
+        geographical_parent_details_data = geographical_parent_details_master
+    else:
+        geographical_parent_details_data = geographical_parent_details
 
-    model_name = geographical_parent_details['model_name']
-    parent_name_model = geographical_parent_details['member_names'][highest_level]
-    self_name_model = geographical_parent_details['member_names'][lowest_level]
+    model_name = geographical_parent_details_data['model_name']
+    parent_name_model = geographical_parent_details_data['member_names'][highest_level]
+    self_name_model = geographical_parent_details_data['member_names'][lowest_level]
     match_list = highest_level_list
     query = eval(model_name + '.objects.filter(' + parent_name_model + '__in=match_list)')
-    lowest_level = geographical_parent_details['base']
-    lowest_level_model_name = geographical_parent_details['base_model_name']
+    lowest_level = geographical_parent_details_data['base']
+    lowest_level_model_name = geographical_parent_details_data['base_model_name']
     if results_by_lowest_level == 1:
         query_values = list(query.values(parent_name_model, self_name_model, lowest_level_model_name))
         list_values = list(query.values_list(lowest_level_model_name, flat=True))
@@ -1088,7 +1090,7 @@ class RangeAPIView(APIView):
         return handle_response('', data={}, success=True)
 
 
-def get_all_assigned_campaigns_vendor_city(user_id, city_list = None, vendor_list = None):
+def get_all_assigned_campaigns_vendor_city(user_id, city_list = None, vendor_list = None, supplier_code = 'RS'):
     final_result = None
     city_assigned_campaigns = None
     if vendor_list is not None:
@@ -1099,7 +1101,7 @@ def get_all_assigned_campaigns_vendor_city(user_id, city_list = None, vendor_lis
         user_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id).values_list(
             'campaign_id', flat=True).distinct()
     if city_list is not None:
-        city_suppliers_result = get_details_by_higher_level_geographical('city',city_list)
+        city_suppliers_result = get_details_by_higher_level_geographical('city',city_list,supplier_code=supplier_code)
         city_suppliers_list = city_suppliers_result['single_list']
         city_campaigns = ShortlistedSpaces.objects.filter(object_id__in=city_suppliers_list).values_list\
             ('proposal_id', flat=True).distinct()
@@ -1123,7 +1125,8 @@ class CityVendorCampaigns(APIView):
         user_data = request.data
         city_list = user_data.get('cities', None)
         vendor_list = user_data.get('vendors', None)
-        all_assigned_campaigns = get_all_assigned_campaigns_vendor_city(user_id, city_list, vendor_list)
+        supplier_code = request.query_params.get("supplier_code")
+        all_assigned_campaigns = get_all_assigned_campaigns_vendor_city(user_id, city_list, vendor_list, supplier_code)
 
         return handle_response({}, data=all_assigned_campaigns, success=True)
 
