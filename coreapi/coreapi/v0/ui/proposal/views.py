@@ -2805,6 +2805,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     "BANNER": [],
                     "GATEWAY ARCH": [],
                     "SUNBOARD" : [],
+                    "WHATSAPP INDIVIDUAL": [],
+                    "WHATSAPP GROUP": []
                 }
         inventory_days_dict = {
             "POSTER": None,
@@ -2814,6 +2816,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             "BANNER": None,
             "GATEWAY ARCH": None,
             "SUNBOARD" : None,
+            "WHATSAPP INDIVIDUAL": None,
+            "WHATSAPP GROUP": None
         }
         for inventory_activity in inventory_activity_assignment:
             inventoy_name = inventory_activity.get('inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name')
