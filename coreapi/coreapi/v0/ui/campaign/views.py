@@ -1187,7 +1187,7 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
         lead_form = mongo_client.leads_forms.find({"campaign_id": campaign_id})
         campaign_hot_leads_dict = lead_counter(campaign_id, leads_form_data, user_start_datetime, user_end_datetime, lead_form[0])
         if lead_form and lead_form[0] and 'hotness_mapping' in lead_form[0]:
-            for key in lead_form[0]['hotness_mapping'] and 'hotness_mapping' in lead_form[0]:
+            for key in lead_form[0]['hotness_mapping']:
                 if 'is_hot_level_1' in key:
                    overall_data['key_hot_level_1'] = lead_form[0]['hotness_mapping']['is_hot_level_1']
                 if 'is_hot_level_2' in key:
