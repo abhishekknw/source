@@ -412,7 +412,10 @@ def adder(dict_array, keys, weighted = 0):
     for curr_dict in dict_array:
         for key in keys:
             sum_key = 'total_' + key
-            curr_dict[sum_key] = sum(curr_dict[key])
+            try:
+                curr_dict[sum_key] = sum(curr_dict[key])
+            except:
+                curr_dict[sum_key] = curr_dict[key]
         new_array.append(curr_dict)
     return new_array
 
