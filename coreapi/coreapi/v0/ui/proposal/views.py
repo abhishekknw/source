@@ -1684,26 +1684,16 @@ class HashtagImagesViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get('campaign_id')
-            date = request.query_params.get('date')
+            supplier_id = request.query_params.get('supplier_id')
+
             try:
-                images = HashTagImages.objects.filter(campaign=campaign_id, created_at__date=date).values()
+                images = HashTagImages.objects.filter(campaign=campaign_id,object_id=supplier_id).values()
             except ObjectDoesNotExist:
                 return ui_utils.handle_response(class_name, data={}, success=True)
-            for image in images:
-
-                supplier = SupplierTypeSociety.objects.get(supplier_id=image['object_id'])
-                serializer = SupplierTypeSocietySerializer(supplier)
-
-                master_supplier = SupplierMaster.objects.get(supplier_id=image['object_id'])
-                master_serializer = SupplierMasterSerializer(master_supplier)
-
-                all_suppliers = manipulate_object_key_values(serializer.data)
-                all_master_suppliers = manipulate_master_to_rs(master_serializer.data)
-                all_suppliers.extend(all_master_suppliers)
-
-                image['supplier_data'] = all_suppliers.data
             return ui_utils.handle_response(class_name, data=images, success=True)
+
         except Exception as e:
+            logger.exception
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     @detail_route(methods=['POST'])
@@ -3219,6 +3209,7 @@ class ImportSheetInExistingCampaign(APIView):
 
             return ui_utils.handle_response(class_name, data={}, success=True)
         except Exception as e:
+            logger.exception(e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 class GetOngoingSuppliersOfCampaign(APIView):
