@@ -1,9 +1,11 @@
 from __future__ import absolute_import
 from rest_framework.serializers import ModelSerializer
-from .models import (SupplierHording, SupplierEducationalInstitute, SupplierTypeSociety, SupplierTypeCode, SupplierTypeRetailShop, SupplierTypeBusShelter,
+from rest_framework import serializers
+from .models import (AddressMaster, SupplierMaster, SupplierHording, SupplierEducationalInstitute, SupplierTypeSociety, SupplierTypeCode, SupplierTypeRetailShop, SupplierTypeBusShelter,
                     SupplierTypeGym, SupplierTypeSalon, SupplierTypeCorporate, SupplierInfo, CorporateBuilding,
                     CorporateParkCompanyList, CorporateCompanyDetails, SupplierTypeBusDepot, SupplierAmenitiesMap)
 from v0.ui.components.serializers import CompanyFloorSerializer, CorporateBuildingWingSerializer
+
 
 class SupplierEducationalInstituteSerializer(ModelSerializer):
     class Meta:
@@ -11,10 +13,24 @@ class SupplierEducationalInstituteSerializer(ModelSerializer):
         fields = '__all__'
 
 
+class AddressMasterSerializer(ModelSerializer):
+    class Meta:
+        model = AddressMaster
+        fields = '__all__'
+
+
+class SupplierMasterSerializer(ModelSerializer):
+    address_supplier = AddressMasterSerializer(read_only=True)
+    class Meta:
+        model = SupplierMaster
+        fields = '__all__'
+
+
 class SupplierHordingSerializer(ModelSerializer):
     class Meta:
         model = SupplierHording
         fields = '__all__'
+
 
 class UICorporateSerializer(ModelSerializer):
     class Meta:
@@ -39,6 +55,7 @@ class BusShelterSerializer(ModelSerializer):
         model = SupplierTypeBusShelter
         fields = '__all__'
 
+
 class CorporateCompanyDetailsSerializer(ModelSerializer):
     class Meta:
         model = CorporateCompanyDetails
@@ -60,6 +77,7 @@ class CorporateCompanySerializer(ModelSerializer):
         model = CorporateCompanyDetails
         fields = '__all__'
 
+
 class CorporateParkCompanySerializer(ModelSerializer):
     # for saving details of comapny with their building wing and floors /corporate/{{corporate_id}}/companyInfo
     companyDetailList = CorporateCompanySerializer(source='get_company_details', many=True)
@@ -68,10 +86,12 @@ class CorporateParkCompanySerializer(ModelSerializer):
         model = CorporateParkCompanyList
         fields = '__all__'
 
+
 class CorporateParkCompanyListSerializer(ModelSerializer):
     class Meta:
         model = CorporateParkCompanyList
         fields = '__all__'
+
 
 class CorporateBuildingGetSerializer(ModelSerializer):
     wingInfo = CorporateBuildingWingSerializer(source='get_wings', many=True)
@@ -80,20 +100,32 @@ class CorporateBuildingGetSerializer(ModelSerializer):
         model = CorporateBuilding
         fields = '__all__'
 
+
 class SupplierTypeSocietySerializer(ModelSerializer):
+    supplier_type = serializers.SerializerMethodField()
     class Meta:
         model = SupplierTypeSociety
         fields = '__all__'
+    
+    def get_supplier_type(self, obj):
+        return 'RS'
+
 
 class SupplierTypeSocietySerializer2(ModelSerializer):
+    supplier_type = serializers.SerializerMethodField()
     class Meta:
         model = SupplierTypeSociety
         fields = '__all__'
+    
+    def get_supplier_type(self, obj):
+        return 'RS'
+
 
 class CorporateBuildingSerializer(ModelSerializer):
     class Meta:
         model = CorporateBuilding
         fields = '__all__'
+
 
 class SupplierTypeCodeSerializer(ModelSerializer):
     class Meta:
@@ -102,7 +134,6 @@ class SupplierTypeCodeSerializer(ModelSerializer):
 
 
 class SupplierTypeRetailShopSerializer(ModelSerializer):
-
     class Meta:
         model = SupplierTypeRetailShop
         fields = '__all__'
@@ -137,10 +168,12 @@ class SupplierInfoSerializer(ModelSerializer):
         model = SupplierInfo
         fields = '__all__'
 
+
 class RetailShopSerializer(ModelSerializer):
     class Meta:
         model = SupplierTypeRetailShop
         fields = '__all__'
+
 
 class BusDepotSerializer(ModelSerializer):
     class Meta:

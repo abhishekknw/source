@@ -1,5 +1,5 @@
 import numpy as np
-from v0.ui.supplier.models import SupplierPhase, SupplierTypeSociety
+from v0.ui.supplier.models import SupplierPhase, SupplierTypeSociety, SupplierMaster
 from v0.ui.proposal.models import ProposalInfo
 from datetime import datetime
 import pytz, copy
@@ -63,6 +63,7 @@ averaging_metrics_list = ["cost_flat"]
 
 related_fields_dict = {"campaign": ['ProposalInfo', 'proposal_id', 'campaign', 'name', 'campaign_name'],
                        "supplier": ['SupplierTypeSociety', 'supplier_id', 'supplier', 'society_name', 'supplier_name'],
+                       "supplier_master": ['SupplierMaster', 'supplier_id', 'supplier', 'supplier_name'],
                        "vendor": ['Organisation', 'organisation_id', 'vendor', 'name', 'vendor_name']
                        }
 
@@ -71,35 +72,35 @@ related_fields_dict = {"campaign": ['ProposalInfo', 'proposal_id', 'campaign', '
 count_details_parent_map = {
     'map name': 'count_details_parent_map',
     'supplier':{'parent': 'campaign', 'model_name': 'ShortlistedSpaces', 'database_type': 'mysql',
-                'self_name_model': 'object_id', 'parent_name_model': 'proposal_id', 'storage_type': 'name'},
+                'self_name_model': 'object_id', 'parent_name_model': 'proposal_id', 'storage_type': 'name', 'supplier_code': 'supplier_code'},
     'checklist': {'parent': 'campaign', 'model_name': 'checklists', 'database_type': 'mongodb',
-                  'self_name_model': 'checklist_id', 'parent_name_model': 'campaign_id', 'storage_type': 'unique'},
+                  'self_name_model': 'checklist_id', 'parent_name_model': 'campaign_id', 'storage_type': 'unique', 'supplier_id': 'supplier_id'},
     'flat': {'parent': 'supplier', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
-             'self_name_model': 'flat_count', 'parent_name_model': 'supplier_id', 'storage_type': 'sum'},
+             'self_name_model': 'flat_count', 'parent_name_model': 'supplier_id', 'storage_type': 'sum', 'supplier_type': 'supplier_type'},
     'lead': {'parent': 'campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
-             'self_name_model': 'total_leads_count', 'parent_name_model': 'campaign_id', 'storage_type': 'sum'},
+             'self_name_model': 'total_leads_count', 'parent_name_model': 'campaign_id', 'storage_type': 'sum', 'supplier_id': 'supplier_id'},
     'hot_lead': {'parent': 'campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
-                 'self_name_model': 'total_hot_leads_count', 'parent_name_model': 'campaign_id', 'storage_type': 'sum'},
+                 'self_name_model': 'total_hot_leads_count', 'parent_name_model': 'campaign_id', 'storage_type': 'sum', 'supplier_id': 'supplier_id'},
     'cost': {'parent': 'campaign', 'model_name':'ShortlistedSpaces', 'database_type': 'mysql',
              'self_name_model': 'total_negotiated_price', 'parent_name_model': 'proposal_id',
-             'storage_type': 'sum'},
+             'storage_type': 'sum', 'supplier_code': 'supplier_code'},
     'phase': {'parent': 'campaign', 'model_name': 'SupplierPhase', 'database_type': 'mysql',
               'self_model_name': 'phase_no', 'parent_name_model':'campaign_id', 'storage_type': 'unique'},
     'hotness_level_': {'parent': 'campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                        'self_name_model': 'hotness_level', 'parent_name_model': 'campaign_id',
-                       'storage_type': 'condition', 'increment_type':3},
+                       'storage_type': 'condition', 'increment_type':3, 'supplier_id': 'supplier_id'},
     'supplier,flattype': {'parent': 'flattype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
                           'self_name_model': 'supplier_id', 'parent_name_model': 'flat_count_type',
-                          'storage_type': 'name'},
+                          'storage_type': 'name', 'supplier_type': 'supplier_type'},
     'cost_flat': {'parent': 'campaign', 'model_name':'ShortlistedSpaces', 'database_type': 'mysql',
                   'self_name_model': 'cost_per_flat', 'parent_name_model': 'proposal_id',
-                  'storage_type': 'mean', 'other_grouping_column':'object_id'},
+                  'storage_type': 'mean', 'other_grouping_column':'object_id', 'supplier_code': 'supplier_code'},
     'total_booking_confirmed': {'parent': 'campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
                                 'self_name_model': 'total_booking_confirmed', 'parent_name_model': 'campaign_id',
-                                'storage_type': 'sum'},
+                                'storage_type': 'sum', 'supplier_id': 'supplier_id'},
     'total_orders_punched': {'parent': 'campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
                              'self_name_model': 'total_orders_punched', 'parent_name_model': 'campaign_id',
-                             'storage_type': 'sum'},
+                             'storage_type': 'sum', 'supplier_id': 'supplier_id'},
 }
 
 count_details_parent_map_multiple = {
@@ -110,28 +111,28 @@ count_details_parent_map_multiple = {
     #              'storage_type': 'condition'},
     'lead': {'parent': 'supplier,campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
              'self_name_model': 'total_leads_count', 'parent_name_model': 'supplier_id,campaign_id',
-             'storage_type': 'sum'},
+             'storage_type': 'sum', 'supplier_id': 'supplier_id'},
     'hot_lead': {'parent': 'supplier,campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
                  'self_name_model': 'total_hot_leads_count', 'parent_name_model': 'supplier_id,campaign_id',
-                 'storage_type': 'sum'},
+                 'storage_type': 'sum', 'supplier_id': 'supplier_id'},
     'cost': {'parent': 'supplier,campaign', 'model_name': 'ShortlistedSpaces', 'database_type': 'mysql',
              'self_name_model': 'total_negotiated_price', 'parent_name_model': 'object_id,proposal_id',
-             'storage_type': 'sum'},
+             'storage_type': 'sum', 'supplier_code': 'supplier_code'},
     'date': {'parent': 'campaign,phase', 'model_name': 'SupplierPhase', 'database_type': 'mysql',
              'self_model_name': 'start_date+end_date', 'parent_name_model': 'campaign_id, phase_no',
              'storage_type': 'range'},
     'hotness_level_': {'parent': 'supplier,campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                        'self_name_model': 'hotness_level', 'parent_name_model': 'supplier_id,campaign_id',
-                       'storage_type': 'condition', 'increment_type': 3},
+                       'storage_type': 'condition', 'increment_type': 3, 'supplier_id': 'supplier_id'},
     'cost_flat': {'parent': 'supplier,campaign', 'model_name': 'ShortlistedSpaces', 'database_type': 'mysql',
                   'self_name_model': 'cost_per_flat', 'parent_name_model': 'object_id,proposal_id',
-                  'storage_type': 'mean'},
+                  'storage_type': 'mean', 'supplier_code': 'supplier_code'},
     'total_booking_confirmed': {'parent': 'supplier,campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
                  'self_name_model': 'total_booking_confirmed', 'parent_name_model': 'supplier_id,campaign_id',
-                 'storage_type': 'sum'},
+                 'storage_type': 'sum', 'supplier_id': 'supplier_id'},
     'total_orders_punched': {'parent': 'supplier,campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
                  'self_name_model': 'total_orders_punched', 'parent_name_model': 'supplier_id,campaign_id',
-                 'storage_type': 'sum'}
+                 'storage_type': 'sum', 'supplier_id': 'supplier_id'}
 }
 
 reverse_direct_match = {'flattype':'supplier', 'qualitytype':'supplier','standeetype':'supplier',
@@ -225,6 +226,13 @@ geographical_parent_details = {
     'base': 'supplier', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
     'base_model_name':'supplier_id', 'storage_type': 'name',
     'member_names': {'locality': 'society_locality', 'city': 'society_city', 'state': 'society_state',
+                     'supplier': 'supplier_id'}
+}
+
+geographical_parent_details_master = {
+    'base': 'supplier', 'model_name': 'SupplierMaster', 'database_type': 'mysql',
+    'base_model_name':'supplier_id', 'storage_type': 'name',
+    'member_names': {'locality': 'locality_rating', 'city': 'city', 'state': 'state',
                      'supplier': 'supplier_id'}
 }
 
@@ -404,7 +412,10 @@ def adder(dict_array, keys, weighted = 0):
     for curr_dict in dict_array:
         for key in keys:
             sum_key = 'total_' + key
-            curr_dict[sum_key] = sum(curr_dict[key])
+            try:
+                curr_dict[sum_key] = sum(curr_dict[key])
+            except:
+                curr_dict[sum_key] = curr_dict[key]
         new_array.append(curr_dict)
     return new_array
 

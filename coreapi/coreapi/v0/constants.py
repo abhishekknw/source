@@ -1359,6 +1359,26 @@ codes_to_model_names = {
     'SB': 'SunBoardInventory',
     'BA': 'BannerInventory',
     'BANNER': 'BannerInventory',
+    'POSTER LIFT': 'PosterLiftInventory',
+    'HOARDING' : 'HordingInventory',
+    'Hoarding' : 'HordingInventory',
+    'GANTRY' : 'GantryInventory',
+    'Gantry' : 'GantryInventory',
+    'BUS SHELTER' : 'BusShelterInventory',
+    'BUS BACK' : 'BusBackInventory',
+    'BUS RIGHT' : 'BusRightInventory',
+    'BUS LEFT' : 'BusLeftInventory',
+    'BUS WRAP' : 'BusWrapInventory',
+    'FLOOR' : 'FloorInventory',
+    'CEILING' : 'CeilingInventory',
+    'BILLING' : 'BillingInventory',
+    'COUNTER DISPLAY' : 'CounterDisplayInventory',
+    'TENT CARD' : 'TentCardInventory',
+    'TABLE' : 'TableInventory',
+    'HOARDING LIT' : 'HordingLitInventory',
+    'BUS SHELTER LIT' : 'BusShelterLitInventory',
+    'GANTRY LIT' : 'GantryLitInventory',
+    'WALL' : 'WallInventory',
     'WHATSAPP INDIVIDUAL': 'WhatsAppIndividualInventory',
     'WHATSAPP GROUP': 'WhatsAppGroupInventory'
 }
@@ -1531,7 +1551,8 @@ tableHeaderData = {
         "receipt" : "Receipt",
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
-        "delete_action" : "Delete Action"
+        "delete_action" : "Delete Action",
+        "brand":"Brand"
     },
     'CP' : {
         "srNo" : "Sr No",
@@ -1541,7 +1562,8 @@ tableHeaderData = {
         "area_subArea" : "Area (Sub Area)",
         "address_landmark" : "Address (Landmark)",
         "relation_ship_data" : "RelationShip Data",
-        "no_of_employees":"No. of Employees",
+        "employee_count":"Employee Count",
+        "visitors_count" : "Visitors Count",
         "contacts_details" : "Contacts Details",
         "assign_user" : "Assign User",
         "booking_priority" : "Booking Priority",
@@ -1554,9 +1576,9 @@ tableHeaderData = {
         "inventory_count" : "Inventory Count",
         "inventory_days" : "Inventory Days",
         "inventory_supplier_price": "Inventory Supplier Price",
-        "total_supplier_price_per_employee": "Total Supplier Price Per Employee",
+        "total_supplier_price": "Total Supplier Price",
         "negotiated_price" : "Negotiated Price",
-        "cost_per_average_daily_footfall" : "Cost Per Average Daily Footfall",
+        "cost_per_employee" : "Cost Per Employee",
         "freebies" : "Freebies",
         "mode_of_payment" : "Mode Of Payment",
         "transaction_cheque_number" : "Transaction/Cheque Number",
@@ -1565,7 +1587,8 @@ tableHeaderData = {
         "receipt" : "Receipt",
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
-        "delete_action" : "Delete Action"
+        "delete_action" : "Delete Action",
+        "brand":"Brand"
     },
     'GY' : {
         "srNo" : "Sr No",
@@ -1575,8 +1598,8 @@ tableHeaderData = {
         "area_subArea" : "Area (Sub Area)",
         "address_landmark" : "Address (Landmark)",
         "relation_ship_data" : "RelationShip Data",
-        "average_weekend_daily_footfall" : "Average Weekend(Daily Footfall)",
-        "average_weekday_daily_footfall" : "Average Weekday(Daily Footfall)", 
+        "weekend_daily_footfall_count" : "Weekend Daily Footfall Count",
+        "weekday_daily_footfall_count" : "Weekday Daily Footfall Count",  
         "contacts_details" : "Contacts Details",
         "assign_user" : "Assign User",
         "booking_priority" : "Booking Priority",
@@ -1589,9 +1612,9 @@ tableHeaderData = {
         "inventory_count" : "Inventory Count",
         "inventory_days" : "Inventory Days",
         "inventory_supplier_price": "Inventory Supplier Price",
-        "total_supplier_price_per_footfall_weekend" : "Total Supplier Price Per Footfall (Weekend)",
+        "total_supplier_price": "Total Supplier Price",
         "negotiated_price" : "Negotiated Price",
-        "cost_per_average_daily_footfall" : "Cost Per Average Daily Footfall",
+        "cost_per_weekend_daily_footfall" : "Cost Per Weekend Daily Footfall",
         "freebies" : "Freebies",
         "mode_of_payment" : "Mode Of Payment",
         "transaction_cheque_number" : "Transaction/Cheque Number",
@@ -1600,7 +1623,8 @@ tableHeaderData = {
         "receipt" : "Receipt",
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
-        "delete_action" : "Delete Action"
+        "delete_action" : "Delete Action",
+        "brand":"Brand"
     },
     'SA' : {
         "srNo" : "Sr No",
@@ -1610,8 +1634,8 @@ tableHeaderData = {
         "area_subArea" : "Area (Sub Area)",
         "address_landmark" : "Address (Landmark)",
         "relation_ship_data" : "RelationShip Data",
-        "average_weekend_daily_footfall" : "Average Weekend(Daily Footfall)",
-        "average_weekday_daily_footfall" : "Average Weekday(Daily Footfall)", 
+        "weekend_daily_footfall_count" : "Weekend Daily Footfall Count",
+        "weekday_daily_footfall_count" : "Weekday Daily Footfall Count",  
         "contacts_details" : "Contacts Details",
         "assign_user" : "Assign User",
         "booking_priority" : "Booking Priority",
@@ -1624,9 +1648,9 @@ tableHeaderData = {
         "inventory_count" : "Inventory Count",
         "inventory_days" : "Inventory Days",
         "inventory_supplier_price": "Inventory Supplier Price",
-        "total_supplier_price_per_footfall_weekend" : "Total Supplier Price Per Footfall (Weekend)",
+        "total_supplier_price": "Total Supplier Price",
         "negotiated_price" : "Negotiated Price",
-        "cost_per_average_daily_footfall" : "Cost Per Average Daily Footfall",
+        "cost_per_weekend_daily_footfall" : "Cost Per Weekend Daily Footfall",
         "freebies" : "Freebies",
         "mode_of_payment" : "Mode Of Payment",
         "transaction_cheque_number" : "Transaction/Cheque Number",
@@ -1635,7 +1659,8 @@ tableHeaderData = {
         "receipt" : "Receipt",
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
-        "delete_action" : "Delete Action"
+        "delete_action" : "Delete Action",
+        "brand":"Brand"
     },
     'BS' : {
         "srNo" : "Sr No",
@@ -1645,8 +1670,8 @@ tableHeaderData = {
         "area_subArea" : "Area (Sub Area)",
         "address_landmark" : "Address (Landmark)",
         "relation_ship_data" : "RelationShip Data",
-        "average_weekend_daily_footfall" : "Average Weekend(Daily Footfall)",
-        "average_weekday_daily_footfall" : "Average Weekday(Daily Footfall)", 
+        "footfall_count" : "Footfall Count",
+        "traffic_count" :  "Traffic Count",
         "contacts_details" : "Contacts Details",
         "assign_user" : "Assign User",
         "booking_priority" : "Booking Priority",
@@ -1659,9 +1684,9 @@ tableHeaderData = {
         "inventory_count" : "Inventory Count",
         "inventory_days" : "Inventory Days",
         "inventory_supplier_price": "Inventory Supplier Price",
-        "total_supplier_price_per_footfall_weekend" : "Total Supplier Price Per Footfall (Weekend)",
+        "total_supplier_price": "Total Supplier Price",
         "negotiated_price" : "Negotiated Price",
-        "cost_per_average_daily_footfall" : "Cost Per Average Daily Footfall",
+        "cost_per_footfall" : "Cost Per Footfall",
         "freebies" : "Freebies",
         "mode_of_payment" : "Mode Of Payment",
         "transaction_cheque_number" : "Transaction/Cheque Number",
@@ -1670,7 +1695,8 @@ tableHeaderData = {
         "receipt" : "Receipt",
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
-        "delete_action" : "Delete Action"
+        "delete_action" : "Delete Action",
+        "brand":"Brand"
     },
     'RE' : {
         "srNo" : "Sr No",
@@ -1680,8 +1706,8 @@ tableHeaderData = {
         "area_subArea" : "Area (Sub Area)",
         "address_landmark" : "Address (Landmark)",
         "relation_ship_data" : "RelationShip Data",
-        "average_weekend_daily_footfall" : "Average Weekend(Daily Footfall)",
-        "average_weekday_daily_footfall" : "Average Weekday(Daily Footfall)", 
+        "weekend_daily_footfall_count" : "Weekend Daily Footfall Count",
+        "weekday_daily_footfall_count" : "Weekday Daily Footfall Count", 
         "contacts_details" : "Contacts Details",
         "assign_user" : "Assign User",
         "booking_priority" : "Booking Priority",
@@ -1694,9 +1720,9 @@ tableHeaderData = {
         "inventory_count" : "Inventory Count",
         "inventory_days" : "Inventory Days",
         "inventory_supplier_price": "Inventory Supplier Price",
-        "total_supplier_price_per_footfall_weekend" : "Total Supplier Price Per Footfall (Weekend)",
+        "total_supplier_price": "Total Supplier Price",
         "negotiated_price" : "Negotiated Price",
-        "cost_per_average_daily_footfall" : "Cost Per Average Daily Footfall",
+        "cost_per_weekend_daily_footfall" : "Cost Per Weekend Daily Footfall",
         "freebies" : "Freebies",
         "mode_of_payment" : "Mode Of Payment",
         "transaction_cheque_number" : "Transaction/Cheque Number",
@@ -1705,7 +1731,8 @@ tableHeaderData = {
         "receipt" : "Receipt",
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
-        "delete_action" : "Delete Action"
+        "delete_action" : "Delete Action",
+        "brand":"Brand"
     }, 
     'BD' : {
         "srNo" : "Sr No",
@@ -1729,7 +1756,7 @@ tableHeaderData = {
         "inventory_count" : "Inventory Count",
         "inventory_days" : "Inventory Days",
         "inventory_supplier_price": "Inventory Supplier Price",
-        "total_supplier_price_per_footfall_weekend" : "Total Supplier Price Per Footfall (Weekend)",
+        "total_supplier_price": "Total Supplier Price",
         "negotiated_price" : "Negotiated Price",
         "cost_per_average_daily_footfall" : "Cost Per Average Daily Footfall",
         "freebies" : "Freebies",
@@ -1740,7 +1767,8 @@ tableHeaderData = {
         "receipt" : "Receipt",
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
-        "delete_action" : "Delete Action"
+        "delete_action" : "Delete Action",
+        "brand":"Brand"
     },
     'EI' : {
         "srNo" : "Sr No",
@@ -1750,7 +1778,8 @@ tableHeaderData = {
         "area_subArea" : "Area (Sub Area)",
         "address_landmark" : "Address (Landmark)",
         "relation_ship_data" : "RelationShip Data",
-        "no_of_students" : "No. of Students",
+        "student_count" : "Student Count",
+        "teacher_count" : "Teacher Count",
         "contacts_details" : "Contacts Details",
         "assign_user" : "Assign User",
         "booking_priority" : "Booking Priority",
@@ -1763,9 +1792,9 @@ tableHeaderData = {
         "inventory_count" : "Inventory Count",
         "inventory_days" : "Inventory Days",
         "inventory_supplier_price": "Inventory Supplier Price",
-        "total_supplier_price_per_student" : "Total Supplier Price Per Student",
+        "total_supplier_price": "Total Supplier Price",
         "negotiated_price" : "Negotiated Price",
-        "cost_per_average_student" : "Cost Per Average Student",
+        "cost_per_student" : "Cost Per Student",
         "freebies" : "Freebies",
         "mode_of_payment" : "Mode Of Payment",
         "transaction_cheque_number" : "Transaction/Cheque Number",
@@ -1774,6 +1803,213 @@ tableHeaderData = {
         "receipt" : "Receipt",
         "lead_performance_summary" : "Lead Performance Summary",
         "completion_status" : "Completion Status",
-        "delete_action" : "Delete Action"
+        "delete_action" : "Delete Action",
+        "brand":"Brand"
+    },
+    'HO' : {
+        "srNo" : "Sr No",
+        "name" : "Supplier Name",
+        "supplier_id" : "Supplier Id",
+        "supplier_type" : "Supplier Type",
+        "area_subArea" : "Area (Sub Area)",
+        "address_landmark" : "Address (Landmark)",
+        "relation_ship_data" : "RelationShip Data",
+        "eyeball_count" :"Eyeball Count",
+        "traffic_count" : "Traffic Count", 
+        "contacts_details" : "Contacts Details",
+        "assign_user" : "Assign User",
+        "booking_priority" : "Booking Priority",
+        "booking_status_and_sub_status" : "Booking Status and Sub Status",
+        "phase" : "Phase",
+        "internal_comments" : "Internal Comments",
+        "comments" : "Comments",
+        "next_action_date" : "Next Action Date",
+        "inventory_type" : "Inventory Type",
+        "inventory_count" : "Inventory Count",
+        "inventory_days" : "Inventory Days",
+        "inventory_supplier_price": "Inventory Supplier Price",
+        "total_supplier_price": "Total Supplier Price",
+        "negotiated_price" : "Negotiated Price",
+        "cost_per_eyeball" : "Cost Per Eyeball",
+        "freebies" : "Freebies",
+        "mode_of_payment" : "Mode Of Payment",
+        "transaction_cheque_number" : "Transaction/Cheque Number",
+        "payment_status" : "Payment Status",
+        "permission_box" : "Permission Box",
+        "receipt" : "Receipt",
+        "lead_performance_summary" : "Lead Performance Summary",
+        "completion_status" : "Completion Status",
+        "delete_action" : "Delete Action",
+        "brand":"Brand"
+    },
+    'ALL' : {
+        "srNo" : "Sr No",
+        "name" : "Supplier Name",
+        "supplier_id" : "Supplier Id",
+        "supplier_type" : "Supplier Type",
+        "area_subArea" : "Area (Sub Area)",
+        "address_landmark" : "Address (Landmark)",
+        "relation_ship_data" : "RelationShip Data",
+        "unit_primary_count" : "Unit Primary Count",
+        "unit_secondary_count" : "Unit Secondary Count", 
+        "contacts_details" : "Contacts Details",
+        "assign_user" : "Assign User",
+        "booking_priority" : "Booking Priority",
+        "booking_status_and_sub_status" : "Booking Status and Sub Status",
+        "phase" : "Phase",
+        "internal_comments" : "Internal Comments",
+        "comments" : "Comments",
+        "next_action_date" : "Next Action Date",
+        "inventory_type" : "Inventory Type",
+        "inventory_count" : "Inventory Count",
+        "inventory_days" : "Inventory Days",
+        "inventory_supplier_price": "Inventory Supplier Price",
+        "total_supplier_price": "Total Supplier Price",
+        "negotiated_price" : "Negotiated Price",
+        "cost_per_unit" : "Cost Per Unit",
+        "freebies" : "Freebies",
+        "mode_of_payment" : "Mode Of Payment",
+        "transaction_cheque_number" : "Transaction/Cheque Number",
+        "payment_status" : "Payment Status",
+        "permission_box" : "Permission Box",
+        "receipt" : "Receipt",
+        "lead_performance_summary" : "Lead Performance Summary",
+        "completion_status" : "Completion Status",
+        "delete_action" : "Delete Action",
+        "brand":"Brand"
     }
+}
+
+supplier_size_category = {
+    "RS":{
+        "0-150":{
+            "min": 0,
+            "max": 150
+        },
+        "151-399":{
+            "min": 151,
+            "max": 399
+        },
+        "400+":{
+            "min": 400
+        }
+    },
+    "CP":{
+        "0-1000":{
+            "min": 0,
+            "max": 1000
+        },
+        "1001-9999":{
+            "min": 1001,
+            "max": 9999
+        },
+        "10000+":{
+            "min": 10000
+        }
+    },
+    "EI":{
+        "0-500":{
+            "min": 0,
+            "max": 500
+        },
+        "501-1999":{
+            "min": 501,
+            "max": 1999
+        },
+        "2000+":{
+            "min": 2000
+        }
+    },
+    "RE":{
+        "0-100":{
+            "min": 0,
+            "max": 100
+        },
+        "101-999":{
+            "min": 101,
+            "max": 999
+        },
+        "1000+":{
+            "min": 1000
+        }
+    },
+    "GY":{
+        "0-50":{
+            "min": 0,
+            "max": 50
+        },
+        "51-199":{
+            "min": 51,
+            "max": 199
+        },
+        "200+":{
+            "min": 200
+        }
+    },
+    "SA":{
+        "0-20":{
+            "min": 0,
+            "max": 20
+        },
+        "21-49":{
+            "min": 21,
+            "max": 49
+        },
+        "50+":{
+            "min": 50
+        }
+    },
+    "BS":{
+        "0-100":{
+            "min": 0,
+            "max": 100
+        },
+        "101-299":{
+            "min": 101,
+            "max": 299
+        },
+        "300+":{
+            "min":300
+        }
+    },
+    "BUS":{
+        "0-30":{
+            "min": 0,
+            "max": 30
+        },
+        "31-99":{
+            "min": 31,
+            "max": 99
+        },
+        "100+":{
+            "min":100
+        }
+    },
+    "Hording":{
+        "0-10000":{
+            "min": 0,
+            "max": 10000
+        },
+        "10001-49999":{
+            "min": 10001,
+            "max": 49999
+        },
+        "50000+":{
+            "min":50000
+        }
+    },
+    "Gantry":{
+        "0-10000":{
+            "min": 0,
+            "max": 10000
+        },
+        "10001-49999":{
+            "min": 10001,
+            "max": 49999
+        },
+        "50000+":{
+            "min":50000
+        }
+    },
+    
 }

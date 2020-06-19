@@ -19,14 +19,15 @@ from rest_framework.views import APIView
 from v0.ui.proposal.models import (ProposalInfo)
 import v0.ui.utils as ui_utils
 import v0.constants as v0_constants
-from v0.ui.supplier.models import (SupplierTypeSociety)
+from v0.ui.supplier.models import (SupplierTypeSociety, SupplierMaster)
 import v0.ui.website.utils as website_utils
+from v0.ui.website.utils import manipulate_object_key_values, return_price, manipulate_master_to_rs
 
 from django.db.models import Q, F
 from .models import (CampaignSocietyMapping, Campaign, CampaignAssignment, CampaignComments)
 from .serializers import (CampaignListSerializer, CampaignSerializer, CampaignAssignmentSerializer)
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalCenterSuppliers
-from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierTypeSocietySerializer2, SupplierMasterSerializer
 from v0.ui.inventory.models import InventoryActivityImage, InventoryActivityAssignment, InventoryActivity, AdInventoryType
 from rest_framework import viewsets
 from rest_framework.decorators import detail_route, list_route
@@ -49,6 +50,9 @@ from celery import shared_task
 CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 from v0.ui.common.models import mongo_client
 from django.db import connection, connections
+
+import logging
+logger = logging.getLogger(__name__)
 
 class CampaignAPIView(APIView):
 
@@ -135,12 +139,11 @@ class campaignListAPIVIew(APIView):
             vendor = request.query_params.get('vendor',None)
             result = []
             category = request.query_params['category']
-            if user.is_superuser:
-                result = website_utils.get_campaigns_with_status(category, user, vendor)
-            else:
-                result = website_utils.get_campaigns_with_status(category, user, vendor)
+            result = website_utils.get_campaigns_with_status(category, user, vendor, request)
+
             return ui_utils.handle_response(class_name, data=result, success=True)
         except Exception as e:
+            logger.exception(e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
@@ -359,7 +362,14 @@ class DashBoardViewSet(viewsets.ViewSet):
 
         suppliers_instances = SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_suppliers_id_list)
         supplier_serializer = SupplierTypeSocietySerializer(suppliers_instances, many=True)
-        suppliers = supplier_serializer.data
+        suppliers = manipulate_object_key_values(supplier_serializer.data)
+
+        master_supplier = SupplierMaster.objects.filter(supplier_id__in=shortlisted_suppliers_id_list)
+        master_serializer = SupplierMasterSerializer(master_supplier, many=True)
+        master_supplier_data = website_utils.manipulate_master_to_rs(master_serializer.data)
+
+        suppliers.extend(master_supplier_data)
+
         flat_count = 0
         supplier_objects_id_list = {supplier['supplier_id']: supplier for supplier in suppliers}
         all_leads_count = get_leads_summary(campaign_id)
@@ -552,7 +562,9 @@ class DashBoardViewSet(viewsets.ViewSet):
                 }
             }
         }
-        return ui_utils.handle_response(class_name, data=data, success=True)
+        center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
+
+        return Response({'status': True, 'data': data, 'supplier_type_code':center_data})
 
     @list_route()
     def get_campaign_filters(self, request):
@@ -770,7 +782,12 @@ class DashBoardViewSet(viewsets.ViewSet):
             for imageInstance in result:
                 imageInstance['object_id'] = supplier_id
 
-            supplier = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).values()
+            master_supplier = SupplierMaster.objects.filter(supplier_id=supplier_id)
+            master_serializer = SupplierMasterSerializer(master_supplier, many=True)
+            supplier = website_utils.manipulate_master_to_rs(master_serializer.data)
+
+            if not supplier:
+                supplier = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).values()
 
             inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(
                 result, supplier)
@@ -822,7 +839,16 @@ class DashBoardViewSet(viewsets.ViewSet):
 
             # need to do by different supplier wise
             suppliers = SupplierTypeSociety.objects.filter(supplier_id__in=list(assigned_objects_map.keys())).values()
-            suppliers_map = {supplier['supplier_id']:supplier for supplier in suppliers}
+            supplier_serializer = SupplierTypeSocietySerializer(suppliers, many=True)
+
+            master_suppliers = SupplierMaster.objects.filter(supplier_id__in=list(assigned_objects_map.keys())).values()
+            master_supplier_serializer = SupplierMasterSerializer(master_suppliers, many=True)
+
+            all_suppliers = manipulate_object_key_values(supplier_serializer.data)
+            all_master_suppliers = manipulate_master_to_rs(master_supplier_serializer.data)
+            all_suppliers.extend(all_master_suppliers)
+
+            suppliers_map = {supplier['supplier_id']:supplier for supplier in all_suppliers}
             result = {}
             for supplier in assigned_objects:
                 if supplier['supplier_id'] not in result:
@@ -979,34 +1005,46 @@ class DeleteAdInventoryIds(APIView):
 
 
 @shared_task()
-def get_leads_data_for_multiple_campaigns(campaign_list):
+def get_leads_data_for_multiple_campaigns(supplier_code, campaign_list):
     multi_campaign_return_data = {}
     campaign_objects = ProposalInfo.objects.filter(proposal_id__in=campaign_list).values()
     campaign_objects_list = {campaign['proposal_id']: campaign for campaign in campaign_objects}
     valid_campaign_list = list(campaign_objects_list.keys())
     for campaign_id in valid_campaign_list:
-        shortlisted_supplier_ids = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values_list(
-            'object_id')
-        flat_count = SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_supplier_ids). \
-            values('flat_count').aggregate(Sum('flat_count'))['flat_count__sum']
-        leads_form_summary_data = get_leads_summary_by_campaign(campaign_id)[0]
-        multi_campaign_return_data[campaign_id] = {
-            'total': leads_form_summary_data['total_leads_count'],
-            'hot_lead_ratio': leads_form_summary_data['hot_leads_percentage']/100,
-            'data': campaign_objects_list[campaign_id],
-            'interested': leads_form_summary_data['hot_leads_count'],
-            'campaign': campaign_id,
-            'flat_count': flat_count
-        }
+        shortlisted_supplier_ids = ShortlistedSpaces.objects.filter(proposal_id=campaign_id, supplier_code=supplier_code).values('object_id')
+        all_supplier_ids = [supplier_ids['object_id'] for supplier_ids in shortlisted_supplier_ids]
+        if supplier_code == "RS":
+            flat_count = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids). \
+                values('flat_count').aggregate(Sum('flat_count'))['flat_count__sum']
+        else:
+            flat_count = SupplierMaster.objects.filter(supplier_id__in=all_supplier_ids). \
+                values('unit_primary_count').aggregate(Sum('unit_primary_count'))['unit_primary_count__sum']
+
+        leads_form_summary_data = get_leads_summary_by_campaign(campaign_id, all_supplier_ids)
+
+        for leads_data in leads_form_summary_data:
+            multi_campaign_return_data[campaign_id] = {
+                'total': leads_data['total_leads_count'],
+                'hot_lead_ratio': leads_data['hot_leads_percentage']/100,
+                'data': campaign_objects_list[campaign_id],
+                'interested': leads_data['hot_leads_count'],
+                'campaign': campaign_id,
+                'flat_count': flat_count
+            }
     return multi_campaign_return_data
 
 
 class CampaignLeadsMultiple(APIView):
     def post(self, request, pk=None):
-        class_name = self.__class__.__name__
-        campaign_list = request.data
-        multi_campaign_return_data = get_leads_data_for_multiple_campaigns(campaign_list)
-        return ui_utils.handle_response(class_name, data=multi_campaign_return_data, success=True)
+        try:
+            class_name = self.__class__.__name__
+            campaign_list = request.data
+            supplier_code = request.query_params.get('supplier_code')
+            multi_campaign_return_data = get_leads_data_for_multiple_campaigns(supplier_code, campaign_list)
+            return ui_utils.handle_response(class_name, data=multi_campaign_return_data, success=True)
+        except Exception as e:
+            logger.exception(e)
+            return ui_utils.handle_response({}, data="Supplier code does not exist", success=False)
 
 
 def calculate_mode(num_list,window_size=3):
@@ -1084,29 +1122,42 @@ def get_mean_median_mode(object_list, list_of_attributes):
                 return_dict[attribute]['mode_percent_by_flat'] = None
     return return_dict
 
-
-def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_date_str=None):
+def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, user_end_date_str=None):
     try:
+        supplier_code = request.query_params.get('supplier_code')
+
+        all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id, supplier_code=supplier_code).all().values("object_id","supplier_code")
+
+        supplier_ids = list(set([x['object_id'] for x in all_shortlisted_spaces]))
+
         format_str = '%d/%m/%Y'
         phase_start_weekday = 'Tuesday' # this is used to set the phase cycle
+        
         user_start_datetime = datetime.strptime(user_start_date_str,format_str) if user_start_date_str is not None else None
         user_end_datetime = datetime.strptime(user_end_date_str,format_str) if user_end_date_str is not None else None
-        and_constraint = [{"campaign_id": campaign_id}, {"status": {"$ne": "inactive"}}]
+        and_constraint = [{"campaign_id": campaign_id}, {"status": {"$ne": "inactive"}}, {"supplier_id":{"$in": supplier_ids}}]
         if user_start_datetime:
             and_constraint.append({"user_end_datetimecreated_at": {"$gte": user_start_datetime}})
         if user_end_datetime:
             and_constraint.append({"created_at": {"$lte": user_end_datetime}})
         leads_form_data = list(mongo_client.leads.find(
             {"$and": and_constraint}, {"_id": 0}))
-        all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).all().values("object_id")
-        supplier_ids = list(set([x['object_id'] for x in all_shortlisted_spaces]))
+        
         all_suppliers_list_non_analytics = {}
         all_localities_data_non_analytics = {}
         supplier_wise_lead_count = {}
-        supplier_data_1 = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
-        supplier_data = SupplierTypeSocietySerializer2(supplier_data_1, many=True).data
+        
+        if supplier_code == "RS":
+            supplier_data_1 = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
+            supplier_data_serializer = SupplierTypeSocietySerializer2(supplier_data_1, many=True).data
+            supplier_data = website_utils.manipulate_object_key_values_generic(supplier_data_serializer)
+        else:
+            supplier_data_1 = SupplierMaster.objects.filter(supplier_id__in=supplier_ids)
+            supplier_data_serializer = SupplierMasterSerializer(supplier_data_1, many=True).data
+            supplier_data = website_utils.manipulate_master_to_rs(supplier_data_serializer)
+
         all_flat_data = {}
-        flat_categories = ['0-150', '151-399', '400+']
+        flat_categories = v0_constants.supplier_size_category[supplier_code]
         flat_category_id = 0
         overall_data = {
             'supplier_count': 0,
@@ -1118,7 +1169,8 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
             'is_hot_level_3': 0,
             'is_hot_level_4': 0,
         }
-        for flat_category in flat_categories:
+        
+        for flat_category, value in flat_categories.items():
             flat_category_id = flat_category_id + 1
             all_flat_data[flat_category] = {
                 "campaign": campaign_id,
@@ -1131,7 +1183,9 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                 'is_hot_level_2': 0,
                 'is_hot_level_3': 0,
                 'is_hot_level_4': 0,
+            
             }
+    
         lead_form = mongo_client.leads_forms.find({"campaign_id": campaign_id})
         campaign_hot_leads_dict = lead_counter(campaign_id, leads_form_data, user_start_datetime, user_end_datetime, lead_form[0])
         if lead_form and lead_form[0] and 'hotness_mapping' in lead_form[0]:
@@ -1144,13 +1198,16 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                     overall_data['key_hot_level_3'] = lead_form[0]['hotness_mapping']['is_hot_level_3']
                 if 'is_hot_level_4' in key:
                     overall_data['key_hot_level_4'] = lead_form[0]['hotness_mapping']['is_hot_level_4']
-
+    
         for curr_supplier_data in supplier_data:
             supplier_id = curr_supplier_data['supplier_id']
-            supplier_locality = curr_supplier_data['society_locality']
+            supplier_locality = curr_supplier_data.get("society_locality")
+            if not supplier_locality:
+                supplier_locality = curr_supplier_data.get("locality_rating")
             supplier_flat_count = curr_supplier_data['flat_count'] if curr_supplier_data['flat_count'] else 0
             lead_count = campaign_hot_leads_dict[supplier_id] if supplier_id in campaign_hot_leads_dict else None
             # leads_data =  campaign_hot_leads_dict[supplier_id]['leads'] if supplier_id in campaign_hot_leads_dict else None
+            
             if not lead_count:
                 continue
             overall_data['supplier_count'] += 1
@@ -1162,6 +1219,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                 if supplier_id in campaign_hot_leads_dict else 0
             is_hot_level_4 = campaign_hot_leads_dict[supplier_id]['is_hot_level_4'] \
                 if supplier_id in campaign_hot_leads_dict else 0
+            
             overall_data['is_hot_level_1'] += is_hot_level_1
             overall_data['is_hot_level_2'] += is_hot_level_2
             overall_data['is_hot_level_3'] += is_hot_level_3
@@ -1173,7 +1231,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
             overall_data['total_hot_leads'] += hot_leads
             overall_data['flat_count'] += supplier_flat_count
             # getting society information
-
+            
             hot_leads_percentage = round(float(hot_leads) / float(total_leads), 5)*100 if total_leads > 0 else 0
             curr_supplier_lead_data = {
                 "is_interested": True,
@@ -1190,7 +1248,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                 'is_hot_level_4': is_hot_level_4,
             }
             all_suppliers_list_non_analytics[supplier_id] = curr_supplier_lead_data
-
+            
             if supplier_locality in all_localities_data_non_analytics:
                 all_localities_data_non_analytics[supplier_locality]["interested"] = all_localities_data_non_analytics[
                                                                     supplier_locality]["interested"] + hot_leads
@@ -1208,7 +1266,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                     all_localities_data_non_analytics[supplier_locality]["is_hot_level_3"] + is_hot_level_3
                 all_localities_data_non_analytics[supplier_locality]["is_hot_level_4"] = \
                     all_localities_data_non_analytics[supplier_locality]["is_hot_level_4"] + is_hot_level_4
-
+                
             else:
                 curr_locality_data = {
                     "is_interested": True,
@@ -1224,45 +1282,28 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                     'is_hot_level_4': is_hot_level_4,
                 }
                 all_localities_data_non_analytics[supplier_locality] = curr_locality_data
-
-            if supplier_flat_count<150:
-                curr_flat_data = all_flat_data['0-150']
-                curr_flat_data['interested'] = curr_flat_data['interested']+hot_leads
-                curr_flat_data['total'] = curr_flat_data['total']+total_leads
-                curr_flat_data['suppliers'] = curr_flat_data['suppliers'] + 1
-                curr_flat_data['flat_count'] = curr_flat_data['flat_count'] + supplier_flat_count
-                curr_flat_data['is_hot_level_1'] = curr_flat_data['is_hot_level_1'] + is_hot_level_1
-                curr_flat_data['is_hot_level_2'] = curr_flat_data['is_hot_level_2'] + is_hot_level_2
-                curr_flat_data['is_hot_level_3'] = curr_flat_data['is_hot_level_3'] + is_hot_level_3
-                curr_flat_data['is_hot_level_4'] = curr_flat_data['is_hot_level_4'] + is_hot_level_4
-                all_flat_data['0-150'] = curr_flat_data
-            elif supplier_flat_count<400:
-                curr_flat_data = all_flat_data['151-399']
-                curr_flat_data['interested'] = curr_flat_data['interested']+hot_leads
-                curr_flat_data['total'] = curr_flat_data['total']+total_leads
-                curr_flat_data['suppliers'] = curr_flat_data['suppliers'] + 1
-                curr_flat_data['flat_count'] = curr_flat_data['flat_count'] + supplier_flat_count
-                curr_flat_data['is_hot_level_1'] = curr_flat_data['is_hot_level_1'] + is_hot_level_1
-                curr_flat_data['is_hot_level_2'] = curr_flat_data['is_hot_level_2'] + is_hot_level_2
-                curr_flat_data['is_hot_level_3'] = curr_flat_data['is_hot_level_3'] + is_hot_level_3
-                curr_flat_data['is_hot_level_4'] = curr_flat_data['is_hot_level_4'] + is_hot_level_4
-                all_flat_data['151-399'] = curr_flat_data
-            else:
-                curr_flat_data = all_flat_data['400+']
-                curr_flat_data['interested'] = curr_flat_data['interested'] + hot_leads
-                curr_flat_data['total'] = curr_flat_data['total'] + total_leads
-                curr_flat_data['suppliers'] = curr_flat_data['suppliers'] + 1
-                curr_flat_data['flat_count'] = curr_flat_data['flat_count'] + supplier_flat_count
-                curr_flat_data['is_hot_level_1'] = curr_flat_data['is_hot_level_1'] + is_hot_level_1
-                curr_flat_data['is_hot_level_2'] = curr_flat_data['is_hot_level_2'] + is_hot_level_2
-                curr_flat_data['is_hot_level_3'] = curr_flat_data['is_hot_level_3'] + is_hot_level_3
-                curr_flat_data['is_hot_level_4'] = curr_flat_data['is_hot_level_4'] + is_hot_level_4
-                all_flat_data['400+'] = curr_flat_data
+            
+            for key, value in flat_categories.items():
+                if supplier_flat_count >= value["min"] and (not value.get("max") or supplier_flat_count <= value["max"]):
+                    
+                    curr_flat_data = all_flat_data[key]
+                    curr_flat_data['interested'] = curr_flat_data['interested']+hot_leads
+                    curr_flat_data['total'] = curr_flat_data['total']+total_leads
+                    curr_flat_data['suppliers'] = curr_flat_data['suppliers'] + 1
+                    
+                    curr_flat_data['flat_count'] = curr_flat_data['flat_count'] + supplier_flat_count
+                    curr_flat_data['is_hot_level_1'] = curr_flat_data['is_hot_level_1'] + is_hot_level_1
+                    curr_flat_data['is_hot_level_2'] = curr_flat_data['is_hot_level_2'] + is_hot_level_2
+                    
+                    curr_flat_data['is_hot_level_3'] = curr_flat_data['is_hot_level_3'] + is_hot_level_3
+                    curr_flat_data['is_hot_level_4'] = curr_flat_data['is_hot_level_4'] + is_hot_level_4
+                    all_flat_data[key] = curr_flat_data
+                    
 
         all_suppliers_list = z_calculator_dict(all_suppliers_list_non_analytics, "hot_leads_percentage")
         all_localities_data_hot_ratio = hot_lead_ratio_calculator(all_localities_data_non_analytics)
         all_localities_data = z_calculator_dict(all_localities_data_hot_ratio, "hot_leads_percentage")
-
+        
         # date-wise
         date_data = {}
         weekday_data = {}
@@ -1288,7 +1329,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
             end_datetime = min(campaign_dates[len(campaign_dates)-1], user_end_datetime)
 
         start_datetime_phase = start_datetime - timedelta(days=start_weekday_diff)
-
+        
         for curr_data in leads_form_data:
             curr_entry_details = {
                 'leads_form_id': curr_data['leads_form_id'],
@@ -1320,7 +1361,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                     'is_hot_level_3': 0,
                     'is_hot_level_4': 0,
                 }
-
+            
             curr_weekday = weekday_names[str(time.weekday())]
 
             supplier_id = curr_data['supplier_id']
@@ -1367,7 +1408,7 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
             date_data[curr_date]['interested'] = date_data[curr_date]['interested'] + add_is_interested
             weekday_data[curr_weekday]['interested'] = weekday_data[curr_weekday]['interested'] + add_is_interested
             phase_data[curr_phase]['interested'] = phase_data[curr_phase]['interested'] + add_is_interested
-
+            
             if supplier_id not in date_data[curr_date]['suppliers']:
                 date_data[curr_date]['supplier_count'] = date_data[curr_date]['supplier_count'] + 1
                 date_data[curr_date]['flat_count'] = date_data[curr_date]['flat_count'] + flat_count
@@ -1396,8 +1437,9 @@ def get_leads_data_for_campaign(campaign_id, user_start_date_str=None, user_end_
                       'locality_data': all_localities_data, 'weekday_data': all_weekdays_data,
                       'flat_data': all_flat_data, 'phase_data': phase_data, 'overall_data': overall_data}
         return final_data
+        
     except Exception as e:
-        return None
+         return None
 
 def bookingPerformance(campaign_id, start_date):
 
@@ -1436,25 +1478,26 @@ class CampaignLeads(APIView):
             #         final_data['last_three_weeks'] = bookingPerformance(campaign_id, start_date.strftime("%d/%m/%Y"))
             #         final_data['overall_data'] = bookingPerformance(campaign_id)
             # else:
-            final_data = get_leads_data_for_campaign(campaign_id, user_start_date_str, user_end_date_str)
+            final_data = get_leads_data_for_campaign(request, campaign_id, user_start_date_str, user_end_date_str)
             if not final_data:
                 return ui_utils.handle_response({}, data='No Leads present for this campaign', success=False)
             start_date = datetime.now() - timedelta(days=7)
-            final_data['last_week'] = get_leads_data_for_campaign(campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
+            final_data['last_week'] = get_leads_data_for_campaign(request, campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
             start_date = datetime.now() - timedelta(days=14)
-            final_data['last_two_weeks'] = get_leads_data_for_campaign(campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
+            final_data['last_two_weeks'] = get_leads_data_for_campaign(request, campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
             start_date = datetime.now() - timedelta(days=21)
-            final_data['last_three_weeks'] = get_leads_data_for_campaign(campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
-            final_data['overall_data'] = get_leads_data_for_campaign(campaign_id)['overall_data']
+            final_data['last_three_weeks'] = get_leads_data_for_campaign(request, campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
+            final_data['overall_data'] = get_leads_data_for_campaign(request, campaign_id)['overall_data']
 
             suppliers_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).all()
             proposal_center_serializer = ProposalCenterSuppliersSerializer(suppliers_data, many=True)
             final_data['center_suppliers'] = proposal_center_serializer.data
 
-            return ui_utils.handle_response({}, data=final_data, success=True)
+            center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
+            return Response({'status': True, 'data': final_data, 'supplier_type_code':center_data})
         except Exception as e:
-            print(e)
-            return ui_utils.handle_response({}, data=final_data, success=False)
+            logger.exception(e)
+            return ui_utils.handle_response(class_name, data=final_data, success=False)
 
 
 @shared_task()
@@ -1897,25 +1940,29 @@ class PhaseWiseMultipleCampaignLeads(APIView):
 class Comment(APIView):
     @staticmethod
     def post(request, campaign_id):
-        user_id = request.user.id
-        comment = request.data['comment']
-        shortlisted_spaces_id = request.data['shortlisted_spaces_id'] if 'shortlisted_spaces_id' in request.data else None
-        if not shortlisted_spaces_id:
-            return ui_utils.handle_response({}, data='Shortlisted Space Id is Mandatory')
+        try:
+            user_id = request.user.id
+            comment = request.data['comment']
 
-        related_to = request.data['related_to'] if 'related_to' in request.data else None
-        inventory_type = request.data['inventory_type'] if 'inventory_type' in request.data else None
-        inventory_comment = CampaignComments(**{
-            "user_id": user_id,
-            "shortlisted_spaces_id": shortlisted_spaces_id,
-            "comment": comment,
-            "campaign_id": campaign_id,
-            "related_to": related_to,
-            "inventory_type": inventory_type
-        })
-        inventory_comment.save()
-        return ui_utils.handle_response({}, data='success', success=True)
+            shortlisted_spaces_id = None
+            if request.data.get('shortlisted_spaces_id'):
+                shortlisted_spaces_id = request.data['shortlisted_spaces_id']
 
+            related_to = request.data['related_to'] if 'related_to' in request.data else None
+            inventory_type = request.data['inventory_type'] if 'inventory_type' in request.data else None
+            inventory_comment = CampaignComments(**{
+                "user_id": user_id,
+                "shortlisted_spaces_id": shortlisted_spaces_id,
+                "comment": comment,
+                "campaign_id": campaign_id,
+                "related_to": related_to,
+                "inventory_type": inventory_type
+            })
+            inventory_comment.save()
+            return ui_utils.handle_response({}, data='success', success=True)
+        except Exception as e:
+            logger.exception(e)
+            return ui_utils.handle_response({}, data='Comment not saved', success=False)
     @staticmethod
     def get(request, campaign_id):
         from_zone = tz.gettz('UTC')
@@ -2042,13 +2089,16 @@ class GetPermissionBoxImages(APIView):
 #         return ui_utils.handle_response(class_name, data={}, success=True)
 
 
-def get_campaign_wise_summary(all_campaign_ids, user_start_datetime=None, user_end_datetime=None):
+def get_campaign_wise_summary(supplier_code, all_campaign_ids, user_start_datetime=None, user_end_datetime=None):
+    all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id__in=all_campaign_ids, supplier_code=supplier_code).values('object_id', 'supplier_code', 'proposal_id')
+    campaign_mapping = {supplier['object_id']: supplier['proposal_id'] for supplier in all_shortlisted_spaces}
+    all_supplier_ids = [supplier_ids['object_id'] for supplier_ids in all_shortlisted_spaces]
+
     all_campaign_objects = ProposalInfo.objects.filter(proposal_id__in=all_campaign_ids).all()
     all_campaign_id_name_map = {campaign.proposal_id: campaign.name for campaign in all_campaign_objects}
-    leads_summary_by_supplier = get_leads_summary(campaign_list=all_campaign_ids,user_start_datetime=user_start_datetime, user_end_datetime=user_end_datetime)
+    leads_summary_by_supplier = get_leads_summary(campaign_list=all_campaign_ids,user_start_datetime=user_start_datetime, user_end_datetime=user_end_datetime, all_supplier_ids=all_supplier_ids)
     campaign_supplier_map = {}
     reverse_campaign_supplier_map = {}
-    all_supplier_ids = []
     campaign_wise_leads = {}
     for summary_point in leads_summary_by_supplier:
         if summary_point["campaign_id"] not in campaign_supplier_map:
@@ -2066,14 +2116,27 @@ def get_campaign_wise_summary(all_campaign_ids, user_start_datetime=None, user_e
 
         reverse_campaign_supplier_map[summary_point["supplier_id"]] = summary_point["campaign_id"]
     campaign_summary = {"campaign_wise": {}, "all_campaigns": {}}
-    all_society_flat_counts = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).values(
-        "supplier_id", "flat_count")
+
+    all_supplier_society_dict = {}
+
+    if supplier_code == "RS":
+        all_society_flat_counts = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).values(
+            "supplier_id", "flat_count")
+        for supplier in all_society_flat_counts:
+            all_supplier_society_dict[supplier['supplier_id']] = {'flat_count': supplier['flat_count']}
+    else:
+        all_supplier_flat_counts = SupplierMaster.objects.filter(supplier_id__in=all_supplier_ids).values(
+            "supplier_id", "unit_primary_count")
+        for supplier in all_supplier_flat_counts:
+            all_supplier_society_dict[supplier['supplier_id']] = {'flat_count': supplier['unit_primary_count']}
+
     campaign_flat_count_map = {}
     supplier_flat_count_map = {}
-    for society in all_society_flat_counts:
-        supplier_flat_count_map[society["supplier_id"]] = society["flat_count"]
-        campaign_id = reverse_campaign_supplier_map[society["supplier_id"]]
-        if campaign_id not in campaign_flat_count_map:
+    for key, society in all_supplier_society_dict.items():
+        supplier_flat_count_map[key] = society["flat_count"]
+        campaign_id = campaign_mapping[key]
+
+        if not campaign_flat_count_map.get(campaign_id):
             campaign_flat_count_map[campaign_id] = 0
         if society["flat_count"]:
             campaign_flat_count_map[campaign_id] += society["flat_count"]
@@ -2148,78 +2211,88 @@ def get_campaign_wise_summary(all_campaign_ids, user_start_datetime=None, user_e
     return campaign_summary
 
 
-def get_campaign_wise_summary_by_user(user_id, user_start_datetime=None, user_end_datetime=None):
+def get_campaign_wise_summary_by_user(supplier_code, user_id, user_start_datetime=None, user_end_datetime=None):
     all_campaigns = CampaignAssignment.objects.filter(assigned_to_id=user_id).all()
     all_campaign_ids = [campaign.campaign_id for campaign in all_campaigns]
-    campaign_wise_summary = get_campaign_wise_summary(all_campaign_ids, user_start_datetime, user_end_datetime)
+    campaign_wise_summary = get_campaign_wise_summary(supplier_code, all_campaign_ids, user_start_datetime, user_end_datetime)
     return campaign_wise_summary
 
 
 class CampaignWiseSummary(APIView):
     @staticmethod
     def get(request):
-        user_id = request.user.id
-        user_start_date_str = request.query_params.get('start_date', None)
-        user_end_date_str = request.query_params.get('end_date', None)
-        campaign_summary = {}
-        start_date = datetime.now() - timedelta(days=7)
-        if user_start_date_str == None:
-            campaign_summary['last_week'] = get_campaign_wise_summary_by_user(user_id, start_date)
-            start_date = datetime.now() - timedelta(days=14)
-            campaign_summary['last_two_weeks'] = get_campaign_wise_summary_by_user(user_id, start_date)
-            start_date = datetime.now() - timedelta(days=21)
-            campaign_summary['last_three_weeks'] = get_campaign_wise_summary_by_user(user_id, start_date)
-            campaign_summary['overall'] = get_campaign_wise_summary_by_user(user_id)
-        else:
-            format_str = '%d/%m/%Y'
-            user_start_datetime = datetime.strptime(user_start_date_str,format_str) if user_start_date_str is not None else None
-            user_end_datetime = datetime.strptime(user_end_date_str,format_str) if user_end_date_str is not None else None
-            campaign_summary['last_week'] = get_campaign_wise_summary_by_user(user_id, user_start_datetime, user_end_datetime)
-            campaign_summary['last_two_weeks'] = get_campaign_wise_summary_by_user(user_id, user_start_datetime, user_end_datetime)
-            campaign_summary['last_three_weeks'] = get_campaign_wise_summary_by_user(user_id, user_start_datetime, user_end_datetime)
-            campaign_summary['overall'] = get_campaign_wise_summary_by_user(user_id, user_start_datetime, user_end_datetime)
+        try:
+            user_id = request.user.id
+            supplier_code = request.query_params.get('supplier_code')
+            user_start_date_str = request.query_params.get('start_date', None)
+            user_end_date_str = request.query_params.get('end_date', None)
+            campaign_summary = {}
+            start_date = datetime.now() - timedelta(days=7)
+            if user_start_date_str == None:
+                campaign_summary['last_week'] = get_campaign_wise_summary_by_user(supplier_code, user_id, start_date)
+                start_date = datetime.now() - timedelta(days=14)
+                campaign_summary['last_two_weeks'] = get_campaign_wise_summary_by_user(supplier_code, user_id, start_date)
+                start_date = datetime.now() - timedelta(days=21)
+                campaign_summary['last_three_weeks'] = get_campaign_wise_summary_by_user(supplier_code, user_id, start_date)
+                campaign_summary['overall'] = get_campaign_wise_summary_by_user(supplier_code, user_id)
+            else:
+                format_str = '%d/%m/%Y'
+                user_start_datetime = datetime.strptime(user_start_date_str,format_str) if user_start_date_str is not None else None
+                user_end_datetime = datetime.strptime(user_end_date_str,format_str) if user_end_date_str is not None else None
+                campaign_summary['last_week'] = get_campaign_wise_summary_by_user(supplier_code, user_id, user_start_datetime, user_end_datetime)
+                campaign_summary['last_two_weeks'] = get_campaign_wise_summary_by_user(supplier_code, user_id, user_start_datetime, user_end_datetime)
+                campaign_summary['last_three_weeks'] = get_campaign_wise_summary_by_user(supplier_code, user_id, user_start_datetime, user_end_datetime)
+                campaign_summary['overall'] = get_campaign_wise_summary_by_user(supplier_code, user_id, user_start_datetime, user_end_datetime)
 
-        return ui_utils.handle_response({}, data=campaign_summary, success=True)
+            return ui_utils.handle_response({}, data=campaign_summary, success=True)
+        except Exception as e:
+            logger.exception(e)
+            return ui_utils.handle_response({}, data="Supplier code does not exist", success=False)
 
 
-def get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, days):
+def get_duration_wise_summary_for_vendors(supplier_code, vendor_campaign_map, all_campaign_ids, days):
     start_date = None
     if days:
         start_date = datetime.now() - timedelta(days=days)
     campaign_summary_map = {}
     for vendor in vendor_campaign_map:
-        campaign_summary_map[vendor] = get_campaign_wise_summary(vendor_campaign_map[vendor], start_date)[
+        campaign_summary_map[vendor] = get_campaign_wise_summary(supplier_code, vendor_campaign_map[vendor], start_date)[
             "all_campaigns"]
-    campaign_summary_map['overall'] = get_campaign_wise_summary(all_campaign_ids, start_date)["all_campaigns"]
+    campaign_summary_map['overall'] = get_campaign_wise_summary(supplier_code, all_campaign_ids, start_date)["all_campaigns"]
     return campaign_summary_map
 
 
 class VendorWiseSummary(APIView):
     @staticmethod
     def get(request):
-        user_id = request.user.id
-        all_assigned_campaigns = get_all_assigned_campaigns(user_id, None)
-        vendor_campaign_map = {}
-        all_campaign_ids = []
-        all_vendor_ids = []
-        for campaign in all_assigned_campaigns:
-            if campaign['principal_vendor']:
-                if campaign['principal_vendor'] not in vendor_campaign_map:
-                    vendor_campaign_map[campaign['principal_vendor']] = []
-                vendor_campaign_map[campaign['principal_vendor']].append(campaign["proposal_id"])
-                all_campaign_ids.append(campaign["proposal_id"])
-                if campaign['principal_vendor'] not in all_campaign_ids:
-                    all_vendor_ids.append(campaign['principal_vendor'])
-        all_vendors = Organisation.objects.filter(organisation_id__in=all_vendor_ids).all()
-        campaign_summary = {}
-        campaign_summary['last_week'] = get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, 7)
-        campaign_summary['last_two_week'] = get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, 14)
-        campaign_summary['last_three_week'] = get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, 21)
-        campaign_summary['overall'] = get_duration_wise_summary_for_vendors(vendor_campaign_map, all_campaign_ids, None)
-        campaign_summary['vendor_details'] = {}
-        for vendor in all_vendors:
-            campaign_summary['vendor_details'][vendor.organisation_id] = {'name': vendor.name}
-        return ui_utils.handle_response({}, data=campaign_summary, success=True)
+        try:
+            user_id = request.user.id
+            supplier_code = request.query_params.get('supplier_code')        
+            all_assigned_campaigns = get_all_assigned_campaigns(user_id, None)
+            vendor_campaign_map = {}
+            all_campaign_ids = []
+            all_vendor_ids = []
+            for campaign in all_assigned_campaigns:
+                if campaign['principal_vendor']:
+                    if campaign['principal_vendor'] not in vendor_campaign_map:
+                        vendor_campaign_map[campaign['principal_vendor']] = []
+                    vendor_campaign_map[campaign['principal_vendor']].append(campaign["proposal_id"])
+                    all_campaign_ids.append(campaign["proposal_id"])
+                    if campaign['principal_vendor'] not in all_campaign_ids:
+                        all_vendor_ids.append(campaign['principal_vendor'])
+            all_vendors = Organisation.objects.filter(organisation_id__in=all_vendor_ids).all()
+            campaign_summary = {}
+            campaign_summary['last_week'] = get_duration_wise_summary_for_vendors(supplier_code, vendor_campaign_map, all_campaign_ids, 7)
+            campaign_summary['last_two_week'] = get_duration_wise_summary_for_vendors(supplier_code, vendor_campaign_map, all_campaign_ids, 14)
+            campaign_summary['last_three_week'] = get_duration_wise_summary_for_vendors(supplier_code, vendor_campaign_map, all_campaign_ids, 21)
+            campaign_summary['overall'] = get_duration_wise_summary_for_vendors(supplier_code, vendor_campaign_map, all_campaign_ids, None)
+            campaign_summary['vendor_details'] = {}
+            for vendor in all_vendors:
+                campaign_summary['vendor_details'][vendor.organisation_id] = {'name': vendor.name}
+            return ui_utils.handle_response({}, data=campaign_summary, success=True)
+        except Exception as e:
+            logger.exception(e)
+            return ui_utils.handle_response({}, data="Supplier code does not exist", success=False)
 
 
 def get_duration_wise_summary_for_cities(all_city_campaign_mapping, all_campaign_ids, days):

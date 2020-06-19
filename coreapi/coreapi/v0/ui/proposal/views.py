@@ -21,7 +21,7 @@ import datetime
 import time
 import random
 import string
-from .models import ProposalInfo, ProposalCenterMapping
+from .models import ProposalInfo, ProposalCenterMapping, ProposalCenterSuppliers
 from .serializers import (ProposalInfoSerializer, ProposalCenterMappingSerializer, ProposalCenterMappingSpaceSerializer,
                          ProposalCenterMappingVersionSpaceSerializer)
 from rest_framework.decorators import detail_route, list_route
@@ -40,7 +40,7 @@ from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMa
                                         SpaceMappingSerializer, ProposalCenterMappingSpaceSerializer,
                                         ProposalCenterMappingVersionSpaceSerializer, SpaceMappingVersionSerializer,
                                         ProposalSocietySerializer, ProposalCorporateSerializer, HashtagImagesSerializer,
-                                        SupplierAssignmentSerializer)
+                                        SupplierAssignmentSerializer, ShortlistedSpacesVersionSerializer)
 from v0.ui.inventory.models import (SupplierTypeSociety, AdInventoryType, InventorySummary)
 from .models import (ProposalInfo, ProposalCenterMapping, ProposalCenterMappingVersion, SpaceMappingVersion,
                     SpaceMapping, ShortlistedSpacesVersion, ShortlistedSpaces, SupplierPhase)
@@ -54,8 +54,8 @@ from v0.ui.website.utils import return_price
 import v0.constants as v0_constants
 import v0.ui.website.tasks as tasks
 from v0.ui.email.views import send_email
-from v0.ui.supplier.models import SupplierTypeCorporate, SupplierTypeRetailShop
-from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
+from v0.ui.supplier.models import SupplierTypeCorporate, SupplierTypeRetailShop, SupplierMaster
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierMasterSerializer
 from v0.ui.base.models import DurationType
 from v0 import errors
 from rest_framework import viewsets
@@ -68,6 +68,8 @@ from v0.ui.common.models import mongo_client, mongo_test
 
 from v0.ui.campaign.models import CampaignAssignment
 
+import logging
+logger = logging.getLogger(__name__)
 
 def convert_date_format(date):
     if isinstance(date, datetime.datetime):
@@ -150,23 +152,24 @@ def create_proposal_object(organisation_id, account_id, user, tentative_cost, na
         'principal_vendor_id': user.profile.organisation_id
     }
 
-def genrate_supplier_data(data):
+def genrate_supplier_data(data,user):
     function_name = genrate_supplier_data.__name__
     try:
-        supplier_data = SupplierTypeSociety.objects.all()
         society_data_list = []
         contact_data_list = []
         total_society_id_list = []
+        total_society_id_list_obj = {}
         source_file = data['file']
         wb = load_workbook(source_file)
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
         for index, row in enumerate(ws.iter_rows()):
             if index > 0:
-                print("row is " + str(index))
+                print("row is " + str(index),row[1].value.strip())
+                
                 try:
                     if not row[1].value:
                         continue
-                    city = City.objects.get(city_name=row[1].value.strip())
+                    city = City.objects.filter(city_name__icontains=row[1].value.strip()).first()
                     city_code = city.city_code
                 except ObjectDoesNotExist as e:
                     error = 'No City Found at - ' + str(index) + ',' + str(row[1].value)
@@ -174,7 +177,7 @@ def genrate_supplier_data(data):
                 try:
                     if not row[2].value:
                         continue
-                    area = CityArea.objects.filter(label=row[2].value.strip())[0]
+                    area = CityArea.objects.filter(label=row[2].value.strip()).first()
                     area_code = area.area_code
                 except ObjectDoesNotExist as e:
                     error = 'No Area Found at - ' + str(index) + ',' + str(row[2].value)
@@ -182,7 +185,7 @@ def genrate_supplier_data(data):
                 try:
                     if not row[3].value:
                         continue
-                    subarea = CitySubArea.objects.filter(subarea_name=row[3].value.strip())[0]
+                    subarea = CitySubArea.objects.filter(subarea_name=row[3].value.strip()).first()
                     subarea_code = subarea.subarea_code
                 except ObjectDoesNotExist as e:
                     error = 'No SubArea Found at - ' + str(index) + ',' + str(row[3].value)
@@ -190,75 +193,74 @@ def genrate_supplier_data(data):
                 try:
                     error = 'No Supplier Code - ' + str(index) + ',' + str(row[3].value)
                     if row[4].value:
-                        supplier_code = row[4].value.strip()
+                        supplier_type_code = row[4].value.strip()
                     else:
                         return ui_utils.handle_response(function_name, data=error)
                 except ObjectDoesNotExist as e:
                     error = 'supplier code error - ' + str(index) + ',' + str(row[3].value)
                     return ui_utils.handle_response(function_name, data=error)
-                supplier_id = city_code + area_code + subarea_code + 'RS' + supplier_code
-                content_type = ui_utils.get_content_type('RS').data['data']
-                try:
-                    supplier = SupplierTypeSociety.objects.get(supplier_id=supplier_id)
-                except ObjectDoesNotExist as e:
-                    society_data_list.append(SupplierTypeSociety(**{
+                
+                supplier_code = row[0].value.strip().upper()
+
+                if len(supplier_code) > 2:
+                    supplier_code = supplier_code[:3]
+                    
+                supplier_id_dict = {
+                    'city_code': city_code,
+                    'area_code': area_code,
+                    'subarea_code': subarea_code,
+                    'supplier_type': supplier_type_code,
+                    'supplier_code': supplier_code,
+                }
+                supplier_id = ui_utils.get_supplier_id(supplier_id_dict)
+                
+                content_type = ui_utils.get_content_type(supplier_type_code).data['data']
+
+                supplier = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).first()
+                
+                if not supplier:
+                    submit_data = {
+                        'city_id': city.id,
+                        'area_id': area.id,
+                        'subarea_id': subarea.id,
+                        'latitude': float(row[6].value) if row[6].value else None,
+                        'longitude': float(row[7].value) if row[7].value else None,
+                        'landmark' : row[13].value if row[13].value else None,
+                        'zipcode': int(row[5].value) if row[5].value else None,
+                        'address1': row[12].value.strip() if row[12].value else None,
+                        'supplier_code': supplier_code,
+                        'supplier_type_code': supplier_type_code,
+                        'supplier_name': row[0].value.strip(),
                         'supplier_id': supplier_id,
-                        'society_name': row[0].value.strip() if row[0].value else None,
-                        'society_city': city.city_name,
-                        'society_locality': area.label,
-                        'society_subarea': subarea.subarea_name,
-                        'supplier_code': str(supplier_code),
-                        'society_zip': int(row[5].value) if row[5].value else None,
-                        'society_latitude': float(row[6].value) if row[6].value else None,
-                        'society_longitude': float(row[7].value) if row[7].value else None,
-                        'tower_count': int(row[8].value) if row[8].value else None,
-                        'flat_count': int(row[9].value) if row[9].value else None,
-                        'address1' : row[20].value if row[20].value else None,
-                        'society_type_quality' : row[21].value if row[21].value else None,
-                        'landmark' : row[22].value if row[22].value else None,
-                    }))
+                        'current_user': user,
+                        'unit_primary_count': int(row[8].value) if row[8].value else None, #flat_count
+                        'unit_secondary_count': int(row[9].value) if row[9].value else None, #tower_count
+                    }
+
+                    response = ui_utils.make_supplier_data(submit_data)
+                    all_supplier_data = response.data['data']
+                    ui_utils.save_supplier_data(user, all_supplier_data)
+                    
                     contact_data_list.append(ContactDetails(**{
-                        'name': row[18].value.strip() if row[18].value else None,
+                        'name': row[10].value.strip() if row[10].value else None,
                         'designation': 'Manager',
                         'salutation': 'Mr',
-                        'mobile': row[19].value if row[19].value else None,
+                        'mobile': row[11].value if row[11].value else None,
                         'object_id': supplier_id,
                         'content_type': content_type
                     }))
 
                 temp_data =  {
                     'id': supplier_id,
-                    'PO': int(row[10].value) if row[10].value else row[8].value,
-                    'SL': int(row[13].value) if row[13].value else None,
-                    'ST': int(row[17].value) if row[17].value else None,
-                    'FL': 1,
-                    'inv_code' : {
-                        'POSTER' : convert_date_format(row[12].value) if row[12].value else None,
-                        'FLIER' : convert_date_format(row[16].value) if row[16].value else None,
-                        'STALL' : get_Date_Values(row[15].value)if row[15].value else None,
-                        'STANDEE': get_Date_Values(row[15].value)[0] if row[15].value else None,
-                    },
                     'status' : 'F',
                     'index' : 0,
                     'rl_count' : 0,
                     'cl_count' : 0,
                 }
-                temp_data['index'] = len(temp_data['inv_code']['STALL']) if temp_data['inv_code']['STALL'] else None
-                total_society_id_list.append(temp_data)
-
-        try:
-            SupplierTypeSociety.objects.bulk_create(society_data_list)
-        except Exception as e:
-            return ui_utils.handle_response(function_name, data="error in bulk create society")
-        try:
-            ContactDetails.objects.bulk_create(contact_data_list)
-        except Exception as e:
-            return ui_utils.handle_response(function_name, data="error in bulk create contact")
-        try:
-            result = {
-                'center_data' : {
-                    'RS' : {
-                        'supplier_data' : total_society_id_list,
+                # total_society_id_list.append(temp_data)
+                if not total_society_id_list_obj.get(supplier_type_code):
+                    total_society_id_list_obj[supplier_type_code] = {
+                        'supplier_data' : [],
                         'filter_codes' : [
                             { 'id' : 'PO'},
                             {'id': 'SL'},
@@ -266,7 +268,17 @@ def genrate_supplier_data(data):
                             {'id': 'FL'}
                         ]
                     }
-                },
+                
+                total_society_id_list_obj[supplier_type_code]["supplier_data"].append(temp_data)
+                
+
+        try:
+            ContactDetails.objects.bulk_create(contact_data_list)
+        except Exception as e:
+            return ui_utils.handle_response(function_name, data="error in bulk create contact")
+        try:
+            result = {
+                'center_data' : total_society_id_list_obj,
                 'proposal_id' : data['proposal_id'],
                 'center_id' : data['center_id'],
                 'invoice_number' : data['invoice_number'],
@@ -431,7 +443,12 @@ class CreateInitialProposal(APIView):
                 if parent:
                     proposal_data['parent'] = ProposalInfo.objects.get_permission(user=user,
                                                                                   proposal_id=parent).proposal_id
-
+                
+                proposal_data['is_mix'] = False
+                if request.data.get('centers') and request.data["centers"][0].get("suppliers"):
+                    supplier_type_count = len([row for row in request.data["centers"][0]["suppliers"] if row["selected"] == True or row["selected"] == "True"])
+                    proposal_data['is_mix'] = True if supplier_type_count > 1 else False
+                
                 # call the function that saves basic proposal information
                 proposal_data['created_by'] = user.username
                 proposal_data['updated_by'] = user.username
@@ -448,6 +465,7 @@ class CreateInitialProposal(APIView):
                 proposal_id = proposal_data['proposal_id']
                 return ui_utils.handle_response(class_name, data=proposal_id, success=True)
         except Exception as e:
+            logger.exception("Something bad happened in CreateInitialProposal")
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 def calculate_hotness_level(multi_level_is_hot):
@@ -1052,6 +1070,7 @@ class ProposalViewSet(viewsets.ViewSet):
             response = website_utils.proposal_shortlisted_spaces(data)
             if not response.data['status']:
                 return response
+            
             return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -1665,18 +1684,16 @@ class HashtagImagesViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get('campaign_id')
-            date = request.query_params.get('date')
+            supplier_id = request.query_params.get('supplier_id')
+
             try:
-                images = HashTagImages.objects.filter(campaign=campaign_id, created_at__date=date).values()
+                images = HashTagImages.objects.filter(campaign=campaign_id,object_id=supplier_id).values()
             except ObjectDoesNotExist:
                 return ui_utils.handle_response(class_name, data={}, success=True)
-            for image in images:
-                #This is static, need to change by supplier code
-                supplier = SupplierTypeSociety.objects.get(supplier_id=image['object_id'])
-                serializer = SupplierTypeSocietySerializer(supplier)
-                image['supplier_data'] = serializer.data
             return ui_utils.handle_response(class_name, data=images, success=True)
+
         except Exception as e:
+            logger.exception
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     @detail_route(methods=['POST'])
@@ -1775,7 +1792,7 @@ class HashtagImagesViewSet(viewsets.ViewSet):
                 return ui_utils.handle_response(class_name, data='Please pass campaign Id', success=False)
             images = HashTagImages.objects.filter(campaign_id=campaign_id, hashtag__in=['Permission Box','RECEIPT']).order_by('-updated_at')
             if not images:
-                return ui_utils.handle_response(class_name, data='No images found', success=False) 
+                return ui_utils.handle_response(class_name, data='No images found', success=True) 
             result_obj = {}
             for image in images:
                 image.hashtag = image.hashtag.lower()
@@ -2612,7 +2629,7 @@ class convertDirectProposalToCampaign(APIView):
             is_import_sheet = data['is_import_sheet']
 
             if is_import_sheet:
-                response = genrate_supplier_data(data)
+                response = genrate_supplier_data(data,request.user)
                 if not response.data['status']:
                     return response
                 proposal_data = response.data['data']
@@ -2783,11 +2800,19 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     no_phase_suppliers = []
     no_status_suppliers = []
     all_supplier_ids = list(set([space.object_id for space in shortlisted_spaces_list]))
-    all_supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids)
-    all_supplier_dict = {supplier.supplier_id:supplier for supplier in all_supplier_objects}
+
+    all_supplier_objects = SupplierMaster.objects.filter(supplier_id__in=all_supplier_ids)
+    all_supplier_data_serializer = SupplierMasterSerializer(all_supplier_objects,many=True).data
+    all_supplier_data = website_utils.manipulate_master_to_rs(all_supplier_data_serializer)
+    if len(all_supplier_data) < 1:
+        all_supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids)
+        all_supplier_data_serializer = SupplierTypeSocietySerializer(all_supplier_objects,many=True).data
+        all_supplier_data = website_utils.manipulate_object_key_values_generic(all_supplier_data_serializer)
+
+    all_supplier_dict = {supplier['supplier_id']:supplier for supplier in all_supplier_data}
     for space in shortlisted_spaces_list:
         try:
-            supplier_society = all_supplier_dict[space.object_id]
+            supplier_society_serialized = all_supplier_dict[space.object_id]
         except KeyError:
             pass
         supplier_inventories = ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces_id=space.id)
@@ -2799,23 +2824,61 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             )
         inventory_dates_dict = {
                     "POSTER": [],
+                    "POSTER LIFT": [],
                     "STALL": [],
                     "STANDEE": [],
                     "FLIER": [],
                     "BANNER": [],
                     "GATEWAY ARCH": [],
                     "SUNBOARD" : [],
+                    "BILLING" : [],
+                    "HOARDING" : [],
+                    "GANTRY" : [],
+                    "BUS SHELTER" : [],
+                    "BUS BACK" : [],
+                    "BUS RIGHT" : [],
+                    "BUS LEFT" : [],
+                    "BUS WRAP" : [],
+                    "FLOOR" : [],
+                    "CEILING" : [],
+                    "COUNTER DISPLAY" : [],
+                    "TENT CARD" : [],
+                    "TABLE" : [],
+                    "HOARDING LIT" : [],
+                    "BUS SHELTER LIT" : [],
+                    "GANTRY LIT" : [],
+                    "WALL" : [],
+                    "CAR DISPLAY" : [],
                     "WHATSAPP INDIVIDUAL": [],
                     "WHATSAPP GROUP": []
                 }
         inventory_days_dict = {
             "POSTER": None,
+            "POSTER LIFT": None,
             "STALL": None,
             "STANDEE": None,
             "FLIER": None,
             "BANNER": None,
             "GATEWAY ARCH": None,
             "SUNBOARD" : None,
+            "BILLING" : None,
+            "HOARDING" : None,
+            "GANTRY" : None,
+            "BUS SHELTER" : None,
+            "BUS BACK" : None,
+            "BUS RIGHT" : None,
+            "BUS LEFT" : None,
+            "BUS WRAP" : None,
+            "FLOOR" : None,
+            "CEILING" : None,
+            "COUNTER DISPLAY" : None,
+            "TENT CARD" : None,
+            "TABLE" : None,
+            "HOARDING LIT" : None,
+            "BUS SHELTER LIT" : None,
+            "GANTRY LIT" : None,
+            "WALL" : None,
+            "CAR DISPLAY" : None,
             "WHATSAPP INDIVIDUAL": None,
             "WHATSAPP GROUP": None
         }
@@ -2828,9 +2891,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     inventory_dates_dict[inventoy_name].append(activity_date)
         inventory_count_dict = {}
 
-        supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society).data        
-        supplier_tower_count = supplier_society.tower_count if supplier_society_serialized.get("tower_count") else 0
-        supplier_flat_count = supplier_society.flat_count if supplier_society_serialized.get("flat_count") else 0
+        supplier_tower_count = supplier_society_serialized["tower_count"] if supplier_society_serialized.get("tower_count") else 0
+        supplier_flat_count = supplier_society_serialized["flat_count"] if supplier_society_serialized.get("flat_count") else 0
         for inventory in supplier_inventories:
             if inventory.ad_inventory_type.adinventory_name not in inventory_count_dict:
                 inventory_count_dict[inventory.ad_inventory_type.adinventory_name] = 0
@@ -2841,8 +2903,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
             if inventory.inventory_number_of_days:
                 inventory_days_dict[inventory.ad_inventory_type.adinventory_name] = inventory.inventory_number_of_days
-            inventory_count_dict['FLIER'] = supplier_society.flat_count if supplier_society_serialized.get("flat_count") else 0
-            overall_inventory_count_dict['FLIER'] = supplier_society.flat_count if supplier_society_serialized.get("flat_count") else 0
+            inventory_count_dict['FLIER'] = supplier_society_serialized["flat_count"] if supplier_society_serialized.get("flat_count") else 0
+            overall_inventory_count_dict['FLIER'] = supplier_society_serialized["flat_count"] if supplier_society_serialized.get("flat_count") else 0
 
         supplier_society_serialized['booking_status'] = space.booking_status
         supplier_society_serialized['booking_sub_status'] = space.booking_sub_status
@@ -3105,8 +3167,13 @@ def get_supplier_list_by_status_ctrl(campaign_id):
 class getSupplierListByStatus(APIView):
     @staticmethod
     def get(request, campaign_id):
-        shortlisted_spaces_by_phase_list = get_supplier_list_by_status_ctrl(campaign_id)
-        return ui_utils.handle_response({}, data=shortlisted_spaces_by_phase_list, success=True)
+        try:
+            center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
+            shortlisted_spaces_by_phase_list = get_supplier_list_by_status_ctrl(campaign_id)
+            return Response({'status': True, 'data': shortlisted_spaces_by_phase_list, 'supplier_type_code':center_data})
+        except Exception as e:
+            logger.exception(e)
+            return ui_utils.handle_response("", exception_object=e, request=request)
 
 class ImportSheetInExistingCampaign(APIView):
     """
@@ -3124,9 +3191,9 @@ class ImportSheetInExistingCampaign(APIView):
             data = request.data.copy()
 
             is_import_sheet = data['is_import_sheet']
-
+    
             if is_import_sheet:
-                response = genrate_supplier_data(data)
+                response = genrate_supplier_data(data,request.user)
                 if not response.data['status']:
                     return response
                 proposal_data = response.data['data']
@@ -3136,9 +3203,6 @@ class ImportSheetInExistingCampaign(APIView):
             proposal = ProposalInfo.objects.get(pk=proposal_data['proposal_id'])
             center = ProposalCenterMapping.objects.get(pk=center_id)
             for supplier_code in proposal_data['center_data']:
-                # response = website_utils.save_filters(center, supplier_code, proposal_data, proposal)
-                # if not response.data['status']:
-                #     return response
 
                 old_shortlisted_suppliers = ShortlistedSpaces.objects.filter(proposal_id=proposal_data['proposal_id'])
                 old_shortlisted_suppliers_map = {}
@@ -3148,22 +3212,10 @@ class ImportSheetInExistingCampaign(APIView):
                 response = website_utils.save_shortlisted_suppliers_data(center, supplier_code, proposal_data, proposal)
                 if not response.data['status']:
                     return response
-                if is_import_sheet:
-                    create_inv_act_data = True
-                    response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
-                                                                 proposal_data, proposal,create_inv_act_data , old_shortlisted_suppliers_map)
-                    if not response.data['status']:
-                        return response
-
-                    response = assign_inv_dates(proposal_data)
-                    if not response.data['status']:
-                        return response
-                # else:
-                #     response = website_utils.save_shortlisted_inventory_pricing_details_data(center, supplier_code,
-                #                                                                          proposal_data, proposal)
 
             return ui_utils.handle_response(class_name, data={}, success=True)
         except Exception as e:
+            logger.exception(e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 class GetOngoingSuppliersOfCampaign(APIView):
@@ -3309,6 +3361,23 @@ class SupplierAssignmentViewSet(viewsets.ViewSet):
             result_obj[supplier_obj.supplier_id]["supplier_id"] = supplier_obj.supplier_id
         result_list = [result_obj[supplier] for supplier in result_obj]
         return ui_utils.handle_response(class_name, data=result_list, success=True)
+
+
+class BrandAssignmentViewSet(viewsets.ViewSet):
+
+    def create(self, request):
+        class_name = self.__class__.__name__
+        try:
+
+            if request.data["id"]:
+                item = ShortlistedSpaces.objects.filter(id=request.data["id"]).first()
+                if item:
+                    item.brand_organisation_id = request.data["brand_organisation_id"]
+                    item.save()
+               
+            return ui_utils.handle_response(class_name, data={}, success=True)
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class ConvertProposalToCampaign(APIView):
