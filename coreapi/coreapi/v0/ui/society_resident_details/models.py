@@ -31,12 +31,13 @@ class ResidentDetail(MongoModel):
 
 class ResidentCampaignDetail(MongoModel):
     message_id = fields.CharField()
-    user_id = fields.CharField()            # Store user -> _id here
+    user_id = fields.CharField()            # Store user
     resident_id = fields.CharField()       # Store resident -> _id here
     campaign_id = fields.CharField()
     lead_phases = fields.DictField()     # impression, click, lead, hot_lead ,in_between, converted
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
+    is_resident = fields.BooleanField()
 
     class Meta:
         write_concern = WriteConcern(j=True)
