@@ -956,7 +956,14 @@ booking_status = {
     'new_entity': 'NE',
     'not_initiated': 'NI',
     'recce':'RE',
-    'meeting_fixed':'MF'
+    'meeting_fixed':'MF',
+    'complete_lockdown': 'LCL',
+    'partial_lockdown': 'LPL',
+    'open_lockdown': 'LOL',
+    'emergency_system': 'LES',
+    'essential_required': 'LER',
+    'medicine_required': 'LMR',
+    'vegetables_fruits_required': 'LVR'
 }
 
 booking_code_to_status = {
@@ -975,7 +982,14 @@ booking_code_to_status = {
     'RE': 'Recce',
     'MF': 'Meeting Fixed',
     'CM': 'completed',
-    'UN': 'unknown'
+    'UN': 'unknown',
+    'LCL': 'Complete Lockdown',
+    'LPL': 'Partial Lockdown',
+    'LOL': 'Open Lockdown',
+    'LES': 'Emergency System',
+    'LER': 'Essential Required',
+    'LMR': 'Medicine Required',
+    'LVR': 'Vegetables & Fruits Required'
 }
 
 booking_substatus_code_to_status = {
@@ -1323,6 +1337,8 @@ codes_to_model_names = {
     'BS': 'SupplierTypeBusShelter',
     'EI': 'SupplierEducationalInstitute',
     'HO': 'SupplierHording',
+    'WI': 'WhatsAppIndividualInventory',
+    'WG': 'WhatsAppGroupInventory',
   
     bus_depot_code: 'SupplierTypeBusDepot',
     retail_shop: 'SupplierTypeRetailShop',
@@ -1362,7 +1378,9 @@ codes_to_model_names = {
     'HOARDING LIT' : 'HordingLitInventory',
     'BUS SHELTER LIT' : 'BusShelterLitInventory',
     'GANTRY LIT' : 'GantryLitInventory',
-    'WALL' : 'WallInventory'
+    'WALL' : 'WallInventory',
+    'WHATSAPP INDIVIDUAL': 'WhatsAppIndividualInventory',
+    'WHATSAPP GROUP': 'WhatsAppGroupInventory'
 }
 
 supplier_code_to_names = {

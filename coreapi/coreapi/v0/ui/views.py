@@ -456,13 +456,14 @@ def AddState(state):
             print('Failed to add State :', state)
     return state_id
 
+
 def AddCity(city, state_id):
     city_detail = City.objects.filter(city_name__icontains=city, state_code=state_id).values('id')
     if city_detail and len(city_detail) > 0:
         city_id = city_detail[0]['id']
     else:
         city_code = ui_utils.getRandomString()
-        cityInserted = City.objects.create(city_name=city, city_code=city_code.upper(), state_code_id=state_id)
+        cityInserted = City.objects.create(city_name=city.title(), city_code=city_code.upper(), state_code_id=state_id)
         if cityInserted:
             city_id = cityInserted.id
         else:
@@ -476,7 +477,7 @@ def AddArea(area, city_id):
         area_id = area_detail[0]['id']
     else:
         area_code = ui_utils.getRandomString()
-        areaInserted = CityArea.objects.create(label=area, area_code=area_code.upper(), city_code_id=city_id)
+        areaInserted = CityArea.objects.create(label=area.title(), area_code=area_code.upper(), city_code_id=city_id)
         if areaInserted:
             area_id = areaInserted.id
         else:
@@ -490,12 +491,13 @@ def AddSubArea(subarea, area_id):
         subarea_id = subarea_detail[0]['id']
     else:
         subarea_code = ui_utils.getRandomString()
-        subareaInserted = CitySubArea.objects.create(subarea_name=subarea, subarea_code=subarea_code.upper(), area_code_id=area_id, locality_rating='Standard')
+        subareaInserted = CitySubArea.objects.create(subarea_name=subarea.title(), subarea_code=subarea_code.upper(), area_code_id=area_id, locality_rating='Standard')
         if subareaInserted:
             subarea_id = subareaInserted.id
         else:
             print('Failed to add Subarea :', subarea)
     return subarea_id
+
 
 class SocietyAPIFilterSubAreaView(APIView):
     def post(self, request, format=None):
@@ -1010,15 +1012,16 @@ class TowerAPIView(APIView):
     def get(self, request, id, format=None):
         try:
             supplier_type_code = request.query_params.get('supplierTypeCode', None)
+            if not supplier_type_code:
+                return Response({'message': 'Missing Supplier type code'}, status=404)
             data = request.data.copy()
             data['supplier_type_code'] = supplier_type_code
-
             towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
             serializer_tower = UITowerSerializer(towers, many=True)
 
             inventory_summary = InventorySummary.objects.get_supplier_type_specific_object(data, id)
             if not inventory_summary:
-                return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(data={'message': "Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
             serializer_inventory = InventorySummarySerializer(inventory_summary)
 
             response = {
@@ -1031,6 +1034,8 @@ class TowerAPIView(APIView):
             return Response({'message': 'Invalid Society ID'}, status=404)
         except InventorySummary.DoesNotExist:
             return Response({'message': 'Please fill Inventory Summary Tab', 'inventory': 'true'}, status=404)
+        except Exception as e:
+            return Response({'message': 'Invalid Error'}, status=404)
 
     def post(self, request, id, format=None):
 
@@ -1057,7 +1062,7 @@ class TowerAPIView(APIView):
             # End: code added and changed for getting supplier_type_code
             inventory_obj = InventorySummary.objects.get_supplier_type_specific_object(data, id)
             if not inventory_obj:
-                return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(data={"message": "Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
         except InventorySummary.DoesNotExist:
             return Response({'message': 'Please fill Inventory Summary Tab', 'inventory': 'true'}, status=404)
 
@@ -1202,6 +1207,8 @@ class PosterAPIView(APIView):
         try:
             # code added and changed for getting supplier_type_code
             supplier_type_code = request.query_params.get('supplierTypeCode', None)
+            if not supplier_type_code:
+                return Response({'message': 'Missing Supplier type code'}, status=404)
             data = request.data.copy()
             data['supplier_type_code'] = supplier_type_code
             towers = SupplierTypeSociety.objects.get(pk=id).towers.all()
@@ -1210,7 +1217,7 @@ class PosterAPIView(APIView):
 
             item = InventorySummary.objects.get_supplier_type_specific_object(data, id)
             if not item:
-                return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(data={"message": "Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
             # item = InventorySummary.objects.get(supplier=society)
 
@@ -1322,6 +1329,8 @@ class FlierAPIView(APIView):
         try:
             # code added and changed for getting supplier_type_code
             supplier_type_code = request.query_params.get('supplierTypeCode', None)
+            if not supplier_type_code:
+                return Response({'message': 'Missing Supplier type code'}, status=404)
             data = request.data.copy()
             data['supplier_type_code'] = supplier_type_code
 
@@ -1335,7 +1344,7 @@ class FlierAPIView(APIView):
 
             item = InventorySummary.objects.get_supplier_type_specific_object(data, id)
             if not item:
-                return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(data={"message": "Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
             # item = InventorySummary.objects.get(supplier=society)
 
@@ -1425,6 +1434,9 @@ class StandeeBannerAPIView(APIView):
 
         # code added and changed for getting supplier_type_code
         supplier_type_code = request.query_params.get('supplierTypeCode', None)
+        if not supplier_type_code:
+            return Response({'message': 'Missing Supplier type code'}, status=404)
+
         data = request.data.copy()
         data['supplier_type_code'] = supplier_type_code
 
@@ -1433,7 +1445,7 @@ class StandeeBannerAPIView(APIView):
 
         item = InventorySummary.objects.get_supplier_type_specific_object(data, id)
         if not item:
-            return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={"message": "Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
         # item = InventorySummary.objects.get(supplier=society)
 
@@ -1472,6 +1484,8 @@ class StallAPIView(APIView):
 
         # code added and changed for getting supplier_type_code
         supplier_type_code = request.query_params.get('supplierTypeCode', None)
+        if not supplier_type_code:
+            return Response({'message': 'Missing Supplier type code'}, status=404)
         data = request.data.copy()
         data['supplier_type_code'] = supplier_type_code
 
@@ -1482,7 +1496,7 @@ class StallAPIView(APIView):
 
         item = InventorySummary.objects.get_supplier_type_specific_object(data, id)
         if not item:
-            return Response(data={"Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={"message": "Inventory Summary object does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer1 = InventorySummarySerializer(item, many=True)
         response = {"disable_stall": item.stall_allowed}
@@ -1695,30 +1709,30 @@ class OtherInventoryAPIView(APIView):
 
         if request.data['wall_available']:
             response = post_data(WallInventory, WallInventorySerializer, request.data['wall_display_details'], society)
-            if response == False:
+            if response is False:
                 return Response(status=400)
 
         if request.data['community_hall_available']:
             response = post_data(CommunityHallInfo, CommunityHallInfoSerializer, request.data['community_hall_details'],
                                  society)
-            if response == False:
+            if response is False:
                 return Response(status=400)
 
         if request.data['swimming_pool_available']:
             response = post_data(SwimmingPoolInfo, SwimmingPoolInfoSerializer, request.data['swimming_pool_details'],
                                  society)
-            if response == False:
+            if response is False:
                 return Response(status=400)
 
         if request.data['street_furniture_available']:
             response = post_data(StreetFurniture, StreetFurnitureSerializer, request.data['street_furniture_details'],
                                  society)
-            if response == False:
+            if response is False:
                 return Response(status=400)
 
         if request.data['sports_available']:
             response = post_data(SportsInfra, SportsInfraSerializer, request.data['sports_details'], society)
-            if response == False:
+            if response is False:
                 return Response(status=400)
 
         return Response(status=201)
