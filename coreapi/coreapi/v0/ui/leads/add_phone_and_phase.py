@@ -7,7 +7,6 @@ from bson.objectid import ObjectId
 logger = logging.getLogger(__name__)
 
 
-
 class updateLeadsItems(APIView):
     @staticmethod
     def patch(request):
@@ -37,7 +36,6 @@ class updateLeadsItems(APIView):
 
                 if data_item_lower == 'alternate number' and item_id_wise_dict[data_item]['value'] and item_id_wise_dict[data_item]['value'] != 'NA':
                     alternate_number = format_contact_number(item_id_wise_dict[data_item]['value'])
-            # print(phone_number, alternate_number)
             lead_dict = {"phone_number": phone_number, "phase_number": int(phase_number), "alternate_number": alternate_number, "lead_entry_date":lead_entry_date}
             mongo_client.leads.update({"_id": _id}, {"$set": lead_dict})
 
