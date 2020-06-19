@@ -14,6 +14,7 @@ from .views import (CreateLeadsForm, GetLeadsForm, LeadsFormEntry, GetLeadsEntri
                     MigrateLeadsFormsByAlias)
 
 from .one_time_scripts import UpdateLeadsMissingItems, UpdateLeadsEntryIds
+from .add_phone_and_phase import updateLeadsItems
 
 
 urlpatterns = [
@@ -62,6 +63,7 @@ urlpatterns = [
     url(r'^update-leads-summary/', UpdateLeadSummary.as_view()),
     url(r'^update-order-id/', UpdateOrderId.as_view()),
     url(r'^migrate-leads-forms-by-alias/', MigrateLeadsFormsByAlias.as_view()),
+    url(r'^update-leads-items/', updateLeadsItems.as_view()),
 ]
 
 router = DefaultRouter()
