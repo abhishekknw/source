@@ -37,6 +37,7 @@ class updateLeadsItems(APIView):
 
                 if data_item_lower == 'alternate number' and item_id_wise_dict[data_item]['value'] and item_id_wise_dict[data_item]['value'] != 'NA':
                     alternate_number = format_contact_number(item_id_wise_dict[data_item]['value'])
+            # print(phone_number, alternate_number)
             lead_dict = {"phone_number": phone_number, "phase_number": int(phase_number), "alternate_number": alternate_number, "lead_entry_date":lead_entry_date}
             mongo_client.leads.update({"_id": _id}, {"$set": lead_dict})
 
@@ -58,4 +59,4 @@ def format_contact_number(contact_number):
             return None
     contact_number = int(contact_number)
     if int(math.log10(contact_number)) + 1 == 10:
-    	return contact_number + 1 if contact_number else None
+    	return contact_number if contact_number else None
