@@ -1,11 +1,11 @@
 import datetime
 import logging
 from rest_framework.views import APIView
+from pymongo.errors import CursorNotFound
 from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg
 from v0.ui.common.models import mongo_client
-from bson.objectid import ObjectId
 from .models import User, ResidentDetail,ResidentCampaignDetail
-from .utils import get_supplier, format_contact_number
+from .utils import get_supplier
 logger = logging.getLogger(__name__)
 
 
@@ -14,9 +14,9 @@ class UpdateResident(APIView):
     def post(request):
         try:
             timestamp = datetime.datetime.utcnow()
-            all_leads = mongo_client.leads.find()
+            all_leads = mongo_client.leads.find({'created_at': {"$gte": datetime.datetime(2016, 1, 1)}})
             for lead in all_leads:
-                if not lead:
+                if not lead or type(lead) != dict:
                     continue
                 try:
                     resident_data = {
@@ -51,19 +51,22 @@ class UpdateResident(APIView):
                             resident_data['lead_phases']['hot_lead'] = True if lead[item] else False
                         if item == 'hotness_level':
                             resident_data['hotness_level'] = lead[item]
+                        if item == 'phone_number' and lead[item] is not None:
+                            resident_data['contact_number'] = lead[item]
+                        if item == 'alternate_number' and lead[item] is not None:
+                            resident_data['alternate_contact_number'] = lead[item]
+
+                    contact_number = resident_data.get('contact_number', None)
+                    alternate_contact_number = resident_data.get('alternate_contact_number', None)
+
+                    if not contact_number and not alternate_contact_number:
+                        continue
 
                     for data_item in lead['data']:
                         item_id_wise_dict[data_item['key_name']] = data_item
 
                     for data_item in item_id_wise_dict:
                         data_item_lower = data_item.lower()
-                        if data_item_lower in ['primary number', 'contact number']:
-                            if item_id_wise_dict[data_item]['value'] and item_id_wise_dict[data_item]['value'] != 'NA':
-                                contact_number = format_contact_number(item_id_wise_dict[data_item]['value'])
-                                resident_data['contact_number'] = contact_number if contact_number else None
-                        if data_item_lower == 'alternate number' and item_id_wise_dict[data_item]['value'] and item_id_wise_dict[data_item]['value'] != 'NA':
-                            alternate_contact_number = format_contact_number(item_id_wise_dict[data_item]['value'])
-                            resident_data['alternate_contact_number'] = alternate_contact_number if alternate_contact_number else None
                         if data_item_lower in ['parent name', 'name']:
                             resident_data['name'] = item_id_wise_dict[data_item]['value']
                         if data_item_lower == 'apartment_name':
@@ -77,11 +80,9 @@ class UpdateResident(APIView):
 
                     resident_data['society_details'].append(society_details)
                     # Check if user, resident exists
-                    contact_number = resident_data.get('contact_number')
-                    alternate_contact_number = resident_data.get('alternate_contact_number')
 
                     if contact_number:
-                        user_already_exists = mongo_client.user.find_one({'contact_number': contact_number}, {'_id': 1}, no_cursor_timeout=True)
+                        user_already_exists = mongo_client.user.find_one({'contact_number': contact_number}, {'_id': 1})
                         if not user_already_exists:
                             # Update user,resident, resident campaign model
                             user_data = {
@@ -111,7 +112,6 @@ class UpdateResident(APIView):
                             is_society_exists = False
                             resident_id = str(resident_already_exists['_id'])
                             for society in resident_already_exists['society_details']:
-                                print(society, supplier_id)
                                 if supplier_id and isinstance(society, dict) and society['society_id'] == supplier_id:
                                     is_society_exists = True
                             if not is_society_exists:
@@ -124,7 +124,7 @@ class UpdateResident(APIView):
                         resident_campaign_already_exists = mongo_client.resident_campaign_detail.find_one({
                             'user_id': user_id,
                             'campaign_id': resident_data['campaign_id']
-                        }, {'_id': 1}, no_cursor_timeout=True)
+                        }, {'_id': 1})
                         if not resident_campaign_already_exists:
                             resident_campaign_detail = {
                                 'user_id': user_id,
@@ -142,7 +142,7 @@ class UpdateResident(APIView):
                     # Create use for alternate contact number
                     if alternate_contact_number:
                         user_already_exists = mongo_client.user.find_one({'contact_number': alternate_contact_number},
-                                                                         {'_id': 1}, no_cursor_timeout=True)
+                                                                         {'_id': 1})
                         if not user_already_exists:
                             # Update user,resident
                             user_data = {
@@ -151,8 +151,12 @@ class UpdateResident(APIView):
                                 'updated_at': timestamp
                             }
                             User(**user_data).save()
+                except CursorNotFound as e:
+                    logger.exception('cursor not found 1:', e, lead)
                 except Exception as e:
                     logger.exception('Error in leads :', e, lead)
+        except CursorNotFound as e:
+            logger.exception('cursor not found 2:', e)
         except Exception as e:
             logger.exception('Unexpected error :', e)
 
