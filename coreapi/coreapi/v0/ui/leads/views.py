@@ -549,6 +549,23 @@ class LeadsFormEntry(APIView):
         campaign_id = lead_form['campaign_id']
         lead_data = request.data["leads_form_entries"]
         enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id)
+        
+        lead_summary = mongo_client.leads_summary.find_one({"campaign_id": campaign_id,"supplier_id": supplier_id})
+        if lead_summary:
+            total_leads_count=lead_summary['total_leads_count']+1
+            mongo_client.leads_summary.update({"_id": ObjectId(lead_summary['_id'])},
+                                                      {"$set": {'total_leads_count': total_leads_count}})
+        else:
+            mongo_client.leads_summary.insert_one({
+                "campaign_id": campaign_id,
+                "supplier_id": supplier_id,
+                "lead_date": None,
+                "total_leads_count": 1,
+                "total_hot_leads_count": 0,
+                "total_booking_confirmed": 0,
+                "total_orders_punched": 0
+            })
+
         return handle_response({}, data='success', success=True)
 
 
