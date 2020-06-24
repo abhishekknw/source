@@ -1652,6 +1652,8 @@ class GenerateCampaignExcelDownloadHash(APIView):
         excel_download_hash_dict["one_time_hash"] = one_time_hash
         CampaignExcelDownloadHash(**excel_download_hash_dict).save()
         return handle_response({}, data={"one_time_hash": one_time_hash}, success=True)
+
+
 class AddHotnessLevelsToLeadForm(APIView):
     @staticmethod
     def get(request):

@@ -2925,7 +2925,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             if space.phase_no_id not in shortlisted_spaces_by_phase_dict:
                 shortlisted_spaces_by_phase_dict[space.phase_no_id] = {'BK': [], 'NB': [], 'PB': [], 'VB': [], 'SR': [], 'NI':[], 'MF':[], 'RERA':[], 'MWS':[], 'MWC':[], 'MWT':[], 'MWO':[],
                                                                        'SE': [], 'VR': [], 'CR': [], 'DPCR':[], 'DPNR':[], 'NE':[], 'UN':[], 'MWA':[], 'UPNI':[], 'UCPI':[], 'TB':[],
-                                                                       'DP': [], 'TB': [], 'MC':[], 'UN':[], 'DPRR': [], 'RLC':[], 'PR': [], 'NVOS':[], 'RE': []}
+                                                                       'DP': [], 'MC':[], 'DPRR': [], 'RLC':[], 'PR': [], 'NVOS':[], 'RE': []}
             if space.booking_status:
                 shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(
                     supplier_society_serialized)
@@ -3130,26 +3130,37 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             pipeline['followup_required']['supplier_data'].append(supplier)
             pipeline['followup_required']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['followup_required']['supplier_count'] += 1
+            pipeline['total_booked']['supplier_data'].append(supplier)
+            pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['total_booked']['supplier_count'] += 1
         if supplier['booking_status'] in verbally_booked_status:
             pipeline['verbally_booked']['supplier_data'].append(supplier)
             pipeline['verbally_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['verbally_booked']['supplier_count'] += 1
+            pipeline['total_booked']['supplier_data'].append(supplier)
+            pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['total_booked']['supplier_count'] += 1
         if supplier['booking_status'] in rejected_status:
             pipeline['rejected']['supplier_data'].append(supplier)
             pipeline['rejected']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['rejected']['supplier_count'] += 1
+            pipeline['total_booked']['supplier_data'].append(supplier)
+            pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['total_booked']['supplier_count'] += 1
         if supplier['booking_status'] in recce_required:
             pipeline['recce_required']['supplier_data'].append(supplier)
             pipeline['recce_required']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['recce_required']['supplier_count'] += 1
+            pipeline['total_booked']['supplier_data'].append(supplier)
+            pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['total_booked']['supplier_count'] += 1
         if supplier['booking_status'] in meeting_fixed:
             pipeline['meeting_fixed']['supplier_data'].append(supplier)
             pipeline['meeting_fixed']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['meeting_fixed']['supplier_count'] += 1
-
-        pipeline['total_booked']['supplier_data'].append(supplier)
-        pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
-        pipeline['total_booked']['supplier_count'] += 1
+            pipeline['total_booked']['supplier_data'].append(supplier)
+            pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['total_booked']['supplier_count'] += 1
 
     if len(completed_phases) > 0:
         last_completed_phase = sorted(completed_phases, key=lambda k: int(k['phase_no']))[-1]
