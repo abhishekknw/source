@@ -3060,8 +3060,6 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             pipeline['total_booked']['supplier_data'] += phase[status_type]['supplier_data']
 
     for supplier in (no_status_suppliers + no_phase_suppliers):
-        total_suppliers = []
-        total_flat_count = 0
         if not supplier['booking_status']:
             pipeline['not_initiated']['supplier_data'].append(supplier)
             pipeline['not_initiated']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
@@ -3070,36 +3068,37 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             pipeline['followup_required']['supplier_data'].append(supplier)
             pipeline['followup_required']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['followup_required']['supplier_count'] += 1
-            total_suppliers.append(supplier)
-            total_flat_count += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['total_booked']['supplier_data'].append(supplier)
+            pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['total_booked']['supplier_count'] += 1
         if supplier['booking_status'] in verbally_booked_status:
             pipeline['verbally_booked']['supplier_data'].append(supplier)
             pipeline['verbally_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['verbally_booked']['supplier_count'] += 1
-            total_suppliers.append(supplier)
-            total_flat_count += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['total_booked']['supplier_data'].append(supplier)
+            pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['total_booked']['supplier_count'] += 1
         if supplier['booking_status'] in rejected_status:
             pipeline['rejected']['supplier_data'].append(supplier)
             pipeline['rejected']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['rejected']['supplier_count'] += 1
-            total_suppliers.append(supplier)
-            total_flat_count += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['total_booked']['supplier_data'].append(supplier)
+            pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['total_booked']['supplier_count'] += 1
         if supplier['booking_status'] in recce_required:
             pipeline['recce_required']['supplier_data'].append(supplier)
             pipeline['recce_required']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['recce_required']['supplier_count'] += 1
-            total_suppliers.append(supplier)
-            total_flat_count += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['total_booked']['supplier_data'].append(supplier)
+            pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['total_booked']['supplier_count'] += 1
         if supplier['booking_status'] in meeting_fixed:
             pipeline['meeting_fixed']['supplier_data'].append(supplier)
             pipeline['meeting_fixed']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['meeting_fixed']['supplier_count'] += 1
-            total_suppliers.append(supplier)
-            total_flat_count += supplier['flat_count'] if supplier['flat_count'] else 0
-
-        pipeline['total_booked']['supplier_data'] = total_suppliers
-        pipeline['total_booked']['flat_count'] = total_flat_count
-        pipeline['total_booked']['supplier_count'] = len(total_suppliers)
+            pipeline['total_booked']['supplier_data'].append(supplier)
+            pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['total_booked']['supplier_count'] += 1
 
     if len(completed_phases) > 0:
         last_completed_phase = sorted(completed_phases, key=lambda k: int(k['phase_no']))[-1]
