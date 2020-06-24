@@ -92,6 +92,8 @@ class UpdateResident(APIView):
                             }
                             if alternate_contact_number:
                                 user_data['alternate_contact_number'] = alternate_contact_number
+                            if resident_data.get('name', None):
+                                user_data['name'] = resident_data['name'].title()
                             user = User(**user_data).save()
                             user_id = str(user._id)
                         else:
