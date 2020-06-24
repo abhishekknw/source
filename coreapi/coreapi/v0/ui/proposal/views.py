@@ -3060,6 +3060,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             pipeline['total_booked']['supplier_data'] += phase[status_type]['supplier_data']
 
     for supplier in (no_status_suppliers + no_phase_suppliers):
+        total_suppliers = []
+        total_flat_count = 0
         if not supplier['booking_status']:
             pipeline['not_initiated']['supplier_data'].append(supplier)
             pipeline['not_initiated']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
