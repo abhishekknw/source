@@ -349,3 +349,25 @@ class SupplierAssignment(BaseModel):
 
     class Meta:
         db_table = 'supplier_assignment'
+
+class TypeOfEndCustomer(BaseModel):
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'type_of_end_customer'
+
+class BookingStatus(BaseModel):
+    type_of_end_customer = models.ForeignKey('TypeOfEndCustomer', null=False, blank=False, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'booking_status'
+
+class BookingSubstatus(BaseModel):
+    booking_status = models.ForeignKey('BookingStatus', null=False, blank=False, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'booking_substatus'

@@ -3391,3 +3391,9 @@ class ConvertProposalToCampaign(APIView):
             return ui_utils.handle_response(class_name, data='Proposal conversion successfull', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, data='Error converting proposal', success=False)
+
+# class BookingStatus(APIView):
+#     def get(self, request):
+#         try:
+#             class_name = self.__class__.__name__
+#             type
