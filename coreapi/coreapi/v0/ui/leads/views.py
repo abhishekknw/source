@@ -406,6 +406,7 @@ class LeadsFormBulkEntry(APIView):
             apartment_index = None
             phone_number_index = None
             club_name_index = None
+            phone_number=None
             for index, row in enumerate(ws.iter_rows()):
                 if index == 0:
                     for idx, i in enumerate(row):
@@ -492,7 +493,8 @@ class LeadsFormBulkEntry(APIView):
                         inv_activity_assignment_activity_date_missing_societies.append(society_name)
                         continue
                     lead_dict = {"data": [], "is_hot": False, "created_at": created_at, "supplier_id": found_supplier_id,
-                                 "campaign_id": campaign_id, "leads_form_id": int(leads_form_id), "entry_id": entry_id}
+                                 "campaign_id": campaign_id, "leads_form_id": int(leads_form_id), "entry_id": entry_id,
+                                 "phone_number":phone_number}
                     for item_id in range(0, fields):
                         curr_item_id = item_id + 1
                         curr_form_item_dict = lead_form['data'][str(curr_item_id)]
