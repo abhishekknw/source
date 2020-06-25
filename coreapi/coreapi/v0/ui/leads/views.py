@@ -123,13 +123,34 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
         mongo_client.leads.insert_one(lead_dict).inserted_id
         mongo_client.leads_forms.update_one({"leads_form_id": lead_form['leads_form_id']},
                                             {"$set": {"last_entry_id": entry_id}})
+
+        lead_summary = mongo_client.leads_summary.find_one({"campaign_id": campaign_id,"supplier_id": supplier_id})
+        hot_lead_count=0
+        if lead_dict["is_hot"]:
+            hot_lead_count=1
+   
+        if lead_summary:
+            total_leads_count=lead_summary['total_leads_count']+1
+            hot_lead_count=lead_summary['total_hot_leads_count']+hot_lead_count
+            mongo_client.leads_summary.update_one({"_id": ObjectId(lead_summary['_id'])},
+                                                      {"$set": {'total_leads_count': total_leads_count,'total_hot_leads_count': hot_lead_count}})
+        else:
+            mongo_client.leads_summary.insert_one({
+                "campaign_id": campaign_id,
+                "supplier_id": supplier_id,
+                "lead_date": None,
+                "total_leads_count": 1,
+                "total_hot_leads_count":hot_lead_count,
+                "total_booking_confirmed": 0,
+                "total_orders_punched": 0
+            })
     return
 
 
 def convertToNumber(str):
     try:
         return int(str)
-    except ValueError:
+    except:
         return str
 
 def get_data_by_supplier_type_code(lead_form, supplier_id):
@@ -549,22 +570,6 @@ class LeadsFormEntry(APIView):
         campaign_id = lead_form['campaign_id']
         lead_data = request.data["leads_form_entries"]
         enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id)
-        
-        lead_summary = mongo_client.leads_summary.find_one({"campaign_id": campaign_id,"supplier_id": supplier_id})
-        if lead_summary:
-            total_leads_count=lead_summary['total_leads_count']+1
-            mongo_client.leads_summary.update({"_id": ObjectId(lead_summary['_id'])},
-                                                      {"$set": {'total_leads_count': total_leads_count}})
-        else:
-            mongo_client.leads_summary.insert_one({
-                "campaign_id": campaign_id,
-                "supplier_id": supplier_id,
-                "lead_date": None,
-                "total_leads_count": 1,
-                "total_hot_leads_count": 0,
-                "total_booking_confirmed": 0,
-                "total_orders_punched": 0
-            })
 
         return handle_response({}, data='success', success=True)
 
