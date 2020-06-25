@@ -404,12 +404,15 @@ class LeadsFormBulkEntry(APIView):
             all_sha256 = list(mongo_client.leads.find({"leads_form_id": int(leads_form_id)},{"lead_sha_256": 1, "_id": 0}))
             all_sha256_list = [str(element['lead_sha_256']) for element in all_sha256]
             apartment_index = None
+            phone_number_index = None
             club_name_index = None
             for index, row in enumerate(ws.iter_rows()):
                 if index == 0:
                     for idx, i in enumerate(row):
                         if i.value and 'apartment' in i.value.lower():
                             apartment_index = idx
+                        if i.value and 'phone_number' in i.value.lower():
+                            phone_number_index = idx
                             break
                     if not apartment_index:
                         for idx, i in enumerate(row):
@@ -419,12 +422,18 @@ class LeadsFormBulkEntry(APIView):
                 if apartment_index is None and club_name_index is None:
                     return handle_response('', data="neither apartment nor club found in the sheet", success=False)
                 entity_index = apartment_index if apartment_index else club_name_index
+                
+                if phone_number_index is None:
+                    return handle_response('', data='phone_number is missing')
+
                 if index > 0:
                     if not (row[entity_index].value is None):
                         society_name = row[entity_index].value
 
                     suppliers = get_supplier_data_by_type(society_name)
 
+                    if not (row[phone_number_index].value is None):
+                        phone_number = row[phone_number_index].value
 
                     if len(suppliers) == 0:
                         if society_name not in missing_societies and society_name is not None:
