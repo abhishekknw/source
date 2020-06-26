@@ -7,7 +7,8 @@ from .views import (CreateInitialProposalBulkBasic, HashtagImagesViewSet, Initia
                    FinalProposalAPIView, CreateProposalAPIView, ProposalImagesPath, convertDirectProposalToCampaign,
                    CampaignToProposal, SupplierPhaseViewSet, getSupplierListByStatus, ImportSheetInExistingCampaign,
                    GetOngoingSuppliersOfCampaign, GetExtraLead, HashtagImagesNewViewSet, SupplierAssignmentViewSet,
-                   BrandAssignmentViewSet, ConvertProposalToCampaign, CreateDummyProposal, BookingAssignmentViewSet)
+                   BrandAssignmentViewSet, ConvertProposalToCampaign, CreateDummyProposal, BookingAssignmentViewSet,
+                   BookingStatusAPI, BookingSubstatusAPI, EndCustomerType)
 
 urlpatterns = [
     url(r'^create-dummy-proposal/$', CreateDummyProposal.as_view()),
@@ -37,6 +38,9 @@ urlpatterns = [
     url(r'^hashtag-images-new/$', HashtagImagesNewViewSet.as_view()),
     url(r'^booking-assignment/$', BookingAssignmentViewSet.as_view()),
     url(r'^proposal-to-campaign/(?P<proposal_id>[A-Z_a-z0-9-]+)/$', ConvertProposalToCampaign.as_view()),
+    url(r'^booking-status/(?P<proposal_id>[A-Z_a-z0-9-]+)/$', BookingStatusAPI.as_view()),
+    url(r'^booking-substatus/(?P<proposal_id>[A-Z_a-z0-9-]+)/$', BookingSubstatusAPI.as_view()),
+    url(r'^type-of-end-customer/$', EndCustomerType.as_view()),    
 ]
 
 router = DefaultRouter()
