@@ -994,7 +994,7 @@ booking_substatus_code_to_status = {
     'DPNR': 'Negotiation Required',
     'DPNA': 'Not Available',
     'DPP': 'Postponed',
-    'DPDOO': 'Specific Occasion Only',
+    'DPSOO': 'Specific Occasion Only',
     'DPOS': 'DP Others',
     'RLO': 'Less occupancy',
     'RLC': 'Less Children',
