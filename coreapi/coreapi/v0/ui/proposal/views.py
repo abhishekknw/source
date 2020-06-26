@@ -40,7 +40,7 @@ from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMa
                                         SpaceMappingSerializer, ProposalCenterMappingSpaceSerializer,
                                         ProposalCenterMappingVersionSpaceSerializer, SpaceMappingVersionSerializer,
                                         ProposalSocietySerializer, ProposalCorporateSerializer, HashtagImagesSerializer,
-                                        SupplierAssignmentSerializer, ShortlistedSpacesVersionSerializer)
+                                        SupplierAssignmentSerializer, ShortlistedSpacesVersionSerializer, BookingStatusSerializer)
 from v0.ui.inventory.models import (SupplierTypeSociety, AdInventoryType, InventorySummary)
 from .models import (ProposalInfo, ProposalCenterMapping, ProposalCenterMappingVersion, SpaceMappingVersion,
                     SpaceMapping, ShortlistedSpacesVersion, ShortlistedSpaces, SupplierPhase, BookingStatus, BookingSubstatus, TypeOfEndCustomer)
@@ -65,6 +65,7 @@ from v0.ui.utils import handle_response
 from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignComments
 from v0.ui.common.models import mongo_client, mongo_test
+from django.db.models import Prefetch
 
 from v0.ui.campaign.models import CampaignAssignment
 
@@ -3397,19 +3398,10 @@ class BookingStatusAPI(APIView):
         try:
             class_name = self.__class__.__name__
             end_customer = ProposalInfo.objects.filter(proposal_id=proposal_id).values('type_of_end_customer')
-            booking_status = BookingStatus.objects.filter(type_of_end_customer__in = end_customer).values('id', 'name', 'code')
-            return ui_utils.handle_response(class_name, data=booking_status, success=True)
+            bk_status = BookingStatus.objects.prefetch_related('booking_substatus').filter(type_of_end_customer__in = end_customer)
+            serializer = BookingStatusSerializer(bk_status, many=True)
 
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, success=False)
-
-class BookingSubstatusAPI(APIView):
-    def get(self, request, proposal_id):
-        try:
-            class_name = self.__class__.__name__
-            booking_status = request.query_params.get('booking_status_id') 
-            booking_substatus = BookingSubstatus.objects.filter(booking_status__in = booking_status).values('id', 'name', 'code')
-            return ui_utils.handle_response(class_name, data=booking_substatus, success=True)
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, success=False)

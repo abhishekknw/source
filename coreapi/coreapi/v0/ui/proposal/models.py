@@ -368,7 +368,7 @@ class BookingStatus(BaseModel):
         db_table = 'booking_status'
 
 class BookingSubstatus(BaseModel):
-    booking_status = models.ForeignKey('BookingStatus', null=False, blank=False, on_delete=models.CASCADE)
+    booking_status = models.ForeignKey('BookingStatus', null=False, blank=False, on_delete=models.CASCADE, related_name ='booking_substatus')
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=255)
 
