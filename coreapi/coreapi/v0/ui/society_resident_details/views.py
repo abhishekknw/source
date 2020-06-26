@@ -5,7 +5,7 @@ from pymongo.errors import CursorNotFound
 from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg
 from v0.ui.common.models import mongo_client
 from .models import User, ResidentDetail,ResidentCampaignDetail
-from .utils import get_supplier
+from .utils import get_supplier, get_phase_id
 logger = logging.getLogger(__name__)
 
 
@@ -163,4 +163,3 @@ class UpdateResident(APIView):
             logger.exception('Unexpected error :', e)
 
         return handle_response('', data='Data updated successfully', success=True)
-

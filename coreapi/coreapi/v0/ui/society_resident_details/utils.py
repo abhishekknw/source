@@ -1,9 +1,18 @@
 import datetime
-from datetime import timedelta
+from django.db import connection
 from v0.ui.supplier.models import SupplierTypeSociety
 from .models import User, ResidentDetail,ResidentCampaignDetail
 from v0.ui.common.models import mongo_client
-from V0.ui.proposal.models import ShortlistedSpaces
+from v0.ui.proposal.models import ShortlistedSpaces, SupplierPhase
+from v0.ui.finances.models import ShortlistedInventoryPricingDetails
+from v0.ui.inventory.models import InventoryActivity, InventoryActivityAssignment
+
+
+def custom_sql_query(query, data):
+    with connection.cursor() as cursor:
+        cursor.execute(query, data)
+        rows = cursor.fetchall()
+    return rows
 
 
 def get_supplier(supplier_id):
@@ -29,16 +38,37 @@ def format_contact_number(contact_number):
     return int(contact_number) if contact_number else None
 
 
-def check_society(campaign_id, society_ids):
-    society_ids_in_campaign = ShortlistedSpaces.objects.filter(proposal_id=campaign_id, object_id__in=society_ids)
+def match_resident_society_with_campaign(campaign_id, society_ids):
+    spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id, object_id__in=society_ids).values('object_id')
+    society_id = society_ids[0]
+    if spaces and len(spaces) > 0:
+        for space in spaces:
+            society_id = space['object_id']
+    # Add society to the campaign
+    shortlisted_spaces_object = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
+    shortlisted_spaces_object.object_id = society_id
+    shortlisted_spaces_object.save()
+    return society_id
 
-    for items in society_ids_in_campaign:
-        society_id= items.object_id
-        phase_number = items.phase_no
-        phase = items.phase
 
+def get_phase_id(campaign_id, lead_creation_date, society_id=None):
+    supplier_phase = SupplierPhase.objects.filter(campaign_id=campaign_id).values('phase_no', 'start_date')
+    sql_query = '''Select iaa.activity_date from shortlisted_spaces as ss 
+    join shortlisted_inventory_pricing_details as sip 
+    on ss.id=sip.shortlisted_spaces_id join inventory_activity as ia 
+    on ia.shortlisted_inventory_details_id=sip.id
+    join inventory_activity_assignment as iaa 
+    on iaa.inventory_activity_id=ia.id
+    where ia.activity_type="RELEASE" and ss.proposal_id=(%s)'''
 
-
+    release_dates = custom_sql_query(sql_query, [campaign_id])
+    print(release_dates)
+    phase_number = 1
+    for release_date in release_dates:
+        for phase in supplier_phase:
+            if phase['start_date'] == release_date[0]['release_date']:
+                phase_number = phase['phase_no']
+    return phase_number
 
 
 def create_resident_and_campaign(user_id, society_id, campaign_id, timestamp):
@@ -80,34 +110,8 @@ def create_resident_campaign(user_id, resident_id, campaign_id, timestamp):
         ResidentCampaignDetail(**resident_campaign_detail).save()
     return
 
-def pull_leads():
-    current_date = datetime.datetime.now().date()
-    # end_date = current_date + datetime.timedelta(days=1)
-    date_time = current_date - datetime.timedelta(hours=24)
-    # timestamp = datetime.datetime.utcnow()
 
-    # leads_within_twenty_four_hr = mongo_client.leads.find()
-    all_leads = mongo_client.leads.find({'created_at': {"$gte": date_time}})
-
-    all_phone_numbers = []
-    all_phase_numbers = []
-    all_campaign_ids = []
-    all_supplier_ids = []
-
-    for values in all_leads:
-        all_supplier_ids['supplier_id'] = values.supplier_id
-        all_campaign_ids['campaign_id'] = values.campaign_id
-        all_phase_numbers['phase_number'] = values.phase_number
-        all_phone_numbers['phone_number'] = values.phone_number
-        created_at = values.created_at
-
-
-
-
-    segregate_leads(contact_number, campaign_id, lead_creation_date, society_id)
-
-
-def segregate_leads(contact_number, campaign_id, lead_creation_date, society_id=None):
+def segregate_lead_data(contact_number, campaign_id, lead_creation_date, society_id=None):
     # Check user
     timestamp = datetime.datetime.utcnow()
     user_exists = mongo_client.user.find_one({'contact_number': contact_number}, {'_id': 1})
@@ -124,7 +128,7 @@ def segregate_leads(contact_number, campaign_id, lead_creation_date, society_id=
             create_resident_and_campaign(user_id, society_id, campaign_id, timestamp)
 
         # Create suspense lead
-        mongo_client.leads.update({'phone_number': contact_number, 'campaign_id':campaign_id}, {"$set": {'is_suspense': True}})
+        mongo_client.leads({'phone_number': contact_number, 'campaign_id':campaign_id, 'is_suspense': True})
         return
     else:
         user_id = str(user_exists._id)
