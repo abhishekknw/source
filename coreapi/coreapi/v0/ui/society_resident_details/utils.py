@@ -51,24 +51,38 @@ def match_resident_society_with_campaign(campaign_id, society_ids):
     return society_id
 
 
-def get_phase_id(campaign_id, lead_creation_date, society_id=None):
-    supplier_phase = SupplierPhase.objects.filter(campaign_id=campaign_id).values('phase_no', 'start_date')
-    sql_query = '''Select iaa.activity_date from shortlisted_spaces as ss 
+def get_phase_id(campaign_id, society_id):
+    shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id, object_id=society_id).values('phase_no')
+    lead_creation_date = datetime.datetime(2019, 12, 4, 0, 0).date()
+
+    sql_query = '''Select iaa.activity_date, ss.phase_no_id from shortlisted_spaces as ss 
     join shortlisted_inventory_pricing_details as sip 
     on ss.id=sip.shortlisted_spaces_id join inventory_activity as ia 
     on ia.shortlisted_inventory_details_id=sip.id
     join inventory_activity_assignment as iaa 
     on iaa.inventory_activity_id=ia.id
-    where ia.activity_type="RELEASE" and ss.proposal_id=(%s)'''
+    where ia.activity_type="RELEASE" and ss.proposal_id=(%s) and ss.object_id=(%r)'''
 
-    release_dates = custom_sql_query(sql_query, [campaign_id])
-    print(release_dates)
-    phase_number = 1
-    for release_date in release_dates:
-        for phase in supplier_phase:
-            if phase['start_date'] == release_date[0]['release_date']:
-                phase_number = phase['phase_no']
-    return phase_number
+    release_dates = custom_sql_query(sql_query, [campaign_id, society_id])
+    print('release_dates ',release_dates)
+    # release_dates = [release_date[0].date() for release_date in release_dates]
+    # phase_number = 1
+    # min_diff = 100
+    # min_diff_date = release_dates[0]
+    # for release_date in release_dates:
+    #     print(lead_creation_date, release_date)
+    #     if lead_creation_date >= release_date:
+    #         diff = (lead_creation_date - release_date).days
+    #         print('diff =', diff, lead_creation_date, release_date)
+    #         if min_diff > diff:
+    #             min_diff = diff
+    #             min_diff_date = release_date
+    # find phase on basis of this date
+    # for phase in supplier_phase:
+    #     print(phase['start_date'].date(), min_diff_date)
+    #     if phase['start_date'].date() == min_diff_date:
+    #         phase_number = phase['phase_no']
+    # return phase_number
 
 
 def create_resident_and_campaign(user_id, society_id, campaign_id, timestamp):
