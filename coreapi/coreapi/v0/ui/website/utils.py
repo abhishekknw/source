@@ -3672,8 +3672,6 @@ def get_shortlisted_suppliers_map(proposal_id, content_type, center_id):
     """
     function = get_shortlisted_suppliers_map.__name__
     try:
-        # fetch the class from content type
-        model_class = apps.get_model(settings.APP_NAME, content_type.model)
         # fetch the shortlisted supplier instances ( object_id, status only )
         shortlisted_suppliers = ShortlistedSpaces.objects.filter(proposal_id=proposal_id, content_type=content_type,
                                                                  center_id=center_id).values('object_id', 'status')
@@ -3684,7 +3682,14 @@ def get_shortlisted_suppliers_map(proposal_id, content_type, center_id):
             supplier_id = instance_dict['object_id']
             shortlisted_suppliers_map[supplier_id] = instance_dict
             shortlisted_ids.append(supplier_id)
-        instances = model_class.objects.filter(supplier_id__in=shortlisted_ids).values()
+        
+        if content_type.model == "suppliertypesociety":
+            instances = SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_ids).values()
+        else:
+            supplier_master = SupplierMaster.objects.filter(supplier_id__in=shortlisted_ids)
+            supplier_master_serializer = SupplierMasterSerializer(supplier_master, many=True).data
+            instances = manipulate_master_to_rs(supplier_master_serializer)
+
         result = {}
         for instance in instances:
             supplier_id = instance['supplier_id']

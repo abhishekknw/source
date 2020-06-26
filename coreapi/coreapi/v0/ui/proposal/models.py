@@ -157,6 +157,7 @@ class ProposalInfo(BaseModel):
     principal_vendor = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
     brand = models.CharField(choices=(( 'single_brand', 'single_brand' ),  ('multi_brand', 'multi_brand')), max_length=60, blank=True, null=True)
     is_mix = models.BooleanField(default=False)
+    type_of_end_customer = models.ForeignKey('TypeOfEndCustomer', null=False, blank=False, on_delete=models.CASCADE, default=2)
 
     def get_centers(self):
         try:
@@ -288,6 +289,8 @@ class ShortlistedSpaces(BaseModel):
     total_negotiated_price = models.CharField(max_length=255, null=True, blank=True)
     booking_status = models.CharField(max_length=10, null=True, blank=True)
     booking_sub_status = models.CharField(max_length=15, null=True, blank=True)
+    bk_status = models.ForeignKey('BookingStatus', null=True, on_delete=models.CASCADE)
+    bk_substatus = models.ForeignKey('BookingSubstatus', null=True, on_delete=models.CASCADE)
     is_completed = models.BooleanField(default=False)
     transaction_or_check_number = models.CharField(max_length=50, null=True, blank=True)
     phase_no = models.ForeignKey('SupplierPhase', blank=True, null=True, on_delete=models.PROTECT)
@@ -349,3 +352,25 @@ class SupplierAssignment(BaseModel):
 
     class Meta:
         db_table = 'supplier_assignment'
+
+class TypeOfEndCustomer(BaseModel):
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'type_of_end_customer'
+
+class BookingStatus(BaseModel):
+    type_of_end_customer = models.ForeignKey('TypeOfEndCustomer', null=False, blank=False, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'booking_status'
+
+class BookingSubstatus(BaseModel):
+    booking_status = models.ForeignKey('BookingStatus', null=False, blank=False, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'booking_substatus'

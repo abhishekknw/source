@@ -43,7 +43,7 @@ from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMa
                                         SupplierAssignmentSerializer, ShortlistedSpacesVersionSerializer)
 from v0.ui.inventory.models import (SupplierTypeSociety, AdInventoryType, InventorySummary)
 from .models import (ProposalInfo, ProposalCenterMapping, ProposalCenterMappingVersion, SpaceMappingVersion,
-                    SpaceMapping, ShortlistedSpacesVersion, ShortlistedSpaces, SupplierPhase)
+                    SpaceMapping, ShortlistedSpacesVersion, ShortlistedSpaces, SupplierPhase, BookingStatus, BookingSubstatus, TypeOfEndCustomer)
 from .serializers import (SupplierPhaseSerializer)
 from v0.ui.inventory.models import (AdInventoryType,InventoryActivityAssignment,InventorySummary,InventoryTypeVersion,
                                     InventoryType,InventoryActivity)
@@ -3391,3 +3391,35 @@ class ConvertProposalToCampaign(APIView):
             return ui_utils.handle_response(class_name, data='Proposal conversion successfull', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, data='Error converting proposal', success=False)
+
+class BookingStatusAPI(APIView):
+    def get(self, request, proposal_id):
+        try:
+            class_name = self.__class__.__name__
+            end_customer = ProposalInfo.objects.filter(proposal_id=proposal_id).values('type_of_end_customer')
+            booking_status = BookingStatus.objects.filter(type_of_end_customer__in = end_customer).values('id', 'name', 'code')
+            return ui_utils.handle_response(class_name, data=booking_status, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, success=False)
+
+class BookingSubstatusAPI(APIView):
+    def get(self, request, proposal_id):
+        try:
+            class_name = self.__class__.__name__
+            booking_status = request.query_params.get('booking_status_id') 
+            booking_substatus = BookingSubstatus.objects.filter(booking_status__in = booking_status).values('id', 'name', 'code')
+            return ui_utils.handle_response(class_name, data=booking_substatus, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, success=False)
+
+class EndCustomerType(APIView):
+    def get(self, request):
+        try:
+            class_name = self.__class__.__name__
+            end_customer = TypeOfEndCustomer.objects.all().values('name')
+            return ui_utils.handle_response(class_name, data=end_customer, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, success=False)
