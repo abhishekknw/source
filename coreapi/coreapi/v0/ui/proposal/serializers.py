@@ -163,14 +163,15 @@ class SupplierAssignmentSerializer(ModelSerializer):
         model = SupplierAssignment
         fields = '__all__'
 
-class BookingStatusSerializer(ModelSerializer):
-    class Meta:
-        model = BookingStatus
-        fields = '__all__'
-
 class BookingSubstatusSerializer(ModelSerializer):
     class Meta:
         model = BookingSubstatus
+        fields = '__all__'
+
+class BookingStatusSerializer(ModelSerializer):
+    booking_substatus = BookingSubstatusSerializer(read_only=True, many=True)
+    class Meta:
+        model = BookingStatus
         fields = '__all__'
 
 class TypeOfEndCustomerSerializer(ModelSerializer):

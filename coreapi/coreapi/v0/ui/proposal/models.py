@@ -157,7 +157,7 @@ class ProposalInfo(BaseModel):
     principal_vendor = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
     brand = models.CharField(choices=(( 'single_brand', 'single_brand' ),  ('multi_brand', 'multi_brand')), max_length=60, blank=True, null=True)
     is_mix = models.BooleanField(default=False)
-    type_of_end_customer = models.ForeignKey('TypeOfEndCustomer', null=False, blank=False, on_delete=models.CASCADE, default=2)
+    type_of_end_customer = models.ForeignKey('TypeOfEndCustomer', null=True, on_delete=models.CASCADE)
 
     def get_centers(self):
         try:
@@ -368,7 +368,7 @@ class BookingStatus(BaseModel):
         db_table = 'booking_status'
 
 class BookingSubstatus(BaseModel):
-    booking_status = models.ForeignKey('BookingStatus', null=False, blank=False, on_delete=models.CASCADE)
+    booking_status = models.ForeignKey('BookingStatus', null=False, blank=False, on_delete=models.CASCADE, related_name ='booking_substatus')
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=255)
 
