@@ -14,6 +14,7 @@ class ShortlistedSpacesVersionSerializer(ModelSerializer):
         fields = '__all__'
 
 class ProposalInfoSerializer(BaseModelPermissionSerializer):
+    type_of_end_customer_name = serializers.ReadOnlyField(source="type_of_end_customer.name")
 
     class Meta:
         model = ProposalInfo
