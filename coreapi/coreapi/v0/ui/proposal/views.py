@@ -40,10 +40,10 @@ from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMa
                                         SpaceMappingSerializer, ProposalCenterMappingSpaceSerializer,
                                         ProposalCenterMappingVersionSpaceSerializer, SpaceMappingVersionSerializer,
                                         ProposalSocietySerializer, ProposalCorporateSerializer, HashtagImagesSerializer,
-                                        SupplierAssignmentSerializer, ShortlistedSpacesVersionSerializer)
+                                        SupplierAssignmentSerializer, ShortlistedSpacesVersionSerializer, BookingStatusSerializer)
 from v0.ui.inventory.models import (SupplierTypeSociety, AdInventoryType, InventorySummary)
 from .models import (ProposalInfo, ProposalCenterMapping, ProposalCenterMappingVersion, SpaceMappingVersion,
-                    SpaceMapping, ShortlistedSpacesVersion, ShortlistedSpaces, SupplierPhase)
+                    SpaceMapping, ShortlistedSpacesVersion, ShortlistedSpaces, SupplierPhase, BookingStatus, BookingSubstatus, TypeOfEndCustomer)
 from .serializers import (SupplierPhaseSerializer)
 from v0.ui.inventory.models import (AdInventoryType,InventoryActivityAssignment,InventorySummary,InventoryTypeVersion,
                                     InventoryType,InventoryActivity)
@@ -65,6 +65,7 @@ from v0.ui.utils import handle_response
 from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignComments
 from v0.ui.common.models import mongo_client, mongo_test
+from django.db.models import Prefetch
 
 from v0.ui.campaign.models import CampaignAssignment
 
@@ -3408,3 +3409,26 @@ class ConvertProposalToCampaign(APIView):
             return ui_utils.handle_response(class_name, data='Proposal conversion successfull', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, data='Error converting proposal', success=False)
+
+class BookingStatusAPI(APIView):
+    def get(self, request, proposal_id):
+        try:
+            class_name = self.__class__.__name__
+            end_customer = ProposalInfo.objects.filter(proposal_id=proposal_id).values('type_of_end_customer')
+            bk_status = BookingStatus.objects.prefetch_related('booking_substatus').filter(type_of_end_customer__in = end_customer)
+            serializer = BookingStatusSerializer(bk_status, many=True)
+
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, success=False)
+
+class EndCustomerType(APIView):
+    def get(self, request):
+        try:
+            class_name = self.__class__.__name__
+            end_customer = TypeOfEndCustomer.objects.all().values('name')
+            return ui_utils.handle_response(class_name, data=end_customer, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, success=False)

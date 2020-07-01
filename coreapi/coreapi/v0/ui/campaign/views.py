@@ -2091,8 +2091,15 @@ class GetPermissionBoxImages(APIView):
 
 def get_campaign_wise_summary(supplier_code, all_campaign_ids, user_start_datetime=None, user_end_datetime=None):
     all_shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id__in=all_campaign_ids, supplier_code=supplier_code).values('object_id', 'supplier_code', 'proposal_id')
-    campaign_mapping = {supplier['object_id']: supplier['proposal_id'] for supplier in all_shortlisted_spaces}
-    all_supplier_ids = [supplier_ids['object_id'] for supplier_ids in all_shortlisted_spaces]
+    campaign_mapping = {}
+    all_supplier_ids = []
+    for supplier in all_shortlisted_spaces:
+        if not campaign_mapping.get(supplier['object_id']):
+            campaign_mapping[supplier['object_id']] = []
+
+        campaign_mapping[supplier['object_id']].append(supplier['proposal_id'])
+
+        all_supplier_ids.append(supplier['object_id'])
 
     all_campaign_objects = ProposalInfo.objects.filter(proposal_id__in=all_campaign_ids).all()
     all_campaign_id_name_map = {campaign.proposal_id: campaign.name for campaign in all_campaign_objects}
@@ -2134,12 +2141,12 @@ def get_campaign_wise_summary(supplier_code, all_campaign_ids, user_start_dateti
     supplier_flat_count_map = {}
     for key, society in all_supplier_society_dict.items():
         supplier_flat_count_map[key] = society["flat_count"]
-        campaign_id = campaign_mapping[key]
+        for campaign_id in campaign_mapping[key]:
+            if not campaign_flat_count_map.get(campaign_id):
+                campaign_flat_count_map[campaign_id] = 0
+            if society["flat_count"]:
+                campaign_flat_count_map[campaign_id] += society["flat_count"]
 
-        if not campaign_flat_count_map.get(campaign_id):
-            campaign_flat_count_map[campaign_id] = 0
-        if society["flat_count"]:
-            campaign_flat_count_map[campaign_id] += society["flat_count"]
     leads_summary_by_supplier_dict = {}
     for summary_point in leads_summary_by_supplier:
         if summary_point["campaign_id"] not in leads_summary_by_supplier_dict:
@@ -2149,6 +2156,7 @@ def get_campaign_wise_summary(supplier_code, all_campaign_ids, user_start_dateti
         else:
             summary_point["flat_count"] = 0
         leads_summary_by_supplier_dict[summary_point["campaign_id"]][summary_point["supplier_id"]] = summary_point
+    
     for campaign_id in campaign_wise_leads:
         if campaign_id not in campaign_flat_count_map:
             continue
