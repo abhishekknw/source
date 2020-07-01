@@ -3410,7 +3410,7 @@ class EndCustomerType(APIView):
     def get(self, request):
         try:
             class_name = self.__class__.__name__
-            end_customer = TypeOfEndCustomer.objects.all().values('name')
+            end_customer = TypeOfEndCustomer.objects.all().values('id', 'name')
             return ui_utils.handle_response(class_name, data=end_customer, success=True)
 
         except Exception as e:
