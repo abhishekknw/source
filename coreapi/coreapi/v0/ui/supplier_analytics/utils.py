@@ -35,3 +35,9 @@ def get_last_3_months():
     first_month_start = datetime.datetime(last_months[-1][0], last_months[-1][1], 1)
     return first_month_start.date()
 
+
+def get_today_yesterday():
+    today = datetime.date.today()
+    yesterday = today - datetime.timedelta(days=1)
+    day_before_yesterday = today - datetime.timedelta(days=2)
+    return [today, yesterday, day_before_yesterday]
