@@ -12,7 +12,7 @@ from v0.ui.supplier.models import (SupplierTypeSociety, SupplierTypeRetailShop,
                                    SupplierTypeCorporate, SupplierTypeBusShelter,
                                    SupplierTypeCode, RETAIL_SHOP_TYPE)
 from v0.ui.account.models import ContactDetails
-from .utils import get_last_week, get_last_month, get_last_3_months
+from .utils import get_last_week, get_last_month, get_last_3_months, get_today_yesterday
 
 
 class GetSupplierSummary(APIView):
@@ -100,6 +100,10 @@ class GetSupplierCitywiseCount(APIView):
             last_monday, last_sunday, this_monday, today = get_last_week()
             last_month_start, last_month_end, this_month_start = get_last_month()
             first_month_start = get_last_3_months()
+            yest_today = get_today_yesterday()
+            today = yest_today[0]
+            yesterday = yest_today[1]
+            day_before_yesterday = yest_today[2]
             for supplier in suppliers:
                 city = supplier['society_city'] if is_society else supplier['city']
 
@@ -114,6 +118,8 @@ class GetSupplierCitywiseCount(APIView):
                     supplier_dict_with_cities[city]['last_week_count'] = 0
                     supplier_dict_with_cities[city]['last_month_count'] = 0
                     supplier_dict_with_cities[city]['last_3_month_count'] = 0
+                    supplier_dict_with_cities[city]['last_day_count'] = 0
+                    supplier_dict_with_cities[city]['today_count'] = 0
                     if supplier['created_at']:
                         if last_monday <= supplier['created_at'].date() <= last_sunday:
                             supplier_dict_with_cities[city]['last_week_count'] += 1
@@ -127,6 +133,12 @@ class GetSupplierCitywiseCount(APIView):
                         # Get last 3 months data
                         if first_month_start <= supplier['created_at'].date() <= last_month_end:
                             supplier_dict_with_cities[city]['last_3_month_count'] += 1
+                        # Get yesterdays data
+                        if day_before_yesterday < supplier['created_at'].date() < today:
+                            supplier_dict_with_cities[city]['last_day_count'] += 1
+                        # Get todays data
+                        if supplier['created_at'].date() > yesterday:
+                            supplier_dict_with_cities[city]['today_count'] += 1
                 else:
                     if supplier['created_at']:
                         if last_monday <= supplier['created_at'].date() <= last_sunday:
@@ -141,6 +153,12 @@ class GetSupplierCitywiseCount(APIView):
                         # Get last 3 months data
                         if first_month_start <= supplier['created_at'].date() <= last_month_end:
                             supplier_dict_with_cities[city]['last_3_month_count'] += 1
+                        # Get yesterdays data
+                        if day_before_yesterday < supplier['created_at'].date() < today:
+                            supplier_dict_with_cities[city]['last_day_count'] += 1
+                        # Get todays data
+                        if supplier['created_at'].date() > yesterday:
+                            supplier_dict_with_cities[city]['today_count'] += 1
                     supplier_dict_with_cities[city]['count'] += 1
                     supplier_dict_with_cities[city]['supplier_ids'].append(supplier['supplier_id'])
 
@@ -176,7 +194,6 @@ class GetSupplierCitywiseCount(APIView):
                 supplier_dict_with_cities[city]['contact_number_not_filled_count'] = len(contact_number_not_filled_suppliers)
                 supplier_dict_with_cities[city]['contact_number_total_filled_count'] = len(supplier_dict_with_cities[city]['contact_number_total_filled_suppliers'])
                 supplier_dict_with_cities[city]['contact_name_total_filled_count'] = len(supplier_dict_with_cities[city]['contact_name_total_filled_suppliers'])
-
             return Response(data={"status": True, "data": supplier_dict_with_cities}, status=status.HTTP_200_OK)
         except Exception as e:
             logger.exception(e)
