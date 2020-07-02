@@ -426,15 +426,16 @@ class AddBulkLocationAPIView(APIView):
                 area = location.get('area')
                 subarea = location.get('subarea')
 
-                if not state or not city or not area or not subarea:
+                if not state or not city or not area:
                     return Response({'message': 'Please add state,city,area,subarea'}, status=400)
 
                 state_id = AddState(state)
+                subarea_id = None
                 if state_id:
                     city_id = AddCity(city, state_id)
                 if city_id:
                     area_id = AddArea(area, city_id)
-                if area_id:
+                if area_id and subarea:
                     subarea_id = AddSubArea(subarea, area_id)
                 if subarea_id:
                     response.append(state + '-' + str(state_id) + ', ' + city + '-' + str(city_id) +
