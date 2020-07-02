@@ -1166,6 +1166,8 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
             'is_hot_level_2': 0,
             'is_hot_level_3': 0,
             'is_hot_level_4': 0,
+            'hot_level_values': {},
+            'hot_level_keys': {}
         }
         
         for flat_category, value in flat_categories.items():
@@ -1181,7 +1183,8 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
                 'is_hot_level_2': 0,
                 'is_hot_level_3': 0,
                 'is_hot_level_4': 0,
-            
+                'hot_level_values': {},
+                'hot_level_keys': {}
             }
     
         lead_form = mongo_client.leads_forms.find({"campaign_id": campaign_id})
@@ -1196,6 +1199,8 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
                     overall_data['key_hot_level_3'] = lead_form[0]['hotness_mapping']['is_hot_level_3']
                 if 'is_hot_level_4' in key:
                     overall_data['key_hot_level_4'] = lead_form[0]['hotness_mapping']['is_hot_level_4']
+                
+                overall_data['hot_level_keys'][key] = lead_form[0]['hotness_mapping'][key]
     
         for curr_supplier_data in supplier_data:
             supplier_id = curr_supplier_data['supplier_id']
