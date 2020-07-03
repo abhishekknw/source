@@ -1996,3 +1996,24 @@ supplier_size_category = {
     },
     
 }
+
+breakup_header = {
+    'B to C' :{
+        "phase_details" : "Phase Details",
+        "confirmed_booked" : "Confirmed Booked",
+        "verbally_booked" : "Verbally Booked",
+        "followup_required" : "Followup Required",
+        "total" : "Total",     
+    }
+}
+
+summary_header = {
+    'B to C' :{
+        "confirmed_booked" : "Confirmed Booked",
+        "not_initiated" : "Not Initiated",
+        "followup_required" : "Followup Required",
+        "verbally_booked" : "Verbally Booked",
+        "rejected" : "Rejected",
+        "total" : "Total",     
+    }
+}
