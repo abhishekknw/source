@@ -2771,7 +2771,7 @@ def flatten_list(list_of_lists):
     return [y for x in list_of_lists for y in x]
 
 
-def get_supplier_list_by_status_ctrl(campaign_id, end_customer):
+def get_supplier_list_by_status_ctrl(campaign_id):
     shortlisted_spaces_list = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
     shortlisted_spaces_by_phase_dict = {}
 
@@ -2955,6 +2955,11 @@ def get_supplier_list_by_status_ctrl(campaign_id, end_customer):
     total_btob_rejected_flats = 0
     total_recce_flats = 0
     total_meeting_fixed_flats=0
+
+    proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
+    print(proposal)
+    end_customer = proposal.type_of_end_customer.name
+    print(end_customer)
 
     for phase_id in shortlisted_spaces_by_phase_dict:
         end_date = all_phase_by_id[phase_id]['end_date'] if phase_id in all_phase_by_id else None
@@ -3166,7 +3171,7 @@ def get_supplier_list_by_status_ctrl(campaign_id, end_customer):
                 'decision_pending': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 }
     for phase in upcoming_beyond_three:
-        for status_type in ['followup_required', 'confirmed_booked', 'verbally_booked', 'rejected', 'btob_rejected', 'total_booked', 'not_initiated', 'recce_required', 'meeting_fixed', 'meeting_converted', 'decision_pending']:
+        for status_type in ['followup_required', 'confirmed_booked', 'verbally_booked', 'rejected', 'btob_rejected', 'total_booked', 'not_initiated', 'recce_required', 'meeting_fixed', 'meeting_converted', 'decision_pending_status']:
             pipeline[status_type]['supplier_count'] += phase[status_type]['supplier_count']
             pipeline[status_type]['flat_count'] += phase[status_type]['flat_count']
             pipeline[status_type]['supplier_data'] += phase[status_type]['supplier_data']
@@ -3207,10 +3212,10 @@ def get_supplier_list_by_status_ctrl(campaign_id, end_customer):
             pipeline['meeting_converted']['supplier_data'].append(supplier)
             pipeline['meeting_converted']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['meeting_converted']['supplier_count'] += 1
-        if supplier['booking_status'] in decision_pending:
-            pipeline['decision_pending']['supplier_data'].append(supplier)
-            pipeline['decision_pending']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
-            pipeline['decision_pending']['supplier_count'] += 1
+        if supplier['booking_status'] in decision_pending_status:
+            pipeline['decision_pending_status']['supplier_data'].append(supplier)
+            pipeline['decision_pending_status']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['decision_pending_status']['supplier_count'] += 1
 
         pipeline['total_booked']['supplier_data'].append(supplier)
         pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
@@ -3238,9 +3243,8 @@ class getSupplierListByStatus(APIView):
     @staticmethod
     def get(request, campaign_id):
         try:
-            end_customer = request.query_params.get('type_of_end_customer')
             center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
-            shortlisted_spaces_by_phase_list = get_supplier_list_by_status_ctrl(campaign_id, end_customer)
+            shortlisted_spaces_by_phase_list = get_supplier_list_by_status_ctrl(campaign_id)
             return Response({'status': True, 'data': shortlisted_spaces_by_phase_list, 'supplier_type_code':center_data})
         except Exception as e:
             logger.exception(e)

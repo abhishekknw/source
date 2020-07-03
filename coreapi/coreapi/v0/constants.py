@@ -956,7 +956,8 @@ booking_status = {
     'new_entity': 'NE',
     'not_initiated': 'NI',
     'recce':'RE',
-    'meeting_fixed':'MF'
+    'meeting_fixed':'MF',
+    'meeting_converted':'MC'
 }
 
 booking_code_to_status = {
@@ -1997,17 +1998,22 @@ supplier_size_category = {
     
 }
 
-breakup_header = {
+summary_header = {
     'B to C' :{
         "phase_details" : "Phase Details",
         "confirmed_booked" : "Confirmed Booked",
         "verbally_booked" : "Verbally Booked",
         "followup_required" : "Followup Required",
         "total" : "Total",     
+    },
+    'B to B' :{
+        'meeting_fixed' : 'Meeting fixed',
+        'meeting_converted' : 'Meeting converted',
+        'decision_pending' : 'Decision Pending',
     }
 }
 
-summary_header = {
+breakup_header = {
     'B to C' :{
         "confirmed_booked" : "Confirmed Booked",
         "not_initiated" : "Not Initiated",
@@ -2015,5 +2021,10 @@ summary_header = {
         "verbally_booked" : "Verbally Booked",
         "rejected" : "Rejected",
         "total" : "Total",     
+    },
+    'B to B' :{
+        'meeting_fixed' : 'Meeting fixed',
+        'meeting_converted' : 'Meeting converted',
+        'rejected' : 'Rejected',
     }
 }
