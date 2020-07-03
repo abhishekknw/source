@@ -2957,9 +2957,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     total_meeting_fixed_flats=0
 
     proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
-    print(proposal)
     end_customer = proposal.type_of_end_customer.name
-    print(end_customer)
 
     for phase_id in shortlisted_spaces_by_phase_dict:
         end_date = all_phase_by_id[phase_id]['end_date'] if phase_id in all_phase_by_id else None
