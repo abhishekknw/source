@@ -6,7 +6,7 @@ from .utils import create_supplier_id, create_random_supplier_id
 from v0.ui.utils import handle_response, get_model, fetch_content_type
 from v0.ui.account.models import ContactDetails
 from v0.ui.supplier.models import SupplierTypeSociety
-from v0.ui.proposal.models import ShortlistedSpaces
+from v0.ui.proposal.models import ShortlistedSpaces, BookingStatus, BookingSubstatus
 
 
 class UpdateSupplierContactDataImport(APIView):
@@ -119,3 +119,35 @@ class DeleteDuplicateSocieties(APIView):
         except Exception as e:
             print(e)
         return handle_response({}, data='Societies deleted successfully', success=True)
+
+class AddBookingStatus(APIView):
+    def post(self, request):
+        try:
+            request_data = request.data
+            data = request_data.get('data')
+            for status in data:
+                name = status.get('name')
+                code = status.get('code')
+                end_customer = status.get('end_customer')
+
+                booking_status = BookingStatus.objects.create(name=name, code=code.upper(), type_of_end_customer_id=end_customer)
+            return handle_response({}, data='status updated', success=True)
+        except Exception as e:
+            print(e)
+            return handle_response({}, data='status not updated', success=True)
+
+class AddBookingSubstatus(APIView):
+    def post(self, request):
+        try:
+            request_data = request.data
+            data = request_data.get('data')
+            for status in data:
+                name = status.get('name')
+                code = status.get('code')
+                booking_status_id = status.get('booking_status_id')
+
+                booking_status = BookingSubstatus.objects.create(name=name, code=code.upper(), booking_status_id=booking_status_id)
+            return handle_response({}, data='substatus updated', success=True)
+        except Exception as e:
+            print(e)
+            return handle_response({}, data='substatuss not updated', success=True)
