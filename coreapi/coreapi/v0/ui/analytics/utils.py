@@ -11,6 +11,7 @@ from scipy import interpolate
 from scipy import stats
 from v0.ui.common.models import mongo_client
 import collections
+import v0.constants as v0_constants
 
 const_intervals = 15.0
 
@@ -1110,6 +1111,7 @@ def key_replace_group_multiple(supplier_code, dict_array, existing_key, required
         database_type = key_details['database_type']
         self_name_model = key_details['self_name_model']
         parent_name_model = key_details['parent_name_model']
+        parent_name_model = "flat_count"
         if model_name == "SupplierTypeSociety" and supplier_code != "RS":
             model_name = "SupplierMaster"
             parent_name_model = "unit_primary_count"
@@ -1124,7 +1126,11 @@ def key_replace_group_multiple(supplier_code, dict_array, existing_key, required
             for curr_dict in dict_array:
                 curr_value = query_dict[curr_dict[existing_key]]
                 curr_dict[required_key] = curr_value
-
+                if required_key == "flattype":
+                    supplier_size_category = v0_constants.supplier_size_category.get(supplier_code)
+                    for key, value in supplier_size_category.items():
+                        if curr_value >= value["min"] and (not value.get("max") or curr_value <= value["max"]):
+                            curr_dict[required_key] = key
                 # if allowed_values is not None and str(curr_value) not in allowed_values:
                 #     continue
                 new_array.append(curr_dict)
