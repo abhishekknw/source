@@ -398,9 +398,10 @@ def mean_calculator(dict_array, keys, weighted=0):
         for curr_dict in dict_array:
             for key in keys:
                 num_list = curr_dict[key]
-                if num_list == []:
-                    continue
                 mean_key = 'mean_' + key
+                if num_list == [] or not num_list:
+                    curr_dict[mean_key] = 0
+                    continue
                 curr_mean = np.mean(num_list)
                 curr_dict[mean_key] = curr_mean
             new_array.append(curr_dict)
@@ -1092,7 +1093,7 @@ def key_replace_group(dict_array, existing_key, required_key, sum_key, value_ran
     return new_array
 
 
-def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key, value_ranges = {},
+def key_replace_group_multiple(supplier_code, dict_array, existing_key, required_keys, sum_key, value_ranges = {},
                                incrementing_value = None, operation_type = 'sum', base = 0):
     # if existing_key == required_key:
     #     return dict_array
@@ -1109,6 +1110,10 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
         database_type = key_details['database_type']
         self_name_model = key_details['self_name_model']
         parent_name_model = key_details['parent_name_model']
+        if model_name == "SupplierTypeSociety" and supplier_code != "RS":
+            model_name = "SupplierMaster"
+            parent_name_model = "unit_primary_count"
+
         match_list = [x[existing_key] for x in dict_array]
         new_array = []
         if database_type == 'mysql':
@@ -1119,8 +1124,9 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
             for curr_dict in dict_array:
                 curr_value = query_dict[curr_dict[existing_key]]
                 curr_dict[required_key] = curr_value
-                if allowed_values is not None and str(curr_value) not in allowed_values:
-                    continue
+
+                # if allowed_values is not None and str(curr_value) not in allowed_values:
+                #     continue
                 new_array.append(curr_dict)
 
         else:
@@ -1131,6 +1137,7 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
     all_keys = list(curr_dict.keys())
     grouping_keys = all_keys
     grouping_keys.remove(sum_key)
+    
     if existing_key in grouping_keys:
         grouping_keys.remove(existing_key)
     if base == 1:
@@ -1141,6 +1148,7 @@ def key_replace_group_multiple(dict_array, existing_key, required_keys, sum_key,
         new_array = operate_array_by_key(new_array, grouping_keys, sum_key, 'mean')
     else:
         new_array = sum_array_by_key(new_array, grouping_keys, sum_key)
+    
     return new_array
 
 
@@ -1355,11 +1363,11 @@ def convert_date_to_days(dict_array, grouping_keys, sum_keys, order_key):
         first_ele = True
         for curr_dict in new_array:
             if first_ele:
-                if curr_dict[sum_key] > 0:
-                    continue
-                else:
-                    start_date = curr_dict[order_key]
-                    curr_dict["date"] = 0
+                # if curr_dict[sum_key] > 0:
+                #     continue
+                # else:
+                start_date = curr_dict[order_key]
+                curr_dict["date"] = 0
             else:
                 if curr_dict[sum_key] == 0:
                     continue
