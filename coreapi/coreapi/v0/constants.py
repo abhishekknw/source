@@ -1864,7 +1864,7 @@ tableHeaderData = {
 
 supplier_size_category = {
     "RS":{
-        "0-150":{
+        "1-150":{
             "min": 0,
             "max": 150
         },
@@ -1877,7 +1877,7 @@ supplier_size_category = {
         }
     },
     "CP":{
-        "0-1000":{
+        "1-1000":{
             "min": 0,
             "max": 1000
         },
@@ -1890,7 +1890,7 @@ supplier_size_category = {
         }
     },
     "EI":{
-        "0-500":{
+        "1-500":{
             "min": 0,
             "max": 500
         },
@@ -1903,7 +1903,7 @@ supplier_size_category = {
         }
     },
     "RE":{
-        "0-100":{
+        "1-100":{
             "min": 0,
             "max": 100
         },
@@ -1916,7 +1916,7 @@ supplier_size_category = {
         }
     },
     "GY":{
-        "0-50":{
+        "1-50":{
             "min": 0,
             "max": 50
         },
@@ -1929,7 +1929,7 @@ supplier_size_category = {
         }
     },
     "SA":{
-        "0-20":{
+        "1-20":{
             "min": 0,
             "max": 20
         },
@@ -1942,7 +1942,7 @@ supplier_size_category = {
         }
     },
     "BS":{
-        "0-100":{
+        "1-100":{
             "min": 0,
             "max": 100
         },
@@ -1955,7 +1955,7 @@ supplier_size_category = {
         }
     },
     "BUS":{
-        "0-30":{
+        "1-30":{
             "min": 0,
             "max": 30
         },
@@ -1968,7 +1968,7 @@ supplier_size_category = {
         }
     },
     "Hording":{
-        "0-10000":{
+        "1-10000":{
             "min": 0,
             "max": 10000
         },
@@ -1981,7 +1981,7 @@ supplier_size_category = {
         }
     },
     "Gantry":{
-        "0-10000":{
+        "1-10000":{
             "min": 0,
             "max": 10000
         },
