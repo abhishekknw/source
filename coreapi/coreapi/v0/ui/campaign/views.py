@@ -1170,6 +1170,8 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
             'hot_level_keys': {}
         }
         
+        i = 0
+        supplier_size_categories = {}
         for flat_category, value in flat_categories.items():
             flat_category_id = flat_category_id + 1
             all_flat_data[flat_category] = {
@@ -1186,6 +1188,26 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
                 'hot_level_values': {},
                 'hot_level_keys': {}
             }
+
+            size_type = "max"
+            text = ""
+            if i == 0:
+                size_type = "min"
+                text = "< "+ str(value["max"])
+            elif i == 1:
+                size_type = "medium"
+                text = "Between "+str(value["min"])+" to "+ str(value["max"])
+            else:
+                size_type = "max"
+                text = "> " + str(value["min"])
+
+            supplier_size_categories[size_type] = {
+                "type": flat_category,
+                "text": text
+            }
+            i+=1
+
+        overall_data["supplier_size_categories"] = supplier_size_categories
     
         lead_form = mongo_client.leads_forms.find({"campaign_id": campaign_id})
         campaign_hot_leads_dict = lead_counter(campaign_id, leads_form_data, user_start_datetime, user_end_datetime, lead_form[0])
