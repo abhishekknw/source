@@ -2007,9 +2007,11 @@ summary_header = {
         "total" : "Total",     
     },
     'B to B' :{
+        "phase_details" : "Phase Details",
         'meeting_fixed' : 'Meeting fixed',
         'meeting_converted' : 'Meeting converted',
         'decision_pending' : 'Decision Pending',
+        "total" : "Total",
     }
 }
 
@@ -2024,7 +2026,10 @@ breakup_header = {
     },
     'B to B' :{
         'meeting_fixed' : 'Meeting fixed',
+        "not_initiated" : "Not Initiated",
         'meeting_converted' : 'Meeting converted',
+        'decision_pending' : 'Decision Pending',
         'rejected' : 'Rejected',
+        "total" : "Total",
     }
 }
