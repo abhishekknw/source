@@ -318,6 +318,13 @@ class GetCampaignWiseAnalytics(APIView):
                 contact_number_filled = all_campaign_dict[campaign_id]['contact_number_filled']
                 contact_number_not_filled = len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_number_filled']
                 flat_count_not_filled = len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['flat_count_filled']
+                
+                print(campaign_id)
+                end_customer = "B to C"
+                proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
+                if proposal.type_of_end_customer:
+                    end_customer = proposal.type_of_end_customer.name                     
+
                 all_campaign_summary.append({
                     "campaign_id": campaign_id,
                     "name": all_campaign_dict[campaign_id]['name'],
@@ -349,7 +356,8 @@ class GetCampaignWiseAnalytics(APIView):
                     "flat_count_details_not_filled_percentage": round((flat_count_not_filled/total_suppliers)*100, 2),
                     "flat_count_details_not_filled_suppliers": [ele for ele in all_campaign_dict[campaign_id]['all_supplier_ids'] if ele not in all_campaign_dict[campaign_id]['flat_count_filled_suppliers']],
                     "payment_details_filled": all_campaign_dict[campaign_id]['total_payment_details'],
-                    "payment_details_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['total_payment_details']
+                    "payment_details_not_filled": len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['total_payment_details'],
+                    "type_of_end_customer": end_customer
                 })
             return Response(data={"status": True, "data": all_campaign_summary}, status=status.HTTP_200_OK)
         except Exception as e:
