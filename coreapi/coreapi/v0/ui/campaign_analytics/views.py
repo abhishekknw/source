@@ -551,9 +551,16 @@ class GetCampaignStatusCount(APIView):
                             all_supplier_dict[booking_status]['supplier_ids'] = [shortlisted_supplier['object_id']]
                         else:
                             all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
+            
+            end_customer = "b_to_c"
+            proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
+            if proposal.type_of_end_customer:
+                end_customer = proposal.type_of_end_customer.formatted_name
+
             response = {
                 'campaign_id': campaign_id,
-                'booking_sub_status': {}
+                'booking_sub_status': {},
+                'type_of_end_customer' : end_customer
             }
             for campaign_status, supplier in all_supplier_dict.items():
                 if campaign_status == 'booking_sub_status':
