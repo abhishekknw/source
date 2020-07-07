@@ -319,11 +319,10 @@ class GetCampaignWiseAnalytics(APIView):
                 contact_number_not_filled = len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['contact_number_filled']
                 flat_count_not_filled = len(all_campaign_dict[campaign_id]['all_supplier_ids']) - all_campaign_dict[campaign_id]['flat_count_filled']
                 
-                print(campaign_id)
-                end_customer = "B to C"
+                end_customer = "b_to_c"
                 proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
                 if proposal.type_of_end_customer:
-                    end_customer = proposal.type_of_end_customer.name                     
+                    end_customer = proposal.type_of_end_customer.formatted_name                 
 
                 all_campaign_summary.append({
                     "campaign_id": campaign_id,
