@@ -218,23 +218,17 @@ def lead_counter(campaign_id, leads_form_data,user_start_datetime,user_end_datet
 
     all_campaign_leads = leads_form_data
     for summary in all_leads_summary:
-        result[summary['supplier_id']] = {"hot_leads": summary['hot_leads_count'],
-                                          "total_leads": summary['total_leads_count'],
-                                          "hot_lead_details": [],
-                                          "is_hot_level_1": leads_by_hoteness_level[summary['supplier_id']]
-                                          ['is_hot_level_1']
-                                            if summary['supplier_id'] in leads_by_hoteness_level else 0,
-                                          "is_hot_level_2": leads_by_hoteness_level[summary['supplier_id']]
-                                          ['is_hot_level_2']
-                                          if summary['supplier_id'] in leads_by_hoteness_level else 0,
-                                          "is_hot_level_3": leads_by_hoteness_level[summary['supplier_id']]
-                                          ['is_hot_level_3']
-                                          if summary['supplier_id'] in leads_by_hoteness_level else 0,
-                                          "is_hot_level_4": leads_by_hoteness_level[summary['supplier_id']]
-                                          ['is_hot_level_4']
-                                          if summary['supplier_id'] in leads_by_hoteness_level else 0
+        default_hot_leads = {
+            "is_hot_level_1": 0,
+            "is_hot_level_2": 0,
+            "is_hot_level_3": 0,
+            "is_hot_level_4": 0,
+        }
+        result[summary['supplier_id']] = summary.get('hot_leads', default_hot_leads)
+        result[summary['supplier_id']]["hot_leads"] = summary['hot_leads_count']
+        result[summary['supplier_id']]["total_leads"] = summary['total_leads_count']
+        result[summary['supplier_id']]["hot_lead_details"] = []
 
-                                          }
     for lead in all_campaign_leads:
         result[lead['supplier_id']]["hot_lead_details"].append({
             "entry_id": lead["entry_id"],
@@ -1169,23 +1163,9 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
             'hot_level_values': {},
             'hot_level_keys': {}
         }
-        
-        for flat_category, value in flat_categories.items():
-            flat_category_id = flat_category_id + 1
-            all_flat_data[flat_category] = {
-                "campaign": campaign_id,
-                "flat_category": flat_category_id,
-                "interested": 0,
-                "total": 0,
-                "suppliers": 0,
-                "flat_count": 0,
-                'is_hot_level_1': 0,
-                'is_hot_level_2': 0,
-                'is_hot_level_3': 0,
-                'is_hot_level_4': 0,
-                'hot_level_values': {},
-                'hot_level_keys': {}
-            }
+
+        hot_level_keys = {}
+        hot_level_values = {}
     
         lead_form = mongo_client.leads_forms.find({"campaign_id": campaign_id})
         campaign_hot_leads_dict = lead_counter(campaign_id, leads_form_data, user_start_datetime, user_end_datetime, lead_form[0])
@@ -1200,7 +1180,27 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
                 if 'is_hot_level_4' in key:
                     overall_data['key_hot_level_4'] = lead_form[0]['hotness_mapping']['is_hot_level_4']
                 
-                overall_data['hot_level_keys'][key] = lead_form[0]['hotness_mapping'][key]
+                hot_level_keys[key] = lead_form[0]['hotness_mapping'][key]
+                hot_level_values[key] = 0
+        
+        overall_data['hot_level_keys'] = hot_level_keys
+        overall_data['hot_level_values'] = hot_level_values
+
+        for flat_category, value in flat_categories.items():
+            flat_category_id = flat_category_id + 1
+            all_flat_data[flat_category] = {
+                "campaign": campaign_id,
+                "flat_category": flat_category_id,
+                "interested": 0,
+                "total": 0,
+                "suppliers": 0,
+                "flat_count": 0,
+                'is_hot_level_1': 0,
+                'is_hot_level_2': 0,
+                'is_hot_level_3': 0,
+                'is_hot_level_4': 0,
+                'hot_level_values': hot_level_values
+            }
     
         for curr_supplier_data in supplier_data:
             supplier_id = curr_supplier_data['supplier_id']
@@ -1234,6 +1234,11 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
             overall_data['total_hot_leads'] += hot_leads
             overall_data['flat_count'] += supplier_flat_count
             # getting society information
+            for key, value in hot_level_keys.items():
+                value_count = 0
+                if campaign_hot_leads_dict[supplier_id].get(key):
+                    value_count = campaign_hot_leads_dict[supplier_id].get(key)
+                overall_data['hot_level_values'][key] = overall_data['hot_level_values'][key] + value_count
             
             hot_leads_percentage = round(float(hot_leads) / float(total_leads), 5)*100 if total_leads > 0 else 0
             curr_supplier_lead_data = {
@@ -1249,6 +1254,7 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
                 'is_hot_level_2': is_hot_level_2,
                 'is_hot_level_3': is_hot_level_3,
                 'is_hot_level_4': is_hot_level_4,
+                'hot_level_values': campaign_hot_leads_dict[supplier_id]
             }
             all_suppliers_list_non_analytics[supplier_id] = curr_supplier_lead_data
             
@@ -1270,6 +1276,10 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
                 all_localities_data_non_analytics[supplier_locality]["is_hot_level_4"] = \
                     all_localities_data_non_analytics[supplier_locality]["is_hot_level_4"] + is_hot_level_4
                 
+                all_localities_data_non_analytics[supplier_locality]['hot_level_values'] = {}
+                for key, value in hot_level_keys.items():
+                    all_localities_data_non_analytics[supplier_locality]['hot_level_values'][key] = campaign_hot_leads_dict[supplier_id][key]
+                
             else:
                 curr_locality_data = {
                     "is_interested": True,
@@ -1283,7 +1293,12 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
                     'is_hot_level_2': is_hot_level_2,
                     'is_hot_level_3': is_hot_level_3,
                     'is_hot_level_4': is_hot_level_4,
+                    'hot_level_values': {}
                 }
+
+                for key, value in hot_level_keys.items():
+                    curr_locality_data['hot_level_values'][key] = campaign_hot_leads_dict[supplier_id][key]
+
                 all_localities_data_non_analytics[supplier_locality] = curr_locality_data
             
             for key, value in flat_categories.items():
@@ -1300,6 +1315,13 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
                     
                     curr_flat_data['is_hot_level_3'] = curr_flat_data['is_hot_level_3'] + is_hot_level_3
                     curr_flat_data['is_hot_level_4'] = curr_flat_data['is_hot_level_4'] + is_hot_level_4
+
+                    for key, value in hot_level_keys.items():
+                        value_count = 0
+                        if campaign_hot_leads_dict[supplier_id].get(key):
+                            value_count = campaign_hot_leads_dict[supplier_id].get(key)
+                        curr_flat_data['hot_level_values'][key] = curr_flat_data['hot_level_values'][key] + value_count
+
                     all_flat_data[key] = curr_flat_data
                     
 
@@ -1363,6 +1385,7 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
                     'is_hot_level_2': 0,
                     'is_hot_level_3': 0,
                     'is_hot_level_4': 0,
+                    'hot_level_values': hot_level_values
                 }
             
             curr_weekday = weekday_names[str(time.weekday())]
