@@ -957,6 +957,7 @@ booking_status = {
     'not_initiated': 'NI',
     'recce':'RE',
     'meeting_fixed':'MF',
+    'meeting_converted':'MC',
     'complete_lockdown': 'LCL',
     'partial_lockdown': 'LPL',
     'open_lockdown': 'LOL',
@@ -1883,134 +1884,194 @@ tableHeaderData = {
 
 supplier_size_category = {
     "RS":{
-        "0-150":{
+        "1-150":{
             "min": 0,
             "max": 150
         },
-        "151-399":{
+        "151-400":{
             "min": 151,
-            "max": 399
+            "max": 400
         },
-        "400+":{
-            "min": 400
+        "401+":{
+            "min": 401
         }
     },
     "CP":{
-        "0-1000":{
-            "min": 0,
+        "1-1000":{
+            "min": 1,
             "max": 1000
         },
-        "1001-9999":{
+        "1001-10000":{
             "min": 1001,
-            "max": 9999
+            "max": 10000
         },
-        "10000+":{
-            "min": 10000
+        "10001+":{
+            "min": 10001
         }
     },
     "EI":{
-        "0-500":{
-            "min": 0,
+        "1-500":{
+            "min": 1,
             "max": 500
         },
-        "501-1999":{
+        "501-2000":{
             "min": 501,
-            "max": 1999
+            "max": 2000
         },
-        "2000+":{
-            "min": 2000
+        "2001+":{
+            "min": 2001
         }
     },
     "RE":{
-        "0-100":{
-            "min": 0,
+        "1-100":{
+            "min": 1,
             "max": 100
         },
-        "101-999":{
+        "101-1000":{
             "min": 101,
-            "max": 999
+            "max": 1000
         },
-        "1000+":{
-            "min": 1000
+        "1001+":{
+            "min": 1001
         }
     },
     "GY":{
-        "0-50":{
-            "min": 0,
+        "1-50":{
+            "min": 1,
             "max": 50
         },
-        "51-199":{
+        "51-200":{
             "min": 51,
-            "max": 199
+            "max": 200
         },
-        "200+":{
-            "min": 200
+        "201+":{
+            "min": 201
         }
     },
     "SA":{
-        "0-20":{
-            "min": 0,
+        "1-20":{
+            "min": 1,
             "max": 20
         },
-        "21-49":{
+        "21-50":{
             "min": 21,
-            "max": 49
+            "max": 50
         },
-        "50+":{
-            "min": 50
+        "51+":{
+            "min": 51
         }
     },
     "BS":{
-        "0-100":{
-            "min": 0,
+        "1-100":{
+            "min": 1,
             "max": 100
         },
-        "101-299":{
+        "101-300":{
             "min": 101,
-            "max": 299
+            "max": 300
         },
-        "300+":{
-            "min":300
+        "301+":{
+            "min":301
         }
     },
     "BUS":{
-        "0-30":{
-            "min": 0,
+        "1-30":{
+            "min": 1,
             "max": 30
         },
-        "31-99":{
+        "31-100":{
             "min": 31,
-            "max": 99
+            "max": 100
         },
-        "100+":{
-            "min":100
+        "101+":{
+            "min":101
         }
     },
     "Hording":{
-        "0-10000":{
-            "min": 0,
+        "1-10000":{
+            "min": 1,
             "max": 10000
         },
-        "10001-49999":{
+        "10001-50000":{
             "min": 10001,
-            "max": 49999
+            "max": 50000
         },
-        "50000+":{
-            "min":50000
+        "50001+":{
+            "min":50001
         }
     },
     "Gantry":{
-        "0-10000":{
-            "min": 0,
+        "1-10000":{
+            "min": 1,
             "max": 10000
         },
-        "10001-49999":{
+        "10001-50000":{
             "min": 10001,
-            "max": 49999
+            "max": 50000
         },
-        "50000+":{
-            "min":50000
+        "50001+":{
+            "min":50001
         }
     },
     
+}
+
+summary_header = {
+    'B to C' :{
+        "phase_details" : "Phase Details",
+        "confirmed_booked" : "Confirmed Booked",
+        "verbally_booked" : "Verbally Booked",
+        "followup_required" : "Followup Required",
+        "total" : "Total",     
+    },
+    'B to B' :{
+        "phase_details" : "Phase Details",
+        'meeting_fixed' : 'Meeting fixed',
+        'meeting_converted' : 'Meeting converted',
+        'decision_pending' : 'Decision Pending',
+        "total" : "Total",
+    },
+    'Others' :{
+        "phase_details" : "Phase Details",
+        'emergency_situation' : 'Emergency Situation',
+        'complete_lockdown' : 'Complete Lockdown',
+        'partial_building_lockdown' : 'Partial Building/Tower Lockdown',
+        'partial_floor_lockdown' : 'Partial Floor Lockdown',
+        'partial_house_lockdown' : 'Partial House/Flat Lockdown',
+        'open' : 'OPEN',
+        "total" : "Total",  
+    }
+}
+
+breakup_header = {
+    'B to C' :{
+        "confirmed_booked" : "Confirmed Booked",
+        "not_initiated" : "Not Initiated",
+        "followup_required" : "Followup Required",
+        "verbally_booked" : "Verbally Booked",
+        "rejected" : "Rejected",
+        "total" : "Total",     
+    },
+    'B to B' :{
+        'meeting_fixed' : 'Meeting fixed',
+        "not_initiated" : "Not Initiated",
+        'meeting_converted' : 'Meeting converted',
+        'decision_pending' : 'Decision Pending',
+        'rejected' : 'Rejected',
+        "total" : "Total",
+    },
+    'Others' :{
+        # 'vegetable_and_fruits' : 'Vegeatable and Fruits',
+        # 'medicine' : 'Medicine',
+        # 'grocery' : 'Grocery',
+        # 'other_essentials' : 'Other Essentials',
+        # 'no_requirements' : 'No Requirment',
+        'emergency_situation' : 'Emergency Situation',
+        'complete_lockdown' : 'Complete Lockdown',
+        'partial_building_lockdown' : 'Partial Building/Tower Lockdown',
+        'partial_floor_lockdown' : 'Partial Floor Lockdown',
+        'partial_house_lockdown' : 'Partial House/Flat Lockdown',
+        'open' : 'OPEN',
+        "total" : "Total",  
+    }
 }
