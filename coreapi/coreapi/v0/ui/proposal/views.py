@@ -2922,8 +2922,13 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                                                                        'SE': [], 'VR': [], 'CR': [], 'DPCR':[], 'DPNR':[], 'NE':[], 'UN':[], 'MWA':[], 'UPNI':[], 'UCPI':[], 'TB':[],
                                                                        'DP': [], 'TB': [], 'MC':[], 'UN':[], 'DPRR': [], 'RLC':[], 'PR': [], 'NVOS':[], 'RE': [], 'RERR':[], 'RERA':[], 'BSR': [], 'BDP': [],
                                                                        'MWA': [], 'MWS': [], 'MWC': [], 'MWT': [], 'MWO': [], 'DPNR': [], 'DPNA': [], 'DPP': [], 'DPSOO': [], 'DPOS': [], 'DPVR': [], 'DPCR': [],
-                                                                       'RLO': [], 'RLC': [], 'RUB': [], 'RVE': [], 'RCR': [], 'RRS': [], 'ROS': [],'BRLO': [], 'BRLC': [], 'BRUB': [], 'BRVE': [], 'BRCR': [], 'BRRS': [],
-                                                                       'BROS': [],'BDPNR': [], 'BDPNA': [], 'BDPP': [], 'BDPSOO': [], 'BDPOS': [], 'BDPVR': [], 'BDPCR': []}
+                                                                       'RLO': [], 'RLC': [], 'RUB': [], 'RVE': [], 'RCR': [], 'RRS': [], 'ROS': [],'BRLO': [], 'BRLC': [], 'BRUB': [], 'BRVE': [], 'BUPNI': [], 'BUCNI':[],
+                                                                       'BRCR': [], 'BRRS': [],'BROS': [],'BDPNR': [], 'BDPNA': [], 'BDPP': [], 'BDPSOO': [], 'BDPOS': [], 'BDPVR': [], 'BDPCR': [], 'BUN': [],
+                                                                       'BNE':[], 'BNVW':[], 'BNVG':[], 'BNVA':[], 'BNVMB':[], 'BNVFT':[], 'BNVOS':[], 'UPNI':[], 'UCPI':[], 'NVW':[], 'NVG':[], 'NVA':[], 
+                                                                       'NVMB':[], 'NVFT':[], 'NVOS':[],                                               
+                                                                       'OEL': [], 'ESVF': [], 'ESMD': [], 'ESGR': [], 'ESOE': [], 'ESNR': [],'OCL': [], 'CLVF': [],'CLMD': [], 'CLGR': [], 'CLOE': [], 'CLNR': [],
+                                                                       'OPBL': [], 'PBVF': [], 'PBMD': [], 'PBGR': [], 'PBOE': [], 'PBNR': [], 'OPFL': [], 'PFVF': [], 'PFMD': [], 'PFGR': [], 'PFOE': [], 'PFNR': [],
+                                                                       'OPHL': [], 'PHVF': [], 'PHMD': [], 'PHGR': [], 'PHOE': [], 'PHNR': [], 'OP': [], 'OVF': [], 'OMD': [], 'OGR': [], 'OOE': [], 'ONR': [] }                                                                    
             if space.booking_status:
                 shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(
                     supplier_society_serialized)
@@ -2946,6 +2951,12 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     btob_rejected_status = ['BSR', 'BRLO', 'BRLC', 'BRUB', 'BRVE', 'BRCR', 'BRRS', 'BROS']
     decision_pending_status = ['BDP', 'BDPNR', 'BDPNA', 'BDPP', 'BDPSOO', 'BDPOS', 'BDPVR', 'BDPCR']
     recce_required = ['DPRR']
+    emergency_situation_status = ['ESVF', 'ESMD', 'ESGR', 'ESOE', 'ESNR']
+    complete_lockdown_status = ['CLVF','CLMD', 'CLGR', 'CLOE', 'CLNR']
+    part_building_lock_status = ['PBVF', 'PBMD', 'PBGR', 'PBOE', 'PBNR']
+    part_floor_lock_status =['PFVF', 'PFMD', 'PFGR', 'PFOE', 'PFNR']
+    part_house_lock_status = ['PHVF', 'PHMD', 'PHGR', 'PHOE', 'PHNR']
+    open_status = ['OVF', 'OMD', 'OGR', 'OOE', 'ONR']
     all_not_initiated_supplier = []
     all_rejected_supplier = []
     all_btob_rejected_supplier = [] 
@@ -2953,6 +2964,12 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     all_recce_supplier = []
     all_meeting_fixed_supplier =[]
     all_meeting_converted_supplier = []
+    all_emergency_situation_supplier = []
+    all_complete_lockdown_supplier = []
+    all_part_building_lock_supplier = []
+    all_part_floor_lock_supplier = []
+    all_part_house_lock_supplier = []
+    all_open_supplier = []
     total_not_initiated_flats = 0
     total_rejected_flats = 0
     total_decision_pending_flats = 0
@@ -2960,6 +2977,12 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     total_recce_flats = 0
     total_meeting_fixed_flats=0
     total_meeting_converted_flats = 0
+    total_emergency_situation_flats = 0
+    total_complete_lockdown_flats = 0
+    total_part_building_lock_flats = 0
+    total_part_floor_lock_flats = 0
+    total_part_house_lock_flats = 0
+    total_open_flats = 0
 
     proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
     end_customer = proposal.type_of_end_customer.name
@@ -2988,6 +3011,18 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         meeting_fixed_flats =0
         meeting_converted_supplier_count = 0
         meeting_converted_flats = 0
+        emergency_situation_supplier_count = 0
+        emergency_situation_flats = 0
+        complete_lockdown_supplier_count = 0
+        complete_lockdown_flats = 0
+        part_building_lock_supplier_count = 0
+        part_building_lock_flats = 0
+        part_floor_lock_supplier_count = 0
+        part_floor_lock_flats = 0
+        part_house_lock_supplier_count = 0
+        part_house_lock_flats = 0
+        open_supplier_count = 0
+        open_flats = 0
         recce_flats = 0
         rejected_flats = 0
         for status in shortlisted_spaces_by_phase_dict[phase_id]:
@@ -3048,6 +3083,38 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     total_decision_pending_flats += phase_booked_flats
                     all_decision_pending_supplier_count = all_decision_pending_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
 
+            else: 
+                if status in emergency_situation_status:
+                    emergency_situation_supplier_count += phase_booked_suppliers
+                    emergency_situation_flats += phase_booked_flats
+                    total_emergency_situation_flats += phase_booked_flats
+                    all_emergency_situation_supplier_count = all_emergency_situation_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                if status in complete_lockdown_status:
+                    complete_lockdown_supplier_count += phase_booked_suppliers
+                    complete_lockdown_flats += phase_booked_flats
+                    total_complete_lockdown_flats += phase_booked_flats
+                    all_complete_lockdown_supplier_count = all_complete_lockdown_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                if status in part_building_lock_status:
+                    part_building_lock_supplier_count += phase_booked_suppliers
+                    part_building_lock_flats += phase_booked_flats
+                    total_part_building_lock_flats += phase_booked_flats
+                    all_part_building_lock_supplier_count = all_part_building_lock_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                if status in part_floor_lock_status:
+                    part_floor_lock_supplier_count += phase_booked_suppliers
+                    part_floor_lock_flats += phase_booked_flats
+                    total_part_floor_lock_flats += phase_booked_flats
+                    all_part_floor_lock_supplier_count = all_part_floor_lock_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                if status in part_house_lock_status:
+                    part_house_lock_supplier_count += phase_booked_suppliers
+                    part_house_lock_flats += phase_booked_flats
+                    total_part_house_lock_flats += phase_booked_flats
+                    all_part_house_lock_supplier_count = all_part_house_lock_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                if status in open_status:
+                    open_supplier_count += phase_booked_suppliers
+                    open_flats += phase_booked_flats
+                    total_open_flats += phase_booked_flats
+                    all_open_supplier_count = all_open_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+
         total_booked_suppliers_list = flatten_list(
             [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items()])
         confirmed_booked_suppliers_list = flatten_list(
@@ -3080,6 +3147,24 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         decision_pending_suppliers_list = flatten_list(
             [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
              status in decision_pending_status])
+        emergency_situation_suppliers_list = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
+             status in emergency_situation_status])
+        complete_lockdown_suppliers_list = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
+             status in complete_lockdown_status])
+        part_building_lock_suppliers_list = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
+             status in part_building_lock_status])
+        part_floor_lock_suppliers_list = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
+             status in part_floor_lock_status])
+        part_house_lock_suppliers_list = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
+             status in part_house_lock_status])
+        open_suppliers_list = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
+             status in open_status])
 
         phase_dict = {
             'phase_no': all_phase_by_id[phase_id]['phase_no'],
@@ -3143,6 +3228,36 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 'flat_count': decision_pending_flats,
                 'supplier_data': decision_pending_suppliers_list
             },
+            'emergency_situation': {
+                'supplier_count': emergency_situation_supplier_count,
+                'flat_count': emergency_situation_flats,
+                'supplier_data': emergency_situation_suppliers_list
+            },
+            'complete_lockdown': {
+                'supplier_count': complete_lockdown_supplier_count,
+                'flat_count': complete_lockdown_flats,
+                'supplier_data': complete_lockdown_suppliers_list
+            },
+            'partial_building_lockdown': {
+                'supplier_count': part_building_lock_supplier_count,
+                'flat_count': part_building_lock_flats,
+                'supplier_data': part_building_lock_suppliers_list
+            },
+            'partial_floor_lockdown': {
+                'supplier_count': part_floor_lock_supplier_count,
+                'flat_count': part_floor_lock_flats,
+                'supplier_data': part_floor_lock_suppliers_list
+            },
+            'partial_house_lockdown': {
+                'supplier_count': part_house_lock_supplier_count,
+                'flat_count': part_house_lock_flats,
+                'supplier_data': part_house_lock_suppliers_list
+            },
+            'open': {
+                'supplier_count': open_supplier_count,
+                'flat_count': open_flats,
+                'supplier_data': open_suppliers_list
+            },
         }
         if end_date is not None and end_date.date() >= current_date:
             shortlisted_spaces_by_phase_list.append(phase_dict)
@@ -3172,9 +3287,16 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 'meeting_fixed': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 'meeting_converted': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 'decision_pending': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'emergency_situation': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'complete_lockdown': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'partial_building_lockdown': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'partial_floor_lockdown': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'partial_house_lockdown': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'open': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 }
     for phase in upcoming_beyond_three:
-        for status_type in ['followup_required', 'confirmed_booked', 'verbally_booked', 'rejected', 'btob_rejected', 'total_booked', 'not_initiated', 'recce_required', 'meeting_fixed', 'meeting_converted', 'decision_pending']:
+        for status_type in ['followup_required', 'confirmed_booked', 'verbally_booked', 'rejected', 'btob_rejected', 'total_booked', 'not_initiated', 'recce_required', 'meeting_fixed', 'meeting_converted', 'decision_pending', 
+                        'emergency_situation', 'complete_lockdown', 'partial_building_lockdown', 'partial_floor_lockdown', 'partial_house_lockdown', 'open']:
             pipeline[status_type]['supplier_count'] += phase[status_type]['supplier_count']
             pipeline[status_type]['flat_count'] += phase[status_type]['flat_count']
             pipeline[status_type]['supplier_data'] += phase[status_type]['supplier_data']
@@ -3219,6 +3341,30 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             pipeline['decision_pending']['supplier_data'].append(supplier)
             pipeline['decision_pending']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['decision_pending']['supplier_count'] += 1
+        if supplier['booking_status'] in emergency_situation_status:
+            pipeline['emergency_situation']['supplier_data'].append(supplier)
+            pipeline['emergency_situation']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['emergency_situation']['supplier_count'] += 1
+        if supplier['booking_status'] in complete_lockdown_status:
+            pipeline['complete_lockdown']['supplier_data'].append(supplier)
+            pipeline['complete_lockdown']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['complete_lockdown']['supplier_count'] += 1
+        if supplier['booking_status'] in part_building_lock_status:
+            pipeline['partial_building_lockdown']['supplier_data'].append(supplier)
+            pipeline['partial_building_lockdown']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['partial_building_lockdown']['supplier_count'] += 1
+        if supplier['booking_status'] in part_floor_lock_status:
+            pipeline['partial_floor_lockdown']['supplier_data'].append(supplier)
+            pipeline['partial_floor_lockdown']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['partial_floor_lockdown']['supplier_count'] += 1
+        if supplier['booking_status'] in part_house_lock_status:
+            pipeline['partial_house_lockdown']['supplier_data'].append(supplier)
+            pipeline['partial_house_lockdown']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['partial_house_lockdown']['supplier_count'] += 1
+        if supplier['booking_status'] in open_status:
+            pipeline['open']['supplier_data'].append(supplier)
+            pipeline['open']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['open']['supplier_count'] += 1
 
         pipeline['total_booked']['supplier_data'].append(supplier)
         pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
