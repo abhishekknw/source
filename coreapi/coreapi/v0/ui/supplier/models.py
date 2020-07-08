@@ -524,7 +524,6 @@ class SupplierTypeRetailShop(BasicSupplierDetails):
     representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
-
         db_table = 'supplier_type_retail_shop'
 
 class SupplierTypeBusDepot(BasicSupplierDetails):
@@ -586,3 +585,18 @@ class AddressMaster(BaseModel):
 
     class Meta:
         db_table = 'address_master'
+
+class SupplierRelationship(BaseModel):
+    """
+    Stores info about Suppliers who has retail shops inside them
+    """
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now_add=True)
+    society = models.ForeignKey('SupplierTypeSociety', db_column='society_id', on_delete=models.CASCADE)
+    supplier_id = models.CharField(max_length=50, null=False)
+    supplier_type = models.CharField(max_length=3, null=False)
+    type = models.CharField(max_length=10, null=False, default='PREFERRED')
+
+    class Meta:
+        db_table = 'supplier_relationship'
+        unique_together = ('society', 'supplier_id','type')

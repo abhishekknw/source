@@ -291,7 +291,7 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
             key_name = item.get("key_name","")
             key_type = item.get("key_type","")
            
-            new_entry.append({"order_id": item["item_id"], "value": value, "key_name":key_name, "key_type":key_type})
+            new_entry.append({"order_id": item.get("item_id"), "value": value, "key_name":key_name, "key_type":key_type})
         leads_data_values.append(new_entry)
 
     final_data = {"hot_leads": hot_leads, "headers": headers, "values": leads_data_values, "missing_suppliers": missing_suppliers}
@@ -1685,6 +1685,8 @@ class GenerateCampaignExcelDownloadHash(APIView):
         excel_download_hash_dict["one_time_hash"] = one_time_hash
         CampaignExcelDownloadHash(**excel_download_hash_dict).save()
         return handle_response({}, data={"one_time_hash": one_time_hash}, success=True)
+
+
 class AddHotnessLevelsToLeadForm(APIView):
     @staticmethod
     def get(request):

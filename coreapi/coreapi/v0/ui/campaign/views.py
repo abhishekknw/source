@@ -802,6 +802,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             date = request.query_params.get("date",None)
             inv_type = request.query_params.get("inv_type",None)
             act_type = request.query_params.get("act_type",None)
+
             if campaign_id is None or date is None or inv_type is None or act_type is None:
                 return Response("Campaign Id or Date or inv type or act type is not provided")
             assigned_objects = InventoryActivityAssignment.objects.select_related('inventory_activity',
@@ -850,7 +851,7 @@ class DashBoardViewSet(viewsets.ViewSet):
                     result[supplier['supplier_id']][supplier['inv_name']] = {}
                 result[supplier['supplier_id']][supplier['inv_name']]['assigned'] = supplier['total']
                 result[supplier['supplier_id']][supplier['inv_name']]['completed'] = 0
-                result[supplier['supplier_id']]['supplier_data'] = suppliers_map[supplier['supplier_id']]
+                result[supplier['supplier_id']]['supplier_data'] = suppliers_map[supplier['supplier_id']] if supplier['supplier_id'] in suppliers_map else None
                 result[supplier['supplier_id']]['space_id'] = supplier['space_id']
             for supplier in completed_objects:
                 if supplier['supplier_id'] in result:
@@ -860,6 +861,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             return handle_response(class_name, data=result, success=True)
 
         except Exception as e:
+            print(e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     # @list_route()
@@ -1186,6 +1188,8 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
         overall_data['hot_level_keys'] = hot_level_keys
         overall_data['hot_level_values'] = hot_level_values
 
+        i = 0
+        supplier_size_categories = {}
         for flat_category, value in flat_categories.items():
             flat_category_id = flat_category_id + 1
             all_flat_data[flat_category] = {
@@ -1201,6 +1205,26 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
                 'is_hot_level_4': 0,
                 'hot_level_values': hot_level_values
             }
+
+            size_type = "max"
+            text = ""
+            if i == 0:
+                size_type = "min"
+                text = "< "+ str(value["max"])
+            elif i == 1:
+                size_type = "medium"
+                text = "Between "+str(value["min"])+" to "+ str(value["max"])
+            else:
+                size_type = "max"
+                text = "> " + str(value["min"])
+
+            supplier_size_categories[size_type] = {
+                "type": flat_category,
+                "text": text
+            }
+            i+=1
+
+        overall_data["supplier_size_categories"] = supplier_size_categories
     
         for curr_supplier_data in supplier_data:
             supplier_id = curr_supplier_data['supplier_id']
@@ -1492,7 +1516,6 @@ class CampaignLeads(APIView):
             user_start_date_str = request.query_params.get('start_date', None)
             user_end_date_str = request.query_params.get('end_date', None)
             campaign_id = request.query_params.get('campaign_id', None)
-
             # if 'NOB' in campaign_id:
             #     final_data = {}
             #     start_date = datetime.now() - timedelta(days=7)
@@ -1507,7 +1530,7 @@ class CampaignLeads(APIView):
             # else:
             final_data = get_leads_data_for_campaign(request, campaign_id, user_start_date_str, user_end_date_str)
             if not final_data:
-                return ui_utils.handle_response(class_name, data=final_data, success=False)
+                return ui_utils.handle_response({}, data='No Leads present for this campaign', success=False)
             start_date = datetime.now() - timedelta(days=7)
             final_data['last_week'] = get_leads_data_for_campaign(request, campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
             start_date = datetime.now() - timedelta(days=14)
