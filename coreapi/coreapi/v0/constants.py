@@ -2014,12 +2014,14 @@ summary_header = {
         "total" : "Total",
     },
     'Others' :{
+        "phase_details" : "Phase Details",
         'emergency_situation' : 'Emergency Situation',
         'complete_lockdown' : 'Complete Lockdown',
         'partial_building_lockdown' : 'Partial Building/Tower Lockdown',
         'partial_floor_lockdown' : 'Partial Floor Lockdown',
         'partial_house_lockdown' : 'Partial House/Flat Lockdown',
         'open' : 'OPEN',
+        "total" : "Total",  
     }
 }
 
@@ -2041,10 +2043,17 @@ breakup_header = {
         "total" : "Total",
     },
     'Others' :{
-        'vegetable_and_fruits' : 'Vegeatable and Fruits',
-        'medicine' : 'Medicine',
-        'grocery' : 'Grocery',
-        'other_essentials' : 'Other Essentials',
-        'no_requirements' : 'No Requirment',
+        # 'vegetable_and_fruits' : 'Vegeatable and Fruits',
+        # 'medicine' : 'Medicine',
+        # 'grocery' : 'Grocery',
+        # 'other_essentials' : 'Other Essentials',
+        # 'no_requirements' : 'No Requirment',
+        'emergency_situation' : 'Emergency Situation',
+        'complete_lockdown' : 'Complete Lockdown',
+        'partial_building_lockdown' : 'Partial Building/Tower Lockdown',
+        'partial_floor_lockdown' : 'Partial Floor Lockdown',
+        'partial_house_lockdown' : 'Partial House/Flat Lockdown',
+        'open' : 'OPEN',
+        "total" : "Total",  
     }
 }
