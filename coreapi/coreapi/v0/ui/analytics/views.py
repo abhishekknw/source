@@ -248,7 +248,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             curr_metric_sp_case = 'hotness_level_' if 'hotness_level' in curr_metric else curr_metric
             storage_type = count_details_parent_map[curr_metric_sp_case]['storage_type']
             if len(superlevels)>0:
-                curr_output = key_replace_group_multiple(curr_output, superlevels_base_set[0], superlevels, curr_metric,
+                curr_output = key_replace_group_multiple(supplier_code, curr_output, superlevels_base_set[0], superlevels, curr_metric,
                                                          value_ranges, None, storage_type)
         curr_output_keys = set(curr_output[0].keys())
         allowed_keys = set([highest_level_original] + grouping_level + [curr_metric])
@@ -466,7 +466,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             if curr_stat[:len(pfix)] == pfix:
                 curr_stat = curr_stat[len(pfix):]
                 weighted = 1
-            higher_level_list = statistics_map[curr_stat](higher_level_list,stat_metrics, weighted=weighted)
+            if higher_level_list:
+                higher_level_list = statistics_map[curr_stat](higher_level_list,stat_metrics, weighted=weighted)
 
     custom_function_output = {}
     if not custom_functions == []:
@@ -633,7 +634,10 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
             supplier_category = "supplier"
             supplier_match_type = 0
             supplier_model_name = SupplierTypeSociety
-            supplier_match_list = get_constrained_values('SupplierTypeSociety','supplier_id',supplier_constraints)
+            supplier_model = 'SupplierTypeSociety'
+            if supplier_code != "RS":
+                supplier_model = 'SupplierMaster'
+            supplier_match_list = get_constrained_values(supplier_model,'supplier_id',supplier_constraints)
 
         # general queries common to all storage types
         match_dict = {}
@@ -771,6 +775,10 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     other_keys = parent_model_names
                     new_results = get_list_elements_single_array(new_model_name, match_dict.copy(), outer_key,
                                                                 inner_key, inner_value, nonnull_key, other_keys)
+                    if not group_dict.get("date"):
+                        group_dict["date"] = {"$first":"$lead_date"}
+                        project_dict["date"] = 1
+                    
                 query = mongo_client[model_name].aggregate(
                     [
                         {"$match": match_dict},
