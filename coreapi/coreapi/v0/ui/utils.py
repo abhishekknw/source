@@ -829,6 +829,7 @@ def fetch_content_type(code):
         if not code:
             raise Exception('No code provided')
         ContentType = apps.get_model('contenttypes', 'ContentType')
+
         load_model = get_model(code)
         content_type = ContentType.objects.get_for_model(load_model)
         return content_type

@@ -15,7 +15,9 @@ from v0.ui.campaign.models import CampaignAssignment, CampaignComments
 from v0.constants import (campaign_status, proposal_on_hold, booking_code_to_status,
                           proposal_not_converted_to_campaign, booking_substatus_code_to_status,
                           proposal_finalized)
+from v0.ui.utils import get_user_organisation_id
 from .utils import getEachCampaignComments
+
 
 class GetSocietyAnalytics(APIView):
     @staticmethod
@@ -204,6 +206,12 @@ class GetCampaignWiseAnalytics(APIView):
     def get(request):
         try:
             user_id = request.user.id
+            organisation_id = get_user_organisation_id(request.user)
+            # Visible only for machadalo users
+            if organisation_id != 'MAC1421':
+                return Response(data={"status": False, "error": "Permission Error"},
+                                status=status.HTTP_400_BAD_REQUEST)
+
             vendor = request.query_params.get('vendor',None)
             if vendor:
                 campaign_list = CampaignAssignment.objects.filter(assigned_to_id=user_id,
@@ -354,6 +362,12 @@ class GetSupplierDetail(APIView):
     def get(request):
         try:
             user_id = request.user.id
+            organisation_id = get_user_organisation_id(request.user)
+            # Visible only for machadalo users
+            if organisation_id != 'MAC1421':
+                return Response(data={"status": False, "error": "Permission Error"},
+                                status=status.HTTP_400_BAD_REQUEST)
+
             campaign_id = request.query_params.get('campaign_id')
             if not campaign_id:
                 return Response(data={"status": False, "error": "Missing campaign id"}, status=status.HTTP_400_BAD_REQUEST)
@@ -485,6 +499,11 @@ class GetCampaignStatusCount(APIView):
     @staticmethod
     def get(request):
         try:
+            organisation_id = get_user_organisation_id(request.user)
+            # Visible only for machadalo users
+            if organisation_id != 'MAC1421':
+                return Response(data={"status": False, "error": "Permission Error"},
+                                status=status.HTTP_400_BAD_REQUEST)
             campaign_id = request.query_params.get('campaign_id')
             if not campaign_id:
                 return Response(data={"status": False, "error": "Missing campaign id"},
@@ -555,6 +574,11 @@ class GetUserAssignedSuppliersDetailTillToday(APIView):
     @staticmethod
     def get(request):
         try:
+            organisation_id = get_user_organisation_id(request.user)
+            # Visible only for machadalo users
+            if organisation_id != 'MAC1421':
+                return Response(data={"status": False, "error": "Permission Error"},
+                                status=status.HTTP_400_BAD_REQUEST)
             logged_in_user = BaseUser.objects.filter(id=request.user.id).values('is_superuser')
             if isinstance(logged_in_user, list) and logged_in_user[0]['is_superuser'] is False:
                 return Response(data={"status": False, "error": "You do not have access to view the page"},

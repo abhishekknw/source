@@ -808,6 +808,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             date = request.query_params.get("date",None)
             inv_type = request.query_params.get("inv_type",None)
             act_type = request.query_params.get("act_type",None)
+
             if campaign_id is None or date is None or inv_type is None or act_type is None:
                 return Response("Campaign Id or Date or inv type or act type is not provided")
             assigned_objects = InventoryActivityAssignment.objects.select_related('inventory_activity',
@@ -856,7 +857,7 @@ class DashBoardViewSet(viewsets.ViewSet):
                     result[supplier['supplier_id']][supplier['inv_name']] = {}
                 result[supplier['supplier_id']][supplier['inv_name']]['assigned'] = supplier['total']
                 result[supplier['supplier_id']][supplier['inv_name']]['completed'] = 0
-                result[supplier['supplier_id']]['supplier_data'] = suppliers_map[supplier['supplier_id']]
+                result[supplier['supplier_id']]['supplier_data'] = suppliers_map[supplier['supplier_id']] if supplier['supplier_id'] in suppliers_map else None
                 result[supplier['supplier_id']]['space_id'] = supplier['space_id']
             for supplier in completed_objects:
                 if supplier['supplier_id'] in result:
@@ -866,6 +867,7 @@ class DashBoardViewSet(viewsets.ViewSet):
             return handle_response(class_name, data=result, success=True)
 
         except Exception as e:
+            print(e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     # @list_route()
@@ -1491,7 +1493,6 @@ class CampaignLeads(APIView):
             user_start_date_str = request.query_params.get('start_date', None)
             user_end_date_str = request.query_params.get('end_date', None)
             campaign_id = request.query_params.get('campaign_id', None)
-
             # if 'NOB' in campaign_id:
             #     final_data = {}
             #     start_date = datetime.now() - timedelta(days=7)
@@ -1506,7 +1507,7 @@ class CampaignLeads(APIView):
             # else:
             final_data = get_leads_data_for_campaign(request, campaign_id, user_start_date_str, user_end_date_str)
             if not final_data:
-                return ui_utils.handle_response(class_name, data=final_data, success=False)
+                return ui_utils.handle_response({}, data='No Leads present for this campaign', success=False)
             start_date = datetime.now() - timedelta(days=7)
             final_data['last_week'] = get_leads_data_for_campaign(request, campaign_id, start_date.strftime("%d/%m/%Y"))['overall_data']
             start_date = datetime.now() - timedelta(days=14)
