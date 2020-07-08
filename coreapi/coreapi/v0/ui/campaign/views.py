@@ -203,12 +203,12 @@ def get_leads_summary_from_summary_table(campaign_id):
     result = {}
     if len(suppliers) > 0:
         for supplier in suppliers:
-            result.setdefault(supplier['supplier_id'],{})
-            supplier['is_hot_level_1'] = supplier['total_leads_count'] if supplier['total_leads_count'] else 0
-            supplier['is_hot_level_2'] = supplier['total_hot_leads_count'] if supplier['total_hot_leads_count'] else 0
-            supplier['is_hot_level_3'] = supplier['total_booking_confirmed'] if supplier['total_booking_confirmed'] else 0
-            supplier['is_hot_level_4'] = supplier['total_orders_punched'] if supplier['total_orders_punched'] else 0
-            result[supplier['supplier_id']] = supplier
+            # result.setdefault(supplier['supplier_id'],{})
+            # supplier['is_hot_level_1'] = supplier['total_leads_count'] if supplier['total_leads_count'] else 0
+            # supplier['is_hot_level_2'] = supplier['total_hot_leads_count'] if supplier['total_hot_leads_count'] else 0
+            # supplier['is_hot_level_3'] = supplier['total_booking_confirmed'] if supplier['total_booking_confirmed'] else 0
+            # supplier['is_hot_level_4'] = supplier['total_orders_punched'] if supplier['total_orders_punched'] else 0
+            result[supplier['supplier_id']] = supplier["hot_leads"]
 
     return result
 def lead_counter(campaign_id, leads_form_data,user_start_datetime,user_end_datetime, lead_form):
@@ -224,7 +224,13 @@ def lead_counter(campaign_id, leads_form_data,user_start_datetime,user_end_datet
             "is_hot_level_3": 0,
             "is_hot_level_4": 0,
         }
+        
         result[summary['supplier_id']] = summary.get('hot_leads', default_hot_leads)
+        
+        if leads_by_hoteness_level.get(summary['supplier_id']):
+            for key, value in leads_by_hoteness_level[summary['supplier_id']].items():
+                result[summary['supplier_id']][key] = value
+
         result[summary['supplier_id']]["hot_leads"] = summary['hot_leads_count']
         result[summary['supplier_id']]["total_leads"] = summary['total_leads_count']
         result[summary['supplier_id']]["hot_lead_details"] = []
@@ -1203,7 +1209,7 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
                 'is_hot_level_2': 0,
                 'is_hot_level_3': 0,
                 'is_hot_level_4': 0,
-                'hot_level_values': hot_level_values
+                'hot_level_values': hot_level_values.copy()
             }
 
             size_type = "max"
@@ -1263,7 +1269,7 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
                 if campaign_hot_leads_dict[supplier_id].get(key):
                     value_count = campaign_hot_leads_dict[supplier_id].get(key)
                 overall_data['hot_level_values'][key] = overall_data['hot_level_values'][key] + value_count
-            
+                
             hot_leads_percentage = round(float(hot_leads) / float(total_leads), 5)*100 if total_leads > 0 else 0
             curr_supplier_lead_data = {
                 "is_interested": True,
@@ -1278,8 +1284,11 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
                 'is_hot_level_2': is_hot_level_2,
                 'is_hot_level_3': is_hot_level_3,
                 'is_hot_level_4': is_hot_level_4,
-                'hot_level_values': campaign_hot_leads_dict[supplier_id]
+                'hot_level_values': {}
             }
+            for key, value in hot_level_keys.items():
+                curr_supplier_lead_data['hot_level_values'][key] = campaign_hot_leads_dict[supplier_id][key]
+
             all_suppliers_list_non_analytics[supplier_id] = curr_supplier_lead_data
             
             if supplier_locality in all_localities_data_non_analytics:
@@ -1303,7 +1312,6 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
                 all_localities_data_non_analytics[supplier_locality]['hot_level_values'] = {}
                 for key, value in hot_level_keys.items():
                     all_localities_data_non_analytics[supplier_locality]['hot_level_values'][key] = campaign_hot_leads_dict[supplier_id][key]
-                
             else:
                 curr_locality_data = {
                     "is_interested": True,
@@ -1324,7 +1332,7 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
                     curr_locality_data['hot_level_values'][key] = campaign_hot_leads_dict[supplier_id][key]
 
                 all_localities_data_non_analytics[supplier_locality] = curr_locality_data
-            
+                
             for key, value in flat_categories.items():
                 if supplier_flat_count >= value["min"] and (not value.get("max") or supplier_flat_count <= value["max"]):
                     
@@ -1340,15 +1348,11 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
                     curr_flat_data['is_hot_level_3'] = curr_flat_data['is_hot_level_3'] + is_hot_level_3
                     curr_flat_data['is_hot_level_4'] = curr_flat_data['is_hot_level_4'] + is_hot_level_4
 
-                    for key, value in hot_level_keys.items():
-                        value_count = 0
-                        if campaign_hot_leads_dict[supplier_id].get(key):
-                            value_count = campaign_hot_leads_dict[supplier_id].get(key)
-                        curr_flat_data['hot_level_values'][key] = curr_flat_data['hot_level_values'][key] + value_count
+                    for key1, value1 in hot_level_keys.items():
+                        curr_flat_data['hot_level_values'][key1] = campaign_hot_leads_dict[supplier_id][key1]
 
                     all_flat_data[key] = curr_flat_data
                     
-
         all_suppliers_list = z_calculator_dict(all_suppliers_list_non_analytics, "hot_leads_percentage")
         all_localities_data_hot_ratio = hot_lead_ratio_calculator(all_localities_data_non_analytics)
         all_localities_data = z_calculator_dict(all_localities_data_hot_ratio, "hot_leads_percentage")
@@ -1486,6 +1490,7 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
         final_data = {'supplier_data': all_suppliers_list, 'date_data': all_dates_data,
                       'locality_data': all_localities_data, 'weekday_data': all_weekdays_data,
                       'flat_data': all_flat_data, 'phase_data': phase_data, 'overall_data': overall_data}
+        
         return final_data
         
     except Exception as e:
