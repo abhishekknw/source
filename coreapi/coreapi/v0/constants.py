@@ -957,7 +957,7 @@ booking_status = {
     'not_initiated': 'NI',
     'recce':'RE',
     'meeting_fixed':'MF',
-    'meeting_converted':'MC'
+    'meeting_converted':'MC',
     'complete_lockdown': 'LCL',
     'partial_lockdown': 'LPL',
     'open_lockdown': 'LOL',
