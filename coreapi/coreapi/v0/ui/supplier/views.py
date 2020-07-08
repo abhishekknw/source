@@ -2,6 +2,9 @@ from __future__ import print_function
 from __future__ import absolute_import
 import json
 import requests
+import logging
+
+logger = logging.getLogger(__name__)
 
 from bson.objectid import ObjectId
 from django.urls import reverse
@@ -16,7 +19,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import list_route
 from v0.ui.utils import (get_supplier_id, handle_response, get_content_type, save_flyer_locations, make_supplier_data,
                          get_model, get_serializer, save_supplier_data, get_region_based_query, get_supplier_image,
-                         save_basic_supplier_details)
+                         save_basic_supplier_details, get_user_organisation_id)
 from v0.ui.website.utils import manipulate_object_key_values, return_price, manipulate_master_to_rs
 import v0.ui.website.utils as website_utils
 
@@ -24,7 +27,8 @@ from v0.ui.dynamic_booking.models import BookingInventoryActivity
 from v0.ui.dynamic_suppliers.models import SupplySupplier
 from .models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeGym, SupplierMaster,
                     SupplierTypeRetailShop, CorporateParkCompanyList, CorporateBuilding, SupplierTypeBusDepot,
-                    SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE, SupplierEducationalInstitute, SupplierHording, SupplierMaster, AddressMaster)
+                    SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE, 
+                    SupplierEducationalInstitute, SupplierHording, SupplierMaster, AddressMaster, SupplierRelationship)
 from .serializers import (UICorporateSerializer, SupplierTypeSocietySerializer, SupplierAmenitiesMapSerializer,
                          UISalonSerializer, SupplierTypeSalon, SupplierTypeGymSerializer, RetailShopSerializer,
                          SupplierInfoSerializer, SupplierInfo, SupplierTypeCorporateSerializer,
@@ -1440,11 +1444,21 @@ class RetailShopViewSet(viewsets.ViewSet):
 
             basic_contacts = request.data.get('basic_contacts', None)
             object_id = request.data.get('supplier_id', None)
+            if basic_contacts is not None:
+                for contact in basic_contacts:
+                    if 'id' in contact:
+                        item = ContactDetails.objects.filter(pk=contact['id']).first()
+                        contact_serializer = ContactDetailsSerializer(item, data=contact)
+                    else:
+                        contact_serializer = ContactDetailsSerializer(data=contact)
+                    if contact_serializer.is_valid():
+                        contact_serializer.save()
 
             supplier_type_code = request.data.get('supplier_type_code', None)
 
             if not supplier_type_code:
                 return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
+            ownership = request.data.get('ownership_details', None)
 
             model_name = get_model(supplier_type_code)
             serializer_name = get_serializer(supplier_type_code)
@@ -3537,6 +3551,11 @@ class MultiSupplierDetails(APIView):
         """
         class_name = self.__class__.__name__
         try:
+            organisation_id = get_user_organisation_id(request.user)
+            # Visible only for machadalo users
+            if organisation_id != 'MAC1421':
+                return Response(data={"status": False, "error": "Permission Error"},
+                                status=status.HTTP_400_BAD_REQUEST)
             supplier_ids = request.data.get('supplier_ids', None)
             supplier_type_code = request.data.get('supplier_type_code', 'RS')
             is_multiple_contact_number = request.data.get('is_multiple_contact_number', False)
@@ -3562,7 +3581,7 @@ class MultiSupplierDetails(APIView):
                 suppliers = model.objects.filter(pk__in=supplier_ids).values('society_name', 'society_locality',
                                                                              'society_city', 'society_subarea', 'society_state',
                                                                              'society_latitude','society_longitude','society_address1',
-                                                                             'supplier_id')
+                                                                             'supplier_id', 'flat_count', 'society_type_quality')
             else:
                 suppliers = model.objects.filter(pk__in=supplier_ids).values('name', 'area','city', 'subarea','state','latitude', 'longitude',
                                                                              'address1','supplier_id')
@@ -3573,6 +3592,7 @@ class MultiSupplierDetails(APIView):
             for supplier in suppliers:
                 index = 0
                 supplier_object = {
+                    'supplier_type_code': supplier_type_code,
                     'supplier_id': supplier['supplier_id'],
                     'name': supplier['society_name'] if is_society else supplier['name'],
                     'area': supplier['society_locality'] if is_society else supplier['area'],
@@ -3582,6 +3602,9 @@ class MultiSupplierDetails(APIView):
                     'longitude': supplier['society_longitude'] if is_society else supplier['longitude'],
                     'state': supplier['society_state'] if is_society else supplier['state'],
                     'address': supplier['society_address1'] if is_society else supplier['address1'],
+                    'flat_count': supplier['flat_count'] if is_society else None,
+                    'society_type': supplier['society_type_quality'] if is_society else None,
+                    'is_society': is_society if is_society else False
                 }
                 if contact_details:
                     for contact_detail in contact_details:
@@ -3596,6 +3619,7 @@ class MultiSupplierDetails(APIView):
                             supplier_object['contact_type'] = contact_detail['contact_type']
                             multiple_supplier_details_with_contact.append({
                                 'id': index,
+                                'supplier_type_code': supplier_type_code,
                                 'supplier_id': supplier['supplier_id'],
                                 'name': supplier['society_name'] if is_society else supplier['name'],
                                 'area': supplier['society_locality'] if is_society else supplier['area'],
@@ -3607,7 +3631,10 @@ class MultiSupplierDetails(APIView):
                                 'address': supplier['society_address1'] if is_society else supplier['address1'],
                                 'contact_name': contact_detail['name'],
                                 'contact_number': contact_detail['mobile'],
-                                'contact_type': contact_detail['contact_type']
+                                'contact_type': contact_detail['contact_type'],
+                                'flat_count': supplier['flat_count'] if is_society else None,
+                                'society_type': supplier['society_type_quality'] if is_society else None,
+                                'is_society': is_society if is_society else False
                             })
                     index += 1
                 if not is_contact_number and not is_contact_name:
@@ -3986,3 +4013,77 @@ class SupplierGenericViewSet(viewsets.ViewSet):
             return handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
+class SocietySupplierRelationship(APIView):
+    @staticmethod
+    def post(request):
+        try:
+            supplier_type = request.query_params.get('type', 'RE')
+            society_id = request.query_params.get('society_id', None)
+            suppliers = request.data.get('suppliers', None)
+            if not supplier_type:
+                return ui_utils.handle_response({}, data={'message': 'Missing supplier type'}, success=False)
+            if not suppliers:
+                return ui_utils.handle_response({}, data={'message': 'Please provide data'}, success=False)
+            for supplier in suppliers:
+                SupplierRelationship(society_id=society_id, supplier_id=supplier['supplier_id'], supplier_type=supplier_type, type=supplier['type']).save()
+            return ui_utils.handle_response({}, data='Supplier added successfully', success=True)
+        except Exception as e:
+            logger.exception(e)
+            return ui_utils.handle_response({}, exception_object=e)
+
+    @staticmethod
+    def get(request):
+        try:
+            society_id = request.query_params.get('society_id', None)
+            supplier_type = request.query_params.get('supplier_type', 'RE')
+            type = request.query_params.get('type', None)
+            if not society_id and not type:
+                return Response(data={"status": False, "error": "Missing supplier_id and type"},
+                                status=status.HTTP_400_BAD_REQUEST)
+            supplier_list = SupplierRelationship.objects.filter(society_id=society_id, type=type)
+            supplier_model = get_model(supplier_type)
+            supplier_ids = [supplier.supplier_id for supplier in supplier_list]
+            if supplier_type == 'RS':
+                supplier_details = supplier_model.objects.filter(supplier_id__in=supplier_ids).values('society_name', 'supplier_id')
+            else:
+                supplier_details = supplier_model.objects.filter(supplier_id__in=supplier_ids).values('name','supplier_id')
+            return ui_utils.handle_response({}, data=supplier_details, success=True)
+        except Exception as e:
+            logger.exception(e)
+            return ui_utils.handle_response({}, exception_object=e)
+
+class ListSuppliers(APIView):
+    @staticmethod
+    def get(request):
+        try:
+            type = request.query_params.get('type', 'RE')
+            supplier_id = request.query_params.get('supplier_id', None)
+            supplier_type = request.query_params.get('supplier_type', 'RS')
+            city = None
+            area = None
+            if not supplier_id:
+                return Response(data={"status": False, "error": "Missing supplier_id"}, status=status.HTTP_400_BAD_REQUEST)
+            # Get area, subarea using supplier id
+            if supplier_type == 'RS':
+                society_details = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).values('society_city','society_locality')
+                if len(society_details) > 0:
+                    city = society_details[0]['society_city']
+                    area = society_details[0]['society_locality']
+            else:
+                supplier_model = get_model(supplier_type)
+                supplier_details = supplier_model.objects.filter(supplier_id=supplier_id).values('area', 'city')
+                if len(supplier_details) > 0:
+                    city = supplier_details[0]['city']
+                    area = supplier_details[0]['area']
+            if not city and not area:
+                return Response(data={"status": False, "error": "Missing paramaters city, area"}, status=status.HTTP_400_BAD_REQUEST)
+            model = get_model(type)
+            if type == 'RS':
+                supplier_list = model.objects.filter(society_city__icontains=city, society_locality__icontains=area).values('society_name','society_locality','society_subarea',
+                                                                                          'society_city', 'supplier_id')
+            else:
+                supplier_list = model.objects.filter(city__icontains=city, area__icontains=area).values('name','supplier_id')
+            return ui_utils.handle_response({}, data=supplier_list, success=True)
+        except Exception as e:
+            logger.exception(e)
+            return ui_utils.handle_response({}, exception_object=e)

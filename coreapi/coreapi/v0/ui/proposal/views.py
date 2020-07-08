@@ -2022,7 +2022,7 @@ class ProposalVersion(APIView):
             email_data = {
                 'subject': v0_constants.subjects['bd_head'],
                 'body': bd_body,
-                'to': ['dev@machadalo.com', 'anmol.prabhu@machadalo.com', 'anupam@machadalo.com', 'abhishek.chandel@machadalo.com', 'prateek.kumar@machadalo.com','sarvesh.patel@synergytop.com', 'akshay.sahu@synergytop.com', 'bheema.gowda@machadalo.com', 'shyamlee.khanna@machadalo.com']
+                'to': ['dev@machadalo.com', 'anmol.prabhu@machadalo.com', 'anupam@machadalo.com', 'abhishek.chandel@machadalo.com', 'sarvesh.patel@synergytop.com', 'akshay.sahu@synergytop.com', 'bheema.gowda@machadalo.com', 'shyamlee.khanna@machadalo.com']
             }
 
             #  email_data = {
@@ -2763,6 +2763,8 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
         try:
             SupplierPhase.objects.get(pk=pk).delete()
             return ui_utils.handle_response(class_name, data=True, success=True)
+        except ValueError:
+            return ui_utils.handle_response(class_name, data='Phase is required getting undefined')
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -2848,6 +2850,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     "GANTRY LIT" : [],
                     "WALL" : [],
                     "CAR DISPLAY" : [],
+                    "WHATSAPP INDIVIDUAL": [],
+                    "WHATSAPP GROUP": []
                 }
         inventory_days_dict = {
             "POSTER": None,
@@ -2876,6 +2880,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             "GANTRY LIT" : None,
             "WALL" : None,
             "CAR DISPLAY" : None,
+            "WHATSAPP INDIVIDUAL": None,
+            "WHATSAPP GROUP": None
         }
         for inventory_activity in inventory_activity_assignment:
             inventoy_name = inventory_activity.get('inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name')
@@ -3313,6 +3319,9 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             pipeline['followup_required']['supplier_data'].append(supplier)
             pipeline['followup_required']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['followup_required']['supplier_count'] += 1
+            pipeline['total_booked']['supplier_data'].append(supplier)
+            pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['total_booked']['supplier_count'] += 1
         if supplier['booking_status'] in verbally_booked_status:
             pipeline['verbally_booked']['supplier_data'].append(supplier)
             pipeline['verbally_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
@@ -3329,6 +3338,9 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             pipeline['recce_required']['supplier_data'].append(supplier)
             pipeline['recce_required']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['recce_required']['supplier_count'] += 1
+            pipeline['total_booked']['supplier_data'].append(supplier)
+            pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['total_booked']['supplier_count'] += 1
         if supplier['booking_status'] in meeting_fixed:
             pipeline['meeting_fixed']['supplier_data'].append(supplier)
             pipeline['meeting_fixed']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0

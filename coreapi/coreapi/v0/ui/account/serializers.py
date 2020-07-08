@@ -64,7 +64,6 @@ class OwnershipDetailsSerializer(ModelSerializer):
         fields = '__all__'
         
 
-
 class ContactDetailsGenericSerializer(ModelSerializer):
     class Meta:
         model = ContactDetailsGeneric
