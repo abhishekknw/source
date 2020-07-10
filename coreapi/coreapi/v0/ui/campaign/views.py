@@ -1485,7 +1485,12 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
         all_weekdays_data = z_calculator_dict(weekday_data_hot_ratio,"hot_leads_percentage")
         all_phase_data = z_calculator_dict(phase_data_hot_ratio,"hot_leads_percentage")
         all_flat_data = hot_lead_ratio_calculator(all_flat_data)
-        mean_median_dict = get_mean_median_mode(all_suppliers_list, ['interested', 'total','is_hot_level_3','is_hot_level_4'])
+        
+        mean_median_mode_keys = ['interested', 'total']
+        for key, value in hot_level_keys.items():
+            mean_median_mode_keys.append(key)
+
+        mean_median_dict = get_mean_median_mode(all_suppliers_list, mean_median_mode_keys)
         overall_data['supplier_stats'] = mean_median_dict
         final_data = {'supplier_data': all_suppliers_list, 'date_data': all_dates_data,
                       'locality_data': all_localities_data, 'weekday_data': all_weekdays_data,

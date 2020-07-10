@@ -995,7 +995,10 @@ class GetLeadsDataGeneric(APIView):
             'higher_level_statistical_information' in all_data else {}
         bivariate_statistical_information = all_data.get('bivariate_statistical_information',{})
         custom_functions = all_data.get('custom_functions', [])
-        supplier_code = request.query_params.get("supplier_code")
+
+        supplier_code = all_data.get("supplier_code")
+        if not supplier_code:
+            supplier_code = request.query_params.get("supplier_code")
         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
                                          higher_level_statistical_information, bivariate_statistical_information,
                                          custom_functions, supplier_code=supplier_code)
