@@ -40,15 +40,20 @@ def format_contact_number(contact_number):
 
 def match_resident_society_with_campaign(campaign_id, society_ids):
     spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id, object_id__in=society_ids).values('object_id')
-    society_id = society_ids[0]
-    if spaces and len(spaces) > 0:
-        for space in spaces:
-            society_id = space['object_id']
+    campaign_societies = [space['object_id'] for space in spaces]
+    society_id = None
+    # Society in societies
+    for society in campaign_societies:
+        for society_id in society_ids:
+            if society == society_id:
+                society_id = society
+                break
     # Add society to the campaign
-    shortlisted_spaces_object = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
-    shortlisted_spaces_object.object_id = society_id
-    shortlisted_spaces_object.save()
-    return society_id
+    if not society_id:
+        shortlisted_spaces_object = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
+        shortlisted_spaces_object.object_id = society_ids[0]
+        shortlisted_spaces_object.save()
+    return True
 
 
 def get_phase_id(campaign_id, society_id):
@@ -142,7 +147,7 @@ def segregate_lead_data(contact_number, campaign_id, lead_creation_date, society
             create_resident_and_campaign(user_id, society_id, campaign_id, timestamp)
 
         # Create suspense lead
-        mongo_client.leads({'phone_number': contact_number, 'campaign_id':campaign_id, 'is_suspense': True})
+        mongo_client.leads({'phone_number': contact_number, 'campaign_id': campaign_id, 'is_suspense': True})
         return
     else:
         user_id = str(user_exists._id)
@@ -158,6 +163,7 @@ def segregate_lead_data(contact_number, campaign_id, lead_creation_date, society
             society_details = resident_exists.society_details
             society_ids = [society['society_id'] for society in society_details]
 
-            if society_id in society_ids:
-                create_resident_campaign(user_id, resident_id, campaign_id, timestamp)
+            # Check if society exists in campaign
+            match_resident_society_with_campaign(campaign_id, society_ids)
+            create_resident_campaign(user_id, resident_id, campaign_id, timestamp)
 
