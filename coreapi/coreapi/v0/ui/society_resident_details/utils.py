@@ -39,7 +39,7 @@ def format_contact_number(contact_number):
 
 
 def match_resident_society_with_campaign(campaign_id, society_ids):
-    spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id, object_id__in=society_ids).values('object_id')
+    spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
     campaign_societies = [space['object_id'] for space in spaces]
     society_id = None
     # Society in societies
@@ -50,9 +50,10 @@ def match_resident_society_with_campaign(campaign_id, society_ids):
                 break
     # Add society to the campaign
     if not society_id:
-        shortlisted_spaces_object = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
-        shortlisted_spaces_object.object_id = society_ids[0]
-        shortlisted_spaces_object.save()
+        space = spaces[0] if len(spaces) > 0 else None
+        if space:
+            space.object_id = society_ids[0]
+            ShortlistedSpaces(space).save()
     return True
 
 
@@ -95,10 +96,10 @@ def create_resident_and_campaign(user_id, society_id, campaign_id, timestamp):
     society_name = get_supplier(society_id)
     resident_id = None
     if society_name:
-        society_details = {
+        society_details = [{
             'name': society_name,
             'society_id': society_id
-        }
+        }]
         resident_detail = {
             'user_id': user_id,
             'society_details': society_details,
@@ -147,10 +148,10 @@ def segregate_lead_data(contact_number, campaign_id, lead_creation_date, society
             create_resident_and_campaign(user_id, society_id, campaign_id, timestamp)
 
         # Create suspense lead
-        mongo_client.leads({'phone_number': contact_number, 'campaign_id': campaign_id, 'is_suspense': True})
+        mongo_client.leads.update({'phone_number': contact_number, 'campaign_id': campaign_id}, {'$set': {'is_suspense': True}}, upsert=False)
         return
     else:
-        user_id = str(user_exists._id)
+        user_id = str(user_exists['_id'])
         # Check resident on basis of user_id
         resident_exists = mongo_client.resident_detail.find_one({'user_id': user_id}, {'_id': 1, 'society_details': 1})
         if not resident_exists:
@@ -158,9 +159,9 @@ def segregate_lead_data(contact_number, campaign_id, lead_creation_date, society
                 create_resident_and_campaign(user_id, society_id, campaign_id, timestamp)
 
         else:
-            resident_id = str(resident_exists._id)
+            resident_id = str(resident_exists['_id'])
             # Check if given society exists in resident
-            society_details = resident_exists.society_details
+            society_details = resident_exists['society_details']
             society_ids = [society['society_id'] for society in society_details]
 
             # Check if society exists in campaign
