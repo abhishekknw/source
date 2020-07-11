@@ -213,26 +213,39 @@ def get_leads_summary_from_summary_table(campaign_id):
     return result
 def lead_counter(campaign_id, leads_form_data,user_start_datetime,user_end_datetime, lead_form):
     result = {}
-    all_leads_summary = get_leads_summary(campaign_id,user_start_datetime,user_end_datetime)
-    leads_by_hoteness_level = get_leads_summary_from_summary_table(campaign_id)
+    # all_leads_summary = get_leads_summary(campaign_id,user_start_datetime,user_end_datetime)
+    # leads_by_hoteness_level = get_leads_summary_from_summary_table(campaign_id)
+    find_query = {"campaign_id":campaign_id}
+    
+    if user_start_datetime or user_end_datetime:
+        find_query["created_at"] = {}
+        if user_start_datetime:
+            find_query["created_at"]["$gte"] = user_start_datetime
+        if user_end_datetime:
+            find_query["created_at"]["$lte"] = user_end_datetime
 
+    all_leads_summary = list(mongo_client.leads.find(find_query))
     all_campaign_leads = leads_form_data
     for summary in all_leads_summary:
-        default_hot_leads = {
-            "is_hot_level_1": 0,
-            "is_hot_level_2": 0,
-            "is_hot_level_3": 0,
-            "is_hot_level_4": 0,
-        }
-        
-        result[summary['supplier_id']] = summary.get('hot_leads', default_hot_leads)
-        
-        if leads_by_hoteness_level.get(summary['supplier_id']):
-            for key, value in leads_by_hoteness_level[summary['supplier_id']].items():
-                result[summary['supplier_id']][key] = value
+        if not result.get(summary['supplier_id']):
+            result[summary['supplier_id']] = dict(summary)
 
-        result[summary['supplier_id']]["hot_leads"] = summary['hot_leads_count']
-        result[summary['supplier_id']]["total_leads"] = summary['total_leads_count']
+        for key, value in summary['multi_level_is_hot'].items():
+            if value:
+                if not result[summary['supplier_id']].get(key):
+                    result[summary['supplier_id']][key] = 0
+                result[summary['supplier_id']][key]+=1
+        
+        if not result[summary['supplier_id']].get("hot_leads"):
+            result[summary['supplier_id']]["hot_leads"] = 0
+        
+        if summary.get("is_hot"):
+            result[summary['supplier_id']]["hot_leads"] += 1
+
+        if not result[summary['supplier_id']].get("total_leads"):
+            result[summary['supplier_id']]["total_leads"] = 0
+        result[summary['supplier_id']]["total_leads"] += 1
+
         result[summary['supplier_id']]["hot_lead_details"] = []
 
     for lead in all_campaign_leads:
@@ -240,6 +253,7 @@ def lead_counter(campaign_id, leads_form_data,user_start_datetime,user_end_datet
             "entry_id": lead["entry_id"],
             "leads_form_id": lead["leads_form_id"]
         })
+        
     return result
 
 
@@ -1362,11 +1376,19 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
         weekday_data = {}
         phase_data = {}
         all_entries_checked = []
+        
+        mean_median_mode_keys = ['interested', 'total']
+        for key, value in hot_level_keys.items():
+            mean_median_mode_keys.append(key)
+
+        mean_median_dict = get_mean_median_mode(all_suppliers_list, mean_median_mode_keys)
+        overall_data['supplier_stats'] = mean_median_dict
+
         campaign_dates = sorted(list(set([x['created_at'] for x in leads_form_data])))
         if len(campaign_dates) == 0:
             final_data_dict = {'supplier': {}, 'date': {},
                                'locality': {}, 'weekday': {},
-                               'flat': {}, 'phase': {}, 'overall_data': {}}
+                               'flat': {}, 'phase': {}, 'overall_data': overall_data}
             return final_data_dict
         weekday_names = {'0': 'Monday', '1': 'Tuesday', '2': 'Wednesday', '3': 'Thursday',
                          '4': 'Friday', '5': 'Saturday', '6': 'Sunday'}
@@ -1486,12 +1508,6 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
         all_phase_data = z_calculator_dict(phase_data_hot_ratio,"hot_leads_percentage")
         all_flat_data = hot_lead_ratio_calculator(all_flat_data)
         
-        mean_median_mode_keys = ['interested', 'total']
-        for key, value in hot_level_keys.items():
-            mean_median_mode_keys.append(key)
-
-        mean_median_dict = get_mean_median_mode(all_suppliers_list, mean_median_mode_keys)
-        overall_data['supplier_stats'] = mean_median_dict
         final_data = {'supplier_data': all_suppliers_list, 'date_data': all_dates_data,
                       'locality_data': all_localities_data, 'weekday_data': all_weekdays_data,
                       'flat_data': all_flat_data, 'phase_data': phase_data, 'overall_data': overall_data}
