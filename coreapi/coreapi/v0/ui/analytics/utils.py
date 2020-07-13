@@ -90,6 +90,8 @@ count_details_parent_map = {
     'hotness_level_': {'parent': 'campaign', 'model_name': 'leads', 'database_type': 'mongodb',
                        'self_name_model': 'hotness_level', 'parent_name_model': 'campaign_id',
                        'storage_type': 'condition', 'increment_type':3, 'supplier_id': 'supplier_id'},
+    'is_hot_level_': {'parent': 'campaign', 'model_name': 'leads_summary', 'database_type': 'mongodb',
+             'self_name_model': 'hot_leads', 'parent_name_model': 'campaign_id', 'storage_type': 'unique', 'supplier_id': 'supplier_id'},
     'supplier,flattype': {'parent': 'flattype', 'model_name': 'SupplierTypeSociety', 'database_type': 'mysql',
                           'self_name_model': 'supplier_id', 'parent_name_model': 'flat_count_type',
                           'storage_type': 'name', 'supplier_type': 'supplier_type'},

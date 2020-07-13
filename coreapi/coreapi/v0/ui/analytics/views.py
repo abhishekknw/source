@@ -246,6 +246,8 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             superlevels_base_set = ['supplier']
             superlevels = [x for x in grouping_level if x in reverse_direct_match]
             curr_metric_sp_case = 'hotness_level_' if 'hotness_level' in curr_metric else curr_metric
+            curr_metric_sp_case = 'is_hot_level_' if 'is_hot_level_' in curr_metric else curr_metric
+
             storage_type = count_details_parent_map[curr_metric_sp_case]['storage_type']
             if len(superlevels)>0:
                 curr_output = key_replace_group_multiple(supplier_code, curr_output, superlevels_base_set[0], superlevels, curr_metric,
@@ -383,6 +385,7 @@ def get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_in
             stat_metrics.append(get_metrics_from_code(curr_index,raw_data,metric_names))
         metrics_array_dict = sum_array_by_single_key(derived_array, stat_metrics)
 
+
         for curr_stat in stats:
             statistics_array = statistics_map[curr_stat](derived_array, metrics_array_dict)
             derived_array = statistics_array
@@ -505,6 +508,9 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
     if lowest_level == None:
         return []
     if 'hotness_level' in lowest_level:
+        incrementing_value = int(lowest_level[-1])
+        lowest_level = lowest_level[:-1]
+    if 'is_hot_level_' in lowest_level:
         incrementing_value = int(lowest_level[-1])
         lowest_level = lowest_level[:-1]
     if highest_level == 'city':
@@ -711,6 +717,10 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     group_dict[curr_parent_model_name] = {"$first": '$' + curr_parent_model_name}
                     project_dict[curr_parent_model_name] = 1
 
+                if lowest_level == "is_hot_level_":
+                    group_dict["supplier_id"] = {"$first": '$supplier_id'}
+                    project_dict["supplier_id"] = 1
+
                 query = mongo_client[model_name].aggregate(
                     [
                         {"$match": match_dict},
@@ -723,7 +733,12 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                     ]
                 )
                 query = list(query)
-                next_level_match_list = [x[self_model_name] for x in query]
+                if lowest_level == "is_hot_level_":
+                    next_level_match_list =[]
+                    for row in query:
+                        row[lowest_level+str(incrementing_value)] = row["hot_leads"][lowest_level+str(incrementing_value)]
+                        next_level_match_list.append(row)
+                    all_results.append(next_level_match_list)
             elif database_type == 'mysql':
                 all_results.append(query)
                 next_level_match_list = list(set([x[self_model_name] for x in query]))
@@ -980,7 +995,10 @@ class GetLeadsDataGeneric(APIView):
             'higher_level_statistical_information' in all_data else {}
         bivariate_statistical_information = all_data.get('bivariate_statistical_information',{})
         custom_functions = all_data.get('custom_functions', [])
-        supplier_code = request.query_params.get("supplier_code")
+
+        supplier_code = all_data.get("supplier_code")
+        if not supplier_code:
+            supplier_code = request.query_params.get("supplier_code")
         mongo_query = get_data_analytics(data_scope, data_point, raw_data, metrics, statistical_information,
                                          higher_level_statistical_information, bivariate_statistical_information,
                                          custom_functions, supplier_code=supplier_code)

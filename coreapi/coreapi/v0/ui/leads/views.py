@@ -133,7 +133,7 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
             hot_leads = lead_summary.get("hot_leads",{})
 
             for i in range(0,lead_dict["hotness_level"]):
-                key = "is_hot_level_"+str(i)
+                key = "is_hot_level_"+str(i+1)
                 hot_leads[key] = hot_leads.get(key,0)+1
             
             total_leads_count=lead_summary['total_leads_count']+1
@@ -141,8 +141,8 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
             mongo_client.leads_summary.update_one({"_id": ObjectId(lead_summary['_id'])},
                                                       {"$set": {'total_leads_count': total_leads_count,'total_hot_leads_count': hot_lead_count,'hot_leads': hot_leads}})
         else:
-            for i in range(1,lead_dict["hotness_level"]):
-                key = "is_hot_level_"+str(i)
+            for i in range(0,lead_dict["hotness_level"]):
+                key = "is_hot_level_"+str(i+1)
                 hot_leads[key] = 1
 
             mongo_client.leads_summary.insert_one({
