@@ -5,7 +5,7 @@ from pymongo.errors import CursorNotFound
 from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg
 from v0.ui.common.models import mongo_client
 from .models import User, ResidentDetail,ResidentCampaignDetail
-from .utils import get_supplier, segregate_lead_data
+from .utils import get_supplier, get_last_24_hour_leads
 logger = logging.getLogger(__name__)
 
 
@@ -169,18 +169,7 @@ class CreateUserResident(APIView):
     @staticmethod
     def post(request):
         try:
-            all_leads = mongo_client.leads.find({'created_at': {"$gte": datetime.datetime(2020, 5, 27),
-                                                                "$lt": datetime.datetime(2020, 5, 28)
-                                                                }
-                                                 })
-            for lead in all_leads:
-                contact_number = lead['phone_number']
-                campaign_id = lead['campaign_id']
-                lead_creation_date = lead['lead_entry_date']
-                supplier_id = lead['supplier_id']
-                alternate_contact_number = lead['alternate_number']
-                print(contact_number, campaign_id, lead_creation_date, supplier_id, alternate_contact_number)
-                segregate_lead_data(contact_number, campaign_id, lead_creation_date, supplier_id)
+            get_last_24_hour_leads()
         except Exception as e:
             logger.exception('Unexpected error :', e)
 

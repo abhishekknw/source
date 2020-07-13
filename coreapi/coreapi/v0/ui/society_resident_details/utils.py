@@ -131,6 +131,24 @@ def create_resident_campaign(user_id, resident_id, campaign_id, timestamp):
     return
 
 
+def get_last_24_hour_leads():
+    current_date = datetime.datetime.now().date()
+    last_24hour_date = current_date - datetime.timedelta(hours=24)
+    last_24hour_date = last_24hour_date.isoformat()
+    leads = mongo_client.leads.find({'created_at': {"$gte": last_24hour_date}})
+
+    for lead in leads:
+        print('inside lead data')
+        print('lead =', lead)
+        contact_number = lead['phone_number']
+        campaign_id = lead['campaign_id']
+        lead_creation_date = lead['lead_entry_date']
+        supplier_id = lead['supplier_id']
+        alternate_contact_number = lead['alternate_number']
+
+        segregate_lead_data(contact_number, campaign_id, lead_creation_date, supplier_id, alternate_contact_number)
+
+
 def segregate_lead_data(contact_number, campaign_id, lead_creation_date, society_id=None):
     # Check user
     timestamp = datetime.datetime.utcnow()
