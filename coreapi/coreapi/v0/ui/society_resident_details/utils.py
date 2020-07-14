@@ -39,21 +39,24 @@ def format_contact_number(contact_number):
 
 
 def match_resident_society_with_campaign(campaign_id, society_ids):
-    spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
-    campaign_societies = [space['object_id'] for space in spaces]
+    spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('object_id')
+    campaign_societies = [space['object_id'] for space in spaces] if spaces and len(spaces) > 0 else []
     society_id = None
     # Society in societies
-    for society in campaign_societies:
-        for society_id in society_ids:
-            if society == society_id:
-                society_id = society
-                break
+    if len(campaign_societies) > 0:
+        for society in campaign_societies:
+            for society_id in society_ids:
+                if society == society_id:
+                    society_id = society
+                    break
     # Add society to the campaign
     if not society_id:
         space = spaces[0] if len(spaces) > 0 else None
         if space:
             space.object_id = society_ids[0]
             ShortlistedSpaces(space).save()
+        else:
+            ShortlistedSpaces(object_id=society_ids[0], proposal_id=campaign_id, content_type=101).save()
     return True
 
 
@@ -132,21 +135,17 @@ def create_resident_campaign(user_id, resident_id, campaign_id, timestamp):
 
 
 def get_last_24_hour_leads():
-    current_date = datetime.datetime.now().date()
-    last_24hour_date = current_date - datetime.timedelta(hours=24)
-    last_24hour_date = last_24hour_date.isoformat()
+    current_date = datetime.date.today()
+    last_24hour_date = current_date - datetime.timedelta(days=1)
+    last_24hour_date = datetime.datetime.combine(last_24hour_date, datetime.time.min)
     leads = mongo_client.leads.find({'created_at': {"$gte": last_24hour_date}})
-
     for lead in leads:
-        print('inside lead data')
-        print('lead =', lead)
         contact_number = lead['phone_number']
         campaign_id = lead['campaign_id']
         lead_creation_date = lead['lead_entry_date']
         supplier_id = lead['supplier_id']
         alternate_contact_number = lead['alternate_number']
-
-        segregate_lead_data(contact_number, campaign_id, lead_creation_date, supplier_id, alternate_contact_number)
+        segregate_lead_data(contact_number, campaign_id, lead_creation_date, supplier_id)
 
 
 def segregate_lead_data(contact_number, campaign_id, lead_creation_date, society_id=None):
