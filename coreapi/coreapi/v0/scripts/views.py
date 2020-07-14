@@ -65,9 +65,10 @@ class CreateSupplierWithContactDetails(APIView):
                 # writer.writerow(['supplier_id', 'name'])
                 for supplier in data:
                     supplier_name = supplier['supplier_name'].title()
+                    state = supplier['state'].strip()
                     city = supplier['city'].strip()
-                    area = supplier['area'].title()
-                    subarea = supplier['subarea'].title()
+                    area = supplier['area'].strip()
+                    subarea = supplier['subarea'].strip()
                     contact_name = supplier.get('contact_name', None)
                     contact_number = supplier.get('contact_number', None)
                     designation = supplier.get('designation', '').title()
@@ -178,13 +179,13 @@ class CreateSupplierWithContactDetails(APIView):
                                                                       supplier_type_code, tower_count, flat_count,
                                                                       latitude, longitude, address, zipcode,
                                                                       supplier_ids, contact_name, contact_number,
-                                                                      designation)
+                                                                      designation, state)
                                 writer.writerow(supplier_details)
                     else:
                         supplier_details = create_new_society(model, supplier_name, city, area, subarea,
                                                               supplier_type_code, tower_count, flat_count,
                                                               latitude, longitude, address, zipcode, supplier_ids,
-                                                              contact_name, contact_number, designation)
+                                                              contact_name, contact_number, designation, state)
                         writer.writerow(supplier_details)
 
             return handle_response({}, data=supplier_ids, success=True)
