@@ -2319,11 +2319,11 @@ def get_campaign_wise_summary(supplier_code, all_campaign_ids, user_start_dateti
     # Lead data
     for row in leads_summary:
         for key, value in row["multi_level_is_hot"].items():
-            if not campaign_summary["all_campaigns"].get(key):
-                campaign_summary["all_campaigns"][key] = 0
+            if not campaign_summary["campaign_wise"][row["campaign_id"]].get(key):
+                campaign_summary["campaign_wise"][row["campaign_id"]][key] = 0
 
             if value:
-                campaign_summary["all_campaigns"][key] += 1
+                campaign_summary["campaign_wise"][row["campaign_id"]][key] += 1
     # /Lead data
 
     analytics = get_mean_median_mode(campaign_summary["campaign_wise"], list(set(lead_key_list)))
