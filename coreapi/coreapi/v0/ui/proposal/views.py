@@ -2929,11 +2929,12 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                                                                        'OEL': [], 'ESVF': [], 'ESMD': [], 'ESGR': [], 'ESOE': [], 'ESNR': [],'OCL': [], 'CLVF': [],'CLMD': [], 'CLGR': [], 'CLOE': [], 'CLNR': [],
                                                                        'OPBL': [], 'PBVF': [], 'PBMD': [], 'PBGR': [], 'PBOE': [], 'PBNR': [], 'OPFL': [], 'PFVF': [], 'PFMD': [], 'PFGR': [], 'PFOE': [], 'PFNR': [],
                                                                        'OPHL': [], 'PHVF': [], 'PHMD': [], 'PHGR': [], 'PHOE': [], 'PHNR': [], 'OP': [], 'OVF': [], 'OMD': [], 'OGR': [], 'OOE': [], 'ONR': [] }                                                                    
-            if space.booking_status:
-                shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(
-                    supplier_society_serialized)
-            if space.booking_sub_status:
-                shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_sub_status].append(
+            if space.booking_status:                
+                if space.booking_sub_status:
+                    shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_sub_status].append(
+                        supplier_society_serialized)
+                else:
+                    shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(
                     supplier_society_serialized)
 
     shortlisted_spaces_by_phase_list = []
@@ -2951,12 +2952,12 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     btob_rejected_status = ['BSR', 'BRLO', 'BRLC', 'BRUB', 'BRVE', 'BRCR', 'BRRS', 'BROS']
     decision_pending_status = ['BDP', 'BDPNR', 'BDPNA', 'BDPP', 'BDPSOO', 'BDPOS', 'BDPVR', 'BDPCR']
     recce_required = ['DPRR']
-    emergency_situation_status = ['ESVF', 'ESMD', 'ESGR', 'ESOE', 'ESNR']
-    complete_lockdown_status = ['CLVF','CLMD', 'CLGR', 'CLOE', 'CLNR']
-    part_building_lock_status = ['PBVF', 'PBMD', 'PBGR', 'PBOE', 'PBNR']
-    part_floor_lock_status =['PFVF', 'PFMD', 'PFGR', 'PFOE', 'PFNR']
-    part_house_lock_status = ['PHVF', 'PHMD', 'PHGR', 'PHOE', 'PHNR']
-    open_status = ['OVF', 'OMD', 'OGR', 'OOE', 'ONR']
+    emergency_situation_status = ['OEL', 'ESVF', 'ESMD', 'ESGR', 'ESOE', 'ESNR']
+    complete_lockdown_status = ['OCL', 'CLVF','CLMD', 'CLGR', 'CLOE', 'CLNR']
+    part_building_lock_status = ['OPBL', 'PBVF', 'PBMD', 'PBGR', 'PBOE', 'PBNR']
+    part_floor_lock_status =['OPFL', 'PFVF', 'PFMD', 'PFGR', 'PFOE', 'PFNR']
+    part_house_lock_status = ['OPHL', 'PHVF', 'PHMD', 'PHGR', 'PHOE', 'PHNR']
+    open_status = ['OP', 'OVF', 'OMD', 'OGR', 'OOE', 'ONR']
     all_not_initiated_supplier = []
     all_rejected_supplier = []
     all_btob_rejected_supplier = [] 
