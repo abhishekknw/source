@@ -3951,6 +3951,7 @@ class SupplierGenericViewSet(viewsets.ViewSet):
                     | Q(address_supplier__address2__icontains=search) 
                     | Q(address_supplier__city__icontains=search) 
                     | Q(supplier_id=search)
+                    | Q(supplier_name=search)
                 )
 
             if not user.is_superuser:
@@ -3959,6 +3960,11 @@ class SupplierGenericViewSet(viewsets.ViewSet):
 
             address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
             master_supplier_objects = SupplierMaster.objects.prefetch_related(address_supplier).filter(search_query).order_by('supplier_name')
+
+            if state_name:
+                master_supplier_objects = SupplierMaster.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code,address_supplier__state__icontains=state_name)
+            else:
+                master_supplier_objects = SupplierMaster.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code)
         
             supplier_objects_paginate = paginate(master_supplier_objects, SupplierMasterSerializer, request)
             supplier_with_images = get_supplier_image(supplier_objects_paginate["list"], 'Supplier')
