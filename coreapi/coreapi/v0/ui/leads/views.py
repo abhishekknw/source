@@ -2002,3 +2002,18 @@ class MigrateLeadsFormsByAlias(APIView):
         if counter > 0:
             bulk.execute()
         return handle_response('', data={"success": True}, success=True)
+
+class LeadsKeys(APIView):
+    def put(self, request):
+        leads_forms = mongo_client.leads_forms.find({})
+        campaign_ids = request.data.get("campaign_ids")
+        forms = list(mongo_client.leads_forms.find({"campaign_id":{"$in":campaign_ids}}))
+
+        hotness_mapping = {}
+
+        for row in forms:
+            if row.get("hotness_mapping"):
+                for key, value in row['hotness_mapping'].items():
+                    hotness_mapping[key] = True
+        
+        return handle_response('', data=hotness_mapping, success=True)
