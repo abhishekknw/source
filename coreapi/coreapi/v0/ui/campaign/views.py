@@ -1151,7 +1151,7 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
         user_end_datetime = datetime.strptime(user_end_date_str,format_str) if user_end_date_str is not None else None
         and_constraint = [{"campaign_id": campaign_id}, {"status": {"$ne": "inactive"}}, {"supplier_id":{"$in": supplier_ids}}]
         if user_start_datetime:
-            and_constraint.append({"user_end_datetimecreated_at": {"$gte": user_start_datetime}})
+            and_constraint.append({"created_at": {"$gte": user_start_datetime}})
         if user_end_datetime:
             and_constraint.append({"created_at": {"$lte": user_end_datetime}})
         leads_form_data = list(mongo_client.leads.find(
