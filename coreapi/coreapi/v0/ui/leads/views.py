@@ -141,6 +141,7 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
             mongo_client.leads_summary.update_one({"_id": ObjectId(lead_summary['_id'])},
                                                       {"$set": {'total_leads_count': total_leads_count,'total_hot_leads_count': hot_lead_count,'hot_leads': hot_leads}})
         else:
+            hot_leads = {}
             for i in range(0,lead_dict["hotness_level"]):
                 key = "is_hot_level_"+str(i+1)
                 hot_leads[key] = 1
@@ -550,6 +551,39 @@ class LeadsFormBulkEntry(APIView):
                     if not lead_already_exist:
                         mongo_client.leads.insert_one(lead_dict)
                         entry_id = entry_id + 1  # will be saved in the end
+
+                        lead_summary = mongo_client.leads_summary.find_one({"campaign_id": campaign_id,"supplier_id": found_supplier_id})
+                        hot_lead_count=0
+                        if lead_dict["is_hot"]:
+                            hot_lead_count=1
+                
+                        if lead_summary:
+                            hot_leads = lead_summary.get("hot_leads",{})
+
+                            for i in range(0,lead_dict["hotness_level"]):
+                                key = "is_hot_level_"+str(i+1)
+                                hot_leads[key] = hot_leads.get(key,0)+1
+                            
+                            total_leads_count=lead_summary['total_leads_count']+1
+                            hot_lead_count=lead_summary['total_hot_leads_count']+hot_lead_count
+                            mongo_client.leads_summary.update_one({"_id": ObjectId(lead_summary['_id'])},
+                                                                    {"$set": {'total_leads_count': total_leads_count,'total_hot_leads_count': hot_lead_count,'hot_leads': hot_leads}})
+                        else:
+                            hot_leads = {}
+                            for i in range(0,lead_dict["hotness_level"]):
+                                key = "is_hot_level_"+str(i+1)
+                                hot_leads[key] = 1
+
+                            mongo_client.leads_summary.insert_one({
+                                "campaign_id": campaign_id,
+                                "supplier_id": found_supplier_id,
+                                "lead_date": None,
+                                "total_leads_count": 1,
+                                "total_hot_leads_count":hot_lead_count,
+                                "total_booking_confirmed": 0,
+                                "total_orders_punched": 0,
+                                "hot_leads": hot_leads
+                            })
 
             mongo_client.leads_forms.update_one({"leads_form_id": leads_form_id}, {"$set": {"last_entry_id": entry_id}})
             missing_societies.sort()
