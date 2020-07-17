@@ -1155,7 +1155,7 @@ def get_leads_data_for_campaign(request, campaign_id, user_start_date_str=None, 
     user_end_datetime = datetime.strptime(user_end_date_str,format_str) if user_end_date_str is not None else None
     and_constraint = [{"campaign_id": campaign_id}, {"status": {"$ne": "inactive"}}, {"supplier_id":{"$in": supplier_ids}}]
     if user_start_datetime:
-        and_constraint.append({"user_end_datetimecreated_at": {"$gte": user_start_datetime}})
+        and_constraint.append({"created_at": {"$gte": user_start_datetime}})
     if user_end_datetime:
         and_constraint.append({"created_at": {"$lte": user_end_datetime}})
     leads_form_data = list(mongo_client.leads.find(
@@ -2236,6 +2236,28 @@ def get_campaign_wise_summary(supplier_code, all_campaign_ids, user_start_dateti
             summary_point["flat_count"] = 0
         leads_summary_by_supplier_dict[summary_point["campaign_id"]][summary_point["supplier_id"]] = summary_point
     
+    leads_query = {"campaign_id": {"$in": all_campaign_ids},"supplier_id":{"$in": all_supplier_ids}}
+    if user_start_datetime or user_end_datetime:
+        leads_query["created_at"] = {}
+        if user_start_datetime:
+            leads_query["created_at"]["$gte"] = user_start_datetime
+        if user_end_datetime:
+            leads_query["created_at"]["$lte"] = user_end_datetime
+        
+    leads_summary = list(mongo_client.leads.find(leads_query))
+    lead_keys = {}
+    lead_key_list = ["total_leads_count", "hot_leads_count"]
+    for row in leads_summary:
+        for key, value in row["multi_level_is_hot"].items():
+            if not leads_summary_by_supplier_dict[row["campaign_id"]][row["supplier_id"]].get(key):
+                leads_summary_by_supplier_dict[row["campaign_id"]][row["supplier_id"]][key] = 0
+
+            if value:
+                leads_summary_by_supplier_dict[row["campaign_id"]][row["supplier_id"]][key] += 1
+            
+            lead_keys[key] = True
+            lead_key_list.append(key)
+
     for campaign_id in campaign_wise_leads:
         if campaign_id not in campaign_flat_count_map:
             continue
@@ -2243,7 +2265,7 @@ def get_campaign_wise_summary(supplier_code, all_campaign_ids, user_start_dateti
             continue
         flat_count = campaign_flat_count_map[campaign_id]
         analytics = get_mean_median_mode(leads_summary_by_supplier_dict[campaign_id],
-                                         ["total_leads_count", "hot_leads_count"])
+                                         lead_key_list)
         campaign_summary["campaign_wise"][campaign_id] = {
             "name": all_campaign_id_name_map[campaign_id],
             "total": campaign_wise_leads[campaign_id]["total_leads_count"],
@@ -2266,8 +2288,48 @@ def get_campaign_wise_summary(supplier_code, all_campaign_ids, user_start_dateti
                 "median_by_society": analytics["total_leads_count"]["median_by_society"],
                 "mean_by_society": analytics["total_leads_count"]["mean_by_society"],
             },
+            "analytics": {}
         }
-    analytics = get_mean_median_mode(campaign_summary["campaign_wise"], ["total", "interested"])
+
+        for key, value in lead_keys.items():
+            campaign_summary["campaign_wise"][campaign_id]["analytics"][key] = {
+                "percentage_by_flat": analytics[key]["percentage_by_flat"],
+                "mean_percent_by_flat": analytics[key]["mean_percent_by_flat"],
+                "median_percent_by_flat": analytics[key]["median_percent_by_flat"],
+                "mode_percent_by_flat": analytics[key]["mode_percent_by_flat"],
+                "median_by_society": analytics[key]["median_by_society"],
+                "mean_by_society": analytics[key]["mean_by_society"],
+            }
+    
+    lead_keys = {}
+    lead_key_list = ["total", "interested"]
+    for row in leads_summary:
+        for key, value in row["multi_level_is_hot"].items():
+            if not campaign_summary["all_campaigns"].get(key):
+                campaign_summary["all_campaigns"][key] = 0
+
+            if not campaign_summary["campaign_wise"][row["campaign_id"]].get(key):
+                campaign_summary["campaign_wise"][row["campaign_id"]][key] = 0
+
+            if value:
+                campaign_summary["all_campaigns"][key] += 1
+                campaign_summary["campaign_wise"][row["campaign_id"]][key] += 1
+
+            lead_keys[key] = True
+            lead_key_list.append(key)
+
+    analytics = get_mean_median_mode(campaign_summary["campaign_wise"], list(set(lead_key_list)))
+    campaign_summary["all_campaigns"]["analytics"] = {}
+    for key,value in lead_keys.items():
+        campaign_summary["all_campaigns"]["analytics"][key] = {
+        "percentage_by_flat": analytics[key]["percentage_by_flat"],
+        "mean_percent_by_flat": analytics[key]["mean_percent_by_flat"],
+        "median_percent_by_flat": analytics[key]["median_percent_by_flat"],
+        "mode_percent_by_flat": analytics[key]["mode_percent_by_flat"],
+        "median_by_campaign": analytics[key]["median_by_society"],
+        "mean_by_campaign": analytics[key]["mean_by_society"],
+    }
+    
     campaign_summary["all_campaigns"]["total_leads_analytics"] = {
         "percentage_by_flat": analytics["total"]["percentage_by_flat"],
         "mean_percent_by_flat": analytics["total"]["mean_percent_by_flat"],
@@ -2295,6 +2357,7 @@ def get_campaign_wise_summary(supplier_code, all_campaign_ids, user_start_dateti
         campaign_summary["all_campaigns"]["flat_count"] += campaign_summary["campaign_wise"][campaign]["flat_count"]
         campaign_summary["all_campaigns"]["total_supplier_count"] += campaign_summary["campaign_wise"][campaign][
             "total_supplier_count"]
+    campaign_summary["all_campaigns"]["lead_keys"] = lead_keys
     return campaign_summary
 
 
