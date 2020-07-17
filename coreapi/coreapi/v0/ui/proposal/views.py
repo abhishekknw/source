@@ -2959,31 +2959,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     part_house_lock_status = ['OPHL', 'PHVF', 'PHMD', 'PHGR', 'PHOE', 'PHNR']
     open_status = ['OP', 'OVF', 'OMD', 'OGR', 'OOE', 'ONR']
     all_not_initiated_supplier = []
-    all_rejected_supplier = []
-    all_btob_rejected_supplier = [] 
-    all_decision_pending_supplier = []
     all_recce_supplier = []
-    all_meeting_fixed_supplier =[]
-    all_meeting_converted_supplier = []
-    all_emergency_situation_supplier = []
-    all_complete_lockdown_supplier = []
-    all_part_building_lock_supplier = []
-    all_part_floor_lock_supplier = []
-    all_part_house_lock_supplier = []
-    all_open_supplier = []
-    total_not_initiated_flats = 0
-    total_rejected_flats = 0
-    total_decision_pending_flats = 0
-    total_btob_rejected_flats = 0
-    total_recce_flats = 0
-    total_meeting_fixed_flats=0
-    total_meeting_converted_flats = 0
-    total_emergency_situation_flats = 0
-    total_complete_lockdown_flats = 0
-    total_part_building_lock_flats = 0
-    total_part_floor_lock_flats = 0
-    total_part_house_lock_flats = 0
-    total_open_flats = 0
 
     proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
     end_customer = proposal.type_of_end_customer.name
@@ -3047,74 +3023,74 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     confirmed_booked_suppliers_count += phase_booked_suppliers
                     confirmed_booked_flats += phase_booked_flats
                 if status in not_initiated_status:
-                    not_initiated_supplier_count += phase_booked_suppliers
+                    total_booked_suppliers_count += phase_booked_suppliers
                     not_initiated_flats += phase_booked_flats
-                    total_not_initiated_flats += phase_booked_flats
-                    all_not_initiated_supplier_count = all_not_initiated_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                    total_booked_flats += phase_booked_flats
+                    not_initiated_supplier_count = all_not_initiated_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
                 if status in btoc_rejected_status:
-                    rejected_supplier_count += phase_booked_suppliers
+                    total_booked_suppliers_count += phase_booked_suppliers
                     rejected_flats += phase_booked_flats
-                    total_rejected_flats += phase_booked_flats
-                    all_rejected_supplier_count = all_rejected_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                    total_booked_flats += phase_booked_flats
+                    rejected_supplier_count += phase_booked_suppliers
                 if status in recce_required:
-                    recce_required_supplier_count += phase_booked_suppliers
+                    total_booked_suppliers_count += phase_booked_suppliers
                     recce_flats += phase_booked_flats
-                    total_recce_flats += phase_booked_flats
-                    all_recce_supplier_count = all_recce_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                    total_booked_flats += phase_booked_flats
+                    recce_supplier_count = all_recce_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
 
             elif end_customer == 'B to B':
                 if status in meeting_fixed:
-                    meeting_fixed_supplier_count += phase_booked_suppliers
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
                     meeting_fixed_flats += phase_booked_flats
-                    total_meeting_fixed_flats += phase_booked_flats
-                    all_meeting_fixed_supplier_count = all_meeting_fixed_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                    meeting_fixed_supplier_count += phase_booked_suppliers
                 if status in meeting_converted:
-                    meeting_converted_supplier_count += phase_booked_suppliers
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
                     meeting_converted_flats += phase_booked_flats
-                    total_meeting_converted_flats += phase_booked_flats
-                    all_meeting_converted_supplier_count = all_meeting_converted_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                    meeting_converted_supplier_count += phase_booked_suppliers
                 if status in btob_rejected_status:
-                    btob_rejected_supplier_count += phase_booked_suppliers
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
                     btob_rejected_flats += phase_booked_flats
-                    total_btob_rejected_flats += phase_booked_flats
-                    all_btob_rejected_supplier_count = all_btob_rejected_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                    btob_rejected_supplier_count += phase_booked_suppliers
                 if status in decision_pending_status:
-                    decision_pending_supplier_count += phase_booked_suppliers
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
                     decision_pending_flats += phase_booked_flats
-                    total_decision_pending_flats += phase_booked_flats
-                    all_decision_pending_supplier_count = all_decision_pending_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                    decision_pending_supplier_count += phase_booked_suppliers
 
             else: 
                 if status in emergency_situation_status:
-                    emergency_situation_supplier_count += phase_booked_suppliers
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
                     emergency_situation_flats += phase_booked_flats
-                    total_emergency_situation_flats += phase_booked_flats
-                    all_emergency_situation_supplier_count = all_emergency_situation_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                    emergency_situation_supplier_count += phase_booked_suppliers
                 if status in complete_lockdown_status:
-                    complete_lockdown_supplier_count += phase_booked_suppliers
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
                     complete_lockdown_flats += phase_booked_flats
-                    total_complete_lockdown_flats += phase_booked_flats
-                    all_complete_lockdown_supplier_count = all_complete_lockdown_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                    complete_lockdown_supplier_count += phase_booked_suppliers
                 if status in part_building_lock_status:
-                    part_building_lock_supplier_count += phase_booked_suppliers
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
                     part_building_lock_flats += phase_booked_flats
-                    total_part_building_lock_flats += phase_booked_flats
-                    all_part_building_lock_supplier_count = all_part_building_lock_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                    part_building_lock_supplier_count += phase_booked_suppliers
                 if status in part_floor_lock_status:
-                    part_floor_lock_supplier_count += phase_booked_suppliers
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
                     part_floor_lock_flats += phase_booked_flats
-                    total_part_floor_lock_flats += phase_booked_flats
-                    all_part_floor_lock_supplier_count = all_part_floor_lock_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                    part_floor_lock_supplier_count += phase_booked_suppliers
                 if status in part_house_lock_status:
-                    part_house_lock_supplier_count += phase_booked_suppliers
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
                     part_house_lock_flats += phase_booked_flats
-                    total_part_house_lock_flats += phase_booked_flats
-                    all_part_house_lock_supplier_count = all_part_house_lock_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                    part_house_lock_supplier_count += phase_booked_suppliers
                 if status in open_status:
-                    open_supplier_count += phase_booked_suppliers
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
                     open_flats += phase_booked_flats
-                    total_open_flats += phase_booked_flats
-                    all_open_supplier_count = all_open_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                    open_supplier_count += phase_booked_suppliers
 
         total_booked_suppliers_list = flatten_list(
             [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items()])
@@ -3276,7 +3252,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             completed_phases.append(phase_dict)
     last_completed_phase = None
     sorted_upcoming_phases = sorted(upcoming_phases, key=lambda k: k['phase_no'])
-    upcoming_beyond_three = sorted_upcoming_phases[3:]
+    upcoming_beyond_three = sorted_upcoming_phases[1:]
     pipeline = {'followup_required': {'supplier_count': 0, 'flat_count': 0, 'supplier_data':[]},
                 'confirmed_booked': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 'verbally_booked': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
@@ -3295,15 +3271,13 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 'partial_house_lockdown': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 'open': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 }
+
     for phase in upcoming_beyond_three:
         for status_type in ['followup_required', 'confirmed_booked', 'verbally_booked', 'rejected', 'btob_rejected', 'total_booked', 'not_initiated', 'recce_required', 'meeting_fixed', 'meeting_converted', 'decision_pending', 
                         'emergency_situation', 'complete_lockdown', 'partial_building_lockdown', 'partial_floor_lockdown', 'partial_house_lockdown', 'open']:
             pipeline[status_type]['supplier_count'] += phase[status_type]['supplier_count']
             pipeline[status_type]['flat_count'] += phase[status_type]['flat_count']
             pipeline[status_type]['supplier_data'] += phase[status_type]['supplier_data']
-            pipeline['total_booked']['supplier_count'] += phase[status_type]['supplier_count']
-            pipeline['total_booked']['flat_count'] += phase[status_type]['flat_count']
-            pipeline['total_booked']['supplier_data'] += phase[status_type]['supplier_data']
 
     for supplier in (no_status_suppliers + no_phase_suppliers):
         if not supplier['booking_status']:
@@ -3379,7 +3353,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     shortlisted_spaces_by_phase_dict = {
         'all_phases': shortlisted_spaces_by_phase_list,
         'last_completed_phase': last_completed_phase,
-        'upcoming_phases': sorted_upcoming_phases[:3],
+        'upcoming_phases': sorted_upcoming_phases[:1],
         'ongoing_phase': ongoing_phase,
         'pipeline_suppliers': pipeline,
         'completed_phases': completed_phases,
