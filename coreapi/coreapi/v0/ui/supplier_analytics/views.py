@@ -55,7 +55,7 @@ class GetSupplierSummary(APIView):
                     'contact_name_filled_count': len(contact_name_filled_suppliers),
                     'contact_number_filled_count': len(contact_number_filled_suppliers),
                     'contact_name_not_filled_count': len(supplier_ids) - len(contact_name_filled_suppliers),
-                    'contact_number_not_filled_count': len(supplier_ids) - len(contact_name_filled_suppliers),
+                    'contact_number_not_filled_count': len(supplier_ids) - len(contact_number_filled_suppliers),
                     'contact_name_filled_suppliers': contact_name_filled_suppliers,
                     'contact_number_filled_suppliers': contact_number_filled_suppliers,
                     'contact_name_not_filled_suppliers': [item for item in supplier_ids if item not in contact_name_filled_suppliers],
