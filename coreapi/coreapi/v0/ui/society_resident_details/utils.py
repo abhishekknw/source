@@ -6,6 +6,8 @@ from v0.ui.common.models import mongo_client
 from v0.ui.proposal.models import ShortlistedSpaces, SupplierPhase
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.inventory.models import InventoryActivity, InventoryActivityAssignment
+from django.contrib.contenttypes.models import ContentType
+import v0.ui.utils as ui_utils
 
 
 def custom_sql_query(query, data):
@@ -39,25 +41,38 @@ def format_contact_number(contact_number):
 
 
 def match_resident_society_with_campaign(campaign_id, society_ids):
-    spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('object_id')
-    campaign_societies = [space['object_id'] for space in spaces] if spaces and len(spaces) > 0 else []
-    society_id = None
-    # Society in societies
-    if len(campaign_societies) > 0:
-        for society in campaign_societies:
-            for society_id in society_ids:
-                if society == society_id:
-                    society_id = society
-                    break
-    # Add society to the campaign
-    if not society_id:
-        space = spaces[0] if len(spaces) > 0 else None
-        if space:
-            space.object_id = society_ids[0]
-            ShortlistedSpaces(space).save()
-        else:
-            ShortlistedSpaces(object_id=society_ids[0], proposal_id=campaign_id, content_type=101).save()
-    return True
+    try:
+        spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('object_id')
+        campaign_societies = [space['object_id'] for space in spaces] if spaces and len(spaces) > 0 else []
+        society_id = None
+        # Society in societies
+        if len(campaign_societies) > 0:
+            for society in campaign_societies:
+                for society_id in society_ids:
+                    if society == society_id:
+                        society_id = society
+                        break
+        # Add society to the campaign
+        if not society_id:
+            space = spaces[0] if len(spaces) > 0 else None
+            if space:
+                space.object_id = society_ids[0]
+                ShortlistedSpaces(space).save()
+            else:
+                supplier_code = "RS"
+                content_type = ui_utils.fetch_content_type(supplier_code)
+
+                data = {
+                    'object_id': society_ids[0],
+                    'proposal_id': campaign_id,
+                    'content_type': content_type,
+                }
+                obj, is_created = ShortlistedSpaces.objects.get_or_create(**data)
+                obj.save()
+        return True
+    except Exception as e:
+        print('Error in adding society to campaign :',e)
+        return False
 
 
 def get_phase_id(campaign_id, society_id):
@@ -145,6 +160,7 @@ def get_last_24_hour_leads():
         lead_creation_date = lead['lead_entry_date']
         supplier_id = lead['supplier_id']
         alternate_contact_number = lead['alternate_number']
+        print(contact_number)
         segregate_lead_data(contact_number, campaign_id, lead_creation_date, supplier_id)
 
 

@@ -40,7 +40,7 @@ from bson.objectid import ObjectId
 from v0.ui.proposal.models import ProposalInfo, ProposalCenterSuppliers
 from v0.ui.account.models import Profile
 from v0.ui.dynamic_suppliers.utils import get_dynamic_single_supplier_data
-from .utils import convert_xldate_as_datetime
+from .utils import convert_xldate_as_datetime, add_society_to_campaign
 
 
 def is_user_permitted(permission_type, user, **kwargs):
@@ -469,7 +469,7 @@ class LeadsFormBulkEntry(APIView):
                                 continue
                             if len(shortlisted_spaces) == 0:
                                 not_present_in_shortlisted_societies.append(society_name)
-                                continue
+                                add_society_to_campaign(campaign_id, supplier_id)
                             else:
                                 found_supplier_id = shortlisted_spaces[0]['object_id']
 
@@ -477,35 +477,38 @@ class LeadsFormBulkEntry(APIView):
                         proposal_id=campaign_id).all()
                     if len(shortlisted_spaces) == 0:
                         not_present_in_shortlisted_societies.append(society_name)
-                        continue
-                    inventory_list = ShortlistedInventoryPricingDetails.objects.filter(
-                        shortlisted_spaces_id=shortlisted_spaces[0].id).all()
-                    stall = None
+                        add_society_to_campaign(campaign_id, found_supplier_id)
 
-                    for inventory in inventory_list:
-                        if inventory.ad_inventory_type_id >= 8 and inventory.ad_inventory_type_id <= 11:
-                            stall = inventory
-                            break
-                    if not stall:
-                        continue
-                    shortlisted_inventory_details_id = stall.id
-                    inventory_list = InventoryActivity.objects.filter(
-                        shortlisted_inventory_details_id=shortlisted_inventory_details_id, activity_type='RELEASE').all()
+                    if len(shortlisted_spaces) > 0:
+                        inventory_list = ShortlistedInventoryPricingDetails.objects.filter(
+                            shortlisted_spaces_id=shortlisted_spaces[0].id).all()
+                        stall = None
 
-                    if len(inventory_list) == 0:
-                        inv_activity_missing_societies.append(society_name)
-                        continue
-                    inventory_activity_id = inventory_list[0].id
-                    inventory_activity_list = InventoryActivityAssignment.objects.filter(
-                        inventory_activity_id=inventory_activity_id).all()
-                    if len(inventory_activity_list) == 0:
-                        inv_activity_assignment_missing_societies.append(society_name)
-                        continue
+                        for inventory in inventory_list:
+                            if inventory.ad_inventory_type_id >= 8 and inventory.ad_inventory_type_id <= 11:
+                                stall = inventory
+                                break
+                        if not stall:
+                            continue
+                        shortlisted_inventory_details_id = stall.id
+                        inventory_list = InventoryActivity.objects.filter(
+                            shortlisted_inventory_details_id=shortlisted_inventory_details_id, activity_type='RELEASE').all()
 
-                    created_at = inventory_activity_list[0].activity_date if inventory_activity_list[0].activity_date else None
-                    if not created_at:
-                        inv_activity_assignment_activity_date_missing_societies.append(society_name)
-                        continue
+                        if len(inventory_list) == 0:
+                            inv_activity_missing_societies.append(society_name)
+                            continue
+                        inventory_activity_id = inventory_list[0].id
+                        inventory_activity_list = InventoryActivityAssignment.objects.filter(
+                            inventory_activity_id=inventory_activity_id).all()
+                        if len(inventory_activity_list) == 0:
+                            inv_activity_assignment_missing_societies.append(society_name)
+                            continue
+
+                        created_at = inventory_activity_list[0].activity_date if inventory_activity_list[0].activity_date else None
+                        if not created_at:
+                            inv_activity_assignment_activity_date_missing_societies.append(society_name)
+                    else:
+                        created_at = datetime.datetime.now()
                     lead_dict = {"data": [], "is_hot": False, "created_at": created_at, "supplier_id": found_supplier_id,
                                  "campaign_id": campaign_id, "leads_form_id": int(leads_form_id), "entry_id": entry_id,
                                  "phone_number": phone_number, 'lead_entry_date': lead_entry_date}
@@ -545,6 +548,7 @@ class LeadsFormBulkEntry(APIView):
             }
             return handle_response({}, data=missing_dict, success=True)
         except Exception as ex:
+            print(ex)
             return handle_response({}, data="failed", success=False)
 
 
