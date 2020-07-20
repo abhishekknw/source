@@ -287,7 +287,7 @@ class ShortlistedSpaces(BaseModel):
     account_number = models.CharField(max_length=250, blank=True, null=True)
     payment_message = models.CharField(max_length=255, null=True, blank=True)
     total_negotiated_price = models.CharField(max_length=255, null=True, blank=True)
-    booking_status = models.CharField(max_length=10, null=True, blank=True)
+    booking_status = models.CharField(max_length=10, default='NI')
     booking_sub_status = models.CharField(max_length=15, null=True, blank=True)
     bk_status = models.ForeignKey('BookingStatus', null=True, on_delete=models.CASCADE)
     bk_substatus = models.ForeignKey('BookingSubstatus', null=True, on_delete=models.CASCADE)
@@ -355,6 +355,7 @@ class SupplierAssignment(BaseModel):
 
 class TypeOfEndCustomer(BaseModel):
     name = models.CharField(max_length=255)
+    formatted_name = models.CharField(max_length=255, null=True)
 
     class Meta:
         db_table = 'type_of_end_customer'

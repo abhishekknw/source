@@ -2428,31 +2428,39 @@ class SuppliersMetaData(APIView):
 
             state = request.GET.get("state")
             state_name = request.GET.get("state_name")
-            
-            search_query = Q()
+            user = request.user
+            org_id = request.user.profile.organisation.organisation_id
 
-            if state:
+            if user.is_superuser :
                 if supplier_type_code == 'RS':
-                    search_query &= Q(society_state=state)
-                else :
-                    search_query &= Q(state=state)
-
-
-            if state_name:
-                if supplier_type_code == 'RS':
-                    search_query |= Q(society_state=state_name)
+                    if state and state_name:
+                        count = SupplierTypeSociety.objects.filter(Q(society_state=state) | Q(society_state=state_name)).count()
                 else:
-                    search_query |= Q(state=state_name)
+                    address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
 
-            if supplier_type_code == 'RS':
-                count = model_name.objects.filter(search_query).count()
+                    if state_name:
+                        count = SupplierMaster.objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code,address_supplier__state__icontains=state_name).count()
+                    else:
+                        count = SupplierMaster.objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code).count()
             else:
-                address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
-
-                if state_name:
-                    count = SupplierMaster.objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code,address_supplier__state__icontains=state_name).count()
+                if supplier_type_code == 'RS':
+                    vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
+                    society_objects = SupplierTypeSociety.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
+                                                                      & Q(representative__isnull=False))
+                
+                    if state and state_name:
+                        count = society_objects.filter(Q(society_state=state) | Q(society_state=state_name)).count()
+                
                 else:
-                    count = SupplierMaster.objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code).count()
+                    vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
+                    supplier_objects = SupplierMaster.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id)) & Q(representative__isnull=False))
+
+                    address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
+
+                    if state_name:
+                        count = supplier_objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code,address_supplier__state__icontains=state_name).count()
+                    else:
+                        count = supplier_objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code).count()
             
             data[supplier_type_code] = {'count': count}
 
@@ -3943,6 +3951,7 @@ class SupplierGenericViewSet(viewsets.ViewSet):
                     | Q(address_supplier__address2__icontains=search) 
                     | Q(address_supplier__city__icontains=search) 
                     | Q(supplier_id=search)
+                    | Q(supplier_name=search)
                 )
 
             if not user.is_superuser:
@@ -3951,6 +3960,11 @@ class SupplierGenericViewSet(viewsets.ViewSet):
 
             address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
             master_supplier_objects = SupplierMaster.objects.prefetch_related(address_supplier).filter(search_query).order_by('supplier_name')
+
+            if state_name:
+                master_supplier_objects = SupplierMaster.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code,address_supplier__state__icontains=state_name)
+            else:
+                master_supplier_objects = SupplierMaster.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code)
         
             supplier_objects_paginate = paginate(master_supplier_objects, SupplierMasterSerializer, request)
             supplier_with_images = get_supplier_image(supplier_objects_paginate["list"], 'Supplier')
