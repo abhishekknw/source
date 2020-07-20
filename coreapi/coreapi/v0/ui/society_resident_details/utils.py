@@ -3,7 +3,7 @@ from django.db import connection
 from v0.ui.supplier.models import SupplierTypeSociety
 from .models import User, ResidentDetail,ResidentCampaignDetail
 from v0.ui.common.models import mongo_client
-from v0.ui.proposal.models import ShortlistedSpaces, SupplierPhase
+from v0.ui.proposal.models import ShortlistedSpaces, SupplierPhase, ProposalCenterMapping
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
 from v0.ui.inventory.models import InventoryActivity, InventoryActivityAssignment
 from django.contrib.contenttypes.models import ContentType
@@ -61,11 +61,18 @@ def match_resident_society_with_campaign(campaign_id, society_ids):
             else:
                 supplier_code = "RS"
                 content_type = ui_utils.fetch_content_type(supplier_code)
+                # Get centre
+                proposal_center_mapping = ProposalCenterMapping.objects.filter(proposal_id=campaign_id).first()
 
                 data = {
-                    'object_id': society_ids[0],
+                    'object_id': society_id,
                     'proposal_id': campaign_id,
                     'content_type': content_type,
+                    'supplier_code': supplier_code,
+                    'status': 'F',
+                    'user_id': 1,
+                    'center_id': proposal_center_mapping.id if proposal_center_mapping else None,
+                    'booking_status': 'BK'
                 }
                 obj, is_created = ShortlistedSpaces.objects.get_or_create(**data)
                 obj.save()
@@ -159,9 +166,8 @@ def get_last_24_hour_leads():
         campaign_id = lead['campaign_id']
         lead_creation_date = lead['lead_entry_date']
         supplier_id = lead['supplier_id']
-        alternate_contact_number = lead['alternate_number']
-        print(contact_number)
-        segregate_lead_data(contact_number, campaign_id, lead_creation_date, supplier_id)
+        if contact_number and type(contact_number) == int:
+            segregate_lead_data(contact_number, campaign_id, lead_creation_date, supplier_id)
 
 
 def segregate_lead_data(contact_number, campaign_id, lead_creation_date, society_id=None):
