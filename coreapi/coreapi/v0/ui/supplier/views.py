@@ -2601,7 +2601,7 @@ class FilteredSuppliers(APIView):
             if supplier_type_code == 'RS':
                 master_suppliers_list = set(list(supplier_model.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
             else :
-                master_suppliers_list = set(list(AddressMaster.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
+                master_suppliers_list = set(list(SupplierMaster.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
             
             # now fetch all inventory_related suppliers
             # handle inventory related filters. it involves quite an involved logic hence it is in another function.
