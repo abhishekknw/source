@@ -2647,10 +2647,10 @@ def handle_common_filters(common_filters, supplier_type_code, proposal):
             query['society_longitude__gt'] = min_longitude
 
         else:
-            query['latitude__lt'] = max_latitude
-            query['latitude__gt'] = min_latitude
-            query['longitude__lt'] = max_longitude
-            query['longitude__gt'] = min_longitude
+            query['address_supplier__latitude__lt'] = max_latitude
+            query['address_supplier__latitude__gt'] = min_latitude
+            query['address_supplier__longitude__lt'] = max_longitude
+            query['address_supplier__longitude__gt'] = min_longitude
 
         # query['representative'] = proposal.principal_vendor
 

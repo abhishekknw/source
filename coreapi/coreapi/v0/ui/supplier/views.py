@@ -2601,7 +2601,7 @@ class FilteredSuppliers(APIView):
             if supplier_type_code == 'RS':
                 master_suppliers_list = set(list(supplier_model.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
             else :
-                master_suppliers_list = set(list(AddressMaster.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
+                master_suppliers_list = set(list(SupplierMaster.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
             
             # now fetch all inventory_related suppliers
             # handle inventory related filters. it involves quite an involved logic hence it is in another function.
@@ -3378,11 +3378,13 @@ class SupplierSearch(APIView):
                 search_query &= Q(supplier_code__isnull=False)
 
                 if search_txt :
+                    search_text_query = Q()
                     for search_field in v0_constants.search_fields[supplier_type_code]:
-                        if search_query:
-                            search_query |= Q(**{search_field: search_txt})
+                        if search_text_query:
+                            search_text_query |= Q(**{search_field: search_txt})
                         else:
-                            search_query = Q(**{search_field: search_txt})
+                            search_text_query = Q(**{search_field: search_txt})
+                    search_query &= search_text_query
 
                 if request.query_params.get("supplier_center"):
                     if search_query:
@@ -3402,7 +3404,6 @@ class SupplierSearch(APIView):
                         search_query &= Q(society_subarea__contains = request.query_params.get("supplier_area_subarea"))
                     else:
                         search_query = Q(society_subarea__contains = request.query_params.get("supplier_area_subarea"))
-                
                 
                 if vendor:
                     suppliers = model.objects.filter(search_query, representative=vendor)
@@ -3435,8 +3436,7 @@ class SupplierSearch(APIView):
                     )
                 
                 if request.query_params.get("supplier_center"):
-                    if search_txt:
-                        search_query &= Q(address_supplier__city__icontains = request.query_params.get("supplier_center"))
+                    search_query &= Q(address_supplier__city__icontains = request.query_params.get("supplier_center"))
                     
                 if request.query_params.get("supplier_area"):
                     search_query &= Q(address_supplier__area__icontains = request.query_params.get("supplier_area"))
