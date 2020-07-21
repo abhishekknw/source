@@ -562,6 +562,7 @@ class SupplierMaster(BaseModel):
     feedback = models.CharField(null=True, blank=True, max_length=250)
     locality_rating = models.CharField(max_length=50, null=True, blank=True)
     quality_rating = models.CharField(max_length=50, null=True, blank=True)
+    quantity_rating = models.CharField(max_length=50, null=True, blank=True)
 
     class Meta:
         db_table = 'supplier_master'
