@@ -422,7 +422,10 @@ class GetSupplierDetail(APIView):
                         supplier_detail['contact_number'] = contact_details[0]['mobile']
                 if booking_status_code is None:
                     continue
-                booking_status = booking_code_to_status[booking_status_code]
+                # booking_status = booking_code_to_status[booking_status_code]
+                bk_status = BookingStatus.objects.get(code = booking_status_code)
+                booking_status = bk_status.name
+                
                 if shortlisted_supplier['is_completed'] and booking_status_code == 'BK':
                     booking_category = 'completed'
                     completed_supplier_ids.append(shortlisted_supplier['object_id'])
