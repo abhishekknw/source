@@ -3928,8 +3928,7 @@ class SupplierGenericViewSet(viewsets.ViewSet):
 
     def list(self, request):
         class_name = self.__class__.__name__
-        try:
-            
+        try:  
             user = request.user
             org_id = request.user.profile.organisation.organisation_id
             retail_shop_objects = []
@@ -3962,9 +3961,9 @@ class SupplierGenericViewSet(viewsets.ViewSet):
             master_supplier_objects = SupplierMaster.objects.prefetch_related(address_supplier).filter(search_query).order_by('supplier_name')
 
             if state_name:
-                master_supplier_objects = SupplierMaster.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code,address_supplier__state__icontains=state_name)
+                master_supplier_objects = SupplierMaster.objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code,address_supplier__state__icontains=state_name)
             else:
-                master_supplier_objects = SupplierMaster.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code)
+                master_supplier_objects = SupplierMaster.objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code)
         
             supplier_objects_paginate = paginate(master_supplier_objects, SupplierMasterSerializer, request)
             supplier_with_images = get_supplier_image(supplier_objects_paginate["list"], 'Supplier')
