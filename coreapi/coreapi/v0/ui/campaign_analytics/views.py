@@ -537,17 +537,22 @@ class GetCampaignStatusCount(APIView):
             for shortlisted_supplier in all_shortlisted_supplier:
                 booking_status_code = shortlisted_supplier['booking_status']
                 booking_sub_status_code = shortlisted_supplier['booking_sub_status']
+
                 if booking_sub_status_code:
 
                     bk_sub_status = BookingSubstatus.objects.get(code = booking_sub_status_code)
                     booking_sub_status = bk_sub_status.name
 
-                    if booking_sub_status not in all_supplier_dict.keys():
+                    if 'booking_sub_status' not in all_supplier_dict:
                         all_supplier_dict['booking_sub_status'] = {}
+
+                    if booking_sub_status not in all_supplier_dict['booking_sub_status'].keys():
+                     
                         all_supplier_dict['booking_sub_status'][booking_sub_status] = {}
                         all_supplier_dict['booking_sub_status'][booking_sub_status]['supplier_ids'] = [shortlisted_supplier['object_id']]
                     else:
                         all_supplier_dict['booking_sub_status'][booking_sub_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
+               
                 if booking_status_code is not None:
 
                     bk_status = BookingStatus.objects.get(code = booking_status_code)
