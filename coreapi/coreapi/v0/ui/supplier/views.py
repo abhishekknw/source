@@ -187,6 +187,8 @@ def update_contact_and_ownership_detail(data):
         if address_master_serializer.is_valid():
             address_master_serializer.save()
 
+    not_remove_contacts = []
+
     if basic_contacts:
         for contact in basic_contacts:
             contact['object_id'] = object_id
@@ -196,7 +198,10 @@ def update_contact_and_ownership_detail(data):
             else:
                 contact_serializer = ContactDetailsSerializer(data=contact)
             if contact_serializer.is_valid():
-                contact_serializer.save()
+                contact_serializer.save(object_id=object_id, content_type=content_type)
+                not_remove_contacts.append(contact_serializer.data['id'])
+
+    ContactDetails.objects.filter(object_id=object_id).exclude(pk__in=not_remove_contacts).delete()
 
     ownership = data.get('ownership_details', None)
 
@@ -3928,55 +3933,62 @@ class SupplierGenericViewSet(viewsets.ViewSet):
 
     def list(self, request):
         class_name = self.__class__.__name__
-        try:  
-            user = request.user
-            org_id = request.user.profile.organisation.organisation_id
-            retail_shop_objects = []
-            supplier_type_code = request.GET.get("supplier_type_code", None)
-            state = request.GET.get("state")
-            state_name = request.GET.get("state_name")
-            search = request.GET.get("search")
+        # try:  
+        user = request.user
+        org_id = request.user.profile.organisation.organisation_id
+        retail_shop_objects = []
+        supplier_type_code = request.GET.get("supplier_type_code", None)
+        state = request.GET.get("state")
+        state_name = request.GET.get("state_name")
+        search = request.GET.get("search")
 
-            if not supplier_type_code:
-                return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
+        if not supplier_type_code:
+            return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
 
-            search_query = Q()
-            search_query &= Q(supplier_type=supplier_type_code)
+        search_query = Q()
+        search_query &= Q(supplier_type=supplier_type_code)
 
-            if search:
-                search_query &= (
-                    Q(address_supplier__state__icontains=search)
+        if search:
+            search_query &= (
+                Q(address_supplier__state__icontains=search)
+                | Q(address_supplier__address1__icontains=search) 
                     | Q(address_supplier__address1__icontains=search) 
+                | Q(address_supplier__address1__icontains=search) 
+                | Q(address_supplier__address2__icontains=search) 
                     | Q(address_supplier__address2__icontains=search) 
+                | Q(address_supplier__address2__icontains=search) 
+                | Q(address_supplier__city__icontains=search) 
                     | Q(address_supplier__city__icontains=search) 
-                    | Q(supplier_id=search)
-                    | Q(supplier_name=search)
-                )
+                | Q(address_supplier__city__icontains=search) 
+                | Q(supplier_id=search)
+                | Q(supplier_name__icontains=search)
+            )
+        master_supplier_objects = SupplierMaster.objects
+        if not user.is_superuser:
+            vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
+            search_query &= ((Q(representative__in=vendor_ids) | Q(representative=org_id)) & Q(representative__isnull=False))
 
-            if not user.is_superuser:
-                vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
-                search_query &= ((Q(representative__in=vendor_ids) | Q(representative=org_id)) & Q(representative__isnull=False))
+        address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
+        master_supplier_objects = master_supplier_objects.prefetch_related(address_supplier).filter(search_query).order_by('supplier_name')
 
-            address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
-            master_supplier_objects = SupplierMaster.objects.prefetch_related(address_supplier).filter(search_query).order_by('supplier_name')
+        if state_name:
+            master_supplier_objects = master_supplier_objects.filter(supplier_type=supplier_type_code,address_supplier__state__icontains=state_name)
+        # else:
+        #     master_supplier_objects = SupplierMaster.objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code)
+        master_supplier_objects = master_supplier_objects.all().order_by('supplier_name')
+    
+        supplier_objects_paginate = paginate(master_supplier_objects, SupplierMasterSerializer, request)
+        supplier_with_images = get_supplier_image(supplier_objects_paginate["list"], 'Supplier')
 
-            if state_name:
-                master_supplier_objects = SupplierMaster.objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code,address_supplier__state__icontains=state_name)
-            else:
-                master_supplier_objects = SupplierMaster.objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code)
-        
-            supplier_objects_paginate = paginate(master_supplier_objects, SupplierMasterSerializer, request)
-            supplier_with_images = get_supplier_image(supplier_objects_paginate["list"], 'Supplier')
-
-            data = {
-                'count': supplier_objects_paginate["count"],
-                'has_next': supplier_objects_paginate["has_next"],
-                'has_previous': supplier_objects_paginate["has_previous"],
-                'supplier_objects': supplier_with_images
-            }
-            return handle_response(class_name, data=data, success=True)
-        except Exception as e:
-            return handle_response(class_name, data="Something went wrong please try again later.", request=request)
+        data = {
+            'count': supplier_objects_paginate["count"],
+            'has_next': supplier_objects_paginate["has_next"],
+            'has_previous': supplier_objects_paginate["has_previous"],
+            'supplier_objects': supplier_with_images
+        }
+        return handle_response(class_name, data=data, success=True)
+        # except Exception as e:
+        #     return handle_response(class_name, data="Something went wrong please try again later.", request=request)
 
     def retrieve(self, request, pk):
         class_name = self.__class__.__name__
@@ -4008,8 +4020,8 @@ class SupplierGenericViewSet(viewsets.ViewSet):
     def update(self, request, pk):
         class_name = self.__class__.__name__
         try:
-            basic_contacts = request.data.get('basic_contacts', None)
-            object_id = request.data.get('supplier_id', None)
+            # basic_contacts = request.data.get('basic_contacts', None)
+            # object_id = request.data.get('supplier_id', None)
             supplier_type_code = request.data.get('supplier_type_code', None)
 
             if not supplier_type_code:
@@ -4018,10 +4030,12 @@ class SupplierGenericViewSet(viewsets.ViewSet):
             model_name = get_model(supplier_type_code)
             serializer_name = get_serializer(supplier_type_code)
             instance = model_name.objects.get(pk=pk)
+            
+            update_contact_and_ownership_detail(request.data)
             serializer = serializer_name(instance=instance, data=request.data)
             if serializer.is_valid():
                 serializer.save()
-                update_contact_and_ownership_detail(request.data)
+                # update_contact_and_ownership_detail(request.data)
                 return handle_response(class_name, data=serializer.data, success=True)
             return handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
