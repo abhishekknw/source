@@ -258,7 +258,7 @@ class SupplierTypeSociety(BaseModel):
 
 class SupplierTypeCode(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    supplier_type_name = models.CharField(db_column='SUPPLIER_TYPE_NAME', max_length=30, null=True)
+    supplier_type_name = models.CharField(db_column='SUPPLIER_TYPE_NAME', max_length=35, null=True)
     supplier_type_code = models.CharField(db_column='SUPPLIER_TYPE_CODE', max_length=5, null=True)
     unit_primary_count = models.CharField(max_length=30, null=True, blank=True)
     unit_secondary_count = models.CharField(max_length=30, null=True, blank=True)
