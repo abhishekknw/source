@@ -544,11 +544,12 @@ class GetCampaignStatusCount(APIView):
                 for supplier_status in booking_substatus_id:
                     booking_status_name = supplier_status['booking_status__name']
                     booking_substatus_name = supplier_status['name']
+
                     response = {
                     'booking_status_name': {
                         'name': booking_status_name,
-                        'substatus': booking_substatus_name
-                    }
+                        'substatus': booking_substatus_name,
+                    } 
                     }
                     print(response)
 
