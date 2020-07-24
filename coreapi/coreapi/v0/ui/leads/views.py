@@ -218,7 +218,10 @@ def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **
     headers = []
     all_order_ids = []
     for form_item in leads_forms_items:
-        curr_item = leads_forms_items[form_item]
+        try:
+            curr_item = leads_forms_items[form_item]
+        except:
+            curr_item = form_item
         headers.append({
             "order_id": curr_item["order_id"] if "order_id" in curr_item else None,
             "key_name": curr_item["key_name"],
