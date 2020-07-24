@@ -1529,6 +1529,7 @@ tableHeaderData = {
         "address_landmark" : "Address (Landmark)",
         "relation_ship_data" : "RelationShip Data",
         "flat_count" : "Flat Count",
+        "resident_count" : "Resident Count",
         "tower_count" : "Tower Count",
         "contacts_details" : "Contacts Details",
         "assign_user" : "Assign User",
