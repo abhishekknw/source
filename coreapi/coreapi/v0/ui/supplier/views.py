@@ -198,7 +198,7 @@ def update_contact_and_ownership_detail(data):
             else:
                 contact_serializer = ContactDetailsSerializer(data=contact)
             if contact_serializer.is_valid():
-                contact_serializer.save(object_id=object_id, content_type=content_type)
+                contact_serializer.save(object_id=object_id)
                 not_remove_contacts.append(contact_serializer.data['id'])
 
     ContactDetails.objects.filter(object_id=object_id).exclude(pk__in=not_remove_contacts).delete()
@@ -206,7 +206,6 @@ def update_contact_and_ownership_detail(data):
     ownership = data.get('ownership_details', None)
 
     if ownership:
-        contact['object_id'] = object_id
         if ownership.get('id'):
             ownership_detail = OwnershipDetails.objects.filter(pk=ownership['id']).first()
             ownership_serializer = OwnershipDetailsSerializer(ownership_detail, data=ownership)
@@ -4028,10 +4027,10 @@ class SupplierGenericViewSet(viewsets.ViewSet):
             serializer_name = get_serializer(supplier_type_code)
             instance = model_name.objects.get(pk=pk)
             
-            update_contact_and_ownership_detail(request.data)
             serializer = serializer_name(instance=instance, data=request.data)
             if serializer.is_valid():
                 serializer.save()
+                update_contact_and_ownership_detail(request.data)
                 return handle_response(class_name, data=serializer.data, success=True)
             return handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
