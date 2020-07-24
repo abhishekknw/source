@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo, ProposalCenterMapping, HashTagImages, SupplierAssignment, BookingStatus, BookingSubstatus
+from v0.ui.proposal.serializers import BookingStatusSerializer
 from v0.ui.account.models import ContactDetails
 from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignAssignment, CampaignComments
@@ -538,6 +539,19 @@ class GetCampaignStatusCount(APIView):
                 booking_status_code = shortlisted_supplier['booking_status']
                 booking_sub_status_code = shortlisted_supplier['booking_sub_status']
 
+                booking_substatus_id = BookingSubstatus.objects.filter(code = booking_sub_status_code).values('name', 'booking_status__name')
+
+                for supplier_status in booking_substatus_id:
+                    booking_status_name = supplier_status['booking_status__name']
+                    booking_substatus_name = supplier_status['name']
+                    response = {
+                    'booking_status_name': {
+                        'name': booking_status_name,
+                        'substatus': booking_substatus_name
+                    }
+                    }
+                    print(response)
+
                 if booking_sub_status_code:
 
                     bk_sub_status = BookingSubstatus.objects.get(code = booking_sub_status_code)
@@ -574,13 +588,14 @@ class GetCampaignStatusCount(APIView):
                             all_supplier_dict[booking_status] = {}
                             all_supplier_dict[booking_status]['supplier_ids'] = [shortlisted_supplier['object_id']]
                         else:
-                            all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
-            
+                            all_supplier_dict[booking_status]['supplier_ids'].append(shortlisted_supplier['object_id'])           
+                            
             response = {
                 'campaign_id': campaign_id,
                 'booking_sub_status': {},
                 'type_of_end_customer' : end_customer
             }
+
             for campaign_status, supplier in all_supplier_dict.items():
                 if campaign_status == 'booking_sub_status':
                     if bool(campaign_status) is True:
