@@ -551,12 +551,16 @@ class GetCampaignStatusCount(APIView):
                         all_supplier_dict['booking_sub_status'] = {}
 
                     if booking_sub_status not in all_supplier_dict['booking_sub_status'].keys():
-                        all_supplier_dict['booking_sub_status'][booking_sub_status] = {
-                            'status': booking_status_name,
+                        all_supplier_dict['booking_sub_status'][booking_sub_status] = {}
+
+                    if not all_supplier_dict['booking_sub_status'][booking_sub_status].get(booking_status_name):
+                        all_supplier_dict['booking_sub_status'][booking_sub_status][booking_status_name] = {
+                            'supplier_ids': [shortlisted_supplier['object_id']],
+                            'count': 1,
                         }
-                        all_supplier_dict['booking_sub_status'][booking_sub_status]['supplier_ids'] = [shortlisted_supplier['object_id']]
                     else:
-                        all_supplier_dict['booking_sub_status'][booking_sub_status]['supplier_ids'].append(shortlisted_supplier['object_id'])
+                        all_supplier_dict['booking_sub_status'][booking_sub_status][booking_status_name]['count'] += 1
+                        all_supplier_dict['booking_sub_status'][booking_sub_status][booking_status_name]['supplier_ids'].append(shortlisted_supplier['object_id'])
 
                 if booking_status_code is not None:
                     bk_status = BookingStatus.objects.get(code=booking_status_code)
@@ -589,9 +593,7 @@ class GetCampaignStatusCount(APIView):
                 if campaign_status == 'booking_sub_status':
                     if bool(campaign_status) is True:
                         for sub_status, supplier_substatus in supplier.items():
-                            supplier_count = len(supplier_substatus['supplier_ids'])
                             response['booking_sub_status'][sub_status] = supplier_substatus
-                            response['booking_sub_status'][sub_status]['count'] = supplier_count
                 else:
                     supplier_count = len(supplier['supplier_ids'])
                     response[campaign_status] = supplier_count
