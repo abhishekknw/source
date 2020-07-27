@@ -2931,7 +2931,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                                                                        'RLO': [], 'RLC': [], 'RUB': [], 'RVE': [], 'RCR': [], 'RRS': [], 'ROS': [],'BRLO': [], 'BRLC': [], 'BRUB': [], 'BRVE': [], 'BUPNI': [], 'BUCNI':[],
                                                                        'BRCR': [], 'BRRS': [],'BROS': [],'BDPNR': [], 'BDPNA': [], 'BDPP': [], 'BDPSOO': [], 'BDPOS': [], 'BDPVR': [], 'BDPCR': [], 'BUN': [],
                                                                        'BNE':[], 'BNVW':[], 'BNVG':[], 'BNVA':[], 'BNVMB':[], 'BNVFT':[], 'BNVOS':[], 'UPNI':[], 'UCPI':[], 'NVW':[], 'NVG':[], 'NVA':[], 
-                                                                       'NVMB':[], 'NVFT':[], 'NVOS':[],                                               
+                                                                       'NVMB':[], 'NVFT':[], 'NVOS':[], 'BNI':[],                                            
                                                                        'OEL': [], 'ESVF': [], 'ESMD': [], 'ESGR': [], 'ESOE': [], 'ESNR': [],'OCL': [], 'CLVF': [],'CLMD': [], 'CLGR': [], 'CLOE': [], 'CLNR': [],
                                                                        'OPBL': [], 'PBVF': [], 'PBMD': [], 'PBGR': [], 'PBOE': [], 'PBNR': [], 'OPFL': [], 'PFVF': [], 'PFMD': [], 'PFGR': [], 'PFOE': [], 'PFNR': [],
                                                                        'OPHL': [], 'PHVF': [], 'PHMD': [], 'PHGR': [], 'PHOE': [], 'PHNR': [], 'OP': [], 'OVF': [], 'OMD': [], 'OGR': [], 'OOE': [], 'ONR': [] }                                                                    
@@ -2953,7 +2953,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     meeting_converted = ['MC']
     verbally_booked_status = ['TB', 'VB', 'PB', 'RE', 'RERR', 'RERA']
     followup_req_status = ['DP', 'DPNR', 'DPNA', 'DPP', 'DPSOO', 'DPOS', 'SE', 'DPVR', 'DPCR']
-    not_initiated_status = ['NB', 'NI']
+    not_initiated_status = ['NB', 'NI', 'BNI']
     btoc_rejected_status = ['SR', 'RLO', 'RLC', 'RUB', 'RVE', 'RCR', 'RRS', 'ROS']
     btob_rejected_status = ['BSR', 'BRLO', 'BRLC', 'BRUB', 'BRVE', 'BRCR', 'BRRS', 'BROS']
     decision_pending_status = ['BDP', 'BDPNR', 'BDPNA', 'BDPP', 'BDPSOO', 'BDPOS', 'BDPVR', 'BDPCR']
@@ -3065,6 +3065,11 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     total_booked_flats += phase_booked_flats
                     decision_pending_flats += phase_booked_flats
                     decision_pending_supplier_count += phase_booked_suppliers
+                if status in not_initiated_status:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    not_initiated_flats += phase_booked_flats
+                    total_booked_flats += phase_booked_flats
+                    not_initiated_supplier_count += phase_booked_suppliers
 
             else: 
                 if status in emergency_situation_status:
