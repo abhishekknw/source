@@ -187,6 +187,8 @@ def update_contact_and_ownership_detail(data):
         if address_master_serializer.is_valid():
             address_master_serializer.save()
 
+    not_remove_contacts = []
+
     if basic_contacts:
         for contact in basic_contacts:
             contact['object_id'] = object_id
@@ -196,12 +198,14 @@ def update_contact_and_ownership_detail(data):
             else:
                 contact_serializer = ContactDetailsSerializer(data=contact)
             if contact_serializer.is_valid():
-                contact_serializer.save()
+                contact_serializer.save(object_id=object_id)
+                not_remove_contacts.append(contact_serializer.data['id'])
+
+    ContactDetails.objects.filter(object_id=object_id).exclude(pk__in=not_remove_contacts).delete()
 
     ownership = data.get('ownership_details', None)
 
     if ownership:
-        contact['object_id'] = object_id
         if ownership.get('id'):
             ownership_detail = OwnershipDetails.objects.filter(pk=ownership['id']).first()
             ownership_serializer = OwnershipDetailsSerializer(ownership_detail, data=ownership)
@@ -2601,7 +2605,7 @@ class FilteredSuppliers(APIView):
             if supplier_type_code == 'RS':
                 master_suppliers_list = set(list(supplier_model.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
             else :
-                master_suppliers_list = set(list(AddressMaster.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
+                master_suppliers_list = set(list(SupplierMaster.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
             
             # now fetch all inventory_related suppliers
             # handle inventory related filters. it involves quite an involved logic hence it is in another function.
@@ -3378,11 +3382,13 @@ class SupplierSearch(APIView):
                 search_query &= Q(supplier_code__isnull=False)
 
                 if search_txt :
+                    search_text_query = Q()
                     for search_field in v0_constants.search_fields[supplier_type_code]:
-                        if search_query:
-                            search_query |= Q(**{search_field: search_txt})
+                        if search_text_query:
+                            search_text_query |= Q(**{search_field: search_txt})
                         else:
-                            search_query = Q(**{search_field: search_txt})
+                            search_text_query = Q(**{search_field: search_txt})
+                    search_query &= search_text_query
 
                 if request.query_params.get("supplier_center"):
                     if search_query:
@@ -3402,7 +3408,6 @@ class SupplierSearch(APIView):
                         search_query &= Q(society_subarea__contains = request.query_params.get("supplier_area_subarea"))
                     else:
                         search_query = Q(society_subarea__contains = request.query_params.get("supplier_area_subarea"))
-                
                 
                 if vendor:
                     suppliers = model.objects.filter(search_query, representative=vendor)
@@ -3435,8 +3440,7 @@ class SupplierSearch(APIView):
                     )
                 
                 if request.query_params.get("supplier_center"):
-                    if search_txt:
-                        search_query &= Q(address_supplier__city__icontains = request.query_params.get("supplier_center"))
+                    search_query &= Q(address_supplier__city__icontains = request.query_params.get("supplier_center"))
                     
                 if request.query_params.get("supplier_area"):
                     search_query &= Q(address_supplier__area__icontains = request.query_params.get("supplier_area"))
@@ -3928,8 +3932,7 @@ class SupplierGenericViewSet(viewsets.ViewSet):
 
     def list(self, request):
         class_name = self.__class__.__name__
-        try:
-            
+        try:  
             user = request.user
             org_id = request.user.profile.organisation.organisation_id
             retail_shop_objects = []
@@ -3948,23 +3951,29 @@ class SupplierGenericViewSet(viewsets.ViewSet):
                 search_query &= (
                     Q(address_supplier__state__icontains=search)
                     | Q(address_supplier__address1__icontains=search) 
+                        | Q(address_supplier__address1__icontains=search) 
+                    | Q(address_supplier__address1__icontains=search) 
+                    | Q(address_supplier__address2__icontains=search) 
+                        | Q(address_supplier__address2__icontains=search) 
                     | Q(address_supplier__address2__icontains=search) 
                     | Q(address_supplier__city__icontains=search) 
+                        | Q(address_supplier__city__icontains=search) 
+                    | Q(address_supplier__city__icontains=search) 
                     | Q(supplier_id=search)
-                    | Q(supplier_name=search)
+                    | Q(supplier_name__icontains=search)
                 )
-
+            master_supplier_objects = SupplierMaster.objects
             if not user.is_superuser:
                 vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
                 search_query &= ((Q(representative__in=vendor_ids) | Q(representative=org_id)) & Q(representative__isnull=False))
 
             address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
-            master_supplier_objects = SupplierMaster.objects.prefetch_related(address_supplier).filter(search_query).order_by('supplier_name')
+            master_supplier_objects = master_supplier_objects.prefetch_related(address_supplier).filter(search_query).order_by('supplier_name')
 
             if state_name:
-                master_supplier_objects = SupplierMaster.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code,address_supplier__state__icontains=state_name)
-            else:
-                master_supplier_objects = SupplierMaster.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code)
+                master_supplier_objects = master_supplier_objects.filter(supplier_type=supplier_type_code,address_supplier__state__icontains=state_name)
+            
+            master_supplier_objects = master_supplier_objects.all().order_by('supplier_name')
         
             supplier_objects_paginate = paginate(master_supplier_objects, SupplierMasterSerializer, request)
             supplier_with_images = get_supplier_image(supplier_objects_paginate["list"], 'Supplier')
@@ -4009,8 +4018,6 @@ class SupplierGenericViewSet(viewsets.ViewSet):
     def update(self, request, pk):
         class_name = self.__class__.__name__
         try:
-            basic_contacts = request.data.get('basic_contacts', None)
-            object_id = request.data.get('supplier_id', None)
             supplier_type_code = request.data.get('supplier_type_code', None)
 
             if not supplier_type_code:
@@ -4019,6 +4026,7 @@ class SupplierGenericViewSet(viewsets.ViewSet):
             model_name = get_model(supplier_type_code)
             serializer_name = get_serializer(supplier_type_code)
             instance = model_name.objects.get(pk=pk)
+            
             serializer = serializer_name(instance=instance, data=request.data)
             if serializer.is_valid():
                 serializer.save()
