@@ -736,7 +736,7 @@ def get_details_by_higher_level(highest_level, lowest_level, highest_level_list,
                 if lowest_level == "is_hot_level_":
                     next_level_match_list =[]
                     for row in query:
-                        row[lowest_level+str(incrementing_value)] = row["hot_leads"][lowest_level+str(incrementing_value)]
+                        row[lowest_level+str(incrementing_value)] = row["hot_leads"].get(lowest_level+str(incrementing_value), 0)
                         next_level_match_list.append(row)
                     all_results.append(next_level_match_list)
             elif database_type == 'mysql':
