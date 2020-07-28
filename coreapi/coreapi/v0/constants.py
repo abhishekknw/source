@@ -2062,11 +2062,6 @@ breakup_header = {
         "total" : "Total",
     },
     'Others' :{
-        # 'vegetable_and_fruits' : 'Vegeatable and Fruits',
-        # 'medicine' : 'Medicine',
-        # 'grocery' : 'Grocery',
-        # 'other_essentials' : 'Other Essentials',
-        # 'no_requirements' : 'No Requirment',
         'emergency_situation' : 'Emergency Situation',
         'complete_lockdown' : 'Complete Lockdown',
         'partial_building_lockdown' : 'Partial Building/Tower Lockdown',
