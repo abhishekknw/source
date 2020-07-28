@@ -1029,9 +1029,9 @@ def get_leads_data_for_multiple_campaigns(supplier_code, campaign_list):
     campaign_objects_list = {campaign['proposal_id']: campaign for campaign in campaign_objects}
     valid_campaign_list = list(campaign_objects_list.keys())
     for campaign_id in valid_campaign_list:
-        shortlisted_supplier_ids = ShortlistedSpaces.objects.filter(proposal_id=campaign_id, supplier_code=supplier_code).values('object_id')
+        shortlisted_supplier_ids = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('object_id', 'supplier_code')
         all_supplier_ids = [supplier_ids['object_id'] for supplier_ids in shortlisted_supplier_ids]
-        if supplier_code == "RS":
+        if shortlisted_supplier_ids[0]["supplier_code"] == "RS":
             flat_count = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids). \
                 values('flat_count').aggregate(Sum('flat_count'))['flat_count__sum']
         else:
