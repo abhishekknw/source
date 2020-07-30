@@ -650,6 +650,7 @@ class AssignCampaign(APIView):
 
                 accountResult = AccountInfo.objects.filter(pk=data['campaign']['account']).first()
                 data['campaign']['accountName'] = accountResult.name
+                data['campaign']['accountOrganisationName'] = accountResult.organisation.name
 
 
                 organisationResult = Organisation.objects.filter(organisation_id=data['campaign']['principal_vendor']).first()
