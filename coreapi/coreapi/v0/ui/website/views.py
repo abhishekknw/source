@@ -11,7 +11,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django.db import transaction
-from django.db.models import Q, F, Sum
+from django.db.models import Q, F, Sum, Max
 from django.forms.models import model_to_dict
 from django.utils.dateparse import parse_datetime
 from rest_framework import status
@@ -65,7 +65,7 @@ from v0 import errors
 import v0.constants as v0_constants
 from v0.ui.campaign.models import CampaignComments
 
-from django.db.models import Max
+from django.db.models.functions import Trim
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -650,7 +650,7 @@ class AssignCampaign(APIView):
             for data in serializer.data:
                 all_proposal_ids.append(data['campaign']['proposal_id'])
             
-            comments_list = CampaignComments.objects.values('campaign_id').annotate(latest_id=Max('id'), comment_max=Max('comment')).filter(campaign_id__in=all_proposal_ids)
+            comments_list = CampaignComments.objects.values('campaign_id').annotate(latest_id=Max('id'), comment_max=Trim('comment')).filter(campaign_id__in=all_proposal_ids, related_to='campaign')
             comments_list_dict = {row["campaign_id"]: row["comment_max"] for row in comments_list}
 
             campaign_obj = {}
