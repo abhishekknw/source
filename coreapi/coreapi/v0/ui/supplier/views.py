@@ -146,7 +146,7 @@ def update_contact_and_ownership_detail(data):
             "unit_primary_count": master_supplier_data.get('unit_primary_count') if master_supplier_data.get('unit_primary_count') else 0,
             "unit_secondary_count": master_supplier_data.get('unit_secondary_count') if master_supplier_data.get('unit_secondary_count') else 0,
             "unit_tertiary_count": master_supplier_data.get('unit_tertiary_count') if master_supplier_data.get('unit_tertiary_count') else 0,
-            "representative": master_supplier_data.get('representative', None),
+            "representative": data.get('representative', None),
             "area": supplier_address_data.get('area', None),
             "subarea": supplier_address_data.get('subarea', None),
             "city": supplier_address_data.get('city', None),
@@ -155,7 +155,21 @@ def update_contact_and_ownership_detail(data):
             "latitude": supplier_address_data.get('latitude', None),
             "longitude": supplier_address_data.get('longitude', None),
             "landmark": supplier_address_data.get('nearest_landmark', None),
+            "feedback": data.get('feedback', None),
         }
+        supplier_type = master_supplier_data.get('supplier_type', None)
+        if supplier_type in ["CP", "BS", "HO"]:
+            master_data["quality_rating"] = data.get('quality_rating', None)
+            master_data["locality_rating"] = data.get('locality_rating', None)
+            master_data["quantity_rating"] = data.get('quantity_rating', None)
+        elif supplier_type in ["GY", "SA"]:
+            master_data["quality_rating"] = data.get('category', None)
+            master_data["locality_rating"] = data.get('locality_rating', None)
+        elif supplier_type in ["RE"]:
+            master_data["quality_rating"] = data.get('rating', None)
+            master_data["locality_rating"] = data.get('rating', None)
+            master_data["quantity_rating"] = data.get('store_size', None)
+
         supplier_master_data = SupplierMaster.objects.filter(supplier_id=object_id).first()
         if supplier_master_data and supplier_master_data.supplier_id:
             supplier_master_serializer = SupplierMasterSerializer(supplier_master_data, data=master_data)
