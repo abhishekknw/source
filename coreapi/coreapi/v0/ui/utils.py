@@ -321,7 +321,8 @@ def save_supplier_data(user, master_data):
                     "zipcode": zipcode,
                     "address1": address1,
                     "unit_primary_count": unit_primary_count,
-                    "unit_secondary_count": unit_secondary_count
+                    "unit_secondary_count": unit_secondary_count,
+                    "representative": user.profile.organisation.organisation_id
                 }
                 supplier_master_serializer = SupplierMasterSerializer(data=supplier_master_data)
                 if supplier_master_serializer.is_valid():
