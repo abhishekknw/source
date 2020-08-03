@@ -48,7 +48,7 @@ from v0.ui.account.serializers import (ContactDetailsSerializer, ContactDetailsG
 from v0.ui.account.models import ContactDetailsGeneric
 from v0.ui.components.models import (SocietyTower, CorporateBuildingWing, CompanyFloor, FlatType, LiftDetails)
 from v0.ui.components.serializers import CorporateBuildingWingSerializer
-from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping)
+from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping, SupplierAssignment)
 from v0.ui.organisation.models import (Organisation)
 import v0.constants as v0_constants
 from rest_framework.response import Response
@@ -78,6 +78,7 @@ from django.db import IntegrityError
 from .supplier_uploads import create_price_mapping_default
 from django.db import connection
 from v0.ui.common.pagination import paginate
+from django.utils import timezone
 
 import logging
 logger = logging.getLogger(__name__)
@@ -4123,3 +4124,37 @@ class ListSuppliers(APIView):
         except Exception as e:
             logger.exception(e)
             return ui_utils.handle_response({}, exception_object=e)
+
+class AssignSupplierUsers(APIView):
+    def put(selt, request):
+        quality_rating = request.data.get("quality_rating")
+        assigned_to_ids = request.data.get("assigned_to_ids")
+        campaign_id = request.data.get("campaign_id")
+        supplier_ids = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values_list("object_id", flat=True)
+        supplier_new_ids = SupplierMaster.objects.filter(supplier_id__in=supplier_ids, quality_rating=quality_rating).values_list("supplier_id", flat=True)
+        if not supplier_new_ids:
+            supplier_new_ids = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids, society_type_quality=quality_rating).values_list("supplier_id", flat=True)
+        
+        user_old = SupplierAssignment.objects.filter(campaign=campaign_id, supplier_id__in=supplier_new_ids).values("supplier_id","assigned_to")
+        user_old_obj = {}
+        for row in user_old:
+            if not user_old_obj.get(row["supplier_id"]):
+                user_old_obj[row["supplier_id"]] = []
+            user_old_obj[row["supplier_id"]].append(row["assigned_to"])
+
+        data = []
+        now_time = timezone.now()
+        for supplier_id in supplier_new_ids:
+            for user_id in assigned_to_ids:
+                if not user_old_obj.get(supplier_id) or not user_id in user_old_obj[supplier_id]:
+                    data.append(SupplierAssignment(**{
+                        "campaign_id": campaign_id,
+                        "supplier_id": supplier_id,
+                        "assigned_by": request.user,
+                        "assigned_to_id": user_id,
+                        "created_at": now_time,
+                        "updated_at": now_time
+                    }))
+
+        SupplierAssignment.objects.bulk_create(data)
+        return ui_utils.handle_response({}, data={}, success=True)
