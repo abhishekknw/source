@@ -149,6 +149,7 @@ class ContactDetails(BaseModel):
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     other_contact_type = models.CharField(max_length=255, null=True, blank=True)
     objects = managers.GeneralManager()
+    relationship_status = models.CharField(max_length=50, null=True, blank=True)
 
     class Meta:
 
