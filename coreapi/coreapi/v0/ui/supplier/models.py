@@ -601,3 +601,23 @@ class SupplierRelationship(BaseModel):
     class Meta:
         db_table = 'supplier_relationship'
         unique_together = ('society', 'supplier_id','type')
+
+class SupplierBus(BasicSupplierDetails):
+
+    class Meta:
+        db_table = 'supplier_bus'
+
+class SupplierGantry(BasicSupplierDetails):
+
+    class Meta:
+        db_table = 'supplier_gantry'
+
+class SupplierRadioChannel(BasicSupplierDetails):
+
+    class Meta:
+        db_table = 'supplier_radio_channel'
+
+class SupplierTvChannel(BasicSupplierDetails):
+
+    class Meta:
+        db_table = 'supplier_tv_channel'
