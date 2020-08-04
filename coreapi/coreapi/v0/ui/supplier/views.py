@@ -48,7 +48,7 @@ from v0.ui.account.serializers import (ContactDetailsSerializer, ContactDetailsG
 from v0.ui.account.models import ContactDetailsGeneric
 from v0.ui.components.models import (SocietyTower, CorporateBuildingWing, CompanyFloor, FlatType, LiftDetails)
 from v0.ui.components.serializers import CorporateBuildingWingSerializer
-from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping)
+from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping, SupplierAssignment)
 from v0.ui.organisation.models import (Organisation)
 import v0.constants as v0_constants
 from rest_framework.response import Response
@@ -78,6 +78,7 @@ from django.db import IntegrityError
 from .supplier_uploads import create_price_mapping_default
 from django.db import connection
 from v0.ui.common.pagination import paginate
+from django.utils import timezone
 
 import logging
 logger = logging.getLogger(__name__)
@@ -146,7 +147,7 @@ def update_contact_and_ownership_detail(data):
             "unit_primary_count": master_supplier_data.get('unit_primary_count') if master_supplier_data.get('unit_primary_count') else 0,
             "unit_secondary_count": master_supplier_data.get('unit_secondary_count') if master_supplier_data.get('unit_secondary_count') else 0,
             "unit_tertiary_count": master_supplier_data.get('unit_tertiary_count') if master_supplier_data.get('unit_tertiary_count') else 0,
-            "representative": master_supplier_data.get('representative', None),
+            "representative": data.get('representative', None),
             "area": supplier_address_data.get('area', None),
             "subarea": supplier_address_data.get('subarea', None),
             "city": supplier_address_data.get('city', None),
@@ -155,7 +156,21 @@ def update_contact_and_ownership_detail(data):
             "latitude": supplier_address_data.get('latitude', None),
             "longitude": supplier_address_data.get('longitude', None),
             "landmark": supplier_address_data.get('nearest_landmark', None),
+            "feedback": data.get('feedback', None),
         }
+        supplier_type = master_supplier_data.get('supplier_type', None)
+        if supplier_type in ["CP", "BS", "HO"]:
+            master_data["quality_rating"] = data.get('quality_rating', None)
+            master_data["locality_rating"] = data.get('locality_rating', None)
+            master_data["quantity_rating"] = data.get('quantity_rating', None)
+        elif supplier_type in ["GY", "SA"]:
+            master_data["quality_rating"] = data.get('category', None)
+            master_data["locality_rating"] = data.get('locality_rating', None)
+        elif supplier_type in ["RE"]:
+            master_data["quality_rating"] = data.get('rating', None)
+            master_data["locality_rating"] = data.get('rating', None)
+            master_data["quantity_rating"] = data.get('store_size', None)
+
         supplier_master_data = SupplierMaster.objects.filter(supplier_id=object_id).first()
         if supplier_master_data and supplier_master_data.supplier_id:
             supplier_master_serializer = SupplierMasterSerializer(supplier_master_data, data=master_data)
@@ -4109,3 +4124,37 @@ class ListSuppliers(APIView):
         except Exception as e:
             logger.exception(e)
             return ui_utils.handle_response({}, exception_object=e)
+
+class AssignSupplierUsers(APIView):
+    def put(selt, request):
+        quality_rating = request.data.get("quality_rating")
+        assigned_to_ids = request.data.get("assigned_to_ids")
+        campaign_id = request.data.get("campaign_id")
+        supplier_ids = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values_list("object_id", flat=True)
+        supplier_new_ids = SupplierMaster.objects.filter(supplier_id__in=supplier_ids, quality_rating=quality_rating).values_list("supplier_id", flat=True)
+        if not supplier_new_ids:
+            supplier_new_ids = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids, society_type_quality=quality_rating).values_list("supplier_id", flat=True)
+        
+        user_old = SupplierAssignment.objects.filter(campaign=campaign_id, supplier_id__in=supplier_new_ids).values("supplier_id","assigned_to")
+        user_old_obj = {}
+        for row in user_old:
+            if not user_old_obj.get(row["supplier_id"]):
+                user_old_obj[row["supplier_id"]] = []
+            user_old_obj[row["supplier_id"]].append(row["assigned_to"])
+
+        data = []
+        now_time = timezone.now()
+        for supplier_id in supplier_new_ids:
+            for user_id in assigned_to_ids:
+                if not user_old_obj.get(supplier_id) or not user_id in user_old_obj[supplier_id]:
+                    data.append(SupplierAssignment(**{
+                        "campaign_id": campaign_id,
+                        "supplier_id": supplier_id,
+                        "assigned_by": request.user,
+                        "assigned_to_id": user_id,
+                        "created_at": now_time,
+                        "updated_at": now_time
+                    }))
+
+        SupplierAssignment.objects.bulk_create(data)
+        return ui_utils.handle_response({}, data={}, success=True)

@@ -11,7 +11,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django.db import transaction
-from django.db.models import Q, F, Sum
+from django.db.models import Q, F, Sum, Max
 from django.forms.models import model_to_dict
 from django.utils.dateparse import parse_datetime
 from rest_framework import status
@@ -63,6 +63,9 @@ import v0.ui.utils as ui_utils
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0 import errors
 import v0.constants as v0_constants
+from v0.ui.campaign.models import CampaignComments
+
+from django.db.models.functions import Trim
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -644,12 +647,19 @@ class AssignCampaign(APIView):
                     campaigns.append(assign_object)
             serializer = CampaignAssignmentSerializerReadOnly(campaigns, many=True)
 
+            for data in serializer.data:
+                all_proposal_ids.append(data['campaign']['proposal_id'])
+            
+            comments_list = CampaignComments.objects.values('campaign_id').annotate(latest_id=Max('id'), comment_max=Trim('comment')).filter(campaign_id__in=all_proposal_ids, related_to='campaign')
+            comments_list_dict = {row["campaign_id"]: row["comment_max"] for row in comments_list}
+
             campaign_obj = {}
 
             for data in serializer.data:
 
                 accountResult = AccountInfo.objects.filter(pk=data['campaign']['account']).first()
                 data['campaign']['accountName'] = accountResult.name
+                data['campaign']['accountOrganisationName'] = accountResult.organisation.name
 
 
                 organisationResult = Organisation.objects.filter(organisation_id=data['campaign']['principal_vendor']).first()
@@ -673,6 +683,7 @@ class AssignCampaign(APIView):
                 }
 
                 campaign_obj[data['campaign']['proposal_id']]["assigned"].append(row)
+                campaign_obj[data['campaign']['proposal_id']]["comment"] = comments_list_dict.get(data['campaign']['proposal_id'])
 
             campaign_list = [value for key,value in campaign_obj.items()]
 

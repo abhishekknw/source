@@ -65,9 +65,10 @@ from v0.ui.utils import handle_response
 from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignComments
 from v0.ui.common.models import mongo_client, mongo_test
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Max
 
 from v0.ui.campaign.models import CampaignAssignment
+from django.db.models.functions import Trim
 
 import logging
 logger = logging.getLogger(__name__)
@@ -964,8 +965,15 @@ class ProposalViewSet(viewsets.ViewSet):
                 if proposal_id not in seen:
                     seen.add(proposal_id)
                     final_file_objects.append(file_object)
-            file_serializer = GenericExportFileSerializerReadOnly(final_file_objects, many=True)
-            return ui_utils.handle_response(class_name, data=file_serializer.data, success=True)
+            file_serializer = GenericExportFileSerializerReadOnly(final_file_objects, many=True).data
+
+            seen = list(seen)
+            comments_list = CampaignComments.objects.values('campaign_id').annotate(latest_id=Max('id'), comment_max=Trim('comment')).filter(campaign_id__in=seen, related_to='campaign')
+            comments_list_dict = {row["campaign_id"]: row["comment_max"] for row in comments_list}
+            for row in file_serializer:
+                row["latest_comment"] = comments_list_dict.get(row["proposal"]["proposal_id"])
+
+            return ui_utils.handle_response(class_name, data=file_serializer, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
