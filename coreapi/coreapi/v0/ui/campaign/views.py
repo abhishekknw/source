@@ -414,16 +414,16 @@ class DashBoardViewSet(viewsets.ViewSet):
             }
         inv_data_objects_list = website_utils.get_campaign_inv_data(campaign_id)
         # inv_data_objects_list = {inv['object_id']:inv for inv in inv_data}
-        ongoing_suppliers = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
-                                                                          'inventory_activity_assignment__inventory_activity',
-                                                                          'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
-                                                                          'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
-            filter(
-            inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id,
-            inventory_activity_assignment__inventory_activity__activity_type='RELEASE',
-            inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__is_completed=False). \
-            values(object_id_alias). \
-            distinct()
+        # ongoing_suppliers = InventoryActivityImage.objects.select_related('inventory_activity_assignment',
+        #                                                                   'inventory_activity_assignment__inventory_activity',
+        #                                                                   'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details',
+        #                                                                   'inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces'). \
+        #     filter(
+        #     inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__proposal=campaign_id,
+        #     inventory_activity_assignment__inventory_activity__activity_type='RELEASE',
+        #     inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__is_completed=False). \
+        #     values(object_id_alias). \
+        #     distinct()
         all_inventory_activity_images = InventoryActivityImage.objects.filter(
             inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces_id__in=shortlisted_spaces_id_list).all()
         all_images_by_supplier = {}
@@ -463,15 +463,25 @@ class DashBoardViewSet(viewsets.ViewSet):
             })
             all_images_by_supplier[supplier_id][hashtag_image.hashtag]["total_count"] += 1
 
-        ongoing_supplier_id_list = [supplier[object_id_alias] for supplier in ongoing_suppliers]
+        startdate = timezone.datetime.today()
+        enddate = startdate + timedelta(days=2)
+        ongoing_suppliers = ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id,
+                                                               is_completed=False,
+                                                               booking_status='BK',
+                                                               next_action_date__range=[startdate, enddate]).values('object_id')
+        ongoing_supplier_id_list = [supplier['object_id'] for supplier in ongoing_suppliers]
 
         completed_suppliers = ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id,
                                                                is_completed=True).values('object_id')
 
         completed_supplier_id_list = [supplier['object_id'] for supplier in completed_suppliers]
 
-        upcoming_supplier_id_list = set(shortlisted_suppliers_id_list) - set(
-            ongoing_supplier_id_list + completed_supplier_id_list)
+        # upcoming_supplier_id_list = set(shortlisted_suppliers_id_list) - set(
+        #     ongoing_supplier_id_list + completed_supplier_id_list)
+        upcoming_suppliers = ShortlistedSpaces.objects.filter(proposal__proposal_id=campaign_id, 
+                                                        is_completed=False, 
+                                                        booking_status__in=('TB', 'DP')).values('object_id')
+        upcoming_supplier_id_list = [supplier['object_id'] for supplier in upcoming_suppliers]
 
         ongoing_suppliers_list = []
         total_ongoing_leads_count = 0
