@@ -1339,6 +1339,10 @@ codes_to_model_names = {
     'BS': 'SupplierTypeBusShelter',
     'EI': 'SupplierEducationalInstitute',
     'HO': 'SupplierHording',
+    'BU': 'SupplierBus',
+    'GN': 'SupplierGantry',
+    'RC': 'SupplierRadioChannel',
+    'TV': 'SupplierTvChannel',
     'WI': 'WhatsAppIndividualInventory',
     'WG': 'WhatsAppGroupInventory',
   

@@ -30,7 +30,7 @@ def create_random_supplier_id(supplier, city, area, subarea, supplier_type_code)
     return new_supplier_id.upper()
 
 
-def create_new_society(model, supplier_name, city, area, subarea, supplier_type_code, tower_count, flat_count, latitude, longitude, address, zipcode, supplier_ids,contact_name, contact_number, designation):
+def create_new_society(model, supplier_name, city, area, subarea, supplier_type_code, tower_count, flat_count, latitude, longitude, address, zipcode, supplier_ids,contact_name, contact_number, designation, state):
     supplier_id = create_random_supplier_id(supplier_name, city, area, subarea, supplier_type_code)
     supplier = model.objects.filter(supplier_id=supplier_id).values('supplier_id', 'society_name')
     # Todo: Check supplier id in all suppliers
@@ -52,6 +52,7 @@ def create_new_society(model, supplier_name, city, area, subarea, supplier_type_
         supplier_details = model(
             supplier_id=supplier_id,
             society_name=supplier_name,
+            society_state=state,
             society_city=city,
             society_locality=area,
             society_subarea=subarea,
@@ -61,7 +62,8 @@ def create_new_society(model, supplier_name, city, area, subarea, supplier_type_
             society_longitude=longitude if longitude else None,
             society_address1=address.strip().rstrip(',').lstrip(',').rstrip('.').rstrip('"').lstrip('.').lstrip('"') if address else None,
             supplier_code='RS',
-            society_zip=zipcode if zipcode else None
+            society_zip=zipcode if zipcode else None,
+            representative_id='MAC1421'
         )
         supplier_details.save()
         # Append supplier id in supplier ids
