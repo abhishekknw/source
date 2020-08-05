@@ -3040,7 +3040,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     total_booked_suppliers_count += phase_booked_suppliers
                     not_initiated_flats += phase_booked_flats
                     total_booked_flats += phase_booked_flats
-                    not_initiated_supplier_count = all_not_initiated_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                    not_initiated_supplier_count += phase_booked_suppliers
                 if status in btoc_rejected_status:
                     total_booked_suppliers_count += phase_booked_suppliers
                     rejected_flats += phase_booked_flats
@@ -3050,7 +3050,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     total_booked_suppliers_count += phase_booked_suppliers
                     recce_flats += phase_booked_flats
                     total_booked_flats += phase_booked_flats
-                    recce_supplier_count = all_recce_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+                    recce_required_supplier_count += phase_booked_suppliers
 
             elif end_customer == 'B to B':
                 if status in meeting_fixed:
