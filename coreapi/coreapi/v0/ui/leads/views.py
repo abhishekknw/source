@@ -510,9 +510,9 @@ class LeadsFormBulkEntry(APIView):
                             shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id,
                                                                                   object_id__in=supplier_ids).values(
                                 'object_id', 'id').all()
-                            if len(shortlisted_spaces) > 1:
-                                more_than_ones_same_shortlisted_society.append(society_name)
-                                continue
+                            # if len(shortlisted_spaces) > 1:
+                            #     more_than_ones_same_shortlisted_society.append(society_name)
+                            #     continue
                             if len(shortlisted_spaces) == 0:
                                 not_present_in_shortlisted_societies.append(society_name)
                                 continue
