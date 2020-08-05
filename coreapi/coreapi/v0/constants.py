@@ -101,6 +101,10 @@ retail_shop_code = 'RE'
 bus_depot_code = 'BD'
 educational_institute = 'EI'
 hording = 'HO'
+bus = 'BU'
+gantry = 'GN'
+radio_channel = 'RC'
+tv_channel = 'TV'
 
 # all supplier codes
 society_code = 'RS'
@@ -115,7 +119,7 @@ hording_code = 'HO'
 positive = ['Yes', 'Y', '1']
 negative = ['No', 'N', '0']
 
-valid_supplier_codes = [society, corporate, gym, salon, bus_shelter, bus_depot_code, retail_shop_code, educational_institute_code, hording_code]
+valid_supplier_codes = [society, corporate, gym, salon, bus_shelter, bus_depot_code, retail_shop_code, educational_institute_code, hording_code, bus, gantry, radio_channel, tv_channel]
 
 supplier_keys = [
 
@@ -1339,6 +1343,10 @@ codes_to_model_names = {
     'BS': 'SupplierTypeBusShelter',
     'EI': 'SupplierEducationalInstitute',
     'HO': 'SupplierHording',
+    'BU': 'SupplierBus',
+    'GN': 'SupplierGantry',
+    'RC': 'SupplierRadioChannel',
+    'TV': 'SupplierTvChannel',
     'WI': 'WhatsAppIndividualInventory',
     'WG': 'WhatsAppGroupInventory',
   
