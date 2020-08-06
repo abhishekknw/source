@@ -3124,7 +3124,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items():
             if status in confirmed_booked_status:
                 for row in supplier:
-                    next_action_date = datetime.datetime.strptime(row["next_action_date"], '%Y/%m/%d').date()
+                    if row["next_action_date"]:
+                        next_action_date = datetime.datetime.strptime(row["next_action_date"], '%Y/%m/%d').date()
                     if row["next_action_date"] and next_action_date >= booking_startdate and next_action_date <= booking_enddate:
                         confirmed_booked_suppliers_list.append(row)
                         confirmed_booked_suppliers_count += 1
@@ -3285,7 +3286,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             completed_phases.append(phase_dict)
     last_completed_phase = None
     sorted_upcoming_phases = sorted(upcoming_phases, key=lambda k: k['phase_no'])
-    upcoming_beyond_three = sorted_upcoming_phases[1:]
+    upcoming_beyond_three = sorted_upcoming_phases[3:]
     pipeline = {'followup_required': {'supplier_count': 0, 'flat_count': 0, 'supplier_data':[]},
                 'confirmed_booked': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 'verbally_booked': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
@@ -3396,10 +3397,20 @@ def get_supplier_list_by_status_ctrl(campaign_id):
 
     if len(completed_phases) > 0:
         last_completed_phase = sorted(completed_phases, key=lambda k: int(k['phase_no']))[-1]
+    if last_completed_phase:
+        if ongoing_phase:
+            upcoming_phase = sorted_upcoming_phases[:1]
+        else:
+            upcoming_phase = sorted_upcoming_phases[:2]
+    else:
+        if ongoing_phase:
+            upcoming_phase = sorted_upcoming_phases[:2]
+        else:
+            upcoming_phase = sorted_upcoming_phases[:3]
     shortlisted_spaces_by_phase_dict = {
         'all_phases': shortlisted_spaces_by_phase_list,
         'last_completed_phase': last_completed_phase,
-        'upcoming_phases': sorted_upcoming_phases[:1],
+        'upcoming_phases': upcoming_phase,
         'ongoing_phase': ongoing_phase,
         'pipeline_suppliers': pipeline,
         'completed_phases': completed_phases,
