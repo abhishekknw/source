@@ -40,7 +40,7 @@ table, td, th {
                         <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_address1 if supplier.society_address1 else ""}}</td>
                         
                         <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">
-                            <a href="https://www.google.com/maps/?q=+{{supplier.society_latitude}}+{{supplier.society_longitude}}">Details</a>
+                            <a href="https://www.google.com/maps/?q=+{{supplier.society_latitude if supplier.society_latitude else supplier.latitude}}+{{supplier.society_longitude if supplier.society_longitude else supplier.longitude}}">Details</a>
                         </td>
                         <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.next_action_date}}</td>
                     </tr>
