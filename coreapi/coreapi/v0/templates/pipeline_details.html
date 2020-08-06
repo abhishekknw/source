@@ -87,14 +87,14 @@ table, td, th {
                         <tr style="border: 1px solid black;border: 1px solid black;">
                             <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{phase.phase_no}}</td>
                             <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{loop.index}}</td>
-                            <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_name}}</td>
+                            <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_name if supplier.society_name else supplier.supplier_name}}</td>
                             <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.flat_count}}</td>
                             <!--<td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.tower_count}}</td>-->
-                            <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_type_quality}}</td>
-                            <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_locality}}({{supplier.society_subarea}})</td>
-                            <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_address1}}</td>
+                            <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_type_quality if supplier.society_type_quality else supplier.quality_rating}}</td>
+                            <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_locality if supplier.society_locality else supplier.area}}({{supplier.society_subarea if supplier.society_subarea else supplier.subarea}})</td>
+                            <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_address1 if supplier.society_address1 else ""}}</td>
                             <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">
-                                <a href="https://www.google.com/maps/?q=+{{supplier.society_latitude}}+{{supplier.society_longitude}}">Details</a>
+                                <a href="https://www.google.com/maps/?q=+{{supplier.society_latitude if supplier.society_latitude else supplier.latitude}}+{{supplier.society_longitude if supplier.society_longitude else supplier.longitude}}">Details</a>
                             </td>
                         </tr>
                     {% endfor %}
@@ -119,17 +119,17 @@ table, td, th {
                 </tr>
 
                 <!--{% if details_dict.pipeline_suppliers.total_booked.supplier_data %}-->
-                {% for supplier in details_dict.pipeline_suppliers.total_booked.supplier_data %}
+                {% for supplier in details_dict.pipeline_suppliers.pipeline.supplier_data %}
                     <tr style="border: 1px solid black;border: 1px solid black;">
                         <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{loop.index}}</td>
-                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_name}}</td>
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_name if supplier.society_name else supplier.supplier_name}}</td>
                         <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.flat_count}}</td>
                         <!--<td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.tower_count}}</td>-->
-                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_type_quality}}</td>
-                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_locality}}({{supplier.society_subarea}})</td>
-                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_address1}}</td>
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_type_quality if supplier.society_type_quality else supplier.quality_rating}}</td>
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_locality if supplier.society_locality else supplier.area}}({{supplier.society_subarea if supplier.society_subarea else supplier.subarea}})</td>
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.society_address1 if supplier.society_address1 else ""}}</td>
                         <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">
-                            <a href="https://www.google.com/maps/?q=+{{supplier.society_latitude}}+{{supplier.society_longitude}}">Details</a>
+                            <a href="https://www.google.com/maps/?q=+{{supplier.society_latitude if supplier.society_latitude else supplier.latitude}}+{{supplier.society_longitude if supplier.society_longitude else supplier.longitude}}">Details</a>
                         </td>
 
                     </tr>
