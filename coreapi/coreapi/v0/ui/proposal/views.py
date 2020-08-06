@@ -3124,9 +3124,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items():
             if status in confirmed_booked_status:
                 for row in supplier:
-                    # if row["next_action_date"]:
-                    print(row["next_action_date"])
-                    next_action_date = datetime.datetime.strptime(row["next_action_date"], '%Y/%m/%d').date()
+                    if row["next_action_date"]:
+                        next_action_date = datetime.datetime.strptime(row["next_action_date"], '%Y/%m/%d').date()
                     if row["next_action_date"] and next_action_date >= booking_startdate and next_action_date <= booking_enddate:
                         confirmed_booked_suppliers_list.append(row)
                         confirmed_booked_suppliers_count += 1
