@@ -26,6 +26,7 @@ table, td, th {
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Area(Subarea)</th>
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Address</th>
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Map Address</th>
+                <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Date of Execution</th>
 <!--                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Inventory Count</th>
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Stall Location</th>
                 <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Freebies</th>
@@ -44,6 +45,7 @@ table, td, th {
                         <td style="height: 50px;vertical-align: middle;border: 1px solid black;">
                             <a href="https://www.google.com/maps/?q=+{{supplier.society_latitude}}+{{supplier.society_longitude}}">Details</a>
                         </td>
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.next_action_date}}</td>
                  <!--        <td style="height: 50px;min-width:120px;vertical-align: bottom;border: 1px solid black;">
                             <div>
                                 Poster : {% if supplier.inventory_counts.POSTER %}{{supplier.inventory_counts.POSTER}}{% else %} 0 {% endif %}<br/>
