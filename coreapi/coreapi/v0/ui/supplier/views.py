@@ -140,6 +140,10 @@ def update_contact_and_ownership_detail(data):
     supplier_address_data = master_supplier_data.get('address_supplier')
 
     if master_supplier_data:
+        landmark = data.get('landmark', None)
+        if not landmark:
+            landmark = data.get('nearest_landmark', None)
+
         master_data = {
             "supplier_id": object_id,
             "supplier_name": master_supplier_data.get('supplier_name', None),
@@ -155,7 +159,7 @@ def update_contact_and_ownership_detail(data):
             "zipcode": supplier_address_data.get('zipcode', None),
             "latitude": supplier_address_data.get('latitude', None),
             "longitude": supplier_address_data.get('longitude', None),
-            "landmark": supplier_address_data.get('nearest_landmark', None),
+            "landmark": landmark,
             "feedback": data.get('feedback', None),
         }
         supplier_type = master_supplier_data.get('supplier_type', None)
@@ -191,7 +195,7 @@ def update_contact_and_ownership_detail(data):
             "zipcode": supplier_address_data.get('zipcode', None),
             "latitude": supplier_address_data.get('latitude', None),
             "longitude": supplier_address_data.get('longitude', None),
-            "nearest_landmark": supplier_address_data.get('nearest_landmark', None),
+            "nearest_landmark": landmark,
         }
         address_master_data = AddressMaster.objects.filter(supplier_id=object_id).first()
         if address_master_data and address_master_data.supplier_id:
