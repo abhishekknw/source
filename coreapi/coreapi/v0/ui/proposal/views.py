@@ -2916,6 +2916,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             overall_inventory_count_dict['FLIER'] = supplier_society_serialized["flat_count"] if supplier_society_serialized.get("flat_count") else 0
 
         supplier_society_serialized['booking_status'] = space.booking_status
+        supplier_society_serialized['next_action_date'] = space.next_action_date.strftime('%Y/%m/%d') if space.next_action_date else None
         supplier_society_serialized['booking_sub_status'] = space.booking_sub_status
         supplier_society_serialized['freebies'] = space.freebies.split(",") if space.freebies else None
         supplier_society_serialized['stall_locations'] = space.stall_locations.split(",") if space.stall_locations else None
@@ -2972,11 +2973,16 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     part_floor_lock_status =['OPFL', 'PFVF', 'PFMD', 'PFGR', 'PFOE', 'PFNR']
     part_house_lock_status = ['OPHL', 'PHVF', 'PHMD', 'PHGR', 'PHOE', 'PHNR']
     open_status = ['OP', 'OVF', 'OMD', 'OGR', 'OOE', 'ONR']
+    pipeline_status = ['TB', 'DP']
     all_not_initiated_supplier = []
     all_recce_supplier = []
 
     proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
     end_customer = proposal.type_of_end_customer.name
+
+    booking_startdate = timezone.datetime.today().date()
+    booking_enddate = booking_startdate + datetime.timedelta(days=3)
+    pipeline_enddate = booking_startdate + datetime.timedelta(days=7)
 
     for phase_id in shortlisted_spaces_by_phase_dict:
         end_date = all_phase_by_id[phase_id]['end_date'] if phase_id in all_phase_by_id else None
@@ -3034,8 +3040,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 if status in confirmed_booked_status:
                     total_booked_suppliers_count += phase_booked_suppliers
                     total_booked_flats += phase_booked_flats
-                    confirmed_booked_suppliers_count += phase_booked_suppliers
-                    confirmed_booked_flats += phase_booked_flats
+                    # confirmed_booked_suppliers_count += phase_booked_suppliers
+                    # confirmed_booked_flats += phase_booked_flats
                 if status in not_initiated_status:
                     total_booked_suppliers_count += phase_booked_suppliers
                     not_initiated_flats += phase_booked_flats
@@ -3113,9 +3119,18 @@ def get_supplier_list_by_status_ctrl(campaign_id):
 
         total_booked_suppliers_list = flatten_list(
             [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items()])
-        confirmed_booked_suppliers_list = flatten_list(
-            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
-             status in confirmed_booked_status])
+
+        confirmed_booked_suppliers_list = []
+        for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items():
+            if status in confirmed_booked_status:
+                for row in supplier:
+                    if row["next_action_date"]:
+                        next_action_date = datetime.datetime.strptime(row["next_action_date"], '%Y/%m/%d').date()
+                    if row["next_action_date"] and next_action_date >= booking_startdate and next_action_date <= booking_enddate:
+                        confirmed_booked_suppliers_list.append(row)
+                        confirmed_booked_suppliers_count += 1
+                        confirmed_booked_flats += row["flat_count"]
+
         verbally_booked_suppliers_list = flatten_list(
             [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
              status in verbally_booked_status])
@@ -3271,7 +3286,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             completed_phases.append(phase_dict)
     last_completed_phase = None
     sorted_upcoming_phases = sorted(upcoming_phases, key=lambda k: k['phase_no'])
-    upcoming_beyond_three = sorted_upcoming_phases[1:]
+    upcoming_beyond_three = sorted_upcoming_phases[3:]
     pipeline = {'followup_required': {'supplier_count': 0, 'flat_count': 0, 'supplier_data':[]},
                 'confirmed_booked': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 'verbally_booked': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
@@ -3289,6 +3304,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 'partial_floor_lockdown': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 'partial_house_lockdown': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 'open': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'pipeline': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 }
 
     for phase in upcoming_beyond_three:
@@ -3365,6 +3381,12 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             pipeline['open']['supplier_data'].append(supplier)
             pipeline['open']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['open']['supplier_count'] += 1
+        if supplier['booking_status'] in pipeline_status and supplier["next_action_date"]:
+            next_action_date = datetime.datetime.strptime(supplier["next_action_date"], '%Y/%m/%d').date()
+            if next_action_date >= booking_startdate and next_action_date <= pipeline_enddate:
+                pipeline['pipeline']['supplier_data'].append(supplier)
+                pipeline['pipeline']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+                pipeline['pipeline']['supplier_count'] += 1
 
         pipeline['total_booked']['supplier_data'].append(supplier)
         pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
@@ -3375,10 +3397,20 @@ def get_supplier_list_by_status_ctrl(campaign_id):
 
     if len(completed_phases) > 0:
         last_completed_phase = sorted(completed_phases, key=lambda k: int(k['phase_no']))[-1]
+    if last_completed_phase:
+        if ongoing_phase:
+            upcoming_phase = sorted_upcoming_phases[:1]
+        else:
+            upcoming_phase = sorted_upcoming_phases[:2]
+    else:
+        if ongoing_phase:
+            upcoming_phase = sorted_upcoming_phases[:2]
+        else:
+            upcoming_phase = sorted_upcoming_phases[:3]
     shortlisted_spaces_by_phase_dict = {
         'all_phases': shortlisted_spaces_by_phase_list,
         'last_completed_phase': last_completed_phase,
-        'upcoming_phases': sorted_upcoming_phases[:1],
+        'upcoming_phases': upcoming_phase,
         'ongoing_phase': ongoing_phase,
         'pipeline_suppliers': pipeline,
         'completed_phases': completed_phases,
