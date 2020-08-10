@@ -6932,19 +6932,12 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
                     supplier_inv_count_mapping = {sup_obj['id'] : sup_obj for sup_obj in proposal_data['center_data'][supplier_code]['supplier_data']}
                     inventory_objects = create_inventory_ids(supplier_objects_mapping[supplier_id], filter_code, is_import_sheet,supplier_inv_count_mapping)
                 else:
-                    inventory_objects = getattr(inventory_models, v0_constants.model_to_codes[filter_code['id']]).objects.filter(
-                        Q(object_id=supplier_id))
-                    if not inventory_objects or str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL' or str(
-                            filter_code['id']) == 'GA':
-                        try:
-                            inventory_objects = create_inventory_ids(supplier_objects_mapping[supplier_id], filter_code)
-                        except KeyError as e:
-                            pass
+                    inventory_objects = create_inventory_ids(None, filter_code)
+
                 response = make_final_list(filter_code, inventory_objects, shortlisted_suppliers_mapping[supplier_id])
-                if not response.data['status']:
-                    return response
-                shortlisted_inv_objects.extend(response.data['data'])
-        # ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces__proposal_id=proposal_data['proposal_data'])
+                if response.data['status'] and response.data['data']:
+                    shortlisted_inv_objects.extend(response.data['data'])
+                    
         ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_inv_objects)
         if create_inv_act_data:
             shortlisted_supplier_ids = {space_obj.id for space_obj in shortlisted_suppliers}
@@ -6983,23 +6976,18 @@ def create_inventory_ids(supplier_object, filter_code, is_import_sheet=False, su
     """
     function_name = create_inventory_ids.__name__
     try:
-        tower_count = int(supplier_object.tower_count) if supplier_object.tower_count else 1
+        tower_count = 1
         inventory_ids = []
         Struct = namedtuple('Struct', 'adinventory_id')
-        data = {}
-        if str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL' or str(filter_code['id']) == 'GA':
-            tower_count = 1
         if is_import_sheet:
             tower_count = supplier_inv_mapping[supplier_object.supplier_id][filter_code['id']]
             if tower_count is None:
                 tower_count = 1
-        if str(filter_code['id']) == 'SB':
-            tower_count = 2
+
         for count in range(int(tower_count)):
             data = Struct(adinventory_id='TESTINVID' + str(filter_code['id']) + '00' + str(count + 1))
             inventory_ids.append(data)
-        # inventory_objects = namedtuple("Struct", inventory_ids.keys())(*inventory_ids.values())
-
+            
         return inventory_ids
     except Exception as e:
         print(e)
