@@ -2938,7 +2938,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                                                                        'DP': [], 'TB': [], 'MC':[], 'UN':[], 'DPRR': [], 'RLC':[], 'PR': [], 'NVOS':[], 'RE': [], 'RERR':[], 'RERA':[], 'BSR': [], 'BDP': [],
                                                                        'MWA': [], 'MWS': [], 'MWC': [], 'MWT': [], 'MWO': [], 'DPNR': [], 'DPNA': [], 'DPP': [], 'DPSOO': [], 'DPOS': [], 'DPVR': [], 'DPCR': [],
                                                                        'RLO': [], 'RLC': [], 'RUB': [], 'RVE': [], 'RCR': [], 'RRS': [], 'ROS': [],'BRLO': [], 'BRLC': [], 'BRUB': [], 'BRVE': [], 'BUPNI': [], 'BUCNI':[],
-                                                                       'BRCR': [], 'BRRS': [],'BROS': [],'BDPNR': [], 'BDPNA': [], 'BDPP': [], 'BDPSOO': [], 'BDPOS': [], 'BDPVR': [], 'BDPCR': [], 'BUN': [],
+                                                                       'BRCR': [], 'BRRS': [],'BROS': [],'BDPNR': [], 'BDPNA': [], 'BDPP': [], 'BDPSOO': [], 'BDPOS': [], 'BDPVR': [], 'BDPCR': [], 'BUN': [], 'BUCPI':[],
                                                                        'BNE':[], 'BNVW':[], 'BNVG':[], 'BNVA':[], 'BNVMB':[], 'BNVFT':[], 'BNVOS':[], 'UPNI':[], 'UCPI':[], 'NVW':[], 'NVG':[], 'NVA':[], 
                                                                        'NVMB':[], 'NVFT':[], 'NVOS':[], 'BNI':[],                                            
                                                                        'OEL': [], 'ESVF': [], 'ESMD': [], 'ESGR': [], 'ESOE': [], 'ESNR': [],'OCL': [], 'CLVF': [],'CLMD': [], 'CLGR': [], 'CLOE': [], 'CLNR': [],
