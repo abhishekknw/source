@@ -2079,3 +2079,56 @@ breakup_header = {
         "total" : "Total",  
     }
 }
+
+supplier_master_diff_table = {
+    'RS': {
+        'supplier_name': 'society_name',
+        'supplier_type': 'supplier_code',
+        'unit_primary_count': 'flat_count',
+        'unit_secondary_count': 'tower_count',
+        'area': 'society_locality',
+        'subarea': 'society_subarea',
+        'city': 'society_city',
+        'state': 'society_state',
+        'landmark': 'landmark',
+        'zipcode': 'society_zip',
+        'latitude': 'society_latitude',
+        'longitude': 'society_longitude',
+        'feedback': 'feedback',
+        'quality_rating': 'society_type_quality',
+        'quantity_rating': 'society_type_quantity',
+        'address1': 'society_address1'
+    },
+    'CP': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code',
+    },
+    'GY': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code',
+        'quality_rating': 'category'
+    },
+    'SA': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code',
+        'quality_rating': 'category'
+    },
+    'BS': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code'
+    },
+    'RE': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code',
+        'quality_rating': 'rating',
+        'quantity_rating': 'store_size'
+    },
+    'EI': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code'
+    },
+    'HO': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code'
+    },
+}
