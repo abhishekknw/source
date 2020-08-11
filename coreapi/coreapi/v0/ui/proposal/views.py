@@ -2957,6 +2957,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     upcoming_phases = []
     completed_phases = []
     confirmed_booked_status = ['BK']
+    unknown = ['BUN', 'BUPNI', 'BUCPI', 'UN', 'UPNI', 'UCPI']
+    new_entity = ['NE', 'NVW', 'NVG', 'NVA', 'NVMB', 'NVFT', 'NVOS', 'BNE', 'BNVW', 'BNVG', 'BNVA', 'BNVMB', 'BNVFT', 'BNVOS']
     # not_initiated = ['NI']
     meeting_fixed = ['MF', 'MWA', 'MWS', 'MWC', 'MWT', 'MWO']
     meeting_converted = ['MC']
@@ -3057,6 +3059,12 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     recce_flats += phase_booked_flats
                     total_booked_flats += phase_booked_flats
                     recce_required_supplier_count += phase_booked_suppliers
+                if status in unknown:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
+                if status in new_entity:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
 
             elif end_customer == 'B to B':
                 if status in meeting_fixed:
@@ -3064,6 +3072,12 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     total_booked_flats += phase_booked_flats
                     meeting_fixed_flats += phase_booked_flats
                     meeting_fixed_supplier_count += phase_booked_suppliers
+                if status in unknown:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
+                if status in new_entity:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
                 if status in meeting_converted:
                     total_booked_suppliers_count += phase_booked_suppliers
                     total_booked_flats += phase_booked_flats
