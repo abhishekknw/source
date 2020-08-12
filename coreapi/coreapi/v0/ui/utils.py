@@ -1249,3 +1249,22 @@ def create_pricing_mapping_default(data, inventory_type, supplier_type_code, sup
         price = PriceMappingDefault.objects.create_price_mapping_object(
             make_dict_manager(adinventory,duration_type), supplier_id, supplier_type_code)
         save_price_data(price, 1)
+
+def create_supplier_from_master(master_data, supplier_type_code):
+    serializer_class = get_serializer(supplier_type_code)
+    master_keys = v0_constants.supplier_master_diff_table[supplier_type_code]
+
+    insert_data = {}
+    for key, value in master_data.items():
+        key1 = key
+
+        if master_keys.get(key):
+            key1 = master_keys[key]
+        
+        insert_data[key1] = value
+        
+    serializer = serializer_class(data=insert_data)
+    if serializer.is_valid():
+        serializer.save()
+
+    return

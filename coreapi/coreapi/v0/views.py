@@ -1418,9 +1418,9 @@ class UserViewSet(viewsets.ViewSet):
             new_password = request.data['password']
             password_valid = validate_password(new_password)
             # if not user.is_superuser:
-            old_input_password = request.data['old_password']
-            if not user.check_password('{}'.format(old_input_password)):
-                return ui_utils.handle_response(class_name, data='Your Old Password is wrong', success=False)
+            # old_input_password = request.data['old_password']
+            # if not user.check_password('{}'.format(old_input_password)):
+            #     return ui_utils.handle_response(class_name, data='Your Old Password is wrong', success=False)
             if password_valid == 1:
                 user.set_password(new_password)
                 user.save()
