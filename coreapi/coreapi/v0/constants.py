@@ -995,7 +995,19 @@ booking_code_to_status = {
     'LES': 'Emergency System',
     'LER': 'Essential Required',
     'LMR': 'Medicine Required',
-    'LVR': 'Vegetables & Fruits Required'
+    'LVR': 'Vegetables & Fruits Required',
+    'CM': 'Completed',
+    'BSR': 'Rejected',
+    'BDP': 'Decision Pending',
+    'BNI': 'Not Initiated',
+    'BNE': 'New Entity',
+    'BUN': 'Unknown',
+    'OEL': 'Emergency Situation',
+    'OCL': 'Complete Lockdown',
+    'OPBL': 'Partial Building/Tower Lockdown',
+    'OPFL': 'Partial Floor Lockdown',
+    'OPHL': 'Partial House/Flat Lockdown',
+    'OP': 'OPEN'
 }
 
 booking_substatus_code_to_status = {
