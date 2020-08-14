@@ -155,6 +155,9 @@ class ProposalInfo(BaseModel):
     is_disabled = models.BooleanField(default=False)
     invoice_number = models.CharField(max_length=1000, null=True, blank=True)
     principal_vendor = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
+    brand = models.CharField(choices=(( 'single_brand', 'single_brand' ),  ('multi_brand', 'multi_brand')), max_length=60, blank=True, null=True)
+    is_mix = models.BooleanField(default=False)
+    type_of_end_customer = models.ForeignKey('TypeOfEndCustomer', null=True, on_delete=models.CASCADE)
 
     def get_centers(self):
         try:
@@ -232,7 +235,7 @@ class ImageMapping(BaseModel):
     supplier = models.ForeignKey('SupplierTypeSociety', db_column='SUPPLIER_ID', related_name='images', blank=True,
                                  null=True, on_delete=models.CASCADE)
     image_url = models.CharField(db_column='IMAGE_URL', max_length=100)
-    comments = models.CharField(db_column='COMMENTS', max_length=100, blank=True, null=True)
+    comments = models.TextField(db_column='COMMENTS', blank=True, null=True)
     name = models.CharField(db_column='NAME', max_length=50, blank=True, null=True)
     content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     object_id = models.CharField(max_length=supplier_id_max_length, null=True)
@@ -279,9 +282,15 @@ class ShortlistedSpaces(BaseModel):
     phase = models.CharField(max_length=10, default='', null=True, blank=True)
     payment_status = models.CharField(max_length=255, null=True, blank=True)
     payment_method = models.CharField(max_length=255, null=True, blank=True)
+    beneficiary_name = models.CharField(max_length=255, null=True, blank=True)
+    ifsc_code = models.CharField(max_length=30, blank=True, null=True)
+    account_number = models.CharField(max_length=250, blank=True, null=True)
+    payment_message = models.CharField(max_length=255, null=True, blank=True)
     total_negotiated_price = models.CharField(max_length=255, null=True, blank=True)
-    booking_status = models.CharField(max_length=10, null=True, blank=True)
+    booking_status = models.CharField(max_length=10, default='NI')
     booking_sub_status = models.CharField(max_length=15, null=True, blank=True)
+    bk_status = models.ForeignKey('BookingStatus', null=True, on_delete=models.CASCADE)
+    bk_substatus = models.ForeignKey('BookingSubstatus', null=True, on_delete=models.CASCADE)
     is_completed = models.BooleanField(default=False)
     transaction_or_check_number = models.CharField(max_length=50, null=True, blank=True)
     phase_no = models.ForeignKey('SupplierPhase', blank=True, null=True, on_delete=models.PROTECT)
@@ -291,6 +300,11 @@ class ShortlistedSpaces(BaseModel):
     booking_priority = models.CharField(max_length=10,null=True,blank=True)
     sunboard_location = models.CharField(max_length=50,null=True,blank=True)
     next_action_date = models.DateTimeField(null=True)
+    brand_organisation_id = models.CharField(max_length=255, null=True, blank=True)
+    permission_box_image = models.CharField(max_length=255, null=True, blank=True)
+    receipt_image = models.CharField(max_length=255, null=True, blank=True)
+    assigned_user = models.CharField(max_length=255, null=True, blank=True)
+    assigned_date = models.DateTimeField(auto_now=True, auto_now_add=False)
 
     class Meta:
         db_table = 'shortlisted_spaces'
@@ -338,3 +352,26 @@ class SupplierAssignment(BaseModel):
 
     class Meta:
         db_table = 'supplier_assignment'
+
+class TypeOfEndCustomer(BaseModel):
+    name = models.CharField(max_length=255)
+    formatted_name = models.CharField(max_length=255, null=True)
+
+    class Meta:
+        db_table = 'type_of_end_customer'
+
+class BookingStatus(BaseModel):
+    type_of_end_customer = models.ForeignKey('TypeOfEndCustomer', null=False, blank=False, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'booking_status'
+
+class BookingSubstatus(BaseModel):
+    booking_status = models.ForeignKey('BookingStatus', null=False, blank=False, on_delete=models.CASCADE, related_name ='booking_substatus')
+    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'booking_substatus'

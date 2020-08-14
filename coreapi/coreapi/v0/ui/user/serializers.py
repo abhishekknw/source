@@ -93,8 +93,7 @@ class BaseUserUpdateSerializer(ModelSerializer):
 
     class Meta:
         model = BaseUser
-        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile', 'is_superuser', 'groups',
-                  'user_permissions', 'profile', 'role')
+        fields = ('id', 'first_name', 'last_name', 'email', 'user_code', 'username', 'mobile', 'is_superuser', 'profile', 'role')
 
 class BaseUserCreateSerializer(ModelSerializer):
     """

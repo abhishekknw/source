@@ -629,7 +629,7 @@ class CampaignInventory(APIView):
             # cache_key = v0_utils.create_cache_key(class_name, campaign_id)
             # cache_value = cache.get(cache_key)
             # cache_value = None
-            response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id, page, user, int(assigned), search, start_date, end_date, supplier_type_code, booking_status_code, phase_id)
+            response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id, page, user, int(assigned), search, start_date, end_date, supplier_type_code, booking_status_code, phase_id, space_status='F')
             if not response.data['status']:
                 return response
             # cache.set(cache_key, response.data['data'])

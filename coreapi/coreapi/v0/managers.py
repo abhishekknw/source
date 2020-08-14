@@ -26,9 +26,7 @@ class GeneralManager(models.Manager):
             supplier_code = data['supplier_type_code']
             content_type = self.get_content_type(supplier_code)
             inventory_object = self.get(object_id=id, content_type=content_type)
-
             return inventory_object
-
         except ObjectDoesNotExist as e:
             return None
         except Exception as e:
@@ -78,12 +76,46 @@ class GeneralManager(models.Manager):
                 'adinventory_type': adinventory_type,
                 'duration_type': duration_type
             }
-
             # get or create price mapping object
             price_object = self.filter(**data)
             if not price_object:
                 return None
             return price_object[0]
+
+        except ObjectDoesNotExist as e:
+            raise ObjectDoesNotExist("PMD object does not exist")
+        except Exception as e:
+            raise Exception("Some exception occurred {0}".format(e.message))
+
+    def create_price_mapping_object(self, data, id, supplier_type_code):
+        """
+        This manager should only be used on PriceMappingDefault class.
+        Args:
+            data: Price Mapping Default Data
+            id: supplier_id
+            supplier_type_code: RS, CP
+
+        Returns: Object of PriceMappingDefault class which has the given data in data.
+
+        """
+        try:
+
+            adinventory_type = data['adinventory_type']
+            duration_type = data['duration_type']
+
+            content_type = self.get_content_type(supplier_type_code)
+            # collect data that is used to get or create price mapping default object
+            data = {
+                'object_id': id,
+                'content_type': content_type,
+                'adinventory_type': adinventory_type,
+                'duration_type': duration_type
+            }
+            # get or create price mapping object
+            price_object = self.get_or_create_objects(data, id, supplier_type_code)
+            if not price_object:
+                return None
+            return price_object
 
         except ObjectDoesNotExist as e:
             raise ObjectDoesNotExist("PMD object does not exist")
@@ -118,7 +150,10 @@ class GeneralManager(models.Manager):
         try:
             ContentType = apps.get_model('contenttypes', 'ContentType')
             suppliers = constants.codes_to_model_names
-            load_model = apps.get_model('v0', suppliers[supplier_type_code])
+            supplier_model = 'SupplierMaster'
+            if supplier_type_code == 'RS':
+                supplier_model = suppliers[supplier_type_code]
+            load_model = apps.get_model('v0', supplier_model)
             content_type = ContentType.objects.get_for_model(load_model)
             return content_type
         except Exception as e:
