@@ -68,8 +68,8 @@ from v0.ui.finances.models import (RatioDetails, PrintingCost, LogisticOperation
                                    SpaceBookingCost, EventStaffingCost, DataSciencesCost,
                                    ShortlistedInventoryPricingDetails, PriceMappingDefault)
 from v0.ui.finances.serializers import ShortlistedSpacesSerializerReadOnly
-from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeSociety
-from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
+from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeSociety, AddressMaster, SupplierMaster
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierMasterSerializer
 from v0.ui.permissions.models import Role
 from v0.ui.permissions.serializers import RoleHierarchySerializer
 from v0.ui.events.models import Events
@@ -79,8 +79,19 @@ from v0.ui.campaign.serializers import GenericExportFileSerializer
 from v0.ui.inventory.models import Filters
 from v0.ui.inventory.serializers import FiltersSerializer
 from v0.ui.dynamic_suppliers.utils import (get_dynamic_suppliers_by_campaign)
+from django.db.models import Prefetch
+
+from v0.ui.organisation.models import Organisation
+from v0.ui.organisation.serializers import OrganisationSerializer
+
+from django.db import transaction
+import openpyxl
+
+import logging
 
 fonts_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fonts')
+
+logger = logging.getLogger(__name__)
 
 def get_union_keys_inventory_code(key_type, unique_inventory_codes):
     """
@@ -1642,15 +1653,41 @@ def get_suppliers(query, supplier_type_code, coordinates):
         longitude = coordinates.get('longitude', 0)
 
         # get the suppliers data within that radius
-        supplier_model = ui_utils.get_model(supplier_type_code)
-        supplier_objects = supplier_model.objects.filter(query)
 
-        # need to set shortlisted=True for every supplier
-        serializer = ui_utils.get_serializer(supplier_type_code)(supplier_objects, many=True)
+        if supplier_type_code == 'RS':
+            supplier_objects = SupplierTypeSociety.objects.filter(query)
+            serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
+
+        else:
+            search_query = Q()
+            search_query &= Q(supplier_type=supplier_type_code)
+
+            address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
+            supplier_objects = SupplierMaster.objects.prefetch_related(address_supplier).filter(search_query).order_by('supplier_name')
+            serializer = SupplierMasterSerializer(supplier_objects, many=True)
+
         # result to store final suppliers
         result = []
         for supplier in serializer.data:
             # replace all society specific keys with common supplier keys
+            if supplier_type_code != "RS":
+                address_supplier = supplier.get('address_supplier')
+                if address_supplier:
+                    address_supplier = supplier.get('address_supplier')
+                    
+                    supplier['address1'] = address_supplier['address1'] if address_supplier['address1'] else ''
+                    supplier['address2'] = address_supplier['address2']
+                    supplier['area'] = address_supplier['area']
+                    supplier['subarea'] = address_supplier['subarea']
+                    supplier['city'] = address_supplier['city']
+                    supplier['state'] = address_supplier['state']
+                    supplier['zipcode'] = address_supplier['zipcode']
+                    supplier['latitude'] = address_supplier['latitude']
+                    supplier['longitude'] = address_supplier['longitude']
+                    supplier['name'] = supplier['supplier_name']
+
+                    
+
             for society_key, actual_key in v0_constants.society_common_keys.items():
                 if society_key in list(supplier.keys()):
                     value = supplier[society_key]
@@ -1670,21 +1707,6 @@ def get_suppliers(query, supplier_type_code, coordinates):
 
     except Exception as e:
         return ui_utils.handle_response(function_name, exception_object=e)
-
-
-def get_filters(data):
-    """
-    Args:
-        proposal_id: The proposal id
-        center_id: The center id
-        content_type: The content type
-
-    Returns: Filters data
-
-    """
-    function_name = get_filters.__name__
-    try:
-
         proposal_id = data['proposal_id']
         center_id = data['center_id']
         supplier_content_type = data['content_type']
@@ -2192,10 +2214,12 @@ def add_shortlisted_suppliers(supplier_type_code_list, shortlisted_suppliers, in
             supplier_to_filter_object_mapping[supplier_id] = supplier
 
         for code in supplier_type_code_list:
-            supplier_model = ui_utils.get_model(code)
-            supplier_serializer = ui_utils.get_serializer(code)
-            suppliers = supplier_model.objects.filter(supplier_id__in=supplier_ids)
-            serializer = supplier_serializer(suppliers, many=True)
+            if code == 'RS':
+                supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids)
+                serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
+            else:
+                supplier_objects = SupplierMaster.objects.filter(supplier_id__in=supplier_ids, supplier_type=code)
+                serializer = SupplierMasterSerializer(supplier_objects, many=True)
 
             # adding status information to each supplier which is stored in shorlisted_spaces table
             for supplier in serializer.data:
@@ -2232,6 +2256,7 @@ def proposal_shortlisted_spaces(data):
 
         shortlisted_suppliers = manipulate_object_key_values(shortlisted_suppliers)
 
+
         # collect all supplier_id's
         supplier_ids = [supplier['object_id'] for supplier in shortlisted_suppliers]
 
@@ -2244,6 +2269,8 @@ def proposal_shortlisted_spaces(data):
 
         shortlisted_suppliers_centerwise = {}
 
+        
+
         # populate the dict with object_id's now
         for supplier in shortlisted_suppliers:
 
@@ -2253,6 +2280,8 @@ def proposal_shortlisted_spaces(data):
 
             shortlisted_suppliers_centerwise[center_id].append(supplier)
 
+        
+       
         # construction of proposal response is isolated
         response = construct_proposal_response(proposal_id)
         if not response.data['status']:
@@ -2618,12 +2647,12 @@ def handle_common_filters(common_filters, supplier_type_code, proposal):
             query['society_longitude__gt'] = min_longitude
 
         else:
-            query['latitude__lt'] = max_latitude
-            query['latitude__gt'] = min_latitude
-            query['longitude__lt'] = max_longitude
-            query['longitude__gt'] = min_longitude
+            query['address_supplier__latitude__lt'] = max_latitude
+            query['address_supplier__latitude__gt'] = min_latitude
+            query['address_supplier__longitude__lt'] = max_longitude
+            query['address_supplier__longitude__gt'] = min_longitude
 
-        query['representative'] = proposal.principal_vendor
+        # query['representative'] = proposal.principal_vendor
 
         # the keys like 'locality', 'quantity', 'quality' we receive from front end are already defined in constants
         predefined_common_filter_keys = list(v0_constants.query_dict[supplier_type_code].keys())
@@ -3313,9 +3342,18 @@ def get_suppliers_within_circle(suppliers, coordinates, supplier_type_code):
         result = []
 
         for supplier in suppliers:
+
+            if supplier_type_code != "RS":
+                address_supplier = supplier.get('address_supplier')
+                if address_supplier:
+                    supplier['latitude'] = address_supplier.get('latitude')
+                    supplier['longitude'] = address_supplier.get('longitude')
+
             # include only those suppliers that lie within the circle of radius given
             supplier_latitude = get_dict_value(supplier, ['society_latitude', 'latitude'])
             supplier_longitude = get_dict_value(supplier, ['society_longitude', 'longitude'])
+           
+
             if space_on_circle(latitude, longitude, radius, supplier_latitude, supplier_longitude):
                 result.append(supplier)
         return result
@@ -3387,7 +3425,7 @@ def get_file_name(user, proposal_id, is_exported=True):
             'organisation': organisation,
             'account': account,
             'proposal': proposal,
-            'date': now_time,
+            # 'date': now_time,
             'file_name': file_name,
             'is_exported': is_exported
         }
@@ -3607,16 +3645,18 @@ def union_suppliers(first_supplier_list, second_supplier_list):
 
         result = {}
         for supplier_id in total_supplier_ids:
-            if first_supplier_mapping.get(supplier_id):
-                result[supplier_id] = first_supplier_mapping[supplier_id]
-            if second_supplier_mapping.get(supplier_id):
+            if second_supplier_mapping.get(supplier_id) and not result.get(supplier_id):
                 result[supplier_id] = second_supplier_mapping[supplier_id]
+
+            elif first_supplier_mapping.get(supplier_id):
+                result[supplier_id] = first_supplier_mapping[supplier_id]
 
             if supplier_id in suppliers_not_in_second_set:
                 result[supplier_id]['status'] = v0_constants.status
             result[supplier_id]['supplier_id'] = supplier_id
         return result
     except Exception as e:
+        logger.exception(e)
         raise Exception(function, ui_utils.get_system_error(e))
 
 
@@ -3632,8 +3672,6 @@ def get_shortlisted_suppliers_map(proposal_id, content_type, center_id):
     """
     function = get_shortlisted_suppliers_map.__name__
     try:
-        # fetch the class from content type
-        model_class = apps.get_model(settings.APP_NAME, content_type.model)
         # fetch the shortlisted supplier instances ( object_id, status only )
         shortlisted_suppliers = ShortlistedSpaces.objects.filter(proposal_id=proposal_id, content_type=content_type,
                                                                  center_id=center_id).values('object_id', 'status')
@@ -3644,7 +3682,14 @@ def get_shortlisted_suppliers_map(proposal_id, content_type, center_id):
             supplier_id = instance_dict['object_id']
             shortlisted_suppliers_map[supplier_id] = instance_dict
             shortlisted_ids.append(supplier_id)
-        instances = model_class.objects.filter(supplier_id__in=shortlisted_ids).values()
+        
+        if content_type.model == "suppliertypesociety":
+            instances = SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_ids).values()
+        else:
+            supplier_master = SupplierMaster.objects.filter(supplier_id__in=shortlisted_ids)
+            supplier_master_serializer = SupplierMasterSerializer(supplier_master, many=True).data
+            instances = manipulate_master_to_rs(supplier_master_serializer)
+
         result = {}
         for instance in instances:
             supplier_id = instance['supplier_id']
@@ -3720,9 +3765,13 @@ def get_shortlisted_suppliers(proposal_id, user):
             if not shortlisted_suppliers_center_content_type_wise[center_id].get(supplier_type_code):
                 shortlisted_suppliers_center_content_type_wise[center_id][supplier_type_code] = []
 
-            supplier_object = shortlisted_spaces_content_type_wise[supplier_type_code][supplier_id]
-            supplier_object['status'] = status
-            shortlisted_suppliers_center_content_type_wise[center_id][supplier_type_code].append(supplier_object)
+            
+            if supplier_id and shortlisted_spaces_content_type_wise.get(supplier_type_code) and shortlisted_spaces_content_type_wise[supplier_type_code].get(supplier_id) :
+                supplier_object = shortlisted_spaces_content_type_wise[supplier_type_code][supplier_id]
+                if supplier_object:
+                    supplier_object['status'] = status
+                    shortlisted_suppliers_center_content_type_wise[center_id][supplier_type_code].append(supplier_object)
+
 
         return ui_utils.handle_response(function, data=shortlisted_suppliers_center_content_type_wise, success=True)
     except KeyError as e:
@@ -3744,6 +3793,22 @@ def manipulate_object_key_values(suppliers, supplier_type_code=v0_constants.soci
     try:
         for supplier in suppliers:
 
+            if supplier.get('address_supplier'):
+                address_supplier = supplier.get('address_supplier')
+                supplier['address1'] = address_supplier['address1'] if address_supplier['address1'] else ''
+                supplier['address2'] = address_supplier['address2']
+                supplier['area'] = address_supplier['area']
+                supplier['subarea'] = address_supplier['subarea']
+                supplier['city'] = address_supplier['city']
+                supplier['state'] = address_supplier['state']
+                supplier['zipcode'] = address_supplier['zipcode']
+                supplier['latitude'] = address_supplier['latitude']
+                supplier['longitude'] = address_supplier['longitude']
+                #del supplier['address_supplier']
+
+            if supplier.get("supplier_name"):
+                supplier['name'] = supplier['supplier_name']
+
             # replace all society specific keys with common supplier keys
             if supplier_type_code == v0_constants.society:
                 for society_key, actual_key in v0_constants.society_common_keys.items():
@@ -3760,6 +3825,84 @@ def manipulate_object_key_values(suppliers, supplier_type_code=v0_constants.soci
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
 
+def manipulate_object_key_values_generic(suppliers, supplier_type_code=v0_constants.society, **kwargs):
+    """
+    Args:
+        suppliers: list of all suppliers
+        supplier_type_code: by default 'RS'.
+        kwargs: key,value pairs meant to set in each supplier.
+    Returns:
+        return list of suppliers by changing some keys in supplier object
+    """
+    function = manipulate_object_key_values_generic.__name__
+    try:
+        for supplier in suppliers:
+            if supplier_type_code != 'RS' and supplier.get('address_supplier'):      
+                address_supplier = supplier.get('address_supplier')
+                supplier['address1'] = address_supplier['address1'] if address_supplier['address1'] else ''
+                supplier['address2'] = address_supplier['address2']
+                supplier['area'] = address_supplier['area']
+                supplier['subarea'] = address_supplier['subarea']
+                supplier['city'] = address_supplier['city']
+                supplier['state'] = address_supplier['state']
+                supplier['zipcode'] = address_supplier['zipcode']
+                supplier['latitude'] = address_supplier['latitude']
+                supplier['longitude'] = address_supplier['longitude']
+                supplier['name'] = supplier['supplier_name']
+                #del supplier.get('address_supplier')
+
+            # replace all society specific keys with common supplier keys
+            if supplier_type_code == v0_constants.society:
+                for society_key, actual_key in v0_constants.society_common_keys.items():
+                    if society_key in list(supplier.keys()):
+                        value = supplier[society_key]
+                        del supplier[society_key]
+                        supplier[actual_key] = value
+
+            if kwargs:
+                # set extra key, value sent in kwargs
+                for key, item in kwargs.items():
+                    supplier[key] = item
+        return suppliers
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
+    
+def manipulate_master_to_rs(suppliers):
+    """
+    Args:
+        suppliers: list of all suppliers
+        supplier_type_code: by default 'RS'.
+        kwargs: key,value pairs meant to set in each supplier.
+    Returns:
+        return list of suppliers by changing some keys in supplier object
+    """
+    function = manipulate_master_to_rs.__name__
+    try:
+        for supplier in suppliers:
+            if supplier.get('address_supplier'):      
+                address_supplier = supplier.get('address_supplier')
+                supplier['address1'] = address_supplier['address1'] if address_supplier['address1'] else ''
+                supplier['address2'] = address_supplier['address2']
+                supplier['area'] = address_supplier['area']
+                supplier['subarea'] = address_supplier['subarea']
+                supplier['city'] = address_supplier['city']
+                supplier['state'] = address_supplier['state']
+                supplier['zipcode'] = address_supplier['zipcode']
+                supplier['latitude'] = address_supplier['latitude']
+                supplier['longitude'] = address_supplier['longitude']
+                #del supplier.get('address_supplier')
+
+            supplier['name'] = supplier.get("supplier_name")
+            supplier['supplier_code'] = supplier.get("supplier_type")
+
+            if not supplier.get("flat_count"):
+                supplier["flat_count"] = supplier["unit_primary_count"] if supplier.get("unit_primary_count") else 0
+            if not supplier.get("tower_count"):
+                supplier["tower_count"] = supplier["unit_secondary_count"] if supplier.get("unit_secondary_count") else 0
+
+        return suppliers
+    except Exception as e:
+        raise Exception(function, ui_utils.get_system_error(e))
 
 def setup_generic_export(data, user, proposal_id):
     """
@@ -3831,9 +3974,10 @@ def setup_generic_export(data, user, proposal_id):
         for supplier_code, detail in inventory_summary_map.items():
             # detail is inventory_summary mapping.
             supplier_pricing_map = {}
-            supplier_pricing_map = merge_two_dicts(
-                set_inventory_pricing(total_suppliers_map[supplier_code], supplier_code, detail, stats),
-                supplier_pricing_map)
+            if len(total_suppliers_map.keys()) > 0 and supplier_code in total_suppliers_map :
+                supplier_pricing_map = merge_two_dicts(
+                    set_inventory_pricing(total_suppliers_map[supplier_code], supplier_code, detail, stats),
+                    supplier_pricing_map)
 
         # make the call to generate data in the result. center_error and supplier_no_pricing_error is logged in this function
         result, stats = make_export_final_response(result, data, inventory_summary_map, supplier_pricing_map, stats)
@@ -3978,7 +4122,7 @@ def is_campaign(proposal):
         return ui_utils.handle_response(function, exception_object=e)
 
 
-def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned, search, start_date, end_date, supplier_type_code=None, booking_status_code=None, phase_id=None):
+def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned, search, start_date, end_date, supplier_type_code=None, booking_status_code=None, phase_id=None, space_status=None):
     """
 
     Args:
@@ -4006,7 +4150,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
             filter_query &= Q(booking_status=booking_status_code)
 
         if phase_id:
-            filter_query &= Q(phase=phase_id)
+            filter_query &= Q(phase_no=phase_id)
 
         if assigned:
             assigned_suppliers_list = SupplierAssignment.objects.filter(campaign=proposal_id,assigned_to=assigned). \
@@ -4021,6 +4165,9 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
         if start_date and end_date:
             filter_query &= Q(next_action_date__gte=start_date)
             filter_query &= Q(next_action_date__lte=end_date)
+        
+        if space_status:
+            filter_query &= Q(status=space_status)
         
         shortlisted_spaces = ShortlistedSpaces.objects.filter(filter_query).order_by('-id')
 
@@ -4040,7 +4187,6 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
         # set the campaign data
         proposal_serializer = ProposalInfoSerializer(proposal)
         result['campaign'] = proposal_serializer.data
-
         # set the shortlisted spaces data. it maps various supplier ids to their respective content_types
         response = get_objects_per_content_type_by_instance(spaces.object_list)
 
@@ -4050,7 +4196,6 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
 
         # converts the ids store in previous step to actual objects and adds additional information which is
         # supplier specific  like area, name, subarea etc.
-
         response = map_objects_ids_to_objects(content_type_supplier_id_map)
         if not response.data['status']:
             return response
@@ -4058,13 +4203,11 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
         # the returned response is a dict in which key is (content_type, supplier_id) and value is a dict of extra
         # information for that supplier
         supplier_specific_info = response.data['data']
-
         response = get_contact_information(content_type_id_set, supplier_id_set)
         if not response.data['status']:
             return response
 
         contact_object_per_content_type_per_supplier = response.data['data']
-
         response = get_supplier_price_information(content_type_id_set, supplier_id_set)
         if not response.data['status']:
             return response
@@ -4078,6 +4221,8 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
         # put the extra supplier specific info like name, area, subarea in the final result.
         for supplier in shortlisted_suppliers_list:
             supplier['supplierCode'] = supplier['supplier_code']
+            supplier['brand_organisation_id'] = supplier['brand_organisation_id']
+            
             supplier_content_type_id = supplier['content_type']
             supplier_id = supplier['object_id']
             supplier['freebies'] = supplier['freebies'].split(',') if supplier['freebies'] else None
@@ -4096,18 +4241,29 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
             except KeyError:
                 supplier['contacts'] = []
             try:
+                brand_organisation_instance = Organisation.objects.filter(pk=supplier['brand_organisation_id']).first()
+                brand_organisation_instance_serializer = OrganisationSerializer(brand_organisation_instance, many=False)
+                supplier['brand_organisation_data'] = brand_organisation_instance_serializer.data
+            except KeyError:
+                supplier['brand_organisation_data'] = []
+                
+            try:
                 pmd_objects_per_supplier = supplier_price_per_content_type_per_supplier[supplier_tuple]
             except KeyError:
                 pmd_objects_per_supplier = []
-
+                
             shortlisted_inventories = supplier['shortlisted_inventories']
+
             response = add_total_price_per_inventory_per_supplier(pmd_objects_per_supplier, shortlisted_inventories)
             if not response.data['status']:
                 return response
             supplier['shortlisted_inventories'], total_inventory_supplier_price = response.data['data']
             supplier['total_inventory_supplier_price'] = total_inventory_supplier_price
-        cache.set(str(proposal_id), result, timeout=60 * 100)
 
+        try:
+            cache.set(str(proposal_id), result, timeout=60 * 100)
+        except:
+            pass
         
         return ui_utils.handle_response(function, data=result, success=True)
     except Exception as e:
@@ -4161,6 +4317,10 @@ def handle_update_campaign_inventories(user, data):
                 'phase_no': supplier['phase_no'],
                 'payment_status': supplier['payment_status'],
                 'payment_method': supplier['payment_method'],
+                'ifsc_code': supplier['ifsc_code'],
+                'beneficiary_name': supplier['beneficiary_name'],
+                'account_number': supplier['account_number'],
+                'payment_message': supplier['payment_message'],
                 'total_negotiated_price': supplier['total_negotiated_price'],
                 'booking_status': supplier['booking_status'],
                 'booking_sub_status': supplier['booking_sub_status'],
@@ -4251,6 +4411,10 @@ def update_campaign_inventories(data):
             obj.phase = shortlisted_spaces[ss_global_id]['phase']
             obj.payment_status = shortlisted_spaces[ss_global_id]['payment_status']
             obj.payment_method = shortlisted_spaces[ss_global_id]['payment_method']
+            obj.ifsc_code = shortlisted_spaces[ss_global_id]['ifsc_code']
+            obj.beneficiary_name = shortlisted_spaces[ss_global_id]['beneficiary_name']
+            obj.account_number = shortlisted_spaces[ss_global_id]['account_number']
+            obj.payment_message = shortlisted_spaces[ss_global_id]['payment_message']
             obj.total_negotiated_price = shortlisted_spaces[ss_global_id]['total_negotiated_price']
             obj.booking_status = shortlisted_spaces[ss_global_id]['booking_status']
             obj.booking_sub_status = shortlisted_spaces[ss_global_id]['booking_sub_status']
@@ -4473,9 +4637,16 @@ def map_objects_ids_to_objects(mapping):
             # fetch all content_type_object
             content_type_object = content_type_object_mapping[content_type_id]
             # fetch the model class.
-            model_class = apps.get_model(settings.APP_NAME, content_type_object.model)
+            model_class = SupplierTypeSociety
+            if content_type_object.model != 'suppliertypesociety':
+                model_class = SupplierMaster
+            
             # fetch all objects.
-            my_objects = model_class.objects.filter(supplier_id__in=object_ids).values()
+            my_objects = model_class.objects.filter(supplier_id__in=object_ids)
+            if content_type_object.model != 'suppliertypesociety':
+                my_objects = SupplierMasterSerializer(my_objects, many=True).data
+            else:
+                my_objects = SupplierTypeSocietySerializer(my_objects, many=True).data
             # set the new mapping
             result[content_type_id] = my_objects
 
@@ -4484,8 +4655,9 @@ def map_objects_ids_to_objects(mapping):
             content_type_object = content_type_object_mapping[content_type_id]
             model_name = content_type_object.model
             # we need to change the keys when we encounter a society
-            if model_name == v0_constants.society_model_name:
-                supplier_objects = manipulate_object_key_values(supplier_objects)
+            # if model_name == v0_constants.society_model_name:
+            supplier_objects = manipulate_object_key_values(supplier_objects)
+            
             # map the extra supplier_specific attributes to content_type, supplier_id
             for supplier in supplier_objects:
                 extra_data = {'area': supplier['area'], 'name': supplier['name'], 'subarea': supplier['subarea']}
@@ -6359,7 +6531,7 @@ def create_entry_in_role_hierarchy(role):
         return Exception(function, ui_utils.get_system_error(e))
 
 
-def get_campaigns_with_status(category, user, vendor):
+def get_campaigns_with_status(category, user, vendor, request):
     """
     return campaigns list by arranging in ongoing, upcoming and completed keys
 
@@ -6377,31 +6549,37 @@ def get_campaigns_with_status(category, user, vendor):
         }
         campaign_query = Q()
         vendor_query = Q()
+        supplier_code_query = Q()
         if vendor:
             vendor_query = Q(campaign__principal_vendor=vendor)
         if not user.is_superuser:
             campaign_query = get_query_by_organisation_category(category,
                                                                 v0_constants.category_query_status['campaign_query'],
                                                                 user)
+        if request.query_params.get('supplier_code') == 'mix':
+            supplier_code_query = Q(campaign__is_mix=True)
+        elif request.query_params.get('supplier_code') and request.query_params.get('supplier_code') != 'mix' and request.query_params.get('supplier_code') != 'all':
+            shortlisted_spaces_ids = ShortlistedSpaces.objects.filter(supplier_code=request.query_params.get('supplier_code')).values_list('proposal', flat=True)
+            supplier_code_query = Q(campaign_id__in=shortlisted_spaces_ids)
+
         campaign_data['completed_campaigns'] = CampaignAssignment.objects. \
-            filter(campaign_query, vendor_query, campaign__tentative_end_date__lt=current_date, campaign__campaign_state='PTC',
-                   ). \
+            filter(campaign_query, vendor_query, supplier_code_query, campaign__tentative_end_date__lt=current_date, campaign__campaign_state='PTC'). \
             annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
                      organisation=F('campaign__account__organisation__name'), vendor_id=F('campaign__principal_vendor')). \
             values('campaign', 'name', 'principal_vendor', 'organisation','vendor_id').distinct()
         campaign_data['upcoming_campaigns'] = CampaignAssignment.objects. \
-            filter(campaign_query, vendor_query, campaign__tentative_start_date__gt=current_date, campaign__campaign_state='PTC'). \
+            filter(campaign_query, vendor_query, supplier_code_query, campaign__tentative_start_date__gt=current_date, campaign__campaign_state='PTC'). \
             annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
                      organisation=F('campaign__account__organisation__name'), vendor_id=F('campaign__principal_vendor')). \
             values('campaign', 'name', 'principal_vendor', 'organisation', 'vendor_id').distinct()
         campaign_data['ongoing_campaigns'] = CampaignAssignment.objects. \
-            filter(campaign_query, vendor_query, Q(campaign__tentative_start_date__lte=current_date) & Q(
+            filter(campaign_query, vendor_query, supplier_code_query, Q(campaign__tentative_start_date__lte=current_date) & Q(
             campaign__tentative_end_date__gte=current_date), campaign__campaign_state='PTC'). \
             annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
                      organisation=F('campaign__account__organisation__name'), vendor_id=F('campaign__principal_vendor')). \
             values('campaign', 'name', 'principal_vendor', 'organisation', 'vendor_id').distinct()
         campaign_data['onhold_campaigns'] = CampaignAssignment.objects. \
-            filter(campaign_query, vendor_query, campaign__campaign_state='POH'). \
+            filter(campaign_query, vendor_query, supplier_code_query, campaign__campaign_state='POH'). \
             annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
                      organisation=F('campaign__account__organisation__name'), vendor_id=F('campaign__principal_vendor')). \
             values('campaign', 'name', 'principal_vendor', 'organisation', 'vendor_id').distinct()
@@ -6754,19 +6932,12 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
                     supplier_inv_count_mapping = {sup_obj['id'] : sup_obj for sup_obj in proposal_data['center_data'][supplier_code]['supplier_data']}
                     inventory_objects = create_inventory_ids(supplier_objects_mapping[supplier_id], filter_code, is_import_sheet,supplier_inv_count_mapping)
                 else:
-                    inventory_objects = getattr(inventory_models, v0_constants.model_to_codes[filter_code['id']]).objects.filter(
-                        Q(object_id=supplier_id))
-                    if not inventory_objects or str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL' or str(
-                            filter_code['id']) == 'GA':
-                        try:
-                            inventory_objects = create_inventory_ids(supplier_objects_mapping[supplier_id], filter_code)
-                        except KeyError as e:
-                            pass
+                    inventory_objects = create_inventory_ids(None, filter_code)
+
                 response = make_final_list(filter_code, inventory_objects, shortlisted_suppliers_mapping[supplier_id])
-                if not response.data['status']:
-                    return response
-                shortlisted_inv_objects.extend(response.data['data'])
-        # ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces__proposal_id=proposal_data['proposal_data'])
+                if response.data['status'] and response.data['data']:
+                    shortlisted_inv_objects.extend(response.data['data'])
+                    
         ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_inv_objects)
         if create_inv_act_data:
             shortlisted_supplier_ids = {space_obj.id for space_obj in shortlisted_suppliers}
@@ -6805,23 +6976,18 @@ def create_inventory_ids(supplier_object, filter_code, is_import_sheet=False, su
     """
     function_name = create_inventory_ids.__name__
     try:
-        tower_count = int(supplier_object.tower_count) if supplier_object.tower_count else 1
+        tower_count = 1
         inventory_ids = []
         Struct = namedtuple('Struct', 'adinventory_id')
-        data = {}
-        if str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL' or str(filter_code['id']) == 'GA':
-            tower_count = 1
         if is_import_sheet:
             tower_count = supplier_inv_mapping[supplier_object.supplier_id][filter_code['id']]
             if tower_count is None:
                 tower_count = 1
-        if str(filter_code['id']) == 'SB':
-            tower_count = 2
+
         for count in range(int(tower_count)):
             data = Struct(adinventory_id='TESTINVID' + str(filter_code['id']) + '00' + str(count + 1))
             inventory_ids.append(data)
-        # inventory_objects = namedtuple("Struct", inventory_ids.keys())(*inventory_ids.values())
-
+            
         return inventory_ids
     except Exception as e:
         print(e)
@@ -7423,3 +7589,43 @@ def add_string_to_image(image,message):
         im.save(str(destination))
         return str(destination)
 
+def import_proposal_cost_data(file,proposal_id):
+    function = import_proposal_cost_data.__name__
+    # load the workbook
+    wb = openpyxl.load_workbook(file)
+    # read the sheet
+    ws = wb.get_sheet_by_name(v0_constants.metric_sheet_name)
+
+    # before inserting delete all previous data as we don't want to duplicate things.
+    response = delete_proposal_cost_data(proposal_id)
+    if not response.data['status']:
+        return response
+
+    with transaction.atomic():
+        try:
+            count = 0
+            master_data = {}
+            # DATA COLLECTION  in order to  collect data in master_data, initialize with proper data structures
+            master_data = initialize_master_data(master_data)
+            for index, row in enumerate(ws.iter_rows()):
+
+                # ignore empty rows
+                if is_empty_row(row):
+                    continue
+                # send one row for processing
+                response = handle_offline_pricing_row(row, master_data)
+                if not response.data['status']:
+                    return response
+                # update master_data with response
+                master_data = response.data['data']
+                count += 1
+
+            # DATA INSERTION time to save the data
+            master_data['proposal_master_cost']['proposal'] = proposal_id
+            response = save_master_data(master_data)
+            if not response.data['status']:
+                return response
+            
+            return True
+        except Exception as e:
+            return ui_utils.handle_response(function, exception_object=e)

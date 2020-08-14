@@ -136,6 +136,7 @@ class ContactDetails(BaseModel):
     landline = models.CharField(blank=True, null=True, max_length=30)
     std_code = models.CharField(max_length=6, blank=True, null=True)
     mobile = models.BigIntegerField(blank=True, null=True)
+    alternate_number = models.BigIntegerField(blank=True, null=True)
     country_code = models.CharField(max_length=10, blank=True, null=True)
     email = models.CharField(max_length=50, blank=True, null=True)
     spoc = models.CharField(max_length=5, blank=True, null=True)
@@ -148,6 +149,7 @@ class ContactDetails(BaseModel):
     content_object = fields.GenericForeignKey('content_type', 'object_id')
     other_contact_type = models.CharField(max_length=255, null=True, blank=True)
     objects = managers.GeneralManager()
+    relationship_status = models.CharField(max_length=50, null=True, blank=True)
 
     class Meta:
 
@@ -162,11 +164,18 @@ class OwnershipDetails(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
     gst_number = models.CharField(max_length=255, blank=True, null=True)
     pan_number = models.CharField(max_length=100, blank=True, null=True)
-    address = models.CharField(max_length=255, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    area = models.CharField(max_length=100, blank=True, null=True)
+    subarea = models.CharField(max_length=100, blank=True, null=True)
+    address1 = models.CharField(max_length=100, blank=True, null=True)
+    address2 = models.CharField(max_length=100, blank=True, null=True)
     start_date = models.DateTimeField(max_length=50, blank=True, null=True)
     end_date = models.DateTimeField(max_length=50, blank=True, null=True)
     payment_terms_condition = models.TextField(max_length=255, blank=True, null=True)
-    food_tasting = models.CharField(choices=(( 'YES', 'YES' ),  ('NO', 'NO')), max_length=10, blank=True, null=True)
+    bank_account_name = models.CharField(max_length=250, blank=True, null=True)
+    bank_name = models.CharField(max_length=250, blank=True, null=True)
+    ifsc_code = models.CharField(max_length=30, blank=True, null=True)
+    account_number = models.CharField(max_length=250, blank=True, null=True)
     
     class Meta:
         db_table = 'ownership_details'
