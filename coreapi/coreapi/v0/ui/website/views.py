@@ -633,6 +633,8 @@ class AssignCampaign(APIView):
 
             if user.is_superuser:
                 assigned_objects = CampaignAssignment.objects.all()
+            elif user.profile.name == "Intern":
+                assigned_objects = CampaignAssignment.objects.filter(assigned_to_id=user)
             else:
                 assigned_objects = CampaignAssignment.objects.filter(campaign__created_by__in=username_list)
             campaigns = []

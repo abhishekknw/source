@@ -3797,8 +3797,11 @@ class listCampaignSuppliers(APIView):
     # inserts flat count type to society on the basis of number of flats it has
     @staticmethod
     def get(request, campaign_id):
-        all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
-            values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name',
+        all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
+        if request.user.profile.name == "Intern":
+            assigned_suppliers = SupplierAssignment.objects.filter(campaign=campaign_id, assigned_to=request.user).values_list("supplier_id", flat=True)
+            all_shortlisted_supplier = all_shortlisted_supplier.filter(object_id__in=assigned_suppliers)
+        all_shortlisted_supplier = all_shortlisted_supplier.values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name',
                    'proposal__tentative_start_date',
                    'proposal__tentative_end_date', 'proposal__campaign_state','supplier_code')
         all_supplier_ids = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] == "RS"]
