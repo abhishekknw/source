@@ -1731,7 +1731,8 @@ class HashtagImagesViewSet(viewsets.ViewSet):
                 "image_path" : file_name
             })
             data.save()
-            return ui_utils.handle_response(class_name, data={}, success=True)
+            image = data.image_path
+            return ui_utils.handle_response(class_name, data={"image_path" : image}, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -1775,7 +1776,8 @@ class HashtagImagesViewSet(viewsets.ViewSet):
                 "image_path": file_name
             })
             data.save()
-            return ui_utils.handle_response(class_name, data={}, success=True)
+            image = data.image_path
+            return ui_utils.handle_response(class_name, data={"image_path" : image}, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
