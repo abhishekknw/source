@@ -19,6 +19,7 @@ import v0.ui.utils as ui_utils
 from v0.ui.utils import get_from_dict
 from v0.ui.controller import inventory_summary_insert
 from django.core.exceptions import ObjectDoesNotExist
+from v0.ui.difflib import get_close_matches
 
 
 def get_state_map():
@@ -50,6 +51,36 @@ def create_price_mapping_default(days_count, adinventory_name, adinventory_type,
                                                           content_type=content_type,
                                                           object_id=supplier_id)
 
+def get_duplicate_supplier(index, item):
+    supplier_names = []
+
+    if item[1].value != "RS":
+        suppliers = SupplierMaster.objects.filter(
+            supplier_type=item[1].value,
+            area= item[4].value,
+            city= item[6].value,
+            state= item[7].value,
+            subarea= item[5].value,
+        )
+        supplier_names = [supplier.supplier_name for supplier in suppliers]
+    else:
+        suppliers = SupplierTypeSociety.objects.filter(
+            society_locality= item[4].value,
+            society_city= item[6].value,
+            society_state= item[7].value,
+            society_subarea= item[5].value,
+        )
+        supplier_names = [supplier.society_name for supplier in suppliers]
+
+    matches = get_close_matches(item[0].value, supplier_names, n=1, cutoff=0.7)
+
+    if matches:
+        return {
+            "row_no": index+1,
+            "supplier_name": item[0].value,
+            "supplier_type": item[1].value,
+            "matched_with": matches[0]
+        }
 
 @method_decorator(csrf_exempt, name='dispatch')
 class CorporateParkDataImport(APIView):
@@ -58,6 +89,7 @@ class CorporateParkDataImport(APIView):
     """
 
     def post(self, request):
+        duplicates_list = []
 
         cities = City.objects.all()
         city_dict = {row.city_name:row.id for row in cities}
@@ -85,14 +117,10 @@ class CorporateParkDataImport(APIView):
                 }
                 supplier_id = get_supplier_id(supplier_data1)
 
-                
-                if row[1].value != "RS":
-                    supplier = SupplierMaster.objects.filter(supplier_name=row[0].value).first()
-                    if supplier:
-                        continue
-                if row[1].value == "RS":
-                    supplier = SupplierTypeSociety.objects.filter(society_name=row[0].value).first()
-                    if supplier:
+                if row[17].value != 'D':
+                    duplicate = get_duplicate_supplier(index, row)
+                    if duplicate:
+                        duplicates_list.append(duplicate)
                         continue
 
                 supplier_data = {
@@ -137,4 +165,4 @@ class CorporateParkDataImport(APIView):
 
                 ui_utils.create_supplier_from_master(supplier_data, row[1].value)
 
-        return handle_response({}, data='success', success=True)
+        return handle_response({}, data={"invalid_row_detail": duplicates_list }, success=True)
