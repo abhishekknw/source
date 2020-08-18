@@ -180,7 +180,8 @@ class GetSupplierCitywiseCount(APIView):
                             supplier_dict_with_cities[city]['contact_name_total_filled_suppliers'].append(contact_detail['object_id'])
                         if contact_detail['mobile']:
                             supplier_dict_with_cities[city]['contact_number_total_filled_suppliers'].append(contact_detail['object_id'])
-                        if contact_detail['contact_type'] == 'Committee Member':
+                        if contact_detail['contact_type'] in ['Chairman', 'Committe Member', 'Committee Member', 'Cultural Secretary', 'Decision Maker',
+                                            'Joint Secretary', 'President', 'Secretary', 'Secretary/ President', 'Treasurer', 'Vice President']:
                             supplier_dict_with_cities[city]['contact_number_decision_total_filled_suppliers'].append(contact_detail['object_id'])
 
                 contact_name_filled_suppliers = list(set(supplier_dict_with_cities[city]['contact_name_total_filled_suppliers']))
