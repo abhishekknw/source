@@ -299,6 +299,91 @@ def genrate_supplier_data(data,user):
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
 
+def get_value_from_list_by_key(list1, key):
+    try:
+        return list1[key].value
+    except:
+        pass
+
+def genrate_supplier_data2(data,user):
+
+    source_file = data['file']
+    wb = load_workbook(source_file)
+    ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+    headers = {}
+    for index, row in enumerate(ws.iter_rows()):
+        if index == 0:
+            i = 0
+            for key in row:
+                key1 = key.value.lower()
+                key1 = key1.strip()
+                headers[key1] = i
+                i+=1
+        else:
+            supplier_id = get_value_from_list_by_key(row, headers.get('supplier id'))
+            booking_status = get_value_from_list_by_key(row, headers.get('booking status'))
+            booking_status1 = None
+            if booking_status:
+                booking_status1 = BookingStatus.objects.filter(name__iexact=booking_status).first()
+            internal_comments = get_value_from_list_by_key(row, headers.get('internal comments'))
+            external_comments = get_value_from_list_by_key(row, headers.get('external comments'))
+            next_action_date = get_value_from_list_by_key(row, headers.get('next action date'))
+            completion_status = get_value_from_list_by_key(row, headers.get('completion status'))
+            phases_no = get_value_from_list_by_key(row, headers.get('phases'))
+            phase = None
+            if phases_no:
+                phase = SupplierPhase.objects.filter(campaign_id=data["proposal_id"], phase_no=phases_no).first()
+            
+            if supplier_id:
+                shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=data["proposal_id"], object_id=supplier_id).first()
+                if not shortlisted_spaces:
+                    supplier_code = "RS"
+                    supplier = SupplierMaster.objects.filter(supplier_id=supplier_id).first()
+                    if supplier:
+                        supplier_code = supplier.supplier_type
+
+                    content_type = ui_utils.fetch_content_type(supplier_code)
+
+                    shortlisted_spaces = ShortlistedSpaces(
+                        proposal_id=data["proposal_id"],
+                        supplier_code=supplier_code,
+                        content_type=content_type,
+                        object_id=supplier_id,
+                        center_id=data['center_id'],
+                        status='F'
+                    )
+
+                print("booking_status1", booking_status1)
+                if booking_status1:
+                    shortlisted_spaces.booking_status = booking_status1.code
+                if next_action_date:
+                    shortlisted_spaces.next_action_date = next_action_date
+                if completion_status and (completion_status.lower() == "yes" or completion_status.lower() == "y"):
+                    shortlisted_spaces.is_completed = 1
+                if phase:
+                    shortlisted_spaces.phase = phase.phase_no
+                    shortlisted_spaces.phase_no = phase
+
+                shortlisted_spaces.save()
+
+                if internal_comments:
+                    CampaignComments(
+                        comment=internal_comments,
+                        campaign_id=data["proposal_id"],
+                        shortlisted_spaces=shortlisted_spaces,
+                        user=user,
+                        related_to='INTERNAL'
+                    ).save()
+                if external_comments:
+                    CampaignComments(
+                        comment=external_comments,
+                        campaign_id=data["proposal_id"],
+                        shortlisted_spaces=shortlisted_spaces,
+                        user=user,
+                        related_to='EXTERNAL'
+                    ).save()
+    return
+
 def assign_inv_dates(data):
     function_name = assign_inv_dates.__name__
     try:
@@ -3461,28 +3546,7 @@ class ImportSheetInExistingCampaign(APIView):
         try:
             data = request.data.copy()
 
-            is_import_sheet = data['is_import_sheet']
-    
-            if is_import_sheet:
-                response = genrate_supplier_data(data,request.user)
-                if not response.data['status']:
-                    return response
-                proposal_data = response.data['data']
-            else:
-                proposal_data = data
-            center_id = proposal_data['center_id']
-            proposal = ProposalInfo.objects.get(pk=proposal_data['proposal_id'])
-            center = ProposalCenterMapping.objects.get(pk=center_id)
-            for supplier_code in proposal_data['center_data']:
-
-                old_shortlisted_suppliers = ShortlistedSpaces.objects.filter(proposal_id=proposal_data['proposal_id'])
-                old_shortlisted_suppliers_map = {}
-                if old_shortlisted_suppliers:
-                    old_shortlisted_suppliers_map = {supplier.object_id: supplier for supplier in
-                                                     old_shortlisted_suppliers}
-                response = website_utils.save_shortlisted_suppliers_data(center, supplier_code, proposal_data, proposal)
-                if not response.data['status']:
-                    return response
+            genrate_supplier_data2(data,request.user)
 
             return ui_utils.handle_response(class_name, data={}, success=True)
         except Exception as e:
