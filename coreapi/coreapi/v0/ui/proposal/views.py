@@ -3111,6 +3111,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         open_flats = 0
         recce_flats = 0
         rejected_flats = 0
+        pipeline_supplier_count = 0
+        pipeline_flats = 0
         for status in shortlisted_spaces_by_phase_dict[phase_id]:
             phase_booked_suppliers = len(shortlisted_spaces_by_phase_dict[phase_id][status])
             phase_booked_flats = sum(supplier['flat_count'] for supplier in shortlisted_spaces_by_phase_dict[phase_id][status] if supplier['flat_count'])
@@ -3222,15 +3224,25 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items()])
 
         confirmed_booked_suppliers_list = []
+        pipeline_suppliers_list = []
         for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items():
             if status in confirmed_booked_status:
                 for row in supplier:
                     if row["next_action_date"]:
                         next_action_date = datetime.datetime.strptime(row["next_action_date"], '%Y/%m/%d').date()
-                    if row["next_action_date"] and next_action_date >= booking_startdate and next_action_date <= booking_enddate:
-                        confirmed_booked_suppliers_list.append(row)
-                        confirmed_booked_suppliers_count += 1
-                        confirmed_booked_flats += row["flat_count"]
+                        if row["next_action_date"] and next_action_date >= booking_startdate and next_action_date <= booking_enddate:
+                            confirmed_booked_suppliers_list.append(row)
+                            confirmed_booked_suppliers_count += 1
+                            confirmed_booked_flats += row["flat_count"]
+
+            elif status in pipeline_status:
+                for row in supplier:
+                    if row["next_action_date"]:
+                        next_action_date = datetime.datetime.strptime(row["next_action_date"], '%Y/%m/%d').date()
+                        if next_action_date and next_action_date >= booking_startdate and next_action_date <= pipeline_enddate:
+                            pipeline_suppliers_list.append(row)
+                            pipeline_supplier_count += 1
+                            pipeline_flats += row["flat_count"]
 
         verbally_booked_suppliers_list = flatten_list(
             [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
@@ -3370,6 +3382,11 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 'flat_count': open_flats,
                 'supplier_data': open_suppliers_list
             },
+            'pipeline': {
+                'supplier_count': pipeline_supplier_count,
+                'flat_count': pipeline_flats,
+                'supplier_data': pipeline_suppliers_list
+            }
         }
         if end_date is not None and end_date.date() >= current_date:
             shortlisted_spaces_by_phase_list.append(phase_dict)
