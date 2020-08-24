@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from v0.constants import supplier_code_to_names
 from v0.ui.utils import get_model, get_user_organisation_id
 from v0.ui.supplier.models import (SupplierTypeSociety, SupplierTypeRetailShop,
-                                   SupplierTypeSalon, SupplierTypeGym,
+                                   SupplierTypeSalon, SupplierTypeGym, SupplierMaster,
                                    SupplierTypeCorporate, SupplierTypeBusShelter,
                                    SupplierTypeCode, RETAIL_SHOP_TYPE)
 from v0.ui.account.models import ContactDetails
@@ -92,7 +92,7 @@ class GetSupplierCitywiseCount(APIView):
                 # Query Supplier Society
                 suppliers = SupplierTypeSociety.objects.values('supplier_id', 'society_city', 'flat_count', 'created_at')
             else:
-                suppliers = model.objects.values('supplier_id', 'city', 'created_at')
+                suppliers = SupplierMaster.objects.filter(supplier_type=supplier_type).values('supplier_id', 'city', 'created_at')
 
             supplier_dict_with_cities = {}
 

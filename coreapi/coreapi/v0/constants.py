@@ -1413,6 +1413,11 @@ supplier_code_to_names = {
     'SA': 'Salon',
     'GY': 'Gym',
     'EI': 'Educational Institute',
+    'HO': 'Hording',
+    'GN': 'Gantry',
+    'BU': 'Bus',
+    'RC': 'Radio Channel',
+    'TV': 'TV Channel',
 }
 
 # model to codes
