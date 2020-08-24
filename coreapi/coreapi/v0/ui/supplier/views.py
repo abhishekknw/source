@@ -4211,9 +4211,8 @@ class UpdateSupplierDataImport(APIView):
                             contact_details.save()
                             new_contact_file.write(
                                 "{mobile},{name},{id}\n".format(mobile=contact_number, name=contact_name, id=supplier_id))
-                    return handle_response({}, data='Data updated successfully', success=True)
                 except Exception as e:
                     print(e)
         except Exception as e:
             print(e)
-        return handle_response({}, data='Data Not updated', success=True)
+        return handle_response({}, data='Data updated Successfully', success=True)
