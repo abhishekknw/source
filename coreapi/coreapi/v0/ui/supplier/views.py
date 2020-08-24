@@ -4165,3 +4165,55 @@ class AssignSupplierUsers(APIView):
 
         SupplierAssignment.objects.bulk_create(data)
         return ui_utils.handle_response({}, data={}, success=True)
+
+import os, sys
+
+class UpdateSupplierDataImport(APIView):
+    def post(self, request):
+        try:
+            data = request.data
+            updated_contact_file = open(os.path.join(sys.path[0], "updated_supplier.txt"), "a")
+            new_contact_file = open(os.path.join(sys.path[0], "new_contact.txt"), "a")
+            for supplier in data:
+                supplier_id = supplier['supplier_id']
+                contact_number = supplier['contact_number']
+                contact_name = supplier['contact_name'].title()
+                name = supplier['name']	
+                flat_count = supplier['flat_count']	
+                society_type = supplier['society_type']	
+                latitude = supplier['latitude']	
+                longitude = supplier['longitude']	
+                area = supplier['area']	
+                subarea = supplier['subarea']
+                city = supplier['city']	
+                address = supplier['address']	
+                contact_type = supplier['contact_type']
+                if contact_type is None:
+                    contact_type = 'Committee Member'
+                try:
+                    if supplier_id:
+                        supplier_data = SupplierTypeSociety.objects.filter(supplier_id=supplier_id)
+                        if supplier_data:
+                            supplier_data.update(society_name=name, society_city=city, society_longitude=longitude,
+                            society_latitude=latitude, flat_count=flat_count, society_type_quality=society_type,
+                            society_locality=area, society_subarea=subarea, society_address1=address )
+                    
+                    if contact_number and supplier_id:
+                        # Check contact number in contact details
+                        contact_details = ContactDetails.objects.filter(mobile=contact_number, object_id=supplier_id)
+                        if contact_details:
+                            if contact_name and contact_type:
+                                contact_details.update(name=contact_name, contact_type=contact_type)
+                                updated_contact_file.write(
+                                    "{mobile},{name},{id}\n".format(mobile=contact_number, name=contact_name, id=supplier_id))
+                        else:
+                            contact_details = ContactDetails(object_id=supplier_id, name=contact_name, contact_type=contact_type, mobile=contact_number)
+                            contact_details.save()
+                            new_contact_file.write(
+                                "{mobile},{name},{id}\n".format(mobile=contact_number, name=contact_name, id=supplier_id))
+                    return handle_response({}, data='Data updated successfully', success=True)
+                except Exception as e:
+                    print(e)
+        except Exception as e:
+            print(e)
+        return handle_response({}, data='Data Not updated', success=True)
