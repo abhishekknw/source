@@ -80,10 +80,11 @@ table, td, th {
                     <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Area(Subarea)</th>
                     <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Address</th>
                     <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Map Address</th>
+                    <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Date of Execution</th>
                 </tr>
 
                 {% for phase in details_dict.upcoming_phases %}
-                    {% for supplier in phase.total_booked.supplier_data  %}
+                    {% for supplier in phase.pipeline.supplier_data  %}
                         <tr style="border: 1px solid black;border: 1px solid black;">
                             <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{phase.phase_no}}</td>
                             <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{loop.index}}</td>
@@ -96,6 +97,7 @@ table, td, th {
                             <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">
                                 <a href="https://www.google.com/maps/?q=+{{supplier.society_latitude if supplier.society_latitude else supplier.latitude}}+{{supplier.society_longitude if supplier.society_longitude else supplier.longitude}}">Details</a>
                             </td>
+                            <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.next_action_date}}</td>
                         </tr>
                     {% endfor %}
                 {% endfor %}
@@ -116,6 +118,7 @@ table, td, th {
                     <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Area(Subarea)</th>
                     <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Address</th>
                     <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Map Address</th>
+                    <th style="background-color:#8C1B24;color:white;border: 1px solid black;">Date of Execution</th>
                 </tr>
 
                 <!--{% if details_dict.pipeline_suppliers.total_booked.supplier_data %}-->
@@ -131,7 +134,7 @@ table, td, th {
                         <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">
                             <a href="https://www.google.com/maps/?q=+{{supplier.society_latitude if supplier.society_latitude else supplier.latitude}}+{{supplier.society_longitude if supplier.society_longitude else supplier.longitude}}">Details</a>
                         </td>
-
+                        <td style="height: 50px;vertical-align: bottom;border: 1px solid black;">{{supplier.next_action_date}}</td>
                     </tr>
                 {% endfor %}
                 <!--{% endif %}-->

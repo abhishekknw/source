@@ -3033,9 +3033,15 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                                                                        'OPHL': [], 'PHVF': [], 'PHMD': [], 'PHGR': [], 'PHOE': [], 'PHNR': [], 'OP': [], 'OVF': [], 'OMD': [], 'OGR': [], 'OOE': [], 'ONR': [] }                                                                    
             if space.booking_status:                
                 if space.booking_sub_status:
+                    if not shortlisted_spaces_by_phase_dict[space.phase_no_id].get(space.booking_sub_status):
+                        shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_sub_status] = []
+
                     shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_sub_status].append(
                         supplier_society_serialized)
                 else:
+                    if not shortlisted_spaces_by_phase_dict[space.phase_no_id].get(space.booking_status):
+                        shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status] = []
+                    
                     shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(
                     supplier_society_serialized)
 
