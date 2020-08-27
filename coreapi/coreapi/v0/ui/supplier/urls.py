@@ -4,7 +4,7 @@ from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 
 from .views import (TransactionDataImport, SocietyDataImport, FilteredSuppliersAPIView, ImportSocietyData,
-                    ImportContactDetails, FilteredSuppliers, SupplierSearch, SupplierDetails,
+                    ImportContactDetails, FilteredSuppliers, SupplierSearch, SupplierDetails, UpdateSupplierDataImport,
                     ImportSupplierDataFromSheet, ImportSupplierData, addSupplierDirectToCampaign, deleteSuppliers,
                     deleteShortlistedSpaces, insertFlatCountType, listCampaignSuppliers, CreateSupplierPriceMappingObjects,
                     GetLocationDataInSheet, MultiSupplierDetails, ListCampaignSuppliers, SocietySupplierRelationship, ListSuppliers, AssignSupplierUsers)
@@ -32,5 +32,6 @@ urlpatterns = [
     url(r'^society-supplier-relationship/$', SocietySupplierRelationship.as_view()),
     url(r'^list-suppliers/citywise/$', ListSuppliers.as_view()),
     url(r'^assign-supplier-users/$', AssignSupplierUsers.as_view()),
+    url(r'^update-supplier-data/$', UpdateSupplierDataImport.as_view()),
 ]
 

@@ -2318,10 +2318,10 @@ def get_campaign_wise_summary(supplier_code, all_campaign_ids, user_start_dateti
             if not campaign_summary["all_campaigns"].get(key):
                 campaign_summary["all_campaigns"][key] = 0
 
-            if not campaign_summary["campaign_wise"][row["campaign_id"]].get(key):
+            if campaign_summary["campaign_wise"].get(row["campaign_id"]) and not campaign_summary["campaign_wise"][row["campaign_id"]].get(key):
                 campaign_summary["campaign_wise"][row["campaign_id"]][key] = 0
 
-            if value:
+            if campaign_summary["campaign_wise"].get(row["campaign_id"]) and value:
                 campaign_summary["all_campaigns"][key] += 1
                 campaign_summary["campaign_wise"][row["campaign_id"]][key] += 1
 

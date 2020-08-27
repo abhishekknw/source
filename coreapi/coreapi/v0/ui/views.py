@@ -415,16 +415,15 @@ class AddBulkLocationAPIView(APIView):
     def post(self, request):
         try:
             class_name = self.__class__.__name__
-            request_data = request.data
-            data = request_data.get('data')
+            data = request.data
             response = []
             if not data:
                 return Response({'message':'Please add data'}, status=400)
             for location in data:
-                state = location.get('state')
-                city = location.get('city')
-                area = location.get('area')
-                subarea = location.get('subarea')
+                state = location['state']
+                city = location['city']
+                area = location['area']
+                subarea = location['subarea']
 
                 if not state or not city or not area:
                     return Response({'message': 'Please add state,city,area,subarea'}, status=400)
