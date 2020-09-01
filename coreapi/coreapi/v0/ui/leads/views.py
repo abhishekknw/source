@@ -1644,6 +1644,10 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
         # 'Banner Allowed', 'Banner Count', 'Banner Price',
     ]
 
+    if data["campaign"].get("type_of_end_customer_formatted_name") == "b_to_b_lead_distribution":
+        header_list.append("Requirement Given")
+        header_list.append("Requirement Given Date")
+
     for inventory in inventory_list:
         header_list.append(inventory+" Allowed")
         header_list.append(inventory+" Count")
@@ -1706,6 +1710,14 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
         supplier_data.append(external_comment)
 
         supplier_data.append(supplier["quality_rating"])
+
+        if data["campaign"].get("type_of_end_customer_formatted_name") == "b_to_b_lead_distribution":
+            supplier_data.append(supplier['requirement_given'])
+            requirement_given_date = None
+            if supplier['requirement_given_date']:
+                requirement_given_date = datetime.datetime.strptime(supplier['requirement_given_date'], '%Y-%m-%dT%H:%M:%S.%fZ').strftime("%d/%m/%Y")
+
+            supplier_data.append(requirement_given_date)
 
         for row in inventory_list:
             supplier_data.append('Yes' if row in supplier['shortlisted_inventories'] else 'No')

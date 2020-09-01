@@ -334,6 +334,11 @@ def genrate_supplier_data2(data,user):
             if phases_no:
                 phase = SupplierPhase.objects.filter(campaign_id=data["proposal_id"], phase_no=phases_no).first()
             
+            requirement_given_text = get_value_from_list_by_key(row, headers.get('requirement given'))
+            requirement_given = "no"
+            if requirement_given_text:
+                requirement_given = requirement_given_text
+
             if supplier_id:
                 shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=data["proposal_id"], object_id=supplier_id).first()
                 if not shortlisted_spaces:
@@ -352,8 +357,7 @@ def genrate_supplier_data2(data,user):
                         center_id=data['center_id'],
                         status='F'
                     )
-
-                print("booking_status1", booking_status1)
+                    
                 if booking_status1:
                     shortlisted_spaces.booking_status = booking_status1.code
                 if next_action_date:
@@ -362,7 +366,10 @@ def genrate_supplier_data2(data,user):
                     shortlisted_spaces.is_completed = 1
                 if phase:
                     shortlisted_spaces.phase = phase.phase_no
-                    shortlisted_spaces.phase_no = phase
+                    shortlisted_spaces.phase_no = phase                
+                if not shortlisted_spaces.requirement_given == requirement_given:
+                    shortlisted_spaces.requirement_given = requirement_given
+                    shortlisted_spaces.requirement_given_date = datetime.datetime.now()
 
                 shortlisted_spaces.save()
 
