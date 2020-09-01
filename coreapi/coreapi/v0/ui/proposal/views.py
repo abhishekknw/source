@@ -3033,11 +3033,11 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                                                                        'OPHL': [], 'PHVF': [], 'PHMD': [], 'PHGR': [], 'PHOE': [], 'PHNR': [], 'OP': [], 'OVF': [], 'OMD': [], 'OGR': [], 'OOE': [], 'ONR': [] }                                                                    
             if space.booking_status:                
                 # if space.booking_sub_status:
-                #     if not shortlisted_spaces_by_phase_dict[space.phase_no_id].get(space.booking_sub_status):
-                #         shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_sub_status] = []
-
                 #     shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_sub_status].append(
                 #         supplier_society_serialized)
+                # else:
+                #     shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(
+                #     supplier_society_serialized)
                 # else
                 if space.booking_status:
                     if not shortlisted_spaces_by_phase_dict[space.phase_no_id].get(space.booking_status):
@@ -3083,6 +3083,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     for phase_id in shortlisted_spaces_by_phase_dict:
         end_date = all_phase_by_id[phase_id]['end_date'] if phase_id in all_phase_by_id else None
         start_date = all_phase_by_id[phase_id]['start_date'] if phase_id in all_phase_by_id else None
+        total_pipeline_suppliers_count = 0
+        total_pipeline_flats = 0
         total_booked_suppliers_count = 0
         total_booked_flats = 0
         verbally_booked_suppliers_count = 0
@@ -3155,12 +3157,6 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     recce_flats += phase_booked_flats
                     total_booked_flats += phase_booked_flats
                     recce_required_supplier_count += phase_booked_suppliers
-                if status in unknown:
-                    total_booked_suppliers_count += phase_booked_suppliers
-                    total_booked_flats += phase_booked_flats
-                if status in new_entity:
-                    total_booked_suppliers_count += phase_booked_suppliers
-                    total_booked_flats += phase_booked_flats
 
             elif end_customer == 'B to B':
                 if status in meeting_fixed:
@@ -3168,12 +3164,6 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     total_booked_flats += phase_booked_flats
                     meeting_fixed_flats += phase_booked_flats
                     meeting_fixed_supplier_count += phase_booked_suppliers
-                if status in unknown:
-                    total_booked_suppliers_count += phase_booked_suppliers
-                    total_booked_flats += phase_booked_flats
-                if status in new_entity:
-                    total_booked_suppliers_count += phase_booked_suppliers
-                    total_booked_flats += phase_booked_flats
                 if status in meeting_converted:
                     total_booked_suppliers_count += phase_booked_suppliers
                     total_booked_flats += phase_booked_flats
@@ -3232,6 +3222,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
 
         confirmed_booked_suppliers_list = []
         pipeline_suppliers_list = []
+        total_pipeline_suppliers_list = []
         for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items():
             if status in confirmed_booked_status:
                 for row in supplier:
@@ -3250,6 +3241,15 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                             pipeline_suppliers_list.append(row)
                             pipeline_supplier_count += 1
                             pipeline_flats += row["flat_count"]
+
+            if status in verbally_booked_status or status in confirmed_booked_status or status in followup_req_status or
+             status in meeting_fixed or status in meeting_converted or status in decision_pending_status or status in complete_lockdown_status or 
+             status in emergency_situation_status or status in part_building_lock_status or status in part_floor_lock_status or 
+             status in part_house_lock_status or status in open_status:
+                for row in supplier:
+                    total_pipeline_suppliers_list.append(row)
+                    total_pipeline_suppliers_count += 1
+                    total_pipeline_flats += row["flat_count"]              
 
         verbally_booked_suppliers_list = flatten_list(
             [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
@@ -3308,6 +3308,11 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 'supplier_count': total_booked_suppliers_count,
                 'flat_count': total_booked_flats,
                 'supplier_data': total_booked_suppliers_list
+            },
+            'total_pipeline': {
+                'supplier_count': total_pipeline_suppliers_count,
+                'flat_count': total_pipeline_flats,
+                'supplier_data': total_pipeline_suppliers_list
             },
             'confirmed_booked': {
                 'supplier_count': confirmed_booked_suppliers_count,
