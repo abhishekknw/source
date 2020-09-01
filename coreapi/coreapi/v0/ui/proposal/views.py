@@ -3242,10 +3242,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                             pipeline_supplier_count += 1
                             pipeline_flats += row["flat_count"]
 
-            if status in verbally_booked_status or status in confirmed_booked_status or status in followup_req_status or
-             status in meeting_fixed or status in meeting_converted or status in decision_pending_status or status in complete_lockdown_status or 
-             status in emergency_situation_status or status in part_building_lock_status or status in part_floor_lock_status or 
-             status in part_house_lock_status or status in open_status:
+            if status in verbally_booked_status or status in confirmed_booked_status or status in followup_req_status or status in meeting_fixed or status in meeting_converted or status in decision_pending_status or status in complete_lockdown_status or status in emergency_situation_status or status in part_building_lock_status or status in part_floor_lock_status or status in part_house_lock_status or status in open_status:
                 for row in supplier:
                     total_pipeline_suppliers_list.append(row)
                     total_pipeline_suppliers_count += 1
@@ -3453,9 +3450,9 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             pipeline['followup_required']['supplier_data'].append(supplier)
             pipeline['followup_required']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['followup_required']['supplier_count'] += 1
-            pipeline['total_booked']['supplier_data'].append(supplier)
-            pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
-            pipeline['total_booked']['supplier_count'] += 1
+            # pipeline['total_booked']['supplier_data'].append(supplier)
+            # pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            # pipeline['total_booked']['supplier_count'] += 1
         if supplier['booking_status'] in verbally_booked_status:
             pipeline['verbally_booked']['supplier_data'].append(supplier)
             pipeline['verbally_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
@@ -3472,9 +3469,9 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             pipeline['recce_required']['supplier_data'].append(supplier)
             pipeline['recce_required']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['recce_required']['supplier_count'] += 1
-            pipeline['total_booked']['supplier_data'].append(supplier)
-            pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
-            pipeline['total_booked']['supplier_count'] += 1
+            # pipeline['total_booked']['supplier_data'].append(supplier)
+            # pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            # pipeline['total_booked']['supplier_count'] += 1
         if supplier['booking_status'] in meeting_fixed:
             pipeline['meeting_fixed']['supplier_data'].append(supplier)
             pipeline['meeting_fixed']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
