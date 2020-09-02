@@ -307,5 +307,5 @@ LOGGING = {
 
 #Establish a connection to the database and call the connection mongo_app
 connect(
-"mongodb://"+MONGO_USER+":"+MONGO_PASSWORD+"@localhost:"+MONGO_PORT+"/"+MONGO_DB, alias="mongo_app"
+"mongodb://"+MONGO_USER+":"+MONGO_PASSWORD+"@localhost:"+str(MONGO_PORT)+"/"+MONGO_DB, alias="mongo_app"
 )
