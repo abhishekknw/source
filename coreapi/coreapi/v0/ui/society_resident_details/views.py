@@ -8,7 +8,7 @@ from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg
 from v0.ui.common.models import mongo_client
 from .models import User, ResidentDetail,ResidentCampaignDetail
-from .utils import get_supplier
+from .utils import get_supplier, get_last_24_hour_leads
 logger = logging.getLogger(__name__)
 
 
@@ -95,6 +95,8 @@ class UpdateResident(APIView):
                             }
                             if alternate_contact_number:
                                 user_data['alternate_contact_number'] = alternate_contact_number
+                            if resident_data.get('name', None):
+                                user_data['name'] = resident_data['name'].title()
                             user = User(**user_data).save()
                             user_id = str(user._id)
                         else:
@@ -166,6 +168,15 @@ class UpdateResident(APIView):
         return handle_response('', data='Data updated successfully', success=True)
 
 
+class CreateUserResident(APIView):
+    @staticmethod
+    def post(request):
+        try:
+            get_last_24_hour_leads()
+        except Exception as e:
+            logger.exception('Unexpected error :', e)
+
+        return handle_response('', data='Data updated successfully', success=True)
 class GetResidentCount(APIView):
     @staticmethod
     def get(request):
