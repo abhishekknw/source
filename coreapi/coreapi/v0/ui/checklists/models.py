@@ -3,8 +3,6 @@ from pymongo.write_concern import WriteConcern
 from pymodm import MongoModel, fields
 from django.conf import settings
 
-connect("mongodb://"+settings.MONGO_USER+":"+settings.MONGO_PASSWORD+"@localhost:"+str(settings.MONGO_PORT)+"/"+settings.MONGO_DB, alias="mongo_app")
-
 
 class ChecklistPermissions(MongoModel):
     profile_id = fields.IntegerField()
