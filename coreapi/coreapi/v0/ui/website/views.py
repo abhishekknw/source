@@ -11,7 +11,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django.db import transaction
-from django.db.models import Q, F, Sum
+from django.db.models import Q, F, Sum, Max
 from django.forms.models import model_to_dict
 from django.utils.dateparse import parse_datetime
 from rest_framework import status
@@ -51,9 +51,9 @@ from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMa
     ProposalCenterMappingSpaceSerializer, ProposalMasterCostSerializer, ProposalMetricsSerializer,
     ProposalCenterMappingVersionSpaceSerializer, SpaceMappingVersionSerializer, ProposalSocietySerializer,
                                         ProposalCorporateSerializer, HashtagImagesSerializer)
-from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeSociety, SupplierTypeBusShelter
+from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeSociety, SupplierTypeBusShelter, SupplierMaster
 from v0.ui.supplier.serializers import (SupplierAmenitiesMapSerializer, SupplierTypeCorporateSerializer,
-                                        SupplierTypeSocietySerializer, SupplierTypeBusShelterSerializer)
+                                        SupplierTypeSocietySerializer, SupplierTypeBusShelterSerializer, SupplierMasterSerializer)
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails, PriceMappingDefault, getPriceDict
 from v0.ui.permissions.models import ObjectLevelPermission, GeneralUserPermission, Role, RoleHierarchy
 from v0.ui.base.serializers import ContentTypeSerializer
@@ -63,6 +63,9 @@ import v0.ui.utils as ui_utils
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0 import errors
 import v0.constants as v0_constants
+from v0.ui.campaign.models import CampaignComments
+
+from django.db.models.functions import Trim
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -630,6 +633,8 @@ class AssignCampaign(APIView):
 
             if user.is_superuser:
                 assigned_objects = CampaignAssignment.objects.all()
+            elif user.profile.name == "Intern":
+                assigned_objects = CampaignAssignment.objects.filter(assigned_to_id=user)
             else:
                 assigned_objects = CampaignAssignment.objects.filter(campaign__created_by__in=username_list)
             campaigns = []
@@ -644,9 +649,27 @@ class AssignCampaign(APIView):
                     campaigns.append(assign_object)
             serializer = CampaignAssignmentSerializerReadOnly(campaigns, many=True)
 
+            for data in serializer.data:
+                all_proposal_ids.append(data['campaign']['proposal_id'])
+            
+            comments_list = CampaignComments.objects.values('campaign_id').annotate(latest_id=Max('id'), comment_max=Trim('comment')).filter(campaign_id__in=all_proposal_ids, related_to='campaign')
+            comments_list_dict = {row["campaign_id"]: row["comment_max"] for row in comments_list}
+
             campaign_obj = {}
 
             for data in serializer.data:
+
+                accountResult = AccountInfo.objects.filter(pk=data['campaign']['account']).first()
+                data['campaign']['accountName'] = accountResult.name
+                data['campaign']['accountOrganisationName'] = accountResult.organisation.name
+
+
+                organisationResult = Organisation.objects.filter(organisation_id=data['campaign']['principal_vendor']).first()
+                if organisationResult:
+                    data['campaign']['organisationName'] = organisationResult.name
+                else:
+                    data['campaign']['organisationName'] = ''
+
                 proposal_start_date = parse_datetime(data['campaign']['tentative_start_date'])
                 proposal_end_date = parse_datetime(data['campaign']['tentative_end_date'])
                 response = website_utils.get_campaign_status(proposal_start_date, proposal_end_date)
@@ -662,6 +685,7 @@ class AssignCampaign(APIView):
                 }
 
                 campaign_obj[data['campaign']['proposal_id']]["assigned"].append(row)
+                campaign_obj[data['campaign']['proposal_id']]["comment"] = comments_list_dict.get(data['campaign']['proposal_id'])
 
             campaign_list = [value for key,value in campaign_obj.items()]
 
@@ -1021,10 +1045,16 @@ class DeleteFileFromSystem(APIView):
         try:
             file_name = request.data['file_name']
             file_extension = file_name.split('.')[1]
+
             if file_extension not in v0_constants.valid_extensions:
                 return ui_utils.handle_response(class_name, data=errors.DELETION_NOT_PERMITTED.format(file_extension), success=False)
                 #raise Exception(class_name, errors.DELETION_NOT_PERMITTED.format(file_extension))
-            os.remove(os.path.join(settings.BASE_DIR, file_name))
+
+            file_path = os.path.join(settings.BASE_DIR, file_name) 
+
+            if os.path.exists(file_path):
+               os.remove(os.path.join(settings.BASE_DIR, file_name))
+            
             return ui_utils.handle_response(class_name, data='success', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, data=str(e), success=False)
@@ -1639,48 +1669,23 @@ class GetAssignedIdImagesListApiView(APIView):
                          supplier_code=F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__supplier_code')). \
                 values('name','inv_id','object_id','latitude','longitude','updated_at','created_at','actual_activity_date','proposal_id','image_path','comment','supplier_code')
 
-
-            supplier_code_list = {
-                'RS' : [],
-                'BS' : [],
-                'RE' : []
-            }
-
+            supplier_id_list = []
             for supplier in inv_act_image_objects:
-                try:
-                    if supplier['object_id']:
-                        supplier['supplier_code'] = 'RS'
-                    supplier_code_list[supplier['supplier_code']].append(supplier)
-                except Exception:
-                    pass
+                supplier_id_list.append(supplier["object_id"])
 
-            inv_act_image_objects_with_distance = []
-            for key, value in supplier_code_list.items():
-                supplier_id_list = []
-                if key == 'RS':
-                    for supplier in value:
-                        supplier_id_list.append(supplier['object_id'])
-                    if supplier_id_list:
-                        supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
-                        serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
-                        suppliers = serializer.data
-                        inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(
-                            inv_act_image_objects, suppliers)
-                if key == 'BS':
-                    for supplier in value:
-                        supplier_id_list.append(supplier['object_id'])
-                    if supplier_id_list:
-                        supplier_objects = SupplierTypeBusShelter.objects.filter(supplier_id__in=supplier_id_list)
-                        serializer = SupplierTypeBusShelterSerializer(supplier_objects, many=True)
-                        suppliers = serializer.data
-                        inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(
-                            inv_act_image_objects, suppliers)
-            # supplier_id_list = [object['object_id'] for object in inv_act_image_objects]
-            # supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
-            # serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
-            # suppliers = serializer.data
+            supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
+            society_serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
 
-            # inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(inv_act_image_objects, suppliers)
+            master_supplier = SupplierMaster.objects.filter(supplier_id__in=supplier_id_list)
+            master_serializer = SupplierMasterSerializer(master_supplier, many=True)
+
+            all_societies = website_utils.manipulate_object_key_values(society_serializer.data)
+            master_suppliers = website_utils.manipulate_master_to_rs(master_serializer.data)
+            all_societies.extend(master_suppliers)
+
+            inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(
+                            inv_act_image_objects, all_societies)
+            
             inv_act_image_objects_with_distance_map = {}
             if inv_act_image_objects_with_distance:
                 inv_act_image_objects_with_distance_map = {inv['inv_id'] : inv for inv in inv_act_image_objects_with_distance}
@@ -1736,28 +1741,26 @@ class GetRelationshipAndPastCampaignsData(APIView):
             supplier_type_code = request.query_params.get('supplier_code',None)
             supplier_id = request.query_params.get('supplier_id',None)
             campaign_id = request.query_params.get('campaign_id', None)
-            supplier_model = ui_utils.get_model(supplier_type_code)
             
-            supplier_data = supplier_model.objects.filter(supplier_id=supplier_id).values('feedback','representative__name')
+            if supplier_type_code == 'RS':
+                supplier_data = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).values('feedback','representative__name')
+            else:
+                supplier_data = SupplierMaster.objects.filter(supplier_id=supplier_id).values('feedback','representative__name')
             campaign_data = website_utils.get_past_campaigns_data(supplier_id,campaign_id)
-
-            
-
             result = {
-                'campaign_data' : campaign_data,
-                'supplier_data' : supplier_data,
-                'contacts' : {}
+                'campaign_data': campaign_data,
+                'supplier_data': supplier_data,
+                'contacts': {}
             }
-
-            retail_shop_instance = ContactDetails.objects.filter(object_id=supplier_id).first()
-            if retail_shop_instance:
-                contact_serializer = ContactDetailsSerializer(retail_shop_instance, many=False)
+            contact_details = ContactDetails.objects.filter(object_id=supplier_id).first()
+            if contact_details:
+                contact_serializer = ContactDetailsSerializer(contact_details, many=False)
                 result['contacts'] = contact_serializer.data
            
             return ui_utils.handle_response(class_name, data=result, success=True)
-
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
+
 
 class CheckExstingSuppliers(APIView):
     def post(self, request):
@@ -1771,22 +1774,17 @@ class CheckExstingSuppliers(APIView):
             rcount = 0
             for index, row in enumerate(ws.iter_rows()):
                 if index > 0:
-
                     name = row[0].value
                     id = row[1].value
                     if SupplierTypeSociety.objects.filter(society_name=name) or SupplierTypeSociety.objects.filter(supplier_id=id):
                         count = count + 1
                         s = str(count) + " " + name
-                        print(s)
                     else:
                         rcount = rcount + 1
-                        print(name)
-                print(str(count) + "and" + str(rcount))
             data = {
-                'on_platform' : count,
-                'not_on_platform' : rcount
+                'on_platform': count,
+                'not_on_platform': rcount
             }
-
             return ui_utils.handle_response({}, data=data, success=True)
         except Exception as e:
             return ui_utils.handle_response({}, exception_object=e, request=request)

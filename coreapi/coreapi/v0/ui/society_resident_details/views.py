@@ -1,7 +1,10 @@
 import datetime
 import logging
+from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.response import Response
 from pymongo.errors import CursorNotFound
+from v0.ui.proposal.models import ShortlistedSpaces
 from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg
 from v0.ui.common.models import mongo_client
 from .models import User, ResidentDetail,ResidentCampaignDetail
@@ -174,3 +177,31 @@ class CreateUserResident(APIView):
             logger.exception('Unexpected error :', e)
 
         return handle_response('', data='Data updated successfully', success=True)
+class GetResidentCount(APIView):
+    @staticmethod
+    def get(request):
+        try:
+            campaign_id = request.query_params.get('campaign_id')
+            if not campaign_id:
+                return Response(data={"status": False, "error": "Missing campaign id"},
+                                status=status.HTTP_400_BAD_REQUEST)
+            result = []
+            spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('object_id')
+            resident_details = mongo_client.resident_detail.find({}, {'_id': 0, 'society_details': 1})
+            resident_details_list = [detail['society_details'] for detail in resident_details]
+            for space in spaces:
+                society_resident_dict = {
+                    'supplier_id': space['object_id'],
+                    'resident_count': 0
+                }
+                for society_details in resident_details_list:
+                    for society in society_details:
+                        if society['society_id'] == space['object_id']:
+                            society_resident_dict['resident_count'] += 1
+                result.append(society_resident_dict)
+
+            return Response(data={'status': True, 'data': result}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.exception(e)
+            return Response(data={'status': False, 'error': 'Error getting data'},
+                            status=status.HTTP_400_BAD_REQUEST)

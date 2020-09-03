@@ -2,7 +2,8 @@ from rest_framework.serializers import ModelSerializer
 from v0.ui.base.serializers import BaseModelPermissionSerializer
 from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMappingVersion, ProposalMasterCost, ProposalInfoVersion,
     ProposalMetrics, ProposalCenterMapping, ImageMapping, SpaceMapping, SpaceMappingVersion, ShortlistedSpacesVersion,
-                                   HashTagImages, SupplierPhase, SupplierAssignment, ProposalCenterSuppliers)
+                                   HashTagImages, SupplierPhase, SupplierAssignment, ProposalCenterSuppliers, BookingSubstatus,
+                                   BookingStatus, TypeOfEndCustomer)
 from rest_framework import serializers
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeCorporate
 
@@ -13,6 +14,8 @@ class ShortlistedSpacesVersionSerializer(ModelSerializer):
         fields = '__all__'
 
 class ProposalInfoSerializer(BaseModelPermissionSerializer):
+    type_of_end_customer_name = serializers.ReadOnlyField(source="type_of_end_customer.name")
+    type_of_end_customer_formatted_name = serializers.ReadOnlyField(source="type_of_end_customer.formatted_name")
 
     class Meta:
         model = ProposalInfo
@@ -160,4 +163,20 @@ class SupplierPhaseSerializer(ModelSerializer):
 class SupplierAssignmentSerializer(ModelSerializer):
     class Meta:
         model = SupplierAssignment
+        fields = '__all__'
+
+class BookingSubstatusSerializer(ModelSerializer):
+    class Meta:
+        model = BookingSubstatus
+        fields = '__all__'
+
+class BookingStatusSerializer(ModelSerializer):
+    booking_substatus = BookingSubstatusSerializer(read_only=True, many=True)
+    class Meta:
+        model = BookingStatus
+        fields = '__all__'
+
+class TypeOfEndCustomerSerializer(ModelSerializer):
+    class Meta:
+        model = TypeOfEndCustomer
         fields = '__all__'

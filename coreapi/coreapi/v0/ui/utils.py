@@ -36,9 +36,10 @@ import v0.constants as v0_constants
 import v0.ui.serializers as ui_serializers
 from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.supplier.serializers import (SupplierHordingSerializer, SupplierEducationalInstituteSerializer, SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SupplierTypeBusShelterSerializer,
-                                        SupplierTypeGymSerializer, SupplierTypeRetailShopSerializer,
-                                        SupplierTypeSalonSerializer, BusDepotSerializer)
-from v0.ui.supplier.models import SupplierTypeSociety
+                                        SupplierTypeGymSerializer, SupplierTypeRetailShopSerializer, SupplierTvChannelSerializer, SupplierRadioChannelSerializer,
+                                        SupplierGantrySerializer, SupplierBusSerializer,
+                                        SupplierTypeSalonSerializer, BusDepotSerializer, SupplierMasterSerializer, AddressMasterSerializer)
+from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster, AddressMaster
 from v0.ui.finances.serializers import (IdeationDesignCostSerializer, DataSciencesCostSerializer, EventStaffingCostSerializer,
                                         LogisticOperationsCostSerializer, SpaceBookingCostSerializer, PrintingCostSerializer)
 from v0.ui.proposal.serializers import ProposalMetricsSerializer, ProposalMasterCostSerializer
@@ -68,14 +69,12 @@ def handle_response(object_name, data=None, headers=None, content_type=None, exc
 
     """
     if not success:
-
         # prepare the object to be sent in error response
         data = {
             'general_error': data,
             'system_error': get_system_error(exception_object),
             'culprit_module': object_name,
         }
-
         if request:
             # fill the data with more information about request
             data['request_data'] = request.data
@@ -86,8 +85,8 @@ def handle_response(object_name, data=None, headers=None, content_type=None, exc
             data['virtual_env'] = request.META.get('VIRTUAL_ENV')
             data['server_port'] = request.META.get('SERVER_PORT')
             data['user'] = request.user.username if request.user else None
-        if isinstance(exception_object, PermissionDenied):
 
+        if isinstance(exception_object, PermissionDenied):
             return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_403_FORBIDDEN)
         else:
             return Response({'status': False, 'data': data}, headers=headers, content_type=content_type, status=status.HTTP_400_BAD_REQUEST)
@@ -151,6 +150,12 @@ def save_basic_supplier_details(supplier_type_code, data):
         return handle_response(function_name, exception_object=e)
 
 
+def generate_random_string(stringLength=5):
+    """Generate a random string of fixed length """
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(stringLength)).upper()
+
+
 def get_supplier_id(data):
     """
     :param request: request parameter
@@ -170,15 +175,21 @@ def get_supplier_id(data):
             subarea_object = CitySubArea.objects.get(subarea_code=data.get('subarea_code'), area_code=area_object)
 
         except ObjectDoesNotExist as e:
+
             city_object = City.objects.get(id=data['city_id'])
             area_object = CityArea.objects.get(id=data['area_id'])
             subarea_object = CitySubArea.objects.get(id=data['subarea_id'],
                                                      area_code=area_object)
 
         supplier_id = city_object.city_code + area_object.area_code + subarea_object.subarea_code + data[
-            'supplier_type'] + data[
-                          'supplier_code']
-        return supplier_id
+            'supplier_type'] + data['supplier_code']
+        supplier_id = generate_random_string(len(supplier_id))
+        # Check supplier id in suppliers
+        supplier_society = SupplierTypeSociety.objects.filter(pk=supplier_id)
+        supplier_master = SupplierMaster.objects.filter(pk=supplier_id)
+        if supplier_society or supplier_master:
+            supplier_id = generate_random_string(len(supplier_id))
+        return supplier_id.strip()
 
     except KeyError as e:
         raise Exception(function, get_system_error(e))
@@ -198,11 +209,11 @@ def make_supplier_data(data):
             state_object = State.objects.get(state_name=state_name, state_code=state_code)
             city = City.objects.get(city_code=data.get('city_code'), state_code=state_object)
             area = CityArea.objects.get(area_code=data.get('area_code'), city_code=city)
-            subarea = CitySubArea.objects.get(subarea_code=data.get('subarea_code'), area_code=area)
+            subarea = CitySubArea.objects.get(subarea_code=data.get('subarea_code'))
         except ObjectDoesNotExist as e:
             city = City.objects.get(id=data['city_id'])
             area = CityArea.objects.get(id=data['area_id'])
-            subarea = CitySubArea.objects.get(id=data['subarea_id'], area_code=area)
+            subarea = CitySubArea.objects.get(id=data['subarea_id'])
 
         all_supplier_data = defaultdict(dict)
 
@@ -213,15 +224,22 @@ def make_supplier_data(data):
                 all_supplier_data[code] = {
 
                     'data': {
-                             'supplier_code': data['supplier_code'],
-                             'society_name': data['supplier_name'],
-                             'supplier_id': data['supplier_id'],
-                             'created_by': current_user.id,
-                             'society_city': city.city_name,
-                             'society_subarea': subarea.subarea_name,
-                             'society_locality': area.label,
-                             'society_state': city.state_code.state_name,
-                             'society_location_type': subarea.locality_rating
+                         'supplier_code': data['supplier_code'],
+                         'society_name': data['supplier_name'],
+                         'supplier_id': data['supplier_id'],
+                         'created_by': current_user.id,
+                         'society_city': city.city_name,
+                         'society_subarea': subarea.subarea_name,
+                         'society_locality': area.label,
+                         'society_state': city.state_code.state_name,
+                         'society_location_type': subarea.locality_rating,
+                         "landmark": data.get("landmark"),
+                         "society_latitude": data.get("latitude"),
+                         "society_longitude": data.get("longitude"),
+                         "society_zip": data.get("zipcode"),
+                         "society_address1": data.get("address1"),
+                         "flat_count": data.get("unit_primary_count"),
+                         "tower_count": data.get("unit_secondary_count")
                     },
 
                     'serializer': get_serializer(code)
@@ -235,7 +253,14 @@ def make_supplier_data(data):
                         'city': city.city_name,
                         'area': area.label,
                         'subarea': subarea.subarea_name,
-                        'state': city.state_code.state_name
+                        'state': city.state_code.state_name,
+                        "landmark": data.get("landmark"),
+                        "latitude": data.get("latitude"),
+                        "longitude": data.get("longitude"),
+                        "zipcode": data.get("zipcode"),
+                        "address1": data.get("address1"),
+                        "unit_primary_count": data.get("unit_primary_count"),
+                        "unit_secondary_count": data.get("unit_secondary_count")
                     },
                     'serializer': get_serializer(code),
                 }
@@ -262,20 +287,124 @@ def save_supplier_data(user, master_data):
     """
     function_name = save_supplier_data.__name__
     try:
-        
         supplier_code = master_data['supplier_type_code']
         serializer_class = get_serializer(supplier_code)
         supplier_data = master_data[supplier_code]['data']
         serializer = serializer_class(data=supplier_data)
         if serializer.is_valid():
             serializer.save(user=user)
-            set_default_pricing(serializer.data['supplier_id'], supplier_code)
+            if supplier_code == 'RS':
+                set_default_pricing(serializer.data['supplier_id'], supplier_code)
+            if supplier_code != v0_constants.society_code:
+                supplier_id = supplier_data.get('supplier_id')
+                area = supplier_data.get('area', None)
+                subarea = supplier_data.get('subarea', None)
+                city = supplier_data.get('city', None)
+                state = supplier_data.get('state', None)
+                landmark = supplier_data.get('landmark', None)
+                longitude = supplier_data.get('longitude', 0.0)
+                latitude = supplier_data.get('latitude', 0.0)
+                zipcode = supplier_data.get('zipcode', 0)
+                address1 = supplier_data.get('address1', "")
+                unit_primary_count = supplier_data.get('unit_primary_count', 0)
+                unit_secondary_count = supplier_data.get('unit_secondary_count', 0)
+                supplier_master_data = {
+                    "supplier_id": supplier_id,
+                    "supplier_name": supplier_data.get('name', None),
+                    "supplier_type": supplier_code,
+                    "area": area,
+                    "subarea": subarea,
+                    "city": city,
+                    "state": state,
+                    "landmark": landmark,
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "zipcode": zipcode,
+                    "address1": address1,
+                    "unit_primary_count": unit_primary_count,
+                    "unit_secondary_count": unit_secondary_count,
+                    "representative": user.profile.organisation.organisation_id
+                }
+                supplier_master_serializer = SupplierMasterSerializer(data=supplier_master_data)
+                if supplier_master_serializer.is_valid():
+                    supplier_master_serializer.save()
+
+                address_master_data = {
+                    "supplier": supplier_id,
+                    "area": area,
+                    "subarea": subarea,
+                    "city": city,
+                    "state": state,
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "zipcode": zipcode,
+                    "address1": address1
+                }
+                address_master_serializer = AddressMasterSerializer(data=address_master_data)
+                if address_master_serializer.is_valid():
+                    address_master_serializer.save()
             return serializer.data
         else:
             raise Exception(function_name, serializer.errors)
     except Exception as e:
-        raise Exception(function_name, get_system_error(e))
+       raise Exception(function_name, get_system_error(e))
 
+def update_supplier_master(request_data):
+    supplier_master_fields = {
+        "supplier_id": "supplier_id",
+        "supplier_name": "name", 
+        "area": "area",
+        "subarea": "subarea", 
+        "city": "city", 
+        "state": "state", 
+        "landmark": "landmark",
+        "latitude": "latitude",
+        "longitude": "longitude", 
+        "zipcode": "zipcode", 
+        "address1": "address1", 
+        "address2": "address2",
+        "unit_primary_count": "unit_primary_count", 
+        "unit_secondary_count": "unit_secondary_count",
+        "unit_tertiary_count": "unit_tertiary_count",
+        "feedback": "feedback", 
+        "quality_rating": "quality_rating",
+        "locality_rating": "locality_rating",
+        "representative": "representative"
+    }
+    supplier_master_data = {}
+    for key, value in supplier_master_fields.items():
+        if request_data.get(value):
+            supplier_master_data[key] = request_data[value]
+
+    supplier_master = SupplierMaster.objects.filter(supplier_id=request_data["supplier_id"]).first()
+    supplier_master_serializer = SupplierMasterSerializer(supplier_master, data=supplier_master_data)
+
+    if supplier_master_serializer.is_valid():
+        supplier_master_serializer.save()
+        
+    address_master_fields = {
+        "supplier": "supplier_id",
+        "area": "area",
+        "subarea": "subarea",
+        "city": "city",
+        "state": "state",
+        "latitude": "latitude",
+        "longitude": "longitude",
+        "zipcode": "zipcode",
+        "address1": "address1",
+        "address2": "address2",
+        "nearest_landmark": "nearest_landmark"
+    }
+
+    address_master_data = {}
+    for key, value in address_master_fields.items():
+        if request_data.get(value):
+            address_master_data[key] = request_data[value]
+
+    address_master = AddressMaster.objects.filter(supplier_id=request_data["supplier_id"]).first()
+    address_master_serializer = AddressMasterSerializer(address_master, data=address_master_data)
+    if address_master_serializer.is_valid():
+        address_master_serializer.save()
 
 def set_default_pricing(supplier_id, supplier_type_code):
     """
@@ -450,7 +579,49 @@ def adinventory_func():
                 adinventory_dict['banner_medium'] = adinventory
             elif adinventory.adinventory_type == 'Large':
                 adinventory_dict['banner_large'] = adinventory
-
+        elif adinventory.adinventory_name == 'BANNER':
+            if adinventory.adinventory_type == 'Small':
+                adinventory_dict['banner_small'] = adinventory
+            elif adinventory.adinventory_type == 'Medium':
+                adinventory_dict['banner_medium'] = adinventory
+            elif adinventory.adinventory_type == 'Large':
+                adinventory_dict['banner_large'] = adinventory
+        elif adinventory.adinventory_name == 'SUNBOARD':
+            adinventory_dict['sun_board_allowed'] = adinventory
+        elif adinventory.adinventory_name == 'HOARDING':
+            adinventory_dict['hoarding'] = adinventory
+        elif adinventory.adinventory_name == 'GANTRY':
+            adinventory_dict['gantry'] = adinventory
+        elif adinventory.adinventory_name == 'BUS SHELTER':
+            adinventory_dict['bus_shelter'] = adinventory
+        elif adinventory.adinventory_name == 'BUS BACK':
+            adinventory_dict['bus_back'] = adinventory
+        elif adinventory.adinventory_name == 'BUS RIGHT':
+            adinventory_dict['bus_right'] = adinventory
+        elif adinventory.adinventory_name == 'BUS LEFT':
+            adinventory_dict['bus_left'] = adinventory
+        elif adinventory.adinventory_name == 'BUS WRAP':
+            adinventory_dict['bus_wrap'] = adinventory
+        elif adinventory.adinventory_name == 'FLOOR':
+            adinventory_dict['floor'] = adinventory
+        elif adinventory.adinventory_name == 'CEILING':
+            adinventory_dict['ceiling'] = adinventory
+        elif adinventory.adinventory_name == 'BILLING':
+            adinventory_dict['billing'] = adinventory
+        elif adinventory.adinventory_name == 'COUNTER DISPLAY':
+            adinventory_dict['counter_display'] = adinventory
+        elif adinventory.adinventory_name == 'TENT CARD':
+            adinventory_dict['tent_card'] = adinventory
+        elif adinventory.adinventory_name == 'TABLE':
+            adinventory_dict['table'] = adinventory
+        elif adinventory.adinventory_name == 'WALL':
+            adinventory_dict['wall'] = adinventory
+        elif adinventory.adinventory_name == 'HOARDING LIT':
+            adinventory_dict['hoarding_lit'] = adinventory
+        elif adinventory.adinventory_name == 'BUS SHELTER LIT':
+            adinventory_dict['bus_shelter_lit'] = adinventory
+        elif adinventory.adinventory_name == 'GANTRY LIT':
+            adinventory_dict['gantry_lit'] = adinventory
     return adinventory_dict
 
 
@@ -462,18 +633,21 @@ def get_supplier_inventory(data, id):
 
     try:
         supplier_code = data['supplier_type_code']
-        # supplier_code = 'CP' #todo: change this when get clearity
         if not supplier_code or not id:
             return Response(data={"status": False, "error": "provide supplier code and  supplier id"},
                             status=status.HTTP_400_BAD_REQUEST)
+        # Get supplier from supplier master if it is not Society
+        supplier_class = SupplierMaster
+        if supplier_code == 'RS':
+            supplier_class = SupplierTypeSociety
+        try:
+            supplier_object = supplier_class.objects.get(pk=id)
+        except Exception as e:
+            return Response(data={"status": False, "error": "Supplier id {id} does not exists for {supplier_type_code}".format(id=id,supplier_type_code=supplier_code)},
+                            status=status.HTTP_400_BAD_REQUEST)
 
-        # supplier_class = v0_constants.suppliers[supplier_code]
-        supplier_class = get_model(supplier_code)
-        supplier_object = supplier_class.objects.get(pk=id)
         content_type = ContentType.objects.get_for_model(supplier_class)
-#       inventory_object = InventorySummary.objects.get(content_object=supplier_object, object_id=id, content_type=content_type)
-
-        (inventory_object, is_created) = InventorySummary.objects.get_or_create(object_id=id, content_type=content_type)
+        inventory_object, is_created = InventorySummary.objects.get_or_create(object_id=id, content_type=content_type)
         data['object_id'] = id
         data['content_type'] = content_type.id
 
@@ -522,7 +696,9 @@ def duration_type_func():
         if duration_type.duration_name == 'Campaign Weekly':
             duration_type_dict['campaign_weekly'] = duration_type
         elif duration_type.duration_name == 'Campaign Monthly':
-            duration_type_dict['campaign_montly'] = duration_type
+            duration_type_dict['campaign_monthly'] = duration_type
+        elif duration_type.duration_name == 'Campaign Daily':
+            duration_type_dict['campaign_daily'] = duration_type
         elif duration_type.duration_name == 'Unit Weekly':
             duration_type_dict['unit_weekly'] = duration_type
         elif duration_type.duration_name == 'Unit Monthly':
@@ -750,6 +926,10 @@ def get_serializer(query):
             v0_constants.bus_shelter: SupplierTypeBusShelterSerializer,
             v0_constants.retail_shop_code: SupplierTypeRetailShopSerializer,
             v0_constants.bus_depot_code: BusDepotSerializer,
+            v0_constants.bus: SupplierBusSerializer,
+            v0_constants.gantry: SupplierGantrySerializer,
+            v0_constants.radio_channel: SupplierRadioChannelSerializer,
+            v0_constants.tv_channel: SupplierTvChannelSerializer,
             'ideation_design_cost': IdeationDesignCostSerializer,
             'logistic_operations_cost': LogisticOperationsCostSerializer,
             'space_booking_cost': SpaceBookingCostSerializer,
@@ -758,7 +938,6 @@ def get_serializer(query):
             'printing_cost': PrintingCostSerializer,
             'proposal_metrics': ProposalMetricsSerializer,
             'proposal_master_cost': ProposalMasterCostSerializer
-
         }
         return serializers[query]
     except Exception as e:
@@ -1058,3 +1237,34 @@ def getRandomString():
 def campaignState(state):
     if state in v0_constants.campaign_state:
         return v0_constants.campaign_state[state]
+
+
+def create_pricing_mapping_default(data, inventory_type, supplier_type_code, supplier_id, adinventory, duration_type):
+    if get_from_dict(data, inventory_type):
+        price = PriceMappingDefault.objects.create_price_mapping_object(
+            make_dict_manager(adinventory,duration_type), supplier_id,
+            supplier_type_code)
+        save_price_data(price, 1)
+
+        price = PriceMappingDefault.objects.create_price_mapping_object(
+            make_dict_manager(adinventory,duration_type), supplier_id, supplier_type_code)
+        save_price_data(price, 1)
+
+def create_supplier_from_master(master_data, supplier_type_code):
+    serializer_class = get_serializer(supplier_type_code)
+    master_keys = v0_constants.supplier_master_diff_table[supplier_type_code]
+
+    insert_data = {}
+    for key, value in master_data.items():
+        key1 = key
+
+        if master_keys.get(key):
+            key1 = master_keys[key]
+        
+        insert_data[key1] = value
+        
+    serializer = serializer_class(data=insert_data)
+    if serializer.is_valid():
+        serializer.save()
+
+    return

@@ -7,9 +7,8 @@ from rest_framework.views import APIView
 from .utils import create_new_society
 from v0.ui.utils import handle_response, get_model, fetch_content_type
 from v0.ui.account.models import ContactDetails
-from v0.ui.supplier.models import (SupplierTypeSociety, SupplierTypeSalon, SupplierTypeGym, SupplierHording,
-SupplierTypeCorporate, SupplierTypeBusShelter, SupplierTypeRetailShop, SupplierTypeBusDepot)
-from v0.ui.proposal.models import ShortlistedSpaces, ProposalInfo
+from v0.ui.supplier.models import SupplierTypeSociety
+from v0.ui.proposal.models import ShortlistedSpaces, BookingStatus, BookingSubstatus, ProposalInfo
 
 from ..ui.common.models import BaseUser
 
@@ -65,9 +64,10 @@ class CreateSupplierWithContactDetails(APIView):
                 # writer.writerow(['supplier_id', 'name'])
                 for supplier in data:
                     supplier_name = supplier['supplier_name'].title()
+                    state = supplier['state'].strip()
                     city = supplier['city'].strip()
-                    area = supplier['area'].title()
-                    subarea = supplier['subarea'].title()
+                    area = supplier['area'].strip()
+                    subarea = supplier['subarea'].strip()
                     contact_name = supplier.get('contact_name', None)
                     contact_number = supplier.get('contact_number', None)
                     designation = supplier.get('designation', '').title()
@@ -178,13 +178,13 @@ class CreateSupplierWithContactDetails(APIView):
                                                                       supplier_type_code, tower_count, flat_count,
                                                                       latitude, longitude, address, zipcode,
                                                                       supplier_ids, contact_name, contact_number,
-                                                                      designation)
+                                                                      designation, state)
                                 writer.writerow(supplier_details)
                     else:
                         supplier_details = create_new_society(model, supplier_name, city, area, subarea,
                                                               supplier_type_code, tower_count, flat_count,
                                                               latitude, longitude, address, zipcode, supplier_ids,
-                                                              contact_name, contact_number, designation)
+                                                              contact_name, contact_number, designation, state)
                         writer.writerow(supplier_details)
 
             return handle_response({}, data=supplier_ids, success=True)
@@ -250,4 +250,37 @@ class storeS3UrlToCSV(APIView):
                     writer.writerow([product_id, url])
         except Exception as e:
             print(e)
+        return handle_response({}, data='Societies deleted successfully', success=True)
+
+class AddBookingStatus(APIView):
+    def post(self, request):
+        try:
+            request_data = request.data
+            data = request_data.get('data')
+            for status in data:
+                name = status.get('name')
+                code = status.get('code')
+                end_customer = status.get('end_customer')
+
+                booking_status = BookingStatus.objects.create(name=name, code=code.upper(), type_of_end_customer_id=end_customer)
+            return handle_response({}, data='status updated', success=True)
+        except Exception as e:
+            print(e)
+            return handle_response({}, data='status not updated', success=True)
+
+class AddBookingSubstatus(APIView):
+    def post(self, request):
+        try:
+            request_data = request.data
+            data = request_data.get('data')
+            for status in data:
+                name = status.get('name')
+                code = status.get('code')
+                booking_status_id = status.get('booking_status_id')
+
+                booking_status = BookingSubstatus.objects.create(name=name, code=code.upper(), booking_status_id=booking_status_id)
+            return handle_response({}, data='substatus updated', success=True)
+        except Exception as e:
+            print(e)
+            return handle_response({}, data='substatuss not updated', success=True)
         return handle_response({}, data='File created', success=True)

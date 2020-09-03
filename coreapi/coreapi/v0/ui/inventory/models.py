@@ -53,6 +53,244 @@ class GatewayArchInventory(BaseModel):
     class Meta:
         db_table = 'gateway_arch_inventory'
 
+class PosterLiftInventory(BaseModel):
+    """
+    This model defines the inventory of Gantry Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'poster_lift_inventory'
+
+class GantryInventory(BaseModel):
+    """
+    This model defines the inventory of Gantry Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'gantry_inventory'
+
+class HordingInventory(BaseModel):
+    """
+    This model defines the inventory of GateWayArch Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'hording_inventory'
+
+class BusShelterInventory(BaseModel):
+    """
+    This model defines the inventory of GateWayArch Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'bus_shelter_inventory'
+
+class BusBackInventory(BaseModel):
+    """
+    This model defines the inventory of GateWayArch Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'bus_back_inventory'
+
+class BusRightInventory(BaseModel):
+    """
+    This model defines the inventory of GateWayArch Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'bus_right_inventory'
+
+class BusLeftInventory(BaseModel):
+    """
+    This model defines the inventory of GateWayArch Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'bus_left_inventory'
+
+class BusWrapInventory(BaseModel):
+    """
+    This model defines the inventory of GateWayArch Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'bus_wrap_inventory'
+
+class FloorInventory(BaseModel):
+    """
+    This model defines the inventory of GateWayArch Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'floor_inventory'
+
+class CeilingInventory(BaseModel):
+    """
+    This model defines the inventory of GateWayArch Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'ceiling_inventory'
+
+class BillingInventory(BaseModel):
+    """
+    This model defines the inventory of GateWayArch Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'billing_inventory'
+
+class CounterDisplayInventory(BaseModel):
+    """
+    This model defines the inventory of GateWayArch Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'counter_display_inventory'
+
+class TentCardInventory(BaseModel):
+    """
+    This model defines the inventory of GateWayArch Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'tent_card_inventory'
+
+class TableInventory(BaseModel):
+    """
+    This model defines the inventory of GateWayArch Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'table_inventory'
+
+class HordingLitInventory(BaseModel):
+    """
+    This model defines the inventory of GateWayArch Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'hording_lit_inventory'
+
+class BusShelterLitInventory(BaseModel):
+    """
+    This model defines the inventory of GateWayArch Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'bus_shelter_lit_inventory'
+
+class GantryLitInventory(BaseModel):
+    """
+    This model defines the inventory of GateWayArch Inventory
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22,unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'gantry_lit_inventory'
+
 class InventoryActivity(BaseModel):
     """
     Stores activities like Release, Closure, Audits against each inventory
@@ -264,6 +502,7 @@ class InventoryTypeVersion(models.Model):
     class Meta:
         db_table = 'inventory_type_version'
 
+
 class InventorySummary(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, default=settings.DEFAULT_USER_ID,on_delete=models.CASCADE)
@@ -337,10 +576,34 @@ class InventorySummary(BaseModel):
     sun_board_length = models.FloatField(blank=True, null=True)
     sun_board_breadth = models.FloatField(blank=True, null=True)
     sun_board_height = models.FloatField(blank=True, null=True)
+    hoarding = models.BooleanField(default=False)
+    hoarding_lit = models.BooleanField(default=False)
+    gantry = models.BooleanField(default=False)
+    bus_shelter = models.BooleanField(default=False)
+    bus_back = models.BooleanField(default=False)
+    bus_right = models.BooleanField(default=False)
+    bus_left = models.BooleanField(default=False)
+    bus_wrap = models.BooleanField(default=False)
+    floor_inventory = models.BooleanField(default=False)
+    ceiling_inventory = models.BooleanField(default=False)
+    billing_inventory = models.BooleanField(default=False)
+    counter_display = models.BooleanField(default=False)
+    tent_card = models.BooleanField(default=False)
+    table_inventory = models.BooleanField(default=False)
+    wall_inventory = models.BooleanField(default=False)
+    bus_shelter_lit = models.BooleanField(default=False)
+    gantry_lit = models.BooleanField(default=False)
+    poster_allowed_lift_A4 = models.BooleanField(default=False)
+    poster_allowed_lift_A3 = models.BooleanField(default=False)
+    standee_large = models.BooleanField(default=False)
+    stall_customize = models.BooleanField(default=False)
+    banner_small = models.BooleanField(default=False)
+    banner_medium = models.BooleanField(default=False)
+    banner_large = models.BooleanField(default=False)
 
     class Meta:
-
         db_table = 'inventory_summary'
+
 
 class InventoryActivityAssignment(BaseModel):
     """
@@ -418,9 +681,9 @@ class InventoryLocation(models.Model):
 
 class AdInventoryType(BaseModel):
     id = models.AutoField(db_column='ID', primary_key=True)
-    adinventory_name = models.CharField(db_column='ADINVENTORY_NAME', max_length=20,
+    adinventory_name = models.CharField(db_column='ADINVENTORY_NAME', max_length=255,
                                         choices=AD_INVENTORY_CHOICES, default='POSTER')
-    adinventory_type = models.CharField(db_column='ADINVENTORY_TYPE', max_length=20)  # Field name made lowercase.
+    adinventory_type = models.CharField(db_column='ADINVENTORY_TYPE', max_length=255)  # Field name made lowercase.
 
     def __str__(self):
         return self.adinventory_name

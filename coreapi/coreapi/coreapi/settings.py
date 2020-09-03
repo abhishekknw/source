@@ -35,7 +35,6 @@ if Config:
 
 ALLOWED_HOSTS = ['localhost','.machadalo.com']
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -52,7 +51,8 @@ INSTALLED_APPS = [
     'v0',
     'drf_generators',
     'rest_framework_swagger',
-    'djcelery'
+    'djcelery',
+    'reset_migrations',
 ]
 
 
@@ -197,17 +197,23 @@ if type(BASE_URL) != str:
     BASE_URL = BASE_URL[0]
 if Config:
     MONGO_DB = Config.MONGO_DB if hasattr(Config, 'MONGO_DB') else 'machadalo_2'
+    MONGO_PORT = Config.MONGO_PORT if hasattr(Config, 'MONGO_PORT') else 27017
+    MONGO_USER = Config.MONGO_USER if hasattr(Config, 'MONGO_USER') else 'abc'
+    MONGO_PASSWORD = Config.MONGO_PASSWORD if hasattr(Config, 'MONGO_PASSWORD') else 'abc'
     MONGO_DB_TEST = Config.MONGO_DB_TEST if hasattr(Config,'MONGO_DB_TEST') else 'mdtest'
     DEFAULT_CC_EMAILS = Config.DEFAULT_CC_EMAILS if hasattr(Config,'DEFAULT_CC_EMAILS') else []
 else:
     MONGO_DB = 'machadalo_2'
+    MONGO_PORT = 27017
+    MONGO_PORT = 'abc'
+    MONGO_PASSWORD = 'abc'
     MONGO_DB_TEST = 'mdtest'
     DEFAULT_CC_EMAILS = []
 # EMAIL SETTINGS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'businessdevelopment@machadalo.com'
-EMAIL_HOST_PASSWORD = 'Bdshapwd#126'
+EMAIL_HOST_PASSWORD = 'bdemail@clientservice#96'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 DEFAULT_EMAIL_FROM = EMAIL_HOST_USER
@@ -225,6 +231,7 @@ AUTH_USER_MODEL = 'v0.BaseUser'  # refer all references to User model by this na
 date_string = '2016-12-1'
 format = '%Y-%m-%d'
 DEFAULT_DATE = timezone.make_aware(datetime.datetime.strptime(date_string, format), timezone.get_default_timezone())
+# DEFAULT_DATE = timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
 
 # AWS settings.
 AWS_ACCESS_KEY_ID = 'AKIAJITJYDRLJ5N5CG5Q'

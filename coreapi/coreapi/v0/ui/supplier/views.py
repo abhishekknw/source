@@ -10,6 +10,8 @@ from bson.objectid import ObjectId
 from django.urls import reverse
 from django.forms.models import model_to_dict
 from django.http import HttpResponse
+from django.db.models import Prefetch
+
 from openpyxl import load_workbook, Workbook
 import csv
 from rest_framework.views import APIView
@@ -18,21 +20,21 @@ from rest_framework.decorators import list_route
 from v0.ui.utils import (get_supplier_id, handle_response, get_content_type, save_flyer_locations, make_supplier_data,
                          get_model, get_serializer, save_supplier_data, get_region_based_query, get_supplier_image,
                          save_basic_supplier_details, get_user_organisation_id)
-from v0.ui.website.utils import manipulate_object_key_values, return_price
+from v0.ui.website.utils import manipulate_object_key_values, return_price, manipulate_master_to_rs
 import v0.ui.website.utils as website_utils
 
 from v0.ui.dynamic_booking.models import BookingInventoryActivity
 from v0.ui.dynamic_suppliers.models import SupplySupplier
-from .models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeGym,
+from .models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeGym, SupplierMaster,
                     SupplierTypeRetailShop, CorporateParkCompanyList, CorporateBuilding, SupplierTypeBusDepot,
-                    SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE,
-                     SupplierEducationalInstitute, SupplierHording, SupplierRelationship)
+                    SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE, 
+                    SupplierEducationalInstitute, SupplierHording, SupplierMaster, AddressMaster, SupplierRelationship)
 from .serializers import (UICorporateSerializer, SupplierTypeSocietySerializer, SupplierAmenitiesMapSerializer,
                          UISalonSerializer, SupplierTypeSalon, SupplierTypeGymSerializer, RetailShopSerializer,
                          SupplierInfoSerializer, SupplierInfo, SupplierTypeCorporateSerializer,
                          CorporateBuildingGetSerializer, CorporateParkCompanyListSerializer, CorporateBuildingSerializer,
                          SupplierTypeSalonSerializer, BusDepotSerializer, CorporateParkCompanySerializer,
-                         BusShelterSerializer, SupplierTypeBusShelterSerializer, SupplierEducationalInstituteSerializer, SupplierHordingSerializer)
+                         BusShelterSerializer, SupplierTypeBusShelterSerializer, SupplierEducationalInstituteSerializer, SupplierHordingSerializer, SupplierMasterSerializer, AddressMasterSerializer)
 from v0.ui.inventory.serializers import ShortlistedSpacesSerializer
 from v0.ui.location.serializers import CityAreaSerializer
 from v0.ui.account.models import (ContactDetails, OwnershipDetails)
@@ -46,7 +48,7 @@ from v0.ui.account.serializers import (ContactDetailsSerializer, ContactDetailsG
 from v0.ui.account.models import ContactDetailsGeneric
 from v0.ui.components.models import (SocietyTower, CorporateBuildingWing, CompanyFloor, FlatType, LiftDetails)
 from v0.ui.components.serializers import CorporateBuildingWingSerializer
-from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping)
+from v0.ui.proposal.models import (ProposalInfo, ProposalCenterMapping, SupplierAssignment)
 from v0.ui.organisation.models import (Organisation)
 import v0.constants as v0_constants
 from rest_framework.response import Response
@@ -76,8 +78,10 @@ from django.db import IntegrityError
 from .supplier_uploads import create_price_mapping_default
 from django.db import connection
 from v0.ui.common.pagination import paginate
+from django.utils import timezone
 
-
+import logging
+logger = logging.getLogger(__name__)
 
 def get_values(list_name,key):
     values = []
@@ -127,6 +131,128 @@ def get_flat_count_type(flat_count):
     else:
         flat_type = '401+'
     return flat_type
+
+
+def update_contact_and_ownership_detail(data):
+    basic_contacts = data.get('contactData', None)
+    object_id = data.get('supplier_id', None)
+    master_supplier_data = data.get('master_data', None)
+    supplier_address_data = master_supplier_data.get('address_supplier')
+
+    if master_supplier_data:
+        landmark = data.get('landmark', None)
+        if not landmark:
+            landmark = data.get('nearest_landmark', None)
+
+        master_data = {
+            "supplier_id": object_id,
+            "supplier_name": master_supplier_data.get('supplier_name', None),
+            "supplier_type": master_supplier_data.get('supplier_type', None),
+            "unit_primary_count": master_supplier_data.get('unit_primary_count') if master_supplier_data.get('unit_primary_count') else 0,
+            "unit_secondary_count": master_supplier_data.get('unit_secondary_count') if master_supplier_data.get('unit_secondary_count') else 0,
+            "unit_tertiary_count": master_supplier_data.get('unit_tertiary_count') if master_supplier_data.get('unit_tertiary_count') else 0,
+            "representative": data.get('representative', None),
+            "area": supplier_address_data.get('area', None),
+            "subarea": supplier_address_data.get('subarea', None),
+            "city": supplier_address_data.get('city', None),
+            "state": supplier_address_data.get('state', None),
+            "zipcode": supplier_address_data.get('zipcode', None),
+            "latitude": supplier_address_data.get('latitude', None),
+            "longitude": supplier_address_data.get('longitude', None),
+            "landmark": landmark,
+            "feedback": data.get('feedback', None),
+        }
+        supplier_type = master_supplier_data.get('supplier_type', None)
+        if supplier_type in ["CP", "BS", "HO"]:
+            master_data["quality_rating"] = data.get('quality_rating', None)
+            master_data["locality_rating"] = data.get('locality_rating', None)
+            master_data["quantity_rating"] = data.get('quantity_rating', None)
+        elif supplier_type in ["GY", "SA"]:
+            master_data["quality_rating"] = data.get('category', None)
+            master_data["locality_rating"] = data.get('locality_rating', None)
+        elif supplier_type in ["RE"]:
+            master_data["quality_rating"] = data.get('rating', None)
+            master_data["locality_rating"] = data.get('rating', None)
+            master_data["quantity_rating"] = data.get('store_size', None)
+
+        supplier_master_data = SupplierMaster.objects.filter(supplier_id=object_id).first()
+        if supplier_master_data and supplier_master_data.supplier_id:
+            supplier_master_serializer = SupplierMasterSerializer(supplier_master_data, data=master_data)
+        else:
+            supplier_master_serializer = SupplierMasterSerializer(data=master_data)
+        
+        if supplier_master_serializer.is_valid():
+            supplier_master_serializer.save()
+
+        address_data = {
+            "supplier": object_id,
+            "address1": supplier_address_data.get('address1', None),
+            "address2": supplier_address_data.get('address2', None),
+            "area": supplier_address_data.get('area', None),
+            "subarea": supplier_address_data.get('subarea', None),
+            "city": supplier_address_data.get('city', None),
+            "state": supplier_address_data.get('state', None),
+            "zipcode": supplier_address_data.get('zipcode', None),
+            "latitude": supplier_address_data.get('latitude', None),
+            "longitude": supplier_address_data.get('longitude', None),
+            "nearest_landmark": landmark,
+        }
+        address_master_data = AddressMaster.objects.filter(supplier_id=object_id).first()
+        if address_master_data and address_master_data.supplier_id:
+            address_master_serializer = AddressMasterSerializer(address_master_data, data=address_data)
+        else:
+            address_master_serializer = AddressMasterSerializer(data=address_data)
+
+        if address_master_serializer.is_valid():
+            address_master_serializer.save()
+
+    not_remove_contacts = []
+
+    if basic_contacts:
+        for contact in basic_contacts:
+            contact['object_id'] = object_id
+            if 'id' in contact:
+                contact_detail = ContactDetails.objects.filter(pk=contact['id']).first()
+                contact_serializer = ContactDetailsSerializer(contact_detail, data=contact)
+            else:
+                contact_serializer = ContactDetailsSerializer(data=contact)
+            if contact_serializer.is_valid():
+                contact_serializer.save(object_id=object_id)
+                not_remove_contacts.append(contact_serializer.data['id'])
+
+    ContactDetails.objects.filter(object_id=object_id).exclude(pk__in=not_remove_contacts).delete()
+
+    ownership = data.get('ownership_details', None)
+
+    if ownership:
+        if ownership.get('id'):
+            ownership_detail = OwnershipDetails.objects.filter(pk=ownership['id']).first()
+            ownership_serializer = OwnershipDetailsSerializer(ownership_detail, data=ownership)
+        else:
+            ownership_serializer = OwnershipDetailsSerializer(data=ownership)
+        
+        if ownership_serializer.is_valid():
+            ownership_serializer.save()
+    return True
+
+
+def retrieve_contact_and_ownership_detail(pk):
+
+    retail_shop_instance = ContactDetails.objects.filter(object_id=pk)
+    contact_serializer = ContactDetailsSerializer(retail_shop_instance, many=True)
+        
+    contact_data = contact_serializer.data
+
+    ownership_details_instance = OwnershipDetails.objects.filter(object_id=pk).first()
+    ownership_details_serializer = OwnershipDetailsSerializer(ownership_details_instance, many=False)
+    
+    ownership_data = ownership_details_serializer.data
+    
+    if ownership_data and ownership_data.get('object_id'):
+        ownership_details = ownership_data
+    else:
+        ownership_details = {}
+    return contact_data, ownership_details
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -473,40 +599,32 @@ class GenerateSupplierIdAPIView(APIView):
         class_name = self.__class__.__name__
         try:
             user = request.user
-            supplier_type_code = request.data['supplier_type']
-
-            data = {
+            data = dict({
                 'city_id': request.data['city_id'],
                 'area_id': request.data['area_id'],
                 'subarea_id': request.data['subarea_id'],
                 'supplier_type': request.data['supplier_type'],
-                'supplier_code': request.data['supplier_code'],
                 'supplier_name': request.data['supplier_name'],
-            }
+            })
+            supplier_name = request.data['supplier_name']
+            if len(supplier_name) == 0:
+                return handle_response(class_name, data='Supplier Name is required', success=False)
+            data['supplier_code'] = supplier_name.upper()
 
-            # city_object = City.objects.get(id=data['city_id'])
-            # city_code = city_object.city_code
-
-            #check supplier code in db, if exists, it will throw error, else, it'll add new supplier code.
-            check_supplier_code = SupplierTypeSociety.objects.filter(supplier_code = request.data['supplier_code'])
+            if len(supplier_name) > 2:
+                data['supplier_code'] = supplier_name[:3].upper()
 
             data['supplier_id'] = get_supplier_id(data)
             data['supplier_type_code'] = request.data['supplier_type']
             data['current_user'] = request.user
             response = make_supplier_data(data)
-            if not check_supplier_code:
-                if not response.data['status']:
-                    return response
-                all_supplier_data = response.data['data']
-                return handle_response(class_name, data=save_supplier_data(user, all_supplier_data),
-                                            success=True)
-            else:
-                return handle_response(class_name,data="Supplier code already exists.", #displaying error externally
-                                            success=False)
+            all_supplier_data = response.data['data']
+            return handle_response(class_name, data=save_supplier_data(user, all_supplier_data), success=True)
         except ObjectDoesNotExist as e:
-            return handle_response(class_name, exception_object=e)
+            return handle_response(class_name, data='Supplier {supplier_code} does not exists'.format(supplier_code=request.data['supplier_type']))
         except Exception as e:
             return handle_response(class_name, exception_object=e)
+
 
 class SupplierImageDetails(APIView):
     """
@@ -548,6 +666,7 @@ class SupplierImageDetails(APIView):
 
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
+
 
 class SocietyAPIView(APIView):
     # permission_classes = (permissions.IsAuthenticated, IsOwnerOrManager,)
@@ -641,7 +760,6 @@ class SocietyAPIView(APIView):
                 if contact_serializer.is_valid():
                     contact_serializer.save(object_id=object_id, content_type=content_type)
                     not_remove_contacts.append(contact_serializer.data['id'])
-  
   
         if basic_reference_available and basic_reference_contacts:
             for basic_reference_contact in basic_reference_contacts:
@@ -876,10 +994,9 @@ class CorporateViewSet(viewsets.ViewSet):
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
 
+
 class SalonViewSet(viewsets.ViewSet):
-
     def list(self, request):
-
         class_name = self.__class__.__name__
         try:
             user = request.user
@@ -1171,8 +1288,12 @@ class SocietyAPISortedListView(APIView):
 
 class SocietyAPISocietyIdsView(APIView):
     def get(self, request, format=None):
-        society_ids = SupplierTypeSociety.objects.all().values_list('supplier_id', flat=True)
-        return Response({'society_ids': society_ids}, status=200)
+        supplier_type_code = request.query_params.get('supplier_type_code', None)
+        if supplier_type_code == 'RS':
+            supplier_ids = SupplierTypeSociety.objects.all().values_list('supplier_id', flat=True)
+        else:
+            supplier_ids = SupplierMaster.objects.all().values_list('supplier_id', flat=True)
+        return Response({'supplier_ids': supplier_ids}, status=200)
 
 class SupplierInfoAPIView(APIView):
 
@@ -1272,6 +1393,7 @@ class SupplierTypeSocietyAPIView(APIView):
         item.delete()
         return Response(status=204)
 
+
 class RetailShopViewSet(viewsets.ViewSet):
     """
     View Set around RetailShop
@@ -1342,6 +1464,7 @@ class RetailShopViewSet(viewsets.ViewSet):
     def update(self, request, pk):
         class_name = self.__class__.__name__
         try:
+
             basic_contacts = request.data.get('basic_contacts', None)
             object_id = request.data.get('supplier_id', None)
             if basic_contacts is not None:
@@ -1354,24 +1477,26 @@ class RetailShopViewSet(viewsets.ViewSet):
                     if contact_serializer.is_valid():
                         contact_serializer.save()
 
+            supplier_type_code = request.data.get('supplier_type_code', None)
+
+            if not supplier_type_code:
+                return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
             ownership = request.data.get('ownership_details', None)
 
-            if ownership:
-                if ownership.get('id'):
-                    item1 = OwnershipDetails.objects.filter(pk=ownership['id']).first()
-                    ownership_serializer = OwnershipDetailsSerializer(item1, data=ownership)
-                else:
-                    ownership_serializer = OwnershipDetailsSerializer(data=ownership)
-                
-                if ownership_serializer.is_valid():
-                    ownership_serializer.save()
+            model_name = get_model(supplier_type_code)
+            serializer_name = get_serializer(supplier_type_code)
 
-            retail_shop_instance = SupplierTypeRetailShop.objects.get(pk=pk)
-            serializer = RetailShopSerializer(instance=retail_shop_instance, data=request.data)
+
+            instance = model_name.objects.get(pk=pk)
+            serializer = serializer_name(instance=instance, data=request.data)
+            
             if serializer.is_valid():
                 serializer.save()
+                contact_and_ownership = update_contact_and_ownership_detail(request.data)
                 return handle_response(class_name, data=serializer.data, success=True)
+            
             return handle_response(class_name, data=serializer.data, success=True)
+        
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
 
@@ -1383,19 +1508,8 @@ class RetailShopViewSet(viewsets.ViewSet):
 
             shopData = serializer.data
 
-            retail_shop_instance = ContactDetails.objects.filter(object_id=pk)
-            contact_serializer = ContactDetailsSerializer(retail_shop_instance, many=True)
-                
-            shopData['contacData'] = contact_serializer.data
-            try:
-                ownership_details_instance = OwnershipDetails.objects.filter(object_id=pk).first()
-                if ownership_details_instance:
-                    ownership_details_serializer = OwnershipDetailsSerializer(ownership_details_instance, many=False)
-                    shopData['ownership_details'] = ownership_details_serializer.data
-                else:
-                    return handle_response(class_name, data=shopData, success=True)
-            except Exception as e:
-                return handle_response(class_name, data=shopData, success=True)
+            shopData['contactData'],shopData['ownership_details'] = retrieve_contact_and_ownership_detail(pk)
+
             return handle_response(class_name, data=shopData, success=True)
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
@@ -1456,20 +1570,11 @@ class HordingViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             hording_instance = SupplierHording.objects.get(pk=pk)
-            serializer = RetailShopSerializer(instance=hording_instance)
+            serializer = SupplierHordingSerializer(instance=hording_instance)
 
             result = serializer.data
 
-            retail_shop_instance = ContactDetails.objects.filter(object_id=pk)
-            contact_serializer = ContactDetailsSerializer(retail_shop_instance, many=True)
-                
-            result['contacData'] = contact_serializer.data
-
-
-            ownership_details_instance = OwnershipDetails.objects.filter(object_id=pk).first()
-            ownership_details_serializer = OwnershipDetailsSerializer(ownership_details_instance, many=False)
-                
-            result['ownership_details'] = ownership_details_serializer.data
+            result['contactData'],result['ownership_details'] = retrieve_contact_and_ownership_detail(pk)
 
             return handle_response(class_name, data=result, success=True)
         except Exception as e:
@@ -1478,34 +1583,7 @@ class HordingViewSet(viewsets.ViewSet):
     def update(self, request, pk):
         class_name = self.__class__.__name__
         try:
-            basic_contacts = request.data.get('basic_contacts', None)
-            object_id = request.data.get('supplier_id', None)
-
-
-            if basic_contacts:
-                for contact in basic_contacts:
-                    if 'id' in contact:
-                        item = ContactDetails.objects.filter(pk=contact['id']).first()
-                        contact_serializer = ContactDetailsSerializer(item, data=contact)
-                    else:
-                        contact_serializer = ContactDetailsSerializer(data=contact)
-                    if contact_serializer.is_valid():
-                        contact_serializer.save()
-
-            
-            ownership = request.data.get('ownership_details', None)
-
-            if ownership:
-                if ownership.get('id'):
-                    item1 = OwnershipDetails.objects.filter(pk=ownership['id']).first()
-                    ownership_serializer = OwnershipDetailsSerializer(item1, data=ownership)
-                else:
-                    ownership_serializer = OwnershipDetailsSerializer(data=ownership)
-                
-                if ownership_serializer.is_valid():
-                    ownership_serializer.save()
-
-
+            contact_and_ownership = update_contact_and_ownership_detail(request.data)
             hording_instance = SupplierHording.objects.get(pk=pk)
             serializer = SupplierHordingSerializer(instance=hording_instance, data=request.data)
             if serializer.is_valid():
@@ -1514,11 +1592,6 @@ class HordingViewSet(viewsets.ViewSet):
             return handle_response(class_name, data=serializer.data, success=True)
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
-
-
-
-
-
 
 
 class EducationalInstituteViewSet(viewsets.ViewSet):
@@ -1549,8 +1622,6 @@ class EducationalInstituteViewSet(viewsets.ViewSet):
 
                 educational_institute_objects = educational_institute_objects.all().order_by('name')
             else:
-                
-                
                 #vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
                 #educational_institute_objects = SupplierEducationalInstitute.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id)) & Q(representative__isnull=False))
 
@@ -1564,14 +1635,7 @@ class EducationalInstituteViewSet(viewsets.ViewSet):
                                       | Q(city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
                
                 educational_institute_objects = educational_institute_objects.all().order_by('name')
-
-                
-                
-                
-
-            
-
-            # #pagination
+          # #pagination
             educational_institute_objects_paginate = paginate(educational_institute_objects,SupplierEducationalInstituteSerializer,request)
             educational_institute_with_images = get_supplier_image(educational_institute_objects_paginate["list"], 'Educational Institute')
 
@@ -1582,21 +1646,16 @@ class EducationalInstituteViewSet(viewsets.ViewSet):
                 'educational_institute_objects': educational_institute_with_images
             }
             return handle_response(class_name, data=data, success=True)
-            
         except Exception as e:
             return handle_response(class_name, data=str(e), request=request)
     
 
 class SaveBasicCorporateDetailsAPIView(APIView):
-
     def post(self, request, id, format=None):
         class_name = self.__class__.__name__
-
         try:
-
             companies = []
             error = {}
-
             # Round 1 Saving basic data
             if 'supplier_id' in request.data:
                 corporate = SupplierTypeCorporate.objects.filter(pk=request.data['supplier_id']).first()
@@ -1617,13 +1676,11 @@ class SaveBasicCorporateDetailsAPIView(APIView):
             # Round 2 Saving List of companies
 
             corporate_id = request.data['supplier_id']
-
             companies_name = request.data.get('list1')
             company_ids = list(
                 CorporateParkCompanyList.objects.filter(supplier_id=corporate_id).values_list('id', flat=True))
 
             for company_name in companies_name:
-                
                 if 'id' is company_name.get('name'):
                     company = CorporateParkCompanyList.objects.get(id=id)
                     company.name = company_name.get('name')
@@ -1636,9 +1693,7 @@ class SaveBasicCorporateDetailsAPIView(APIView):
 
             CorporateParkCompanyList.objects.bulk_create(companies)
             CorporateParkCompanyList.objects.filter(id__in=company_ids).delete()
-
             # Round 3 - Saving contacts
-
             try:
                 instance = SupplierTypeCorporate.objects.get(supplier_id=id)
             except SupplierTypeCorporate.DoesNotExist:
@@ -1655,7 +1710,6 @@ class SaveBasicCorporateDetailsAPIView(APIView):
             contact_detail_ids = set([contact_id for contact_id in contact_detail_objects.keys()])
 
             for contact in request.data.get('contacts'):
-
                 # make the data you want to save in contacts
                 contact_data = {
                     'name': contact.get('name'),
@@ -1678,7 +1732,6 @@ class SaveBasicCorporateDetailsAPIView(APIView):
 
                 if contact_instance:
                     contact_detail_ids.remove(contact['id'])
-
                 # save the data
                 serializer = ContactDetailsSerializer(contact_instance, data=contact_data)
 
@@ -1746,7 +1799,6 @@ class SaveBasicCorporateDetailsAPIView(APIView):
 
     def get(self, request, id, format=None):
         try:
-
             supplier = SupplierTypeCorporate.objects.get(supplier_id=id)
             serializer = SupplierTypeCorporateSerializer(supplier)
             companies = CorporateParkCompanyList.objects.filter(supplier_id=id)
@@ -1781,14 +1833,11 @@ class SaveBuildingDetailsAPIView(APIView):
         return Response(building_serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, id, format=None):
-
         try:
             corporate_object = SupplierTypeCorporate.objects.get(supplier_id=id)
         except SupplierTypeCorporate.DoesNotExist:
             return Response({'message': 'Invalid Corporate ID'}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-
             building_count = len(request.data)
             if corporate_object.building_count != building_count:
                 corporate_object.building_count = building_count
@@ -2010,7 +2059,7 @@ class saveBasicSalonDetailsAPIView(APIView):
         else:
             error['message'] = 'Invalid Salon Info data'
             error = json.dumps(error)
-            return Response(response, status=406)
+            return Response(error, status=406)
 
         # Now saving contacts
         try:
@@ -2033,7 +2082,6 @@ class saveBasicSalonDetailsAPIView(APIView):
                     serializer.save()
                 else:
                     return Response(status=404)
-
             else:
                 contact['object_id'] = instance.supplier_id
                 serializer = ContactDetailsGenericSerializer(data=contact)
@@ -2044,9 +2092,7 @@ class saveBasicSalonDetailsAPIView(APIView):
 
         ContactDetailsGeneric.objects.filter(id__in=contacts_ids).delete()
         return Response(status=200)
-
         # End of contact saving
-
 
 # Saving and fetching basic data of a gym.
 class saveBasicGymDetailsAPIView(APIView):
@@ -2125,12 +2171,8 @@ class saveBasicGymDetailsAPIView(APIView):
             
             if ownership_serializer.is_valid():
                 ownership_serializer.save()
-
-
         return Response(status=200)
-
         # End of contact Saving
-
 
 class BusShelter(APIView):
     """
@@ -2249,9 +2291,6 @@ class BusShelter(APIView):
             return handle_response(class_name, exception_object=e, request=request)
     
 
-
-
-
 class getBusShelter(APIView):
     """
     The class provides api's for fetching and saving Bus Shelter details
@@ -2279,7 +2318,6 @@ class getBusShelter(APIView):
             
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
-
 
 
 class BusShelterSearchView(APIView):
@@ -2313,7 +2351,6 @@ class BusShelterSearchView(APIView):
 
 
 class SocietyAPIListView(APIView):
-
     def get(self, request):
         class_name = self.__class__.__name__
         try:
@@ -2349,48 +2386,47 @@ class SocietyAPIListView(APIView):
 
 class SuppliersMeta(APIView):
     """
-    Fetches meta information about suppliers. How many are there in the system, count of each one of them how many
-    of them have pricing, how many don't
+    Fetches meta information about suppliers. How many are there in the system, count of each one of them.
     """
 
     def get(self, request):
-        """
-
-        :param request:
-        :return:
-        """
         class_name = self.__class__.__name__
         try:
             valid_supplier_type_code_instances = SupplierTypeCode.objects.all()
-            data = {}
             org_id= request.user.profile.organisation.organisation_id
+            data = {}
 
             for instance in valid_supplier_type_code_instances:
                 supplier_type_code = instance.supplier_type_code
                 error = False
                 try:
-                    model_name = get_model(supplier_type_code)
                     if request.user.is_superuser:
-                        count = model_name.objects.all().count()
+                        if instance.supplier_type_code == 'RS':
+                            count = SupplierTypeSociety.objects.all().count()
+                        else :
+                            count = SupplierMaster.objects.filter(supplier_type = instance.supplier_type_code).count()
                     else:
                         vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
-                        count = model_name.objects.all().filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
-                                                            & Q(representative__isnull=False)).count()
+                        if instance.supplier_type_code == 'RS':
+                            count = SupplierTypeSociety.objects.all().filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
+                                                                    & Q(representative__isnull=False)).count()
+                        else :
+                            count = SupplierMaster.objects.filter(Q(supplier_type = instance.supplier_type_code) & (Q(representative__in=vendor_ids) | Q(representative=org_id))
+                                                                & Q(representative__isnull=False)).count()
                 except Exception:
                     count = 0
                     error = True
-
+               
                 data[supplier_type_code] = {
                     'count': count,
                     'name': instance.supplier_type_name,
                     'error': error
                 }
-                if supplier_type_code == v0_constants.retail_shop_code:
-                    data[supplier_type_code]['retail_shop_types'] = [tup[0] for tup in RETAIL_SHOP_TYPE]
-
             return handle_response(class_name, data=data, success=True)
-        except Exception as e:
-            return handle_response(class_name, exception_object=e, request=request)
+
+        except Exception :
+            return handle_response(class_name, data='Something went wrong please try again later', success=False)
+
 
 class SuppliersMetaData(APIView):
     """
@@ -2407,29 +2443,48 @@ class SuppliersMetaData(APIView):
         try:
             data = {}
             supplier_type_code = request.query_params.get('supplier_code', None)
+
+            if not supplier_type_code:
+                return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
             
             model_name = get_model(supplier_type_code)
 
             state = request.GET.get("state")
             state_name = request.GET.get("state_name")
-            
-            search_query = Q()
+            user = request.user
+            org_id = request.user.profile.organisation.organisation_id
 
-            if state:
+            if user.is_superuser :
                 if supplier_type_code == 'RS':
-                    search_query &= Q(society_state=state)
-                else :
-                    search_query &= Q(state=state)
-
-
-            if state_name:
-                if supplier_type_code == 'RS':
-                    search_query |= Q(society_state=state_name)
+                    if state and state_name:
+                        count = SupplierTypeSociety.objects.filter(Q(society_state=state) | Q(society_state=state_name)).count()
                 else:
-                    search_query |= Q(state=state_name)
+                    address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
 
-            count = model_name.objects.filter(search_query).count()
-        
+                    if state_name:
+                        count = SupplierMaster.objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code,address_supplier__state__icontains=state_name).count()
+                    else:
+                        count = SupplierMaster.objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code).count()
+            else:
+                if supplier_type_code == 'RS':
+                    vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
+                    society_objects = SupplierTypeSociety.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
+                                                                      & Q(representative__isnull=False))
+                
+                    if state and state_name:
+                        count = society_objects.filter(Q(society_state=state) | Q(society_state=state_name)).count()
+                
+                else:
+                    vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
+                    supplier_objects = SupplierMaster.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id)) & Q(representative__isnull=False))
+
+                    address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
+
+                    if state_name:
+                        count = supplier_objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code,address_supplier__state__icontains=state_name).count()
+                    else:
+                        count = supplier_objects.prefetch_related(address_supplier).filter(supplier_type=supplier_type_code).count()
+            
             data[supplier_type_code] = {'count': count}
 
             return handle_response(class_name, data=data, success=True)   
@@ -2566,15 +2621,11 @@ class FilteredSuppliers(APIView):
             inventory_type_query_suppliers = []
 
             # this is the main list. if no filter is selected this is what is returned by default
-            # cache_key = create_cache_key(class_name, proposal_id, supplier_type_code, common_filters_query)
-            # cache_key = None
-            #
-            #
-            # if cache.get(cache_key):
-            #     master_suppliers_list = cache.get(cache_key)
-            # else:
-            master_suppliers_list = set(list(supplier_model.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
-            # cache.set(cache_key, master_suppliers_list)
+            if supplier_type_code == 'RS':
+                master_suppliers_list = set(list(supplier_model.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
+            else :
+                master_suppliers_list = set(list(SupplierMaster.objects.filter(common_filters_query).values_list('supplier_id', flat=True)))
+            
             # now fetch all inventory_related suppliers
             # handle inventory related filters. it involves quite an involved logic hence it is in another function.
             response = website_utils.handle_inventory_filters(inventory_filters)
@@ -2583,17 +2634,8 @@ class FilteredSuppliers(APIView):
             inventory_type_query = response.data['data']
 
             if inventory_type_query.__len__():
-
                 inventory_type_query &= Q(content_type=content_type)
-
-                # cache_key = create_cache_key(class_name, proposal_id, supplier_type_code, inventory_type_query)
-                # cache_key = None
-                # if cache.get(cache_key):
-                #     inventory_type_query_suppliers = cache.get(cache_key)
-                # else:
-                #
                 inventory_type_query_suppliers = set(list(InventorySummary.objects.filter(inventory_type_query).values_list('object_id', flat=True)))
-                # cache.set(cache_key, inventory_type_query_suppliers)
 
             # if inventory query was non zero in length, set final_suppliers_id_list to inventory_type_query_suppliers.
             if inventory_type_query.__len__():
@@ -2604,21 +2646,19 @@ class FilteredSuppliers(APIView):
             # when the final supplier list is prepared. we need to take intersection with master list.
             final_suppliers_id_list = final_suppliers_id_list.intersection(master_suppliers_list)
 
+            
             result = {}
 
-            # query now for real objects for supplier_id in the list
-            # cache_key = create_cache_key(class_name, final_suppliers_id_list)
-            # if cache.get(cache_key):
-            #     import pdb
-            #     pdb.set_trace()
-            #     filtered_suppliers = cache.get(cache_key)
-            #
-            filtered_suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_id_list,
-                                                               representative=proposal.principal_vendor)
-
-            # cache.set(cache_key, filtered_suppliers)
-            supplier_serializer = ui_utils.get_serializer(supplier_type_code)
+            if supplier_type_code == 'RS':
+                filtered_suppliers = supplier_model.objects.filter(supplier_id__in=final_suppliers_id_list, representative=proposal.principal_vendor)
+                supplier_serializer = ui_utils.get_serializer(supplier_type_code)
+            else: 
+                filtered_suppliers = SupplierMaster.objects.filter(supplier_type=supplier_type_code, supplier_id__in=final_suppliers_id_list)
+                supplier_serializer = SupplierMasterSerializer
+           
             serializer = supplier_serializer(filtered_suppliers, many=True)
+
+            
 
             # to include only those suppliers that lie within radius, we need to send coordinates
             coordinates = {
@@ -2626,10 +2666,11 @@ class FilteredSuppliers(APIView):
                 'latitude': common_filters['latitude'],
                 'longitude': common_filters['longitude']
             }
-
+            
             # set initial value of total_suppliers. if we do not find suppliers which were saved initially, this is the final list
             initial_suppliers = website_utils.get_suppliers_within_circle(serializer.data, coordinates, supplier_type_code)
 
+            
             # adding earlier saved shortlisted suppliers in the results for this center only
             shortlisted_suppliers = website_utils.get_shortlisted_suppliers_map(proposal_id, content_type, center_id)
             total_suppliers = website_utils.union_suppliers(initial_suppliers, shortlisted_suppliers.values())
@@ -2637,14 +2678,8 @@ class FilteredSuppliers(APIView):
             # because some suppliers can be outside the given radius, we need to recalculate list of
             # supplier_id's.
             final_suppliers_id_list = list(total_suppliers.keys())
-
-            # cache_key = create_cache_key(class_name, proposal_id, supplier_type_code, priority_index_filters, final_suppliers_id_list)
-            # cache_key = None
-            # if cache.get(cache_key):
-            #     pi_index_map = cache.get(cache_key)
-            # else:
-            #     # We are applying ranking on combined list of previous saved suppliers plus the new suppliers if any. now the suppliers are filtered. we have to rank these suppliers. Get the ranking by calling this function.
-
+            
+            # We are applying ranking on combined list of previous saved suppliers plus the new suppliers if any. now the suppliers are filtered. we have to rank these suppliers. Get the ranking by calling this function.
             pi_index_map = {}
             supplier_id_to_pi_map = {}
 
@@ -2682,6 +2717,7 @@ class FilteredSuppliers(APIView):
             return ui_utils.handle_response(class_name, data=result, success=True)
 
         except Exception as e:
+            logger.exception(e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
@@ -3306,25 +3342,11 @@ class ImportSupplierData(APIView):
             # # data for this supplier is made. populate the shortlisted_inventory_details table before hitting the urls
             message = website_utils.populate_shortlisted_inventory_pricing_details(result, proposal_id, request.user)
 
-            # hit metric url to save metric data. current m sending the entire file, though only first sheet sending
-            # is required.
+            website_utils.import_proposal_cost_data(my_file,proposal_id)
 
-            url = reverse('import-metric-data', kwargs={'proposal_id': proposal_id})
-            url = BASE_URL + url[1:]
-
-            # set the pointer to zero to be read again in next api
-            my_file.seek(0)
-            files = {
-                'file': my_file
-            }
-            headers = {
-                'Authorization': request.META.get('HTTP_AUTHORIZATION', '')
-            }
-            response = requests.post(url, files=files, headers=headers)
-
-            if response.status_code != status.HTTP_200_OK:
-                return Response({'status': False, 'error in import-metric-data api ': response.text},
-                                status=status.HTTP_400_BAD_REQUEST)
+            # if response.status_code != status.HTTP_200_OK:
+            #     return Response({'status': False, 'error in import-metric-data api ': response.text},
+            #                     status=status.HTTP_400_BAD_REQUEST)
 
             # prepare a new name for this file and save it in the required table
             file_name = website_utils.get_file_name(request.user, proposal_id, is_exported=False)
@@ -3371,76 +3393,94 @@ class SupplierSearch(APIView):
             if not supplier_type_code :
                 return ui_utils.handle_response(class_name, data='provide supplier type code')
 
-            model = ui_utils.get_model(supplier_type_code)
             
-            search_query = Q()
+            if supplier_type_code == "RS" :
 
-            if search_txt :
-                for search_field in v0_constants.search_fields[supplier_type_code]:
-                    if search_query:
-                        search_query |= Q(**{search_field: search_txt})
-                    else:
-                        search_query = Q(**{search_field: search_txt})
+                model = ui_utils.get_model(supplier_type_code)
+                search_query = Q()
+                search_query &= Q(supplier_code__isnull=False)
 
+                if search_txt :
+                    search_text_query = Q()
+                    for search_field in v0_constants.search_fields[supplier_type_code]:
+                        if search_text_query:
+                            search_text_query |= Q(**{search_field: search_txt})
+                        else:
+                            search_text_query = Q(**{search_field: search_txt})
+                    search_query &= search_text_query
 
-            if request.query_params.get("supplier_center"):
-                
-                if supplier_type_code == "RS" :
+                if request.query_params.get("supplier_center"):
                     if search_query:
                         search_query &= Q(society_city__icontains=request.query_params.get("supplier_center"))
                     else:
                         search_query = Q(society_city__icontains=request.query_params.get("supplier_center"))
-                else:
-                    if search_query:
-                        search_query &= Q(city__icontains=request.query_params.get("supplier_center"))
-                    else:
-                        search_query = Q(city__icontains=request.query_params.get("supplier_center"))
                 
-
-            if request.query_params.get("supplier_area"):
-                if supplier_type_code == "RS" :
+                if request.query_params.get("supplier_area"):
                     if search_query:
                         search_query &= Q(society_locality__icontains=request.query_params.get("supplier_area"))
                     else:
                         search_query = Q(society_locality__icontains=request.query_params.get("supplier_area"))
-                else:
-                    if search_query:
-                        search_query &= Q(area__icontains=request.query_params.get("supplier_area"))
-                    else:
-                        search_query = Q(area__icontains=request.query_params.get("supplier_area"))
-
-
-            if request.query_params.get("supplier_area_subarea"):
-                if supplier_type_code == "RS" :
+                
+                if request.query_params.get("supplier_area_subarea"):
+                    
                     if search_query:
                         search_query &= Q(society_subarea__contains = request.query_params.get("supplier_area_subarea"))
                     else:
                         search_query = Q(society_subarea__contains = request.query_params.get("supplier_area_subarea"))
-                else:
-                    if search_query:
-                        search_query &= Q(subarea__icontains = request.query_params.get("supplier_area_subarea"))
-                    else:
-                        search_query = Q(subarea__icontains = request.query_params.get("supplier_area_subarea"))
                 
-            if vendor:
-                suppliers = model.objects.filter(search_query, representative=vendor)
-            else:
-                suppliers = model.objects.filter(search_query)
+                if vendor:
+                    suppliers = model.objects.filter(search_query, representative=vendor)
+                else:
+                    suppliers = model.objects.filter(search_query)
 
-            if len(all_shortlisted_spaces) > 0:
-                suppliers = suppliers.exclude(supplier_id__in=all_shortlisted_spaces)
-               
-
-            print('--------------------')
-            print(all_shortlisted_spaces)
-
+                if len(all_shortlisted_spaces) > 0:
+                    suppliers = suppliers.exclude(supplier_id__in=all_shortlisted_spaces)
+                
+                
             
-            serializer_class = ui_utils.get_serializer(supplier_type_code)
-            serializer = serializer_class(suppliers, many=True)
-            suppliers = website_utils.manipulate_object_key_values(serializer.data, supplier_type_code=supplier_type_code, **{'status': v0_constants.status})
+                serializer_class = ui_utils.get_serializer(supplier_type_code)
+                serializer = serializer_class(suppliers, many=True)
+                suppliers = website_utils.manipulate_object_key_values_generic(serializer.data, supplier_type_code=supplier_type_code, **{'status': v0_constants.status})
 
-            return ui_utils.handle_response(class_name, data=suppliers, success=True)
-        
+                
+                return ui_utils.handle_response(class_name, data=suppliers, success=True)
+            else : 
+
+                search_query = Q()
+                search_query &= Q(supplier_type=supplier_type_code)
+
+                if search_txt:
+                    search_query &= (
+                        Q(address_supplier__state__icontains=search_txt)
+                        | Q(supplier_name__icontains=search_txt) 
+                        | Q(address_supplier__address1__icontains=search_txt) 
+                        | Q(address_supplier__address2__icontains=search_txt) 
+                        | Q(address_supplier__city__icontains=search_txt) 
+                    )
+                
+                if request.query_params.get("supplier_center"):
+                    search_query &= Q(address_supplier__city__icontains = request.query_params.get("supplier_center"))
+                    
+                if request.query_params.get("supplier_area"):
+                    search_query &= Q(address_supplier__area__icontains = request.query_params.get("supplier_area"))
+                
+                if request.query_params.get("supplier_area_subarea"):
+                    search_query &= Q(address_supplier__subarea__icontains = request.query_params.get("supplier_area_subarea"))
+
+                address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
+                master_supplier_objects = SupplierMaster.objects.prefetch_related(address_supplier).filter(search_query).order_by('supplier_name')
+
+                if len(all_shortlisted_spaces) > 0:
+                    master_supplier_objects = master_supplier_objects.exclude(supplier_id__in=all_shortlisted_spaces)
+
+                supplier_master_serializer = SupplierMasterSerializer(master_supplier_objects, many=True)
+
+
+                suppliers = website_utils.manipulate_object_key_values_generic(supplier_master_serializer.data, supplier_type_code=supplier_type_code, **{'status': v0_constants.status})
+                
+
+                return ui_utils.handle_response(class_name, data=suppliers, success=True)
+            
         except:
             return ui_utils.handle_response(class_name, data='something went wrong please try again later.')
         
@@ -3757,13 +3797,53 @@ class listCampaignSuppliers(APIView):
     # inserts flat count type to society on the basis of number of flats it has
     @staticmethod
     def get(request, campaign_id):
+        all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
+        if request.user.profile.name == "Intern":
+            assigned_suppliers = SupplierAssignment.objects.filter(campaign=campaign_id, assigned_to=request.user).values_list("supplier_id", flat=True)
+            all_shortlisted_supplier = all_shortlisted_supplier.filter(object_id__in=assigned_suppliers)
+        all_shortlisted_supplier = all_shortlisted_supplier.values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name',
+                   'proposal__tentative_start_date',
+                   'proposal__tentative_end_date', 'proposal__campaign_state','supplier_code')
+        all_supplier_ids = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] == "RS"]
+        all_campaign_societies = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).all()
+        serializer = SupplierTypeSocietySerializer(all_campaign_societies, many=True)
+
+        all_supplier_master_ids = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] != "RS"]
+        all_campaign_master_societies = SupplierMaster.objects.filter(supplier_id__in=all_supplier_master_ids).all()
+        master_serializer = SupplierMasterSerializer(all_campaign_master_societies, many=True)
+
+        all_societies = manipulate_object_key_values(serializer.data)
+        master_suppliers = manipulate_master_to_rs(master_serializer.data)
+        all_societies.extend(master_suppliers)
+
+        booking_inv_activities = BookingInventoryActivity.objects.raw({"campaign_id": campaign_id})
+        supplier_ids = [ObjectId(supplier.supplier_id) for supplier in booking_inv_activities]
+        suppliers = SupplySupplier.objects.raw({'_id': {'$in': (supplier_ids)}})
+        dynamic_suppliers = []
+        if suppliers.count() > 0:
+            for supplier in suppliers:
+                data = {
+                    "name": supplier.name,
+                    "supplier_id": str(supplier._id)
+                }
+                for attr in supplier.supplier_attributes:
+                    data[attr['name']] = attr['value'] if 'value' in attr else None
+                dynamic_suppliers.append(data)
+        all_societies = all_societies + dynamic_suppliers
+        all_societies = [dict(society) for society in all_societies]
+        return ui_utils.handle_response({}, data=all_societies, success=True)
+
+class ListCampaignSuppliers(APIView):
+    # inserts flat count type to society on the basis of number of flats it has
+    @staticmethod
+    def get(request, campaign_id):
         all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id). \
             values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name',
                    'proposal__tentative_start_date',
                    'proposal__tentative_end_date', 'proposal__campaign_state')
         all_supplier_ids = [supplier['object_id'] for supplier in all_shortlisted_supplier]
-        all_campaign_societies = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).all()
-        serializer = SupplierTypeSocietySerializer(all_campaign_societies, many=True)
+        all_campaign_societies = SupplierMaster.objects.filter(supplier_id__in=all_supplier_ids).all()
+        serializer = SupplierMasterSerializer(all_campaign_societies, many=True)
         all_societies = manipulate_object_key_values(serializer.data)
         booking_inv_activities = BookingInventoryActivity.objects.raw({"campaign_id": campaign_id})
         supplier_ids = [ObjectId(supplier.supplier_id) for supplier in booking_inv_activities]
@@ -3867,6 +3947,116 @@ class GetLocationDataInSheet(APIView):
         return ()
 
 
+class SupplierGenericViewSet(viewsets.ViewSet):
+    """
+    View Set around All Suppliers
+    """ 
+
+    def list(self, request):
+        class_name = self.__class__.__name__
+        try:  
+            user = request.user
+            org_id = request.user.profile.organisation.organisation_id
+            retail_shop_objects = []
+            supplier_type_code = request.GET.get("supplier_type_code", None)
+            state = request.GET.get("state")
+            state_name = request.GET.get("state_name")
+            search = request.GET.get("search")
+
+            if not supplier_type_code:
+                return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
+
+            search_query = Q()
+            search_query &= Q(supplier_type=supplier_type_code)
+
+            if search:
+                search_query &= (
+                    Q(address_supplier__state__icontains=search)
+                    | Q(address_supplier__address1__icontains=search) 
+                        | Q(address_supplier__address1__icontains=search) 
+                    | Q(address_supplier__address1__icontains=search) 
+                    | Q(address_supplier__address2__icontains=search) 
+                        | Q(address_supplier__address2__icontains=search) 
+                    | Q(address_supplier__address2__icontains=search) 
+                    | Q(address_supplier__city__icontains=search) 
+                        | Q(address_supplier__city__icontains=search) 
+                    | Q(address_supplier__city__icontains=search) 
+                    | Q(supplier_id=search)
+                    | Q(supplier_name__icontains=search)
+                )
+            master_supplier_objects = SupplierMaster.objects
+            if not user.is_superuser:
+                vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
+                search_query &= ((Q(representative__in=vendor_ids) | Q(representative=org_id)) & Q(representative__isnull=False))
+
+            address_supplier = Prefetch('address_supplier',queryset=AddressMaster.objects.all())
+            master_supplier_objects = master_supplier_objects.prefetch_related(address_supplier).filter(search_query).order_by('supplier_name')
+
+            if state_name:
+                master_supplier_objects = master_supplier_objects.filter(supplier_type=supplier_type_code,address_supplier__state__icontains=state_name)
+            
+            master_supplier_objects = master_supplier_objects.all().order_by('supplier_name')
+        
+            supplier_objects_paginate = paginate(master_supplier_objects, SupplierMasterSerializer, request)
+            supplier_with_images = get_supplier_image(supplier_objects_paginate["list"], 'Supplier')
+
+            data = {
+                'count': supplier_objects_paginate["count"],
+                'has_next': supplier_objects_paginate["has_next"],
+                'has_previous': supplier_objects_paginate["has_previous"],
+                'supplier_objects': supplier_with_images
+            }
+            return handle_response(class_name, data=data, success=True)
+        except Exception as e:
+            return handle_response(class_name, data="Something went wrong please try again later.", request=request)
+
+    def retrieve(self, request, pk):
+        class_name = self.__class__.__name__
+
+        try:
+            supplier_type_code = request.GET.get("supplier_type_code", None)
+            
+            if not supplier_type_code:
+                return ui_utils.handle_response({}, data='supplier_type_code is Mandatory')
+
+            master_supplier_objects = SupplierMaster.objects.filter(pk=pk).first()
+            supplier_master_serializer = SupplierMasterSerializer(master_supplier_objects, many=False)
+
+            model_name = get_model(supplier_type_code)
+            supplier_instance = model_name.objects.filter(pk=pk).first()
+
+            if supplier_instance:
+                serializer_name = get_serializer(supplier_type_code)
+                serializer = serializer_name(instance=supplier_instance)
+                shopData = serializer.data
+                shopData['master_data'] = supplier_master_serializer.data
+                shopData['contactData'],shopData['ownership_details'] = retrieve_contact_and_ownership_detail(pk)
+                return handle_response(class_name, data=shopData, success=True)
+            else:
+                return handle_response(class_name, data="Supplier Id does not exist.", success=True)
+        except Exception as e:
+            return handle_response(class_name, data="Something went wrong please try again later.", request=request)
+
+    def update(self, request, pk):
+        class_name = self.__class__.__name__
+        try:
+            supplier_type_code = request.data.get('supplier_type_code', None)
+
+            if not supplier_type_code:
+                return handle_response({}, data='supplier_type_code is Mandatory')
+
+            model_name = get_model(supplier_type_code)
+            serializer_name = get_serializer(supplier_type_code)
+            instance = model_name.objects.get(pk=pk)
+            
+            serializer = serializer_name(instance=instance, data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                update_contact_and_ownership_detail(request.data)
+                return handle_response(class_name, data=serializer.data, success=True)
+            return handle_response(class_name, data=serializer.data, success=True)
+        except Exception as e:
+            return handle_response(class_name, exception_object=e, request=request)
 class SocietySupplierRelationship(APIView):
     @staticmethod
     def post(request):
@@ -3906,7 +4096,6 @@ class SocietySupplierRelationship(APIView):
             logger.exception(e)
             return ui_utils.handle_response({}, exception_object=e)
 
-
 class ListSuppliers(APIView):
     @staticmethod
     def get(request):
@@ -3942,3 +4131,88 @@ class ListSuppliers(APIView):
         except Exception as e:
             logger.exception(e)
             return ui_utils.handle_response({}, exception_object=e)
+
+class AssignSupplierUsers(APIView):
+    def put(selt, request):
+        quality_rating = request.data.get("quality_rating")
+        assigned_to_ids = request.data.get("assigned_to_ids")
+        campaign_id = request.data.get("campaign_id")
+        supplier_ids = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values_list("object_id", flat=True)
+        supplier_new_ids = SupplierMaster.objects.filter(supplier_id__in=supplier_ids, quality_rating=quality_rating).values_list("supplier_id", flat=True)
+        if not supplier_new_ids:
+            supplier_new_ids = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids, society_type_quality=quality_rating).values_list("supplier_id", flat=True)
+        
+        user_old = SupplierAssignment.objects.filter(campaign=campaign_id, supplier_id__in=supplier_new_ids).values("supplier_id","assigned_to")
+        user_old_obj = {}
+        for row in user_old:
+            if not user_old_obj.get(row["supplier_id"]):
+                user_old_obj[row["supplier_id"]] = []
+            user_old_obj[row["supplier_id"]].append(row["assigned_to"])
+
+        data = []
+        now_time = timezone.now()
+        for supplier_id in supplier_new_ids:
+            for user_id in assigned_to_ids:
+                if not user_old_obj.get(supplier_id) or not user_id in user_old_obj[supplier_id]:
+                    data.append(SupplierAssignment(**{
+                        "campaign_id": campaign_id,
+                        "supplier_id": supplier_id,
+                        "assigned_by": request.user,
+                        "assigned_to_id": user_id,
+                        "created_at": now_time,
+                        "updated_at": now_time
+                    }))
+
+        SupplierAssignment.objects.bulk_create(data)
+        return ui_utils.handle_response({}, data={}, success=True)
+
+import os, sys
+
+class UpdateSupplierDataImport(APIView):
+    def post(self, request):
+        try:
+            data = request.data
+            updated_contact_file = open(os.path.join(sys.path[0], "updated_supplier.txt"), "a")
+            new_contact_file = open(os.path.join(sys.path[0], "new_contact.txt"), "a")
+            for supplier in data:
+                supplier_id = supplier['supplier_id']
+                contact_number = supplier['contact_number']
+                contact_name = supplier['contact_name'].title()
+                name = supplier['name']	
+                flat_count = supplier['flat_count']	
+                society_type = supplier['society_type']	
+                latitude = supplier['latitude']	
+                longitude = supplier['longitude']	
+                area = supplier['area']	
+                subarea = supplier['subarea']
+                city = supplier['city']	
+                address = supplier['address']	
+                contact_type = supplier['contact_type']
+                if contact_type is None:
+                    contact_type = 'Committee Member'
+                try:
+                    if supplier_id:
+                        supplier_data = SupplierTypeSociety.objects.filter(supplier_id=supplier_id)
+                        if supplier_data:
+                            supplier_data.update(society_name=name, society_city=city, society_longitude=longitude,
+                            society_latitude=latitude, flat_count=flat_count, society_type_quality=society_type,
+                            society_locality=area, society_subarea=subarea, society_address1=address )
+                    
+                    if contact_number and supplier_id:
+                        # Check contact number in contact details
+                        contact_details = ContactDetails.objects.filter(mobile=contact_number, object_id=supplier_id)
+                        if contact_details:
+                            if contact_name and contact_type:
+                                contact_details.update(name=contact_name, contact_type=contact_type)
+                                updated_contact_file.write(
+                                    "{mobile},{name},{id}\n".format(mobile=contact_number, name=contact_name, id=supplier_id))
+                        else:
+                            contact_details = ContactDetails(object_id=supplier_id, name=contact_name, contact_type=contact_type, mobile=contact_number)
+                            contact_details.save()
+                            new_contact_file.write(
+                                "{mobile},{name},{id}\n".format(mobile=contact_number, name=contact_name, id=supplier_id))
+                except Exception as e:
+                    print(e)
+        except Exception as e:
+            print(e)
+        return handle_response({}, data='Data updated Successfully', success=True)
