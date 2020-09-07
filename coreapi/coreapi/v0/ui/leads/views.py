@@ -1644,7 +1644,7 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
         # 'Banner Allowed', 'Banner Count', 'Banner Price',
     ]
 
-    if data["campaign"].get("type_of_end_customer_formatted_name") == "b_to_b_lead_distribution":
+    if data["campaign"].get("type_of_end_customer_formatted_name") == "b_to_b_r_g":
         header_list.append("Requirement Given")
         header_list.append("Requirement Given Date")
 
@@ -1711,7 +1711,7 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
 
         supplier_data.append(supplier["quality_rating"])
 
-        if data["campaign"].get("type_of_end_customer_formatted_name") == "b_to_b_lead_distribution":
+        if data["campaign"].get("type_of_end_customer_formatted_name") == "b_to_b_r_g":
             supplier_data.append(supplier['requirement_given'])
             requirement_given_date = None
             if supplier['requirement_given_date']:
