@@ -305,6 +305,8 @@ class ShortlistedSpaces(BaseModel):
     receipt_image = models.CharField(max_length=255, null=True, blank=True)
     assigned_user = models.CharField(max_length=255, null=True, blank=True)
     assigned_date = models.DateTimeField(auto_now=True, auto_now_add=False)
+    requirement_given = models.CharField(max_length=5, default="no")
+    requirement_given_date = models.DateTimeField(null=True)
 
     class Meta:
         db_table = 'shortlisted_spaces'

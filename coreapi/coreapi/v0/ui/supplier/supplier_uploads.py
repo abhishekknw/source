@@ -105,7 +105,7 @@ class CorporateParkDataImport(APIView):
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
         cp_data_list = []
         for index, row in enumerate(ws.iter_rows()):
-            if index > 0:
+            if index > 0 and row[0].value:
 
                 supplier_data1 = {
                     'city_id': city_dict.get(row[6].value),
