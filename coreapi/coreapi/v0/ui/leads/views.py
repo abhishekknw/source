@@ -1690,7 +1690,11 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
         supplier_data.append(
             booking_priority_code_to_status[supplier['booking_priority']] if supplier['booking_priority'] else None)
         supplier_data.append(booking_code_to_status[supplier['booking_status']] if supplier['booking_status'] else None)
-        supplier_data.append(supplier['next_action_date'])
+        # supplier_data.append(supplier['next_action_date'])
+        next_action_date = None
+        if supplier['next_action_date']:
+            next_action_date = datetime.datetime.strptime(supplier['next_action_date'], '%Y-%m-%dT%H:%M:%SZ').strftime("%d/%m/%Y")
+        supplier_data.append(next_action_date)
 
         supplier_data.append(supplier['payment_method'])
         supplier_data.append(payment_code_to_status[supplier['payment_status']] if supplier['payment_status'] else None)
