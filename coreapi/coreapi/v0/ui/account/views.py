@@ -11,7 +11,7 @@ from v0.ui.supplier.models import SupplierTypeSociety
 from v0.ui.organisation.models import Organisation
 from v0.ui.account.models import ContactDetails, Signup, ActivityLog
 from v0.ui.account.serializers import (BusinessInfoSerializer, BusinessSubTypesSerializer, UIBusinessInfoSerializer,
-                                       UIAccountInfoSerializer, BusinessAccountContactSerializer,
+                                       UIAccountInfoSerializer, BusinessAccountContactSerializer, BusinessTypeSubTypeReadOnlySerializer,
                                        ContactDetailsSerializer, SignupSerializer, ActivityLogSerializer)
 from v0.ui.common.models import BaseUser
 from django.contrib.contenttypes.models import ContentType
@@ -33,8 +33,8 @@ class GetBusinessTypesAPIView(APIView):
     """
     def get(self, request, format=None):
         try:
-            busTypes = BusinessTypes.objects.all()
-            serializer = BusinessTypesSerializer(busTypes, many=True)
+            busTypes = BusinessTypes.objects.prefetch_related('business_subtypes').all()
+            serializer = BusinessTypeSubTypeReadOnlySerializer(busTypes, many=True)
             return Response(serializer.data, status=200)
         except :
             logger.exception("Something bad happened in GetBusinessTypesAPIView")
