@@ -2,7 +2,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import (Requirement)
+from .models import (Requirement, SuspenseLead)
 import v0.ui.utils as ui_utils
 from openpyxl import load_workbook
 from v0.ui.account.models import ContactDetails, BusinessTypes
@@ -14,10 +14,13 @@ import v0.ui.utils as ui_utils
 import datetime
 
 def get_value_from_list_by_key(list1, key):
+    text = ""
     try:
-        return list1[key].value.strip()
+        text = list1[key].value
+        text = text.strip()
     except:
         pass
+    return text
 
 class ImportLead(APIView):
     def get(self, request):
@@ -43,6 +46,9 @@ class ImportLead(APIView):
             else:
                 # Parsing excel columns
                 phone_number = get_value_from_list_by_key(row, headers.get('phone number'))
+                supplier_name = get_value_from_list_by_key(row, headers.get('supplier name'))
+                city = get_value_from_list_by_key(row, headers.get('city'))
+                area = get_value_from_list_by_key(row, headers.get('area'))
                 sector_name = get_value_from_list_by_key(row, headers.get('sector'))
                 impl_timeline = get_value_from_list_by_key(row, headers.get('implementation timeline'))
                 meating_timeline = get_value_from_list_by_key(row, headers.get('meating timeline'))
@@ -51,27 +57,48 @@ class ImportLead(APIView):
                 current_patner = get_value_from_list_by_key(row, headers.get('current partner'))
                 prefered_patners = get_value_from_list_by_key(row, headers.get('prefered partners'))
                 
-                contact_details = ContactDetails.objects.filter(Q(mobile=phone_number)|Q(landline=phone_number)).first()
+                prefered_patners_array = []
+                if prefered_patners:
+                    prefered_patners_split = prefered_patners.split(",")
+                    prefered_patners_array = [row.strip() for row in prefered_patners_split]
 
+                contact_details = None
+                if phone_number:
+                    contact_details = ContactDetails.objects.filter(Q(mobile=phone_number)|Q(landline=phone_number)).first()
+                
+                supplier_id = ""
+                supplier_type = "RS"
+
+                supplier_conditions = {}
+                supplier = None
                 if contact_details:
-                    supplier = SupplierTypeSociety.objects.filter(supplier_id=contact_details.object_id).first()
+                    supplier_id = contact_details.object_id
+                    supplier = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).first()
+
+                    if not supplier:
+                        supplier = SupplierMaster.objects.filter(supplier_id=supplier_id).first()
+                        supplier_type = supplier.supplier_type
+                elif supplier_name and city and area:
+                    supplier = SupplierTypeSociety.objects.filter(society_name=supplier_name, society_city=city, society_locality=area).first()
+                    if not supplier:
+                        supplier = SupplierMaster.objects.filter(supplier_name=supplier_name, city=city, area=area).first()
+                        supplier_type = supplier.supplier_type
+
+                if supplier:
+                    supplier_id = supplier.supplier_id
                     city = ""
                     area = ""
-                    supplier_type = ""
+                    
 
-                    if supplier:
-                        city = supplier.society_city
-                        area = supplier.society_locality
-                        supplier_type = "RS"
-                    else:
-                        supplier = SupplierMaster.objects.filter(supplier_id=contact_details.object_id).first()
-
+                    if supplier_type != "RS":
                         city = supplier.address_supplier.city
                         area = supplier.address_supplier.area
-                        supplier_type = supplier.supplier_type
+                    else:
+                        city = supplier.society_city
+                        area = supplier.society_locality
                     
                     if campaign:
-                        shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign.proposal_id, object_id=contact_details.object_id).first()
+                        shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign.proposal_id, object_id=supplier_id).first()
                         if not shortlisted_spaces:
 
                             content_type = ui_utils.get_content_type(supplier_type)
@@ -80,7 +107,7 @@ class ImportLead(APIView):
                                 proposal=campaign,
                                 center=center,
                                 supplier_code=supplier_type,
-                                object_id=contact_details.object_id,
+                                object_id=supplier_id,
                                 content_type=content_type.data['data'],
                                 status='F',
                                 user=request.user,
@@ -97,10 +124,8 @@ class ImportLead(APIView):
                             current_patner_obj = Organisation.objects.filter(name=current_patner).first()
 
                         prefered_patners_list = []
-                        if prefered_patners:
-                            prefered_patners_split = prefered_patners.split(",")
-                            prefered_patners_split = [row.strip() for row in prefered_patners_split]
-                            prefered_patners_list = Organisation.objects.filter(name__in=prefered_patners_split).all()
+                        if prefered_patners_array:
+                            prefered_patners_list = Organisation.objects.filter(name__in=prefered_patners_array).all()
                         
                         for company in companies:
                             requirement = Requirement(
@@ -123,8 +148,21 @@ class ImportLead(APIView):
 
                             if prefered_patners_list:
                                 requirement.preferred_company.set(prefered_patners_list)
-
                 else:
-                    pass
+                    SuspenseLead(
+                        phone_number = phone_number,
+                        supplier_name = supplier_name,
+                        city = city,
+                        area = area,
+                        sector_name = sector_name,
+                        implementation_timeline = impl_timeline,
+                        meating_timeline = meating_timeline,
+                        lead_status = lead_status,
+                        comment = comment,
+                        current_patner = current_patner,
+                        prefered_patners = prefered_patners_array,
+                        created_at = datetime.datetime.now(),
+                        updated_at = datetime.datetime.now()
+                    ).save()
         
         return ui_utils.handle_response({}, data={}, success=True)

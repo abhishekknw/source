@@ -1,4 +1,6 @@
 from django.db import models
+from pymongo.write_concern import WriteConcern
+from pymodm import MongoModel, fields
 
 IMPL_TIMELINE_CATEGORY = (
     ('immediate', 'immediate'),
@@ -42,3 +44,23 @@ class Requirement(models.Model):
 
     class Meta:
         db_table = 'requirement'
+
+class SuspenseLead(MongoModel):
+    phone_number = fields.CharField(blank=True)
+    supplier_name = fields.CharField(blank=True)
+    city = fields.CharField(blank=True)
+    area = fields.CharField(blank=True)
+    sub_area = fields.CharField(blank=True)
+    sector_name = fields.CharField(blank=True)
+    implementation_timeline = fields.CharField(blank=True)
+    meating_timeline = fields.CharField(blank=True)
+    lead_status = fields.CharField(blank=True)
+    comment = fields.CharField(blank=True)
+    current_patner = fields.CharField(blank=True)
+    prefered_patners = fields.ListField(blank=True)
+    created_at = fields.DateTimeField()
+    updated_at = fields.DateTimeField()
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'mongo_app'
