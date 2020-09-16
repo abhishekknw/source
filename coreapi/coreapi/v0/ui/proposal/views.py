@@ -330,6 +330,7 @@ def genrate_supplier_data2(data,user):
             next_action_date = get_value_from_list_by_key(row, headers.get('next action date'))
             completion_status = get_value_from_list_by_key(row, headers.get('completion status'))
             phases_no = get_value_from_list_by_key(row, headers.get('phases'))
+            assign_to_user = get_value_from_list_by_key(row, headers.get('assign user'))
             phase = None
             if phases_no:
                 phase = SupplierPhase.objects.filter(campaign_id=data["proposal_id"], phase_no=phases_no).first()
@@ -372,6 +373,20 @@ def genrate_supplier_data2(data,user):
                     shortlisted_spaces.requirement_given_date = datetime.datetime.now()
 
                 shortlisted_spaces.save()
+
+                now_time = timezone.now()
+                if assign_to_user:
+                    organisation = user.profile.organisation
+                    assign_to = BaseUser.objects.filter(profile__organisation = organisation, username = assign_to_user).first()
+                    if assign_to:
+                        SupplierAssignment(
+                            campaign_id=data["proposal_id"],
+                            supplier_id=supplier_id,
+                            assigned_by= user,
+                            assigned_to= assign_to,
+                            created_at= now_time,
+                            updated_at= now_time
+                        ).save()
 
                 if internal_comments:
                     CampaignComments(
