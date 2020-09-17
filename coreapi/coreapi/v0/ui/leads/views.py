@@ -12,7 +12,7 @@ from v0.ui.analytics.views import (get_data_analytics, get_details_by_higher_lev
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierTypeRetailShop, SupplierMaster
 from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierMasterSerializer
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails
-from v0.ui.proposal.models import ShortlistedSpaces
+from v0.ui.proposal.models import ShortlistedSpaces, SupplierAssignment
 from v0.ui.inventory.models import (InventoryActivityAssignment, InventoryActivity)
 import operator
 from v0.ui.utils import handle_response, get_user_organisation_id, create_validation_msg
@@ -1647,6 +1647,7 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
     if data["campaign"].get("type_of_end_customer_formatted_name") == "b_to_b_r_g":
         header_list.append("Requirement Given")
         header_list.append("Requirement Given Date")
+        header_list.append("Assigned To")
 
     for inventory in inventory_list:
         header_list.append(inventory+" Allowed")
@@ -1722,6 +1723,14 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
                 requirement_given_date = datetime.datetime.strptime(supplier['requirement_given_date'], '%Y-%m-%dT%H:%M:%S.%fZ').strftime("%d/%m/%Y")
 
             supplier_data.append(requirement_given_date)
+
+            assigned_user = SupplierAssignment.objects.filter(campaign_id=supplier['proposal'], supplier_id=supplier['object_id']).first()
+            assigned_to = None
+            if assigned_user:
+                assigned_to =  assigned_user.assigned_to.username
+                supplier_data.append(assigned_to)
+            else :
+                supplier_data.append(assigned_to)
 
         for row in inventory_list:
             supplier_data.append('Yes' if row in supplier['shortlisted_inventories'] else 'No')

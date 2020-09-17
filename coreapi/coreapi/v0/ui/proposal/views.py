@@ -338,8 +338,7 @@ def genrate_supplier_data2(data,user):
             requirement_given_text = get_value_from_list_by_key(row, headers.get('requirement given'))
             requirement_given = "no"
             if requirement_given_text:
-                requirement_given = requirement_given_text
-
+                requirement_given = requirement_given_text.lower()
             if supplier_id:
                 shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=data["proposal_id"], object_id=supplier_id).first()
                 if not shortlisted_spaces:
