@@ -1,7 +1,7 @@
 from rest_framework.serializers import ModelSerializer
-from .models import (Sector)
+from .models import (Requirement)
 
-class SectorSerializer(ModelSerializer):
+class RequirementSerializer(ModelSerializer):
     class Meta:
-        model = Sector
+        model = Requirement
         fields = '__all__'

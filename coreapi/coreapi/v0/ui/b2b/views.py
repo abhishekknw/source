@@ -3,15 +3,19 @@ from __future__ import absolute_import
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import (Requirement, SuspenseLead)
+from .serializers import RequirementSerializer
 import v0.ui.utils as ui_utils
 from openpyxl import load_workbook
 from v0.ui.account.models import ContactDetails, BusinessTypes
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster
 from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, ProposalCenterMapping
 from v0.ui.organisation.models import Organisation
+from v0.ui.organisation.serializers import OrganisationSerializer
 from django.db.models import Q
 import v0.ui.utils as ui_utils
 import datetime
+from v0.ui.common.models import mongo_client
+import hashlib
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -23,18 +27,15 @@ def get_value_from_list_by_key(list1, key):
     return text
 
 class ImportLead(APIView):
-    def get(self, request):
-        return ui_utils.handle_response({}, data={}, success=True)
 
-    def post(self, request):
+    def post(self, request, campaign_id):
         data = request.data.copy()
         source_file = data['file']
         wb = load_workbook(source_file)
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
         headers = {}
 
-        campaign = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_r_g").first()
-        center = ProposalCenterMapping.objects.filter(proposal=campaign).first()
+        center = ProposalCenterMapping.objects.filter(proposal_id=campaign_id).first()
         for index, row in enumerate(ws.iter_rows()):
             if index == 0:
                 i = 0
@@ -97,57 +98,56 @@ class ImportLead(APIView):
                         city = supplier.society_city
                         area = supplier.society_locality
                     
-                    if campaign:
-                        shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign.proposal_id, object_id=supplier_id).first()
-                        if not shortlisted_spaces:
+                    shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id, object_id=supplier_id).first()
+                    if not shortlisted_spaces:
 
-                            content_type = ui_utils.get_content_type(supplier_type)
+                        content_type = ui_utils.get_content_type(supplier_type)
 
-                            shortlisted_spaces = ShortlistedSpaces(
-                                proposal=campaign,
-                                center=center,
-                                supplier_code=supplier_type,
-                                object_id=supplier_id,
-                                content_type=content_type.data['data'],
-                                status='F',
-                                user=request.user,
-                                requirement_given='yes',
-                                requirement_given_date=datetime.datetime.now()
-                            )
-                            shortlisted_spaces.save()
-                        
-                        sector = BusinessTypes.objects.filter(business_type=sector_name.lower()).first()
-                        companies = Organisation.objects.filter(business_type=sector)
+                        shortlisted_spaces = ShortlistedSpaces(
+                            proposal_id=campaign_id,
+                            center=center,
+                            supplier_code=supplier_type,
+                            object_id=supplier_id,
+                            content_type=content_type.data['data'],
+                            status='F',
+                            user=request.user,
+                            requirement_given='yes',
+                            requirement_given_date=datetime.datetime.now()
+                        )
+                        shortlisted_spaces.save()
+                    
+                    sector = BusinessTypes.objects.filter(business_type=sector_name.lower()).first()
+                    companies = Organisation.objects.filter(business_type=sector)
 
-                        current_patner_obj = None
-                        if current_patner:
-                            current_patner_obj = Organisation.objects.filter(name=current_patner).first()
+                    current_patner_obj = None
+                    if current_patner:
+                        current_patner_obj = Organisation.objects.filter(name=current_patner).first()
 
-                        prefered_patners_list = []
-                        if prefered_patners_array:
-                            prefered_patners_list = Organisation.objects.filter(name__in=prefered_patners_array).all()
-                        
-                        for company in companies:
-                            requirement = Requirement(
-                                campaign=campaign,
-                                shortlisted_spaces=shortlisted_spaces,
-                                company = company,
-                                current_company = current_patner_obj,
-                                # preferred_company = prefered_patners_list,
-                                sector = sector,
-                                # sub_sector = models.ForeignKey('BusinessSubTypes', null=True, blank=True, on_delete=models.CASCADE)
-                                lead_by = contact_details,
-                                impl_timeline = impl_timeline.lower(),
-                                meating_timeline = meating_timeline.lower(),
-                                lead_status = lead_status,
-                                comment = comment,
-                                varified = 'no',
-                                lead_date = datetime.datetime.now()
-                            )
-                            requirement.save()
+                    prefered_patners_list = []
+                    if prefered_patners_array:
+                        prefered_patners_list = Organisation.objects.filter(name__in=prefered_patners_array).all()
+                    
+                    for company in companies:
+                        requirement = Requirement(
+                            campaign_id=campaign_id,
+                            shortlisted_spaces=shortlisted_spaces,
+                            company = company,
+                            current_company = current_patner_obj,
+                            # preferred_company = prefered_patners_list,
+                            sector = sector,
+                            # sub_sector = models.ForeignKey('BusinessSubTypes', null=True, blank=True, on_delete=models.CASCADE)
+                            lead_by = contact_details,
+                            impl_timeline = impl_timeline.lower(),
+                            meating_timeline = meating_timeline.lower(),
+                            lead_status = lead_status,
+                            comment = comment,
+                            varified = 'no',
+                            lead_date = datetime.datetime.now()
+                        )
+                        requirement.save()
 
-                            if prefered_patners_list:
-                                requirement.preferred_company.set(prefered_patners_list)
+                        if prefered_patners_list:
+                            requirement.preferred_company.set(prefered_patners_list)
                 else:
                     SuspenseLead(
                         phone_number = phone_number,
@@ -166,3 +166,179 @@ class ImportLead(APIView):
                     ).save()
         
         return ui_utils.handle_response({}, data={}, success=True)
+    
+class RequirementClass(APIView):
+    
+    def get(self, request):
+        shortlisted_spaces_id = request.query_params.get("shortlisted_spaces_id")
+        requirements = Requirement.objects.filter(shortlisted_spaces_id=shortlisted_spaces_id, is_deleted='no')
+        sectors = [row.sector for row in requirements]
+
+        requirement_data = RequirementSerializer(requirements, many=True).data
+
+        companies = Organisation.objects.filter(business_type__in=sectors)
+        companies_data = OrganisationSerializer(companies, many=True).data
+        
+        return ui_utils.handle_response({}, data={"requirements": requirement_data, "companies": companies_data}, success=True)
+
+    def put(self, request):
+        requirements = request.data.get("requirements")
+
+        for requirement in requirements:
+            requirement_objs = Requirement.objects.filter(id=requirement["id"]).first()
+            requirement_data = RequirementSerializer(requirement_objs, data=requirement)
+
+            if requirement_data.is_valid():
+                requirement_data.save()
+            else:
+                return ui_utils.handle_response({}, data={"errors":requirement_data.errors}, success=False)
+        
+        return ui_utils.handle_response({}, data={}, success=True)
+    
+    def post(self, request):
+        requirement_ids = request.data.get("requirement_ids")
+
+        requirements = Requirement.objects.filter(id__in=requirement_ids)
+
+        for requirement in requirements:
+            if requirement.varified == "no":
+
+                campaign = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d", account__organisation=requirement.company).first()
+                if campaign:
+                    center = ProposalCenterMapping.objects.filter(proposal=campaign).first()
+
+                    shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal=campaign, object_id=requirement.shortlisted_spaces.object_id).first()
+                    if not shortlisted_spaces:
+
+                        content_type = ui_utils.get_content_type(requirement.shortlisted_spaces.supplier_code)
+
+                        shortlisted_spaces = ShortlistedSpaces(
+                            proposal=campaign,
+                            center=center,
+                            supplier_code=requirement.shortlisted_spaces.supplier_code,
+                            object_id=requirement.shortlisted_spaces.object_id,
+                            content_type=content_type.data['data'],
+                            status='F',
+                            user=request.user,
+                            requirement_given='yes',
+                            requirement_given_date=datetime.datetime.now()
+                        )
+                        shortlisted_spaces.save()
+                    
+                    lead_form = mongo_client.leads_forms.find_one({"campaign_id": campaign.proposal_id})
+                    if lead_form:
+                        self.insert_lead_data(lead_form, requirement, campaign)
+
+                        requirement.varified = "yes"
+                        requirement.save()
+                    else:
+                        return ui_utils.handle_response({}, data={"error":"No lead form of "+requirement.company.name}, success=True)
+                else:
+                    return ui_utils.handle_response({}, data={"error":"No campaign to lead distributor of "+requirement.company.name}, success=True)
+                
+        return ui_utils.handle_response({}, data={}, success=True)
+
+    def insert_lead_data(self, lead_form, requirement, campaign):
+        entry_id = lead_form['last_entry_id'] + 1 if 'last_entry_id' in lead_form else 1
+        lead_data = []
+        
+        supplier_name = ""
+        supplier_city = ""
+        supplier_area = ""
+        supplier_subarea = ""
+        supplier_primary_count = ""
+        
+        if requirement.shortlisted_spaces.supplier_code == 'RS':
+            supplier = SupplierTypeSociety.objects.filter(supplier_id = requirement.shortlisted_spaces.object_id).first()
+
+            if supplier:
+                supplier_name = supplier.society_name
+                supplier_city = supplier.society_city
+                supplier_area = supplier.society_locality
+                supplier_subarea = supplier.society_subarea
+                supplier_primary_count = supplier.flat_count
+        else:
+            supplier = SupplierMaster.objects.filter(supplier_id = requirement.shortlisted_spaces.object_id).first()
+            if supplier:
+                supplier_name = supplier.supplier_name
+                supplier_city = supplier.city
+                supplier_area = supplier.area
+                supplier_subarea = supplier.subarea
+                supplier_primary_count = supplier.unit_primary_count
+        
+        prefered_patner = "No"
+        
+        for row in requirement.preferred_company.all():
+            if requirement.company == row:
+                prefered_patner = "Yes"
+        
+        current_patner = "No"
+        if requirement.company == requirement.current_company:
+            current_patner = "Yes"
+        
+        lead_status = requirement.lead_status
+        lead_form_key = None
+        for key, lead_form_keys in lead_form["data"].items():
+            if lead_form_keys["key_name"] == lead_status:
+                lead_form_key = lead_form_keys["item_id"]
+        
+        lead_form_key_2 = None
+        if lead_form_key:
+            for key, value in lead_form["global_hot_lead_criteria"].items():
+                if value.get("or"):
+                    for key1, value1 in value["or"].items():
+                        
+                        if str(key1) == str(lead_form_key):
+                            lead_form_key_2 = key
+            if lead_form_key_2 and lead_form["hotness_mapping"].get(lead_form_key_2):
+                lead_status = lead_form["hotness_mapping"].get(lead_form_key_2)
+
+        lead_data_dict = {
+            "Supplier Name": supplier_name,
+            "Supplier City": supplier_city,
+            "Supplier Area": supplier_area,
+            "Supplier Sub Area": supplier_subarea,
+            "Primary Count": supplier_primary_count,
+            "Prefered Patner": prefered_patner,
+            "Current Patner": current_patner,
+            "Lead Status": lead_status
+        }
+
+        lead_data = []
+        i = 1
+        for key, value in lead_data_dict.items():
+            row = {
+                    'key_name': key,
+                    'value': value,
+                    'item_id': i,
+                    'key_type': 'STRING'
+                }
+            lead_data.append(row)
+
+            i+=1
+
+        lead_dict = {"data": lead_data, "is_hot": False, "created_at": datetime.datetime.now(), "supplier_id": requirement.shortlisted_spaces.object_id, "campaign_id": campaign.proposal_id,
+                    "leads_form_id": lead_form['leads_form_id'], "entry_id": entry_id, "status": "active", "lead_status": requirement.lead_status}
+        lead_for_hash = {
+            "data": lead_data,
+            "leads_form_id": lead_form['leads_form_id']
+        }
+        
+        lead_sha_256 = self.create_lead_hash(lead_for_hash)
+        lead_dict["lead_sha_256"] = lead_sha_256
+
+        mongo_client.leads.insert_one(lead_dict)
+
+        return True
+
+    def create_lead_hash(self, lead_dict):
+        lead_hash_string = ''
+        lead_hash_string += str(lead_dict['leads_form_id'])
+
+        for item in lead_dict['data']:
+            if item['value']:
+                if isinstance(item["value"], (str,bytes)):
+                    lead_hash_string += str(item['value'].strip())
+                else:
+                    lead_hash_string += str(item['value'])
+        return hashlib.sha256(lead_hash_string.encode('utf-8')).hexdigest()
