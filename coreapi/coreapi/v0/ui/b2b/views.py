@@ -2,6 +2,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.http import HttpResponse
 from .models import (Requirement, SuspenseLead)
 from .serializers import RequirementSerializer
 import v0.ui.utils as ui_utils
@@ -16,6 +17,8 @@ import v0.ui.utils as ui_utils
 import datetime
 from v0.ui.common.models import mongo_client
 import hashlib
+from v0.ui.common.pagination import paginateMongo
+import json
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -83,7 +86,8 @@ class ImportLead(APIView):
                     supplier = SupplierTypeSociety.objects.filter(society_name=supplier_name, society_city=city, society_locality=area).first()
                     if not supplier:
                         supplier = SupplierMaster.objects.filter(supplier_name=supplier_name, city=city, area=area).first()
-                        supplier_type = supplier.supplier_type
+                        if supplier:
+                            supplier_type = supplier.supplier_type
 
                 if supplier:
                     supplier_id = supplier.supplier_id
@@ -342,3 +346,33 @@ class RequirementClass(APIView):
                 else:
                     lead_hash_string += str(item['value'])
         return hashlib.sha256(lead_hash_string.encode('utf-8')).hexdigest()
+
+
+def remove_suspense_lead_cron():
+
+    all_suspense_lead = SuspenseLead.objects.all()
+    
+    for row in all_suspense_lead:
+        contact_details = ContactDetails.objects.filter(Q(mobile=row.phone_number)|Q(landline=row.phone_number)).first()
+        
+        if contact_details:
+            row.delete()
+
+    return HttpResponse(status=201)
+
+
+class SuspenseLeadClass(APIView):
+
+    def get(self, request):
+        all_suspense_lead = SuspenseLead.objects.values()
+        
+        data = paginateMongo(all_suspense_lead, request)
+        
+        list1 = []
+        for row in data["list"]:
+            row1 = dict(row)
+            row1["_id"] = str(row1["_id"])
+            list1.append(row1)
+
+        data["list"] = list1
+        return ui_utils.handle_response({}, data=data, success=True)
