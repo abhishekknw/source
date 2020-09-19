@@ -17,11 +17,11 @@ MEATING_TIMELINE_CATEGORY = (
 )
 
 LEAD_STATUS_CATEGORY = (
-    ('very_deep_lead', 'Very Deep Lead'),
-    ('deep_lead', 'Deep Lead'),
-    ('hot_lead', 'Hot Lead'),
-    ("lead", "Lead"),
-    ("raw_lead", "Raw Lead")
+    ('Very Deep Lead', 'Very Deep Lead'),
+    ('Deep Lead', 'Deep Lead'),
+    ('Hot Lead', 'Hot Lead'),
+    ("Lead", "Lead"),
+    ("Raw Lead", "Raw Lead")
 )
 
 class Requirement(models.Model):
@@ -38,6 +38,7 @@ class Requirement(models.Model):
     lead_status = models.CharField(max_length=30, choices=LEAD_STATUS_CATEGORY, default=LEAD_STATUS_CATEGORY[1][0])
     comment = models.TextField(max_length=500, blank=True)
     varified = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
+    is_deleted = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     lead_date = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -58,6 +59,30 @@ class SuspenseLead(MongoModel):
     comment = fields.CharField(blank=True)
     current_patner = fields.CharField(blank=True)
     prefered_patners = fields.ListField(blank=True)
+    created_at = fields.DateTimeField()
+    updated_at = fields.DateTimeField()
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'mongo_app'
+
+class BrowsedLead(MongoModel):
+    supplier_id = fields.CharField(blank=True)
+    shortlisted_spaces_id = fields.CharField(blank=True)
+    campaign_id = fields.CharField(blank=True)
+    phone_number = fields.CharField(blank=True)
+    supplier_name = fields.CharField(blank=True)
+    city = fields.CharField(blank=True)
+    area = fields.CharField(blank=True)
+    sub_area = fields.CharField(blank=True)
+    sector_id = fields.CharField(blank=True)
+    implementation_timeline = fields.CharField(blank=True)
+    meating_timeline = fields.CharField(blank=True)
+    lead_status = fields.CharField(blank=True)
+    comment = fields.CharField(blank=True)
+    current_patner_id = fields.CharField(blank=True)
+    prefered_patners = fields.ListField(blank=True)
+    status = fields.ListField(blank=True)
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
 
