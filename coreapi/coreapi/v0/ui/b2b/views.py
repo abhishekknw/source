@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import HttpResponse
-from .models import (Requirement, SuspenseLead)
+from .models import (Requirement, SuspenseLead, BrowsedLead)
 from .serializers import RequirementSerializer
 import v0.ui.utils as ui_utils
 from openpyxl import load_workbook
@@ -60,6 +60,7 @@ class ImportLead(APIView):
                 comment = get_value_from_list_by_key(row, headers.get('comment'))
                 current_patner = get_value_from_list_by_key(row, headers.get('current partner'))
                 prefered_patners = get_value_from_list_by_key(row, headers.get('prefered partners'))
+                submitted = get_value_from_list_by_key(row, headers.get('submitted'))
                 
                 prefered_patners_array = []
                 if prefered_patners:
@@ -121,37 +122,61 @@ class ImportLead(APIView):
                         shortlisted_spaces.save()
                     
                     sector = BusinessTypes.objects.filter(business_type=sector_name.lower()).first()
-                    companies = Organisation.objects.filter(business_type=sector)
 
                     current_patner_obj = None
                     if current_patner:
                         current_patner_obj = Organisation.objects.filter(name=current_patner).first()
 
                     prefered_patners_list = []
+                    prefered_patners_id_list = []
                     if prefered_patners_array:
                         prefered_patners_list = Organisation.objects.filter(name__in=prefered_patners_array).all()
+                        prefered_patners_id_list = [row.organisation_id for row in prefered_patners_list]
                     
-                    for company in companies:
-                        requirement = Requirement(
+                    if not submitted and submitted.lower() == "yes":
+                        companies = Organisation.objects.filter(business_type=sector)
+                        for company in companies:
+                            requirement = Requirement(
+                                campaign_id=campaign_id,
+                                shortlisted_spaces=shortlisted_spaces,
+                                company = company,
+                                current_company = current_patner_obj,
+                                # preferred_company = prefered_patners_list,
+                                sector = sector,
+                                # sub_sector = models.ForeignKey('BusinessSubTypes', null=True, blank=True, on_delete=models.CASCADE)
+                                lead_by = contact_details,
+                                impl_timeline = impl_timeline.lower(),
+                                meating_timeline = meating_timeline.lower(),
+                                lead_status = lead_status,
+                                comment = comment,
+                                varified = 'no',
+                                lead_date = datetime.datetime.now()
+                            )
+                            requirement.save()
+
+                            if prefered_patners_list:
+                                requirement.preferred_company.set(prefered_patners_list)
+                    else:
+                        BrowsedLead(
+                            supplier_id=supplier_id,
+                            shortlisted_spaces_id=shortlisted_spaces.id,
                             campaign_id=campaign_id,
-                            shortlisted_spaces=shortlisted_spaces,
-                            company = company,
-                            current_company = current_patner_obj,
-                            # preferred_company = prefered_patners_list,
-                            sector = sector,
-                            # sub_sector = models.ForeignKey('BusinessSubTypes', null=True, blank=True, on_delete=models.CASCADE)
-                            lead_by = contact_details,
-                            impl_timeline = impl_timeline.lower(),
-                            meating_timeline = meating_timeline.lower(),
+                            phone_number = phone_number,
+                            supplier_name = supplier_name,
+                            city = city,
+                            area = area,
+                            sector_id = sector.id if sector else None,
+                            implementation_timeline = impl_timeline,
+                            meating_timeline = meating_timeline,
                             lead_status = lead_status,
                             comment = comment,
-                            varified = 'no',
-                            lead_date = datetime.datetime.now()
-                        )
-                        requirement.save()
+                            current_patner_id = current_patner_obj.organisation_id if current_patner_obj else None,
+                            prefered_patners = prefered_patners_id_list,
+                            status="open",
+                            created_at = datetime.datetime.now(),
+                            updated_at = datetime.datetime.now()
+                        ).save()
 
-                        if prefered_patners_list:
-                            requirement.preferred_company.set(prefered_patners_list)
                 else:
                     SuspenseLead(
                         phone_number = phone_number,
@@ -357,6 +382,10 @@ def remove_suspense_lead_cron():
         
         if contact_details:
             row.delete()
+    
+    prev_24h = datetime.datetime.now() - datetime.timedelta(days=1)
+
+    BrowsedLead.objects.raw({'status': 'open', 'created_at': {"$lte": prev_24h}}).update({"$set":{"status":"closed"}})
 
     return HttpResponse(status=201)
 
@@ -376,3 +405,17 @@ class SuspenseLeadClass(APIView):
 
         data["list"] = list1
         return ui_utils.handle_response({}, data=data, success=True)
+
+class BrowsedLeadClass(APIView):
+
+    def get(self, request):
+        shortlisted_spaces_id = request.query_params.get("shortlisted_spaces_id")
+        browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":shortlisted_spaces_id, "status":"closed"}).values()
+        
+        list1 = []
+        for row in browsed_leads:
+            row1 = dict(row)
+            row1["_id"] = str(row1["_id"])
+            list1.append(row1)
+
+        return ui_utils.handle_response({}, data=list1, success=True)

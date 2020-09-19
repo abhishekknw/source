@@ -65,3 +65,27 @@ class SuspenseLead(MongoModel):
     class Meta:
         write_concern = WriteConcern(j=True)
         connection_alias = 'mongo_app'
+
+class BrowsedLead(MongoModel):
+    supplier_id = fields.CharField(blank=True)
+    shortlisted_spaces_id = fields.CharField(blank=True)
+    campaign_id = fields.CharField(blank=True)
+    phone_number = fields.CharField(blank=True)
+    supplier_name = fields.CharField(blank=True)
+    city = fields.CharField(blank=True)
+    area = fields.CharField(blank=True)
+    sub_area = fields.CharField(blank=True)
+    sector_id = fields.CharField(blank=True)
+    implementation_timeline = fields.CharField(blank=True)
+    meating_timeline = fields.CharField(blank=True)
+    lead_status = fields.CharField(blank=True)
+    comment = fields.CharField(blank=True)
+    current_patner_id = fields.CharField(blank=True)
+    prefered_patners = fields.ListField(blank=True)
+    status = fields.ListField(blank=True)
+    created_at = fields.DateTimeField()
+    updated_at = fields.DateTimeField()
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'mongo_app'
