@@ -140,9 +140,9 @@ def update_contact_and_ownership_detail(data):
     supplier_address_data = master_supplier_data.get('address_supplier')
 
     if master_supplier_data:
-        landmark = data.get('landmark', None)
+        landmark = master_supplier_data.get('landmark', None)
         if not landmark:
-            landmark = data.get('nearest_landmark', None)
+            landmark = master_supplier_data.get('nearest_landmark', None)
 
         master_data = {
             "supplier_id": object_id,
