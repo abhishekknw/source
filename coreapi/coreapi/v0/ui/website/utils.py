@@ -4320,7 +4320,7 @@ def handle_update_campaign_inventories(user, data):
                 'ifsc_code': supplier['ifsc_code'],
                 'beneficiary_name': supplier['beneficiary_name'],
                 'account_number': supplier['account_number'],
-                'payment_message': supplier['payment_message'],
+                'payment_message': supplier['payment_message'] if 'payment_message' in supplier else None,
                 'total_negotiated_price': supplier['total_negotiated_price'],
                 'booking_status': supplier['booking_status'],
                 'booking_sub_status': supplier['booking_sub_status'],
