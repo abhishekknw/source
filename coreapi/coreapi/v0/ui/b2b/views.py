@@ -419,3 +419,15 @@ class BrowsedLeadClass(APIView):
             list1.append(row1)
 
         return ui_utils.handle_response({}, data=list1, success=True)
+
+class DeleteRequirement(APIView):
+
+    def post(self, request):
+        requirement_id = request.query_params.get('requirement_id')
+        requirments = Requirement.objects.filter(id=requirement_id)
+
+        if requirments:
+            requirments.is_deleted = "yes"
+            requirments.save()
+        
+        return ui_utils.handle_response({}, data={}, success=True)
