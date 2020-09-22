@@ -307,6 +307,7 @@ class ShortlistedSpaces(BaseModel):
     assigned_date = models.DateTimeField(auto_now=True, auto_now_add=False)
     requirement_given = models.CharField(max_length=5, default="no")
     requirement_given_date = models.DateTimeField(null=True)
+    color_code = models.IntegerField(null=True, default=4)
 
     class Meta:
         db_table = 'shortlisted_spaces'
