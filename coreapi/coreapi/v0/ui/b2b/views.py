@@ -446,6 +446,19 @@ class BrowsedLeadClass(APIView):
 
         return ui_utils.handle_response({}, data=list1, success=True)
 
+class DeleteRequirement(APIView):
+
+    def post(self, request):
+        requirement_id = request.data.get('requirement_id')
+        requirements = Requirement.objects.filter(id=requirement_id)
+        
+        for requirement in requirements:
+
+            requirement.is_deleted = "yes"
+            requirement.save()
+
+        return ui_utils.handle_response({}, data="Requirement deleted", success=True)
+        
 class LeadOpsVerification(APIView):
 
     def post(self, request):
