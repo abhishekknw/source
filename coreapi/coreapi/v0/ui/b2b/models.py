@@ -37,7 +37,10 @@ class Requirement(models.Model):
     meating_timeline = models.CharField(max_length=30, choices=MEATING_TIMELINE_CATEGORY, default=MEATING_TIMELINE_CATEGORY[1][0]) # meating_timeline
     lead_status = models.CharField(max_length=30, choices=LEAD_STATUS_CATEGORY, default=LEAD_STATUS_CATEGORY[1][0])
     comment = models.TextField(max_length=500, blank=True)
-    varified = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
+    varified_ops = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
+    varified_ops_date = models.DateTimeField(null=True)
+    varified_bd = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
+    varified_bd_date = models.DateTimeField(null=True)
     is_deleted = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     lead_date = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)

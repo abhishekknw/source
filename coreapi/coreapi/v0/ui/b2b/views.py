@@ -19,6 +19,7 @@ from v0.ui.common.models import mongo_client
 import hashlib
 from v0.ui.common.pagination import paginateMongo
 import json
+from pymodm.fields import ObjectIdField
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -134,6 +135,9 @@ class ImportLead(APIView):
                         prefered_patners_id_list = [row.organisation_id for row in prefered_patners_list]
                     
                     if not submitted and submitted.lower() == "yes":
+                        shortlisted_spaces.color_code = 1
+                        shortlisted_spaces.save()
+
                         companies = Organisation.objects.filter(business_type=sector)
                         for company in companies:
                             requirement = Requirement(
@@ -149,7 +153,8 @@ class ImportLead(APIView):
                                 meating_timeline = meating_timeline.lower(),
                                 lead_status = lead_status,
                                 comment = comment,
-                                varified = 'no',
+                                varified_ops = 'no',
+                                varified_bd = 'no',
                                 lead_date = datetime.datetime.now()
                             )
                             requirement.save()
@@ -157,6 +162,10 @@ class ImportLead(APIView):
                             if prefered_patners_list:
                                 requirement.preferred_company.set(prefered_patners_list)
                     else:
+                        if shortlisted_spaces.color_code != 1:
+                            shortlisted_spaces.color_code = 2
+                            shortlisted_spaces.save()
+
                         BrowsedLead(
                             supplier_id=supplier_id,
                             shortlisted_spaces_id=shortlisted_spaces.id,
@@ -178,6 +187,10 @@ class ImportLead(APIView):
                         ).save()
 
                 else:
+                    if not shortlisted_spaces.color_code in [1,2,3]:
+                        shortlisted_spaces.color_code = 4
+                        shortlisted_spaces.save()
+
                     SuspenseLead(
                         phone_number = phone_number,
                         supplier_name = supplier_name,
@@ -229,8 +242,10 @@ class RequirementClass(APIView):
 
         requirements = Requirement.objects.filter(id__in=requirement_ids)
 
+        shortlisted_spaces = None
+
         for requirement in requirements:
-            if requirement.varified == "no":
+            if requirement.varified_bd == "no":
 
                 campaign = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d", account__organisation=requirement.company).first()
                 if campaign:
@@ -258,13 +273,22 @@ class RequirementClass(APIView):
                     if lead_form:
                         self.insert_lead_data(lead_form, requirement, campaign)
 
-                        requirement.varified = "yes"
+                        requirement.varified_bd = "yes"
+                        requirement.varified_bd_date = datetime.datetime.now()
                         requirement.save()
                     else:
                         return ui_utils.handle_response({}, data={"error":"No lead form of "+requirement.company.name}, success=True)
                 else:
                     return ui_utils.handle_response({}, data={"error":"No campaign to lead distributor of "+requirement.company.name}, success=True)
+        if shortlisted_spaces:
+            requirement_exist = Requirement.objects.filter(shortlisted_spaces=shortlisted_spaces, varified_bd = "no").first()
+            if not requirement_exist:
+                browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":shortlisted_spaces.id, "status":"closed"})
                 
+                if not browsed_leads:
+                    shortlisted_spaces.color_code = 3
+
+            
         return ui_utils.handle_response({}, data={}, success=True)
 
     def insert_lead_data(self, lead_form, requirement, campaign):
@@ -375,6 +399,7 @@ class RequirementClass(APIView):
 
 def remove_suspense_lead_cron():
 
+    # Remove suspense leads
     all_suspense_lead = SuspenseLead.objects.all()
     
     for row in all_suspense_lead:
@@ -383,6 +408,7 @@ def remove_suspense_lead_cron():
         if contact_details:
             row.delete()
     
+    # Close browsed leads
     prev_24h = datetime.datetime.now() - datetime.timedelta(days=1)
 
     BrowsedLead.objects.raw({'status': 'open', 'created_at': {"$lte": prev_24h}}).update({"$set":{"status":"closed"}})
@@ -419,3 +445,54 @@ class BrowsedLeadClass(APIView):
             list1.append(row1)
 
         return ui_utils.handle_response({}, data=list1, success=True)
+
+class LeadOpsVerification(APIView):
+
+    def post(self, request):
+        requirement_ids = request.data.get("requirement_ids")
+
+        requirements = Requirement.objects.filter(id__in=requirement_ids)
+
+        for requirement in requirements:
+            if requirement.varified_ops == "no":
+                requirement.varified_ops = "yes"
+                requirement.varified_ops_date = datetime.datetime.now()
+                requirement.save()
+
+        return ui_utils.handle_response({}, data={}, success=True)
+
+class BrowsedToRequirement(APIView):
+
+    def post(self, request):
+        browsed_ids = request.data.get("browsed_ids")
+
+        shortlisted_spaces = None
+
+        for browsed_id in browsed_ids:
+            browsed = BrowsedLead.objects.get({"_id": ObjectIdField(browsed_id)})
+            print(browsed)
+            # companies = Organisation.objects.filter(business_type=browsed.sector_id)
+            # for company in companies:
+            #     requirement = Requirement(
+            #         campaign_id=campaign_id,
+            #         shortlisted_spaces=shortlisted_spaces,
+            #         company = company,
+            #         current_company = current_patner_obj,
+            #         # preferred_company = prefered_patners_list,
+            #         sector = sector,
+            #         # sub_sector = models.ForeignKey('BusinessSubTypes', null=True, blank=True, on_delete=models.CASCADE)
+            #         lead_by = contact_details,
+            #         impl_timeline = impl_timeline.lower(),
+            #         meating_timeline = meating_timeline.lower(),
+            #         lead_status = lead_status,
+            #         comment = comment,
+            #         varified_ops = 'no',
+            #         varified_bd = 'no',
+            #         lead_date = datetime.datetime.now()
+            #     )
+            #     requirement.save()
+
+            #     if prefered_patners_list:
+            #         requirement.preferred_company.set(prefered_patners_list)
+
+        return ui_utils.handle_response({}, data={}, success=True)
