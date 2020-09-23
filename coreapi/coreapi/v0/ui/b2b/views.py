@@ -18,7 +18,7 @@ import datetime
 from v0.ui.common.models import mongo_client
 import hashlib
 from v0.ui.common.pagination import paginateMongo
-import json
+from bson.objectid import ObjectId
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -144,9 +144,7 @@ class ImportLead(APIView):
                                 shortlisted_spaces=shortlisted_spaces,
                                 company = company,
                                 current_company = current_patner_obj,
-                                # preferred_company = prefered_patners_list,
                                 sector = sector,
-                                # sub_sector = models.ForeignKey('BusinessSubTypes', null=True, blank=True, on_delete=models.CASCADE)
                                 lead_by = contact_details,
                                 impl_timeline = impl_timeline.lower(),
                                 meating_timeline = meating_timeline.lower(),
@@ -489,34 +487,48 @@ class BrowsedToRequirement(APIView):
 
     def post(self, request):
         browsed_ids = request.data.get("browsed_ids")
-
-        shortlisted_spaces = None
+    
+        shortlisted_spaces_id = None
 
         for browsed_id in browsed_ids:
-            browsed = dict(BrowsedLead.objects.raw({"_id": browsed_id}).values())
-            print(browsed)
-            # companies = Organisation.objects.filter(business_type=browsed.sector_id)
-            # for company in companies:
-            #     requirement = Requirement(
-            #         campaign_id=campaign_id,
-            #         shortlisted_spaces=shortlisted_spaces,
-            #         company = company,
-            #         current_company = current_patner_obj,
-            #         # preferred_company = prefered_patners_list,
-            #         sector = sector,
-            #         # sub_sector = models.ForeignKey('BusinessSubTypes', null=True, blank=True, on_delete=models.CASCADE)
-            #         lead_by = contact_details,
-            #         impl_timeline = impl_timeline.lower(),
-            #         meating_timeline = meating_timeline.lower(),
-            #         lead_status = lead_status,
-            #         comment = comment,
-            #         varified_ops = 'no',
-            #         varified_bd = 'no',
-            #         lead_date = datetime.datetime.now()
-            #     )
-            #     requirement.save()
+            browsed = dict(mongo_client.browsed_lead.find_one({"_id": ObjectId(browsed_id)}))
+            if browsed:
+                mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id)}, {"$set":{"status":"converted"}})
 
-            #     if prefered_patners_list:
-            #         requirement.preferred_company.set(prefered_patners_list)
+                companies = Organisation.objects.filter(business_type=browsed["sector_id"])
+                
+                contact_details = None
+                if browsed["phone_number"]:
+                    contact_details = ContactDetails.objects.filter(Q(mobile=browsed["phone_number"])|Q(landline=browsed["phone_number"])).first()
+                
+                prefered_patners_list = []
+                if browsed["prefered_patners"]:
+                    prefered_patners_list = Organisation.objects.filter(organisation_id__in=browsed["prefered_patners"]).all()
+                
+                shortlisted_spaces_id = browsed["shortlisted_spaces_id"]
+
+                for company in companies:
+                    requirement = Requirement(
+                        campaign_id=browsed["campaign_id"],
+                        shortlisted_spaces_id=browsed["shortlisted_spaces_id"],
+                        company = company,
+                        current_company_id = browsed["current_patner_id"],
+                        sector_id = browsed["sector_id"],
+                        lead_by = contact_details,
+                        impl_timeline = browsed["implementation_timeline"].lower(),
+                        meating_timeline = browsed["meating_timeline"].lower(),
+                        lead_status = browsed["lead_status"],
+                        comment = browsed["comment"],
+                        varified_ops = 'no',
+                        varified_bd = 'no',
+                        lead_date = datetime.datetime.now()
+                    )
+                    requirement.save()
+
+                    if prefered_patners_list:
+                        requirement.preferred_company.set(prefered_patners_list)
+
+        if shortlisted_spaces_id:
+            ShortlistedSpaces.objects.filter(id=shortlisted_spaces_id).update(color_code=1, requirement_given='yes', requirement_given_date=datetime.datetime.now())
 
         return ui_utils.handle_response({}, data={}, success=True)
