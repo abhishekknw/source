@@ -215,12 +215,24 @@ class RequirementClass(APIView):
         requirements = Requirement.objects.filter(shortlisted_spaces_id=shortlisted_spaces_id, is_deleted='no')
         sectors = [row.sector for row in requirements]
 
+        company_ids = set()
+        
+        requirement_obj = {}
         requirement_data = RequirementSerializer(requirements, many=True).data
+        for row in requirement_data:
+            if not requirement_obj.get(row["sector"]):
+                requirement_obj[row["sector"]] = dict(row)
+                requirement_obj[row["sector"]]["requirements"] = []
 
-        companies = Organisation.objects.filter(business_type__in=sectors)
+            requirement_obj[row["sector"]]["requirements"].append(row)
+            company_ids.add(row["company"])
+            company_ids.add(row["current_company"])
+            company_ids.update(row["preferred_company"])
+
+        companies = Organisation.objects.filter(Q(business_type__in=sectors)|Q(organisation_id__in=company_ids))
         companies_data = OrganisationSerializer(companies, many=True).data
         
-        return ui_utils.handle_response({}, data={"requirements": requirement_data, "companies": companies_data}, success=True)
+        return ui_utils.handle_response({}, data={"requirements": requirement_obj, "companies": companies_data}, success=True)
 
     def put(self, request):
         requirements = request.data.get("requirements")
