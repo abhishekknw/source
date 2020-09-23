@@ -19,7 +19,6 @@ from v0.ui.common.models import mongo_client
 import hashlib
 from v0.ui.common.pagination import paginateMongo
 import json
-from pymodm.fields import ObjectIdField
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -469,7 +468,7 @@ class BrowsedToRequirement(APIView):
         shortlisted_spaces = None
 
         for browsed_id in browsed_ids:
-            browsed = BrowsedLead.objects.get({"_id": ObjectIdField(browsed_id)})
+            browsed = dict(BrowsedLead.objects.raw({"_id": browsed_id}).values())
             print(browsed)
             # companies = Organisation.objects.filter(business_type=browsed.sector_id)
             # for company in companies:
