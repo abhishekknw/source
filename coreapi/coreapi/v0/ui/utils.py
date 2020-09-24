@@ -50,7 +50,7 @@ from v0.ui.base.models import DurationType
 from v0.ui.finances.models import PriceMappingDefault
 from v0.ui.account.models import Profile
 from pymodm import MongoModel, fields
-
+from v0.ui.common.models import mongo_client
 
 def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False, request=None):
     """
@@ -1268,3 +1268,20 @@ def create_supplier_from_master(master_data, supplier_type_code):
         serializer.save()
 
     return
+
+def create_api_cache(slug, resData):
+    if slug and resData:
+        mongo_client.api_cache.insert({
+            "slug": slug,
+            "resData": resData,
+            "exp": datetime.datetime.now() + datetime.timedelta(days=1)
+        })
+
+def get_api_cache(slug):
+    data = mongo_client.api_cache.find_one({"slug": slug})
+
+    if data:
+        if data["exp"] > datetime.datetime.now():
+            return data["resData"]
+        else:
+            mongo_client.api_cache.remove({"slug": slug})

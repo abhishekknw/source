@@ -607,46 +607,54 @@ class CampaignInventory(APIView):
         try:
             user = request.user
             page = request.query_params.get("page", None)
-            assigned = request.query_params.get("assigned", 0)
-            search = request.query_params.get("search", None)
-            start_date = request.query_params.get("start_date", None)
-            end_date = request.query_params.get("end_date", None)
 
-            supplier_type_code = request.query_params.get("supplier_type_code", None)
-            booking_status_code = request.query_params.get("booking_status_code", None)
-            phase_id = request.query_params.get("phase_id", None)
+            page_slug = "campaign-inventories-"+campaign_id+"-"+str(page)
+            return_data = ui_utils.get_api_cache(page_slug)
 
-            username_list = BaseUser.objects.filter(profile__organisation=user.profile.organisation.organisation_id). \
-                values_list('username')
-            proposal_list = ProposalInfo.objects.filter(created_by__in=username_list, proposal_id=campaign_id)
-            if not proposal_list:
-                return Response(data="You do not have access to Proposal", status=201)
-            proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
-            response = website_utils.is_campaign(proposal)
-            if not response.data['status']:
-                return response
-            #
-            # cache_key = v0_utils.create_cache_key(class_name, campaign_id)
-            # cache_value = cache.get(cache_key)
-            # cache_value = None
-            if request.user.profile.name == "Intern":
-                assigned = request.user.id
+            if not return_data:
+                assigned = request.query_params.get("assigned", 0)
+                search = request.query_params.get("search", None)
+                start_date = request.query_params.get("start_date", None)
+                end_date = request.query_params.get("end_date", None)
 
-            response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id, page, user, int(assigned), search, start_date, end_date, supplier_type_code, booking_status_code, phase_id, space_status='F')
-            if not response.data['status']:
-                return response
-            # cache.set(cache_key, response.data['data'])
+                supplier_type_code = request.query_params.get("supplier_type_code", None)
+                booking_status_code = request.query_params.get("booking_status_code", None)
+                phase_id = request.query_params.get("phase_id", None)
 
-            all_city_campaign = ProposalCenterMapping.objects.filter(proposal_id=campaign_id).all()
-            serializer1 = ProposalCenterMappingSerializer(all_city_campaign, many=True)
-            response.data['data']['campaign']['centerData'] = serializer1.data
+                username_list = BaseUser.objects.filter(profile__organisation=user.profile.organisation.organisation_id). \
+                    values_list('username')
+                proposal_list = ProposalInfo.objects.filter(created_by__in=username_list, proposal_id=campaign_id)
+                if not proposal_list:
+                    return Response(data="You do not have access to Proposal", status=201)
+                proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
+                response = website_utils.is_campaign(proposal)
+                if not response.data['status']:
+                    return response
+                #
+                # cache_key = v0_utils.create_cache_key(class_name, campaign_id)
+                # cache_value = cache.get(cache_key)
+                # cache_value = None
+                if request.user.profile.name == "Intern":
+                    assigned = request.user.id
+
+                response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id, page, user, int(assigned), search, start_date, end_date, supplier_type_code, booking_status_code, phase_id, space_status='F')
+                if not response.data['status']:
+                    return response
+                # cache.set(cache_key, response.data['data'])
+
+                all_city_campaign = ProposalCenterMapping.objects.filter(proposal_id=campaign_id).all()
+                serializer1 = ProposalCenterMappingSerializer(all_city_campaign, many=True)
+                response.data['data']['campaign']['centerData'] = serializer1.data
 
 
-            suppliersData = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).all()
-            serializer2 = ProposalCenterSuppliersSerializer(suppliersData, many=True)
-            response.data['data']['campaign']['centerSuppliers'] = serializer2.data
+                suppliersData = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).all()
+                serializer2 = ProposalCenterSuppliersSerializer(suppliersData, many=True)
+                response.data['data']['campaign']['centerSuppliers'] = serializer2.data
 
-            return ui_utils.handle_response(class_name, data=response.data['data'], success=True)
+                return_data = response.data['data']
+                ui_utils.create_api_cache(page_slug, return_data)
+
+            return ui_utils.handle_response(class_name, data=return_data, success=True)
 
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
