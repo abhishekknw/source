@@ -3797,41 +3797,51 @@ class listCampaignSuppliers(APIView):
     # inserts flat count type to society on the basis of number of flats it has
     @staticmethod
     def get(request, campaign_id):
-        all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
-        if request.user.profile.name == "Intern":
-            assigned_suppliers = SupplierAssignment.objects.filter(campaign=campaign_id, assigned_to=request.user).values_list("supplier_id", flat=True)
-            all_shortlisted_supplier = all_shortlisted_supplier.filter(object_id__in=assigned_suppliers)
-        all_shortlisted_supplier = all_shortlisted_supplier.values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name',
-                   'proposal__tentative_start_date',
-                   'proposal__tentative_end_date', 'proposal__campaign_state','supplier_code')
-        all_supplier_ids = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] == "RS"]
-        all_campaign_societies = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).all()
-        serializer = SupplierTypeSocietySerializer(all_campaign_societies, many=True)
+        
+        page_slug = "list_suppliers-"+campaign_id
+        return_data = ui_utils.get_api_cache(page_slug)
 
-        all_supplier_master_ids = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] != "RS"]
-        all_campaign_master_societies = SupplierMaster.objects.filter(supplier_id__in=all_supplier_master_ids).all()
-        master_serializer = SupplierMasterSerializer(all_campaign_master_societies, many=True)
+        if not return_data:
 
-        all_societies = manipulate_object_key_values(serializer.data)
-        master_suppliers = manipulate_master_to_rs(master_serializer.data)
-        all_societies.extend(master_suppliers)
+            all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
+            if request.user.profile.name == "Intern":
+                assigned_suppliers = SupplierAssignment.objects.filter(campaign=campaign_id, assigned_to=request.user).values_list("supplier_id", flat=True)
+                all_shortlisted_supplier = all_shortlisted_supplier.filter(object_id__in=assigned_suppliers)
+            all_shortlisted_supplier = all_shortlisted_supplier.values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name',
+                    'proposal__tentative_start_date',
+                    'proposal__tentative_end_date', 'proposal__campaign_state','supplier_code')
+            all_supplier_ids = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] == "RS"]
+            all_campaign_societies = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).all()
+            serializer = SupplierTypeSocietySerializer(all_campaign_societies, many=True)
 
-        booking_inv_activities = BookingInventoryActivity.objects.raw({"campaign_id": campaign_id})
-        supplier_ids = [ObjectId(supplier.supplier_id) for supplier in booking_inv_activities]
-        suppliers = SupplySupplier.objects.raw({'_id': {'$in': (supplier_ids)}})
-        dynamic_suppliers = []
-        if suppliers.count() > 0:
-            for supplier in suppliers:
-                data = {
-                    "name": supplier.name,
-                    "supplier_id": str(supplier._id)
-                }
-                for attr in supplier.supplier_attributes:
-                    data[attr['name']] = attr['value'] if 'value' in attr else None
-                dynamic_suppliers.append(data)
-        all_societies = all_societies + dynamic_suppliers
-        all_societies = [dict(society) for society in all_societies]
-        return ui_utils.handle_response({}, data=all_societies, success=True)
+            all_supplier_master_ids = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] != "RS"]
+            all_campaign_master_societies = SupplierMaster.objects.filter(supplier_id__in=all_supplier_master_ids).all()
+            master_serializer = SupplierMasterSerializer(all_campaign_master_societies, many=True)
+
+            all_societies = manipulate_object_key_values(serializer.data)
+            master_suppliers = manipulate_master_to_rs(master_serializer.data)
+            all_societies.extend(master_suppliers)
+
+            booking_inv_activities = BookingInventoryActivity.objects.raw({"campaign_id": campaign_id})
+            supplier_ids = [ObjectId(supplier.supplier_id) for supplier in booking_inv_activities]
+            suppliers = SupplySupplier.objects.raw({'_id': {'$in': (supplier_ids)}})
+            dynamic_suppliers = []
+            if suppliers.count() > 0:
+                for supplier in suppliers:
+                    data = {
+                        "name": supplier.name,
+                        "supplier_id": str(supplier._id)
+                    }
+                    for attr in supplier.supplier_attributes:
+                        data[attr['name']] = attr['value'] if 'value' in attr else None
+                    dynamic_suppliers.append(data)
+            all_societies = all_societies + dynamic_suppliers
+            all_societies = [dict(society) for society in all_societies]
+
+            return_data = all_societies
+            ui_utils.create_api_cache(page_slug, return_data)
+
+        return ui_utils.handle_response({}, data=return_data, success=True)
 
 class ListCampaignSuppliers(APIView):
     # inserts flat count type to society on the basis of number of flats it has
