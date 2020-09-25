@@ -454,17 +454,20 @@ class BrowsedLeadClass(APIView):
             list1.append(row1)
 
         return ui_utils.handle_response({}, data=list1, success=True)
+    
+    def delete(self, request):
+        browsed_ids = request.data.get("browsed_ids")
+
+        for browsed_id in browsed_ids:
+            mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id)}, {"$set":{"status":"deleted"}})
+
+        return ui_utils.handle_response({}, data="", success=True)
 
 class DeleteRequirement(APIView):
 
-    def post(self, request):
-        requirement_id = request.data.get('requirement_id')
-        requirements = Requirement.objects.filter(id=requirement_id)
-        
-        for requirement in requirements:
-
-            requirement.is_deleted = "yes"
-            requirement.save()
+    def delete(self, request):
+        requirement_ids = request.data.get('requirement_ids')
+        requirements = Requirement.objects.filter(id__in=requirement_ids).update(is_deleted="yes")
 
         return ui_utils.handle_response({}, data="Requirement deleted", success=True)
         
