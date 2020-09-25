@@ -454,8 +454,10 @@ class BrowsedLeadClass(APIView):
             list1.append(row1)
 
         return ui_utils.handle_response({}, data=list1, success=True)
-    
-    def delete(self, request):
+
+class BrowsedLeadDelete(APIView):
+
+    def post(self, request):
         browsed_ids = request.data.get("browsed_ids")
 
         for browsed_id in browsed_ids:
@@ -465,7 +467,7 @@ class BrowsedLeadClass(APIView):
 
 class DeleteRequirement(APIView):
 
-    def delete(self, request):
+    def post(self, request):
         requirement_ids = request.data.get('requirement_ids')
         requirements = Requirement.objects.filter(id__in=requirement_ids).update(is_deleted="yes")
 
