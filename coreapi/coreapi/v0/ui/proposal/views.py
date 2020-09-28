@@ -2866,16 +2866,20 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
             campaign_id = request.query_params.get('campaign_id')
             if not campaign_id or not phases:
                 return handle_response(class_name, data='Please provide campaign id or phases', success=False)
-            new_phase = phases[-1]
-            if new_phase and 'phase_no' in new_phase:
-                phase_already_exists = SupplierPhase.objects.filter(campaign=campaign_id, phase_no=new_phase['phase_no'])
-                if phase_already_exists:
-                    return handle_response(class_name, data='Phase No. already exists', success=False)
+
             for phase in phases:
                 if 'id' in phase:
+                    phase_already_exists = SupplierPhase.objects.filter(campaign=campaign_id, phase_no=phase['phase_no']).exclude(id=phase['id'])
+                    if phase_already_exists:
+                        return handle_response(class_name, data='Phase No. already exists', success=False)
+
                     item = SupplierPhase.objects.get(pk=phase['id'],campaign=campaign_id)
                     phase_serializer = SupplierPhaseSerializer(item, data=phase)
                 else:
+                    phase_already_exists = SupplierPhase.objects.filter(campaign=campaign_id, phase_no=phase['phase_no'])
+                    if phase_already_exists:
+                        return handle_response(class_name, data='Phase No. already exists', success=False)
+                    
                     phase['campaign'] = campaign_id
                     phase_serializer = SupplierPhaseSerializer(data=phase)
                 if phase_serializer.is_valid():
