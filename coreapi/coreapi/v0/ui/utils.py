@@ -172,14 +172,13 @@ def get_supplier_id(data):
             # state_object = State.objects.get(state_name=state_name, state_code=state_code)
             city_object = City.objects.get(city_code=data.get('city_code'))
             area_object = CityArea.objects.get(area_code=data.get('area_code'), city_code=city_object)
-            subarea_object = CitySubArea.objects.get(subarea_code=data.get('subarea_code'), area_code=area_object)
+            subarea_object = CitySubArea.objects.get(subarea_code=data.get('subarea_code'))
 
         except ObjectDoesNotExist as e:
 
             city_object = City.objects.get(id=data['city_id'])
             area_object = CityArea.objects.get(id=data['area_id'])
-            subarea_object = CitySubArea.objects.get(id=data['subarea_id'],
-                                                     area_code=area_object)
+            subarea_object = CitySubArea.objects.get(id=data['subarea_id'])
 
         supplier_id = city_object.city_code + area_object.area_code + subarea_object.subarea_code + data[
             'supplier_type'] + data['supplier_code']

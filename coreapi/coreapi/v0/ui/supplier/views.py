@@ -79,6 +79,7 @@ from .supplier_uploads import create_price_mapping_default
 from django.db import connection
 from v0.ui.common.pagination import paginate
 from django.utils import timezone
+from django.views.generic import ListView
 
 import logging
 logger = logging.getLogger(__name__)
@@ -4226,3 +4227,15 @@ class UpdateSupplierDataImport(APIView):
         except Exception as e:
             print(e)
         return handle_response({}, data='Data updated Successfully', success=True)
+
+
+class DownloadExcel(ListView):
+    permission_classes = ()
+    authentication_classes = ()
+
+    def get(self, request):
+        wb = load_workbook('files/export_supplier.xlsx')
+        resp = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        resp['Content-Disposition'] = 'attachment; filename=files/export_supplier.xlsx'
+        wb.save(resp)
+        return resp
