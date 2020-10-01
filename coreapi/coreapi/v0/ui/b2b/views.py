@@ -228,6 +228,11 @@ class RequirementClass(APIView):
             company_ids.add(row["current_company"])
             company_ids.update(row["preferred_company"])
 
+        browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":shortlisted_spaces_id, "status":"closed"}).values()
+        for row in browsed_leads:
+            company_ids.add(row["current_patner_id"])
+            company_ids.update(row["prefered_patners"])
+
         companies = Organisation.objects.filter(Q(business_type__in=sectors)|Q(organisation_id__in=company_ids))
         companies_data = OrganisationSerializer(companies, many=True).data
         
@@ -289,7 +294,7 @@ class RequirementClass(APIView):
                     else:
                         return ui_utils.handle_response({}, data={"error":"No lead form of "+requirement.company.name}, success=True)
                 else:
-                    return ui_utils.handle_response({}, data={"error":"No campaign to lead distributor of "+requirement.company.name}, success=True)
+                    return ui_utils.handle_response({}, data={"error":"No campaigns available of lead distribution type of "+requirement.company.name+"."}, success=True)
         if shortlisted_spaces:
             requirement_exist = Requirement.objects.filter(shortlisted_spaces=shortlisted_spaces, varified_bd = "no").first()
             if not requirement_exist:
