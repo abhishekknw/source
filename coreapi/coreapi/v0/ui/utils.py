@@ -1268,22 +1268,21 @@ def create_supplier_from_master(master_data, supplier_type_code):
 
     return
 
-def create_api_cache(slug, resData):
-    # if slug and resData:
-    #     mongo_client.api_cache.insert({
-    #         "slug": slug,
-    #         "resData": resData,
-    #         "exp": datetime.datetime.now() + datetime.timedelta(days=1)
-    #     })
-    pass
+def create_api_cache(slug, slugType, resData):
+    if slug and resData:
+        mongo_client.api_cache.insert({
+            "slug": slug,
+            "slugType": slugType,
+            "resData": resData,
+            "exp": datetime.datetime.now() + datetime.timedelta(days=1)
+        })
     
 
 def get_api_cache(slug):
-    # data = mongo_client.api_cache.find_one({"slug": slug})
+    data = mongo_client.api_cache.find_one({"slug": slug})
 
-    # if data:
-    #     if data["exp"] > datetime.datetime.now():
-    #         return data["resData"]
-    #     else:
-    #         mongo_client.api_cache.remove({"slug": slug})
-    pass
+    if data:
+        if data["exp"] > datetime.datetime.now():
+            return data["resData"]
+        else:
+            mongo_client.api_cache.remove({"slug": slug})

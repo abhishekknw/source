@@ -74,9 +74,15 @@ class ImportLead(APIView):
                 supplier_id = ""
                 supplier_type = "RS"
 
+                sector = BusinessTypes.objects.filter(business_type=sector_name.lower()).first()
+
                 supplier_conditions = {}
                 supplier = None
                 if contact_details:
+                    requirement = Requirement.objects.filter(campaign_id = campaign_id, lead_by = contact_details, sector = sector, is_deleted='no').first()
+                    if requirement:
+                        continue
+
                     supplier_id = contact_details.object_id
                     supplier = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).first()
 
@@ -120,8 +126,6 @@ class ImportLead(APIView):
                             requirement_given_date=datetime.datetime.now()
                         )
                         shortlisted_spaces.save()
-                    
-                    sector = BusinessTypes.objects.filter(business_type=sector_name.lower()).first()
 
                     current_patner_obj = None
                     if current_patner:
@@ -133,7 +137,7 @@ class ImportLead(APIView):
                         prefered_patners_list = Organisation.objects.filter(name__in=prefered_patners_array).all()
                         prefered_patners_id_list = [row.organisation_id for row in prefered_patners_list]
                     
-                    if not submitted and submitted.lower() == "yes":
+                    if submitted and submitted.lower() == "yes":
                         shortlisted_spaces.color_code = 1
                         shortlisted_spaces.save()
 
@@ -184,9 +188,6 @@ class ImportLead(APIView):
                         ).save()
 
                 else:
-                    if not shortlisted_spaces.color_code in [1,2,3]:
-                        shortlisted_spaces.color_code = 4
-                        shortlisted_spaces.save()
 
                     SuspenseLead(
                         phone_number = phone_number,
