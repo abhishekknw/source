@@ -614,6 +614,7 @@ class CampaignInventory(APIView):
             end_date = request.query_params.get("end_date", None)
 
             supplier_type_code = request.query_params.get("supplier_type_code", None)
+            supplier_type_code = supplier_type_code if supplier_type_code != "ALL" else None
             booking_status_code = request.query_params.get("booking_status_code", None)
             phase_id = request.query_params.get("phase_id", None)
 
