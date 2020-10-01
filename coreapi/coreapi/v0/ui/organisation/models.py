@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from v0 import managers
 from v0.ui.account.models import BusinessAccountContact, BusinessTypes, BusinessSubTypes
+from v0.ui.common.models import mongo_client
 # five possible organization types
 ORGANIZATION_CATEGORY = (
     ('MACHADALO', 'MACHADALO'),
@@ -40,8 +41,10 @@ class Organisation(BaseModel):
 
     class Meta:
         db_table = 'organisation'
-
-
+    
+    def save(self, *args, **kwargs):
+        mongo_client.api_cache.remove({"slugType": 'organisation'})
+        super(Organisation, self).save(*args, **kwargs)
 
 class OrganisationMap(BaseModel):
     """
