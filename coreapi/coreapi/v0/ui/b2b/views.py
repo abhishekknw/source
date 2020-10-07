@@ -123,6 +123,10 @@ class ImportLead(APIView):
                         )
                         shortlisted_spaces.save()
                     
+                    shortlisted_spaces.requirement_given = 'yes'
+                    shortlisted_spaces.requirement_given_date=datetime.datetime.now()
+                    shortlisted_spaces.save()
+
                     sector = BusinessTypes.objects.filter(business_type=sector_name.lower()).first()
 
                     current_patner_obj = None
@@ -146,7 +150,7 @@ class ImportLead(APIView):
                                 shortlisted_spaces=shortlisted_spaces,
                                 company = company,
                                 current_company = current_patner_obj,
-                                is_current_patner = "yes" if current_patner_obj == company else "no"
+                                is_current_patner = "yes" if current_patner_obj == company else "no",
                                 current_patner_feedback = current_patner_feedback,
                                 current_patner_feedback_reason = current_patner_feedback_reason,
                                 sector = sector,
@@ -177,8 +181,8 @@ class ImportLead(APIView):
                             city = city,
                             area = area,
                             sector_id = sector.id if sector else None,
-                            implementation_timeline = impl_timeline,
-                            meating_timeline = meating_timeline,
+                            implementation_timeline = impl_timeline.lower(),
+                            meating_timeline = meating_timeline.lower(),
                             lead_status = lead_status,
                             comment = comment,
                             current_patner_id = current_patner_obj.organisation_id if current_patner_obj else None,
@@ -201,8 +205,8 @@ class ImportLead(APIView):
                         city = city,
                         area = area,
                         sector_name = sector_name,
-                        implementation_timeline = impl_timeline,
-                        meating_timeline = meating_timeline,
+                        implementation_timeline = impl_timeline.lower(),
+                        meating_timeline = meating_timeline.lower(),
                         lead_status = lead_status,
                         comment = comment,
                         current_patner = current_patner,
