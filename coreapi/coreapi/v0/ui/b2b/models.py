@@ -24,6 +24,13 @@ LEAD_STATUS_CATEGORY = (
     ("Raw Lead", "Raw Lead")
 )
 
+CURRENT_PATNER_FEEDBACK = (
+    ('NA','NA'),
+    ('Satisfied', 'Satisfied'),
+    ('Dissatisfied', 'Dissatisfied'),
+    ('Extremely Dissatisfied', 'Extremely Dissatisfied'),
+)
+
 class Requirement(models.Model):
     campaign = models.ForeignKey('ProposalInfo', null=True, blank=True, on_delete=models.CASCADE)
     shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True, on_delete=models.CASCADE)
@@ -37,6 +44,9 @@ class Requirement(models.Model):
     meating_timeline = models.CharField(max_length=30, choices=MEATING_TIMELINE_CATEGORY, default=MEATING_TIMELINE_CATEGORY[1][0]) # meating_timeline
     lead_status = models.CharField(max_length=30, choices=LEAD_STATUS_CATEGORY, default=LEAD_STATUS_CATEGORY[1][0])
     comment = models.TextField(max_length=500, blank=True)
+    is_current_patner = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
+    current_patner_feedback = models.CharField(max_length=50, choices=CURRENT_PATNER_FEEDBACK, default="NA")
+    current_patner_feedback_reason = models.CharField(max_length=250, default="")
     varified_ops = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     varified_ops_date = models.DateTimeField(null=True)
     varified_bd = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
@@ -61,6 +71,8 @@ class SuspenseLead(MongoModel):
     lead_status = fields.CharField(blank=True)
     comment = fields.CharField(blank=True)
     current_patner = fields.CharField(blank=True)
+    current_patner_feedback = fields.CharField(blank=True)
+    current_patner_feedback_reason = fields.CharField(blank=True)
     prefered_patners = fields.ListField(blank=True)
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
@@ -79,12 +91,15 @@ class BrowsedLead(MongoModel):
     area = fields.CharField(blank=True)
     sub_area = fields.CharField(blank=True)
     sector_id = fields.CharField(blank=True)
+    sub_sector_id = fields.CharField(blank=True)
     implementation_timeline = fields.CharField(blank=True)
     meating_timeline = fields.CharField(blank=True)
     lead_status = fields.CharField(blank=True)
     comment = fields.CharField(blank=True)
     current_patner_id = fields.CharField(blank=True)
     prefered_patners = fields.ListField(blank=True)
+    current_patner_feedback = fields.CharField(blank=True)
+    current_patner_feedback_reason = fields.CharField(blank=True)
     status = fields.ListField(blank=True)
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()

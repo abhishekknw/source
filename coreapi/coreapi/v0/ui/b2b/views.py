@@ -59,6 +59,8 @@ class ImportLead(APIView):
                 lead_status = get_value_from_list_by_key(row, headers.get('lead status'))
                 comment = get_value_from_list_by_key(row, headers.get('comment'))
                 current_patner = get_value_from_list_by_key(row, headers.get('current partner'))
+                current_patner_feedback = get_value_from_list_by_key(row, headers.get('current patner feedback'))
+                current_patner_feedback_reason = get_value_from_list_by_key(row, headers.get('current patner feedback reason'))
                 prefered_patners = get_value_from_list_by_key(row, headers.get('prefered partners'))
                 submitted = get_value_from_list_by_key(row, headers.get('submitted'))
                 
@@ -126,6 +128,10 @@ class ImportLead(APIView):
                             requirement_given_date=datetime.datetime.now()
                         )
                         shortlisted_spaces.save()
+                    
+                    shortlisted_spaces.requirement_given = 'yes'
+                    shortlisted_spaces.requirement_given_date=datetime.datetime.now()
+                    shortlisted_spaces.save()
 
                     current_patner_obj = None
                     if current_patner:
@@ -148,6 +154,9 @@ class ImportLead(APIView):
                                 shortlisted_spaces=shortlisted_spaces,
                                 company = company,
                                 current_company = current_patner_obj,
+                                is_current_patner = "yes" if current_patner_obj == company else "no",
+                                current_patner_feedback = current_patner_feedback,
+                                current_patner_feedback_reason = current_patner_feedback_reason,
                                 sector = sector,
                                 lead_by = contact_details,
                                 impl_timeline = impl_timeline.lower(),
@@ -181,6 +190,8 @@ class ImportLead(APIView):
                             lead_status = lead_status,
                             comment = comment,
                             current_patner_id = current_patner_obj.organisation_id if current_patner_obj else None,
+                            current_patner_feedback = current_patner_feedback,
+                            current_patner_feedback_reason = current_patner_feedback_reason,
                             prefered_patners = prefered_patners_id_list,
                             status="open",
                             created_at = datetime.datetime.now(),
@@ -200,6 +211,8 @@ class ImportLead(APIView):
                         lead_status = lead_status,
                         comment = comment,
                         current_patner = current_patner,
+                        current_patner_feedback = current_patner_feedback,
+                        current_patner_feedback_reason = current_patner_feedback_reason,
                         prefered_patners = prefered_patners_array,
                         created_at = datetime.datetime.now(),
                         updated_at = datetime.datetime.now()
@@ -524,6 +537,9 @@ class BrowsedToRequirement(APIView):
                         shortlisted_spaces_id=browsed["shortlisted_spaces_id"],
                         company = company,
                         current_company_id = browsed["current_patner_id"],
+                        is_current_patner = "yes" if browsed["current_patner_id"] == company.organisation_id else "no",
+                        current_patner_feedback = browsed["current_patner_feedback"],
+                        current_patner_feedback_reason = browsed["current_patner_feedback_reason"],
                         sector_id = browsed["sector_id"],
                         lead_by = contact_details,
                         impl_timeline = browsed["implementation_timeline"].lower(),
