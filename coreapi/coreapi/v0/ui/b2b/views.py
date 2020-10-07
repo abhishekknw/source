@@ -76,9 +76,15 @@ class ImportLead(APIView):
                 supplier_id = ""
                 supplier_type = "RS"
 
+                sector = BusinessTypes.objects.filter(business_type=sector_name.lower()).first()
+
                 supplier_conditions = {}
                 supplier = None
                 if contact_details:
+                    requirement = Requirement.objects.filter(campaign_id = campaign_id, lead_by = contact_details, sector = sector, is_deleted='no').first()
+                    if requirement:
+                        continue
+
                     supplier_id = contact_details.object_id
                     supplier = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).first()
 
@@ -127,8 +133,6 @@ class ImportLead(APIView):
                     shortlisted_spaces.requirement_given_date=datetime.datetime.now()
                     shortlisted_spaces.save()
 
-                    sector = BusinessTypes.objects.filter(business_type=sector_name.lower()).first()
-
                     current_patner_obj = None
                     if current_patner:
                         current_patner_obj = Organisation.objects.filter(name=current_patner).first()
@@ -139,7 +143,7 @@ class ImportLead(APIView):
                         prefered_patners_list = Organisation.objects.filter(name__in=prefered_patners_array).all()
                         prefered_patners_id_list = [row.organisation_id for row in prefered_patners_list]
                     
-                    if not submitted and submitted.lower() == "yes":
+                    if submitted and submitted.lower() == "yes":
                         shortlisted_spaces.color_code = 1
                         shortlisted_spaces.save()
 
@@ -195,9 +199,6 @@ class ImportLead(APIView):
                         ).save()
 
                 else:
-                    if not shortlisted_spaces.color_code in [1,2,3]:
-                        shortlisted_spaces.color_code = 4
-                        shortlisted_spaces.save()
 
                     SuspenseLead(
                         phone_number = phone_number,
@@ -239,6 +240,11 @@ class RequirementClass(APIView):
             company_ids.add(row["company"])
             company_ids.add(row["current_company"])
             company_ids.update(row["preferred_company"])
+
+        browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":shortlisted_spaces_id, "status":"closed"}).values()
+        for row in browsed_leads:
+            company_ids.add(row["current_patner_id"])
+            company_ids.update(row["prefered_patners"])
 
         companies = Organisation.objects.filter(Q(business_type__in=sectors)|Q(organisation_id__in=company_ids))
         companies_data = OrganisationSerializer(companies, many=True).data
@@ -301,7 +307,7 @@ class RequirementClass(APIView):
                     else:
                         return ui_utils.handle_response({}, data={"error":"No lead form of "+requirement.company.name}, success=True)
                 else:
-                    return ui_utils.handle_response({}, data={"error":"No campaign to lead distributor of "+requirement.company.name}, success=True)
+                    return ui_utils.handle_response({}, data={"error":"No campaigns available of lead distribution type of "+requirement.company.name+"."}, success=True)
         if shortlisted_spaces:
             requirement_exist = Requirement.objects.filter(shortlisted_spaces=shortlisted_spaces, varified_bd = "no").first()
             if not requirement_exist:
@@ -531,6 +537,9 @@ class BrowsedToRequirement(APIView):
                         shortlisted_spaces_id=browsed["shortlisted_spaces_id"],
                         company = company,
                         current_company_id = browsed["current_patner_id"],
+                        is_current_patner = "yes" if browsed["current_patner_id"] == company.organisation_id else "no",
+                        current_patner_feedback = browsed["current_patner_feedback"],
+                        current_patner_feedback_reason = browsed["current_patner_feedback_reason"],
                         sector_id = browsed["sector_id"],
                         lead_by = contact_details,
                         impl_timeline = browsed["implementation_timeline"].lower(),

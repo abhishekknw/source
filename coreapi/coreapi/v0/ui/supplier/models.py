@@ -279,10 +279,11 @@ class SupplierTypeSalon(BasicSupplierDetails):
     category = models.CharField(db_column='CATEGORY', max_length=30, blank=True, null=True)
     salon_type_chain = models.CharField(db_column='SALON_TYPE_CHAIN', max_length=30, blank=True, null=True)
     footfall_day = models.IntegerField(db_column='FOOTFALL_DAY', blank=True, null=True)
+    footfall_week = models.IntegerField(db_column='FOOTFALL_WEEL', blank=True, null=True)
     isspaavailable = models.BooleanField(db_column='ISSPAAVAILABLE', default=False)
     advertising_media = models.CharField(db_column='AD_MEDIA', max_length=30, blank=True, null=True)
-    shop_size = models.CharField(db_column='SHOP_SIZE', max_length=30, blank=True, null=True)
-    floor_size = models.CharField(db_column='FLOOR_SIZE', max_length=30, blank=True, null=True)
+    shop_size = models.IntegerField(db_column='SHOP_SIZE', blank=True, null=True)
+    floor_size = models.IntegerField(db_column='FLOOR_SIZE', blank=True, null=True)
     standee_price_week = models.IntegerField(db_column='ST_PRICE_WEEK', blank=True, null=True)
     standee_price_weekend = models.IntegerField(db_column='ST_PRICE_WEEKEND', blank=True, null=True)
     standee_places = models.IntegerField(db_column='ST_PLACES', blank=True, null=True)
@@ -300,7 +301,8 @@ class SupplierTypeSalon(BasicSupplierDetails):
     mirrorstrip_price_month = models.IntegerField(db_column='MS_PRICE_MONTH', blank=True, null=True)
     fields.GenericRelation(ContactDetailsGeneric)
     representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
-
+    comments = models.CharField(max_length=255, null=True, blank=True)
+    
     class Meta:
         db_table = 'supplier_salon'
 
@@ -353,12 +355,18 @@ class SupplierTypeGym(BasicSupplierDetails):
     wall_price_three_month = models.IntegerField(blank=True, null=True)
     fields.GenericRelation(ContactDetailsGeneric)
     representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
+    comments = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = 'supplier_gym'
 
 
 class SupplierEducationalInstitute(BasicSupplierDetails):
+    inst_type = models.CharField(max_length=200, null=True, blank=True)
+    inst_sub_type = models.CharField(max_length=200, null=True, blank=True)
+    educationBoard = models.CharField(max_length=200, null=True, blank=True)
+    comments = models.CharField(max_length=255, null=True, blank=True)
+
     class Meta:
         db_table = 'supplier_educational_institute'
 
@@ -486,7 +494,7 @@ class SupplierTypeBusShelter(BasicSupplierDetails):
     size_side_ext = models.FloatField(null=True, blank=True)
     size_side_int = models.FloatField(null=True, blank=True)
     force_majeure_clause = models.CharField(max_length=200, null=True, blank=True)
-    terms_print_mount = models.CharField(max_length=200, null=True, blank=True)
+    terms_print_mount = models.IntegerField(null=True, blank=True)
     type_road_status = models.CharField(max_length=200, null=True, blank=True)
     ac_hault = models.CharField(max_length=200, null=True, blank=True)
     type_bus_stand = models.CharField(max_length=200, null=True, blank=True)
@@ -624,21 +632,25 @@ class SupplierRelationship(BaseModel):
         unique_together = ('society', 'supplier_id','type')
 
 class SupplierBus(BasicSupplierDetails):
+    comments = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = 'supplier_bus'
 
 class SupplierGantry(BasicSupplierDetails):
+    comments = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = 'supplier_gantry'
 
 class SupplierRadioChannel(BasicSupplierDetails):
+    comments = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = 'supplier_radio_channel'
 
 class SupplierTvChannel(BasicSupplierDetails):
+    comments = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = 'supplier_tv_channel'

@@ -4169,7 +4169,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
         if space_status:
             filter_query &= Q(status=space_status)
         
-        shortlisted_spaces = ShortlistedSpaces.objects.filter(filter_query).order_by('color_code')
+        shortlisted_spaces = ShortlistedSpaces.objects.filter(filter_query).order_by(F('color_code').asc(nulls_last=True))
 
         if page:
             entries = 10

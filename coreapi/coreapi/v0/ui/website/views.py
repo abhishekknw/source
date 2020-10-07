@@ -934,7 +934,7 @@ class UserMinimalList(APIView):
                     })
                 
                 return_data = user_list
-                ui_utils.create_api_cache(page_slug, return_data)
+                ui_utils.create_api_cache(page_slug, 'user-list', return_data)
 
             return ui_utils.handle_response(class_name, data=return_data, success=True)
         except Exception as e:
@@ -1424,7 +1424,7 @@ class OrganisationViewSet(viewsets.ViewSet):
                 serializer = OrganisationSerializer(instances, many=True)
 
                 return_data = serializer.data
-                ui_utils.create_api_cache(page_slug, return_data)
+                ui_utils.create_api_cache(page_slug, "organisation", return_data)
 
             return ui_utils.handle_response(class_name, data=return_data, success=True)
         except Exception as e:

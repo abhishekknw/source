@@ -1,6 +1,6 @@
 from __future__ import print_function
 from __future__ import absolute_import
-from openpyxl import load_workbook
+from openpyxl import load_workbook, Workbook
 from rest_framework.views import APIView
 from v0.ui.utils import (get_supplier_id, handle_response, get_content_type, save_flyer_locations, make_supplier_data,
                          get_model, get_serializer, save_supplier_data, get_region_based_query, get_supplier_image,
@@ -20,7 +20,7 @@ from v0.ui.utils import get_from_dict
 from v0.ui.controller import inventory_summary_insert
 from django.core.exceptions import ObjectDoesNotExist
 from v0.ui.difflib import get_close_matches
-
+import os
 
 def get_state_map():
     all_city = City.objects.all()
@@ -53,6 +53,7 @@ def create_price_mapping_default(days_count, adinventory_name, adinventory_type,
 
 def get_duplicate_supplier(index, item):
     supplier_names = []
+    supplier_dict = {}
 
     if item[1].value != "RS":
         suppliers = SupplierMaster.objects.filter(
@@ -63,6 +64,7 @@ def get_duplicate_supplier(index, item):
             subarea= item[5].value,
         )
         supplier_names = [supplier.supplier_name for supplier in suppliers]
+        supplier_dict = {supplier.supplier_name:supplier.supplier_id for supplier in suppliers}
     else:
         suppliers = SupplierTypeSociety.objects.filter(
             society_locality= item[4].value,
@@ -71,6 +73,7 @@ def get_duplicate_supplier(index, item):
             society_subarea= item[5].value,
         )
         supplier_names = [supplier.society_name for supplier in suppliers]
+        supplier_dict = {supplier.society_name:supplier.supplier_id for supplier in suppliers}
 
     matches = get_close_matches(item[0].value, supplier_names, n=1, cutoff=0.7)
 
@@ -79,6 +82,7 @@ def get_duplicate_supplier(index, item):
             "row_no": index+1,
             "supplier_name": item[0].value,
             "supplier_type": item[1].value,
+            "supplier_id": supplier_dict.get(matches[0]),
             "matched_with": matches[0]
         }
 
@@ -90,7 +94,11 @@ class CorporateParkDataImport(APIView):
 
     def post(self, request):
         duplicates_list = []
+        general_error = set()
 
+        book = Workbook()
+        sheet = book.active
+        
         cities = City.objects.all()
         city_dict = {row.city_name:row.id for row in cities}
 
@@ -105,8 +113,26 @@ class CorporateParkDataImport(APIView):
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
         cp_data_list = []
         for index, row in enumerate(ws.iter_rows()):
-            if index > 0 and row[0].value:
+            if index == 0:
+                header_list = ['Supplier Id']
+                for cell in row:
+                    header_list.append(cell.value)
+                sheet.append(header_list)
 
+            elif index > 0 and row[0].value:
+
+                if not city_dict.get(row[6].value) or not area_dict.get(row[4].value) or not subarea_dict.get(row[5].value):
+                    error = ""
+                    if not city_dict.get(row[6].value):
+                        error = row[6].value+" doesn't exist."
+                    if not area_dict.get(row[4].value):
+                        error = row[4].value+" doesn't exist."
+                    if not subarea_dict.get(row[5].value):
+                        error = row[5].value+" doesn't exist."
+                    
+                    general_error.add(error)
+                    continue
+                
                 supplier_data1 = {
                     'city_id': city_dict.get(row[6].value),
                     'area_id': area_dict.get(row[4].value),
@@ -121,7 +147,19 @@ class CorporateParkDataImport(APIView):
                     duplicate = get_duplicate_supplier(index, row)
                     if duplicate:
                         duplicates_list.append(duplicate)
+
+                        cell_list = [duplicate["supplier_id"]]
+                        for cell in row:
+                            cell_list.append(cell.value)
+                        sheet.append(cell_list)
+
                         continue
+                    else:
+
+                        cell_list = [supplier_id]
+                        for cell in row:
+                            cell_list.append(cell.value)
+                        sheet.append(cell_list)
 
                 supplier_data = {
                     'supplier_id': supplier_id,
@@ -165,4 +203,7 @@ class CorporateParkDataImport(APIView):
 
                 ui_utils.create_supplier_from_master(supplier_data, row[1].value)
 
-        return handle_response({}, data={"invalid_row_detail": duplicates_list }, success=True)
+        filepath = 'files/export_supplier.xlsx'
+        book.save(filepath)
+
+        return handle_response({}, data={"invalid_row_detail": duplicates_list, "general_error": list(general_error) }, success=True)

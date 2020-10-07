@@ -45,7 +45,7 @@ class Requirement(models.Model):
     lead_status = models.CharField(max_length=30, choices=LEAD_STATUS_CATEGORY, default=LEAD_STATUS_CATEGORY[1][0])
     comment = models.TextField(max_length=500, blank=True)
     is_current_patner = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
-    current_patner_feedback = models.CharField(max_length=5, choices=CURRENT_PATNER_FEEDBACK, default="NA")
+    current_patner_feedback = models.CharField(max_length=50, choices=CURRENT_PATNER_FEEDBACK, default="NA")
     current_patner_feedback_reason = models.CharField(max_length=250, default="")
     varified_ops = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     varified_ops_date = models.DateTimeField(null=True)
