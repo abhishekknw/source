@@ -18,7 +18,7 @@ import datetime
 from v0.ui.common.models import mongo_client
 import hashlib
 from v0.ui.common.pagination import paginateMongo
-import json
+from bson.objectid import ObjectId
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -59,6 +59,8 @@ class ImportLead(APIView):
                 lead_status = get_value_from_list_by_key(row, headers.get('lead status'))
                 comment = get_value_from_list_by_key(row, headers.get('comment'))
                 current_patner = get_value_from_list_by_key(row, headers.get('current partner'))
+                current_patner_feedback = get_value_from_list_by_key(row, headers.get('current patner feedback'))
+                current_patner_feedback_reason = get_value_from_list_by_key(row, headers.get('current patner feedback reason'))
                 prefered_patners = get_value_from_list_by_key(row, headers.get('prefered partners'))
                 submitted = get_value_from_list_by_key(row, headers.get('submitted'))
                 
@@ -74,9 +76,15 @@ class ImportLead(APIView):
                 supplier_id = ""
                 supplier_type = "RS"
 
+                sector = BusinessTypes.objects.filter(business_type=sector_name.lower()).first()
+
                 supplier_conditions = {}
                 supplier = None
                 if contact_details:
+                    requirement = Requirement.objects.filter(campaign_id = campaign_id, lead_by = contact_details, sector = sector, is_deleted='no').first()
+                    if requirement:
+                        continue
+
                     supplier_id = contact_details.object_id
                     supplier = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).first()
 
@@ -121,7 +129,9 @@ class ImportLead(APIView):
                         )
                         shortlisted_spaces.save()
                     
-                    sector = BusinessTypes.objects.filter(business_type=sector_name.lower()).first()
+                    shortlisted_spaces.requirement_given = 'yes'
+                    shortlisted_spaces.requirement_given_date=datetime.datetime.now()
+                    shortlisted_spaces.save()
 
                     current_patner_obj = None
                     if current_patner:
@@ -133,7 +143,10 @@ class ImportLead(APIView):
                         prefered_patners_list = Organisation.objects.filter(name__in=prefered_patners_array).all()
                         prefered_patners_id_list = [row.organisation_id for row in prefered_patners_list]
                     
-                    if not submitted and submitted.lower() == "yes":
+                    if submitted and submitted.lower() == "yes":
+                        shortlisted_spaces.color_code = 1
+                        shortlisted_spaces.save()
+
                         companies = Organisation.objects.filter(business_type=sector)
                         for company in companies:
                             requirement = Requirement(
@@ -141,15 +154,17 @@ class ImportLead(APIView):
                                 shortlisted_spaces=shortlisted_spaces,
                                 company = company,
                                 current_company = current_patner_obj,
-                                # preferred_company = prefered_patners_list,
+                                is_current_patner = "yes" if current_patner_obj == company else "no",
+                                current_patner_feedback = current_patner_feedback,
+                                current_patner_feedback_reason = current_patner_feedback_reason,
                                 sector = sector,
-                                # sub_sector = models.ForeignKey('BusinessSubTypes', null=True, blank=True, on_delete=models.CASCADE)
                                 lead_by = contact_details,
                                 impl_timeline = impl_timeline.lower(),
                                 meating_timeline = meating_timeline.lower(),
                                 lead_status = lead_status,
                                 comment = comment,
-                                varified = 'no',
+                                varified_ops = 'no',
+                                varified_bd = 'no',
                                 lead_date = datetime.datetime.now()
                             )
                             requirement.save()
@@ -157,6 +172,10 @@ class ImportLead(APIView):
                             if prefered_patners_list:
                                 requirement.preferred_company.set(prefered_patners_list)
                     else:
+                        if shortlisted_spaces.color_code != 1:
+                            shortlisted_spaces.color_code = 2
+                            shortlisted_spaces.save()
+
                         BrowsedLead(
                             supplier_id=supplier_id,
                             shortlisted_spaces_id=shortlisted_spaces.id,
@@ -166,11 +185,13 @@ class ImportLead(APIView):
                             city = city,
                             area = area,
                             sector_id = sector.id if sector else None,
-                            implementation_timeline = impl_timeline,
-                            meating_timeline = meating_timeline,
+                            implementation_timeline = impl_timeline.lower(),
+                            meating_timeline = meating_timeline.lower(),
                             lead_status = lead_status,
                             comment = comment,
                             current_patner_id = current_patner_obj.organisation_id if current_patner_obj else None,
+                            current_patner_feedback = current_patner_feedback,
+                            current_patner_feedback_reason = current_patner_feedback_reason,
                             prefered_patners = prefered_patners_id_list,
                             status="open",
                             created_at = datetime.datetime.now(),
@@ -178,17 +199,20 @@ class ImportLead(APIView):
                         ).save()
 
                 else:
+
                     SuspenseLead(
                         phone_number = phone_number,
                         supplier_name = supplier_name,
                         city = city,
                         area = area,
                         sector_name = sector_name,
-                        implementation_timeline = impl_timeline,
-                        meating_timeline = meating_timeline,
+                        implementation_timeline = impl_timeline.lower(),
+                        meating_timeline = meating_timeline.lower(),
                         lead_status = lead_status,
                         comment = comment,
                         current_patner = current_patner,
+                        current_patner_feedback = current_patner_feedback,
+                        current_patner_feedback_reason = current_patner_feedback_reason,
                         prefered_patners = prefered_patners_array,
                         created_at = datetime.datetime.now(),
                         updated_at = datetime.datetime.now()
@@ -203,12 +227,29 @@ class RequirementClass(APIView):
         requirements = Requirement.objects.filter(shortlisted_spaces_id=shortlisted_spaces_id, is_deleted='no')
         sectors = [row.sector for row in requirements]
 
+        company_ids = set()
+        
+        requirement_obj = {}
         requirement_data = RequirementSerializer(requirements, many=True).data
+        for row in requirement_data:
+            if not requirement_obj.get(row["sector"]):
+                requirement_obj[row["sector"]] = dict(row)
+                requirement_obj[row["sector"]]["requirements"] = []
 
-        companies = Organisation.objects.filter(business_type__in=sectors)
+            requirement_obj[row["sector"]]["requirements"].append(row)
+            company_ids.add(row["company"])
+            company_ids.add(row["current_company"])
+            company_ids.update(row["preferred_company"])
+
+        browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":shortlisted_spaces_id, "status":"closed"}).values()
+        for row in browsed_leads:
+            company_ids.add(row["current_patner_id"])
+            company_ids.update(row["prefered_patners"])
+
+        companies = Organisation.objects.filter(Q(business_type__in=sectors)|Q(organisation_id__in=company_ids))
         companies_data = OrganisationSerializer(companies, many=True).data
         
-        return ui_utils.handle_response({}, data={"requirements": requirement_data, "companies": companies_data}, success=True)
+        return ui_utils.handle_response({}, data={"requirements": requirement_obj, "companies": companies_data}, success=True)
 
     def put(self, request):
         requirements = request.data.get("requirements")
@@ -229,8 +270,10 @@ class RequirementClass(APIView):
 
         requirements = Requirement.objects.filter(id__in=requirement_ids)
 
+        shortlisted_spaces = None
+
         for requirement in requirements:
-            if requirement.varified == "no":
+            if requirement.varified_bd == "no":
 
                 campaign = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d", account__organisation=requirement.company).first()
                 if campaign:
@@ -258,13 +301,22 @@ class RequirementClass(APIView):
                     if lead_form:
                         self.insert_lead_data(lead_form, requirement, campaign)
 
-                        requirement.varified = "yes"
+                        requirement.varified_bd = "yes"
+                        requirement.varified_bd_date = datetime.datetime.now()
                         requirement.save()
                     else:
                         return ui_utils.handle_response({}, data={"error":"No lead form of "+requirement.company.name}, success=True)
                 else:
-                    return ui_utils.handle_response({}, data={"error":"No campaign to lead distributor of "+requirement.company.name}, success=True)
+                    return ui_utils.handle_response({}, data={"error":"No campaigns available of lead distribution type of "+requirement.company.name+"."}, success=True)
+        if shortlisted_spaces:
+            requirement_exist = Requirement.objects.filter(shortlisted_spaces=shortlisted_spaces, varified_bd = "no").first()
+            if not requirement_exist:
+                browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":shortlisted_spaces.id, "status":"closed"})
                 
+                if not browsed_leads:
+                    shortlisted_spaces.color_code = 3
+
+            
         return ui_utils.handle_response({}, data={}, success=True)
 
     def insert_lead_data(self, lead_form, requirement, campaign):
@@ -375,6 +427,7 @@ class RequirementClass(APIView):
 
 def remove_suspense_lead_cron():
 
+    # Remove suspense leads
     all_suspense_lead = SuspenseLead.objects.all()
     
     for row in all_suspense_lead:
@@ -383,6 +436,7 @@ def remove_suspense_lead_cron():
         if contact_details:
             row.delete()
     
+    # Close browsed leads
     prev_24h = datetime.datetime.now() - datetime.timedelta(days=1)
 
     BrowsedLead.objects.raw({'status': 'open', 'created_at': {"$lte": prev_24h}}).update({"$set":{"status":"closed"}})
@@ -411,11 +465,108 @@ class BrowsedLeadClass(APIView):
     def get(self, request):
         shortlisted_spaces_id = request.query_params.get("shortlisted_spaces_id")
         browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":shortlisted_spaces_id, "status":"closed"}).values()
-        
+        phone_numers = [row["phone_number"] for row in browsed_leads]
+
+        contact_details = ContactDetails.objects.filter(Q(mobile__in=phone_numers)|Q(landline__in=phone_numers))
+        contact_details_dict_mobile = {str(row.mobile):row.name for row in contact_details}
+        contact_details_dict_landline = {str(row.landline):row.name for row in contact_details}
+
         list1 = []
         for row in browsed_leads:
             row1 = dict(row)
             row1["_id"] = str(row1["_id"])
+
+            row1["lead_by_name"] = contact_details_dict_mobile.get(row1["phone_number"])
+
+            if not row1["lead_by_name"]:
+                row1["lead_by_name"] = contact_details_dict_landline.get(row["phone_number"])
+
             list1.append(row1)
 
         return ui_utils.handle_response({}, data=list1, success=True)
+
+class BrowsedLeadDelete(APIView):
+
+    def post(self, request):
+        browsed_ids = request.data.get("browsed_ids")
+
+        for browsed_id in browsed_ids:
+            mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id)}, {"$set":{"status":"deleted"}})
+
+        return ui_utils.handle_response({}, data="", success=True)
+
+class DeleteRequirement(APIView):
+
+    def post(self, request):
+        requirement_ids = request.data.get('requirement_ids')
+        requirements = Requirement.objects.filter(id__in=requirement_ids).update(is_deleted="yes")
+
+        return ui_utils.handle_response({}, data="Requirement deleted", success=True)
+        
+class LeadOpsVerification(APIView):
+
+    def post(self, request):
+        requirement_ids = request.data.get("requirement_ids")
+
+        requirements = Requirement.objects.filter(id__in=requirement_ids)
+
+        for requirement in requirements:
+            if requirement.varified_ops == "no":
+                requirement.varified_ops = "yes"
+                requirement.varified_ops_date = datetime.datetime.now()
+                requirement.save()
+
+        return ui_utils.handle_response({}, data={}, success=True)
+
+class BrowsedToRequirement(APIView):
+
+    def post(self, request):
+        browsed_ids = request.data.get("browsed_ids")
+    
+        shortlisted_spaces_id = None
+
+        for browsed_id in browsed_ids:
+            browsed = dict(mongo_client.browsed_lead.find_one({"_id": ObjectId(browsed_id)}))
+            if browsed:
+                mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id)}, {"$set":{"status":"converted"}})
+
+                companies = Organisation.objects.filter(business_type=browsed["sector_id"])
+                
+                contact_details = None
+                if browsed["phone_number"]:
+                    contact_details = ContactDetails.objects.filter(Q(mobile=browsed["phone_number"])|Q(landline=browsed["phone_number"])).first()
+                
+                prefered_patners_list = []
+                if browsed["prefered_patners"]:
+                    prefered_patners_list = Organisation.objects.filter(organisation_id__in=browsed["prefered_patners"]).all()
+                
+                shortlisted_spaces_id = browsed["shortlisted_spaces_id"]
+
+                for company in companies:
+                    requirement = Requirement(
+                        campaign_id=browsed["campaign_id"],
+                        shortlisted_spaces_id=browsed["shortlisted_spaces_id"],
+                        company = company,
+                        current_company_id = browsed["current_patner_id"],
+                        is_current_patner = "yes" if browsed["current_patner_id"] == company.organisation_id else "no",
+                        current_patner_feedback = browsed["current_patner_feedback"],
+                        current_patner_feedback_reason = browsed["current_patner_feedback_reason"],
+                        sector_id = browsed["sector_id"],
+                        lead_by = contact_details,
+                        impl_timeline = browsed["implementation_timeline"].lower(),
+                        meating_timeline = browsed["meating_timeline"].lower(),
+                        lead_status = browsed["lead_status"],
+                        comment = browsed["comment"],
+                        varified_ops = 'no',
+                        varified_bd = 'no',
+                        lead_date = datetime.datetime.now()
+                    )
+                    requirement.save()
+
+                    if prefered_patners_list:
+                        requirement.preferred_company.set(prefered_patners_list)
+
+        if shortlisted_spaces_id:
+            ShortlistedSpaces.objects.filter(id=shortlisted_spaces_id).update(color_code=1, requirement_given='yes', requirement_given_date=datetime.datetime.now())
+
+        return ui_utils.handle_response({}, data={}, success=True)

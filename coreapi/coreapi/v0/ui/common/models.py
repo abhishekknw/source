@@ -21,3 +21,7 @@ class BaseUser(AbstractUser):
     emailVerifyDate = models.DateTimeField(null=True, blank=True)
     class Meta:
         db_table = 'base_user'
+
+    def save(self, *args, **kwargs):
+        mongo_client.api_cache.remove({"slugType": 'user-list'})
+        super(BaseUser, self).save(*args, **kwargs)

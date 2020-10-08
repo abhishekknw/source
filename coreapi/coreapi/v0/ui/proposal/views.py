@@ -1905,6 +1905,7 @@ class HashtagImagesViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get("campaign_id")
+
             if not campaign_id:
                 return ui_utils.handle_response(class_name, data='Please pass campaign Id', success=False)
             images = HashTagImages.objects.filter(campaign_id=campaign_id, hashtag__in=['Permission Box','RECEIPT']).order_by('-updated_at')
@@ -1924,6 +1925,7 @@ class HashtagImagesViewSet(viewsets.ViewSet):
                 result_obj[image.object_id][image.hashtag]["hashtag"] = image.hashtag
                 result_obj[image.object_id][image.hashtag]["updated_at"] = image.updated_at
                 result_list = [result_obj[result] for result in result_obj]
+                
             return ui_utils.handle_response(class_name, data=result_list, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -2808,6 +2810,7 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get('campaign_id')
+
             phases = SupplierPhase.objects.filter(campaign=campaign_id)
             current_date = datetime.datetime.now().date()
             result_obj = {}
@@ -2848,16 +2851,20 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
             campaign_id = request.query_params.get('campaign_id')
             if not campaign_id or not phases:
                 return handle_response(class_name, data='Please provide campaign id or phases', success=False)
-            new_phase = phases[-1]
-            if new_phase and 'phase_no' in new_phase:
-                phase_already_exists = SupplierPhase.objects.filter(campaign=campaign_id, phase_no=new_phase['phase_no'])
-                if phase_already_exists:
-                    return handle_response(class_name, data='Phase No. already exists', success=False)
+
             for phase in phases:
                 if 'id' in phase:
+                    phase_already_exists = SupplierPhase.objects.filter(campaign=campaign_id, phase_no=phase['phase_no']).exclude(id=phase['id'])
+                    if phase_already_exists:
+                        return handle_response(class_name, data='Phase No. already exists', success=False)
+
                     item = SupplierPhase.objects.get(pk=phase['id'],campaign=campaign_id)
                     phase_serializer = SupplierPhaseSerializer(item, data=phase)
                 else:
+                    phase_already_exists = SupplierPhase.objects.filter(campaign=campaign_id, phase_no=phase['phase_no'])
+                    if phase_already_exists:
+                        return handle_response(class_name, data='Phase No. already exists', success=False)
+                    
                     phase['campaign'] = campaign_id
                     phase_serializer = SupplierPhaseSerializer(data=phase)
                 if phase_serializer.is_valid():
@@ -3733,6 +3740,7 @@ class SupplierAssignmentViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         user = request.user.id
         campaign_id = request.query_params.get('campaign_id')
+
         if not campaign_id:
             return ui_utils.handle_response(class_name, data='Please pass campaign Id', success=False)
         suppliers = SupplierAssignment.objects.filter(campaign=campaign_id, assigned_by=user)
@@ -3744,6 +3752,7 @@ class SupplierAssignmentViewSet(viewsets.ViewSet):
             result_obj[supplier_obj.supplier_id]["updated_at"] = supplier_obj.updated_at
             result_obj[supplier_obj.supplier_id]["supplier_id"] = supplier_obj.supplier_id
         result_list = [result_obj[supplier] for supplier in result_obj]
+
         return ui_utils.handle_response(class_name, data=result_list, success=True)
 
 

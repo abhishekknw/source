@@ -912,22 +912,31 @@ class UserMinimalList(APIView):
         class_name = self.__class__.__name__
         try:
             organisation_id = request.query_params.get('org_id',None)
-            if organisation_id:
-                users = BaseUser.objects.filter(profile__organisation=organisation_id)
-            else:
-                users = BaseUser.objects.all()
-            user_list = []
-            for user in users:
-                user_list.append({
-                    "id": user.id,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "email": user.email,
-                    "username": user.username,
-                    "profile_id": user.profile_id,
-                    "role_id": user.role_id,
-                })
-            return ui_utils.handle_response(class_name, data=user_list, success=True)
+
+            page_slug = "get-users-minimal-list-"+str(organisation_id)
+            return_data = ui_utils.get_api_cache(page_slug)
+
+            if not return_data:
+                if organisation_id:
+                    users = BaseUser.objects.filter(profile__organisation=organisation_id)
+                else:
+                    users = BaseUser.objects.all()
+                user_list = []
+                for user in users:
+                    user_list.append({
+                        "id": user.id,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
+                        "email": user.email,
+                        "username": user.username,
+                        "profile_id": user.profile_id,
+                        "role_id": user.role_id,
+                    })
+                
+                return_data = user_list
+                ui_utils.create_api_cache(page_slug, 'user-list', return_data)
+
+            return ui_utils.handle_response(class_name, data=return_data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -1398,17 +1407,26 @@ class OrganisationViewSet(viewsets.ViewSet):
         try:
             category = request.query_params.get('category')
             organisation_id = request.user.profile.organisation.organisation_id
-            if request.user.is_superuser:
-                if category:
-                    instances = Organisation.objects.filter(category__in=[category,"MACHADALO"])
+
+            page_slug = "organisation-"+str(organisation_id)+"-"+str(category)
+            return_data = ui_utils.get_api_cache(page_slug)
+
+            if not return_data:
+                if request.user.is_superuser:
+                    if category:
+                        instances = Organisation.objects.filter(category__in=[category,"MACHADALO"])
+                    else:
+                        instances = Organisation.objects.all()
+                elif category:
+                    instances = Organisation.objects.filter_permission(user=request.user, category__in=[category,"MACHADALO"], created_by_org=organisation_id)
                 else:
-                    instances = Organisation.objects.all()
-            elif category:
-                instances = Organisation.objects.filter_permission(user=request.user, category__in=[category,"MACHADALO"], created_by_org=organisation_id)
-            else:
-                instances = Organisation.objects.filter_permission(user=request.user, created_by_org=organisation_id)
-            serializer = OrganisationSerializer(instances, many=True)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+                    instances = Organisation.objects.filter_permission(user=request.user, created_by_org=organisation_id)
+                serializer = OrganisationSerializer(instances, many=True)
+
+                return_data = serializer.data
+                ui_utils.create_api_cache(page_slug, "organisation", return_data)
+
+            return ui_utils.handle_response(class_name, data=return_data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
