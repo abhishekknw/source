@@ -7,7 +7,7 @@ from .models import (Requirement, SuspenseLead, BrowsedLead)
 from .serializers import RequirementSerializer
 import v0.ui.utils as ui_utils
 from openpyxl import load_workbook
-from v0.ui.account.models import ContactDetails, BusinessTypes
+from v0.ui.account.models import ContactDetails, BusinessTypes, BusinessSubTypes
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster
 from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, ProposalCenterMapping
 from v0.ui.organisation.models import Organisation
@@ -54,6 +54,7 @@ class ImportLead(APIView):
                 city = get_value_from_list_by_key(row, headers.get('city'))
                 area = get_value_from_list_by_key(row, headers.get('area'))
                 sector_name = get_value_from_list_by_key(row, headers.get('sector'))
+                sub_sector_name = get_value_from_list_by_key(row, headers.get('sub sector'))
                 impl_timeline = get_value_from_list_by_key(row, headers.get('implementation timeline'))
                 meating_timeline = get_value_from_list_by_key(row, headers.get('meating timeline'))
                 lead_status = get_value_from_list_by_key(row, headers.get('lead status'))
@@ -77,11 +78,12 @@ class ImportLead(APIView):
                 supplier_type = "RS"
 
                 sector = BusinessTypes.objects.filter(business_type=sector_name.lower()).first()
+                sub_sector = BusinessSubTypes.objects.filter(business_sub_type=sub_sector_name.lower()).first()
 
                 supplier_conditions = {}
                 supplier = None
                 if contact_details:
-                    requirement = Requirement.objects.filter(campaign_id = campaign_id, lead_by = contact_details, sector = sector, is_deleted='no').first()
+                    requirement = Requirement.objects.filter(campaign_id = campaign_id, lead_by = contact_details, sub_sector = sub_sector, is_deleted='no').first()
                     if requirement:
                         continue
 
@@ -158,6 +160,7 @@ class ImportLead(APIView):
                                 current_patner_feedback = current_patner_feedback,
                                 current_patner_feedback_reason = current_patner_feedback_reason,
                                 sector = sector,
+                                sub_sector = sub_sector,
                                 lead_by = contact_details,
                                 impl_timeline = impl_timeline.lower(),
                                 meating_timeline = meating_timeline.lower(),
@@ -185,6 +188,7 @@ class ImportLead(APIView):
                             city = city,
                             area = area,
                             sector_id = sector.id if sector else None,
+                            sub_sector_id = sub_sector.id if sub_sector else None,
                             implementation_timeline = impl_timeline.lower(),
                             meating_timeline = meating_timeline.lower(),
                             lead_status = lead_status,
@@ -206,6 +210,7 @@ class ImportLead(APIView):
                         city = city,
                         area = area,
                         sector_name = sector_name,
+                        sub_sector_name = sub_sector_name,
                         implementation_timeline = impl_timeline.lower(),
                         meating_timeline = meating_timeline.lower(),
                         lead_status = lead_status,
