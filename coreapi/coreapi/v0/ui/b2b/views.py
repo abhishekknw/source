@@ -465,11 +465,22 @@ class BrowsedLeadClass(APIView):
     def get(self, request):
         shortlisted_spaces_id = request.query_params.get("shortlisted_spaces_id")
         browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":shortlisted_spaces_id, "status":"closed"}).values()
-        
+        phone_numers = [row["phone_number"] for row in browsed_leads]
+
+        contact_details = ContactDetails.objects.filter(Q(mobile__in=phone_numers)|Q(landline__in=phone_numers))
+        contact_details_dict_mobile = {str(row.mobile):row.name for row in contact_details}
+        contact_details_dict_landline = {str(row.landline):row.name for row in contact_details}
+
         list1 = []
         for row in browsed_leads:
             row1 = dict(row)
             row1["_id"] = str(row1["_id"])
+
+            row1["lead_by_name"] = contact_details_dict_mobile.get(row1["phone_number"])
+
+            if not row1["lead_by_name"]:
+                row1["lead_by_name"] = contact_details_dict_landline.get(row["phone_number"])
+
             list1.append(row1)
 
         return ui_utils.handle_response({}, data=list1, success=True)
