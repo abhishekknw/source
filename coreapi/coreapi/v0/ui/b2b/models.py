@@ -66,6 +66,7 @@ class SuspenseLead(MongoModel):
     area = fields.CharField(blank=True)
     sub_area = fields.CharField(blank=True)
     sector_name = fields.CharField(blank=True)
+    sub_sector_name = fields.CharField(blank=True)
     implementation_timeline = fields.CharField(blank=True)
     meating_timeline = fields.CharField(blank=True)
     lead_status = fields.CharField(blank=True)
