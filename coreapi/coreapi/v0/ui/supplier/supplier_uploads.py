@@ -154,12 +154,11 @@ class CorporateParkDataImport(APIView):
                         sheet.append(cell_list)
 
                         continue
-                    else:
-
-                        cell_list = [supplier_id]
-                        for cell in row:
-                            cell_list.append(cell.value)
-                        sheet.append(cell_list)
+                    
+                cell_list = [supplier_id]
+                for cell in row:
+                    cell_list.append(cell.value)
+                sheet.append(cell_list)
 
                 supplier_data = {
                     'supplier_id': supplier_id,

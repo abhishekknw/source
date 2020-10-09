@@ -7,7 +7,7 @@ from .models import (Requirement, SuspenseLead, BrowsedLead)
 from .serializers import RequirementSerializer
 import v0.ui.utils as ui_utils
 from openpyxl import load_workbook
-from v0.ui.account.models import ContactDetails, BusinessTypes
+from v0.ui.account.models import ContactDetails, BusinessTypes, BusinessSubTypes
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster
 from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, ProposalCenterMapping
 from v0.ui.organisation.models import Organisation
@@ -54,11 +54,14 @@ class ImportLead(APIView):
                 city = get_value_from_list_by_key(row, headers.get('city'))
                 area = get_value_from_list_by_key(row, headers.get('area'))
                 sector_name = get_value_from_list_by_key(row, headers.get('sector'))
+                sub_sector_name = get_value_from_list_by_key(row, headers.get('sub sector'))
                 impl_timeline = get_value_from_list_by_key(row, headers.get('implementation timeline'))
                 meating_timeline = get_value_from_list_by_key(row, headers.get('meating timeline'))
                 lead_status = get_value_from_list_by_key(row, headers.get('lead status'))
                 comment = get_value_from_list_by_key(row, headers.get('comment'))
                 current_patner = get_value_from_list_by_key(row, headers.get('current partner'))
+                current_patner_feedback = get_value_from_list_by_key(row, headers.get('current patner feedback'))
+                current_patner_feedback_reason = get_value_from_list_by_key(row, headers.get('current patner feedback reason'))
                 prefered_patners = get_value_from_list_by_key(row, headers.get('prefered partners'))
                 submitted = get_value_from_list_by_key(row, headers.get('submitted'))
                 
@@ -75,11 +78,12 @@ class ImportLead(APIView):
                 supplier_type = "RS"
 
                 sector = BusinessTypes.objects.filter(business_type=sector_name.lower()).first()
+                sub_sector = BusinessSubTypes.objects.filter(business_sub_type=sub_sector_name.lower()).first()
 
                 supplier_conditions = {}
                 supplier = None
                 if contact_details:
-                    requirement = Requirement.objects.filter(campaign_id = campaign_id, lead_by = contact_details, sector = sector, is_deleted='no').first()
+                    requirement = Requirement.objects.filter(campaign_id = campaign_id, lead_by = contact_details, sub_sector = sub_sector, is_deleted='no').first()
                     if requirement:
                         continue
 
@@ -126,6 +130,10 @@ class ImportLead(APIView):
                             requirement_given_date=datetime.datetime.now()
                         )
                         shortlisted_spaces.save()
+                    
+                    shortlisted_spaces.requirement_given = 'yes'
+                    shortlisted_spaces.requirement_given_date=datetime.datetime.now()
+                    shortlisted_spaces.save()
 
                     current_patner_obj = None
                     if current_patner:
@@ -148,7 +156,11 @@ class ImportLead(APIView):
                                 shortlisted_spaces=shortlisted_spaces,
                                 company = company,
                                 current_company = current_patner_obj,
+                                is_current_patner = "yes" if current_patner_obj == company else "no",
+                                current_patner_feedback = current_patner_feedback,
+                                current_patner_feedback_reason = current_patner_feedback_reason,
                                 sector = sector,
+                                sub_sector = sub_sector,
                                 lead_by = contact_details,
                                 impl_timeline = impl_timeline.lower(),
                                 meating_timeline = meating_timeline.lower(),
@@ -176,11 +188,14 @@ class ImportLead(APIView):
                             city = city,
                             area = area,
                             sector_id = sector.id if sector else None,
+                            sub_sector_id = sub_sector.id if sub_sector else None,
                             implementation_timeline = impl_timeline.lower(),
                             meating_timeline = meating_timeline.lower(),
                             lead_status = lead_status,
                             comment = comment,
                             current_patner_id = current_patner_obj.organisation_id if current_patner_obj else None,
+                            current_patner_feedback = current_patner_feedback,
+                            current_patner_feedback_reason = current_patner_feedback_reason,
                             prefered_patners = prefered_patners_id_list,
                             status="open",
                             created_at = datetime.datetime.now(),
@@ -195,11 +210,14 @@ class ImportLead(APIView):
                         city = city,
                         area = area,
                         sector_name = sector_name,
+                        sub_sector_name = sub_sector_name,
                         implementation_timeline = impl_timeline.lower(),
                         meating_timeline = meating_timeline.lower(),
                         lead_status = lead_status,
                         comment = comment,
                         current_patner = current_patner,
+                        current_patner_feedback = current_patner_feedback,
+                        current_patner_feedback_reason = current_patner_feedback_reason,
                         prefered_patners = prefered_patners_array,
                         created_at = datetime.datetime.now(),
                         updated_at = datetime.datetime.now()
@@ -452,11 +470,22 @@ class BrowsedLeadClass(APIView):
     def get(self, request):
         shortlisted_spaces_id = request.query_params.get("shortlisted_spaces_id")
         browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":shortlisted_spaces_id, "status":"closed"}).values()
-        
+        phone_numers = [row["phone_number"] for row in browsed_leads]
+
+        contact_details = ContactDetails.objects.filter(Q(mobile__in=phone_numers)|Q(landline__in=phone_numers))
+        contact_details_dict_mobile = {str(row.mobile):row.name for row in contact_details}
+        contact_details_dict_landline = {str(row.landline):row.name for row in contact_details}
+
         list1 = []
         for row in browsed_leads:
             row1 = dict(row)
             row1["_id"] = str(row1["_id"])
+
+            row1["lead_by_name"] = contact_details_dict_mobile.get(row1["phone_number"])
+
+            if not row1["lead_by_name"]:
+                row1["lead_by_name"] = contact_details_dict_landline.get(row["phone_number"])
+
             list1.append(row1)
 
         return ui_utils.handle_response({}, data=list1, success=True)
@@ -524,6 +553,9 @@ class BrowsedToRequirement(APIView):
                         shortlisted_spaces_id=browsed["shortlisted_spaces_id"],
                         company = company,
                         current_company_id = browsed["current_patner_id"],
+                        is_current_patner = "yes" if browsed["current_patner_id"] == company.organisation_id else "no",
+                        current_patner_feedback = browsed["current_patner_feedback"],
+                        current_patner_feedback_reason = browsed["current_patner_feedback_reason"],
                         sector_id = browsed["sector_id"],
                         lead_by = contact_details,
                         impl_timeline = browsed["implementation_timeline"].lower(),
