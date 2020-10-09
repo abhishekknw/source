@@ -3,7 +3,7 @@ from v0.ui.account.serializers import ContactDetailsSerializer
 from .models import (Requirement)
 
 class RequirementSerializer(ModelSerializer):
-    lead_by = ContactDetailsSerializer()
+    lead_by = ContactDetailsSerializer(read_only=True)
     class Meta:
         model = Requirement
         fields = '__all__'
