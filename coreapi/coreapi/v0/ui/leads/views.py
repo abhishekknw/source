@@ -1636,7 +1636,7 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
         'Landmark', 'PinCode', 'Unit Primary Count / Flat Count', 'Unit Secondary Count / Tower Count',
         'Cost Per Unit', 'Booking Priority', 'Booking Status', 'Next Action Date',
         'Payment Method', 'Payment Status', 'Completion Status', 'Total Price',
-        'Internal Comment', 'External Comment', 'Rating',
+        'Internal Comment', 'External Comment', 'Rating', 'Assigned To',
         # 'Poster Allowed', 'Poster Count', 'Poster Price',
         # 'Standee Allowed', 'Standee Count', 'Standee Price',
         # 'Stall Allowed', 'Stall Count', 'Stall Price',
@@ -1647,7 +1647,6 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
     if data["campaign"].get("type_of_end_customer_formatted_name") == "b_to_b_r_g":
         header_list.append("Requirement Given")
         header_list.append("Requirement Given Date")
-        header_list.append("Assigned To")
 
     for inventory in inventory_list:
         header_list.append(inventory+" Allowed")
@@ -1716,6 +1715,14 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
 
         supplier_data.append(supplier["quality_rating"])
 
+        assigned_user = SupplierAssignment.objects.filter(campaign_id=supplier['proposal'], supplier_id=supplier['object_id']).first()
+        assigned_to = None
+        if assigned_user:
+            assigned_to =  assigned_user.assigned_to.username
+            supplier_data.append(assigned_to)
+        else :
+            supplier_data.append(assigned_to)
+
         if data["campaign"].get("type_of_end_customer_formatted_name") == "b_to_b_r_g":
             supplier_data.append(supplier['requirement_given'])
             requirement_given_date = None
@@ -1723,14 +1730,6 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
                 requirement_given_date = datetime.datetime.strptime(supplier['requirement_given_date'], '%Y-%m-%dT%H:%M:%S.%fZ').strftime("%d/%m/%Y")
 
             supplier_data.append(requirement_given_date)
-
-            assigned_user = SupplierAssignment.objects.filter(campaign_id=supplier['proposal'], supplier_id=supplier['object_id']).first()
-            assigned_to = None
-            if assigned_user:
-                assigned_to =  assigned_user.assigned_to.username
-                supplier_data.append(assigned_to)
-            else :
-                supplier_data.append(assigned_to)
 
         for row in inventory_list:
             supplier_data.append('Yes' if row in supplier['shortlisted_inventories'] else 'No')
