@@ -4169,7 +4169,12 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
         if space_status:
             filter_query &= Q(status=space_status)
         
-        shortlisted_spaces = ShortlistedSpaces.objects.filter(filter_query).order_by(F('color_code').asc(nulls_last=True))
+        shortlisted_spaces = ShortlistedSpaces.objects.filter(filter_query)
+
+        if proposal.type_of_end_customer and proposal.type_of_end_customer.formatted_name == "b_to_b_r_g":
+            shortlisted_spaces = shortlisted_spaces.order_by(F('color_code').asc(nulls_last=True), '-requirement_given_date')
+        else:
+            shortlisted_spaces = shortlisted_spaces.order_by('-id')
 
         if page:
             entries = 10
@@ -6950,9 +6955,9 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
                 shortlisted_spaces__in=shortlisted_supplier_ids,
                 shortlisted_spaces__proposal=proposal.proposal_id)
 
-            response = create_inventory_activity_data(shortlisted_inventory_objects,proposal_data)
-            if not response:
-                return response
+            # response = create_inventory_activity_data(shortlisted_inventory_objects,proposal_data)
+            # if not response:
+            #     return response
 
 
         return ui_utils.handle_response(function_name, data={}, success=True)

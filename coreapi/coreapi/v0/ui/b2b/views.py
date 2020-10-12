@@ -92,7 +92,8 @@ class ImportLead(APIView):
 
                     if not supplier:
                         supplier = SupplierMaster.objects.filter(supplier_id=supplier_id).first()
-                        supplier_type = supplier.supplier_type
+                        if supplier:
+                            supplier_type = supplier.supplier_type
                 elif supplier_name and city and area:
                     supplier = SupplierTypeSociety.objects.filter(society_name=supplier_name, society_city=city, society_locality=area).first()
                     if not supplier:
