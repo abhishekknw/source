@@ -285,7 +285,7 @@ class RequirementClass(APIView):
                 if campaign:
                     center = ProposalCenterMapping.objects.filter(proposal=campaign).first()
 
-                    shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal=campaign, object_id=requirement.shortlisted_spaces.object_id).first()
+                    shortlisted_spaces = requirement.shortlisted_spaces
                     if not shortlisted_spaces:
 
                         content_type = ui_utils.get_content_type(requirement.shortlisted_spaces.supplier_code)
@@ -315,12 +315,12 @@ class RequirementClass(APIView):
                 else:
                     return ui_utils.handle_response({}, data={"error":"No campaigns available of lead distribution type of "+requirement.company.name+"."}, success=True)
         if shortlisted_spaces:
-            requirement_exist = Requirement.objects.filter(shortlisted_spaces=shortlisted_spaces, varified_bd = "no").first()
+            requirement_exist = Requirement.objects.filter(shortlisted_spaces_id=shortlisted_spaces.id, varified_bd = "no", is_deleted = "no").first()
             if not requirement_exist:
-                browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":shortlisted_spaces.id, "status":"closed"})
-                
-                if not browsed_leads:
+                browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":shortlisted_spaces.id, "status":"closed"}).values()
+                if not dict(browsed_leads):
                     shortlisted_spaces.color_code = 3
+                    shortlisted_spaces.save()
 
             
         return ui_utils.handle_response({}, data={}, success=True)
