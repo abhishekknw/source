@@ -2688,6 +2688,7 @@ class ProposalImagesPath(APIView):
             shutil.make_archive(output_path, 'zip', path_to_master_dir)
             file_url = settings.BASE_URL + proposal_id + '.zip'
             # we should remove the original folder as it will consume space.
+            os.chmod(path_to_master_dir, 777)
             shutil.rmtree(path_to_master_dir)
             return ui_utils.handle_response(class_name, data=file_url, success=True)
         except Exception as e:
