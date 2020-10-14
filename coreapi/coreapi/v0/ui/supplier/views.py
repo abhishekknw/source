@@ -79,6 +79,7 @@ from .supplier_uploads import create_price_mapping_default
 from django.db import connection
 from v0.ui.common.pagination import paginate
 from django.utils import timezone
+from django.views.generic import ListView
 
 import logging
 logger = logging.getLogger(__name__)
@@ -140,9 +141,9 @@ def update_contact_and_ownership_detail(data):
     supplier_address_data = master_supplier_data.get('address_supplier')
 
     if master_supplier_data:
-        landmark = data.get('landmark', None)
+        landmark = master_supplier_data.get('landmark', None)
         if not landmark:
-            landmark = data.get('nearest_landmark', None)
+            landmark = master_supplier_data.get('nearest_landmark', None)
 
         master_data = {
             "supplier_id": object_id,
@@ -3797,13 +3798,14 @@ class listCampaignSuppliers(APIView):
     # inserts flat count type to society on the basis of number of flats it has
     @staticmethod
     def get(request, campaign_id):
+
         all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id=campaign_id)
         if request.user.profile.name == "Intern":
             assigned_suppliers = SupplierAssignment.objects.filter(campaign=campaign_id, assigned_to=request.user).values_list("supplier_id", flat=True)
             all_shortlisted_supplier = all_shortlisted_supplier.filter(object_id__in=assigned_suppliers)
         all_shortlisted_supplier = all_shortlisted_supplier.values('proposal_id', 'object_id', 'phase_no_id', 'is_completed', 'proposal__name',
-                   'proposal__tentative_start_date',
-                   'proposal__tentative_end_date', 'proposal__campaign_state','supplier_code')
+                'proposal__tentative_start_date',
+                'proposal__tentative_end_date', 'proposal__campaign_state','supplier_code')
         all_supplier_ids = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] == "RS"]
         all_campaign_societies = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids).all()
         serializer = SupplierTypeSocietySerializer(all_campaign_societies, many=True)
@@ -3831,6 +3833,7 @@ class listCampaignSuppliers(APIView):
                 dynamic_suppliers.append(data)
         all_societies = all_societies + dynamic_suppliers
         all_societies = [dict(society) for society in all_societies]
+
         return ui_utils.handle_response({}, data=all_societies, success=True)
 
 class ListCampaignSuppliers(APIView):
@@ -4216,3 +4219,15 @@ class UpdateSupplierDataImport(APIView):
         except Exception as e:
             print(e)
         return handle_response({}, data='Data updated Successfully', success=True)
+
+
+class DownloadExcel(ListView):
+    permission_classes = ()
+    authentication_classes = ()
+
+    def get(self, request):
+        wb = load_workbook('files/export_supplier.xlsx')
+        resp = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        resp['Content-Disposition'] = 'attachment; filename=files/export_supplier.xlsx'
+        wb.save(resp)
+        return resp

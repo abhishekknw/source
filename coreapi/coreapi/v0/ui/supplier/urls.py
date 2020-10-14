@@ -7,7 +7,7 @@ from .views import (TransactionDataImport, SocietyDataImport, FilteredSuppliersA
                     ImportContactDetails, FilteredSuppliers, SupplierSearch, SupplierDetails, UpdateSupplierDataImport,
                     ImportSupplierDataFromSheet, ImportSupplierData, addSupplierDirectToCampaign, deleteSuppliers,
                     deleteShortlistedSpaces, insertFlatCountType, listCampaignSuppliers, CreateSupplierPriceMappingObjects,
-                    GetLocationDataInSheet, MultiSupplierDetails, ListCampaignSuppliers, SocietySupplierRelationship, ListSuppliers, AssignSupplierUsers)
+                    GetLocationDataInSheet, MultiSupplierDetails, ListCampaignSuppliers, SocietySupplierRelationship, ListSuppliers, AssignSupplierUsers, DownloadExcel)
 
 urlpatterns = [
     url(r'^society-transaction-data-import-excel/$', TransactionDataImport.as_view()),
@@ -33,5 +33,6 @@ urlpatterns = [
     url(r'^list-suppliers/citywise/$', ListSuppliers.as_view()),
     url(r'^assign-supplier-users/$', AssignSupplierUsers.as_view()),
     url(r'^update-supplier-data/$', UpdateSupplierDataImport.as_view()),
+    url(r'^download-supplier-data/$', DownloadExcel.as_view()),
 ]
 

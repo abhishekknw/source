@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
     'djcelery',
     'reset_migrations',
+    'django_crontab',
 ]
 
 
@@ -309,3 +310,8 @@ LOGGING = {
 connect(
 "mongodb://"+MONGO_USER+":"+MONGO_PASSWORD+"@localhost:"+str(MONGO_PORT)+"/"+MONGO_DB+"?AuthMechanism=SCRAM-SHA-1&AuthSource=admin", alias="mongo_app"
 )
+
+# CronJob settings
+CRONJOBS = [
+    ('0 22 * * *', 'v0.ui.b2b.views.remove_suspense_lead_cron') # Remove suspance leads
+]

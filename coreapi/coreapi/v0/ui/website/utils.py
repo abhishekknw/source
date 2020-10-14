@@ -4169,7 +4169,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
         if space_status:
             filter_query &= Q(status=space_status)
         
-        shortlisted_spaces = ShortlistedSpaces.objects.filter(filter_query).order_by('-id')
+        shortlisted_spaces = ShortlistedSpaces.objects.filter(filter_query).order_by(F('color_code').asc(nulls_last=True))
 
         if page:
             entries = 10
@@ -4320,7 +4320,7 @@ def handle_update_campaign_inventories(user, data):
                 'ifsc_code': supplier['ifsc_code'],
                 'beneficiary_name': supplier['beneficiary_name'],
                 'account_number': supplier['account_number'],
-                'payment_message': supplier['payment_message'],
+                'payment_message': supplier['payment_message'] if 'payment_message' in supplier else None,
                 'total_negotiated_price': supplier['total_negotiated_price'],
                 'booking_status': supplier['booking_status'],
                 'booking_sub_status': supplier['booking_sub_status'],

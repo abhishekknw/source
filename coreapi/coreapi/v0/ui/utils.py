@@ -50,7 +50,7 @@ from v0.ui.base.models import DurationType
 from v0.ui.finances.models import PriceMappingDefault
 from v0.ui.account.models import Profile
 from pymodm import MongoModel, fields
-
+from v0.ui.common.models import mongo_client
 
 def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False, request=None):
     """
@@ -172,14 +172,13 @@ def get_supplier_id(data):
             # state_object = State.objects.get(state_name=state_name, state_code=state_code)
             city_object = City.objects.get(city_code=data.get('city_code'))
             area_object = CityArea.objects.get(area_code=data.get('area_code'), city_code=city_object)
-            subarea_object = CitySubArea.objects.get(subarea_code=data.get('subarea_code'), area_code=area_object)
+            subarea_object = CitySubArea.objects.get(subarea_code=data.get('subarea_code'))
 
         except ObjectDoesNotExist as e:
 
             city_object = City.objects.get(id=data['city_id'])
             area_object = CityArea.objects.get(id=data['area_id'])
-            subarea_object = CitySubArea.objects.get(id=data['subarea_id'],
-                                                     area_code=area_object)
+            subarea_object = CitySubArea.objects.get(id=data['subarea_id'])
 
         supplier_id = city_object.city_code + area_object.area_code + subarea_object.subarea_code + data[
             'supplier_type'] + data['supplier_code']
@@ -1268,3 +1267,22 @@ def create_supplier_from_master(master_data, supplier_type_code):
         serializer.save()
 
     return
+
+def create_api_cache(slug, slugType, resData):
+    if slug and resData:
+        mongo_client.api_cache.insert({
+            "slug": slug,
+            "slugType": slugType,
+            "resData": resData,
+            "exp": datetime.datetime.now() + datetime.timedelta(days=1)
+        })
+    
+
+def get_api_cache(slug):
+    data = mongo_client.api_cache.find_one({"slug": slug})
+
+    if data:
+        if data["exp"] > datetime.datetime.now():
+            return data["resData"]
+        else:
+            mongo_client.api_cache.remove({"slug": slug})
