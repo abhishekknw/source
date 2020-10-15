@@ -977,7 +977,7 @@ class BulkDownloadImagesAmazon(APIView):
         Amazon for each supplier and store it in 'files' directory under folder 'downloaded_images/<proposal_id>'
         """
         class_name = self.__class__.__name__
-        try:
+        if True:
             proposal_id = request.query_params['proposal_id']
             proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
             response = website_utils.is_campaign(proposal)
@@ -1005,8 +1005,8 @@ class BulkDownloadImagesAmazon(APIView):
             # initiate the task and return the task id.
             result = website_utils.start_download_from_amazon(proposal_id, json.dumps(image_map))
             return ui_utils.handle_response(class_name, data=result, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+        # except Exception as e:
+        #     return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class IsGroupTaskSuccessFull(APIView):

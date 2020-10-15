@@ -5822,29 +5822,32 @@ def start_download_from_amazon(proposal_id, image_map):
     Returns: task id
     """
     function = start_download_from_amazon.__name__
-    try:
-        image_map = json.loads(image_map)
-        # create this path before calling util to download
-        path_to_master_dir = settings.BASE_DIR + '/files/downloaded_images/' + proposal_id
+    # try:
+    image_map = json.loads(image_map)
+    # create this path before calling util to download
+    path_to_master_dir = settings.BASE_DIR + '/files/downloaded_images/' + proposal_id
 
-        if os.path.exists(path_to_master_dir):
-            shutil.rmtree(path_to_master_dir)
-        os.makedirs(path_to_master_dir)
-        sub_tasks = []
-        for supplier_key, image_name_list in image_map.items():
-            supplier_id = supplier_key.split('_')[
-                0]  # supplier_id and content_type_id are joined by '_'. splitting and getting first value
-            # call util function to download from amazon
-            sub_tasks.append(subtask(tasks.bulk_download_from_amazon_per_supplier,
-                                     args=[path_to_master_dir + '/' + supplier_id, image_name_list]))
+    if os.path.exists(path_to_master_dir):
+        # shutil.rmtree(path_to_master_dir)
+        os.system("rm -rf "+path_to_master_dir)
 
-        job = group(sub_tasks)
-        result = job.apply_async()
-        result.save()
-        return result.id
-    except Exception as e:
-        raise Exception(function, ui_utils.get_system_error(e))
+    os.system("mkdir "+path_to_master_dir)
+    # os.makedirs(path_to_master_dir)
 
+    sub_tasks = []
+    for supplier_key, image_name_list in image_map.items():
+        supplier_id = supplier_key.split('_')[
+            0]  # supplier_id and content_type_id are joined by '_'. splitting and getting first value
+        # call util function to download from amazon
+        sub_tasks.append(subtask(tasks.bulk_download_from_amazon_per_supplier,
+                                    args=[path_to_master_dir + '/' + supplier_id, image_name_list]))
+
+    job = group(sub_tasks)
+    result = job.apply_async()
+    result.save()
+    return result.id
+    # except Exception as e:
+    #     raise Exception(function, ui_utils.get_system_error(e))
 
 def get_random_pattern(size=v0_constants.pattern_length, chars=string.ascii_uppercase + string.digits):
     function = get_random_pattern.__name__

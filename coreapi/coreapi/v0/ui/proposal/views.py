@@ -2672,7 +2672,7 @@ class ProposalImagesPath(APIView):
 
     def get(self, request):
         class_name = self.__class__.__name__
-        try:
+        if True:
             proposal_id = request.query_params['proposal_id']
             task_id = request.query_params['task_id']
             result = GroupResult.restore(task_id)
@@ -2688,11 +2688,12 @@ class ProposalImagesPath(APIView):
             shutil.make_archive(output_path, 'zip', path_to_master_dir)
             file_url = settings.BASE_URL + proposal_id + '.zip'
             # we should remove the original folder as it will consume space.
-            os.chmod(path_to_master_dir, 777)
-            shutil.rmtree(path_to_master_dir)
+            # os.chmod(path_to_master_dir, 777)
+            # shutil.rmtree(path_to_master_dir)
+            os.system("rm -rf "+path_to_master_dir)
             return ui_utils.handle_response(class_name, data=file_url, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+        # except Exception as e:
+        #     return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class CampaignToProposal(APIView):
