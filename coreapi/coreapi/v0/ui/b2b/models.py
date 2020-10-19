@@ -36,7 +36,9 @@ class Requirement(models.Model):
     shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True, on_delete=models.CASCADE)
     company = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE, related_name='company')
     current_company = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE, related_name='current')
+    current_company_other =  models.CharField(max_length=50, null=True, blank=True)
     preferred_company = models.ManyToManyField('Organisation', null=True, blank=True, related_name='preferred')
+    preferred_company_other =  models.CharField(max_length=50, null=True, blank=True)
     sector = models.ForeignKey('BusinessTypes', null=True, blank=True, on_delete=models.CASCADE)
     sub_sector = models.ForeignKey('BusinessSubTypes', null=True, blank=True, on_delete=models.CASCADE)
     lead_by = models.ForeignKey('ContactDetails', null=True, blank=True, on_delete=models.CASCADE)
@@ -55,6 +57,8 @@ class Requirement(models.Model):
     lead_date = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    l1_answers = models.CharField(max_length=100, null=True, blank=True)
+    l2_answers = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
         db_table = 'requirement'
@@ -77,6 +81,8 @@ class SuspenseLead(MongoModel):
     prefered_patners = fields.ListField(blank=True)
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
+    l1_answers = fields.CharField(blank=True)
+    l2_answers = fields.CharField(blank=True)
 
     class Meta:
         write_concern = WriteConcern(j=True)
@@ -98,12 +104,16 @@ class BrowsedLead(MongoModel):
     lead_status = fields.CharField(blank=True)
     comment = fields.CharField(blank=True)
     current_patner_id = fields.CharField(blank=True)
+    current_patner_other = fields.CharField(blank=True)
     prefered_patners = fields.ListField(blank=True)
+    prefered_patner_other = fields.CharField(blank=True)
     current_patner_feedback = fields.CharField(blank=True)
     current_patner_feedback_reason = fields.CharField(blank=True)
     status = fields.ListField(blank=True)
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
+    l1_answers = fields.CharField(blank=True)
+    l2_answers = fields.CharField(blank=True)
 
     class Meta:
         write_concern = WriteConcern(j=True)

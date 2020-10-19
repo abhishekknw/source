@@ -64,6 +64,8 @@ class ImportLead(APIView):
                 current_patner_feedback_reason = get_value_from_list_by_key(row, headers.get('current patner feedback reason'))
                 prefered_patners = get_value_from_list_by_key(row, headers.get('prefered partners'))
                 submitted = get_value_from_list_by_key(row, headers.get('submitted'))
+                l1_answers = get_value_from_list_by_key(row, headers.get('l1 answers'))
+                l2_answers = get_value_from_list_by_key(row, headers.get('l2 answers'))
                 
                 prefered_patners_array = []
                 if prefered_patners:
@@ -100,6 +102,9 @@ class ImportLead(APIView):
                         supplier = SupplierMaster.objects.filter(supplier_name=supplier_name, city=city, area=area).first()
                         if supplier:
                             supplier_type = supplier.supplier_type
+                
+                # campaign = ProposalInfo.objects.filter(Q(type_of_end_customer="b_2_b_r_g")&Q(Q(name=supplier.stage)|Q(name=@supplier.city))).first()
+                # campaign_id = campaign.proposal_id
 
                 if supplier:
                     supplier_id = supplier.supplier_id
@@ -137,14 +142,25 @@ class ImportLead(APIView):
                     shortlisted_spaces.save()
 
                     current_patner_obj = None
+                    current_company_other = None
                     if current_patner:
                         current_patner_obj = Organisation.objects.filter(name=current_patner).first()
+                        if not current_patner_obj:
+                            current_company_other = current_patner
 
                     prefered_patners_list = []
                     prefered_patners_id_list = []
+                    preferred_company_other = None
                     if prefered_patners_array:
                         prefered_patners_list = Organisation.objects.filter(name__in=prefered_patners_array).all()
                         prefered_patners_id_list = [row.organisation_id for row in prefered_patners_list]
+                        prefered_patners_name_list = [row.name for row in prefered_patners_list]
+
+                        if len(prefered_patners_name_list) < len(prefered_patners_array):
+                            for prefered_patners_name in prefered_patners_array:
+                                if prefered_patners_name not in prefered_patners_name_list:
+                                    preferred_company_other = prefered_patners_name
+                                    break
                     
                     if submitted and submitted.lower() == "yes":
                         shortlisted_spaces.color_code = 1
@@ -157,9 +173,11 @@ class ImportLead(APIView):
                                 shortlisted_spaces=shortlisted_spaces,
                                 company = company,
                                 current_company = current_patner_obj,
+                                current_company_other = current_company_other,
                                 is_current_patner = "yes" if current_patner_obj == company else "no",
                                 current_patner_feedback = current_patner_feedback,
                                 current_patner_feedback_reason = current_patner_feedback_reason,
+                                preferred_company_other = preferred_company_other,
                                 sector = sector,
                                 sub_sector = sub_sector,
                                 lead_by = contact_details,
@@ -169,7 +187,9 @@ class ImportLead(APIView):
                                 comment = comment,
                                 varified_ops = 'no',
                                 varified_bd = 'no',
-                                lead_date = datetime.datetime.now()
+                                lead_date = datetime.datetime.now(),
+                                l1_answers = l1_answers,
+                                l2_answers = l2_answers
                             )
                             requirement.save()
 
@@ -195,12 +215,16 @@ class ImportLead(APIView):
                             lead_status = lead_status,
                             comment = comment,
                             current_patner_id = current_patner_obj.organisation_id if current_patner_obj else None,
+                            current_patner_other = current_company_other,
                             current_patner_feedback = current_patner_feedback,
                             current_patner_feedback_reason = current_patner_feedback_reason,
                             prefered_patners = prefered_patners_id_list,
+                            prefered_patner_other = preferred_company_other,
                             status="open",
                             created_at = datetime.datetime.now(),
-                            updated_at = datetime.datetime.now()
+                            updated_at = datetime.datetime.now(),
+                            l1_answers = l1_answers,
+                            l2_answers = l2_answers
                         ).save()
 
                 else:
@@ -221,7 +245,9 @@ class ImportLead(APIView):
                         current_patner_feedback_reason = current_patner_feedback_reason,
                         prefered_patners = prefered_patners_array,
                         created_at = datetime.datetime.now(),
-                        updated_at = datetime.datetime.now()
+                        updated_at = datetime.datetime.now(),
+                        l1_answers = l1_answers,
+                        l2_answers = l2_answers
                     ).save()
         
         return ui_utils.handle_response({}, data={}, success=True)
@@ -230,14 +256,19 @@ class RequirementClass(APIView):
     
     def get(self, request):
         shortlisted_spaces_id = request.query_params.get("shortlisted_spaces_id")
-        requirements = Requirement.objects.filter(shortlisted_spaces_id=shortlisted_spaces_id, is_deleted='no')
+        requirements = Requirement.objects.filter(shortlisted_spaces_id=shortlisted_spaces_id)
         sectors = [row.sector for row in requirements]
 
         company_ids = set()
         
         requirement_obj = {}
         requirement_data = RequirementSerializer(requirements, many=True).data
+        added_requirement = {}
         for row in requirement_data:
+            key = str(row["lead_by"])+str(row["sub_sector"])+str(row["sector"])
+            if added_requirement.get(key):
+                continue
+
             if not requirement_obj.get(row["sector"]):
                 requirement_obj[row["sector"]] = dict(row)
                 requirement_obj[row["sector"]]["requirements"] = []
@@ -246,6 +277,8 @@ class RequirementClass(APIView):
             company_ids.add(row["company"])
             company_ids.add(row["current_company"])
             company_ids.update(row["preferred_company"])
+
+            added_requirement[key] = True
 
         browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":shortlisted_spaces_id, "status":"closed"}).values()
         for row in browsed_leads:
@@ -505,7 +538,11 @@ class DeleteRequirement(APIView):
 
     def post(self, request):
         requirement_ids = request.data.get('requirement_ids')
-        requirements = Requirement.objects.filter(id__in=requirement_ids).update(is_deleted="yes")
+
+        requirements = Requirement.objects.filter(id__in=requirement_ids)
+
+        for req in requirements:
+            Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="no").update(is_deleted="yes")
 
         return ui_utils.handle_response({}, data="Requirement deleted", success=True)
         
@@ -516,11 +553,13 @@ class LeadOpsVerification(APIView):
 
         requirements = Requirement.objects.filter(id__in=requirement_ids)
 
-        for requirement in requirements:
-            if requirement.varified_ops == "no":
-                requirement.varified_ops = "yes"
-                requirement.varified_ops_date = datetime.datetime.now()
-                requirement.save()
+        for req in requirements:
+            reqs = Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="no")
+            for requirement in reqs:
+                if requirement.varified_ops == "no":
+                    requirement.varified_ops = "yes"
+                    requirement.varified_ops_date = datetime.datetime.now()
+                    requirement.save()
 
         return ui_utils.handle_response({}, data={}, success=True)
 
