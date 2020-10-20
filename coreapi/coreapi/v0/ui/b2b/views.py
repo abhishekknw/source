@@ -293,15 +293,35 @@ class RequirementClass(APIView):
     def put(self, request):
         requirements = request.data.get("requirements")
 
-        for requirement in requirements:
-            requirement_objs = Requirement.objects.filter(id=requirement["id"]).first()
-            requirement_data = RequirementSerializer(requirement_objs, data=requirement)
+        for req in requirements:
 
-            if requirement_data.is_valid():
-                requirement_data.save()
-            else:
-                return ui_utils.handle_response({}, data={"errors":requirement_data.errors}, success=False)
-        
+            update_req = {
+                "current_company": req["current_company"],
+                "current_company_other": req["current_company_other"],
+                "preferred_company": req["preferred_company"],
+                "preferred_company_other": req["preferred_company_other"],
+                "impl_timeline": req["impl_timeline"],
+                "meating_timeline": req["meating_timeline"],
+                "lead_status": req["lead_status"],
+                "comment": req["comment"],
+                "current_patner_feedback": req["current_patner_feedback"],
+                "current_patner_feedback_reason": req["current_patner_feedback_reason"]
+            }
+
+            reqs = Requirement.objects.filter(
+                sector_id = req["sector"], 
+                sub_sector_id = req["sub_sector"], 
+                shortlisted_spaces_id = req["shortlisted_spaces"], 
+                lead_by_id = req["lead_by"],
+            )
+            for row in reqs:
+                requirement_data = RequirementSerializer(row, data=update_req)
+
+                if requirement_data.is_valid():
+                    requirement_data.save()
+                else:
+                    return ui_utils.handle_response({}, data={"errors":requirement_data.errors}, success=False)
+
         return ui_utils.handle_response({}, data={}, success=True)
     
     def post(self, request):
