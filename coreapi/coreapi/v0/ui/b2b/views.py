@@ -19,6 +19,7 @@ from v0.ui.common.models import mongo_client
 import hashlib
 from v0.ui.common.pagination import paginateMongo
 from bson.objectid import ObjectId
+from v0.ui.common.serializers import BaseUserSerializer
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -257,10 +258,13 @@ class RequirementClass(APIView):
     def get(self, request):
         shortlisted_spaces_id = request.query_params.get("shortlisted_spaces_id")
         requirements = Requirement.objects.filter(shortlisted_spaces_id=shortlisted_spaces_id)
-        sectors = [row.sector for row in requirements]
+        sectors = []
+        verified_ops_user = {}
+        for row in requirements:
+            sectors.append(row.sector)
 
-        company_ids = set()
-        
+            if row.varified_ops_by and not verified_ops_user.get(row.varified_ops_by.id):
+                verified_ops_user[row.varified_ops_by.id] = BaseUserSerializer(row.varified_ops_by,many=False).data
         requirement_obj = {}
         requirement_data = RequirementSerializer(requirements, many=True).data
         added_requirement = {}
@@ -273,19 +277,13 @@ class RequirementClass(APIView):
                 requirement_obj[row["sector"]] = dict(row)
                 requirement_obj[row["sector"]]["requirements"] = []
 
+            row["verified_ops_by_obj"] = verified_ops_user.get(row["varified_ops_by"])
+
             requirement_obj[row["sector"]]["requirements"].append(row)
-            company_ids.add(row["company"])
-            company_ids.add(row["current_company"])
-            company_ids.update(row["preferred_company"])
 
             added_requirement[key] = True
 
-        browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":shortlisted_spaces_id, "status":"closed"}).values()
-        for row in browsed_leads:
-            company_ids.add(row["current_patner_id"])
-            company_ids.update(row["prefered_patners"])
-
-        companies = Organisation.objects.filter(Q(business_type__in=sectors)|Q(organisation_id__in=company_ids))
+        companies = Organisation.objects.filter(business_type__in=sectors)
         companies_data = OrganisationSerializer(companies, many=True).data
         
         return ui_utils.handle_response({}, data={"requirements": requirement_obj, "companies": companies_data}, success=True)
@@ -570,17 +568,15 @@ class LeadOpsVerification(APIView):
 
     def post(self, request):
         requirement_ids = request.data.get("requirement_ids")
-
         requirements = Requirement.objects.filter(id__in=requirement_ids)
-
         for req in requirements:
             reqs = Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="no")
             for requirement in reqs:
                 if requirement.varified_ops == "no":
                     requirement.varified_ops = "yes"
                     requirement.varified_ops_date = datetime.datetime.now()
+                    requirement.varified_ops_by = request.user
                     requirement.save()
-
         return ui_utils.handle_response({}, data={}, success=True)
 
 class BrowsedToRequirement(APIView):
@@ -624,7 +620,12 @@ class BrowsedToRequirement(APIView):
                         comment = browsed["comment"],
                         varified_ops = 'no',
                         varified_bd = 'no',
-                        lead_date = datetime.datetime.now()
+                        lead_date = datetime.datetime.now(),
+                        preferred_company_other = browsed["prefered_patner_other"],
+                        current_company_other = browsed["current_patner_other"],
+                        l1_answers = browsed["l1_answers"],
+                        l2_answers = browsed["l2_answers"],
+                        sub_sector_id = browsed["sub_sector_id"]
                     )
                     requirement.save()
 

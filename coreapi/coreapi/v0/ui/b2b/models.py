@@ -1,6 +1,7 @@
 from django.db import models
 from pymongo.write_concern import WriteConcern
 from pymodm import MongoModel, fields
+from django.conf import settings
 
 IMPL_TIMELINE_CATEGORY = (
     ('immediate', 'immediate'),
@@ -59,6 +60,7 @@ class Requirement(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     l1_answers = models.CharField(max_length=100, null=True, blank=True)
     l2_answers = models.CharField(max_length=100, null=True, blank=True)
+    varified_ops_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'requirement'
