@@ -97,6 +97,7 @@ def is_user_permitted(permission_type, user, **kwargs):
 
 
 def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id):
+    entry_id = entry_id + 1
     all_form_items_dict = lead_form['data']
     timestamp = datetime.datetime.utcnow()
     lead_dict = {"data": [], "is_hot": False, "created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id,
@@ -134,7 +135,6 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
     leads_count = 0
     if not lead_already_exist:
         mongo_client.leads.insert_one(lead_dict)
-        entry_id = entry_id + 1
         mongo_client.leads_forms.update_one({"leads_form_id": lead_form['leads_form_id']}, {"$set": {"last_entry_id": entry_id}})
         leads_count = 1
 
@@ -460,7 +460,7 @@ class LeadsFormBulkEntry(APIView):
             fields = len(lead_form['data'])
             campaign_id = lead_form['campaign_id']
             global_hot_lead_criteria = lead_form['global_hot_lead_criteria']
-            entry_id = lead_form['last_entry_id'] + 1 if 'last_entry_id' in lead_form else 1
+            entry_id = lead_form['last_entry_id'] if 'last_entry_id' in lead_form else 0
 
             missing_societies = []
             inv_activity_assignment_missing_societies = []
@@ -584,9 +584,9 @@ class LeadsFormBulkEntry(APIView):
                     hot_lead_count=0
                     leads_count = 0
                     if not lead_already_exist:
+                        entry_id = entry_id + 1
                         lead_dict["entry_id"] = entry_id
                         mongo_client.leads.insert_one(lead_dict)
-                        entry_id = entry_id + 1
                         mongo_client.leads_forms.update_one({"leads_form_id": leads_form_id}, {"$set": {"last_entry_id": entry_id}})
                         leads_count = 1
 
@@ -655,7 +655,7 @@ class LeadsFormEntry(APIView):
             return handle_response('', data=validation_msg_dict, success=False)
         supplier_id = request.data['supplier_id']
         lead_form = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)})
-        entry_id = lead_form['last_entry_id'] + 1 if ('last_entry_id' in lead_form and lead_form['last_entry_id']) else 1
+        entry_id = lead_form['last_entry_id'] if ('last_entry_id' in lead_form and lead_form['last_entry_id']) else 0
         campaign_id = lead_form['campaign_id']
         lead_data = request.data["leads_form_entries"]
         enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id)
