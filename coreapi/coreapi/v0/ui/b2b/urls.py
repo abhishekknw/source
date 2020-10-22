@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
-from .views import (ImportLead, RequirementClass, SuspenseLeadClass, BrowsedLeadClass, LeadOpsVerification, BrowsedToRequirement, DeleteRequirement, BrowsedLeadDelete)
+from .views import (ImportLead, RequirementClass, SuspenseLeadClass, BrowsedLeadClass, LeadOpsVerification, BrowsedToRequirement, DeleteRequirement, BrowsedLeadDelete, RestoreRequirement)
 
 urlpatterns = [
     url(r'^import-lead/(?P<campaign_id>[A-Z_a-z0-9]+)/$', ImportLead.as_view()),
@@ -11,7 +11,8 @@ urlpatterns = [
     url(r'^ops-lead-verification/$', LeadOpsVerification.as_view()),
     url(r'^browsed-to-requirement/$', BrowsedToRequirement.as_view()),
     url(r'^delete-requirement/$', DeleteRequirement.as_view()),
-    url(r'^delete-browsed-lead/$', BrowsedLeadDelete.as_view())
+    url(r'^delete-browsed-lead/$', BrowsedLeadDelete.as_view()),
+    url(r'^restore-requirement/$', RestoreRequirement.as_view()),
 ]
 
 # router = DefaultRouter()
