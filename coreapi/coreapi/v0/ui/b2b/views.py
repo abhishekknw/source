@@ -310,7 +310,7 @@ class RequirementClass(APIView):
                 sector_id = req["sector"], 
                 sub_sector_id = req["sub_sector"], 
                 shortlisted_spaces_id = req["shortlisted_spaces"], 
-                lead_by_id = req["lead_by"],
+                lead_by_id = req["lead_by"]["id"],
             )
             for row in reqs:
                 requirement_data = RequirementSerializer(row, data=update_req)
