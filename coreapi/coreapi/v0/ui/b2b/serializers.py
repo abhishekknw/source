@@ -7,7 +7,7 @@ from v0.ui.common.models import BaseUser
 
 
 class RequirementSerializer(ModelSerializer):
-
+	
 	lead_by_name = serializers.ReadOnlyField(source="lead_by.name")
 	class Meta:
 		model = Requirement
