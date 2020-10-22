@@ -290,9 +290,7 @@ class RequirementClass(APIView):
 
     def put(self, request):
         requirements = request.data.get("requirements")
-
         for req in requirements:
-
             update_req = {
                 "current_company": req["current_company"],
                 "current_company_other": req["current_company_other"],
@@ -563,6 +561,20 @@ class DeleteRequirement(APIView):
             Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="no").update(is_deleted="yes")
 
         return ui_utils.handle_response({}, data="Requirement deleted", success=True)
+
+
+class RestoreRequirement(APIView):
+    # Requirement restore api (deletion revert api)
+
+    def post(self, request):
+        requirement_ids = request.data.get('requirement_ids')
+
+        requirements = Requirement.objects.filter(id__in=requirement_ids)
+
+        for req in requirements:
+            Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="yes").update(is_deleted="no")
+
+        return ui_utils.handle_response({}, data="Requirement restored", success=True)
         
 class LeadOpsVerification(APIView):
 
