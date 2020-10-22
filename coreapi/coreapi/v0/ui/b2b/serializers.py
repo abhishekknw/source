@@ -7,8 +7,8 @@ from v0.ui.common.models import BaseUser
 
 
 class RequirementSerializer(ModelSerializer):
-	
-	lead_by_name = serializers.ReadOnlyField(source="lead_by.name")
+
+	lead_by = ContactDetailsSerializer(read_only=True)
 	class Meta:
 		model = Requirement
 		fields = '__all__'
