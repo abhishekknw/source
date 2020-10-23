@@ -42,6 +42,7 @@ urlpatterns = [
     url(r'^mis/', include('v0.ui.mis.urls')),
     url(r'^leads/', include('v0.ui.mis.urls')),
     url(r'^b2b/', include('v0.ui.b2b.urls')),
+    url(r'^bot/', include('v0.ui.bot.urls')),
 
     # Script urls
     url(r'^scripts/', include(('v0.scripts.urls'))),
