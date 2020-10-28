@@ -61,6 +61,8 @@ class Requirement(models.Model):
     l1_answers = models.CharField(max_length=100, null=True, blank=True)
     l2_answers = models.CharField(max_length=100, null=True, blank=True)
     varified_ops_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
+    company_campaign = models.ForeignKey('ProposalInfo', null=True, blank=True, on_delete=models.CASCADE)
+    company_shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'requirement'
