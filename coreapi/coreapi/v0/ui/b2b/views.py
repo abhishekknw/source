@@ -596,11 +596,10 @@ class LeadOpsVerification(APIView):
                      account__organisation=requirement.company).first()
                     if company_campaign:
 
-                        try:
-                            company_shortlisted_spaces = ShortlistedSpaces.objects.get(object_id=requirement.shortlisted_spaces.object_id,
-                         proposal=company_campaign.proposal_id) # object_id is supplier_id
+                        company_shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=requirement.shortlisted_spaces.object_id,
+                         proposal=company_campaign.proposal_id).first()
 
-                        except ShortlistedSpaces.DoesNotExist:
+                        if not company_shortlisted_spaces:
 
                             center = ProposalCenterMapping.objects.filter(proposal=company_campaign).first()
 
