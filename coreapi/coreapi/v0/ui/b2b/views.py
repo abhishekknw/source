@@ -581,15 +581,51 @@ class LeadOpsVerification(APIView):
     def post(self, request):
         requirement_ids = request.data.get("requirement_ids")
         requirements = Requirement.objects.filter(id__in=requirement_ids)
+
         for req in requirements:
             reqs = Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="no")
             for requirement in reqs:
+
                 if requirement.varified_ops == "no":
+                    
                     requirement.varified_ops = "yes"
                     requirement.varified_ops_date = datetime.datetime.now()
                     requirement.varified_ops_by = request.user
-                    requirement.save()
-        return ui_utils.handle_response({}, data={}, success=True)
+
+                    company_campaign = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d",
+                     account__organisation=requirement.company).first()
+                    if company_campaign:
+
+                        try:
+                            company_shortlisted_spaces = ShortlistedSpaces.objects.get(object_id=requirement.shortlisted_spaces.object_id,
+                         proposal=company_campaign.proposal_id) # object_id is supplier_id
+
+                        except ShortlistedSpaces.DoesNotExist:
+
+                            center = ProposalCenterMapping.objects.filter(proposal=company_campaign).first()
+
+                            content_type = ui_utils.get_content_type(requirement.shortlisted_spaces.supplier_code)
+
+                            company_shortlisted_spaces = ShortlistedSpaces(
+                                proposal=company_campaign,
+                                center=center,
+                                object_id=requirement.shortlisted_spaces.object_id,
+                                supplier_code=requirement.shortlisted_spaces.supplier_code,
+                                content_type=content_type.data['data'],
+                                status='F',
+                                user=request.user,
+                                requirement_given='yes',
+                                requirement_given_date=datetime.datetime.now()
+                            )
+
+                            company_shortlisted_spaces.save()
+
+                        requirement.company_campaign = company_campaign
+                        requirement.company_shortlisted_spaces = company_shortlisted_spaces
+                        requirement.save()
+
+        return ui_utils.handle_response({}, data="Verified", success=True)
+
 
 class BrowsedToRequirement(APIView):
 
@@ -648,45 +684,3 @@ class BrowsedToRequirement(APIView):
             ShortlistedSpaces.objects.filter(id=shortlisted_spaces_id).update(color_code=1, requirement_given='yes', requirement_given_date=datetime.datetime.now())
 
         return ui_utils.handle_response({}, data={}, success=True)
-
-
-class BdVerification(APIView):
-
-    def post(self, request):
-        requirement_ids = request.data.get("requirement_ids")
-        requirements = Requirement.objects.filter(id__in=requirement_ids)
-        for req in requirements:
-            reqs = Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, 
-                shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="no")
-            if req.varified_ops == "no":
-                for requirement in reqs:
-                    requirement.varified_ops = "yes"
-                    requirement.varified_ops_date = datetime.datetime.now()
-                    requirement.varified_ops_by = request.user
-                   
-                    company_campaign = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d",
-                     account__organisation=requirement.company).first()
-                    if company_campaign:
-                        company_shortlisted_space = requirement.shortlisted_spaces
-                        if not company_shortlisted_space:
-                            content_type = ui_utils.get_content_type(requirement.company_shortlisted_space.supplier_code)
-                            center = ProposalCenterMapping.objects.filter(proposal=company_campaign).first()
-
-                            company_shortlisted_space = ShortlistedSpaces(
-                                proposal=company_campaign,
-                                center=center,
-                                supplier_code=requirement.company_shortlisted_space.supplier_code,
-                                object_id=requirement.company_shortlisted_space.object_id,
-                                content_type=content_type.data['data'],
-                                status='F',
-                                user=request.user,
-                                requirement_given='yes',
-                                requirement_given_date=datetime.datetime.now()
-                            )
-                            shortlisted_spaces.save()
-
-                        requirement.company_campaign = company_campaign
-                        requirement.company_shortlisted_spaces = company_shortlisted_space
-                        requirement.save()
-
-        return ui_utils.handle_response({}, data="Verified", success=True)
