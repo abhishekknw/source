@@ -683,3 +683,167 @@ class BrowsedToRequirement(APIView):
             ShortlistedSpaces.objects.filter(id=shortlisted_spaces_id).update(color_code=1, requirement_given='yes', requirement_given_date=datetime.datetime.now())
 
         return ui_utils.handle_response({}, data={}, success=True)
+
+
+class BdVerification(APIView):
+    """docstring for BdVerification"""
+    def post(self, request):
+        requirement_ids = request.data.get("requirement_ids")
+
+        requirements = Requirement.objects.filter(id__in=requirement_ids)
+
+        for requirement in requirements:
+
+            if requirement.varified_bd == "no":
+                
+                if requirement.company_campaign:
+                
+                    lead_form = mongo_client.leads_forms.find_one({"campaign_id": requirement.company_campaign.proposal_id})
+                    if lead_form:
+                
+                        self.insert_lead_data(lead_form, requirement, requirement.campaign)
+
+                        requirement.varified_bd = "yes"
+                        requirement.varified_bd_by = request.user
+                        requirement.varified_bd_date = datetime.datetime.now()
+                        requirement.save()
+
+        return ui_utils.handle_response({}, data={}, success=True)
+
+
+    def insert_lead_data(self, lead_form, requirement, campaign):
+        entry_id = lead_form['last_entry_id'] + 1 if 'last_entry_id' in lead_form else 1
+        lead_data = []
+        
+        supplier_name = ""
+        supplier_city = ""
+        supplier_area = ""
+        supplier_subarea = ""
+        supplier_primary_count = ""
+
+        supplier_state = ""
+        supplier_pin_code = ""
+        supplier_contact_person_name = ""
+        supplier_designation = ""
+        supplier_moblile = ""
+
+        
+        
+        if requirement.shortlisted_spaces.supplier_code == 'RS':
+            supplier = SupplierTypeSociety.objects.filter(supplier_id = requirement.shortlisted_spaces.object_id).first()
+
+            if supplier:
+                supplier_name = supplier.society_name
+                supplier_city = supplier.society_city
+                supplier_area = supplier.society_locality
+                supplier_subarea = supplier.society_subarea
+                supplier_primary_count = supplier.flat_count
+
+                supplier_state = supplier.society_state
+                supplier_pin_code = supplier.society_zip
+
+                supplier_contact_person_name = requirement.lead_by.name
+                supplier_designation = requirement.lead_by.designation
+                supplier_moblile = requirement.lead_by.mobile
+        else:
+            supplier = SupplierMaster.objects.filter(supplier_id = requirement.shortlisted_spaces.object_id).first()
+            if supplier:
+                supplier_name = supplier.supplier_name
+                supplier_city = supplier.city
+                supplier_area = supplier.area
+                supplier_subarea = supplier.subarea
+                supplier_primary_count = supplier.unit_primary_count
+
+                supplier_state = supplier.state
+                supplier_pin_code = supplier.zipcode
+
+                supplier_contact_person_name = requirement.lead_by.name
+                supplier_designation = requirement.lead_by.designation
+                supplier_moblile = requirement.lead_by.mobile
+        
+        prefered_patner = "No"
+        
+        for row in requirement.preferred_company.all():
+            if requirement.company == row:
+                prefered_patner = "Yes"
+        
+        current_patner = "No"
+        if requirement.company == requirement.current_company:
+            current_patner = "Yes"
+        
+        lead_status = requirement.lead_status
+        lead_form_key = None
+        for key, lead_form_keys in lead_form["data"].items():
+            if lead_form_keys["key_name"].lower() == lead_status.lower():
+                lead_form_key = lead_form_keys["item_id"]
+        
+        lead_form_key_2 = None
+        if lead_form_key:
+            for key, value in lead_form["global_hot_lead_criteria"].items():
+                if value.get("or"):
+                    for key1, value1 in value["or"].items():
+                        
+                        if str(key1) == str(lead_form_key):
+                            lead_form_key_2 = key
+            if lead_form_key_2 and lead_form["hotness_mapping"].get(lead_form_key_2):
+                lead_status = lead_form["hotness_mapping"].get(lead_form_key_2)
+
+        lead_data_dict = {
+            "Supplier Name": supplier_name,
+            "Supplier City": supplier_city,
+            "Supplier Area": supplier_area,
+            "Supplier Sub Area": supplier_subarea,
+            "Primary Count": supplier_primary_count,
+            "Prefered Patner": prefered_patner,
+            "Current Patner": current_patner,
+            "Lead Status": lead_status,
+
+            "State": supplier_state,
+            "Pin Code": supplier_pin_code,
+            "Contact Person": supplier_contact_person_name,
+            "Designation": supplier_designation,
+            "Mobile": supplier_moblile,
+        }
+
+        lead_data = []
+        i = 1
+        for key, value in lead_data_dict.items():
+            row = {
+                    'key_name': key,
+                    'value': value,
+                    'item_id': i,
+                    'key_type': 'STRING'
+                }
+            lead_data.append(row)
+
+            i+=1
+
+        lead_dict = {"data": lead_data, "is_hot": False, "created_at": datetime.datetime.now(),
+            "supplier_id": requirement.shortlisted_spaces.object_id, "campaign_id": requirement.campaign_id,
+            "leads_form_id": lead_form['leads_form_id'], "entry_id": entry_id, "status": "active",
+            "lead_status": requirement.lead_status, "lead_purchased": "no", "lead_existing_client": "no",
+            "company_campaign_id": requirement.company_campaign_id, "requrement_id":requirement.id}
+
+        lead_for_hash = {
+            "data": lead_data,
+            "leads_form_id": lead_form['leads_form_id']
+        }
+        
+        lead_sha_256 = self.create_lead_hash(lead_for_hash)
+        lead_dict["lead_sha_256"] = lead_sha_256
+
+        mongo_client.leads.insert_one(lead_dict)
+
+        return True
+
+    def create_lead_hash(self, lead_dict):
+        lead_hash_string = ''
+        lead_hash_string += str(lead_dict['leads_form_id'])
+
+        for item in lead_dict['data']:
+            if item['value']:
+                if isinstance(item["value"], (str,bytes)):
+                    lead_hash_string += str(item['value'].strip())
+                else:
+                    lead_hash_string += str(item['value'])
+        return hashlib.sha256(lead_hash_string.encode('utf-8')).hexdigest()
