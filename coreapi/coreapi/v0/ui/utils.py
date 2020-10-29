@@ -51,6 +51,7 @@ from v0.ui.finances.models import PriceMappingDefault
 from v0.ui.account.models import Profile
 from pymodm import MongoModel, fields
 from v0.ui.common.models import mongo_client
+from v0.ui.b2b.models import Requirement
 
 def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False, request=None):
     """

@@ -54,6 +54,7 @@ class Requirement(models.Model):
     varified_ops_date = models.DateTimeField(null=True)
     varified_bd = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     varified_bd_date = models.DateTimeField(null=True)
+    varified_bd_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
     is_deleted = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     lead_date = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -63,6 +64,7 @@ class Requirement(models.Model):
     varified_ops_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
     company_campaign = models.ForeignKey('ProposalInfo', null=True, blank=True, on_delete=models.CASCADE)
     company_shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True, on_delete=models.CASCADE)
+    change_current_patner = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
 
     class Meta:
         db_table = 'requirement'
