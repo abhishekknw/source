@@ -847,3 +847,39 @@ class BdVerification(APIView):
                 else:
                     lead_hash_string += str(item['value'])
         return hashlib.sha256(lead_hash_string.encode('utf-8')).hexdigest()
+
+
+class BdRequirement(APIView):
+    
+    def get(self, request):
+        company_shortlisted_spaces_id = request.query_params.get("company_shortlisted_spaces_id")
+
+        requirements = Requirement.objects.filter(company_shortlisted_spaces_id=company_shortlisted_spaces_id)
+        
+        sectors = []
+        verified_ops_user = {}
+        for row in requirements:
+            sectors.append(row.sector)
+
+            if row.varified_ops_by and not verified_ops_user.get(row.varified_ops_by.id):
+                verified_ops_user[row.varified_ops_by.id] = BaseUserSerializer(row.varified_ops_by,many=False).data
+        requirement_obj = {}
+        requirement_data = RequirementSerializer(requirements, many=True).data
+        added_requirement = {}
+        for row in requirement_data:
+            key = str(row["lead_by"])+str(row["sub_sector"])+str(row["sector"])
+
+            if not requirement_obj.get(row["sector"]):
+                requirement_obj[row["sector"]] = dict(row)
+                requirement_obj[row["sector"]]["requirements"] = []
+
+            row["verified_ops_by_obj"] = verified_ops_user.get(row["varified_ops_by"])
+
+            requirement_obj[row["sector"]]["requirements"].append(row)
+
+            added_requirement[key] = True
+
+        companies = Organisation.objects.filter(business_type__in=sectors)
+        companies_data = OrganisationSerializer(companies, many=True).data
+        
+        return ui_utils.handle_response({}, data={"requirements": requirement_obj, "companies": companies_data}, success=True)
