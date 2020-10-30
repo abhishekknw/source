@@ -663,7 +663,11 @@ class BdVerification(APIView):
             "supplier_id": requirement.shortlisted_spaces.object_id, "campaign_id": requirement.campaign_id,
             "leads_form_id": lead_form['leads_form_id'], "entry_id": entry_id, "status": "active",
             "lead_status": requirement.lead_status, "lead_purchased": "no", "lead_existing_client": "no",
-            "company_campaign_id": requirement.company_campaign_id, "requrement_id":requirement.id}
+            "company_campaign_id": requirement.company_campaign_id, "requrement_id":requirement.id,
+            "company_lead_status":lead_status, "is_current_company":requirement.is_current_patner,
+            "current_patner_feedback":requirement.current_patner_feedback,
+            "current_patner_feedback_reason":requirement.current_patner_feedback_reason,
+            "company_id":requirement.company.organisation_id}
 
         lead_for_hash = {
             "data": lead_data,
@@ -724,3 +728,27 @@ class BdRequirement(APIView):
         companies_data = OrganisationSerializer(companies, many=True).data
         
         return ui_utils.handle_response({}, data={"requirements": requirement_obj, "companies": companies_data}, success=True)
+
+
+# class GetLeadsByCampaignId(APIView):
+    
+#     def get(self, request):
+
+#         is_purchased = request.query_params.get('is_purchased')
+#         company_campaign_id = request.query_params.get('campaign_id')
+
+#         leads_data = mongo_client.leads.find({"campaign_id":campaign_id,
+#             "lead_purchased":is_purchased})
+
+#         if leads_data is not None:
+
+#             leads_data_list = list(leads_data)
+#             suppliers_list = []
+#             for lead_data in leads_data_list:
+#                 suppliers_list.append(lead_data['supplier_id'])
+#             suppliers_list = list(set(suppliers_list))
+
+
+#             return handle_response({}, data={}, success=True)
+#         else:
+#             return handle_response({}, data="No leads found", success=False)
