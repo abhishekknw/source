@@ -663,7 +663,10 @@ class BdVerification(APIView):
             "supplier_id": requirement.shortlisted_spaces.object_id, "campaign_id": requirement.campaign_id,
             "leads_form_id": lead_form['leads_form_id'], "entry_id": entry_id, "status": "active",
             "lead_status": requirement.lead_status, "lead_purchased": "no", "lead_existing_client": "no",
-            "company_campaign_id": requirement.company_campaign_id, "requrement_id":requirement.id}
+            "company_campaign_id": requirement.company_campaign_id, "requrement_id":requirement.id,
+            "company_lead_status":lead_status, "is_current_company":requirement.is_current_patner,
+            "current_patner_feedback":requirement.current_patner_feedback,
+            "current_patner_feedback_reason":requirement.current_patner_feedback_reason}
 
         lead_for_hash = {
             "data": lead_data,
