@@ -804,3 +804,43 @@ class GetLeadsForDonutChart(APIView):
             return ui_utils.handle_response({}, data=data, success=True)
         else:
             return ui_utils.handle_response({}, data="No leads found", success=False)
+
+class GetLeadsSummeryForDonutChart(APIView):
+
+    def get(self, request):
+       
+        where = {
+            "is_current_company": "yes",
+            "company_id":request.user.profile.organisation.organisation_id
+        }
+        total_leads = mongo_client.leads.find(where).count()
+        if total_leads:
+            where["lead_purchased"] = "yes"
+            where["current_patner_feedback"] = { "$ne": "Satisfied" }
+            
+            dissatisfied_purchased = mongo_client.leads.find(where).count()
+
+            dissatisfied_purchased_per = (dissatisfied_purchased*100)/total_leads
+
+            where["lead_purchased"] = "no"
+            dissatisfied_not_purchased = mongo_client.leads.find(where).count()
+
+            dissatisfied_not_purchased_per = (dissatisfied_not_purchased*100)/total_leads
+
+            where["current_patner_feedback"] = "Satisfied"
+            satisfied = mongo_client.leads.find(where).count()
+
+            satisfied_per = (satisfied*100)/total_leads
+
+            data = {
+                "total_leads": total_leads,
+                "dissatisfied_purchased": dissatisfied_purchased,
+                "dissatisfied_purchased_per": dissatisfied_purchased_per,
+                "dissatisfied_not_purchased": dissatisfied_not_purchased,
+                "dissatisfied_not_purchased_per": dissatisfied_not_purchased_per,
+                "satisfied": satisfied,
+                "satisfied_per": satisfied_per,
+            }
+            return ui_utils.handle_response({}, data=data, success=True)
+        else:
+            return ui_utils.handle_response({}, data="No leads found", success=False)
