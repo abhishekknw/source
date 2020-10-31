@@ -606,15 +606,11 @@ class BdVerification(APIView):
                 supplier_designation = requirement.lead_by.designation
                 supplier_moblile = requirement.lead_by.mobile
         
-        prefered_patner = "No"
-        
+        prefered_patner = "no"
         for row in requirement.preferred_company.all():
             if requirement.company == row:
-                prefered_patner = "Yes"
-        
-        current_patner = "No"
-        if requirement.company == requirement.current_company:
-            current_patner = "Yes"
+                prefered_patner = "yes"
+    
         
         lead_status = requirement.lead_status
         lead_form_key = None
@@ -640,7 +636,7 @@ class BdVerification(APIView):
             "Supplier Sub Area": supplier_subarea,
             "Primary Count": supplier_primary_count,
             "Prefered Patner": prefered_patner,
-            "Current Patner": current_patner,
+            "Current Patner": requirement.is_current_patner,
             "Lead Status": lead_status,
 
             "State": supplier_state,
@@ -671,7 +667,9 @@ class BdVerification(APIView):
             "company_lead_status":lead_status, "is_current_company":requirement.is_current_patner,
             "current_patner_feedback":requirement.current_patner_feedback,
             "current_patner_feedback_reason":requirement.current_patner_feedback_reason,
-            "company_id":requirement.company.organisation_id}
+            "company_id":requirement.company.organisation_id,"meating_timeline":requirement.meating_timeline,
+            "impl_timeline":requirement.impl_timeline,"lead_date":requirement.varified_bd_date,
+            "preferred_patner":prefered_patner}
 
         lead_for_hash = {
             "data": lead_data,
