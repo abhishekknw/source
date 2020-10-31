@@ -785,6 +785,5 @@ class GetLeadsByDate(APIView):
 
         date = request.query_params('date')
         organisation_id = request.user.profile.organisation.organisation_id      
-        leads_data = mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"date": {"$ne": "inactive"}}]},
-                                             {"_id": 0}).count()
+        leads_data = mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"created_at": date}]}).count()
 
