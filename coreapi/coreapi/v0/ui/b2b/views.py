@@ -22,8 +22,7 @@ from bson.objectid import ObjectId
 from v0.ui.common.serializers import BaseUserSerializer
 from v0.ui.supplier.serializers import SupplierMasterSerializer, SupplierTypeSocietySerializer
 import v0.constants as v0_constants
-
-from v0.ui.supplier.views import manipulate_object_key_values,manipulate_master_to_rs
+from v0.ui.website.utils import manipulate_object_key_values, manipulate_master_to_rs
 
 def get_value_from_list_by_key(list1, key):
     text = ""
