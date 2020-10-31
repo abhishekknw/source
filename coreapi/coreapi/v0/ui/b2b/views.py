@@ -20,6 +20,9 @@ import hashlib
 from v0.ui.common.pagination import paginateMongo
 from bson.objectid import ObjectId
 from v0.ui.common.serializers import BaseUserSerializer
+from v0.ui.supplier.serializers import SupplierMasterSerializer, SupplierTypeSocietySerializer
+import v0.constants as v0_constants
+from v0.ui.website.utils import manipulate_object_key_values, manipulate_master_to_rs
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -602,15 +605,11 @@ class BdVerification(APIView):
                 supplier_designation = requirement.lead_by.designation
                 supplier_moblile = requirement.lead_by.mobile
         
-        prefered_patner = "No"
-        
+        prefered_patner = "no"
         for row in requirement.preferred_company.all():
             if requirement.company == row:
-                prefered_patner = "Yes"
-        
-        current_patner = "No"
-        if requirement.company == requirement.current_company:
-            current_patner = "Yes"
+                prefered_patner = "yes"
+    
         
         lead_status = requirement.lead_status
         lead_form_key = None
@@ -636,7 +635,7 @@ class BdVerification(APIView):
             "Supplier Sub Area": supplier_subarea,
             "Primary Count": supplier_primary_count,
             "Prefered Patner": prefered_patner,
-            "Current Patner": current_patner,
+            "Current Patner": requirement.is_current_patner,
             "Lead Status": lead_status,
 
             "State": supplier_state,
@@ -667,7 +666,9 @@ class BdVerification(APIView):
             "company_lead_status":lead_status, "is_current_company":requirement.is_current_patner,
             "current_patner_feedback":requirement.current_patner_feedback,
             "current_patner_feedback_reason":requirement.current_patner_feedback_reason,
-            "company_id":requirement.company.organisation_id}
+            "company_id":requirement.company.organisation_id,"meating_timeline":requirement.meating_timeline,
+            "impl_timeline":requirement.impl_timeline,"lead_date":requirement.varified_bd_date,
+            "preferred_patner":prefered_patner}
 
         lead_for_hash = {
             "data": lead_data,
@@ -730,25 +731,49 @@ class BdRequirement(APIView):
         return ui_utils.handle_response({}, data={"requirements": requirement_obj, "companies": companies_data}, success=True)
 
 
-# class GetLeadsByCampaignId(APIView):
-    
-#     def get(self, request):
+class GetLeadsByCampaignId(APIView):
 
-#         is_purchased = request.query_params.get('is_purchased')
-#         company_campaign_id = request.query_params.get('campaign_id')
+    def get(self, request):
 
-#         leads_data = mongo_client.leads.find({"campaign_id":campaign_id,
-#             "lead_purchased":is_purchased})
+        is_purchased = request.query_params.get('is_purchased')
+        company_campaign_id = request.query_params.get('campaign_id')
 
-#         if leads_data is not None:
+        leads_data = mongo_client.leads.find({"campaign_id":company_campaign_id,
+            "lead_purchased":is_purchased})
 
-#             leads_data_list = list(leads_data)
-#             suppliers_list = []
-#             for lead_data in leads_data_list:
-#                 suppliers_list.append(lead_data['supplier_id'])
-#             suppliers_list = list(set(suppliers_list))
+        if leads_data is not None:
 
-
-#             return handle_response({}, data={}, success=True)
-#         else:
-#             return handle_response({}, data="No leads found", success=False)
+            leads_data_list = list(leads_data)
+            suppliers_list = []
+            for lead_data in leads_data_list:
+                suppliers_list.append(lead_data['supplier_id'])
+            suppliers_list = list(set(suppliers_list))
+            
+            master_societies = SupplierMaster.objects.filter(
+                supplier_id__in=suppliers_list).exclude(supplier_type="RS")
+            master_serializer = SupplierMasterSerializer(master_societies, many=True)
+            
+            supplire_societies = SupplierTypeSociety.objects.filter(
+                supplier_id__in=suppliers_list,supplier_code="RS")
+            supplire_serializer = SupplierTypeSocietySerializer(supplire_societies, many=True)
+            
+            all_societies = manipulate_object_key_values(supplire_serializer.data)
+            master_suppliers = manipulate_master_to_rs(master_serializer.data)
+            
+            supplier_data = {}
+            all_societies.extend(master_suppliers)
+            for supplr in all_societies:
+                supplier_data[supplr['supplier_id']] = supplr
+        
+            data = []
+            led = {}
+            supplier = []
+            for lead in leads_data_list:
+                led = dict(lead)
+                led['_id'] = str(led['_id'])
+                led['supplier_data'] = supplier_data.get(lead['supplier_id'])
+                data.append(led)
+                
+            return ui_utils.handle_response({}, data=data, success=True)
+        else:
+            return ui_utils.handle_response({}, data="No leads found", success=False)
