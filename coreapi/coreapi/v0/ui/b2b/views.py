@@ -777,3 +777,30 @@ class GetLeadsByCampaignId(APIView):
             return ui_utils.handle_response({}, data=data, success=True)
         else:
             return ui_utils.handle_response({}, data="No leads found", success=False)
+
+
+class GetLeadsForDonutChart(APIView):
+
+    def get(self, request):
+       
+        where = {"is_current_company": "no"}
+        if request.data.get("campaign_id"):
+            where["campaign_id"] = request.data.get("campaign_id")
+        else:
+            where["company_id"] = request.user.profile.organisation.organisation_id
+
+        total_leads = mongo_client.leads.find(where).count()
+        if total_leads:
+            where["lead_purchased"] = "yes"
+            leads_purchased = mongo_client.leads.find(where).count()
+            leads_remain = total_leads-leads_purchased
+
+            data = {
+                "total_leads": total_leads,
+                "leads_purchased_per": (leads_purchased*100)/total_leads,
+                "leads_remain": leads_remain,
+                "leads_remain_per": (leads_remain*100)/total_leads,
+            }
+            return ui_utils.handle_response({}, data=data, success=True)
+        else:
+            return ui_utils.handle_response({}, data="No leads found", success=False)
