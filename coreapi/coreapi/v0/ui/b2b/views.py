@@ -431,14 +431,14 @@ class LeadOpsVerification(APIView):
             for requirement in reqs:
 
                 if requirement.varified_ops == "no":
-                    
-                    requirement.varified_ops = "yes"
-                    requirement.varified_ops_date = datetime.datetime.now()
-                    requirement.varified_ops_by = request.user
 
                     company_campaign = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d",
                      account__organisation=requirement.company).first()
                     if company_campaign:
+
+                        requirement.varified_ops = "yes"
+                        requirement.varified_ops_date = datetime.datetime.now()
+                        requirement.varified_ops_by = request.user
 
                         company_shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=requirement.shortlisted_spaces.object_id,
                          proposal=company_campaign.proposal_id).first()
@@ -551,6 +551,17 @@ class BdVerification(APIView):
                         requirement.varified_bd_by = request.user
                         requirement.varified_bd_date = datetime.datetime.now()
                         requirement.save()
+                    else:
+                        return ui_utils.handle_response({}, data="No lead form found", success=False)
+
+        if requirement.shortlisted_spaces:
+            requirement_exist = Requirement.objects.filter(shortlisted_spaces=requirement.shortlisted_spaces,
+             varified_bd = "no").first()
+            if not requirement_exist:
+                browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":requirement.shortlisted_spaces.id, "status":"closed"})
+                
+                if not browsed_leads:
+                    requirement.shortlisted_spaces.color_code = 3
 
         return ui_utils.handle_response({}, data={}, success=True)
 
@@ -704,11 +715,16 @@ class BdRequirement(APIView):
         
         sectors = []
         verified_ops_user = {}
+        verified_bd_user = {}
         for row in requirements:
             sectors.append(row.sector)
 
             if row.varified_ops_by and not verified_ops_user.get(row.varified_ops_by.id):
                 verified_ops_user[row.varified_ops_by.id] = BaseUserSerializer(row.varified_ops_by,many=False).data
+
+            if row.varified_bd_by and not verified_bd_user.get(row.varified_bd_by.id):
+                verified_bd_user[row.varified_bd_by.id] = BaseUserSerializer(row.varified_bd_by,many=False).data
+
         requirement_obj = {}
         requirement_data = RequirementSerializer(requirements, many=True).data
         added_requirement = {}
@@ -720,6 +736,7 @@ class BdRequirement(APIView):
                 requirement_obj[row["sector"]]["requirements"] = []
 
             row["verified_ops_by_obj"] = verified_ops_user.get(row["varified_ops_by"])
+            row["verified_bd_by_obj"] = verified_bd_user.get(row["varified_bd_by"])
 
             requirement_obj[row["sector"]]["requirements"].append(row)
 
