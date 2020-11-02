@@ -432,13 +432,13 @@ class LeadOpsVerification(APIView):
 
                 if requirement.varified_ops == "no":
 
+                    requirement.varified_ops = "yes"
+                    requirement.varified_ops_date = datetime.datetime.now()
+                    requirement.varified_ops_by = request.user
+
                     company_campaign = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d",
                      account__organisation=requirement.company).first()
                     if company_campaign:
-
-                        requirement.varified_ops = "yes"
-                        requirement.varified_ops_date = datetime.datetime.now()
-                        requirement.varified_ops_by = request.user
 
                         company_shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=requirement.shortlisted_spaces.object_id,
                          proposal=company_campaign.proposal_id).first()
@@ -465,7 +465,7 @@ class LeadOpsVerification(APIView):
 
                         requirement.company_campaign = company_campaign
                         requirement.company_shortlisted_spaces = company_shortlisted_spaces
-                        requirement.save()
+                    requirement.save()
 
         return ui_utils.handle_response({}, data="Verified", success=True)
 
