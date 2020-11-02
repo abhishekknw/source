@@ -844,3 +844,79 @@ class GetLeadsSummeryForDonutChart(APIView):
             return ui_utils.handle_response({}, data=data, success=True)
         else:
             return ui_utils.handle_response({}, data="No leads found", success=False)
+
+
+class GetLeadsForCurrentCompanyDonut(APIView):
+
+    def get(self, request):
+       
+        where = {
+            "is_current_company": "yes",
+            "company_id":request.user.profile.organisation.organisation_id,
+            "current_patner_feedback":"Satisfied"
+        }
+
+        satisfied_leads_data = mongo_client.leads.find(where)
+        satisfied_leads_count = mongo_client.leads.find(where).count()
+        satisfied_leads_list = list(satisfied_leads_data)
+
+        where["current_patner_feedback"] = { "$ne": "Satisfied" }
+        dissatisfied_leads_data = mongo_client.leads.find(where)
+        dissatisfied_leads_count = mongo_client.leads.find(where).count()
+        dissatisfied_leads_list = list(dissatisfied_leads_data)
+
+        if satisfied_leads_count == 0 and dissatisfied_leads_count == 0:
+            return ui_utils.handle_response({}, data="No leads found", success=False)
+        else:
+            all_leads = satisfied_leads_list + dissatisfied_leads_list
+            suppliers_list = []
+            for lead_data in all_leads:
+                suppliers_list.append(lead_data['supplier_id'])
+            suppliers_list = list(set(suppliers_list))
+
+            master_societies = SupplierMaster.objects.filter(
+                supplier_id__in=suppliers_list).exclude(supplier_type="RS")
+            master_serializer = SupplierMasterSerializer(master_societies, many=True)
+            
+            supplire_societies = SupplierTypeSociety.objects.filter(
+                supplier_id__in=suppliers_list,supplier_code="RS")
+            supplire_serializer = SupplierTypeSocietySerializer(supplire_societies, many=True)
+            
+            all_societies = manipulate_object_key_values(supplire_serializer.data)
+            master_suppliers = manipulate_master_to_rs(master_serializer.data)
+            all_societies.extend(master_suppliers)
+
+            supplier_data = {}
+            for supplr in all_societies:
+                supplier_data[supplr['supplier_id']] = supplr
+
+            s_data = []
+            if satisfied_leads_count:
+                
+                if satisfied_leads_list is not None:
+                    s_led_obj = {}
+                    for s_lead in satisfied_leads_list:
+                        s_led_obj = dict(s_lead)
+                        s_led_obj['_id'] = str(s_led_obj['_id'])
+                        s_led_obj['supplier_data'] = supplier_data.get(s_led_obj['supplier_id'])
+                        s_led_obj['total_satisfied_leads'] = satisfied_leads_count
+                        s_data.append(s_led_obj)
+
+            d_data = []
+            if dissatisfied_leads_count:
+
+                if dissatisfied_leads_list is not None:
+                    d_led_obj = {}
+                    for d_lead in dissatisfied_leads_list:
+                        d_led_obj = dict(d_lead)
+                        d_led_obj['_id'] = str(d_led_obj['_id'])
+                        d_led_obj['supplier_data'] = supplier_data.get(d_led_obj['supplier_id'])
+                        d_led_obj['total_dissatisfied_leads'] = dissatisfied_leads_count
+                        d_data.append(d_led_obj)
+
+            data = {
+                "satisfied_data":s_data,
+                "dissatisfied_data":d_data
+            }
+
+            return ui_utils.handle_response({}, data=data, success=True)
