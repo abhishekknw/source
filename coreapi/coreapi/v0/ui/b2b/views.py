@@ -809,8 +809,8 @@ class GetLeadsForDonutChart(APIView):
     def get(self, request):
        
         where = {"is_current_company": "no"}
-        if request.data.get("campaign_id"):
-            where["campaign_id"] = request.data.get("campaign_id")
+        if request.query_params.get("campaign_id"):
+            where["campaign_id"] = request.query_params.get("campaign_id")
         else:
             where["company_id"] = request.user.profile.organisation.organisation_id
 
