@@ -836,12 +836,13 @@ class GetLeadsSummeryForDonutChart(APIView):
     def get(self, request):
        
         where = {"is_current_company": "yes"}
-        if request.data.get("campaign_id"):
-            where["campaign_id"] = request.data.get("campaign_id")
+        if request.query_params.get("campaign_id"):
+            where["campaign_id"] = request.query_params.get("campaign_id")
         else:
             where["company_id"] = request.user.profile.organisation.organisation_id
 
         total_leads = mongo_client.leads.find(where).count()
+        data = {}
         if total_leads:
             where["current_patner_feedback"] = "Satisfied"
             total_satisfied = mongo_client.leads.find(where).count()
@@ -869,22 +870,20 @@ class GetLeadsSummeryForDonutChart(APIView):
                 "total_satisfied": total_satisfied,
                 "satisfied_per": satisfied_per,
             }
-            return ui_utils.handle_response({}, data=data, success=True)
-        else:
-            return ui_utils.handle_response({}, data="No leads found", success=False)
-
+        return ui_utils.handle_response({}, data=data, success=True)
+        
 
 class GetLeadsForCurrentCompanyDonut(APIView):
 
     def get(self, request):
         
-        where = {"is_current_company": "yes","lead_purchased":request.data.get("is_purchased")}
-        if request.data.get("campaign_id"):
-            where["campaign_id"] = request.data.get("campaign_id")
+        where = {"is_current_company": "yes","lead_purchased":request.query_params.get("is_purchased")}
+        if request.query_params.get("campaign_id"):
+            where["campaign_id"] = request.query_params.get("campaign_id")
         else:
             where["company_id"] = request.user.profile.organisation.organisation_id
 
-        if request.data.get("is_satisfied") == "yes":
+        if request.query_params.get("is_satisfied") == "yes":
             where["current_patner_feedback"] = "Satisfied"
         else:
             where["current_patner_feedback"] = { "$ne": "Satisfied" }
