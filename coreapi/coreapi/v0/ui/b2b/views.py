@@ -815,6 +815,7 @@ class GetLeadsForDonutChart(APIView):
             where["company_id"] = request.user.profile.organisation.organisation_id
 
         total_leads = mongo_client.leads.find(where).count()
+        data = {}
         if total_leads:
             where["lead_purchased"] = "yes"
             leads_purchased = mongo_client.leads.find(where).count()
@@ -827,9 +828,8 @@ class GetLeadsForDonutChart(APIView):
                 "leads_remain_per": (leads_remain*100)/total_leads,
                 "total_leads_purchased": total_leads - leads_purchased,
             }
-            return ui_utils.handle_response({}, data=data, success=True)
-        else:
-            return ui_utils.handle_response({}, data="No leads found", success=False)
+        return ui_utils.handle_response({}, data=data, success=True)
+        
 
 class GetLeadsSummeryForDonutChart(APIView):
 
