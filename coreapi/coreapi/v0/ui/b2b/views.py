@@ -23,6 +23,7 @@ from v0.ui.common.serializers import BaseUserSerializer
 from v0.ui.supplier.serializers import SupplierMasterSerializer, SupplierTypeSocietySerializer
 import v0.constants as v0_constants
 from v0.ui.website.utils import manipulate_object_key_values, manipulate_master_to_rs
+import v0.ui.b2b.utils as b2b_utils
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -172,6 +173,13 @@ class ImportLead(APIView):
 
                         companies = Organisation.objects.filter(business_type=sector)
                         for company in companies:
+                            lead_status = b2b_utils.get_lead_status(
+                                impl_timeline = impl_timeline.lower(),
+                                meating_timeline = meating_timeline.lower(),
+                                company=company,
+                                prefered_patners=prefered_patners)
+
+
                             requirement = Requirement(
                                 campaign_id=campaign_id,
                                 shortlisted_spaces=shortlisted_spaces,
@@ -431,7 +439,7 @@ class LeadOpsVerification(APIView):
             for requirement in reqs:
 
                 if requirement.varified_ops == "no":
-
+                    
                     requirement.varified_ops = "yes"
                     requirement.varified_ops_date = datetime.datetime.now()
                     requirement.varified_ops_by = request.user
