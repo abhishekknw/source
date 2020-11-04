@@ -3,9 +3,9 @@ from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 from .views import (GetLeadsByCampaignId,BdRequirement,BdVerification, ImportLead, RequirementClass, SuspenseLeadClass, BrowsedLeadClass,  
                         LeadOpsVerification, BrowsedToRequirement, DeleteRequirement, BrowsedLeadDelete, RestoreRequirement, GetLeadsByDate,
-                        GetLeadsCampaignByDate, GetSupplierByCampaign, GetFeedbackCount, GetCampaignList, GetLeadsForCurrentCompanyDonut,
+                        GetLeadsCampaignByDate, GetFeedbackCount, GetCampaignList, GetLeadsForCurrentCompanyDonut,
                         GetLeadsSummeryForDonutChart, GetLeadsForDonutChart )
-                        
+
 urlpatterns = [
     url(r'^import-lead/(?P<campaign_id>[A-Z_a-z0-9]+)/$', ImportLead.as_view()),
     url(r'^requirements/$', RequirementClass.as_view()),
@@ -21,7 +21,6 @@ urlpatterns = [
     url(r'^donut-table-1st/$', GetLeadsByCampaignId.as_view()),
     url(r'^lead-count-by-date/$', GetLeadsByDate.as_view()),
     url(r'^lead-campaign-data/$', GetLeadsCampaignByDate.as_view()),
-    url(r'^supplier-by-campaign/$', GetSupplierByCampaign.as_view()),
     url(r'^existing-client-feedback/$', GetFeedbackCount.as_view()),
     url(r'^campaign-list-by-status/$', GetCampaignList.as_view()),
 

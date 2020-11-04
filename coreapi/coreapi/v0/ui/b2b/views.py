@@ -986,26 +986,17 @@ class GetLeadsCampaignByDate(APIView):
         campaign_ids = list(campaign_ids)
 
         campaigns = ProposalInfo.objects.filter(proposal_id__in=campaign_ids)
-        serializer = ProposalInfoSerializer(campaigns, many=True)
+        campaign_data = ProposalInfoSerializer(campaigns, many=True).data
 
-        for row in serializer.data:
+        campaign = {}
+        for row in campaign_data:
             row["purchased_count"] = lead_count_purchased_map.get(row["proposal_id"])
             row["not_purchased_count"] = lead_count_not_purchased_map.get(row["proposal_id"])
             
         lead_dict = {
-            'campaigns' : row,
+            'campaigns' : campaign_data,
         }
         return ui_utils.handle_response({}, data=lead_dict, success=True)
-
-
-class GetSupplierByCampaign(APIView):
-
-    def get(self, request):
-
-        campaign_id = request.query_params("campaign_id")
-        supplier_data = mongo_client.leads.find({"campaign_id" : campaign_id})
-
-        return ui_utils.handle_response({}, data={}, success=True)
 
 
 class GetFeedbackCount(APIView):
@@ -1018,15 +1009,36 @@ class GetFeedbackCount(APIView):
         end_date = date_time_obj.replace(hour=23, minute=59, second=59)
         organisation_id = request.user.profile.organisation.organisation_id
 
+        satisfied_count = 0
+        dissatisfied_count = 0
+        extremely_dissatisfied_count = 0
+
         client_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"yes"}]})
 
-        return ui_utils.handle_response({}, data={}, success=True)
+        for row in client_count:
+            feedback = row["current_patner_feedback"]
+            if feedback=="Satisfied":
+                satisfied_count +=1
+            elif feedback=="Dissatisfied":
+                dissatisfied_count +=1
+            elif feedback=="Extremely Dissatisfied":
+                extremely_dissatisfied_count +=1
+
+        feedback_count = {
+            'satisfied_count' : satisfied_count,
+            'dissatisfied_count' : dissatisfied_count,
+            'extremely_dissatisfied_count' : extremely_dissatisfied_count,
+        }
+                
+        return ui_utils.handle_response({}, data=feedback_count, success=True)
 
 
 class GetCampaignList(APIView):
 
     def get(self, request):
         
+        organisation_id = request.user.profile.organisation.organisation_id
+
         campaign_data = {
             'ongoing_campaigns': [],
             'upcoming_campaigns': [],
@@ -1035,16 +1047,16 @@ class GetCampaignList(APIView):
         }
         current_date = datetime.datetime.now()
 
-        campaign_data['completed_campaigns'] = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d", tentative_end_date__lt=current_date, 
+        campaign_data['completed_campaigns'] = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d", tentative_end_date__lt=current_date, account__organisation=organisation_id, 
             campaign_state='PTC').values('proposal_id', 'name')
 
-        campaign_data['upcoming_campaigns'] = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d", tentative_start_date__gt=current_date,
+        campaign_data['upcoming_campaigns'] = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d", tentative_start_date__gt=current_date, account__organisation=organisation_id,
             campaign_state='PTC').values('proposal_id', 'name')
 
-        campaign_data['ongoing_campaigns'] = ProposalInfo.objects.filter(Q(tentative_start_date__lte=current_date)&Q(tentative_end_date__gte=current_date), 
+        campaign_data['ongoing_campaigns'] = ProposalInfo.objects.filter(tentative_start_date__lte=current_date, tentative_end_date__gte=current_date, account__organisation=organisation_id, 
             campaign_state='PTC', type_of_end_customer__formatted_name="b_to_b_l_d").values('proposal_id', 'name')
 
-        campaign_data['onhold_campaigns'] = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d", 
+        campaign_data['onhold_campaigns'] = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d", account__organisation=organisation_id,
             campaign_state='POH').values('proposal_id', 'name')
 
         return ui_utils.handle_response({}, data=campaign_data, success=True)
