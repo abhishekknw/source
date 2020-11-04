@@ -24,6 +24,7 @@ from v0.ui.common.serializers import BaseUserSerializer
 from v0.ui.supplier.serializers import SupplierMasterSerializer, SupplierTypeSocietySerializer
 import v0.constants as v0_constants
 from v0.ui.website.utils import manipulate_object_key_values, manipulate_master_to_rs
+import v0.ui.b2b.utils as b2b_utils
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -71,6 +72,7 @@ class ImportLead(APIView):
                 submitted = get_value_from_list_by_key(row, headers.get('submitted'))
                 l1_answers = get_value_from_list_by_key(row, headers.get('l1 answers'))
                 l2_answers = get_value_from_list_by_key(row, headers.get('l2 answers'))
+                change_current_patner = get_value_from_list_by_key(row, headers.get('change current partner'))
                 
                 prefered_patners_array = []
                 if prefered_patners:
@@ -173,6 +175,14 @@ class ImportLead(APIView):
 
                         companies = Organisation.objects.filter(business_type=sector)
                         for company in companies:
+                            lead_status = b2b_utils.get_lead_status(
+                                impl_timeline = impl_timeline.lower(),
+                                meating_timeline = meating_timeline.lower(),
+                                company=company,
+                                prefered_patners=prefered_patners_list,
+                                change_current_patner=change_current_patner)
+
+
                             requirement = Requirement(
                                 campaign_id=campaign_id,
                                 shortlisted_spaces=shortlisted_spaces,
@@ -466,7 +476,7 @@ class LeadOpsVerification(APIView):
 
                         requirement.company_campaign = company_campaign
                         requirement.company_shortlisted_spaces = company_shortlisted_spaces
-                        requirement.save()
+                    requirement.save()
 
         return ui_utils.handle_response({}, data="Verified", success=True)
 
@@ -552,6 +562,17 @@ class BdVerification(APIView):
                         requirement.varified_bd_by = request.user
                         requirement.varified_bd_date = datetime.datetime.now()
                         requirement.save()
+                    else:
+                        return ui_utils.handle_response({}, data="No lead form found", success=False)
+
+        if requirement.shortlisted_spaces:
+            requirement_exist = Requirement.objects.filter(shortlisted_spaces=requirement.shortlisted_spaces,
+             varified_bd = "no").first()
+            if not requirement_exist:
+                browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":requirement.shortlisted_spaces.id, "status":"closed"})
+                
+                if not browsed_leads:
+                    requirement.shortlisted_spaces.color_code = 3
 
         return ui_utils.handle_response({}, data={}, success=True)
 
@@ -705,11 +726,16 @@ class BdRequirement(APIView):
         
         sectors = []
         verified_ops_user = {}
+        verified_bd_user = {}
         for row in requirements:
             sectors.append(row.sector)
 
             if row.varified_ops_by and not verified_ops_user.get(row.varified_ops_by.id):
                 verified_ops_user[row.varified_ops_by.id] = BaseUserSerializer(row.varified_ops_by,many=False).data
+
+            if row.varified_bd_by and not verified_bd_user.get(row.varified_bd_by.id):
+                verified_bd_user[row.varified_bd_by.id] = BaseUserSerializer(row.varified_bd_by,many=False).data
+
         requirement_obj = {}
         requirement_data = RequirementSerializer(requirements, many=True).data
         added_requirement = {}
@@ -721,6 +747,7 @@ class BdRequirement(APIView):
                 requirement_obj[row["sector"]]["requirements"] = []
 
             row["verified_ops_by_obj"] = verified_ops_user.get(row["varified_ops_by"])
+            row["verified_bd_by_obj"] = verified_bd_user.get(row["varified_bd_by"])
 
             requirement_obj[row["sector"]]["requirements"].append(row)
 
@@ -736,12 +763,15 @@ class GetLeadsByCampaignId(APIView):
 
     def get(self, request):
 
-        is_purchased = request.query_params.get('is_purchased')
-        company_campaign_id = request.query_params.get('campaign_id')
+        where = {"is_current_company": "no","lead_purchased": request.query_params.get('is_purchased')}
 
-        leads_data = mongo_client.leads.find({"campaign_id":company_campaign_id,
-            "lead_purchased":is_purchased})
+        if request.query_params.get("campaign_id"):
+            where["campaign_id"] = request.query_params.get("campaign_id")
+        else:
+            where["company_id"] = request.user.profile.organisation.organisation_id
 
+        leads_data = mongo_client.leads.find(where)
+        data = {}
         if leads_data is not None:
 
             leads_data_list = list(leads_data)
@@ -775,9 +805,135 @@ class GetLeadsByCampaignId(APIView):
                 led['supplier_data'] = supplier_data.get(lead['supplier_id'])
                 data.append(led)
                 
-            return ui_utils.handle_response({}, data=data, success=True)
+        return ui_utils.handle_response({}, data=data, success=True)
+        
+
+
+class GetLeadsForDonutChart(APIView):
+
+    def get(self, request):
+       
+        where = {"is_current_company": "no"}
+        if request.query_params.get("campaign_id"):
+            where["campaign_id"] = request.query_params.get("campaign_id")
         else:
-            return ui_utils.handle_response({}, data="No leads found", success=False)
+            where["company_id"] = request.user.profile.organisation.organisation_id
+
+        total_leads = mongo_client.leads.find(where).count()
+        data = {}
+        if total_leads:
+            where["lead_purchased"] = "yes"
+            leads_purchased = mongo_client.leads.find(where).count()
+            leads_remain = total_leads-leads_purchased
+
+            data = {
+                "total_leads": total_leads,
+                "leads_purchased_per": (leads_purchased*100)/total_leads,
+                "leads_remain": leads_remain,
+                "leads_remain_per": (leads_remain*100)/total_leads,
+                "total_leads_purchased": leads_purchased,
+            }
+        return ui_utils.handle_response({}, data=data, success=True)
+        
+
+class GetLeadsSummeryForDonutChart(APIView):
+
+    def get(self, request):
+       
+        where = {"is_current_company": "yes"}
+        if request.query_params.get("campaign_id"):
+            where["campaign_id"] = request.query_params.get("campaign_id")
+        else:
+            where["company_id"] = request.user.profile.organisation.organisation_id
+
+        total_leads = mongo_client.leads.find(where).count()
+        data = {}
+        if total_leads:
+            where["current_patner_feedback"] = "Satisfied"
+            total_satisfied = mongo_client.leads.find(where).count()
+
+            where["lead_purchased"] = "yes"
+            where["current_patner_feedback"] = { "$ne": "Satisfied" }
+            
+            dissatisfied_purchased = total_leads - total_satisfied
+
+            dissatisfied_purchased_per = (dissatisfied_purchased*100)/total_leads
+
+            where["lead_purchased"] = "no"
+            dissatisfied_not_purchased = mongo_client.leads.find(where).count()
+
+            dissatisfied_not_purchased_per = (dissatisfied_not_purchased*100)/total_leads
+
+            satisfied_per = (total_satisfied*100)/total_leads
+
+            data = {
+                "total_leads": total_leads,
+                "dissatisfied_purchased": dissatisfied_purchased,
+                "dissatisfied_purchased_per": dissatisfied_purchased_per,
+                "dissatisfied_not_purchased": dissatisfied_not_purchased,
+                "dissatisfied_not_purchased_per": dissatisfied_not_purchased_per,
+                "total_satisfied": total_satisfied,
+                "satisfied_per": satisfied_per,
+            }
+        return ui_utils.handle_response({}, data=data, success=True)
+        
+
+class GetLeadsForCurrentCompanyDonut(APIView):
+
+    def get(self, request):
+        
+        where = {"is_current_company": "yes","lead_purchased":request.query_params.get("is_purchased")}
+        if request.query_params.get("campaign_id"):
+            where["campaign_id"] = request.query_params.get("campaign_id")
+        else:
+            where["company_id"] = request.user.profile.organisation.organisation_id
+
+        if request.query_params.get("is_satisfied") == "yes":
+            where["current_patner_feedback"] = "Satisfied"
+        else:
+            where["current_patner_feedback"] = { "$ne": "Satisfied" }
+
+        lead_data = mongo_client.leads.find(where)
+        leads_list = list(lead_data)
+        total_leads = len(leads_list)
+
+        if total_leads:
+            suppliers_list = []
+            for lead_data in leads_list:
+                suppliers_list.append(lead_data['supplier_id'])
+            suppliers_list = list(set(suppliers_list))
+        
+            master_societies = SupplierMaster.objects.filter(
+                supplier_id__in=suppliers_list).exclude(supplier_type="RS")
+            master_serializer = SupplierMasterSerializer(master_societies, many=True)
+            
+            supplire_societies = SupplierTypeSociety.objects.filter(
+                supplier_id__in=suppliers_list,supplier_code="RS")
+            supplire_serializer = SupplierTypeSocietySerializer(supplire_societies, many=True)
+            
+            all_societies = manipulate_object_key_values(supplire_serializer.data)
+            master_suppliers = manipulate_master_to_rs(master_serializer.data)
+            all_societies.extend(master_suppliers)
+
+            supplier_data = {}
+            for supplr in all_societies:
+                supplier_data[supplr['supplier_id']] = supplr
+
+            data = []
+            s_led_obj = {}
+            for lead in leads_list:
+                lead_obj = dict(lead)
+                lead_obj['_id'] = str(lead_obj['_id'])
+                lead_obj['supplier_data'] = supplier_data.get(lead_obj['supplier_id'])
+                data.append(lead_obj)
+
+            context = {
+                "lead_data":data,
+                "total_leads":total_leads
+            }
+
+        return ui_utils.handle_response({}, data=context, success=True)
+
 
 class GetLeadsByDate(APIView):
 
@@ -862,7 +1018,7 @@ class GetFeedbackCount(APIView):
         end_date = date_time_obj.replace(hour=23, minute=59, second=59)
         organisation_id = request.user.profile.organisation.organisation_id
 
-        existing_client_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"yes"}]}).count()
+        client_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"yes"}]})
 
         return ui_utils.handle_response({}, data={}, success=True)
 
@@ -892,3 +1048,4 @@ class GetCampaignList(APIView):
             campaign_state='POH').values('proposal_id', 'name')
 
         return ui_utils.handle_response({}, data=campaign_data, success=True)
+        

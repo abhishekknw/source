@@ -3,8 +3,9 @@ from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 from .views import (GetLeadsByCampaignId,BdRequirement,BdVerification, ImportLead, RequirementClass, SuspenseLeadClass, BrowsedLeadClass,  
                         LeadOpsVerification, BrowsedToRequirement, DeleteRequirement, BrowsedLeadDelete, RestoreRequirement, GetLeadsByDate,
-                        GetLeadsCampaignByDate, GetSupplierByCampaign, GetFeedbackCount, GetCampaignList)
-
+                        GetLeadsCampaignByDate, GetSupplierByCampaign, GetFeedbackCount, GetCampaignList, GetLeadsForCurrentCompanyDonut,
+                        GetLeadsSummeryForDonutChart, GetLeadsForDonutChart )
+                        
 urlpatterns = [
     url(r'^import-lead/(?P<campaign_id>[A-Z_a-z0-9]+)/$', ImportLead.as_view()),
     url(r'^requirements/$', RequirementClass.as_view()),
@@ -24,6 +25,9 @@ urlpatterns = [
     url(r'^existing-client-feedback/$', GetFeedbackCount.as_view()),
     url(r'^campaign-list-by-status/$', GetCampaignList.as_view()),
 
+    url(r'^donut-1st/$', GetLeadsForDonutChart.as_view()),
+    url(r'^donut-2nd/$', GetLeadsSummeryForDonutChart.as_view()),
+    url(r'^donut-table-2nd/$', GetLeadsForCurrentCompanyDonut.as_view()),
 ]
 
 # router = DefaultRouter()
