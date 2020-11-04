@@ -71,6 +71,7 @@ class ImportLead(APIView):
                 submitted = get_value_from_list_by_key(row, headers.get('submitted'))
                 l1_answers = get_value_from_list_by_key(row, headers.get('l1 answers'))
                 l2_answers = get_value_from_list_by_key(row, headers.get('l2 answers'))
+                change_current_patner = get_value_from_list_by_key(row, headers.get('change current partner'))
                 
                 prefered_patners_array = []
                 if prefered_patners:
@@ -177,7 +178,8 @@ class ImportLead(APIView):
                                 impl_timeline = impl_timeline.lower(),
                                 meating_timeline = meating_timeline.lower(),
                                 company=company,
-                                prefered_patners=prefered_patners)
+                                prefered_patners=prefered_patners_list,
+                                change_current_patner=change_current_patner)
 
 
                             requirement = Requirement(
@@ -760,12 +762,15 @@ class GetLeadsByCampaignId(APIView):
 
     def get(self, request):
 
-        is_purchased = request.query_params.get('is_purchased')
-        company_campaign_id = request.query_params.get('campaign_id')
+        where = {"is_current_company": "no","lead_purchased": request.query_params.get('is_purchased')}
 
-        leads_data = mongo_client.leads.find({"campaign_id":company_campaign_id,
-            "lead_purchased":is_purchased})
+        if request.query_params.get("campaign_id"):
+            where["campaign_id"] = request.query_params.get("campaign_id")
+        else:
+            where["company_id"] = request.user.profile.organisation.organisation_id
 
+        leads_data = mongo_client.leads.find(where)
+        data = {}
         if leads_data is not None:
 
             leads_data_list = list(leads_data)
@@ -799,9 +804,8 @@ class GetLeadsByCampaignId(APIView):
                 led['supplier_data'] = supplier_data.get(lead['supplier_id'])
                 data.append(led)
                 
-            return ui_utils.handle_response({}, data=data, success=True)
-        else:
-            return ui_utils.handle_response({}, data="No leads found", success=False)
+        return ui_utils.handle_response({}, data=data, success=True)
+        
 
 
 class GetLeadsForDonutChart(APIView):
@@ -826,7 +830,7 @@ class GetLeadsForDonutChart(APIView):
                 "leads_purchased_per": (leads_purchased*100)/total_leads,
                 "leads_remain": leads_remain,
                 "leads_remain_per": (leads_remain*100)/total_leads,
-                "total_leads_purchased": total_leads - leads_purchased,
+                "total_leads_purchased": leads_purchased,
             }
         return ui_utils.handle_response({}, data=data, success=True)
         
@@ -927,6 +931,5 @@ class GetLeadsForCurrentCompanyDonut(APIView):
                 "total_leads":total_leads
             }
 
-            return ui_utils.handle_response({}, data=context, success=True)
-        else:
-            return ui_utils.handle_response({}, data="No leads found", success=False)
+        return ui_utils.handle_response({}, data=context, success=True)
+        
