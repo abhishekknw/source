@@ -179,7 +179,8 @@ class ImportLead(APIView):
                                 meating_timeline = meating_timeline.lower(),
                                 company=company,
                                 prefered_patners=prefered_patners_list,
-                                change_current_patner=change_current_patner)
+                                change_current_patner=change_current_patner.lower()
+                                )
 
 
                             requirement = Requirement(
@@ -203,7 +204,8 @@ class ImportLead(APIView):
                                 varified_bd = 'no',
                                 lead_date = datetime.datetime.now(),
                                 l1_answers = l1_answers,
-                                l2_answers = l2_answers
+                                l2_answers = l2_answers,
+                                change_current_patner = change_current_patner.lower()
                             )
                             requirement.save()
 
@@ -468,7 +470,8 @@ class LeadOpsVerification(APIView):
                                 status='F',
                                 user=request.user,
                                 requirement_given='yes',
-                                requirement_given_date=datetime.datetime.now()
+                                requirement_given_date=datetime.datetime.now(),
+                                color_code = 2
                             )
 
                             company_shortlisted_spaces.save()
@@ -560,7 +563,13 @@ class BdVerification(APIView):
                         requirement.varified_bd = "yes"
                         requirement.varified_bd_by = request.user
                         requirement.varified_bd_date = datetime.datetime.now()
+                        if requirement.company_shortlisted_spaces:
+                            shortlisted_spac = ShortlistedSpaces.objects.filter(
+                                id=requirement.company_shortlisted_spaces.id).first()
+                            shortlisted_spac.color_code = 3
+                            shortlisted_spac.save()
                         requirement.save()
+
                     else:
                         return ui_utils.handle_response({}, data="No lead form found", success=False)
 
@@ -571,7 +580,10 @@ class BdVerification(APIView):
                 browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":requirement.shortlisted_spaces.id, "status":"closed"})
                 
                 if not browsed_leads:
-                    requirement.shortlisted_spaces.color_code = 3
+                    shortlisted_spac = ShortlistedSpaces.objects.filter(
+                        id=requirement.shortlisted_spaces.id).first()
+                    shortlisted_spac.color_code = 3
+                    shortlisted_spac.save()
 
         return ui_utils.handle_response({}, data={}, success=True)
 
