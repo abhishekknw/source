@@ -22,7 +22,8 @@ LEAD_STATUS_CATEGORY = (
     ('Deep Lead', 'Deep Lead'),
     ('Hot Lead', 'Hot Lead'),
     ("Lead", "Lead"),
-    ("Raw Lead", "Raw Lead")
+    ("Raw Lead", "Raw Lead"),
+    ('Warm Lead', 'Warm Lead')
 )
 
 CURRENT_PATNER_FEEDBACK = (
