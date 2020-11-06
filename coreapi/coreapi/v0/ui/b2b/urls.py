@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (GetLeadsByCampaignId,BdRequirement,BdVerification, ImportLead, RequirementClass, SuspenseLeadClass, BrowsedLeadClass,  
                         LeadOpsVerification, BrowsedToRequirement, DeleteRequirement, BrowsedLeadDelete, RestoreRequirement, GetLeadsByDate,
                         GetLeadsCampaignByDate, GetFeedbackCount, GetCampaignList, GetLeadsForCurrentCompanyDonut,
-                        GetLeadsSummeryForDonutChart, GetLeadsForDonutChart )
+                        GetLeadsSummeryForDonutChart, GetLeadsForDonutChart,GetSupplierByCampaign )
 
 urlpatterns = [
     url(r'^import-lead/(?P<campaign_id>[A-Z_a-z0-9]+)/$', ImportLead.as_view()),
@@ -23,6 +23,7 @@ urlpatterns = [
     url(r'^lead-campaign-data/$', GetLeadsCampaignByDate.as_view()),
     url(r'^existing-client-feedback/$', GetFeedbackCount.as_view()),
     url(r'^campaign-list-by-status/$', GetCampaignList.as_view()),
+    url(r'^supplier-by-campaign/$', GetSupplierByCampaign.as_view()),
 
     url(r'^donut-1st/$', GetLeadsForDonutChart.as_view()),
     url(r'^donut-2nd/$', GetLeadsSummeryForDonutChart.as_view()),
