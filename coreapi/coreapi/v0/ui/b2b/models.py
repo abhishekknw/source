@@ -66,6 +66,7 @@ class Requirement(models.Model):
     company_campaign = models.ForeignKey('ProposalInfo', null=True, blank=True, on_delete=models.CASCADE, related_name='company_campaign')
     company_shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True, on_delete=models.CASCADE, related_name='company_shortlisted_spaces')
     change_current_patner = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
+    lead_price = models.FloatField(default=0.0, blank=True, null=True)
 
     class Meta:
         db_table = 'requirement'
