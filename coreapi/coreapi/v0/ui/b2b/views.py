@@ -25,6 +25,7 @@ from v0.ui.supplier.serializers import SupplierMasterSerializer, SupplierTypeSoc
 import v0.constants as v0_constants
 from v0.ui.website.utils import manipulate_object_key_values, manipulate_master_to_rs
 import v0.ui.b2b.utils as b2b_utils
+from django.db.models import F
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -1060,4 +1061,19 @@ class GetCampaignList(APIView):
             campaign_state='POH').values('proposal_id', 'name')
 
         return ui_utils.handle_response({}, data=campaign_data, success=True)
-        
+
+       
+class GetSupplierByCampaign(APIView):
+
+    def get(self, request):
+
+        campaign_id = request.query_params.get('campaign_id')
+        supplier_ids = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('object_id')
+        supplier_society_data = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids).values('supplier_id').annotate(
+            supplier_name = F('society_name'), unit_primary_count=F('flat_count'), city=F('society_city'), area=F('society_locality'))
+        supplier_master_data = SupplierMaster.objects.filter(supplier_id__in=supplier_ids).values('supplier_id', 'supplier_name', 'unit_primary_count', 'city', 'area')
+        supplier_data = list(supplier_society_data) + list(supplier_master_data)
+
+        return ui_utils.handle_response({}, data=supplier_data, success=True)
+
+
