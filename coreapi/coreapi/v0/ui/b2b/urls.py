@@ -29,10 +29,7 @@ urlpatterns = [
     url(r'^donut-1st/$', GetLeadsForDonutChart.as_view()),
     url(r'^donut-2nd/$', GetLeadsSummeryForDonutChart.as_view()),
     url(r'^donut-table-2nd/$', GetLeadsForCurrentCompanyDonut.as_view()),
-    url(r'^add-requirement-price/$', 
-        
-        
-        .as_view()),
+    url(r'^add-requirement-price/$', AddLeadPrice.as_view()),
 ]
 
 # router = DefaultRouter()
