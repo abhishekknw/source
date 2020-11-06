@@ -563,11 +563,6 @@ class BdVerification(APIView):
                         requirement.varified_bd = "yes"
                         requirement.varified_bd_by = request.user
                         requirement.varified_bd_date = datetime.datetime.now()
-                        if requirement.company_shortlisted_spaces:
-                            shortlisted_spac = ShortlistedSpaces.objects.filter(
-                                id=requirement.company_shortlisted_spaces.id).first()
-                            shortlisted_spac.color_code = 3
-                            shortlisted_spac.save()
                         requirement.save()
 
                     else:
@@ -584,6 +579,12 @@ class BdVerification(APIView):
                         id=requirement.shortlisted_spaces.id).first()
                     shortlisted_spac.color_code = 3
                     shortlisted_spac.save()
+
+        if requirement.company_shortlisted_spaces:
+            shortlisted_spac = ShortlistedSpaces.objects.filter(
+                id=requirement.company_shortlisted_spaces.id).first()
+            shortlisted_spac.color_code = 3
+            shortlisted_spac.save()
 
         return ui_utils.handle_response({}, data={}, success=True)
 
@@ -603,8 +604,6 @@ class BdVerification(APIView):
         supplier_contact_person_name = ""
         supplier_designation = ""
         supplier_moblile = ""
-
-        
         
         if requirement.shortlisted_spaces.supplier_code == 'RS':
             supplier = SupplierTypeSociety.objects.filter(supplier_id = requirement.shortlisted_spaces.object_id).first()
@@ -701,7 +700,7 @@ class BdVerification(APIView):
             "current_patner_feedback_reason":requirement.current_patner_feedback_reason,
             "company_id":requirement.company.organisation_id,"meating_timeline":requirement.meating_timeline,
             "impl_timeline":requirement.impl_timeline,"lead_date":requirement.varified_bd_date,
-            "preferred_patner":prefered_patner}
+            "preferred_patner":prefered_patner,"lead_price":requirement.lead_price}
 
         lead_for_hash = {
             "data": lead_data,
@@ -945,3 +944,15 @@ class GetLeadsForCurrentCompanyDonut(APIView):
 
         return ui_utils.handle_response({}, data=context, success=True)
         
+
+class AddLeadPrice(APIView):
+    # Update requirement price and comment api
+
+    def post(self, request):
+        data = request.data.get('data')
+        for row in data:
+            requirement = Requirement.objects.filter(id=row['requirement_id']).first()
+            requirement.lead_price = row['lead_price']
+            requirement.comment = row['comment']
+            requirement.save()
+        return ui_utils.handle_response({}, data="Price and comment added", success=True)
