@@ -10,6 +10,7 @@ from openpyxl import load_workbook
 from v0.ui.account.models import ContactDetails, BusinessTypes, BusinessSubTypes
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster
 from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, ProposalCenterMapping
+from v0.ui.proposal.serializers import ProposalInfoSerializer
 from v0.ui.organisation.models import Organisation
 from v0.ui.organisation.serializers import OrganisationSerializer
 from django.db.models import Q
@@ -24,6 +25,7 @@ from v0.ui.supplier.serializers import SupplierMasterSerializer, SupplierTypeSoc
 import v0.constants as v0_constants
 from v0.ui.website.utils import manipulate_object_key_values, manipulate_master_to_rs
 import v0.ui.b2b.utils as b2b_utils
+from django.db.models import F
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -943,7 +945,6 @@ class GetLeadsForCurrentCompanyDonut(APIView):
             }
 
         return ui_utils.handle_response({}, data=context, success=True)
-        
 
 class AddLeadPrice(APIView):
     # Update requirement price and comment api
@@ -956,3 +957,143 @@ class AddLeadPrice(APIView):
             requirement.comment = row['comment']
             requirement.save()
         return ui_utils.handle_response({}, data="Price and comment added", success=True)
+
+class GetLeadsByDate(APIView):
+
+    def get(self, request):
+
+        date = request.query_params.get('date')
+        date_time_obj = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
+        start_date = date_time_obj.replace(hour=0, minute=0, second=0)
+        end_date = date_time_obj.replace(hour=23, minute=59, second=59)
+        organisation_id = request.user.profile.organisation.organisation_id
+        lead_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"no"}]}).count()
+        existing_client_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"yes"}]}).count()
+            
+        lead_dict = {
+            'lead_count' : lead_count,
+            'existing_client_count' : existing_client_count,
+        }
+        return ui_utils.handle_response({}, data=lead_dict, success=True)
+
+class GetLeadsCampaignByDate(APIView):
+
+    def get(self, request):
+
+        date = request.query_params.get('date')
+        date_time_obj = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
+        start_date = date_time_obj.replace(hour=0, minute=0, second=0)
+        end_date = date_time_obj.replace(hour=23, minute=59, second=59)
+        organisation_id = request.user.profile.organisation.organisation_id
+
+        leads = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"no"}]})
+        campaign_ids = set()
+        lead_count_purchased_map = {}
+        lead_count_not_purchased_map = {}
+
+        for row in leads:
+            campaign_ids.add(row["company_campaign_id"])
+
+            if not lead_count_purchased_map.get(row["company_campaign_id"]):
+                lead_count_purchased_map[row["company_campaign_id"]] = 0
+            
+            if row["lead_purchased"] == "yes":
+                lead_count_purchased_map[row["company_campaign_id"]] += 1
+            
+            if not lead_count_not_purchased_map.get(row["company_campaign_id"]):
+                lead_count_not_purchased_map[row["company_campaign_id"]] = 0
+
+            if row["lead_purchased"] == "no":
+                lead_count_not_purchased_map[row["company_campaign_id"]] += 1
+            
+        campaign_ids = list(campaign_ids)
+
+        campaigns = ProposalInfo.objects.filter(proposal_id__in=campaign_ids)
+        campaign_data = ProposalInfoSerializer(campaigns, many=True).data
+
+        campaign = {}
+        for row in campaign_data:
+            row["purchased_count"] = lead_count_purchased_map.get(row["proposal_id"])
+            row["not_purchased_count"] = lead_count_not_purchased_map.get(row["proposal_id"])
+            
+        lead_dict = {
+            'campaigns' : campaign_data,
+        }
+        return ui_utils.handle_response({}, data=lead_dict, success=True)
+
+
+class GetFeedbackCount(APIView):
+
+    def get(self, request):
+
+        date = request.query_params.get('date')
+        date_time_obj = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
+        start_date = date_time_obj.replace(hour=0, minute=0, second=0)
+        end_date = date_time_obj.replace(hour=23, minute=59, second=59)
+        organisation_id = request.user.profile.organisation.organisation_id
+
+        satisfied_count = 0
+        dissatisfied_count = 0
+        extremely_dissatisfied_count = 0
+
+        client_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"yes"}]})
+
+        for row in client_count:
+            feedback = row["current_patner_feedback"]
+            if feedback=="Satisfied":
+                satisfied_count +=1
+            elif feedback=="Dissatisfied":
+                dissatisfied_count +=1
+            elif feedback=="Extremely Dissatisfied":
+                extremely_dissatisfied_count +=1
+
+        feedback_count = {
+            'satisfied_count' : satisfied_count,
+            'dissatisfied_count' : dissatisfied_count,
+            'extremely_dissatisfied_count' : extremely_dissatisfied_count,
+        }
+                
+        return ui_utils.handle_response({}, data=feedback_count, success=True)
+
+
+class GetCampaignList(APIView):
+
+    def get(self, request):
+        
+        organisation_id = request.user.profile.organisation.organisation_id
+
+        campaign_data = {
+            'ongoing_campaigns': [],
+            'upcoming_campaigns': [],
+            'completed_campaigns': [],
+            'onhold_campaigns': []
+        }
+        current_date = datetime.datetime.now()
+
+        campaign_data['completed_campaigns'] = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d", tentative_end_date__lt=current_date, account__organisation=organisation_id, 
+            campaign_state='PTC').values('proposal_id', 'name')
+
+        campaign_data['upcoming_campaigns'] = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d", tentative_start_date__gt=current_date, account__organisation=organisation_id,
+            campaign_state='PTC').values('proposal_id', 'name')
+
+        campaign_data['ongoing_campaigns'] = ProposalInfo.objects.filter(tentative_start_date__lte=current_date, tentative_end_date__gte=current_date, account__organisation=organisation_id, 
+            campaign_state='PTC', type_of_end_customer__formatted_name="b_to_b_l_d").values('proposal_id', 'name')
+
+        campaign_data['onhold_campaigns'] = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d", account__organisation=organisation_id,
+            campaign_state='POH').values('proposal_id', 'name')
+
+        return ui_utils.handle_response({}, data=campaign_data, success=True)
+
+       
+class GetSupplierByCampaign(APIView):
+
+    def get(self, request):
+
+        campaign_id = request.query_params.get('campaign_id')
+        supplier_ids = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('object_id')
+        supplier_society_data = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids).values('supplier_id').annotate(
+            supplier_name = F('society_name'), unit_primary_count=F('flat_count'), city=F('society_city'), area=F('society_locality'))
+        supplier_master_data = SupplierMaster.objects.filter(supplier_id__in=supplier_ids).values('supplier_id', 'supplier_name', 'unit_primary_count', 'city', 'area')
+        supplier_data = list(supplier_society_data) + list(supplier_master_data)
+
+        return ui_utils.handle_response({}, data=supplier_data, success=True)
