@@ -788,10 +788,10 @@ class GetLeadsByCampaignId(APIView):
         if request.query_params.get("campaign_id"):
             where["company_campaign_id"] = request.query_params.get("campaign_id")
         else:
-            where["company_campaign_id"] = request.user.profile.organisation.organisation_id
+            where["company_id"] = request.user.profile.organisation.organisation_id
 
         leads_data = mongo_client.leads.find(where)
-       
+        data = {}
         if leads_data is not None:
 
             leads_data_list = list(leads_data)
@@ -826,17 +826,17 @@ class GetLeadsByCampaignId(APIView):
                 data.append(led)
                 
         return ui_utils.handle_response({}, data=data, success=True)
-        
 
 class GetLeadsForDonutChart(APIView):
 
     def get(self, request):
        
         where = {"is_current_company": "no"}
+        
         if request.query_params.get("campaign_id"):
             where["company_campaign_id"] = request.query_params.get("campaign_id")
         else:
-            where["company_campaign_id"] = request.user.profile.organisation.organisation_id
+            where["company_id"] = request.user.profile.organisation.organisation_id
 
         total_leads = mongo_client.leads.find(where).count()
         data = {}
@@ -863,7 +863,7 @@ class GetLeadsSummeryForDonutChart(APIView):
         if request.query_params.get("campaign_id"):
             where["company_campaign_id"] = request.query_params.get("campaign_id")
         else:
-            where["company_campaign_id"] = request.user.profile.organisation.organisation_id
+            where["company_id"] = request.user.profile.organisation.organisation_id
 
         total_leads = mongo_client.leads.find(where).count()
         data = {}
@@ -905,7 +905,7 @@ class GetLeadsForCurrentCompanyDonut(APIView):
         if request.query_params.get("campaign_id"):
             where["company_campaign_id"] = request.query_params.get("campaign_id")
         else:
-            where["company_campaign_id"] = request.user.profile.organisation.organisation_id
+            where["company_id"] = request.user.profile.organisation.organisation_id
 
         if request.query_params.get("is_satisfied") == "yes":
             where["current_patner_feedback"] = "Satisfied"
