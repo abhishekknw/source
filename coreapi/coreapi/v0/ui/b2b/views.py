@@ -442,6 +442,12 @@ class LeadOpsVerification(APIView):
 
         for req in requirements:
             reqs = Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="no")
+            
+        companies = [row.company for row in reqs]
+        company_campaigns = ProposalInfo.objects.filter(account__organisation__in=companies)
+
+        if len(company_campaigns) > 0:
+
             for requirement in reqs:
 
                 if requirement.varified_ops == "no":
@@ -481,8 +487,10 @@ class LeadOpsVerification(APIView):
                         requirement.company_campaign = company_campaign
                         requirement.company_shortlisted_spaces = company_shortlisted_spaces
                     requirement.save()
-
-        return ui_utils.handle_response({}, data="Verified", success=True)
+            return ui_utils.handle_response({}, data="Verified", success=True)
+        else:
+            return ui_utils.handle_response({}, data={"error":"No company campaign found"}, success=False)           
+        
 
 
 class BrowsedToRequirement(APIView):
