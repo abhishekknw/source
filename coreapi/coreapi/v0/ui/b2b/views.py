@@ -493,7 +493,7 @@ class LeadOpsVerification(APIView):
         if requirement.shortlisted_spaces:
             
             requirement_exist = Requirement.objects.filter(shortlisted_spaces=requirement.shortlisted_spaces,
-             varified_bd = "no").first()
+             varified_ops = "no").first()
             if not requirement_exist:
                 browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":requirement.shortlisted_spaces.id, "status":"closed"})
                 
