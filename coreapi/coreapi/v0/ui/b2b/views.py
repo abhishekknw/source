@@ -490,6 +490,19 @@ class LeadOpsVerification(APIView):
             else:
                 return ui_utils.handle_response({}, data={"error":"No company campaign found"}, success=False)           
         
+        if requirement.shortlisted_spaces:
+
+            requirement_exist = Requirement.objects.filter(shortlisted_spaces=requirement.shortlisted_spaces,
+             varified_ops = "no").first()
+            if not requirement_exist:
+                browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":requirement.shortlisted_spaces.id, "status":"closed"})
+                
+                if not browsed_leads:
+                    shortlisted_spac = ShortlistedSpaces.objects.filter(
+                        id=requirement.shortlisted_spaces.id).first()
+                    shortlisted_spac.color_code = 3
+                    shortlisted_spac.save()
+
         return ui_utils.handle_response({}, data="Verified", success=True)
 
 class BrowsedToRequirement(APIView):
@@ -576,18 +589,6 @@ class BdVerification(APIView):
 
                     else:
                         return ui_utils.handle_response({}, data="No lead form found", success=False)
-
-        if requirement.shortlisted_spaces:
-            requirement_exist = Requirement.objects.filter(shortlisted_spaces=requirement.shortlisted_spaces,
-             varified_bd = "no").first()
-            if not requirement_exist:
-                browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":requirement.shortlisted_spaces.id, "status":"closed"})
-                
-                if not browsed_leads:
-                    shortlisted_spac = ShortlistedSpaces.objects.filter(
-                        id=requirement.shortlisted_spaces.id).first()
-                    shortlisted_spac.color_code = 3
-                    shortlisted_spac.save()
 
         if requirement.company_shortlisted_spaces:
             shortlisted_spac = ShortlistedSpaces.objects.filter(
@@ -785,7 +786,7 @@ class GetLeadsByCampaignId(APIView):
         where = {"is_current_company": "no","lead_purchased": request.query_params.get('is_purchased')}
 
         if request.query_params.get("campaign_id"):
-            where["campaign_id"] = request.query_params.get("campaign_id")
+            where["company_campaign_id"] = request.query_params.get("campaign_id")
         else:
             where["company_id"] = request.user.profile.organisation.organisation_id
 
@@ -825,16 +826,15 @@ class GetLeadsByCampaignId(APIView):
                 data.append(led)
                 
         return ui_utils.handle_response({}, data=data, success=True)
-        
-
 
 class GetLeadsForDonutChart(APIView):
 
     def get(self, request):
        
         where = {"is_current_company": "no"}
+        
         if request.query_params.get("campaign_id"):
-            where["campaign_id"] = request.query_params.get("campaign_id")
+            where["company_campaign_id"] = request.query_params.get("campaign_id")
         else:
             where["company_id"] = request.user.profile.organisation.organisation_id
 
@@ -861,7 +861,7 @@ class GetLeadsSummeryForDonutChart(APIView):
        
         where = {"is_current_company": "yes"}
         if request.query_params.get("campaign_id"):
-            where["campaign_id"] = request.query_params.get("campaign_id")
+            where["company_campaign_id"] = request.query_params.get("campaign_id")
         else:
             where["company_id"] = request.user.profile.organisation.organisation_id
 
@@ -903,7 +903,7 @@ class GetLeadsForCurrentCompanyDonut(APIView):
         
         where = {"is_current_company": "yes","lead_purchased":request.query_params.get("is_purchased")}
         if request.query_params.get("campaign_id"):
-            where["campaign_id"] = request.query_params.get("campaign_id")
+            where["company_campaign_id"] = request.query_params.get("campaign_id")
         else:
             where["company_id"] = request.user.profile.organisation.organisation_id
 
@@ -915,7 +915,7 @@ class GetLeadsForCurrentCompanyDonut(APIView):
         lead_data = mongo_client.leads.find(where)
         leads_list = list(lead_data)
         total_leads = len(leads_list)
-
+        context = {}
         if total_leads:
             suppliers_list = []
             for lead_data in leads_list:
