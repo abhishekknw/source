@@ -874,7 +874,7 @@ class GetLeadsSummeryForDonutChart(APIView):
             where["lead_purchased"] = "yes"
             where["current_patner_feedback"] = { "$ne": "Satisfied" }
             
-            dissatisfied_purchased = total_leads - total_satisfied
+            dissatisfied_purchased = mongo_client.leads.find(where).count()
 
             dissatisfied_purchased_per = (dissatisfied_purchased*100)/total_leads
 
@@ -888,11 +888,11 @@ class GetLeadsSummeryForDonutChart(APIView):
             data = {
                 "total_leads": total_leads,
                 "dissatisfied_purchased": dissatisfied_purchased,
-                "dissatisfied_purchased_per": dissatisfied_purchased_per,
+                "dissatisfied_purchased_per":round(dissatisfied_purchased_per, 2),
                 "dissatisfied_not_purchased": dissatisfied_not_purchased,
-                "dissatisfied_not_purchased_per": dissatisfied_not_purchased_per,
+                "dissatisfied_not_purchased_per":round(dissatisfied_not_purchased_per, 2),
                 "total_satisfied": total_satisfied,
-                "satisfied_per": satisfied_per,
+                "satisfied_per": round(satisfied_per, 2),
             }
         return ui_utils.handle_response({}, data=data, success=True)
         
