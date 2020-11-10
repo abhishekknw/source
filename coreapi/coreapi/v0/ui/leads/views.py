@@ -98,6 +98,7 @@ def is_user_permitted(permission_type, user, **kwargs):
 
 
 def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id):
+    entry_id = entry_id + 1
     all_form_items_dict = lead_form['data']
     timestamp = datetime.datetime.utcnow()
     lead_dict = {"data": [], "is_hot": False, "created_at": timestamp, "supplier_id": supplier_id, "campaign_id": campaign_id,
@@ -135,7 +136,6 @@ def enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id
     leads_count = 0
     if not lead_already_exist:
         mongo_client.leads.insert_one(lead_dict)
-        entry_id = entry_id + 1
         mongo_client.leads_forms.update_one({"leads_form_id": lead_form['leads_form_id']}, {"$set": {"last_entry_id": entry_id}})
         leads_count = 1
 
@@ -461,7 +461,7 @@ class LeadsFormBulkEntry(APIView):
             fields = len(lead_form['data'])
             campaign_id = lead_form['campaign_id']
             global_hot_lead_criteria = lead_form['global_hot_lead_criteria']
-            entry_id = lead_form['last_entry_id'] + 1 if 'last_entry_id' in lead_form else 1
+            entry_id = lead_form['last_entry_id'] if 'last_entry_id' in lead_form else 0
 
             missing_societies = []
             inv_activity_assignment_missing_societies = []
@@ -612,9 +612,9 @@ class LeadsFormBulkEntry(APIView):
                     hot_lead_count=0
                     leads_count = 0
                     if not lead_already_exist:
+                        entry_id = entry_id + 1
                         lead_dict["entry_id"] = entry_id
                         mongo_client.leads.insert_one(lead_dict)
-                        entry_id = entry_id + 1
                         mongo_client.leads_forms.update_one({"leads_form_id": leads_form_id}, {"$set": {"last_entry_id": entry_id}})
                         leads_count = 1
 
@@ -684,7 +684,7 @@ class LeadsFormEntry(APIView):
             return handle_response('', data=validation_msg_dict, success=False)
         supplier_id = request.data['supplier_id']
         lead_form = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)})
-        entry_id = lead_form['last_entry_id'] + 1 if ('last_entry_id' in lead_form and lead_form['last_entry_id']) else 1
+        entry_id = lead_form['last_entry_id'] if ('last_entry_id' in lead_form and lead_form['last_entry_id']) else 0
         campaign_id = lead_form['campaign_id']
         lead_data = request.data["leads_form_entries"]
         enter_lead_to_mongo(lead_data, supplier_id, campaign_id, lead_form, entry_id)
@@ -1665,7 +1665,7 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
         'Landmark', 'PinCode', 'Unit Primary Count / Flat Count', 'Unit Secondary Count / Tower Count',
         'Cost Per Unit', 'Booking Priority', 'Booking Status', 'Next Action Date',
         'Payment Method', 'Payment Status', 'Completion Status', 'Total Price',
-        'Internal Comment', 'External Comment', 'Rating',
+        'Internal Comment', 'External Comment', 'Rating', 'Assigned To',
         # 'Poster Allowed', 'Poster Count', 'Poster Price',
         # 'Standee Allowed', 'Standee Count', 'Standee Price',
         # 'Stall Allowed', 'Stall Count', 'Stall Price',
@@ -1676,7 +1676,6 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
     if data["campaign"].get("type_of_end_customer_formatted_name") == "b_to_b_r_g":
         header_list.append("Requirement Given")
         header_list.append("Requirement Given Date")
-        header_list.append("Assigned To")
 
     for inventory in inventory_list:
         header_list.append(inventory+" Allowed")
@@ -1745,6 +1744,14 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
 
         supplier_data.append(supplier["quality_rating"])
 
+        assigned_user = SupplierAssignment.objects.filter(campaign_id=supplier['proposal'], supplier_id=supplier['object_id']).first()
+        assigned_to = None
+        if assigned_user:
+            assigned_to =  assigned_user.assigned_to.username
+            supplier_data.append(assigned_to)
+        else :
+            supplier_data.append(assigned_to)
+
         if data["campaign"].get("type_of_end_customer_formatted_name") == "b_to_b_r_g":
             supplier_data.append(supplier['requirement_given'])
             requirement_given_date = None
@@ -1752,14 +1759,6 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
                 requirement_given_date = datetime.datetime.strptime(supplier['requirement_given_date'], '%Y-%m-%dT%H:%M:%S.%fZ').strftime("%d/%m/%Y")
 
             supplier_data.append(requirement_given_date)
-
-            assigned_user = SupplierAssignment.objects.filter(campaign_id=supplier['proposal'], supplier_id=supplier['object_id']).first()
-            assigned_to = None
-            if assigned_user:
-                assigned_to =  assigned_user.assigned_to.username
-                supplier_data.append(assigned_to)
-            else :
-                supplier_data.append(assigned_to)
 
         for row in inventory_list:
             supplier_data.append('Yes' if row in supplier['shortlisted_inventories'] else 'No')

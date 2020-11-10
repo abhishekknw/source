@@ -1,6 +1,7 @@
 from django.db import models
 from pymongo.write_concern import WriteConcern
 from pymodm import MongoModel, fields
+from django.conf import settings
 
 IMPL_TIMELINE_CATEGORY = (
     ('immediate', 'immediate'),
@@ -36,7 +37,9 @@ class Requirement(models.Model):
     shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True, on_delete=models.CASCADE)
     company = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE, related_name='company')
     current_company = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE, related_name='current')
+    current_company_other =  models.CharField(max_length=50, null=True, blank=True)
     preferred_company = models.ManyToManyField('Organisation', null=True, blank=True, related_name='preferred')
+    preferred_company_other =  models.CharField(max_length=50, null=True, blank=True)
     sector = models.ForeignKey('BusinessTypes', null=True, blank=True, on_delete=models.CASCADE)
     sub_sector = models.ForeignKey('BusinessSubTypes', null=True, blank=True, on_delete=models.CASCADE)
     lead_by = models.ForeignKey('ContactDetails', null=True, blank=True, on_delete=models.CASCADE)
@@ -46,15 +49,22 @@ class Requirement(models.Model):
     comment = models.TextField(max_length=500, blank=True)
     is_current_patner = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     current_patner_feedback = models.CharField(max_length=50, choices=CURRENT_PATNER_FEEDBACK, default="NA")
-    current_patner_feedback_reason = models.CharField(max_length=250, default="")
+    current_patner_feedback_reason = models.CharField(max_length=250, null=True, blank=True)
     varified_ops = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     varified_ops_date = models.DateTimeField(null=True)
     varified_bd = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     varified_bd_date = models.DateTimeField(null=True)
+    varified_bd_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
     is_deleted = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     lead_date = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    l1_answers = models.CharField(max_length=100, null=True, blank=True)
+    l2_answers = models.CharField(max_length=100, null=True, blank=True)
+    varified_ops_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
+    company_campaign = models.ForeignKey('ProposalInfo', null=True, blank=True, on_delete=models.CASCADE)
+    company_shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True, on_delete=models.CASCADE)
+    change_current_patner = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
 
     class Meta:
         db_table = 'requirement'
@@ -77,6 +87,8 @@ class SuspenseLead(MongoModel):
     prefered_patners = fields.ListField(blank=True)
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
+    l1_answers = fields.CharField(blank=True)
+    l2_answers = fields.CharField(blank=True)
 
     class Meta:
         write_concern = WriteConcern(j=True)
@@ -98,12 +110,16 @@ class BrowsedLead(MongoModel):
     lead_status = fields.CharField(blank=True)
     comment = fields.CharField(blank=True)
     current_patner_id = fields.CharField(blank=True)
+    current_patner_other = fields.CharField(blank=True)
     prefered_patners = fields.ListField(blank=True)
+    prefered_patner_other = fields.CharField(blank=True)
     current_patner_feedback = fields.CharField(blank=True)
     current_patner_feedback_reason = fields.CharField(blank=True)
     status = fields.ListField(blank=True)
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
+    l1_answers = fields.CharField(blank=True)
+    l2_answers = fields.CharField(blank=True)
 
     class Meta:
         write_concern = WriteConcern(j=True)
