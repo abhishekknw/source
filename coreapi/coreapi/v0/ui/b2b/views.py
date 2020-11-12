@@ -444,7 +444,7 @@ class LeadOpsVerification(APIView):
             reqs = Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="no")
             
             companies = [row.company for row in reqs]
-            company_campaigns = ProposalInfo.objects.filter(account__organisation__in=companies)
+            company_campaigns = ProposalInfo.objects.filter(account__organisation__in=companies,type_of_end_customer__formatted_name="b_to_b_l_d")
 
             if len(company_campaigns) > 0:
 
@@ -479,25 +479,27 @@ class LeadOpsVerification(APIView):
                                     user=request.user,
                                     requirement_given='yes',
                                     requirement_given_date=datetime.datetime.now(),
-                                    color_code = 2
+                                    color_code = 1
                                 )
 
                                 company_shortlisted_spaces.save()
 
                             requirement.company_campaign = company_campaign
                             requirement.company_shortlisted_spaces = company_shortlisted_spaces
-                        requirement.save()
+                            requirement.save()
             else:
                 return ui_utils.handle_response({}, data={"error":"No company campaign found"}, success=False)           
         
         if requirement.shortlisted_spaces:
-
+        
             requirement_exist = Requirement.objects.filter(shortlisted_spaces=requirement.shortlisted_spaces,
              varified_ops = "no").first()
+        
             if not requirement_exist:
-                browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":requirement.shortlisted_spaces.id, "status":"closed"})
                 
+                browsed_leads = dict(BrowsedLead.objects.raw({"shortlisted_spaces_id":requirement.shortlisted_spaces.id, "status":"closed"}))
                 if not browsed_leads:
+                   
                     shortlisted_spac = ShortlistedSpaces.objects.filter(
                         id=requirement.shortlisted_spaces.id).first()
                     shortlisted_spac.color_code = 3
@@ -588,13 +590,18 @@ class BdVerification(APIView):
                         requirement.save()
 
                     else:
-                        return ui_utils.handle_response({}, data="No lead form found", success=False)
+                        return ui_utils.handle_response({}, data="Please add lead form for this campaign to BD verify",
+                         success=False)
 
         if requirement.company_shortlisted_spaces:
-            shortlisted_spac = ShortlistedSpaces.objects.filter(
-                id=requirement.company_shortlisted_spaces.id).first()
-            shortlisted_spac.color_code = 3
-            shortlisted_spac.save()
+    
+            requirement_exist = Requirement.objects.filter(company_shortlisted_spaces=requirement.company_shortlisted_spaces,
+             varified_bd = "no")
+            if not requirement_exist:
+                shortlisted_spac = ShortlistedSpaces.objects.filter(
+                    id=requirement.company_shortlisted_spaces.id).first()
+                shortlisted_spac.color_code = 3
+                shortlisted_spac.save()
 
         return ui_utils.handle_response({}, data={}, success=True)
 
