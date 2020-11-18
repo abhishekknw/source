@@ -308,6 +308,7 @@ class RequirementClass(APIView):
     def put(self, request):
         requirements = request.data.get("requirements")
         for req in requirements:
+
             update_req = {
                 "current_company": req["current_company"],
                 "current_company_other": req["current_company_other"],
@@ -321,6 +322,8 @@ class RequirementClass(APIView):
                 "current_patner_feedback_reason": req["current_patner_feedback_reason"]
             }
 
+            prefered_patners_list = Organisation.objects.filter(
+                organisation_id__in=req["preferred_company"]).all()
             reqs = Requirement.objects.filter(
                 sector_id = req["sector"], 
                 sub_sector_id = req["sub_sector"], 
@@ -328,6 +331,16 @@ class RequirementClass(APIView):
                 lead_by_id = req["lead_by"]["id"],
             )
             for row in reqs:
+                
+                lead_status = b2b_utils.get_lead_status(
+
+                    impl_timeline = req["impl_timeline"].lower(),
+                    meating_timeline = req["meating_timeline"].lower(),
+                    company=row.company,
+                    prefered_patners=prefered_patners_list,
+                    change_current_patner=row.change_current_patner.lower()
+                )
+                update_req['lead_status'] = lead_status
                 requirement_data = RequirementSerializer(row, data=update_req)
 
                 if requirement_data.is_valid():
@@ -486,7 +499,7 @@ class LeadOpsVerification(APIView):
 
                             requirement.company_campaign = company_campaign
                             requirement.company_shortlisted_spaces = company_shortlisted_spaces
-                            requirement.save()
+                        requirement.save()
             else:
                 return ui_utils.handle_response({}, data={"error":"No company campaign found"}, success=False)           
         
