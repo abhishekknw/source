@@ -23,7 +23,7 @@ from bulk_update.helper import bulk_update
 from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignAssignment, CampaignComments
 from v0.constants import (campaign_status, proposal_on_hold, booking_code_to_status,
-                          payment_code_to_status, booking_priority_code_to_status )
+                          payment_code_to_status, booking_priority_code_to_status, booking_substatus_code_to_status)
 from django.http import HttpResponse
 from celery import shared_task
 from django.conf import settings
@@ -1634,7 +1634,7 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
     header_list = [
         'Index', 'Proposal Id', 'Supplier Id', 'Supplier Name', 'Supplier Type' , 'Subarea', 'Area', 'City', 'Address',
         'Landmark', 'PinCode', 'Unit Primary Count / Flat Count', 'Unit Secondary Count / Tower Count',
-        'Cost Per Unit', 'Booking Priority', 'Booking Status', 'Next Action Date',
+        'Cost Per Unit', 'Booking Priority', 'Booking Status', 'Booking Sub-status', 'Next Action Date',
         'Payment Method', 'Payment Status', 'Completion Status', 'Total Price',
         'Internal Comment', 'External Comment', 'Rating', 'Assigned To',
         # 'Poster Allowed', 'Poster Count', 'Poster Price',
@@ -1690,6 +1690,10 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
         supplier_data.append(
             booking_priority_code_to_status[supplier['booking_priority']] if supplier['booking_priority'] else None)
         supplier_data.append(booking_code_to_status[supplier['booking_status']] if supplier['booking_status'] else None)
+        supplier_data.append(booking_substatus_code_to_status[supplier['booking_sub_status']] if supplier['booking_sub_status'] else None)
+        
+
+
         # supplier_data.append(supplier['next_action_date'])
         next_action_date = None
         if supplier['next_action_date']:
