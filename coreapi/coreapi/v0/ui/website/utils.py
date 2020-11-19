@@ -4155,6 +4155,8 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
         if start_date and end_date:
             filter_query &= Q(next_action_date__gte=start_date)
             filter_query &= Q(next_action_date__lte=end_date)
+            filter_query &= Q(last_call_date__gte=start_date)
+            filter_query &= Q(last_call_date__lte=end_date)
         
         if space_status:
             filter_query &= Q(status=space_status)
@@ -4322,6 +4324,7 @@ def handle_update_campaign_inventories(user, data):
                 'booking_priority': supplier['booking_priority'],
                 'sunboard_location': supplier['sunboard_location'] if 'sunboard_location' in supplier else None,
                 'next_action_date': supplier['next_action_date'] if 'next_action_date' in supplier else None,
+                'last_call_date': supplier['last_call_date'] if 'last_call_date' in supplier else None,
             }
 
             shortlisted_inventories = supplier['shortlisted_inventories']
