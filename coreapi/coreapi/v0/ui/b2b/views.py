@@ -308,6 +308,7 @@ class RequirementClass(APIView):
     def put(self, request):
         requirements = request.data.get("requirements")
         for req in requirements:
+
             update_req = {
                 "current_company": req["current_company"],
                 "current_company_other": req["current_company_other"],
@@ -321,6 +322,8 @@ class RequirementClass(APIView):
                 "current_patner_feedback_reason": req["current_patner_feedback_reason"]
             }
 
+            prefered_patners_list = Organisation.objects.filter(
+                organisation_id__in=req["preferred_company"]).all()
             reqs = Requirement.objects.filter(
                 sector_id = req["sector"], 
                 sub_sector_id = req["sub_sector"], 
@@ -328,6 +331,16 @@ class RequirementClass(APIView):
                 lead_by_id = req["lead_by"]["id"],
             )
             for row in reqs:
+                
+                lead_status = b2b_utils.get_lead_status(
+
+                    impl_timeline = req["impl_timeline"].lower(),
+                    meating_timeline = req["meating_timeline"].lower(),
+                    company=row.company,
+                    prefered_patners=prefered_patners_list,
+                    change_current_patner=row.change_current_patner.lower()
+                )
+                update_req['lead_status'] = lead_status
                 requirement_data = RequirementSerializer(row, data=update_req)
 
                 if requirement_data.is_valid():
@@ -444,7 +457,7 @@ class LeadOpsVerification(APIView):
             reqs = Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="no")
             
             companies = [row.company for row in reqs]
-            company_campaigns = ProposalInfo.objects.filter(account__organisation__in=companies)
+            company_campaigns = ProposalInfo.objects.filter(account__organisation__in=companies,type_of_end_customer__formatted_name="b_to_b_l_d")
 
             if len(company_campaigns) > 0:
 
@@ -479,7 +492,7 @@ class LeadOpsVerification(APIView):
                                     user=request.user,
                                     requirement_given='yes',
                                     requirement_given_date=datetime.datetime.now(),
-                                    color_code = 2
+                                    color_code = 1
                                 )
 
                                 company_shortlisted_spaces.save()
@@ -491,13 +504,15 @@ class LeadOpsVerification(APIView):
                 return ui_utils.handle_response({}, data={"error":"No company campaign found"}, success=False)           
         
         if requirement.shortlisted_spaces:
-
+        
             requirement_exist = Requirement.objects.filter(shortlisted_spaces=requirement.shortlisted_spaces,
              varified_ops = "no").first()
+        
             if not requirement_exist:
-                browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":requirement.shortlisted_spaces.id, "status":"closed"})
                 
+                browsed_leads = dict(BrowsedLead.objects.raw({"shortlisted_spaces_id":requirement.shortlisted_spaces.id, "status":"closed"}))
                 if not browsed_leads:
+                   
                     shortlisted_spac = ShortlistedSpaces.objects.filter(
                         id=requirement.shortlisted_spaces.id).first()
                     shortlisted_spac.color_code = 3
@@ -588,13 +603,18 @@ class BdVerification(APIView):
                         requirement.save()
 
                     else:
-                        return ui_utils.handle_response({}, data="No lead form found", success=False)
+                        return ui_utils.handle_response({}, data="Please add lead form for this campaign to BD verify",
+                         success=False)
 
         if requirement.company_shortlisted_spaces:
-            shortlisted_spac = ShortlistedSpaces.objects.filter(
-                id=requirement.company_shortlisted_spaces.id).first()
-            shortlisted_spac.color_code = 3
-            shortlisted_spac.save()
+    
+            requirement_exist = Requirement.objects.filter(company_shortlisted_spaces=requirement.company_shortlisted_spaces,
+             varified_bd = "no")
+            if not requirement_exist:
+                shortlisted_spac = ShortlistedSpaces.objects.filter(
+                    id=requirement.company_shortlisted_spaces.id).first()
+                shortlisted_spac.color_code = 3
+                shortlisted_spac.save()
 
         return ui_utils.handle_response({}, data={}, success=True)
 
