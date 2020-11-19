@@ -300,6 +300,7 @@ class ShortlistedSpaces(BaseModel):
     booking_priority = models.CharField(max_length=10,null=True,blank=True)
     sunboard_location = models.CharField(max_length=50,null=True,blank=True)
     next_action_date = models.DateTimeField(null=True)
+    last_call_date = models.DateTimeField(null=True)
     brand_organisation_id = models.CharField(max_length=255, null=True, blank=True)
     permission_box_image = models.CharField(max_length=255, null=True, blank=True)
     receipt_image = models.CharField(max_length=255, null=True, blank=True)

@@ -1555,6 +1555,7 @@ tableHeaderData = {
         "relation_ship_data" : "RelationShip Data",
         "flat_count" : "Flat Count",
         "resident_count" : "Resident Count",
+        "average_household_points" : "Average Household Points",
         "tower_count" : "Tower Count",
         "contacts_details" : "Contacts Details",
         "assign_user" : "Assign User",
