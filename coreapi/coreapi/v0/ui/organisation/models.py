@@ -3,7 +3,8 @@ from v0.ui.base.models import BaseModel
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from v0 import managers
-from v0.ui.account.models import BusinessAccountContact
+from v0.ui.account.models import BusinessAccountContact, BusinessTypes, BusinessSubTypes
+from v0.ui.common.models import mongo_client
 # five possible organization types
 ORGANIZATION_CATEGORY = (
     ('MACHADALO', 'MACHADALO'),
@@ -22,8 +23,10 @@ class Organisation(BaseModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     organisation_id = models.CharField(max_length=30, primary_key=True)
     name = models.CharField(max_length=255, blank=True)
-    type_name = models.ForeignKey('BusinessTypes', null=True, blank=True, on_delete=models.CASCADE)
-    sub_type = models.ForeignKey('BusinessSubTypes', null=True, blank=True, on_delete=models.CASCADE)
+    type_name = models.ForeignKey('BusinessTypes', null=True, blank=True, on_delete=models.CASCADE, related_name='company')
+    sub_type = models.ForeignKey('BusinessSubTypes', null=True, blank=True, on_delete=models.CASCADE, related_name='company_subtype')
+    business_type = models.ManyToManyField(BusinessTypes)
+    business_subtype = models.ManyToManyField(BusinessSubTypes)
     phone = models.CharField(max_length=12, blank=True)
     email = models.CharField(max_length=50, blank=True)
     address = models.CharField(max_length=255, blank=True)
@@ -38,8 +41,10 @@ class Organisation(BaseModel):
 
     class Meta:
         db_table = 'organisation'
-
-
+    
+    def save(self, *args, **kwargs):
+        mongo_client.api_cache.remove({"slugType": 'organisation'})
+        super(Organisation, self).save(*args, **kwargs)
 
 class OrganisationMap(BaseModel):
     """

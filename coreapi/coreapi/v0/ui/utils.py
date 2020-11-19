@@ -36,7 +36,8 @@ import v0.constants as v0_constants
 import v0.ui.serializers as ui_serializers
 from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.supplier.serializers import (SupplierHordingSerializer, SupplierEducationalInstituteSerializer, SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SupplierTypeBusShelterSerializer,
-                                        SupplierTypeGymSerializer, SupplierTypeRetailShopSerializer,
+                                        SupplierTypeGymSerializer, SupplierTypeRetailShopSerializer, SupplierTvChannelSerializer, SupplierRadioChannelSerializer,
+                                        SupplierGantrySerializer, SupplierBusSerializer,
                                         SupplierTypeSalonSerializer, BusDepotSerializer, SupplierMasterSerializer, AddressMasterSerializer)
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster, AddressMaster
 from v0.ui.finances.serializers import (IdeationDesignCostSerializer, DataSciencesCostSerializer, EventStaffingCostSerializer,
@@ -49,7 +50,8 @@ from v0.ui.base.models import DurationType
 from v0.ui.finances.models import PriceMappingDefault
 from v0.ui.account.models import Profile
 from pymodm import MongoModel, fields
-
+from v0.ui.common.models import mongo_client
+from v0.ui.b2b.models import Requirement
 
 def handle_response(object_name, data=None, headers=None, content_type=None, exception_object=None, success=False, request=None):
     """
@@ -171,14 +173,13 @@ def get_supplier_id(data):
             # state_object = State.objects.get(state_name=state_name, state_code=state_code)
             city_object = City.objects.get(city_code=data.get('city_code'))
             area_object = CityArea.objects.get(area_code=data.get('area_code'), city_code=city_object)
-            subarea_object = CitySubArea.objects.get(subarea_code=data.get('subarea_code'), area_code=area_object)
+            subarea_object = CitySubArea.objects.get(subarea_code=data.get('subarea_code'))
 
         except ObjectDoesNotExist as e:
 
             city_object = City.objects.get(id=data['city_id'])
             area_object = CityArea.objects.get(id=data['area_id'])
-            subarea_object = CitySubArea.objects.get(id=data['subarea_id'],
-                                                     area_code=area_object)
+            subarea_object = CitySubArea.objects.get(id=data['subarea_id'])
 
         supplier_id = city_object.city_code + area_object.area_code + subarea_object.subarea_code + data[
             'supplier_type'] + data['supplier_code']
@@ -321,7 +322,8 @@ def save_supplier_data(user, master_data):
                     "zipcode": zipcode,
                     "address1": address1,
                     "unit_primary_count": unit_primary_count,
-                    "unit_secondary_count": unit_secondary_count
+                    "unit_secondary_count": unit_secondary_count,
+                    "representative": user.profile.organisation.organisation_id
                 }
                 supplier_master_serializer = SupplierMasterSerializer(data=supplier_master_data)
                 if supplier_master_serializer.is_valid():
@@ -829,6 +831,7 @@ def fetch_content_type(code):
         if not code:
             raise Exception('No code provided')
         ContentType = apps.get_model('contenttypes', 'ContentType')
+
         load_model = get_model(code)
         content_type = ContentType.objects.get_for_model(load_model)
         return content_type
@@ -923,6 +926,10 @@ def get_serializer(query):
             v0_constants.bus_shelter: SupplierTypeBusShelterSerializer,
             v0_constants.retail_shop_code: SupplierTypeRetailShopSerializer,
             v0_constants.bus_depot_code: BusDepotSerializer,
+            v0_constants.bus: SupplierBusSerializer,
+            v0_constants.gantry: SupplierGantrySerializer,
+            v0_constants.radio_channel: SupplierRadioChannelSerializer,
+            v0_constants.tv_channel: SupplierTvChannelSerializer,
             'ideation_design_cost': IdeationDesignCostSerializer,
             'logistic_operations_cost': LogisticOperationsCostSerializer,
             'space_booking_cost': SpaceBookingCostSerializer,
@@ -1242,3 +1249,41 @@ def create_pricing_mapping_default(data, inventory_type, supplier_type_code, sup
         price = PriceMappingDefault.objects.create_price_mapping_object(
             make_dict_manager(adinventory,duration_type), supplier_id, supplier_type_code)
         save_price_data(price, 1)
+
+def create_supplier_from_master(master_data, supplier_type_code):
+    serializer_class = get_serializer(supplier_type_code)
+    master_keys = v0_constants.supplier_master_diff_table[supplier_type_code]
+
+    insert_data = {}
+    for key, value in master_data.items():
+        key1 = key
+
+        if master_keys.get(key):
+            key1 = master_keys[key]
+        
+        insert_data[key1] = value
+        
+    serializer = serializer_class(data=insert_data)
+    if serializer.is_valid():
+        serializer.save()
+
+    return
+
+def create_api_cache(slug, slugType, resData):
+    if slug and resData:
+        mongo_client.api_cache.insert({
+            "slug": slug,
+            "slugType": slugType,
+            "resData": resData,
+            "exp": datetime.datetime.now() + datetime.timedelta(days=1)
+        })
+    
+
+def get_api_cache(slug):
+    data = mongo_client.api_cache.find_one({"slug": slug})
+
+    if data:
+        if data["exp"] > datetime.datetime.now():
+            return data["resData"]
+        else:
+            mongo_client.api_cache.remove({"slug": slug})

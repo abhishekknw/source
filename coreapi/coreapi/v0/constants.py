@@ -101,6 +101,10 @@ retail_shop_code = 'RE'
 bus_depot_code = 'BD'
 educational_institute = 'EI'
 hording = 'HO'
+bus = 'BU'
+gantry = 'GN'
+radio_channel = 'RC'
+tv_channel = 'TV'
 
 # all supplier codes
 society_code = 'RS'
@@ -115,7 +119,7 @@ hording_code = 'HO'
 positive = ['Yes', 'Y', '1']
 negative = ['No', 'N', '0']
 
-valid_supplier_codes = [society, corporate, gym, salon, bus_shelter, bus_depot_code, retail_shop_code, educational_institute_code, hording_code]
+valid_supplier_codes = [society, corporate, gym, salon, bus_shelter, bus_depot_code, retail_shop_code, educational_institute_code, hording_code, bus, gantry, radio_channel, tv_channel]
 
 supplier_keys = [
 
@@ -956,7 +960,15 @@ booking_status = {
     'new_entity': 'NE',
     'not_initiated': 'NI',
     'recce':'RE',
-    'meeting_fixed':'MF'
+    'meeting_fixed':'MF',
+    'meeting_converted':'MC',
+    'complete_lockdown': 'LCL',
+    'partial_lockdown': 'LPL',
+    'open_lockdown': 'LOL',
+    'emergency_system': 'LES',
+    'essential_required': 'LER',
+    'medicine_required': 'LMR',
+    'vegetables_fruits_required': 'LVR'
 }
 
 booking_code_to_status = {
@@ -974,8 +986,28 @@ booking_code_to_status = {
     'NI': 'Not Initiated',
     'RE': 'Recce',
     'MF': 'Meeting Fixed',
+    'MC': 'Meeting Converted',
     'CM': 'completed',
-    'UN': 'unknown'
+    'UN': 'unknown',
+    'LCL': 'Complete Lockdown',
+    'LPL': 'Partial Lockdown',
+    'LOL': 'Open Lockdown',
+    'LES': 'Emergency System',
+    'LER': 'Essential Required',
+    'LMR': 'Medicine Required',
+    'LVR': 'Vegetables & Fruits Required',
+    'CM': 'Completed',
+    'BSR': 'Rejected',
+    'BDP': 'Decision Pending',
+    'BNI': 'Not Initiated',
+    'BNE': 'New Entity',
+    'BUN': 'Unknown',
+    'OEL': 'Emergency Situation',
+    'OCL': 'Complete Lockdown',
+    'OPBL': 'Partial Building/Tower Lockdown',
+    'OPFL': 'Partial Floor Lockdown',
+    'OPHL': 'Partial House/Flat Lockdown',
+    'OP': 'OPEN'
 }
 
 booking_substatus_code_to_status = {
@@ -993,7 +1025,7 @@ booking_substatus_code_to_status = {
     'DPNR': 'Negotiation Required',
     'DPNA': 'Not Available',
     'DPP': 'Postponed',
-    'DPDOO': 'Specific Occasion Only',
+    'DPSOO': 'Specific Occasion Only',
     'DPOS': 'DP Others',
     'RLO': 'Less occupancy',
     'RLC': 'Less Children',
@@ -1323,6 +1355,12 @@ codes_to_model_names = {
     'BS': 'SupplierTypeBusShelter',
     'EI': 'SupplierEducationalInstitute',
     'HO': 'SupplierHording',
+    'BU': 'SupplierBus',
+    'GN': 'SupplierGantry',
+    'RC': 'SupplierRadioChannel',
+    'TV': 'SupplierTvChannel',
+    'WI': 'WhatsAppIndividualInventory',
+    'WG': 'WhatsAppGroupInventory',
   
     bus_depot_code: 'SupplierTypeBusDepot',
     retail_shop: 'SupplierTypeRetailShop',
@@ -1362,7 +1400,9 @@ codes_to_model_names = {
     'HOARDING LIT' : 'HordingLitInventory',
     'BUS SHELTER LIT' : 'BusShelterLitInventory',
     'GANTRY LIT' : 'GantryLitInventory',
-    'WALL' : 'WallInventory'
+    'WALL' : 'WallInventory',
+    'WHATSAPP INDIVIDUAL': 'WhatsAppIndividualInventory',
+    'WHATSAPP GROUP': 'WhatsAppGroupInventory'
 }
 
 supplier_code_to_names = {
@@ -1373,6 +1413,11 @@ supplier_code_to_names = {
     'SA': 'Salon',
     'GY': 'Gym',
     'EI': 'Educational Institute',
+    'HO': 'Hording',
+    'GN': 'Gantry',
+    'BU': 'Bus',
+    'RC': 'Radio Channel',
+    'TV': 'TV Channel',
 }
 
 # model to codes
@@ -1509,12 +1554,14 @@ tableHeaderData = {
         "address_landmark" : "Address (Landmark)",
         "relation_ship_data" : "RelationShip Data",
         "flat_count" : "Flat Count",
+        "resident_count" : "Resident Count",
         "average_household_points" : "Average Household Points",
         "tower_count" : "Tower Count",
         "contacts_details" : "Contacts Details",
         "assign_user" : "Assign User",
         "booking_priority" : "Booking Priority",
         "booking_status_and_sub_status" : "Booking Status and Sub Status",
+        "requirement_given" : "Requirement Given",
         "phase" : "Phase",
         "internal_comments" : "Internal Comments",
         "comments" : "Comments",
@@ -1551,6 +1598,7 @@ tableHeaderData = {
         "assign_user" : "Assign User",
         "booking_priority" : "Booking Priority",
         "booking_status_and_sub_status" : "Booking Status and Sub Status",
+        "requirement_given" : "Requirement Given",
         "phase" : "Phase",
         "internal_comments" : "Internal Comments",
         "comments" : "Comments",
@@ -1587,6 +1635,7 @@ tableHeaderData = {
         "assign_user" : "Assign User",
         "booking_priority" : "Booking Priority",
         "booking_status_and_sub_status" : "Booking Status and Sub Status",
+        "requirement_given" : "Requirement Given",
         "phase" : "Phase",
         "internal_comments" : "Internal Comments",
         "comments" : "Comments",
@@ -1623,6 +1672,7 @@ tableHeaderData = {
         "assign_user" : "Assign User",
         "booking_priority" : "Booking Priority",
         "booking_status_and_sub_status" : "Booking Status and Sub Status",
+        "requirement_given" : "Requirement Given",
         "phase" : "Phase",
         "internal_comments" : "Internal Comments",
         "comments" : "Comments",
@@ -1659,6 +1709,7 @@ tableHeaderData = {
         "assign_user" : "Assign User",
         "booking_priority" : "Booking Priority",
         "booking_status_and_sub_status" : "Booking Status and Sub Status",
+        "requirement_given" : "Requirement Given",
         "phase" : "Phase",
         "internal_comments" : "Internal Comments",
         "comments" : "Comments",
@@ -1695,6 +1746,7 @@ tableHeaderData = {
         "assign_user" : "Assign User",
         "booking_priority" : "Booking Priority",
         "booking_status_and_sub_status" : "Booking Status and Sub Status",
+        "requirement_given" : "Requirement Given",
         "phase" : "Phase",
         "internal_comments" : "Internal Comments",
         "comments" : "Comments",
@@ -1731,6 +1783,7 @@ tableHeaderData = {
         "assign_user" : "Assign User",
         "booking_priority" : "Booking Priority",
         "booking_status_and_sub_status" : "Booking Status and Sub Status",
+        "requirement_given" : "Requirement Given",
         "phase" : "Phase",
         "internal_comments" : "Internal Comments",
         "comments" : "Comments",
@@ -1767,6 +1820,7 @@ tableHeaderData = {
         "assign_user" : "Assign User",
         "booking_priority" : "Booking Priority",
         "booking_status_and_sub_status" : "Booking Status and Sub Status",
+        "requirement_given" : "Requirement Given",
         "phase" : "Phase",
         "internal_comments" : "Internal Comments",
         "comments" : "Comments",
@@ -1803,6 +1857,7 @@ tableHeaderData = {
         "assign_user" : "Assign User",
         "booking_priority" : "Booking Priority",
         "booking_status_and_sub_status" : "Booking Status and Sub Status",
+        "requirement_given" : "Requirement Given",
         "phase" : "Phase",
         "internal_comments" : "Internal Comments",
         "comments" : "Comments",
@@ -1839,6 +1894,7 @@ tableHeaderData = {
         "assign_user" : "Assign User",
         "booking_priority" : "Booking Priority",
         "booking_status_and_sub_status" : "Booking Status and Sub Status",
+        "requirement_given" : "Requirement Given",
         "phase" : "Phase",
         "internal_comments" : "Internal Comments",
         "comments" : "Comments",
@@ -1861,4 +1917,246 @@ tableHeaderData = {
         "delete_action" : "Delete Action",
         "brand":"Brand"
     }
+}
+
+supplier_size_category = {
+    "RS":{
+        "1-150":{
+            "min": 0,
+            "max": 150
+        },
+        "151-400":{
+            "min": 151,
+            "max": 400
+        },
+        "401+":{
+            "min": 401
+        }
+    },
+    "CP":{
+        "1-1000":{
+            "min": 1,
+            "max": 1000
+        },
+        "1001-10000":{
+            "min": 1001,
+            "max": 10000
+        },
+        "10001+":{
+            "min": 10001
+        }
+    },
+    "EI":{
+        "1-500":{
+            "min": 1,
+            "max": 500
+        },
+        "501-2000":{
+            "min": 501,
+            "max": 2000
+        },
+        "2001+":{
+            "min": 2001
+        }
+    },
+    "RE":{
+        "1-100":{
+            "min": 1,
+            "max": 100
+        },
+        "101-1000":{
+            "min": 101,
+            "max": 1000
+        },
+        "1001+":{
+            "min": 1001
+        }
+    },
+    "GY":{
+        "1-50":{
+            "min": 1,
+            "max": 50
+        },
+        "51-200":{
+            "min": 51,
+            "max": 200
+        },
+        "201+":{
+            "min": 201
+        }
+    },
+    "SA":{
+        "1-20":{
+            "min": 1,
+            "max": 20
+        },
+        "21-50":{
+            "min": 21,
+            "max": 50
+        },
+        "51+":{
+            "min": 51
+        }
+    },
+    "BS":{
+        "1-100":{
+            "min": 1,
+            "max": 100
+        },
+        "101-300":{
+            "min": 101,
+            "max": 300
+        },
+        "301+":{
+            "min":301
+        }
+    },
+    "BUS":{
+        "1-30":{
+            "min": 1,
+            "max": 30
+        },
+        "31-100":{
+            "min": 31,
+            "max": 100
+        },
+        "101+":{
+            "min":101
+        }
+    },
+    "Hording":{
+        "1-10000":{
+            "min": 1,
+            "max": 10000
+        },
+        "10001-50000":{
+            "min": 10001,
+            "max": 50000
+        },
+        "50001+":{
+            "min":50001
+        }
+    },
+    "Gantry":{
+        "1-10000":{
+            "min": 1,
+            "max": 10000
+        },
+        "10001-50000":{
+            "min": 10001,
+            "max": 50000
+        },
+        "50001+":{
+            "min":50001
+        }
+    },
+    
+}
+
+summary_header = {
+    'B to C' :{
+        "phase_details" : "Phase Details",
+        "confirmed_booked" : "Confirmed Booked",
+        "verbally_booked" : "Verbally Booked",
+        "followup_required" : "Followup Required",
+        "total" : "Total",     
+    },
+    'B to B' :{
+        "phase_details" : "Phase Details",
+        'meeting_fixed' : 'Meeting fixed',
+        'meeting_converted' : 'Meeting converted',
+        'decision_pending' : 'Decision Pending',
+        "total" : "Total",
+    },
+    'Others' :{
+        "phase_details" : "Phase Details",
+        'emergency_situation' : 'Emergency Situation',
+        'complete_lockdown' : 'Complete Lockdown',
+        'partial_building_lockdown' : 'Partial Building/Tower Lockdown',
+        'partial_floor_lockdown' : 'Partial Floor Lockdown',
+        'partial_house_lockdown' : 'Partial House/Flat Lockdown',
+        'open' : 'OPEN',
+        "total" : "Total",  
+    }
+}
+
+breakup_header = {
+    'B to C' :{
+        "confirmed_booked" : "Confirmed Booked",
+        "not_initiated" : "Not Initiated",
+        "followup_required" : "Followup Required",
+        "verbally_booked" : "Verbally Booked",
+        "rejected" : "Rejected",
+        "total" : "Total",     
+    },
+    'B to B' :{
+        'meeting_fixed' : 'Meeting fixed',
+        "not_initiated" : "Not Initiated",
+        'meeting_converted' : 'Meeting converted',
+        'decision_pending' : 'Decision Pending',
+        'rejected' : 'Rejected',
+        "total" : "Total",
+    },
+    'Others' :{
+        'emergency_situation' : 'Emergency Situation',
+        'complete_lockdown' : 'Complete Lockdown',
+        'partial_building_lockdown' : 'Partial Building/Tower Lockdown',
+        'partial_floor_lockdown' : 'Partial Floor Lockdown',
+        'partial_house_lockdown' : 'Partial House/Flat Lockdown',
+        'open' : 'OPEN',
+        "total" : "Total",  
+    }
+}
+
+supplier_master_diff_table = {
+    'RS': {
+        'supplier_name': 'society_name',
+        'supplier_type': 'supplier_code',
+        'unit_primary_count': 'flat_count',
+        'unit_secondary_count': 'tower_count',
+        'area': 'society_locality',
+        'subarea': 'society_subarea',
+        'city': 'society_city',
+        'state': 'society_state',
+        'landmark': 'landmark',
+        'zipcode': 'society_zip',
+        'latitude': 'society_latitude',
+        'longitude': 'society_longitude',
+        'feedback': 'feedback',
+        'quality_rating': 'society_type_quality',
+        'quantity_rating': 'society_type_quantity',
+        'address1': 'society_address1'
+    },
+    'CP': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code',
+    },
+    'GY': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code',
+        'quality_rating': 'category'
+    },
+    'SA': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code',
+        'quality_rating': 'category'
+    },
+    'BS': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code'
+    },
+    'RE': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code',
+        'quality_rating': 'rating',
+        'quantity_rating': 'store_size'
+    },
+    'EI': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code'
+    },
+    'HO': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code'
+    },
 }

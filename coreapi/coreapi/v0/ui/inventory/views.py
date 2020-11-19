@@ -607,12 +607,14 @@ class CampaignInventory(APIView):
         try:
             user = request.user
             page = request.query_params.get("page", None)
+
             assigned = request.query_params.get("assigned", 0)
             search = request.query_params.get("search", None)
             start_date = request.query_params.get("start_date", None)
             end_date = request.query_params.get("end_date", None)
 
             supplier_type_code = request.query_params.get("supplier_type_code", None)
+            supplier_type_code = supplier_type_code if supplier_type_code != "ALL" else None
             booking_status_code = request.query_params.get("booking_status_code", None)
             phase_id = request.query_params.get("phase_id", None)
 
@@ -629,6 +631,9 @@ class CampaignInventory(APIView):
             # cache_key = v0_utils.create_cache_key(class_name, campaign_id)
             # cache_value = cache.get(cache_key)
             # cache_value = None
+            if request.user.profile.name == "Intern":
+                assigned = request.user.id
+
             response = website_utils.prepare_shortlisted_spaces_and_inventories(campaign_id, page, user, int(assigned), search, start_date, end_date, supplier_type_code, booking_status_code, phase_id, space_status='F')
             if not response.data['status']:
                 return response

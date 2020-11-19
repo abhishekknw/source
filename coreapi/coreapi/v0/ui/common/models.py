@@ -3,7 +3,7 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from v0.ui.permissions.models import Role
 from pymongo import MongoClient
-client = MongoClient('localhost', 27017, maxPoolSize=2, waitQueueMultiple=10)
+client = MongoClient('localhost', settings.MONGO_PORT, username=settings.MONGO_USER, password=settings.MONGO_PASSWORD, maxPoolSize=2, waitQueueMultiple=10)
 mongo_client = client[settings.MONGO_DB]
 mongo_test = client[settings.MONGO_DB_TEST]
 
@@ -21,3 +21,7 @@ class BaseUser(AbstractUser):
     emailVerifyDate = models.DateTimeField(null=True, blank=True)
     class Meta:
         db_table = 'base_user'
+
+    def save(self, *args, **kwargs):
+        mongo_client.api_cache.remove({"slugType": 'user-list'})
+        super(BaseUser, self).save(*args, **kwargs)

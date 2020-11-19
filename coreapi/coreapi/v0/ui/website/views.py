@@ -11,7 +11,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django.db import transaction
-from django.db.models import Q, F, Sum
+from django.db.models import Q, F, Sum, Max
 from django.forms.models import model_to_dict
 from django.utils.dateparse import parse_datetime
 from rest_framework import status
@@ -53,7 +53,7 @@ from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMa
                                         ProposalCorporateSerializer, HashtagImagesSerializer)
 from v0.ui.supplier.models import SupplierAmenitiesMap, SupplierTypeCorporate, SupplierTypeSociety, SupplierTypeBusShelter, SupplierMaster
 from v0.ui.supplier.serializers import (SupplierAmenitiesMapSerializer, SupplierTypeCorporateSerializer,
-                                        SupplierTypeSocietySerializer, SupplierTypeBusShelterSerializer)
+                                        SupplierTypeSocietySerializer, SupplierTypeBusShelterSerializer, SupplierMasterSerializer)
 from v0.ui.finances.models import ShortlistedInventoryPricingDetails, PriceMappingDefault, getPriceDict
 from v0.ui.permissions.models import ObjectLevelPermission, GeneralUserPermission, Role, RoleHierarchy
 from v0.ui.base.serializers import ContentTypeSerializer
@@ -63,6 +63,9 @@ import v0.ui.utils as ui_utils
 from coreapi.settings import BASE_URL, BASE_DIR
 from v0 import errors
 import v0.constants as v0_constants
+from v0.ui.campaign.models import CampaignComments
+
+from django.db.models.functions import Trim
 
 
 # codes for supplier Types  Society -> RS   Corporate -> CP  Gym -> GY   salon -> SA
@@ -630,6 +633,8 @@ class AssignCampaign(APIView):
 
             if user.is_superuser:
                 assigned_objects = CampaignAssignment.objects.all()
+            elif user.profile.name == "Intern":
+                assigned_objects = CampaignAssignment.objects.filter(assigned_to_id=user)
             else:
                 assigned_objects = CampaignAssignment.objects.filter(campaign__created_by__in=username_list)
             campaigns = []
@@ -644,12 +649,19 @@ class AssignCampaign(APIView):
                     campaigns.append(assign_object)
             serializer = CampaignAssignmentSerializerReadOnly(campaigns, many=True)
 
+            for data in serializer.data:
+                all_proposal_ids.append(data['campaign']['proposal_id'])
+            
+            comments_list = CampaignComments.objects.values('campaign_id').annotate(latest_id=Max('id'), comment_max=Trim('comment')).filter(campaign_id__in=all_proposal_ids, related_to='campaign')
+            comments_list_dict = {row["campaign_id"]: row["comment_max"] for row in comments_list}
+
             campaign_obj = {}
 
             for data in serializer.data:
 
                 accountResult = AccountInfo.objects.filter(pk=data['campaign']['account']).first()
                 data['campaign']['accountName'] = accountResult.name
+                data['campaign']['accountOrganisationName'] = accountResult.organisation.name
 
 
                 organisationResult = Organisation.objects.filter(organisation_id=data['campaign']['principal_vendor']).first()
@@ -673,6 +685,7 @@ class AssignCampaign(APIView):
                 }
 
                 campaign_obj[data['campaign']['proposal_id']]["assigned"].append(row)
+                campaign_obj[data['campaign']['proposal_id']]["comment"] = comments_list_dict.get(data['campaign']['proposal_id'])
 
             campaign_list = [value for key,value in campaign_obj.items()]
 
@@ -899,22 +912,31 @@ class UserMinimalList(APIView):
         class_name = self.__class__.__name__
         try:
             organisation_id = request.query_params.get('org_id',None)
-            if organisation_id:
-                users = BaseUser.objects.filter(profile__organisation=organisation_id)
-            else:
-                users = BaseUser.objects.all()
-            user_list = []
-            for user in users:
-                user_list.append({
-                    "id": user.id,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "email": user.email,
-                    "username": user.username,
-                    "profile_id": user.profile_id,
-                    "role_id": user.role_id,
-                })
-            return ui_utils.handle_response(class_name, data=user_list, success=True)
+
+            page_slug = "get-users-minimal-list-"+str(organisation_id)
+            return_data = ui_utils.get_api_cache(page_slug)
+
+            if not return_data:
+                if organisation_id:
+                    users = BaseUser.objects.filter(profile__organisation=organisation_id)
+                else:
+                    users = BaseUser.objects.all()
+                user_list = []
+                for user in users:
+                    user_list.append({
+                        "id": user.id,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
+                        "email": user.email,
+                        "username": user.username,
+                        "profile_id": user.profile_id,
+                        "role_id": user.role_id,
+                    })
+                
+                return_data = user_list
+                ui_utils.create_api_cache(page_slug, 'user-list', return_data)
+
+            return ui_utils.handle_response(class_name, data=return_data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -955,7 +977,7 @@ class BulkDownloadImagesAmazon(APIView):
         Amazon for each supplier and store it in 'files' directory under folder 'downloaded_images/<proposal_id>'
         """
         class_name = self.__class__.__name__
-        try:
+        if True:
             proposal_id = request.query_params['proposal_id']
             proposal = ProposalInfo.objects.get(proposal_id=proposal_id)
             response = website_utils.is_campaign(proposal)
@@ -983,8 +1005,8 @@ class BulkDownloadImagesAmazon(APIView):
             # initiate the task and return the task id.
             result = website_utils.start_download_from_amazon(proposal_id, json.dumps(image_map))
             return ui_utils.handle_response(class_name, data=result, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+        # except Exception as e:
+        #     return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class IsGroupTaskSuccessFull(APIView):
@@ -1385,17 +1407,26 @@ class OrganisationViewSet(viewsets.ViewSet):
         try:
             category = request.query_params.get('category')
             organisation_id = request.user.profile.organisation.organisation_id
-            if request.user.is_superuser:
-                if category:
-                    instances = Organisation.objects.filter(category__in=[category,"MACHADALO"])
+
+            page_slug = "organisation-"+str(organisation_id)+"-"+str(category)
+            return_data = ui_utils.get_api_cache(page_slug)
+
+            if not return_data:
+                if request.user.is_superuser:
+                    if category:
+                        instances = Organisation.objects.filter(category__in=[category,"MACHADALO"])
+                    else:
+                        instances = Organisation.objects.all()
+                elif category:
+                    instances = Organisation.objects.filter_permission(user=request.user, category__in=[category,"MACHADALO"], created_by_org=organisation_id)
                 else:
-                    instances = Organisation.objects.all()
-            elif category:
-                instances = Organisation.objects.filter_permission(user=request.user, category__in=[category,"MACHADALO"], created_by_org=organisation_id)
-            else:
-                instances = Organisation.objects.filter_permission(user=request.user, created_by_org=organisation_id)
-            serializer = OrganisationSerializer(instances, many=True)
-            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+                    instances = Organisation.objects.filter_permission(user=request.user, created_by_org=organisation_id)
+                serializer = OrganisationSerializer(instances, many=True)
+
+                return_data = serializer.data
+                ui_utils.create_api_cache(page_slug, "organisation", return_data)
+
+            return ui_utils.handle_response(class_name, data=return_data, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -1656,48 +1687,23 @@ class GetAssignedIdImagesListApiView(APIView):
                          supplier_code=F('inventory_activity_assignment__inventory_activity__shortlisted_inventory_details__shortlisted_spaces__supplier_code')). \
                 values('name','inv_id','object_id','latitude','longitude','updated_at','created_at','actual_activity_date','proposal_id','image_path','comment','supplier_code')
 
-
-            supplier_code_list = {
-                'RS' : [],
-                'BS' : [],
-                'RE' : []
-            }
-
+            supplier_id_list = []
             for supplier in inv_act_image_objects:
-                try:
-                    if supplier['object_id']:
-                        supplier['supplier_code'] = 'RS'
-                    supplier_code_list[supplier['supplier_code']].append(supplier)
-                except Exception:
-                    pass
+                supplier_id_list.append(supplier["object_id"])
 
-            inv_act_image_objects_with_distance = []
-            for key, value in supplier_code_list.items():
-                supplier_id_list = []
-                if key == 'RS':
-                    for supplier in value:
-                        supplier_id_list.append(supplier['object_id'])
-                    if supplier_id_list:
-                        supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
-                        serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
-                        suppliers = serializer.data
-                        inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(
-                            inv_act_image_objects, suppliers)
-                if key == 'BS':
-                    for supplier in value:
-                        supplier_id_list.append(supplier['object_id'])
-                    if supplier_id_list:
-                        supplier_objects = SupplierTypeBusShelter.objects.filter(supplier_id__in=supplier_id_list)
-                        serializer = SupplierTypeBusShelterSerializer(supplier_objects, many=True)
-                        suppliers = serializer.data
-                        inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(
-                            inv_act_image_objects, suppliers)
-            # supplier_id_list = [object['object_id'] for object in inv_act_image_objects]
-            # supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
-            # serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
-            # suppliers = serializer.data
+            supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_id_list)
+            society_serializer = SupplierTypeSocietySerializer(supplier_objects, many=True)
 
-            # inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(inv_act_image_objects, suppliers)
+            master_supplier = SupplierMaster.objects.filter(supplier_id__in=supplier_id_list)
+            master_serializer = SupplierMasterSerializer(master_supplier, many=True)
+
+            all_societies = website_utils.manipulate_object_key_values(society_serializer.data)
+            master_suppliers = website_utils.manipulate_master_to_rs(master_serializer.data)
+            all_societies.extend(master_suppliers)
+
+            inv_act_image_objects_with_distance = website_utils.calculate_location_difference_between_inventory_and_supplier(
+                            inv_act_image_objects, all_societies)
+            
             inv_act_image_objects_with_distance_map = {}
             if inv_act_image_objects_with_distance:
                 inv_act_image_objects_with_distance_map = {inv['inv_id'] : inv for inv in inv_act_image_objects_with_distance}

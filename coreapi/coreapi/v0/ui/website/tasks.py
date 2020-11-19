@@ -68,7 +68,9 @@ def bulk_download_from_amazon_per_supplier(folder_path, file_name_list):
         bucket = conn.get_bucket(bucket_name)
 
         if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
+            # os.makedirs(folder_path)
+            os.system("mkdir "+folder_path)
+        os.system("chmod 777 "+folder_path)
         count = 0
         for file_name in file_name_list:
             key = bucket.get_key(file_name)
@@ -77,6 +79,7 @@ def bulk_download_from_amazon_per_supplier(folder_path, file_name_list):
                 image_file = open(file_path, 'wb')
                 key.get_contents_to_filename(file_path)
                 image_file.close()
+                
                 count +=1
         return count
     except Exception as e:

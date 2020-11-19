@@ -2647,10 +2647,10 @@ def handle_common_filters(common_filters, supplier_type_code, proposal):
             query['society_longitude__gt'] = min_longitude
 
         else:
-            query['latitude__lt'] = max_latitude
-            query['latitude__gt'] = min_latitude
-            query['longitude__lt'] = max_longitude
-            query['longitude__gt'] = min_longitude
+            query['address_supplier__latitude__lt'] = max_latitude
+            query['address_supplier__latitude__gt'] = min_latitude
+            query['address_supplier__longitude__lt'] = max_longitude
+            query['address_supplier__longitude__gt'] = min_longitude
 
         # query['representative'] = proposal.principal_vendor
 
@@ -3672,8 +3672,6 @@ def get_shortlisted_suppliers_map(proposal_id, content_type, center_id):
     """
     function = get_shortlisted_suppliers_map.__name__
     try:
-        # fetch the class from content type
-        model_class = apps.get_model(settings.APP_NAME, content_type.model)
         # fetch the shortlisted supplier instances ( object_id, status only )
         shortlisted_suppliers = ShortlistedSpaces.objects.filter(proposal_id=proposal_id, content_type=content_type,
                                                                  center_id=center_id).values('object_id', 'status')
@@ -3684,7 +3682,14 @@ def get_shortlisted_suppliers_map(proposal_id, content_type, center_id):
             supplier_id = instance_dict['object_id']
             shortlisted_suppliers_map[supplier_id] = instance_dict
             shortlisted_ids.append(supplier_id)
-        instances = model_class.objects.filter(supplier_id__in=shortlisted_ids).values()
+        
+        if content_type.model == "suppliertypesociety":
+            instances = SupplierTypeSociety.objects.filter(supplier_id__in=shortlisted_ids).values()
+        else:
+            supplier_master = SupplierMaster.objects.filter(supplier_id__in=shortlisted_ids)
+            supplier_master_serializer = SupplierMasterSerializer(supplier_master, many=True).data
+            instances = manipulate_master_to_rs(supplier_master_serializer)
+
         result = {}
         for instance in instances:
             supplier_id = instance['supplier_id']
@@ -3889,7 +3894,12 @@ def manipulate_master_to_rs(suppliers):
 
             supplier['name'] = supplier.get("supplier_name")
             supplier['supplier_code'] = supplier.get("supplier_type")
-                
+
+            if not supplier.get("flat_count"):
+                supplier["flat_count"] = supplier["unit_primary_count"] if supplier.get("unit_primary_count") else 0
+            if not supplier.get("tower_count"):
+                supplier["tower_count"] = supplier["unit_secondary_count"] if supplier.get("unit_secondary_count") else 0
+
         return suppliers
     except Exception as e:
         raise Exception(function, ui_utils.get_system_error(e))
@@ -4161,7 +4171,12 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
         if space_status:
             filter_query &= Q(status=space_status)
         
-        shortlisted_spaces = ShortlistedSpaces.objects.filter(filter_query).order_by('-id')
+        shortlisted_spaces = ShortlistedSpaces.objects.filter(filter_query)
+
+        if proposal.type_of_end_customer and proposal.type_of_end_customer.formatted_name == "b_to_b_r_g":
+            shortlisted_spaces = shortlisted_spaces.order_by(F('color_code').asc(nulls_last=True), '-requirement_given_date')
+        else:
+            shortlisted_spaces = shortlisted_spaces.order_by('-id')
 
         if page:
             entries = 10
@@ -4312,7 +4327,7 @@ def handle_update_campaign_inventories(user, data):
                 'ifsc_code': supplier['ifsc_code'],
                 'beneficiary_name': supplier['beneficiary_name'],
                 'account_number': supplier['account_number'],
-                'payment_message': supplier['payment_message'],
+                'payment_message': supplier['payment_message'] if 'payment_message' in supplier else None,
                 'total_negotiated_price': supplier['total_negotiated_price'],
                 'booking_status': supplier['booking_status'],
                 'booking_sub_status': supplier['booking_sub_status'],
@@ -4324,7 +4339,11 @@ def handle_update_campaign_inventories(user, data):
                 'booking_priority': supplier['booking_priority'],
                 'sunboard_location': supplier['sunboard_location'] if 'sunboard_location' in supplier else None,
                 'next_action_date': supplier['next_action_date'] if 'next_action_date' in supplier else None,
+<<<<<<< HEAD
                 'last_call_date': supplier['last_call_date'] if 'last_call_date' in supplier else None,
+=======
+                'requirement_given': supplier['requirement_given'] if 'requirement_given' in supplier else 'no',
+>>>>>>> fa9e3002c685b9445ba46bd284fdb0565fb7bba2
             }
 
             shortlisted_inventories = supplier['shortlisted_inventories']
@@ -4419,6 +4438,10 @@ def update_campaign_inventories(data):
             obj.booking_priority = shortlisted_spaces[ss_global_id]['booking_priority']
             obj.sunboard_location = shortlisted_spaces[ss_global_id]['sunboard_location']
             obj.next_action_date = shortlisted_spaces[ss_global_id]['next_action_date']
+            
+            if not obj.requirement_given == shortlisted_spaces[ss_global_id]['requirement_given']:
+                obj.requirement_given = shortlisted_spaces[ss_global_id]['requirement_given']
+                obj.requirement_given_date = datetime.datetime.now()
 
         sid_ids = list(shortlisted_inventory_details.keys())
         sid_objects = ShortlistedInventoryPricingDetails.objects.filter(id__in=sid_ids)
@@ -5805,29 +5828,32 @@ def start_download_from_amazon(proposal_id, image_map):
     Returns: task id
     """
     function = start_download_from_amazon.__name__
-    try:
-        image_map = json.loads(image_map)
-        # create this path before calling util to download
-        path_to_master_dir = settings.BASE_DIR + '/files/downloaded_images/' + proposal_id
+    # try:
+    image_map = json.loads(image_map)
+    # create this path before calling util to download
+    path_to_master_dir = settings.BASE_DIR + '/files/downloaded_images/' + proposal_id
 
-        if os.path.exists(path_to_master_dir):
-            shutil.rmtree(path_to_master_dir)
-        os.makedirs(path_to_master_dir)
-        sub_tasks = []
-        for supplier_key, image_name_list in image_map.items():
-            supplier_id = supplier_key.split('_')[
-                0]  # supplier_id and content_type_id are joined by '_'. splitting and getting first value
-            # call util function to download from amazon
-            sub_tasks.append(subtask(tasks.bulk_download_from_amazon_per_supplier,
-                                     args=[path_to_master_dir + '/' + supplier_id, image_name_list]))
+    if os.path.exists(path_to_master_dir):
+        # shutil.rmtree(path_to_master_dir)
+        os.system("rm -rf "+path_to_master_dir)
 
-        job = group(sub_tasks)
-        result = job.apply_async()
-        result.save()
-        return result.id
-    except Exception as e:
-        raise Exception(function, ui_utils.get_system_error(e))
+    os.system("mkdir "+path_to_master_dir)
+    # os.makedirs(path_to_master_dir)
 
+    sub_tasks = []
+    for supplier_key, image_name_list in image_map.items():
+        supplier_id = supplier_key.split('_')[
+            0]  # supplier_id and content_type_id are joined by '_'. splitting and getting first value
+        # call util function to download from amazon
+        sub_tasks.append(subtask(tasks.bulk_download_from_amazon_per_supplier,
+                                    args=[path_to_master_dir + '/' + supplier_id, image_name_list]))
+
+    job = group(sub_tasks)
+    result = job.apply_async()
+    result.save()
+    return result.id
+    # except Exception as e:
+    #     raise Exception(function, ui_utils.get_system_error(e))
 
 def get_random_pattern(size=v0_constants.pattern_length, chars=string.ascii_uppercase + string.digits):
     function = get_random_pattern.__name__
@@ -6524,7 +6550,7 @@ def create_entry_in_role_hierarchy(role):
         return Exception(function, ui_utils.get_system_error(e))
 
 
-def get_campaigns_with_status(category, user, vendor):
+def get_campaigns_with_status(category, user, vendor, request):
     """
     return campaigns list by arranging in ongoing, upcoming and completed keys
 
@@ -6542,31 +6568,37 @@ def get_campaigns_with_status(category, user, vendor):
         }
         campaign_query = Q()
         vendor_query = Q()
+        supplier_code_query = Q()
         if vendor:
             vendor_query = Q(campaign__principal_vendor=vendor)
         if not user.is_superuser:
             campaign_query = get_query_by_organisation_category(category,
                                                                 v0_constants.category_query_status['campaign_query'],
                                                                 user)
+        if request.query_params.get('supplier_code') == 'mix':
+            supplier_code_query = Q(campaign__is_mix=True)
+        elif request.query_params.get('supplier_code') and request.query_params.get('supplier_code') != 'mix' and request.query_params.get('supplier_code') != 'all':
+            shortlisted_spaces_ids = ShortlistedSpaces.objects.filter(supplier_code=request.query_params.get('supplier_code')).values_list('proposal', flat=True)
+            supplier_code_query = Q(campaign_id__in=shortlisted_spaces_ids)
+
         campaign_data['completed_campaigns'] = CampaignAssignment.objects. \
-            filter(campaign_query, vendor_query, campaign__tentative_end_date__lt=current_date, campaign__campaign_state='PTC',
-                   ). \
+            filter(campaign_query, vendor_query, supplier_code_query, campaign__tentative_end_date__lt=current_date, campaign__campaign_state='PTC'). \
             annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
                      organisation=F('campaign__account__organisation__name'), vendor_id=F('campaign__principal_vendor')). \
             values('campaign', 'name', 'principal_vendor', 'organisation','vendor_id').distinct()
         campaign_data['upcoming_campaigns'] = CampaignAssignment.objects. \
-            filter(campaign_query, vendor_query, campaign__tentative_start_date__gt=current_date, campaign__campaign_state='PTC'). \
+            filter(campaign_query, vendor_query, supplier_code_query, campaign__tentative_start_date__gt=current_date, campaign__campaign_state='PTC'). \
             annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
                      organisation=F('campaign__account__organisation__name'), vendor_id=F('campaign__principal_vendor')). \
             values('campaign', 'name', 'principal_vendor', 'organisation', 'vendor_id').distinct()
         campaign_data['ongoing_campaigns'] = CampaignAssignment.objects. \
-            filter(campaign_query, vendor_query, Q(campaign__tentative_start_date__lte=current_date) & Q(
+            filter(campaign_query, vendor_query, supplier_code_query, Q(campaign__tentative_start_date__lte=current_date) & Q(
             campaign__tentative_end_date__gte=current_date), campaign__campaign_state='PTC'). \
             annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
                      organisation=F('campaign__account__organisation__name'), vendor_id=F('campaign__principal_vendor')). \
             values('campaign', 'name', 'principal_vendor', 'organisation', 'vendor_id').distinct()
         campaign_data['onhold_campaigns'] = CampaignAssignment.objects. \
-            filter(campaign_query, vendor_query, campaign__campaign_state='POH'). \
+            filter(campaign_query, vendor_query, supplier_code_query, campaign__campaign_state='POH'). \
             annotate(name=F('campaign__name'), principal_vendor=F('campaign__principal_vendor__name'),
                      organisation=F('campaign__account__organisation__name'), vendor_id=F('campaign__principal_vendor')). \
             values('campaign', 'name', 'principal_vendor', 'organisation', 'vendor_id').distinct()
@@ -6919,19 +6951,12 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
                     supplier_inv_count_mapping = {sup_obj['id'] : sup_obj for sup_obj in proposal_data['center_data'][supplier_code]['supplier_data']}
                     inventory_objects = create_inventory_ids(supplier_objects_mapping[supplier_id], filter_code, is_import_sheet,supplier_inv_count_mapping)
                 else:
-                    inventory_objects = getattr(inventory_models, v0_constants.model_to_codes[filter_code['id']]).objects.filter(
-                        Q(object_id=supplier_id))
-                    if not inventory_objects or str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL' or str(
-                            filter_code['id']) == 'GA':
-                        try:
-                            inventory_objects = create_inventory_ids(supplier_objects_mapping[supplier_id], filter_code)
-                        except KeyError as e:
-                            pass
+                    inventory_objects = create_inventory_ids(None, filter_code)
+
                 response = make_final_list(filter_code, inventory_objects, shortlisted_suppliers_mapping[supplier_id])
-                if not response.data['status']:
-                    return response
-                shortlisted_inv_objects.extend(response.data['data'])
-        # ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces__proposal_id=proposal_data['proposal_data'])
+                if response.data['status'] and response.data['data']:
+                    shortlisted_inv_objects.extend(response.data['data'])
+                    
         ShortlistedInventoryPricingDetails.objects.bulk_create(shortlisted_inv_objects)
         if create_inv_act_data:
             shortlisted_supplier_ids = {space_obj.id for space_obj in shortlisted_suppliers}
@@ -6939,9 +6964,9 @@ def save_shortlisted_inventory_pricing_details_data(center, supplier_code, propo
                 shortlisted_spaces__in=shortlisted_supplier_ids,
                 shortlisted_spaces__proposal=proposal.proposal_id)
 
-            response = create_inventory_activity_data(shortlisted_inventory_objects,proposal_data)
-            if not response:
-                return response
+            # response = create_inventory_activity_data(shortlisted_inventory_objects,proposal_data)
+            # if not response:
+            #     return response
 
 
         return ui_utils.handle_response(function_name, data={}, success=True)
@@ -6970,23 +6995,18 @@ def create_inventory_ids(supplier_object, filter_code, is_import_sheet=False, su
     """
     function_name = create_inventory_ids.__name__
     try:
-        tower_count = int(supplier_object.tower_count) if supplier_object.tower_count else 1
+        tower_count = 1
         inventory_ids = []
         Struct = namedtuple('Struct', 'adinventory_id')
-        data = {}
-        if str(filter_code['id']) == 'SL' or str(filter_code['id']) == 'FL' or str(filter_code['id']) == 'GA':
-            tower_count = 1
         if is_import_sheet:
             tower_count = supplier_inv_mapping[supplier_object.supplier_id][filter_code['id']]
             if tower_count is None:
                 tower_count = 1
-        if str(filter_code['id']) == 'SB':
-            tower_count = 2
+
         for count in range(int(tower_count)):
             data = Struct(adinventory_id='TESTINVID' + str(filter_code['id']) + '00' + str(count + 1))
             inventory_ids.append(data)
-        # inventory_objects = namedtuple("Struct", inventory_ids.keys())(*inventory_ids.values())
-
+            
         return inventory_ids
     except Exception as e:
         print(e)

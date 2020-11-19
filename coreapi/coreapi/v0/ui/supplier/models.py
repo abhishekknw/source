@@ -258,7 +258,7 @@ class SupplierTypeSociety(BaseModel):
 
 class SupplierTypeCode(models.Model):
     id = models.AutoField(db_column='ID', primary_key=True)
-    supplier_type_name = models.CharField(db_column='SUPPLIER_TYPE_NAME', max_length=30, null=True)
+    supplier_type_name = models.CharField(db_column='SUPPLIER_TYPE_NAME', max_length=35, null=True)
     supplier_type_code = models.CharField(db_column='SUPPLIER_TYPE_CODE', max_length=5, null=True)
     unit_primary_count = models.CharField(max_length=30, null=True, blank=True)
     unit_secondary_count = models.CharField(max_length=30, null=True, blank=True)
@@ -279,10 +279,11 @@ class SupplierTypeSalon(BasicSupplierDetails):
     category = models.CharField(db_column='CATEGORY', max_length=30, blank=True, null=True)
     salon_type_chain = models.CharField(db_column='SALON_TYPE_CHAIN', max_length=30, blank=True, null=True)
     footfall_day = models.IntegerField(db_column='FOOTFALL_DAY', blank=True, null=True)
+    footfall_week = models.IntegerField(db_column='FOOTFALL_WEEL', blank=True, null=True)
     isspaavailable = models.BooleanField(db_column='ISSPAAVAILABLE', default=False)
     advertising_media = models.CharField(db_column='AD_MEDIA', max_length=30, blank=True, null=True)
-    shop_size = models.CharField(db_column='SHOP_SIZE', max_length=30, blank=True, null=True)
-    floor_size = models.CharField(db_column='FLOOR_SIZE', max_length=30, blank=True, null=True)
+    shop_size = models.IntegerField(db_column='SHOP_SIZE', blank=True, null=True)
+    floor_size = models.IntegerField(db_column='FLOOR_SIZE', blank=True, null=True)
     standee_price_week = models.IntegerField(db_column='ST_PRICE_WEEK', blank=True, null=True)
     standee_price_weekend = models.IntegerField(db_column='ST_PRICE_WEEKEND', blank=True, null=True)
     standee_places = models.IntegerField(db_column='ST_PLACES', blank=True, null=True)
@@ -300,7 +301,8 @@ class SupplierTypeSalon(BasicSupplierDetails):
     mirrorstrip_price_month = models.IntegerField(db_column='MS_PRICE_MONTH', blank=True, null=True)
     fields.GenericRelation(ContactDetailsGeneric)
     representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
-
+    comments = models.CharField(max_length=255, null=True, blank=True)
+    
     class Meta:
         db_table = 'supplier_salon'
 
@@ -353,12 +355,18 @@ class SupplierTypeGym(BasicSupplierDetails):
     wall_price_three_month = models.IntegerField(blank=True, null=True)
     fields.GenericRelation(ContactDetailsGeneric)
     representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
+    comments = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = 'supplier_gym'
 
 
 class SupplierEducationalInstitute(BasicSupplierDetails):
+    inst_type = models.CharField(max_length=200, null=True, blank=True)
+    inst_sub_type = models.CharField(max_length=200, null=True, blank=True)
+    educationBoard = models.CharField(max_length=200, null=True, blank=True)
+    comments = models.CharField(max_length=255, null=True, blank=True)
+
     class Meta:
         db_table = 'supplier_educational_institute'
 
@@ -473,11 +481,32 @@ class SupplierTypeBusShelter(BasicSupplierDetails):
     lit_status = models.CharField(max_length=250, null=True, blank=True)
     halt_buses_count = models.IntegerField(null=True, blank=True, max_length=500)
     representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
-    
     average_down_boarding_daily_count = models.IntegerField(null=True, max_length=500, blank=True)
     average_on_boarding_daily_count = models.IntegerField(null=True, max_length=500, blank=True)
-
     external_number = models.CharField(max_length=200, null=True, blank=True)
+    bus_shelter_road_name = models.CharField(max_length=200, null=True, blank=True)
+    direction = models.CharField(max_length=200, null=True, blank=True)
+    bus_shelter_supplier = models.CharField(max_length=200, null=True, blank=True)
+    total_size = models.IntegerField(null=True, blank=True, max_length=500)
+    size_top = models.IntegerField(null=True, blank=True, max_length=500)
+    size_middle = models.IntegerField(null=True, blank=True, max_length=500)
+    size_bottom = models.IntegerField(null=True, blank=True, max_length=500)
+    size_side_ext = models.FloatField(null=True, blank=True)
+    size_side_int = models.FloatField(null=True, blank=True)
+    force_majeure_clause = models.CharField(max_length=200, null=True, blank=True)
+    terms_print_mount = models.IntegerField(null=True, blank=True)
+    type_road_status = models.CharField(max_length=200, null=True, blank=True)
+    ac_hault = models.CharField(max_length=200, null=True, blank=True)
+    type_bus_stand = models.CharField(max_length=200, null=True, blank=True)
+    population_type = models.CharField(max_length=200, null=True, blank=True)
+    cost_sqft = models.IntegerField(null=True, blank=True, max_length=500)
+    cost = models.IntegerField(null=True, blank=True, max_length=500)
+    print_cost = models.IntegerField(null=True, blank=True, max_length=500)
+    bus_shelters_cluster = models.BooleanField(default=False)
+    comments = models.CharField(max_length=255, null=True, blank=True)
+    average_peak_hour_traffic = models.IntegerField(null=True, blank=True, max_length=500)
+    average_non_peak_hour_traffic = models.IntegerField(null=True, blank=True, max_length=500)
+    footfall_daily_count = models.IntegerField(null=True, blank=True, max_length=500)
 
     class Meta:
         db_table = 'supplier_bus_shelter'
@@ -524,7 +553,6 @@ class SupplierTypeRetailShop(BasicSupplierDetails):
     representative = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
-
         db_table = 'supplier_type_retail_shop'
 
 class SupplierTypeBusDepot(BasicSupplierDetails):
@@ -563,6 +591,7 @@ class SupplierMaster(BaseModel):
     feedback = models.CharField(null=True, blank=True, max_length=250)
     locality_rating = models.CharField(max_length=50, null=True, blank=True)
     quality_rating = models.CharField(max_length=50, null=True, blank=True)
+    quantity_rating = models.CharField(max_length=50, null=True, blank=True)
 
     class Meta:
         db_table = 'supplier_master'
@@ -586,3 +615,42 @@ class AddressMaster(BaseModel):
 
     class Meta:
         db_table = 'address_master'
+
+class SupplierRelationship(BaseModel):
+    """
+    Stores info about Suppliers who has retail shops inside them
+    """
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now_add=True)
+    society = models.ForeignKey('SupplierTypeSociety', db_column='society_id', on_delete=models.CASCADE)
+    supplier_id = models.CharField(max_length=50, null=False)
+    supplier_type = models.CharField(max_length=3, null=False)
+    type = models.CharField(max_length=10, null=False, default='PREFERRED')
+
+    class Meta:
+        db_table = 'supplier_relationship'
+        unique_together = ('society', 'supplier_id','type')
+
+class SupplierBus(BasicSupplierDetails):
+    comments = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        db_table = 'supplier_bus'
+
+class SupplierGantry(BasicSupplierDetails):
+    comments = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        db_table = 'supplier_gantry'
+
+class SupplierRadioChannel(BasicSupplierDetails):
+    comments = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        db_table = 'supplier_radio_channel'
+
+class SupplierTvChannel(BasicSupplierDetails):
+    comments = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        db_table = 'supplier_tv_channel'

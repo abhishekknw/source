@@ -40,10 +40,10 @@ from v0.ui.proposal.serializers import (ProposalInfoSerializer, ProposalCenterMa
                                         SpaceMappingSerializer, ProposalCenterMappingSpaceSerializer,
                                         ProposalCenterMappingVersionSpaceSerializer, SpaceMappingVersionSerializer,
                                         ProposalSocietySerializer, ProposalCorporateSerializer, HashtagImagesSerializer,
-                                        SupplierAssignmentSerializer, ShortlistedSpacesVersionSerializer)
+                                        SupplierAssignmentSerializer, ShortlistedSpacesVersionSerializer, BookingStatusSerializer)
 from v0.ui.inventory.models import (SupplierTypeSociety, AdInventoryType, InventorySummary)
 from .models import (ProposalInfo, ProposalCenterMapping, ProposalCenterMappingVersion, SpaceMappingVersion,
-                    SpaceMapping, ShortlistedSpacesVersion, ShortlistedSpaces, SupplierPhase)
+                    SpaceMapping, ShortlistedSpacesVersion, ShortlistedSpaces, SupplierPhase, BookingStatus, BookingSubstatus, TypeOfEndCustomer)
 from .serializers import (SupplierPhaseSerializer)
 from v0.ui.inventory.models import (AdInventoryType,InventoryActivityAssignment,InventorySummary,InventoryTypeVersion,
                                     InventoryType,InventoryActivity)
@@ -54,8 +54,8 @@ from v0.ui.website.utils import return_price
 import v0.constants as v0_constants
 import v0.ui.website.tasks as tasks
 from v0.ui.email.views import send_email
-from v0.ui.supplier.models import SupplierTypeCorporate, SupplierTypeRetailShop
-from v0.ui.supplier.serializers import SupplierTypeSocietySerializer
+from v0.ui.supplier.models import SupplierTypeCorporate, SupplierTypeRetailShop, SupplierMaster
+from v0.ui.supplier.serializers import SupplierTypeSocietySerializer, SupplierMasterSerializer
 from v0.ui.base.models import DurationType
 from v0 import errors
 from rest_framework import viewsets
@@ -65,10 +65,13 @@ from v0.ui.utils import handle_response
 from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignComments
 from v0.ui.common.models import mongo_client, mongo_test
+from django.db.models import Prefetch, Max
 
 from v0.ui.campaign.models import CampaignAssignment
+from django.db.models.functions import Trim
 
-
+import logging
+logger = logging.getLogger(__name__)
 
 def convert_date_format(date):
     if isinstance(date, datetime.datetime):
@@ -296,6 +299,112 @@ def genrate_supplier_data(data,user):
     except Exception as e:
         return Exception(function_name, ui_utils.get_system_error(e))
 
+def get_value_from_list_by_key(list1, key):
+    try:
+        return list1[key].value
+    except:
+        pass
+
+def genrate_supplier_data2(data,user):
+
+    source_file = data['file']
+    wb = load_workbook(source_file)
+    ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
+    headers = {}
+    for index, row in enumerate(ws.iter_rows()):
+        if index == 0:
+            i = 0
+            for key in row:
+                key1 = key.value.lower()
+                key1 = key1.strip()
+                headers[key1] = i
+                i+=1
+        else:
+            supplier_id = get_value_from_list_by_key(row, headers.get('supplier id'))
+            booking_status = get_value_from_list_by_key(row, headers.get('booking status'))
+            booking_status1 = None
+            if booking_status:
+                booking_status1 = BookingStatus.objects.filter(name__iexact=booking_status).first()
+            internal_comments = get_value_from_list_by_key(row, headers.get('internal comments'))
+            external_comments = get_value_from_list_by_key(row, headers.get('external comments'))
+            next_action_date = get_value_from_list_by_key(row, headers.get('next action date'))
+            completion_status = get_value_from_list_by_key(row, headers.get('completion status'))
+            phases_no = get_value_from_list_by_key(row, headers.get('phases'))
+            assign_to_user = get_value_from_list_by_key(row, headers.get('assign user'))
+            phase = None
+            if phases_no:
+                phase = SupplierPhase.objects.filter(campaign_id=data["proposal_id"], phase_no=phases_no).first()
+            
+            requirement_given_text = get_value_from_list_by_key(row, headers.get('requirement given'))
+            requirement_given = "no"
+            if requirement_given_text:
+                requirement_given = requirement_given_text.lower()
+            if supplier_id:
+                shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=data["proposal_id"], object_id=supplier_id).first()
+                if not shortlisted_spaces:
+                    supplier_code = "RS"
+                    supplier = SupplierMaster.objects.filter(supplier_id=supplier_id).first()
+                    if supplier:
+                        supplier_code = supplier.supplier_type
+
+                    content_type = ui_utils.fetch_content_type(supplier_code)
+
+                    shortlisted_spaces = ShortlistedSpaces(
+                        proposal_id=data["proposal_id"],
+                        supplier_code=supplier_code,
+                        content_type=content_type,
+                        object_id=supplier_id,
+                        center_id=data['center_id'],
+                        status='F'
+                    )
+                    
+                if booking_status1:
+                    shortlisted_spaces.booking_status = booking_status1.code
+                if next_action_date:
+                    shortlisted_spaces.next_action_date = next_action_date
+                if completion_status and (completion_status.lower() == "yes" or completion_status.lower() == "y"):
+                    shortlisted_spaces.is_completed = 1
+                if phase:
+                    shortlisted_spaces.phase = phase.phase_no
+                    shortlisted_spaces.phase_no = phase                
+                if not shortlisted_spaces.requirement_given == requirement_given:
+                    shortlisted_spaces.requirement_given = requirement_given
+                    shortlisted_spaces.requirement_given_date = datetime.datetime.now()
+
+                shortlisted_spaces.save()
+
+                now_time = timezone.now()
+                if assign_to_user:
+                    organisation = user.profile.organisation
+                    assign_to = BaseUser.objects.filter(profile__organisation = organisation, username = assign_to_user).first()
+                    if assign_to:
+                        SupplierAssignment(
+                            campaign_id=data["proposal_id"],
+                            supplier_id=supplier_id,
+                            assigned_by= user,
+                            assigned_to= assign_to,
+                            created_at= now_time,
+                            updated_at= now_time
+                        ).save()
+
+                if internal_comments:
+                    CampaignComments(
+                        comment=internal_comments,
+                        campaign_id=data["proposal_id"],
+                        shortlisted_spaces=shortlisted_spaces,
+                        user=user,
+                        related_to='INTERNAL'
+                    ).save()
+                if external_comments:
+                    CampaignComments(
+                        comment=external_comments,
+                        campaign_id=data["proposal_id"],
+                        shortlisted_spaces=shortlisted_spaces,
+                        user=user,
+                        related_to='EXTERNAL'
+                    ).save()
+    return
+
 def assign_inv_dates(data):
     function_name = assign_inv_dates.__name__
     try:
@@ -442,7 +551,12 @@ class CreateInitialProposal(APIView):
                 if parent:
                     proposal_data['parent'] = ProposalInfo.objects.get_permission(user=user,
                                                                                   proposal_id=parent).proposal_id
-
+                
+                proposal_data['is_mix'] = False
+                if request.data.get('centers') and request.data["centers"][0].get("suppliers"):
+                    supplier_type_count = len([row for row in request.data["centers"][0]["suppliers"] if row["selected"] == True or row["selected"] == "True"])
+                    proposal_data['is_mix'] = True if supplier_type_count > 1 else False
+                
                 # call the function that saves basic proposal information
                 proposal_data['created_by'] = user.username
                 proposal_data['updated_by'] = user.username
@@ -459,6 +573,7 @@ class CreateInitialProposal(APIView):
                 proposal_id = proposal_data['proposal_id']
                 return ui_utils.handle_response(class_name, data=proposal_id, success=True)
         except Exception as e:
+            logger.exception("Something bad happened in CreateInitialProposal")
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 def calculate_hotness_level(multi_level_is_hot):
@@ -956,8 +1071,15 @@ class ProposalViewSet(viewsets.ViewSet):
                 if proposal_id not in seen:
                     seen.add(proposal_id)
                     final_file_objects.append(file_object)
-            file_serializer = GenericExportFileSerializerReadOnly(final_file_objects, many=True)
-            return ui_utils.handle_response(class_name, data=file_serializer.data, success=True)
+            file_serializer = GenericExportFileSerializerReadOnly(final_file_objects, many=True).data
+
+            seen = list(seen)
+            comments_list = CampaignComments.objects.values('campaign_id').annotate(latest_id=Max('id'), comment_max=Trim('comment')).filter(campaign_id__in=seen, related_to='campaign')
+            comments_list_dict = {row["campaign_id"]: row["comment_max"] for row in comments_list}
+            for row in file_serializer:
+                row["latest_comment"] = comments_list_dict.get(row["proposal"]["proposal_id"])
+
+            return ui_utils.handle_response(class_name, data=file_serializer, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -1677,18 +1799,16 @@ class HashtagImagesViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get('campaign_id')
-            date = request.query_params.get('date')
+            supplier_id = request.query_params.get('supplier_id')
+
             try:
-                images = HashTagImages.objects.filter(campaign=campaign_id, created_at__date=date).values()
+                images = HashTagImages.objects.filter(campaign=campaign_id,object_id=supplier_id).values()
             except ObjectDoesNotExist:
                 return ui_utils.handle_response(class_name, data={}, success=True)
-            for image in images:
-                #This is static, need to change by supplier code
-                supplier = SupplierTypeSociety.objects.get(supplier_id=image['object_id'])
-                serializer = SupplierTypeSocietySerializer(supplier)
-                image['supplier_data'] = serializer.data
             return ui_utils.handle_response(class_name, data=images, success=True)
+
         except Exception as e:
+            logger.exception
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
     @detail_route(methods=['POST'])
@@ -1717,7 +1837,8 @@ class HashtagImagesViewSet(viewsets.ViewSet):
                 "image_path" : file_name
             })
             data.save()
-            return ui_utils.handle_response(class_name, data={}, success=True)
+            image = data.image_path
+            return ui_utils.handle_response(class_name, data={"image_path" : image}, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -1761,7 +1882,8 @@ class HashtagImagesViewSet(viewsets.ViewSet):
                 "image_path": file_name
             })
             data.save()
-            return ui_utils.handle_response(class_name, data={}, success=True)
+            image = data.image_path
+            return ui_utils.handle_response(class_name, data={"image_path" : image}, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -1783,6 +1905,7 @@ class HashtagImagesViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get("campaign_id")
+
             if not campaign_id:
                 return ui_utils.handle_response(class_name, data='Please pass campaign Id', success=False)
             images = HashTagImages.objects.filter(campaign_id=campaign_id, hashtag__in=['Permission Box','RECEIPT']).order_by('-updated_at')
@@ -1802,6 +1925,7 @@ class HashtagImagesViewSet(viewsets.ViewSet):
                 result_obj[image.object_id][image.hashtag]["hashtag"] = image.hashtag
                 result_obj[image.object_id][image.hashtag]["updated_at"] = image.updated_at
                 result_list = [result_obj[result] for result in result_obj]
+                
             return ui_utils.handle_response(class_name, data=result_list, success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
@@ -2016,7 +2140,7 @@ class ProposalVersion(APIView):
             email_data = {
                 'subject': v0_constants.subjects['bd_head'],
                 'body': bd_body,
-                'to': ['dev@machadalo.com', 'anmol.prabhu@machadalo.com', 'anupam@machadalo.com', 'abhishek.chandel@machadalo.com', 'prateek.kumar@machadalo.com','sarvesh.patel@synergytop.com', 'akshay.sahu@synergytop.com', 'bheema.gowda@machadalo.com', 'shyamlee.khanna@machadalo.com']
+                'to': ['dev@machadalo.com', 'anmol.prabhu@machadalo.com', 'anupam@machadalo.com', 'abhishek.chandel@machadalo.com', 'sarvesh.patel@synergytop.com', 'akshay.sahu@synergytop.com', 'bheema.gowda@machadalo.com', 'shyamlee.khanna@machadalo.com']
             }
 
             #  email_data = {
@@ -2548,7 +2672,7 @@ class ProposalImagesPath(APIView):
 
     def get(self, request):
         class_name = self.__class__.__name__
-        try:
+        if True:
             proposal_id = request.query_params['proposal_id']
             task_id = request.query_params['task_id']
             result = GroupResult.restore(task_id)
@@ -2564,10 +2688,12 @@ class ProposalImagesPath(APIView):
             shutil.make_archive(output_path, 'zip', path_to_master_dir)
             file_url = settings.BASE_URL + proposal_id + '.zip'
             # we should remove the original folder as it will consume space.
-            shutil.rmtree(path_to_master_dir)
+            # os.chmod(path_to_master_dir, 777)
+            # shutil.rmtree(path_to_master_dir)
+            os.system("rm -rf "+path_to_master_dir)
             return ui_utils.handle_response(class_name, data=file_url, success=True)
-        except Exception as e:
-            return ui_utils.handle_response(class_name, exception_object=e, request=request)
+        # except Exception as e:
+        #     return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 
 class CampaignToProposal(APIView):
@@ -2686,6 +2812,7 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         try:
             campaign_id = request.query_params.get('campaign_id')
+
             phases = SupplierPhase.objects.filter(campaign=campaign_id)
             current_date = datetime.datetime.now().date()
             result_obj = {}
@@ -2726,16 +2853,20 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
             campaign_id = request.query_params.get('campaign_id')
             if not campaign_id or not phases:
                 return handle_response(class_name, data='Please provide campaign id or phases', success=False)
-            new_phase = phases[-1]
-            if new_phase and 'phase_no' in new_phase:
-                phase_already_exists = SupplierPhase.objects.filter(campaign=campaign_id, phase_no=new_phase['phase_no'])
-                if phase_already_exists:
-                    return handle_response(class_name, data='Phase No. already exists', success=False)
+
             for phase in phases:
                 if 'id' in phase:
+                    phase_already_exists = SupplierPhase.objects.filter(campaign=campaign_id, phase_no=phase['phase_no']).exclude(id=phase['id'])
+                    if phase_already_exists:
+                        return handle_response(class_name, data='Phase No. already exists', success=False)
+
                     item = SupplierPhase.objects.get(pk=phase['id'],campaign=campaign_id)
                     phase_serializer = SupplierPhaseSerializer(item, data=phase)
                 else:
+                    phase_already_exists = SupplierPhase.objects.filter(campaign=campaign_id, phase_no=phase['phase_no'])
+                    if phase_already_exists:
+                        return handle_response(class_name, data='Phase No. already exists', success=False)
+                    
                     phase['campaign'] = campaign_id
                     phase_serializer = SupplierPhaseSerializer(data=phase)
                 if phase_serializer.is_valid():
@@ -2757,6 +2888,8 @@ class SupplierPhaseViewSet(viewsets.ViewSet):
         try:
             SupplierPhase.objects.get(pk=pk).delete()
             return ui_utils.handle_response(class_name, data=True, success=True)
+        except ValueError:
+            return ui_utils.handle_response(class_name, data='Phase is required getting undefined')
         except Exception as e:
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
@@ -2793,11 +2926,19 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     no_phase_suppliers = []
     no_status_suppliers = []
     all_supplier_ids = list(set([space.object_id for space in shortlisted_spaces_list]))
-    all_supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids)
-    all_supplier_dict = {supplier.supplier_id:supplier for supplier in all_supplier_objects}
+
+    all_supplier_objects = SupplierMaster.objects.filter(supplier_id__in=all_supplier_ids)
+    all_supplier_data_serializer = SupplierMasterSerializer(all_supplier_objects,many=True).data
+    all_supplier_data = website_utils.manipulate_master_to_rs(all_supplier_data_serializer)
+    if len(all_supplier_data) < 1:
+        all_supplier_objects = SupplierTypeSociety.objects.filter(supplier_id__in=all_supplier_ids)
+        all_supplier_data_serializer = SupplierTypeSocietySerializer(all_supplier_objects,many=True).data
+        all_supplier_data = website_utils.manipulate_object_key_values_generic(all_supplier_data_serializer)
+
+    all_supplier_dict = {supplier['supplier_id']:supplier for supplier in all_supplier_data}
     for space in shortlisted_spaces_list:
         try:
-            supplier_society = all_supplier_dict[space.object_id]
+            supplier_society_serialized = all_supplier_dict[space.object_id]
         except KeyError:
             pass
         supplier_inventories = ShortlistedInventoryPricingDetails.objects.filter(shortlisted_spaces_id=space.id)
@@ -2809,21 +2950,63 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             )
         inventory_dates_dict = {
                     "POSTER": [],
+                    "POSTER LIFT": [],
                     "STALL": [],
                     "STANDEE": [],
                     "FLIER": [],
                     "BANNER": [],
                     "GATEWAY ARCH": [],
                     "SUNBOARD" : [],
+                    "BILLING" : [],
+                    "HOARDING" : [],
+                    "GANTRY" : [],
+                    "BUS SHELTER" : [],
+                    "BUS BACK" : [],
+                    "BUS RIGHT" : [],
+                    "BUS LEFT" : [],
+                    "BUS WRAP" : [],
+                    "FLOOR" : [],
+                    "CEILING" : [],
+                    "COUNTER DISPLAY" : [],
+                    "TENT CARD" : [],
+                    "TABLE" : [],
+                    "HOARDING LIT" : [],
+                    "BUS SHELTER LIT" : [],
+                    "GANTRY LIT" : [],
+                    "WALL" : [],
+                    "CAR DISPLAY" : [],
+                    "WHATSAPP INDIVIDUAL": [],
+                    "WHATSAPP GROUP": []
                 }
         inventory_days_dict = {
             "POSTER": None,
+            "POSTER LIFT": None,
             "STALL": None,
             "STANDEE": None,
             "FLIER": None,
             "BANNER": None,
             "GATEWAY ARCH": None,
             "SUNBOARD" : None,
+            "BILLING" : None,
+            "HOARDING" : None,
+            "GANTRY" : None,
+            "BUS SHELTER" : None,
+            "BUS BACK" : None,
+            "BUS RIGHT" : None,
+            "BUS LEFT" : None,
+            "BUS WRAP" : None,
+            "FLOOR" : None,
+            "CEILING" : None,
+            "COUNTER DISPLAY" : None,
+            "TENT CARD" : None,
+            "TABLE" : None,
+            "HOARDING LIT" : None,
+            "BUS SHELTER LIT" : None,
+            "GANTRY LIT" : None,
+            "WALL" : None,
+            "CAR DISPLAY" : None,
+            "WHATSAPP INDIVIDUAL": None,
+            "WHATSAPP GROUP": None
         }
         for inventory_activity in inventory_activity_assignment:
             inventoy_name = inventory_activity.get('inventory_activity__shortlisted_inventory_details__ad_inventory_type__adinventory_name')
@@ -2834,9 +3017,8 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                     inventory_dates_dict[inventoy_name].append(activity_date)
         inventory_count_dict = {}
 
-        supplier_society_serialized = SupplierTypeSocietySerializer(supplier_society).data        
-        supplier_tower_count = supplier_society.tower_count if supplier_society_serialized.get("tower_count") else 0
-        supplier_flat_count = supplier_society.flat_count if supplier_society_serialized.get("flat_count") else 0
+        supplier_tower_count = supplier_society_serialized["tower_count"] if supplier_society_serialized.get("tower_count") else 0
+        supplier_flat_count = supplier_society_serialized["flat_count"] if supplier_society_serialized.get("flat_count") else 0
         for inventory in supplier_inventories:
             if inventory.ad_inventory_type.adinventory_name not in inventory_count_dict:
                 inventory_count_dict[inventory.ad_inventory_type.adinventory_name] = 0
@@ -2847,10 +3029,11 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             overall_inventory_count_dict[inventory.ad_inventory_type.adinventory_name] += 1
             if inventory.inventory_number_of_days:
                 inventory_days_dict[inventory.ad_inventory_type.adinventory_name] = inventory.inventory_number_of_days
-            inventory_count_dict['FLIER'] = supplier_society.flat_count if supplier_society_serialized.get("flat_count") else 0
-            overall_inventory_count_dict['FLIER'] = supplier_society.flat_count if supplier_society_serialized.get("flat_count") else 0
+            inventory_count_dict['FLIER'] = supplier_society_serialized["flat_count"] if supplier_society_serialized.get("flat_count") else 0
+            overall_inventory_count_dict['FLIER'] = supplier_society_serialized["flat_count"] if supplier_society_serialized.get("flat_count") else 0
 
         supplier_society_serialized['booking_status'] = space.booking_status
+        supplier_society_serialized['next_action_date'] = space.next_action_date.strftime('%Y/%m/%d') if space.next_action_date else None
         supplier_society_serialized['booking_sub_status'] = space.booking_sub_status
         supplier_society_serialized['freebies'] = space.freebies.split(",") if space.freebies else None
         supplier_society_serialized['stall_locations'] = space.stall_locations.split(",") if space.stall_locations else None
@@ -2869,12 +3052,28 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             if space.phase_no_id not in shortlisted_spaces_by_phase_dict:
                 shortlisted_spaces_by_phase_dict[space.phase_no_id] = {'BK': [], 'NB': [], 'PB': [], 'VB': [], 'SR': [], 'NI':[], 'MF':[], 'RERA':[], 'MWS':[], 'MWC':[], 'MWT':[], 'MWO':[],
                                                                        'SE': [], 'VR': [], 'CR': [], 'DPCR':[], 'DPNR':[], 'NE':[], 'UN':[], 'MWA':[], 'UPNI':[], 'UCPI':[], 'TB':[],
-                                                                       'DP': [], 'TB': [], 'MC':[], 'UN':[], 'DPRR': [], 'RLC':[], 'PR': [], 'NVOS':[], 'RE': []}
-            if space.booking_status:
-                shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(
-                    supplier_society_serialized)
-            if space.booking_sub_status:
-                shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_sub_status].append(
+                                                                       'DP': [], 'TB': [], 'MC':[], 'UN':[], 'DPRR': [], 'RLC':[], 'PR': [], 'NVOS':[], 'RE': [], 'RERR':[], 'RERA':[], 'BSR': [], 'BDP': [],
+                                                                       'MWA': [], 'MWS': [], 'MWC': [], 'MWT': [], 'MWO': [], 'DPNR': [], 'DPNA': [], 'DPP': [], 'DPSOO': [], 'DPOS': [], 'DPVR': [], 'DPCR': [],
+                                                                       'RLO': [], 'RLC': [], 'RUB': [], 'RVE': [], 'RCR': [], 'RRS': [], 'ROS': [],'BRLO': [], 'BRLC': [], 'BRUB': [], 'BRVE': [], 'BUPNI': [], 'BUCNI':[],
+                                                                       'BRCR': [], 'BRRS': [],'BROS': [],'BDPNR': [], 'BDPNA': [], 'BDPP': [], 'BDPSOO': [], 'BDPOS': [], 'BDPVR': [], 'BDPCR': [], 'BUN': [], 'BUCPI':[],
+                                                                       'BNE':[], 'BNVW':[], 'BNVG':[], 'BNVA':[], 'BNVMB':[], 'BNVFT':[], 'BNVOS':[], 'UPNI':[], 'UCPI':[], 'NVW':[], 'NVG':[], 'NVA':[], 
+                                                                       'NVMB':[], 'NVFT':[], 'NVOS':[], 'BNI':[],                                            
+                                                                       'OEL': [], 'ESVF': [], 'ESMD': [], 'ESGR': [], 'ESOE': [], 'ESNR': [],'OCL': [], 'CLVF': [],'CLMD': [], 'CLGR': [], 'CLOE': [], 'CLNR': [],
+                                                                       'OPBL': [], 'PBVF': [], 'PBMD': [], 'PBGR': [], 'PBOE': [], 'PBNR': [], 'OPFL': [], 'PFVF': [], 'PFMD': [], 'PFGR': [], 'PFOE': [], 'PFNR': [],
+                                                                       'OPHL': [], 'PHVF': [], 'PHMD': [], 'PHGR': [], 'PHOE': [], 'PHNR': [], 'OP': [], 'OVF': [], 'OMD': [], 'OGR': [], 'OOE': [], 'ONR': [] }                                                                    
+            if space.booking_status:                
+                # if space.booking_sub_status:
+                #     shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_sub_status].append(
+                #         supplier_society_serialized)
+                # else:
+                #     shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(
+                #     supplier_society_serialized)
+                # else
+                if space.booking_status:
+                    if not shortlisted_spaces_by_phase_dict[space.phase_no_id].get(space.booking_status):
+                        shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status] = []
+                    
+                    shortlisted_spaces_by_phase_dict[space.phase_no_id][space.booking_status].append(
                     supplier_society_serialized)
 
     shortlisted_spaces_by_phase_list = []
@@ -2882,25 +3081,40 @@ def get_supplier_list_by_status_ctrl(campaign_id):
     upcoming_phases = []
     completed_phases = []
     confirmed_booked_status = ['BK']
+    unknown = ['BUN', 'BUPNI', 'BUCPI', 'UN', 'UPNI', 'UCPI']
+    new_entity = ['NE', 'NVW', 'NVG', 'NVA', 'NVMB', 'NVFT', 'NVOS', 'BNE', 'BNVW', 'BNVG', 'BNVA', 'BNVMB', 'BNVFT', 'BNVOS']
     # not_initiated = ['NI']
-    meeting_fixed = ['MF']
-    verbally_booked_status = ['VB', 'TB', 'PB']
-    followup_req_status = ['SE', 'VR', 'CR']
-    not_initiated_status = ['NB', 'NI']
-    rejected_status = ['SR']
+    meeting_fixed = ['MF', 'MWA', 'MWS', 'MWC', 'MWT', 'MWO']
+    meeting_converted = ['MC']
+    verbally_booked_status = ['TB', 'VB', 'PB', 'RE', 'RERR', 'RERA']
+    followup_req_status = ['DP', 'DPNR', 'DPNA', 'DPP', 'DPSOO', 'DPOS', 'SE', 'DPVR', 'DPCR']
+    not_initiated_status = ['NB', 'NI', 'BNI']
+    btoc_rejected_status = ['SR', 'RLO', 'RLC', 'RUB', 'RVE', 'RCR', 'RRS', 'ROS']
+    btob_rejected_status = ['BSR', 'BRLO', 'BRLC', 'BRUB', 'BRVE', 'BRCR', 'BRRS', 'BROS']
+    decision_pending_status = ['BDP', 'BDPNR', 'BDPNA', 'BDPP', 'BDPSOO', 'BDPOS', 'BDPVR', 'BDPCR']
     recce_required = ['DPRR']
+    emergency_situation_status = ['OEL', 'ESVF', 'ESMD', 'ESGR', 'ESOE', 'ESNR']
+    complete_lockdown_status = ['OCL', 'CLVF','CLMD', 'CLGR', 'CLOE', 'CLNR']
+    part_building_lock_status = ['OPBL', 'PBVF', 'PBMD', 'PBGR', 'PBOE', 'PBNR']
+    part_floor_lock_status =['OPFL', 'PFVF', 'PFMD', 'PFGR', 'PFOE', 'PFNR']
+    part_house_lock_status = ['OPHL', 'PHVF', 'PHMD', 'PHGR', 'PHOE', 'PHNR']
+    open_status = ['OP', 'OVF', 'OMD', 'OGR', 'OOE', 'ONR']
+    pipeline_status = ['TB', 'DP']
     all_not_initiated_supplier = []
-    all_rejected_supplier = []
     all_recce_supplier = []
-    all_meeting_fixed_supplier =[]
-    total_not_initiated_flats = 0
-    total_rejected_flats = 0
-    total_recce_flats = 0
-    total_meeting_fixed_flats=0
+
+    proposal = ProposalInfo.objects.get(proposal_id=campaign_id)
+    end_customer = proposal.type_of_end_customer.name
+
+    booking_startdate = timezone.datetime.today().date()
+    booking_enddate = booking_startdate + datetime.timedelta(days=3)
+    pipeline_enddate = booking_startdate + datetime.timedelta(days=7)
 
     for phase_id in shortlisted_spaces_by_phase_dict:
         end_date = all_phase_by_id[phase_id]['end_date'] if phase_id in all_phase_by_id else None
         start_date = all_phase_by_id[phase_id]['start_date'] if phase_id in all_phase_by_id else None
+        total_pipeline_suppliers_count = 0
+        total_pipeline_flats = 0
         total_booked_suppliers_count = 0
         total_booked_flats = 0
         verbally_booked_suppliers_count = 0
@@ -2912,66 +3126,167 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         not_initiated_supplier_count = 0
         not_initiated_flats = 0
         rejected_supplier_count = 0
+        btob_rejected_supplier_count = 0
+        btob_rejected_flats = 0
+        decision_pending_supplier_count = 0
+        decision_pending_flats = 0
         recce_required_supplier_count = 0
         not_initiated_supplier_count = 0
         meeting_fixed_supplier_count =0
         meeting_fixed_flats =0
+        meeting_converted_supplier_count = 0
+        meeting_converted_flats = 0
+        emergency_situation_supplier_count = 0
+        emergency_situation_flats = 0
+        complete_lockdown_supplier_count = 0
+        complete_lockdown_flats = 0
+        part_building_lock_supplier_count = 0
+        part_building_lock_flats = 0
+        part_floor_lock_supplier_count = 0
+        part_floor_lock_flats = 0
+        part_house_lock_supplier_count = 0
+        part_house_lock_flats = 0
+        open_supplier_count = 0
+        open_flats = 0
         recce_flats = 0
         rejected_flats = 0
+        pipeline_supplier_count = 0
+        pipeline_flats = 0
         for status in shortlisted_spaces_by_phase_dict[phase_id]:
             phase_booked_suppliers = len(shortlisted_spaces_by_phase_dict[phase_id][status])
             phase_booked_flats = sum(supplier['flat_count'] for supplier in shortlisted_spaces_by_phase_dict[phase_id][status] if supplier['flat_count'])
-            if status in verbally_booked_status:
-                total_booked_suppliers_count += phase_booked_suppliers
-                total_booked_flats += phase_booked_flats
-                verbally_booked_suppliers_count += phase_booked_suppliers
-                verbally_booked_flats += phase_booked_flats
-            if status in followup_req_status:
-                total_booked_suppliers_count += phase_booked_suppliers
-                total_booked_flats += phase_booked_flats
-                followup_req_booked_suppliers_count += phase_booked_suppliers
-                followup_req_booked_flats += phase_booked_flats
-            if status in confirmed_booked_status:
-                total_booked_suppliers_count += phase_booked_suppliers
-                total_booked_flats += phase_booked_flats
-                confirmed_booked_suppliers_count += phase_booked_suppliers
-                confirmed_booked_flats += phase_booked_flats
-            if status in not_initiated_status:
-                not_initiated_supplier_count += phase_booked_suppliers
-                not_initiated_flats += phase_booked_flats
-                total_not_initiated_flats += phase_booked_flats
-                all_not_initiated_supplier_count = all_not_initiated_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
-            if status in rejected_status:
-                rejected_supplier_count += phase_booked_suppliers
-                rejected_flats += phase_booked_flats
-                total_rejected_flats += phase_booked_flats
-                all_rejected_supplier_count = all_rejected_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
-            if status in recce_required:
-                recce_required_supplier_count += phase_booked_suppliers
-                recce_flats += phase_booked_flats
-                total_recce_flats += phase_booked_flats
-                all_recce_supplier_count = all_recce_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
-            if status in meeting_fixed:
-                meeting_fixed_supplier_count += phase_booked_suppliers
-                meeting_fixed_flats += phase_booked_flats
-                total_meeting_fixed_flats += phase_booked_flats
-                all_meeting_fixed_supplier_count = all_meeting_fixed_supplier + shortlisted_spaces_by_phase_dict[phase_id][status]
+            
+            if end_customer == 'B to C':
+                if status in verbally_booked_status:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
+                    verbally_booked_suppliers_count += phase_booked_suppliers
+                    verbally_booked_flats += phase_booked_flats
+                if status in followup_req_status:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
+                    followup_req_booked_suppliers_count += phase_booked_suppliers
+                    followup_req_booked_flats += phase_booked_flats
+                if status in confirmed_booked_status:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
+                    # confirmed_booked_suppliers_count += phase_booked_suppliers
+                    # confirmed_booked_flats += phase_booked_flats
+                if status in not_initiated_status:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    not_initiated_flats += phase_booked_flats
+                    total_booked_flats += phase_booked_flats
+                    not_initiated_supplier_count += phase_booked_suppliers
+                if status in btoc_rejected_status:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    rejected_flats += phase_booked_flats
+                    total_booked_flats += phase_booked_flats
+                    rejected_supplier_count += phase_booked_suppliers
+                if status in recce_required:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    recce_flats += phase_booked_flats
+                    total_booked_flats += phase_booked_flats
+                    recce_required_supplier_count += phase_booked_suppliers
 
+            elif end_customer == 'B to B':
+                if status in meeting_fixed:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
+                    meeting_fixed_flats += phase_booked_flats
+                    meeting_fixed_supplier_count += phase_booked_suppliers
+                if status in meeting_converted:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
+                    meeting_converted_flats += phase_booked_flats
+                    meeting_converted_supplier_count += phase_booked_suppliers
+                if status in btob_rejected_status:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
+                    btob_rejected_flats += phase_booked_flats
+                    btob_rejected_supplier_count += phase_booked_suppliers
+                if status in decision_pending_status:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
+                    decision_pending_flats += phase_booked_flats
+                    decision_pending_supplier_count += phase_booked_suppliers
+                if status in not_initiated_status:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    not_initiated_flats += phase_booked_flats
+                    total_booked_flats += phase_booked_flats
+                    not_initiated_supplier_count += phase_booked_suppliers
+
+            else: 
+                if status in emergency_situation_status:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
+                    emergency_situation_flats += phase_booked_flats
+                    emergency_situation_supplier_count += phase_booked_suppliers
+                if status in complete_lockdown_status:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
+                    complete_lockdown_flats += phase_booked_flats
+                    complete_lockdown_supplier_count += phase_booked_suppliers
+                if status in part_building_lock_status:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
+                    part_building_lock_flats += phase_booked_flats
+                    part_building_lock_supplier_count += phase_booked_suppliers
+                if status in part_floor_lock_status:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
+                    part_floor_lock_flats += phase_booked_flats
+                    part_floor_lock_supplier_count += phase_booked_suppliers
+                if status in part_house_lock_status:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
+                    part_house_lock_flats += phase_booked_flats
+                    part_house_lock_supplier_count += phase_booked_suppliers
+                if status in open_status:
+                    total_booked_suppliers_count += phase_booked_suppliers
+                    total_booked_flats += phase_booked_flats
+                    open_flats += phase_booked_flats
+                    open_supplier_count += phase_booked_suppliers
 
         total_booked_suppliers_list = flatten_list(
             [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items()])
-        confirmed_booked_suppliers_list = flatten_list(
-            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
-             status in confirmed_booked_status])
+
+        confirmed_booked_suppliers_list = []
+        pipeline_suppliers_list = []
+        total_pipeline_suppliers_list = []
+        for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items():
+            if status in confirmed_booked_status:
+                for row in supplier:
+                    if row["next_action_date"]:
+                        next_action_date = datetime.datetime.strptime(row["next_action_date"], '%Y/%m/%d').date()
+                        if row["next_action_date"] and next_action_date >= booking_startdate and next_action_date <= booking_enddate:
+                            confirmed_booked_suppliers_list.append(row)
+                            confirmed_booked_suppliers_count += 1
+                            confirmed_booked_flats += row["flat_count"]
+
+            elif status in pipeline_status:
+                for row in supplier:
+                    if row["next_action_date"]:
+                        next_action_date = datetime.datetime.strptime(row["next_action_date"], '%Y/%m/%d').date()
+                        if next_action_date and next_action_date >= booking_startdate and next_action_date <= pipeline_enddate:
+                            pipeline_suppliers_list.append(row)
+                            pipeline_supplier_count += 1
+                            pipeline_flats += row["flat_count"]
+
+            if status in verbally_booked_status or status in confirmed_booked_status or status in followup_req_status or status in meeting_fixed or status in meeting_converted or status in decision_pending_status or status in complete_lockdown_status or status in emergency_situation_status or status in part_building_lock_status or status in part_floor_lock_status or status in part_house_lock_status or status in open_status:
+                for row in supplier:
+                    total_pipeline_suppliers_list.append(row)
+                    total_pipeline_suppliers_count += 1
+                    total_pipeline_flats += row["flat_count"]              
+
         verbally_booked_suppliers_list = flatten_list(
             [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
              status in verbally_booked_status])
         followup_required_suppliers_list = flatten_list(
             [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
              status in followup_req_status])
-        rejected_suppliers_list = flatten_list(
+        btoc_rejected_suppliers_list = flatten_list(
             [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
-             status in rejected_status])
+             status in btoc_rejected_status])
         not_initiated_suppliers_list = flatten_list(
             [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
              status in not_initiated_status])
@@ -2981,6 +3296,33 @@ def get_supplier_list_by_status_ctrl(campaign_id):
         meeting_fixed_suppliers_list = flatten_list(
             [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
              status in meeting_fixed])
+        meeting_converted_suppliers_list = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
+             status in meeting_converted])
+        btob_rejected_suppliers_list = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
+             status in btob_rejected_status])
+        decision_pending_suppliers_list = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
+             status in decision_pending_status])
+        emergency_situation_suppliers_list = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
+             status in emergency_situation_status])
+        complete_lockdown_suppliers_list = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
+             status in complete_lockdown_status])
+        part_building_lock_suppliers_list = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
+             status in part_building_lock_status])
+        part_floor_lock_suppliers_list = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
+             status in part_floor_lock_status])
+        part_house_lock_suppliers_list = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
+             status in part_house_lock_status])
+        open_suppliers_list = flatten_list(
+            [supplier for status, supplier in shortlisted_spaces_by_phase_dict[phase_id].items() if
+             status in open_status])
 
         phase_dict = {
             'phase_no': all_phase_by_id[phase_id]['phase_no'],
@@ -2993,6 +3335,11 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 'supplier_count': total_booked_suppliers_count,
                 'flat_count': total_booked_flats,
                 'supplier_data': total_booked_suppliers_list
+            },
+            'total_pipeline': {
+                'supplier_count': total_pipeline_suppliers_count,
+                'flat_count': total_pipeline_flats,
+                'supplier_data': total_pipeline_suppliers_list
             },
             'confirmed_booked': {
                 'supplier_count': confirmed_booked_suppliers_count,
@@ -3012,7 +3359,7 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             'rejected': {
                 'supplier_count': rejected_supplier_count,
                 'flat_count': rejected_flats,
-                'supplier_data': rejected_suppliers_list
+                'supplier_data': btoc_rejected_suppliers_list
             },
             'not_initiated': {
                 'supplier_count': not_initiated_supplier_count,
@@ -3029,6 +3376,56 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 'flat_count': meeting_fixed_flats,
                 'supplier_data': meeting_fixed_suppliers_list
             },
+            'meeting_converted': {
+                'supplier_count': meeting_converted_supplier_count,
+                'flat_count': meeting_converted_flats,
+                'supplier_data': meeting_converted_suppliers_list
+            },
+            'btob_rejected': {
+                'supplier_count': btob_rejected_supplier_count,
+                'flat_count': btob_rejected_flats,
+                'supplier_data': btob_rejected_suppliers_list
+            },
+            'decision_pending': {
+                'supplier_count': decision_pending_supplier_count,
+                'flat_count': decision_pending_flats,
+                'supplier_data': decision_pending_suppliers_list
+            },
+            'emergency_situation': {
+                'supplier_count': emergency_situation_supplier_count,
+                'flat_count': emergency_situation_flats,
+                'supplier_data': emergency_situation_suppliers_list
+            },
+            'complete_lockdown': {
+                'supplier_count': complete_lockdown_supplier_count,
+                'flat_count': complete_lockdown_flats,
+                'supplier_data': complete_lockdown_suppliers_list
+            },
+            'partial_building_lockdown': {
+                'supplier_count': part_building_lock_supplier_count,
+                'flat_count': part_building_lock_flats,
+                'supplier_data': part_building_lock_suppliers_list
+            },
+            'partial_floor_lockdown': {
+                'supplier_count': part_floor_lock_supplier_count,
+                'flat_count': part_floor_lock_flats,
+                'supplier_data': part_floor_lock_suppliers_list
+            },
+            'partial_house_lockdown': {
+                'supplier_count': part_house_lock_supplier_count,
+                'flat_count': part_house_lock_flats,
+                'supplier_data': part_house_lock_suppliers_list
+            },
+            'open': {
+                'supplier_count': open_supplier_count,
+                'flat_count': open_flats,
+                'supplier_data': open_suppliers_list
+            },
+            'pipeline': {
+                'supplier_count': pipeline_supplier_count,
+                'flat_count': pipeline_flats,
+                'supplier_data': pipeline_suppliers_list
+            }
         }
         if end_date is not None and end_date.date() >= current_date:
             shortlisted_spaces_by_phase_list.append(phase_dict)
@@ -3051,19 +3448,28 @@ def get_supplier_list_by_status_ctrl(campaign_id):
                 'confirmed_booked': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 'verbally_booked': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 'rejected': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'btob_rejected': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 'not_initiated': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 'total_booked': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 'recce_required': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 'meeting_fixed': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'meeting_converted': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'decision_pending': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'emergency_situation': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'complete_lockdown': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'partial_building_lockdown': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'partial_floor_lockdown': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'partial_house_lockdown': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'open': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
+                'pipeline': {'supplier_count': 0, 'flat_count': 0, 'supplier_data': []},
                 }
+
     for phase in upcoming_beyond_three:
-        for status_type in ['followup_required', 'confirmed_booked', 'verbally_booked', 'rejected', 'total_booked', 'not_initiated', 'recce_required', 'meeting_fixed']:
+        for status_type in ['followup_required', 'confirmed_booked', 'verbally_booked', 'rejected', 'btob_rejected', 'total_booked', 'not_initiated', 'recce_required', 'meeting_fixed', 'meeting_converted', 'decision_pending', 
+                        'emergency_situation', 'complete_lockdown', 'partial_building_lockdown', 'partial_floor_lockdown', 'partial_house_lockdown', 'open']:
             pipeline[status_type]['supplier_count'] += phase[status_type]['supplier_count']
             pipeline[status_type]['flat_count'] += phase[status_type]['flat_count']
             pipeline[status_type]['supplier_data'] += phase[status_type]['supplier_data']
-            pipeline['total_booked']['supplier_count'] += phase[status_type]['supplier_count']
-            pipeline['total_booked']['flat_count'] += phase[status_type]['flat_count']
-            pipeline['total_booked']['supplier_data'] += phase[status_type]['supplier_data']
 
     for supplier in (no_status_suppliers + no_phase_suppliers):
         if not supplier['booking_status']:
@@ -3074,36 +3480,100 @@ def get_supplier_list_by_status_ctrl(campaign_id):
             pipeline['followup_required']['supplier_data'].append(supplier)
             pipeline['followup_required']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['followup_required']['supplier_count'] += 1
+            # pipeline['total_booked']['supplier_data'].append(supplier)
+            # pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            # pipeline['total_booked']['supplier_count'] += 1
         if supplier['booking_status'] in verbally_booked_status:
             pipeline['verbally_booked']['supplier_data'].append(supplier)
             pipeline['verbally_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['verbally_booked']['supplier_count'] += 1
-        if supplier['booking_status'] in rejected_status:
+        if supplier['booking_status'] in btoc_rejected_status:
             pipeline['rejected']['supplier_data'].append(supplier)
             pipeline['rejected']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['rejected']['supplier_count'] += 1
+        if supplier['booking_status'] in btob_rejected_status:
+            pipeline['btob_rejected']['supplier_data'].append(supplier)
+            pipeline['btob_rejected']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['btob_rejected']['supplier_count'] += 1
         if supplier['booking_status'] in recce_required:
             pipeline['recce_required']['supplier_data'].append(supplier)
             pipeline['recce_required']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['recce_required']['supplier_count'] += 1
+            # pipeline['total_booked']['supplier_data'].append(supplier)
+            # pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            # pipeline['total_booked']['supplier_count'] += 1
         if supplier['booking_status'] in meeting_fixed:
             pipeline['meeting_fixed']['supplier_data'].append(supplier)
             pipeline['meeting_fixed']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
             pipeline['meeting_fixed']['supplier_count'] += 1
+        if supplier['booking_status'] in meeting_converted:
+            pipeline['meeting_converted']['supplier_data'].append(supplier)
+            pipeline['meeting_converted']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['meeting_converted']['supplier_count'] += 1
+        if supplier['booking_status'] in decision_pending_status:
+            pipeline['decision_pending']['supplier_data'].append(supplier)
+            pipeline['decision_pending']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['decision_pending']['supplier_count'] += 1
+        if supplier['booking_status'] in emergency_situation_status:
+            pipeline['emergency_situation']['supplier_data'].append(supplier)
+            pipeline['emergency_situation']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['emergency_situation']['supplier_count'] += 1
+        if supplier['booking_status'] in complete_lockdown_status:
+            pipeline['complete_lockdown']['supplier_data'].append(supplier)
+            pipeline['complete_lockdown']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['complete_lockdown']['supplier_count'] += 1
+        if supplier['booking_status'] in part_building_lock_status:
+            pipeline['partial_building_lockdown']['supplier_data'].append(supplier)
+            pipeline['partial_building_lockdown']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['partial_building_lockdown']['supplier_count'] += 1
+        if supplier['booking_status'] in part_floor_lock_status:
+            pipeline['partial_floor_lockdown']['supplier_data'].append(supplier)
+            pipeline['partial_floor_lockdown']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['partial_floor_lockdown']['supplier_count'] += 1
+        if supplier['booking_status'] in part_house_lock_status:
+            pipeline['partial_house_lockdown']['supplier_data'].append(supplier)
+            pipeline['partial_house_lockdown']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['partial_house_lockdown']['supplier_count'] += 1
+        if supplier['booking_status'] in open_status:
+            pipeline['open']['supplier_data'].append(supplier)
+            pipeline['open']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+            pipeline['open']['supplier_count'] += 1
+        if supplier['booking_status'] in pipeline_status and supplier["next_action_date"]:
+            next_action_date = datetime.datetime.strptime(supplier["next_action_date"], '%Y/%m/%d').date()
+            if next_action_date >= booking_startdate and next_action_date <= pipeline_enddate:
+                pipeline['pipeline']['supplier_data'].append(supplier)
+                pipeline['pipeline']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
+                pipeline['pipeline']['supplier_count'] += 1
 
         pipeline['total_booked']['supplier_data'].append(supplier)
         pipeline['total_booked']['flat_count'] += supplier['flat_count'] if supplier['flat_count'] else 0
         pipeline['total_booked']['supplier_count'] += 1
+    
+    breakup_header = v0_constants.breakup_header
+    summary_header = v0_constants.summary_header
 
     if len(completed_phases) > 0:
         last_completed_phase = sorted(completed_phases, key=lambda k: int(k['phase_no']))[-1]
+    if last_completed_phase:
+        if ongoing_phase:
+            upcoming_phase = sorted_upcoming_phases[:1]
+        else:
+            upcoming_phase = sorted_upcoming_phases[:2]
+    else:
+        if ongoing_phase:
+            upcoming_phase = sorted_upcoming_phases[:2]
+        else:
+            upcoming_phase = sorted_upcoming_phases[:3]
     shortlisted_spaces_by_phase_dict = {
         'all_phases': shortlisted_spaces_by_phase_list,
         'last_completed_phase': last_completed_phase,
-        'upcoming_phases': sorted_upcoming_phases[:3],
+        'upcoming_phases': upcoming_phase,
         'ongoing_phase': ongoing_phase,
         'pipeline_suppliers': pipeline,
-        'completed_phases': completed_phases
+        'completed_phases': completed_phases,
+        'breakup_header' : breakup_header,
+        'summary_header' : summary_header,
+        'type_of_end_customer' : end_customer,
     }
     return shortlisted_spaces_by_phase_dict
 
@@ -3111,9 +3581,13 @@ def get_supplier_list_by_status_ctrl(campaign_id):
 class getSupplierListByStatus(APIView):
     @staticmethod
     def get(request, campaign_id):
-        center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
-        shortlisted_spaces_by_phase_list = get_supplier_list_by_status_ctrl(campaign_id)
-        return Response({'status': True, 'data': shortlisted_spaces_by_phase_list, 'supplier_type_code':center_data})
+        try:
+            center_data = ProposalCenterSuppliers.objects.filter(proposal_id=campaign_id).values('supplier_type_code').annotate(supplier_type=Count('supplier_type_code'))
+            shortlisted_spaces_by_phase_list = get_supplier_list_by_status_ctrl(campaign_id)
+            return Response({'status': True, 'data': shortlisted_spaces_by_phase_list, 'supplier_type_code':center_data})
+        except Exception as e:
+            logger.exception(e)
+            return ui_utils.handle_response("", exception_object=e, request=request)
 
 class ImportSheetInExistingCampaign(APIView):
     """
@@ -3130,31 +3604,11 @@ class ImportSheetInExistingCampaign(APIView):
         try:
             data = request.data.copy()
 
-            is_import_sheet = data['is_import_sheet']
-    
-            if is_import_sheet:
-                response = genrate_supplier_data(data,request.user)
-                if not response.data['status']:
-                    return response
-                proposal_data = response.data['data']
-            else:
-                proposal_data = data
-            center_id = proposal_data['center_id']
-            proposal = ProposalInfo.objects.get(pk=proposal_data['proposal_id'])
-            center = ProposalCenterMapping.objects.get(pk=center_id)
-            for supplier_code in proposal_data['center_data']:
-
-                old_shortlisted_suppliers = ShortlistedSpaces.objects.filter(proposal_id=proposal_data['proposal_id'])
-                old_shortlisted_suppliers_map = {}
-                if old_shortlisted_suppliers:
-                    old_shortlisted_suppliers_map = {supplier.object_id: supplier for supplier in
-                                                     old_shortlisted_suppliers}
-                response = website_utils.save_shortlisted_suppliers_data(center, supplier_code, proposal_data, proposal)
-                if not response.data['status']:
-                    return response
+            genrate_supplier_data2(data,request.user)
 
             return ui_utils.handle_response(class_name, data={}, success=True)
         except Exception as e:
+            logger.exception(e)
             return ui_utils.handle_response(class_name, exception_object=e, request=request)
 
 class GetOngoingSuppliersOfCampaign(APIView):
@@ -3288,6 +3742,7 @@ class SupplierAssignmentViewSet(viewsets.ViewSet):
         class_name = self.__class__.__name__
         user = request.user.id
         campaign_id = request.query_params.get('campaign_id')
+
         if not campaign_id:
             return ui_utils.handle_response(class_name, data='Please pass campaign Id', success=False)
         suppliers = SupplierAssignment.objects.filter(campaign=campaign_id, assigned_by=user)
@@ -3299,6 +3754,7 @@ class SupplierAssignmentViewSet(viewsets.ViewSet):
             result_obj[supplier_obj.supplier_id]["updated_at"] = supplier_obj.updated_at
             result_obj[supplier_obj.supplier_id]["supplier_id"] = supplier_obj.supplier_id
         result_list = [result_obj[supplier] for supplier in result_obj]
+
         return ui_utils.handle_response(class_name, data=result_list, success=True)
 
 
@@ -3336,3 +3792,26 @@ class ConvertProposalToCampaign(APIView):
             return ui_utils.handle_response(class_name, data='Proposal conversion successfull', success=True)
         except Exception as e:
             return ui_utils.handle_response(class_name, data='Error converting proposal', success=False)
+
+class BookingStatusAPI(APIView):
+    def get(self, request, proposal_id):
+        try:
+            class_name = self.__class__.__name__
+            end_customer = ProposalInfo.objects.filter(proposal_id=proposal_id).values('type_of_end_customer')
+            bk_status = BookingStatus.objects.prefetch_related('booking_substatus').filter(type_of_end_customer__in = end_customer)
+            serializer = BookingStatusSerializer(bk_status, many=True)
+
+            return ui_utils.handle_response(class_name, data=serializer.data, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, success=False)
+
+class EndCustomerType(APIView):
+    def get(self, request):
+        try:
+            class_name = self.__class__.__name__
+            end_customer = TypeOfEndCustomer.objects.all().values('id', 'name')
+            return ui_utils.handle_response(class_name, data=end_customer, success=True)
+
+        except Exception as e:
+            return ui_utils.handle_response(class_name, exception_object=e, success=False)

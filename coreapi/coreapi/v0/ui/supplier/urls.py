@@ -4,10 +4,10 @@ from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 
 from .views import (TransactionDataImport, SocietyDataImport, FilteredSuppliersAPIView, ImportSocietyData,
-                    ImportContactDetails, FilteredSuppliers, SupplierSearch, SupplierDetails,
+                    ImportContactDetails, FilteredSuppliers, SupplierSearch, SupplierDetails, UpdateSupplierDataImport,
                     ImportSupplierDataFromSheet, ImportSupplierData, addSupplierDirectToCampaign, deleteSuppliers,
                     deleteShortlistedSpaces, insertFlatCountType, listCampaignSuppliers, CreateSupplierPriceMappingObjects,
-                    GetLocationDataInSheet, MultiSupplierDetails, ListCampaignSuppliers)
+                    GetLocationDataInSheet, MultiSupplierDetails, ListCampaignSuppliers, SocietySupplierRelationship, ListSuppliers, AssignSupplierUsers, DownloadExcel)
 
 urlpatterns = [
     url(r'^society-transaction-data-import-excel/$', TransactionDataImport.as_view()),
@@ -29,5 +29,10 @@ urlpatterns = [
     url(r'^create_pmd_for_supplier/$', CreateSupplierPriceMappingObjects.as_view()),
     url(r'^get-location-data-in-sheet/$', GetLocationDataInSheet.as_view()),
     url(r'^multi-supplier-details/$', MultiSupplierDetails.as_view()),
+    url(r'^society-supplier-relationship/$', SocietySupplierRelationship.as_view()),
+    url(r'^list-suppliers/citywise/$', ListSuppliers.as_view()),
+    url(r'^assign-supplier-users/$', AssignSupplierUsers.as_view()),
+    url(r'^update-supplier-data/$', UpdateSupplierDataImport.as_view()),
+    url(r'^download-supplier-data/$', DownloadExcel.as_view()),
 ]
 

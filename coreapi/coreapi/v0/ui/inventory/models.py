@@ -593,6 +593,13 @@ class InventorySummary(BaseModel):
     wall_inventory = models.BooleanField(default=False)
     bus_shelter_lit = models.BooleanField(default=False)
     gantry_lit = models.BooleanField(default=False)
+    poster_allowed_lift_A4 = models.BooleanField(default=False)
+    poster_allowed_lift_A3 = models.BooleanField(default=False)
+    standee_large = models.BooleanField(default=False)
+    stall_customize = models.BooleanField(default=False)
+    banner_small = models.BooleanField(default=False)
+    banner_medium = models.BooleanField(default=False)
+    banner_large = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'inventory_summary'
@@ -792,3 +799,33 @@ class SunBoardInventory(BaseModel):
 
     class Meta:
         db_table = 'sun_board_inventory'
+
+
+class WhatsAppIndividualInventory(BaseModel):
+    """
+
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'whatsapp_individual_inventory'
+
+
+class WhatsAppGroupInventory(BaseModel):
+    """
+
+    """
+    id = models.AutoField(db_column='ID', primary_key=True)
+    adinventory_id = models.CharField(db_column='ADINVENTORY_ID', max_length=22, unique=True)
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=supplier_id_max_length, null=True)
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
+    objects = managers.GeneralManager()
+
+    class Meta:
+        db_table = 'whatsapp_group_inventory'
