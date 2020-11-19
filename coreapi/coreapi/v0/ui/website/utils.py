@@ -4435,6 +4435,7 @@ def update_campaign_inventories(data):
             obj.booking_priority = shortlisted_spaces[ss_global_id]['booking_priority']
             obj.sunboard_location = shortlisted_spaces[ss_global_id]['sunboard_location']
             obj.next_action_date = shortlisted_spaces[ss_global_id]['next_action_date']
+            obj.last_call_date = shortlisted_spaces[ss_global_id]['last_call_date']
             
             if not obj.requirement_given == shortlisted_spaces[ss_global_id]['requirement_given']:
                 obj.requirement_given = shortlisted_spaces[ss_global_id]['requirement_given']
