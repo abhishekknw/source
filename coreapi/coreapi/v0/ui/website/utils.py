@@ -4339,11 +4339,8 @@ def handle_update_campaign_inventories(user, data):
                 'booking_priority': supplier['booking_priority'],
                 'sunboard_location': supplier['sunboard_location'] if 'sunboard_location' in supplier else None,
                 'next_action_date': supplier['next_action_date'] if 'next_action_date' in supplier else None,
-<<<<<<< HEAD
                 'last_call_date': supplier['last_call_date'] if 'last_call_date' in supplier else None,
-=======
                 'requirement_given': supplier['requirement_given'] if 'requirement_given' in supplier else 'no',
->>>>>>> fa9e3002c685b9445ba46bd284fdb0565fb7bba2
             }
 
             shortlisted_inventories = supplier['shortlisted_inventories']
