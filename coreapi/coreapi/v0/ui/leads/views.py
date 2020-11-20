@@ -41,6 +41,7 @@ from bson.objectid import ObjectId
 from v0.ui.proposal.models import ProposalInfo, ProposalCenterSuppliers, BookingSubstatus
 from v0.ui.account.models import Profile
 from v0.ui.dynamic_suppliers.utils import get_dynamic_single_supplier_data
+from .utils import convert_xldate_as_datetime, add_society_to_campaign
 
 import logging
 logger = logging.getLogger(__name__)
@@ -474,27 +475,50 @@ class LeadsFormBulkEntry(APIView):
             all_sha256 = list(mongo_client.leads.find({"leads_form_id": int(leads_form_id)},{"lead_sha_256": 1, "_id": 0}))
             all_sha256_list = [str(element['lead_sha_256']) for element in all_sha256]
             apartment_index = None
+            phone_number_index = None
             club_name_index = None
+            phone_number = None
+            lead_entry_date = None
+            lead_entry_date_index = None
             for index, row in enumerate(ws.iter_rows()):
                 if index == 0:
                     for idx, i in enumerate(row):
                         if i.value and 'apartment' in i.value.lower():
                             apartment_index = idx
-                            break
+                        if i.value and i.value.lower() == 'phone_number':
+                            phone_number_index = idx
+                        if i.value and i.value.lower() == 'lead_entry_date':
+                            lead_entry_date_index = idx
                     if not apartment_index:
                         for idx, i in enumerate(row):
                             if i.value and 'club name' in i.value.strip().lower():
                                 club_name_index = idx
                                 break
+                    if not phone_number_index:
+                        return handle_response('', data='phone_number header is missing')
+                    if not lead_entry_date_index:
+                        return handle_response('', data='lead_entry_date header is missing')
                 if apartment_index is None and club_name_index is None:
                     return handle_response('', data="neither apartment nor club found in the sheet", success=False)
                 entity_index = apartment_index if apartment_index else club_name_index
+
                 if index > 0:
                     if not (row[entity_index].value is None):
                         society_name = row[entity_index].value
 
                     suppliers = get_supplier_data_by_type(society_name)
 
+                    if not (row[phone_number_index].value is None):
+                        phone_number = row[phone_number_index].value
+
+                    if not (row[lead_entry_date_index].value is None):
+                        lead_entry_date = row[lead_entry_date_index].value
+                        try:
+                            lead_entry_date = convert_xldate_as_datetime(lead_entry_date)
+                            lead_entry_date = lead_entry_date.isoformat()
+                        except Exception as e:
+                            return handle_response('', data="Pass lead_entry_date as dd/mm/yy format",
+                                                   success=False)
 
                     if len(suppliers) == 0:
                         if society_name not in missing_societies and society_name is not None:
@@ -515,7 +539,7 @@ class LeadsFormBulkEntry(APIView):
                             #     continue
                             if len(shortlisted_spaces) == 0:
                                 not_present_in_shortlisted_societies.append(society_name)
-                                continue
+                                add_society_to_campaign(campaign_id, supplier_id)
                             else:
                                 found_supplier_id = shortlisted_spaces[0]['object_id']
 
@@ -523,38 +547,42 @@ class LeadsFormBulkEntry(APIView):
                         proposal_id=campaign_id).all()
                     if len(shortlisted_spaces) == 0:
                         not_present_in_shortlisted_societies.append(society_name)
-                        continue
-                    inventory_list = ShortlistedInventoryPricingDetails.objects.filter(
-                        shortlisted_spaces_id=shortlisted_spaces[0].id).all()
-                    stall = None
+                        add_society_to_campaign(campaign_id, found_supplier_id)
 
-                    for inventory in inventory_list:
-                        if inventory.ad_inventory_type_id >= 8 and inventory.ad_inventory_type_id <= 11:
-                            stall = inventory
-                            break
-                    if not stall:
-                        continue
-                    shortlisted_inventory_details_id = stall.id
-                    inventory_list = InventoryActivity.objects.filter(
-                        shortlisted_inventory_details_id=shortlisted_inventory_details_id, activity_type='RELEASE').all()
+                    if len(shortlisted_spaces) > 0:
+                        inventory_list = ShortlistedInventoryPricingDetails.objects.filter(
+                            shortlisted_spaces_id=shortlisted_spaces[0].id).all()
+                        stall = None
 
-                    if len(inventory_list) == 0:
-                        inv_activity_missing_societies.append(society_name)
-                        continue
-                    inventory_activity_id = inventory_list[0].id
-                    inventory_activity_list = InventoryActivityAssignment.objects.filter(
-                        inventory_activity_id=inventory_activity_id).all()
-                    if len(inventory_activity_list) == 0:
-                        inv_activity_assignment_missing_societies.append(society_name)
-                        continue
+                        for inventory in inventory_list:
+                            if inventory.ad_inventory_type_id >= 8 and inventory.ad_inventory_type_id <= 11:
+                                stall = inventory
+                                break
+                        if not stall:
+                            continue
+                        shortlisted_inventory_details_id = stall.id
+                        inventory_list = InventoryActivity.objects.filter(
+                            shortlisted_inventory_details_id=shortlisted_inventory_details_id, activity_type='RELEASE').all()
 
-                    created_at = inventory_activity_list[0].activity_date if inventory_activity_list[0].activity_date else None
-                    if not created_at:
-                        inv_activity_assignment_activity_date_missing_societies.append(society_name)
-                        continue
+                        if len(inventory_list) == 0:
+                            inv_activity_missing_societies.append(society_name)
+                            continue
+                        inventory_activity_id = inventory_list[0].id
+                        inventory_activity_list = InventoryActivityAssignment.objects.filter(
+                            inventory_activity_id=inventory_activity_id).all()
+                        if len(inventory_activity_list) == 0:
+                            inv_activity_assignment_missing_societies.append(society_name)
+                            continue
+
+                        created_at = inventory_activity_list[0].activity_date if inventory_activity_list[0].activity_date else None
+                        if not created_at:
+                            inv_activity_assignment_activity_date_missing_societies.append(society_name)
+                    else:
+                        created_at = datetime.datetime.now()
                     lead_dict = {"data": [], "is_hot": False, "created_at": created_at, "supplier_id": found_supplier_id,
-                                 "campaign_id": campaign_id, "leads_form_id": int(leads_form_id)}
-                    lead_for_hash = {"data": []}
+                                 "campaign_id": campaign_id, "leads_form_id": int(leads_form_id), "entry_id": entry_id,
+                                 "phone_number": phone_number, 'lead_entry_date': lead_entry_date}
+                    lead_for_hash = {"data": [], "phone_number": phone_number}
                     for item_id in range(0, fields):
                         curr_item_id = item_id + 1
                         curr_form_item_dict = lead_form['data'][str(curr_item_id)]
@@ -644,6 +672,7 @@ class LeadsFormBulkEntry(APIView):
             }
             return handle_response({}, data=missing_dict, success=True)
         except Exception as ex:
+            print(ex)
             return handle_response({}, data="failed", success=False)
 
 

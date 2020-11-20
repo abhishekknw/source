@@ -7,7 +7,6 @@ from bson.objectid import ObjectId
 logger = logging.getLogger(__name__)
 
 
-
 class updateLeadsItems(APIView):
     @staticmethod
     def patch(request):
