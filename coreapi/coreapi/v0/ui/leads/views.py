@@ -38,7 +38,7 @@ from v0.ui.proposal.views import convert_date_format
 pp = pprint.PrettyPrinter(depth=6)
 import hashlib
 from bson.objectid import ObjectId
-from v0.ui.proposal.models import ProposalInfo, ProposalCenterSuppliers
+from v0.ui.proposal.models import ProposalInfo, ProposalCenterSuppliers, BookingSubstatus
 from v0.ui.account.models import Profile
 from v0.ui.dynamic_suppliers.utils import get_dynamic_single_supplier_data
 
@@ -1690,9 +1690,9 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
         supplier_data.append(
             booking_priority_code_to_status[supplier['booking_priority']] if supplier['booking_priority'] else None)
         supplier_data.append(booking_code_to_status[supplier['booking_status']] if supplier['booking_status'] else None)
-        supplier_data.append(booking_substatus_code_to_status[supplier['booking_sub_status']] if supplier['booking_sub_status'] else None)
         
-
+        booking_substatus = BookingSubstatus.objects.filter(code=supplier['booking_sub_status']).first()
+        supplier_data.append(booking_substatus.name if booking_substatus else None)
 
         # supplier_data.append(supplier['next_action_date'])
         next_action_date = None
