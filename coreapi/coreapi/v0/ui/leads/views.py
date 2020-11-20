@@ -1714,7 +1714,8 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
 
         supplier_data.append(primary_count)
         supplier_data.append(secondary_count)
-        supplier_data.append(supplier["avg_household_occupants"])
+        if supplier['avg_household_occupants']:
+            supplier_data.append(supplier["avg_household_occupants"])
 
         supplier_data.append(supplier['cost_per_flat'])
         supplier_data.append(
