@@ -1662,8 +1662,8 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
 
     header_list = [
         'Index', 'Proposal Id', 'Supplier Id', 'Supplier Name', 'Supplier Type' , 'Subarea', 'Area', 'City', 'Address',
-        'Landmark', 'PinCode', 'Unit Primary Count / Flat Count', 'Unit Secondary Count / Tower Count',
-        'Cost Per Unit', 'Booking Priority', 'Booking Status', 'Booking Sub-status', 'Next Action Date',
+        'Landmark', 'PinCode', 'Unit Primary Count / Flat Count', 'Unit Secondary Count / Tower Count', 'Average Household Points',
+        'Cost Per Unit', 'Booking Priority', 'Booking Status', 'Booking Sub-status', 'Next Action Date', 'Date of Last Call',
         'Payment Method', 'Payment Status', 'Completion Status', 'Total Price',
         'Internal Comment', 'External Comment', 'Rating', 'Assigned To',
         # 'Poster Allowed', 'Poster Count', 'Poster Price',
@@ -1714,6 +1714,8 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
 
         supplier_data.append(primary_count)
         supplier_data.append(secondary_count)
+        if supplier['avg_household_occupants']:
+            supplier_data.append(supplier["avg_household_occupants"])
 
         supplier_data.append(supplier['cost_per_flat'])
         supplier_data.append(
@@ -1728,6 +1730,11 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
         if supplier['next_action_date']:
             next_action_date = datetime.datetime.strptime(supplier['next_action_date'], '%Y-%m-%dT%H:%M:%SZ').strftime("%d/%m/%Y")
         supplier_data.append(next_action_date)
+
+        last_call_date = None
+        if supplier['last_call_date']:
+            last_call_date = datetime.datetime.strptime(supplier['last_call_date'], '%Y-%m-%dT%H:%M:%SZ').strftime("%d/%m/%Y")
+        supplier_data.append(last_call_date)
 
         supplier_data.append(supplier['payment_method'])
         supplier_data.append(payment_code_to_status[supplier['payment_status']] if supplier['payment_status'] else None)
