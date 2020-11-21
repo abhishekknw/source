@@ -1714,12 +1714,10 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
 
         supplier_data.append(primary_count)
         supplier_data.append(secondary_count)
-        if supplier['avg_household_occupants']:
-            supplier_data.append(supplier["avg_household_occupants"])
+        supplier_data.append(supplier["avg_household_occupants"] if supplier['avg_household_occupants'] else None)
 
         supplier_data.append(supplier['cost_per_flat'])
-        supplier_data.append(
-            booking_priority_code_to_status[supplier['booking_priority']] if supplier['booking_priority'] else None)
+        supplier_data.append(booking_priority_code_to_status[supplier['booking_priority']] if supplier['booking_priority'] else None)
         supplier_data.append(booking_code_to_status[supplier['booking_status']] if supplier['booking_status'] else None)
         
         booking_substatus = BookingSubstatus.objects.filter(code=supplier['booking_sub_status']).first()
