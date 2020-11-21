@@ -50,11 +50,15 @@ class ImportLead(APIView):
             if index == 0:
                 i = 0
                 for key in row:
-                    key1 = key.value.lower()
-                    key1 = key1.strip()
+                    if key.value is not None:
+                        key1 = key.value.lower()
+                        key1 = key1.strip()
+                    else:
+                        key1 = None
                     headers[key1] = i
                     i+=1
             else:
+
                 # Parsing excel columns
                 phone_number = get_value_from_list_by_key(row, headers.get('phone number'))
                 supplier_name = get_value_from_list_by_key(row, headers.get('supplier name'))
@@ -86,9 +90,13 @@ class ImportLead(APIView):
                 
                 supplier_id = ""
                 supplier_type = "RS"
-
-                sector = BusinessTypes.objects.filter(business_type=sector_name.lower()).first()
-                sub_sector = BusinessSubTypes.objects.filter(business_sub_type=sub_sector_name.lower()).first()
+                sector = None
+                if sector_name is not None:
+                    sector = BusinessTypes.objects.filter(business_type=sector_name.lower()).first()
+                
+                sub_sector = None
+                if sub_sector_name is not None:
+                    sub_sector = BusinessSubTypes.objects.filter(business_sub_type=sub_sector_name.lower()).first()
 
                 supplier_conditions = {}
                 supplier = None
@@ -119,7 +127,6 @@ class ImportLead(APIView):
                     city = ""
                     area = ""
                     
-
                     if supplier_type != "RS":
                         city = supplier.address_supplier.city
                         area = supplier.address_supplier.area
@@ -325,9 +332,9 @@ class RequirementClass(APIView):
             prefered_patners_list = Organisation.objects.filter(
                 organisation_id__in=req["preferred_company"]).all()
             reqs = Requirement.objects.filter(
-                sector_id = req["sector"], 
-                sub_sector_id = req["sub_sector"], 
-                shortlisted_spaces_id = req["shortlisted_spaces"], 
+                sector_id = req["sector"],
+                sub_sector_id = req["sub_sector"],
+                shortlisted_spaces_id = req["shortlisted_spaces"],
                 lead_by_id = req["lead_by"]["id"],
             )
             for row in reqs:
@@ -348,7 +355,7 @@ class RequirementClass(APIView):
                 else:
                     return ui_utils.handle_response({}, data={"errors":requirement_data.errors}, success=False)
 
-        return ui_utils.handle_response({}, data={}, success=True)
+        return ui_utils.handle_response({}, data={"lead_status":lead_status}, success=True)
 
 
 def remove_suspense_lead_cron():
@@ -1118,9 +1125,15 @@ class GetSupplierByCampaign(APIView):
 
         campaign_id = request.query_params.get('campaign_id')
         supplier_ids = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('object_id')
-        supplier_society_data = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids).values('supplier_id').annotate(
+        
+        verified_supplier_ids = Requirement.objects.filter(
+            company_shortlisted_spaces_id__object_id__in=supplier_ids,
+            varified_bd="yes").values('company_shortlisted_spaces_id__object_id')
+        
+        supplier_society_data = SupplierTypeSociety.objects.filter(supplier_id__in=verified_supplier_ids).values('supplier_id').annotate(
             supplier_name = F('society_name'), unit_primary_count=F('flat_count'), city=F('society_city'), area=F('society_locality'))
-        supplier_master_data = SupplierMaster.objects.filter(supplier_id__in=supplier_ids).values('supplier_id', 'supplier_name', 'unit_primary_count', 'city', 'area')
+        
+        supplier_master_data = SupplierMaster.objects.filter(supplier_id__in=verified_supplier_ids).values('supplier_id', 'supplier_name', 'unit_primary_count', 'city', 'area')
         supplier_data = list(supplier_society_data) + list(supplier_master_data)
 
         return ui_utils.handle_response({}, data=supplier_data, success=True)

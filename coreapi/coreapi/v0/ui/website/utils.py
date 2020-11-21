@@ -4171,7 +4171,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
         
         shortlisted_spaces = ShortlistedSpaces.objects.filter(filter_query)
 
-        if proposal.type_of_end_customer and proposal.type_of_end_customer.formatted_name == "b_to_b_r_g":
+        if proposal.type_of_end_customer and proposal.type_of_end_customer.formatted_name in ["b_to_b_r_g", "b_to_b_l_d"]:
             shortlisted_spaces = shortlisted_spaces.order_by(F('color_code').asc(nulls_last=True), '-requirement_given_date')
         else:
             shortlisted_spaces = shortlisted_spaces.order_by('-id')
