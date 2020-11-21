@@ -1714,6 +1714,7 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
 
         supplier_data.append(primary_count)
         supplier_data.append(secondary_count)
+        avg_household_occupants = None
         if supplier.get('avg_household_occupants'):
             avg_household_occupants = supplier.get('avg_household_occupants')
         supplier_data.append(avg_household_occupants)
