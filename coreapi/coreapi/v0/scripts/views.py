@@ -284,3 +284,16 @@ class AddBookingSubstatus(APIView):
             print(e)
             return handle_response({}, data='substatuss not updated', success=True)
         return handle_response({}, data='File created', success=True)
+
+class UpdateLandmark(APIView):
+
+    def post(self, request):
+    
+        data = request.data
+        for row in data:
+            supplier_id = row['supplier_id']
+            landmark = row['landmark']
+            supplier_society = SupplierTypeSociety.objects.filter(supplier_id=supplier_id)
+            if supplier_society:
+                supplier_society.update(landmark=landmark)
+        return handle_response({}, data='Landmark updated successfully', success=True)

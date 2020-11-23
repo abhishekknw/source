@@ -9,6 +9,7 @@ from .models import (SupplierTypeSociety, SupplierAmenitiesMap, SupplierTypeCorp
                     SupplierTypeRetailShop, CorporateParkCompanyList, CorporateBuilding, SupplierTypeBusDepot,
                     SupplierTypeCode, SupplierTypeBusShelter, CorporateCompanyDetails, RETAIL_SHOP_TYPE, SupplierMaster, AddressMaster)
 from .serializers import SupplierMasterSerializer
+from v0.ui.account.models import ContactDetails
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from v0.ui.finances.models import PriceMappingDefault
@@ -86,6 +87,24 @@ def get_duplicate_supplier(index, item):
             "matched_with": matches[0]
         }
 
+def add_contact_data(supplier_id, row):
+    contact_number = row[17].value
+    contact_name = row[18].value
+    contact_type = row[19].value
+    
+    if contact_number and supplier_id:
+        contact_details = ContactDetails.objects.filter(mobile=contact_number, object_id=supplier_id)
+        if contact_details:
+            if contact_name and contact_type:
+                contact_details.update(name=contact_name, contact_type=contact_type)                
+        else:
+            ContactDetails(**{
+                'object_id': supplier_id,
+                'mobile' : contact_number, 
+                'name' : contact_name, 
+                'contact_type' : contact_type,
+            }).save()
+
 @method_decorator(csrf_exempt, name='dispatch')
 class CorporateParkDataImport(APIView):
     """
@@ -143,12 +162,13 @@ class CorporateParkDataImport(APIView):
                 }
                 supplier_id = get_supplier_id(supplier_data1)
 
-                if row[17].value != 'D':
+                if row[20].value != 'D':
                     duplicate = get_duplicate_supplier(index, row)
                     if duplicate:
                         duplicates_list.append(duplicate)
 
                         cell_list = [duplicate["supplier_id"]]
+                        add_contact_data(duplicate["supplier_id"], row)
                         for cell in row:
                             cell_list.append(cell.value)
                         sheet.append(cell_list)
@@ -181,6 +201,8 @@ class CorporateParkDataImport(APIView):
                     'locality_rating': row[15].value,
                     'quantity_rating': row[16].value,
                 }
+
+                add_contact_data(supplier_id, row)
 
                 if row[1].value != "RS":
                     serializer = SupplierMasterSerializer(data=supplier_data)

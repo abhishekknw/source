@@ -313,5 +313,5 @@ connect(
 
 # CronJob settings
 CRONJOBS = [
-    ('* */12 * * *', 'v0.ui.b2b.views.remove_suspense_lead_cron') # Remove suspance leads
+    ('* */1 * * *', 'v0.ui.b2b.views.remove_suspense_lead_cron') # Remove suspance leads
 ]

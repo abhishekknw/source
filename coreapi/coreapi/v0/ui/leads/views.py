@@ -23,7 +23,7 @@ from bulk_update.helper import bulk_update
 from v0.ui.common.models import BaseUser
 from v0.ui.campaign.models import CampaignAssignment, CampaignComments
 from v0.constants import (campaign_status, proposal_on_hold, booking_code_to_status,
-                          payment_code_to_status, booking_priority_code_to_status )
+                          payment_code_to_status, booking_priority_code_to_status, booking_substatus_code_to_status)
 from django.http import HttpResponse
 from celery import shared_task
 from django.conf import settings
@@ -38,9 +38,10 @@ from v0.ui.proposal.views import convert_date_format
 pp = pprint.PrettyPrinter(depth=6)
 import hashlib
 from bson.objectid import ObjectId
-from v0.ui.proposal.models import ProposalInfo, ProposalCenterSuppliers
+from v0.ui.proposal.models import ProposalInfo, ProposalCenterSuppliers, BookingSubstatus
 from v0.ui.account.models import Profile
 from v0.ui.dynamic_suppliers.utils import get_dynamic_single_supplier_data
+from .utils import convert_xldate_as_datetime, add_society_to_campaign
 
 import logging
 logger = logging.getLogger(__name__)
@@ -474,27 +475,50 @@ class LeadsFormBulkEntry(APIView):
             all_sha256 = list(mongo_client.leads.find({"leads_form_id": int(leads_form_id)},{"lead_sha_256": 1, "_id": 0}))
             all_sha256_list = [str(element['lead_sha_256']) for element in all_sha256]
             apartment_index = None
+            phone_number_index = None
             club_name_index = None
+            phone_number = None
+            lead_entry_date = None
+            lead_entry_date_index = None
             for index, row in enumerate(ws.iter_rows()):
                 if index == 0:
                     for idx, i in enumerate(row):
                         if i.value and 'apartment' in i.value.lower():
                             apartment_index = idx
-                            break
+                        if i.value and i.value.lower() == 'phone_number':
+                            phone_number_index = idx
+                        if i.value and i.value.lower() == 'lead_entry_date':
+                            lead_entry_date_index = idx
                     if not apartment_index:
                         for idx, i in enumerate(row):
                             if i.value and 'club name' in i.value.strip().lower():
                                 club_name_index = idx
                                 break
+                    if not phone_number_index:
+                        return handle_response('', data='phone_number header is missing')
+                    if not lead_entry_date_index:
+                        return handle_response('', data='lead_entry_date header is missing')
                 if apartment_index is None and club_name_index is None:
                     return handle_response('', data="neither apartment nor club found in the sheet", success=False)
                 entity_index = apartment_index if apartment_index else club_name_index
+
                 if index > 0:
                     if not (row[entity_index].value is None):
                         society_name = row[entity_index].value
 
                     suppliers = get_supplier_data_by_type(society_name)
 
+                    if not (row[phone_number_index].value is None):
+                        phone_number = row[phone_number_index].value
+
+                    if not (row[lead_entry_date_index].value is None):
+                        lead_entry_date = row[lead_entry_date_index].value
+                        try:
+                            lead_entry_date = convert_xldate_as_datetime(lead_entry_date)
+                            lead_entry_date = lead_entry_date.isoformat()
+                        except Exception as e:
+                            return handle_response('', data="Pass lead_entry_date as dd/mm/yy format",
+                                                   success=False)
 
                     if len(suppliers) == 0:
                         if society_name not in missing_societies and society_name is not None:
@@ -515,7 +539,7 @@ class LeadsFormBulkEntry(APIView):
                             #     continue
                             if len(shortlisted_spaces) == 0:
                                 not_present_in_shortlisted_societies.append(society_name)
-                                continue
+                                add_society_to_campaign(campaign_id, supplier_id)
                             else:
                                 found_supplier_id = shortlisted_spaces[0]['object_id']
 
@@ -523,38 +547,42 @@ class LeadsFormBulkEntry(APIView):
                         proposal_id=campaign_id).all()
                     if len(shortlisted_spaces) == 0:
                         not_present_in_shortlisted_societies.append(society_name)
-                        continue
-                    inventory_list = ShortlistedInventoryPricingDetails.objects.filter(
-                        shortlisted_spaces_id=shortlisted_spaces[0].id).all()
-                    stall = None
+                        add_society_to_campaign(campaign_id, found_supplier_id)
 
-                    for inventory in inventory_list:
-                        if inventory.ad_inventory_type_id >= 8 and inventory.ad_inventory_type_id <= 11:
-                            stall = inventory
-                            break
-                    if not stall:
-                        continue
-                    shortlisted_inventory_details_id = stall.id
-                    inventory_list = InventoryActivity.objects.filter(
-                        shortlisted_inventory_details_id=shortlisted_inventory_details_id, activity_type='RELEASE').all()
+                    if len(shortlisted_spaces) > 0:
+                        inventory_list = ShortlistedInventoryPricingDetails.objects.filter(
+                            shortlisted_spaces_id=shortlisted_spaces[0].id).all()
+                        stall = None
 
-                    if len(inventory_list) == 0:
-                        inv_activity_missing_societies.append(society_name)
-                        continue
-                    inventory_activity_id = inventory_list[0].id
-                    inventory_activity_list = InventoryActivityAssignment.objects.filter(
-                        inventory_activity_id=inventory_activity_id).all()
-                    if len(inventory_activity_list) == 0:
-                        inv_activity_assignment_missing_societies.append(society_name)
-                        continue
+                        for inventory in inventory_list:
+                            if inventory.ad_inventory_type_id >= 8 and inventory.ad_inventory_type_id <= 11:
+                                stall = inventory
+                                break
+                        if not stall:
+                            continue
+                        shortlisted_inventory_details_id = stall.id
+                        inventory_list = InventoryActivity.objects.filter(
+                            shortlisted_inventory_details_id=shortlisted_inventory_details_id, activity_type='RELEASE').all()
 
-                    created_at = inventory_activity_list[0].activity_date if inventory_activity_list[0].activity_date else None
-                    if not created_at:
-                        inv_activity_assignment_activity_date_missing_societies.append(society_name)
-                        continue
+                        if len(inventory_list) == 0:
+                            inv_activity_missing_societies.append(society_name)
+                            continue
+                        inventory_activity_id = inventory_list[0].id
+                        inventory_activity_list = InventoryActivityAssignment.objects.filter(
+                            inventory_activity_id=inventory_activity_id).all()
+                        if len(inventory_activity_list) == 0:
+                            inv_activity_assignment_missing_societies.append(society_name)
+                            continue
+
+                        created_at = inventory_activity_list[0].activity_date if inventory_activity_list[0].activity_date else None
+                        if not created_at:
+                            inv_activity_assignment_activity_date_missing_societies.append(society_name)
+                    else:
+                        created_at = datetime.datetime.now()
                     lead_dict = {"data": [], "is_hot": False, "created_at": created_at, "supplier_id": found_supplier_id,
-                                 "campaign_id": campaign_id, "leads_form_id": int(leads_form_id)}
-                    lead_for_hash = {"data": []}
+                                 "campaign_id": campaign_id, "leads_form_id": int(leads_form_id), "entry_id": entry_id,
+                                 "phone_number": phone_number, 'lead_entry_date': lead_entry_date}
+                    lead_for_hash = {"data": [], "phone_number": phone_number}
                     for item_id in range(0, fields):
                         curr_item_id = item_id + 1
                         curr_form_item_dict = lead_form['data'][str(curr_item_id)]
@@ -644,6 +672,7 @@ class LeadsFormBulkEntry(APIView):
             }
             return handle_response({}, data=missing_dict, success=True)
         except Exception as ex:
+            print(ex)
             return handle_response({}, data="failed", success=False)
 
 
@@ -1633,8 +1662,8 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
 
     header_list = [
         'Index', 'Proposal Id', 'Supplier Id', 'Supplier Name', 'Supplier Type' , 'Subarea', 'Area', 'City', 'Address',
-        'Landmark', 'PinCode', 'Unit Primary Count / Flat Count', 'Unit Secondary Count / Tower Count',
-        'Cost Per Unit', 'Booking Priority', 'Booking Status', 'Next Action Date',
+        'Landmark', 'PinCode', 'Unit Primary Count / Flat Count', 'Unit Secondary Count / Tower Count', 'Average Household Points',
+        'Cost Per Unit', 'Booking Priority', 'Booking Status', 'Booking Sub-status', 'Next Action Date', 'Date of Last Call',
         'Payment Method', 'Payment Status', 'Completion Status', 'Total Price',
         'Internal Comment', 'External Comment', 'Rating', 'Assigned To',
         # 'Poster Allowed', 'Poster Count', 'Poster Price',
@@ -1685,16 +1714,28 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
 
         supplier_data.append(primary_count)
         supplier_data.append(secondary_count)
+        avg_household_occupants = None
+        if supplier.get('avg_household_occupants'):
+            avg_household_occupants = supplier.get('avg_household_occupants')
+        supplier_data.append(avg_household_occupants)
 
         supplier_data.append(supplier['cost_per_flat'])
-        supplier_data.append(
-            booking_priority_code_to_status[supplier['booking_priority']] if supplier['booking_priority'] else None)
+        supplier_data.append(booking_priority_code_to_status[supplier['booking_priority']] if supplier['booking_priority'] else None)
         supplier_data.append(booking_code_to_status[supplier['booking_status']] if supplier['booking_status'] else None)
+        
+        booking_substatus = BookingSubstatus.objects.filter(code=supplier['booking_sub_status']).first()
+        supplier_data.append(booking_substatus.name if booking_substatus else None)
+
         # supplier_data.append(supplier['next_action_date'])
         next_action_date = None
         if supplier['next_action_date']:
             next_action_date = datetime.datetime.strptime(supplier['next_action_date'], '%Y-%m-%dT%H:%M:%SZ').strftime("%d/%m/%Y")
         supplier_data.append(next_action_date)
+
+        last_call_date = None
+        if supplier['last_call_date']:
+            last_call_date = datetime.datetime.strptime(supplier['last_call_date'], '%Y-%m-%dT%H:%M:%SZ').strftime("%d/%m/%Y")
+        supplier_data.append(last_call_date)
 
         supplier_data.append(supplier['payment_method'])
         supplier_data.append(payment_code_to_status[supplier['payment_status']] if supplier['payment_status'] else None)
