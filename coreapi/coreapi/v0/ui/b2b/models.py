@@ -4,17 +4,19 @@ from pymodm import MongoModel, fields
 from django.conf import settings
 
 IMPL_TIMELINE_CATEGORY = (
-    ('immediate', 'immediate'),
-    ('next 2-4 months', 'next 2-4 months'),
-    ('after 4 months', 'after 4 months'),
-    ("don't know", "don't know")
+    ('within 2 weeks', 'within 2 weeks'),
+    ('within 2 months','within 2 months'),
+    ('2 months to 6 months', '2 months to 6 months'),
+    ('6 months to 1 year', '6 months to 1 year'),
+    ('1 year to 1.5 years', '1 year to 1.5 years'),
+    ('yet not decided', 'yet not decided')
 )
 
 MEATING_TIMELINE_CATEGORY = (
-    ('immediate', 'immediate'),
-    ('next 15 days-2 months', 'next 15 days-2 months'),
-    ('after 2 months', 'after 2 months'),
-    ("don't know", "don't know")
+    ('as soon as possible', 'as soon as possible'),
+    ('within 1 week', 'within 1 week'),
+    ('within a month', 'within a month'),
+    ('after a month', 'after a month')
 )
 
 LEAD_STATUS_CATEGORY = (
@@ -22,7 +24,8 @@ LEAD_STATUS_CATEGORY = (
     ('Deep Lead', 'Deep Lead'),
     ('Hot Lead', 'Hot Lead'),
     ("Lead", "Lead"),
-    ("Raw Lead", "Raw Lead")
+    ("Raw Lead", "Raw Lead"),
+    ('Warm Lead', 'Warm Lead')
 )
 
 CURRENT_PATNER_FEEDBACK = (
@@ -61,10 +64,11 @@ class Requirement(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     l1_answers = models.CharField(max_length=100, null=True, blank=True)
     l2_answers = models.CharField(max_length=100, null=True, blank=True)
-    varified_ops_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
-    company_campaign = models.ForeignKey('ProposalInfo', null=True, blank=True, on_delete=models.CASCADE)
-    company_shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True, on_delete=models.CASCADE)
+    varified_ops_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE, related_name='varified_ops_by')
+    company_campaign = models.ForeignKey('ProposalInfo', null=True, blank=True, on_delete=models.CASCADE, related_name='company_campaign')
+    company_shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True, on_delete=models.CASCADE, related_name='company_shortlisted_spaces')
     change_current_patner = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
+    lead_price = models.FloatField(default=0.0, blank=True, null=True)
 
     class Meta:
         db_table = 'requirement'
