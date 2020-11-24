@@ -50,11 +50,8 @@ class ImportLead(APIView):
             if index == 0:
                 i = 0
                 for key in row:
-                    if key.value is not None:
-                        key1 = key.value.lower()
-                        key1 = key1.strip()
-                    else:
-                        key1 = None
+                    key1 = key.value.lower()
+                    key1 = key1.strip()
                     headers[key1] = i
                     i+=1
             else:
@@ -79,6 +76,22 @@ class ImportLead(APIView):
                 l2_answers = get_value_from_list_by_key(row, headers.get('l2 answers'))
                 change_current_patner = get_value_from_list_by_key(row, headers.get('change current partner'))
                 
+                if sector_name is None or phone_number is None or submitted is None:
+                    return ui_utils.handle_response({}, data={"errors":"Sector \
+                     Phone Number or Submitted column should not be null"}, success=False)
+
+                if impl_timeline is None:
+                    impl_timeline = "not given"
+
+                if meating_timeline is None:
+                    meating_timeline = "not given"
+
+                if change_current_patner is None:
+                    change_current_patner = "no"
+
+                if current_patner_feedback is None:
+                    current_patner_feedback = "NA"
+
                 prefered_patners_array = []
                 if prefered_patners:
                     prefered_patners_split = prefered_patners.split(",")
@@ -337,6 +350,7 @@ class RequirementClass(APIView):
                 shortlisted_spaces_id = req["shortlisted_spaces"],
                 lead_by_id = req["lead_by"]["id"],
             )
+            lead_data = []
             for row in reqs:
                 
                 lead_status = b2b_utils.get_lead_status(
@@ -349,13 +363,18 @@ class RequirementClass(APIView):
                 )
                 update_req['lead_status'] = lead_status
                 requirement_data = RequirementSerializer(row, data=update_req)
-
+                data = {}
+                
                 if requirement_data.is_valid():
                     requirement_data.save()
+                    context = requirement_data.data
+                    if context['id'] == req["id"]:
+                        lead_data.append({"lead_status":context['lead_status'],"id":context['id']})
                 else:
                     return ui_utils.handle_response({}, data={"errors":requirement_data.errors}, success=False)
 
-        return ui_utils.handle_response({}, data={"lead_status":lead_status}, success=True)
+
+        return ui_utils.handle_response({}, data=lead_data, success=True)
 
 
 def remove_suspense_lead_cron():
