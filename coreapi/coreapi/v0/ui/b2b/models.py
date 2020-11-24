@@ -9,14 +9,16 @@ IMPL_TIMELINE_CATEGORY = (
     ('2 months to 6 months', '2 months to 6 months'),
     ('6 months to 1 year', '6 months to 1 year'),
     ('1 year to 1.5 years', '1 year to 1.5 years'),
-    ('yet not decided', 'yet not decided')
+    ('yet not decided', 'yet not decided'),
+    ('not given', 'not given')
 )
 
 MEATING_TIMELINE_CATEGORY = (
     ('as soon as possible', 'as soon as possible'),
     ('within 1 week', 'within 1 week'),
     ('within a month', 'within a month'),
-    ('after a month', 'after a month')
+    ('after a month', 'after a month'),
+    ('not given', 'not given')
 )
 
 LEAD_STATUS_CATEGORY = (
@@ -49,7 +51,7 @@ class Requirement(models.Model):
     impl_timeline = models.CharField(max_length=30, choices=IMPL_TIMELINE_CATEGORY, default=IMPL_TIMELINE_CATEGORY[1][0]) # implementation_timeline
     meating_timeline = models.CharField(max_length=30, choices=MEATING_TIMELINE_CATEGORY, default=MEATING_TIMELINE_CATEGORY[1][0]) # meating_timeline
     lead_status = models.CharField(max_length=30, choices=LEAD_STATUS_CATEGORY, default=LEAD_STATUS_CATEGORY[1][0])
-    comment = models.TextField(max_length=500, blank=True)
+    comment = models.TextField(max_length=500, null=True, blank=True)
     is_current_patner = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     current_patner_feedback = models.CharField(max_length=50, choices=CURRENT_PATNER_FEEDBACK, default="NA")
     current_patner_feedback_reason = models.CharField(max_length=250, null=True, blank=True)
