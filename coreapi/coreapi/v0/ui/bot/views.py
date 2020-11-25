@@ -21,20 +21,32 @@ class GetDataFromBot(APIView):
     def post(self, request):
         data = request.data
 
-        mongo_client.bot_requirement.insert({
-            "data" : data,
-            "mobile" : data.get("mobile"),
-            "sector" : data.get("sector"),	
-            "sub_sector" : data.get("sub_sector"),
-            "current_partner_feedBack" : data.get("current_partner_feedBack"),
-            "preferred_partner" : data.get("preferred_partner"),
-            "L1_answers" :	data.get("L1_answers"),
-            "L2_answers" :	data.get("L2_answers"),
-            "implementation_time"  : data.get("implementation_time"),
-            "meeting_time" : data.get("meeting_time"),
-            "lead_status" :	data.get("lead_status"),
-            "comment" :	data.get("comment"),
-            "lead_given_by" : data.get("lead_given_by"),
-        })
+        mobile = data.get("phone")
+        sessionIds = data.get("sessionIds")
+        requestId = data.get("requestId")
+        datetime = data.get("datetime")
+
+        for row in data["data"]:
+
+            mongo_client.bot_requirement.insert({
+                "bot_data" : data,
+                "mobile" : mobile,
+                "sessionIds" : sessionIds,
+                "requestId" : requestId,
+                "datetime" : datetime,
+                "sector" : row.get("service"),	
+                "sub_sector" : row.get("subservice"),
+                "L1Response_1": row.get("L1Response_1"),
+                "L1Response_2": row.get("L1Response_2"),
+                "L2Response_1": row.get("L2Response_1"),
+                "L2Response_2": row.get("L2Response_2"),
+                "current_partner" : row.get("existingPartner"),
+                "current_partner_feedBack" : row.get("partnerFeedback"),
+                "feedback_reason" : row.get("feedbackReason"),
+                "preferred_partner" : row.get("preferredPartner"),
+                "implementation_time"  : row.get("implementationTime"),
+                "meeting_time" : row.get("meetingTime"),
+                "call_back_time" : row.get("contactBackTime")
+            })
         
         return ui_utils.handle_response({}, data=" Bot data successfully updated ", success=True)
