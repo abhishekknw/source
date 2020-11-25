@@ -35,7 +35,7 @@ class GetDataFromBot(APIView):
                 "requestId" : requestId,
                 "datetime" : datetime,
                 "sector" : row.get("service"),	
-                "sub_sector" : row.get("subservice"),
+                "sub_sector" : row.get("subService"),
                 "L1Response_1": row.get("L1Response_1"),
                 "L1Response_2": row.get("L1Response_2"),
                 "L2Response_1": row.get("L2Response_1"),
