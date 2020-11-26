@@ -527,10 +527,10 @@ class LeadOpsVerification(APIView):
                             requirement.company_shortlisted_spaces = company_shortlisted_spaces
                         requirement.save()
             else:
-                return ui_utils.handle_response({}, data={"error":"No company campaign found"}, success=False)           
+                return ui_utils.handle_response({}, data={"error":"No company campaign found"}, success=False)
         
+        color_code = None
         if requirement.shortlisted_spaces:
-        
             requirement_exist = Requirement.objects.filter(shortlisted_spaces=requirement.shortlisted_spaces,
              varified_ops = "no").first()
         
@@ -543,8 +543,9 @@ class LeadOpsVerification(APIView):
                         id=requirement.shortlisted_spaces.id).first()
                     shortlisted_spac.color_code = 3
                     shortlisted_spac.save()
+                    color_code = 3
 
-        return ui_utils.handle_response({}, data="Verified", success=True)
+        return ui_utils.handle_response({}, data={"messege":"Verified","color_code":color_code}, success=True)
 
 class BrowsedToRequirement(APIView):
 
@@ -632,6 +633,7 @@ class BdVerification(APIView):
                         return ui_utils.handle_response({}, data="Please add lead form for this campaign to BD verify",
                          success=False)
 
+        color_code = None
         if requirement.company_shortlisted_spaces:
     
             requirement_exist = Requirement.objects.filter(company_shortlisted_spaces=requirement.company_shortlisted_spaces,
@@ -641,8 +643,9 @@ class BdVerification(APIView):
                     id=requirement.company_shortlisted_spaces.id).first()
                 shortlisted_spac.color_code = 3
                 shortlisted_spac.save()
+                color_code = 3
 
-        return ui_utils.handle_response({}, data={}, success=True)
+        return ui_utils.handle_response({}, data={"color_code":color_code}, success=True)
 
 
     def insert_lead_data(self, lead_form, requirement, campaign):

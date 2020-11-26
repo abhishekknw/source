@@ -37,6 +37,16 @@ CURRENT_PATNER_FEEDBACK = (
     ('Extremely Dissatisfied', 'Extremely Dissatisfied'),
 )
 
+# CALL_BACK_PREFERENCE = (
+#     ('Anytime', 'Anytime'),
+#     ('No need of call. Arrange a meeting directly', 'No need of call. Arrange a meeting directly'),
+#     ('Weekday Morning', 'Weekday Morning'),
+#     ("Weekday Evening", "Weekday Evening"),
+#     ("Weekend Morning", "Weekend Morning"),
+#     ('Weekend Evening', 'Weekend Evening')
+# )
+
+
 class Requirement(models.Model):
     campaign = models.ForeignKey('ProposalInfo', null=True, blank=True, on_delete=models.CASCADE)
     shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True, on_delete=models.CASCADE)
@@ -71,6 +81,7 @@ class Requirement(models.Model):
     company_shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True, on_delete=models.CASCADE, related_name='company_shortlisted_spaces')
     change_current_patner = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     lead_price = models.FloatField(default=0.0, blank=True, null=True)
+    call_back_preference = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
         db_table = 'requirement'
