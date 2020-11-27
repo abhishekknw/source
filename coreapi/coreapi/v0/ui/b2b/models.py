@@ -9,14 +9,16 @@ IMPL_TIMELINE_CATEGORY = (
     ('2 months to 6 months', '2 months to 6 months'),
     ('6 months to 1 year', '6 months to 1 year'),
     ('1 year to 1.5 years', '1 year to 1.5 years'),
-    ('yet not decided', 'yet not decided')
+    ('yet not decided', 'yet not decided'),
+    ('not given', 'not given')
 )
 
 MEATING_TIMELINE_CATEGORY = (
     ('as soon as possible', 'as soon as possible'),
     ('within 1 week', 'within 1 week'),
     ('within a month', 'within a month'),
-    ('after a month', 'after a month')
+    ('after a month', 'after a month'),
+    ('not given', 'not given')
 )
 
 LEAD_STATUS_CATEGORY = (
@@ -35,6 +37,16 @@ CURRENT_PATNER_FEEDBACK = (
     ('Extremely Dissatisfied', 'Extremely Dissatisfied'),
 )
 
+# CALL_BACK_PREFERENCE = (
+#     ('Anytime', 'Anytime'),
+#     ('No need of call. Arrange a meeting directly', 'No need of call. Arrange a meeting directly'),
+#     ('Weekday Morning', 'Weekday Morning'),
+#     ("Weekday Evening", "Weekday Evening"),
+#     ("Weekend Morning", "Weekend Morning"),
+#     ('Weekend Evening', 'Weekend Evening')
+# )
+
+
 class Requirement(models.Model):
     campaign = models.ForeignKey('ProposalInfo', null=True, blank=True, on_delete=models.CASCADE)
     shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True, on_delete=models.CASCADE)
@@ -49,7 +61,7 @@ class Requirement(models.Model):
     impl_timeline = models.CharField(max_length=30, choices=IMPL_TIMELINE_CATEGORY, default=IMPL_TIMELINE_CATEGORY[1][0]) # implementation_timeline
     meating_timeline = models.CharField(max_length=30, choices=MEATING_TIMELINE_CATEGORY, default=MEATING_TIMELINE_CATEGORY[1][0]) # meating_timeline
     lead_status = models.CharField(max_length=30, choices=LEAD_STATUS_CATEGORY, default=LEAD_STATUS_CATEGORY[1][0])
-    comment = models.TextField(max_length=500, blank=True)
+    comment = models.TextField(max_length=500, null=True, blank=True)
     is_current_patner = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     current_patner_feedback = models.CharField(max_length=50, choices=CURRENT_PATNER_FEEDBACK, default="NA")
     current_patner_feedback_reason = models.CharField(max_length=250, null=True, blank=True)
@@ -69,6 +81,7 @@ class Requirement(models.Model):
     company_shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True, on_delete=models.CASCADE, related_name='company_shortlisted_spaces')
     change_current_patner = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     lead_price = models.FloatField(default=0.0, blank=True, null=True)
+    call_back_preference = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
         db_table = 'requirement'

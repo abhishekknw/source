@@ -55,6 +55,7 @@ class ImportLead(APIView):
                     headers[key1] = i
                     i+=1
             else:
+
                 # Parsing excel columns
                 phone_number = get_value_from_list_by_key(row, headers.get('phone number'))
                 supplier_name = get_value_from_list_by_key(row, headers.get('supplier name'))
@@ -75,6 +76,22 @@ class ImportLead(APIView):
                 l2_answers = get_value_from_list_by_key(row, headers.get('l2 answers'))
                 change_current_patner = get_value_from_list_by_key(row, headers.get('change current partner'))
                 
+                if sector_name is None or phone_number is None or submitted is None:
+                    return ui_utils.handle_response({}, data={"errors":"Sector \
+                     Phone Number or Submitted column should not be null"}, success=False)
+
+                if impl_timeline is None:
+                    impl_timeline = "not given"
+
+                if meating_timeline is None:
+                    meating_timeline = "not given"
+
+                if change_current_patner is None:
+                    change_current_patner = "no"
+
+                if current_patner_feedback is None:
+                    current_patner_feedback = "NA"
+
                 prefered_patners_array = []
                 if prefered_patners:
                     prefered_patners_split = prefered_patners.split(",")
@@ -86,9 +103,13 @@ class ImportLead(APIView):
                 
                 supplier_id = ""
                 supplier_type = "RS"
-
-                sector = BusinessTypes.objects.filter(business_type=sector_name.lower()).first()
-                sub_sector = BusinessSubTypes.objects.filter(business_sub_type=sub_sector_name.lower()).first()
+                sector = None
+                if sector_name is not None:
+                    sector = BusinessTypes.objects.filter(business_type=sector_name.lower()).first()
+                
+                sub_sector = None
+                if sub_sector_name is not None:
+                    sub_sector = BusinessSubTypes.objects.filter(business_sub_type=sub_sector_name.lower()).first()
 
                 supplier_conditions = {}
                 supplier = None
@@ -119,7 +140,6 @@ class ImportLead(APIView):
                     city = ""
                     area = ""
                     
-
                     if supplier_type != "RS":
                         city = supplier.address_supplier.city
                         area = supplier.address_supplier.area
@@ -325,11 +345,12 @@ class RequirementClass(APIView):
             prefered_patners_list = Organisation.objects.filter(
                 organisation_id__in=req["preferred_company"]).all()
             reqs = Requirement.objects.filter(
-                sector_id = req["sector"], 
-                sub_sector_id = req["sub_sector"], 
-                shortlisted_spaces_id = req["shortlisted_spaces"], 
+                sector_id = req["sector"],
+                sub_sector_id = req["sub_sector"],
+                shortlisted_spaces_id = req["shortlisted_spaces"],
                 lead_by_id = req["lead_by"]["id"],
             )
+            lead_data = []
             for row in reqs:
                 
                 lead_status = b2b_utils.get_lead_status(
@@ -342,13 +363,18 @@ class RequirementClass(APIView):
                 )
                 update_req['lead_status'] = lead_status
                 requirement_data = RequirementSerializer(row, data=update_req)
-
+                data = {}
+                
                 if requirement_data.is_valid():
                     requirement_data.save()
+                    context = requirement_data.data
+                    if context['id'] == req["id"]:
+                        lead_data.append({"lead_status":context['lead_status'],"id":context['id']})
                 else:
                     return ui_utils.handle_response({}, data={"errors":requirement_data.errors}, success=False)
 
-        return ui_utils.handle_response({}, data={}, success=True)
+
+        return ui_utils.handle_response({}, data=lead_data, success=True)
 
 
 def remove_suspense_lead_cron():
@@ -501,10 +527,10 @@ class LeadOpsVerification(APIView):
                             requirement.company_shortlisted_spaces = company_shortlisted_spaces
                         requirement.save()
             else:
-                return ui_utils.handle_response({}, data={"error":"No company campaign found"}, success=False)           
+                return ui_utils.handle_response({}, data={"error":"No company campaign found"}, success=False)
         
+        color_code = None
         if requirement.shortlisted_spaces:
-        
             requirement_exist = Requirement.objects.filter(shortlisted_spaces=requirement.shortlisted_spaces,
              varified_ops = "no").first()
         
@@ -517,8 +543,9 @@ class LeadOpsVerification(APIView):
                         id=requirement.shortlisted_spaces.id).first()
                     shortlisted_spac.color_code = 3
                     shortlisted_spac.save()
+                    color_code = 3
 
-        return ui_utils.handle_response({}, data="Verified", success=True)
+        return ui_utils.handle_response({}, data={"messege":"Verified","color_code":color_code}, success=True)
 
 class BrowsedToRequirement(APIView):
 
@@ -606,6 +633,7 @@ class BdVerification(APIView):
                         return ui_utils.handle_response({}, data="Please add lead form for this campaign to BD verify",
                          success=False)
 
+        color_code = None
         if requirement.company_shortlisted_spaces:
     
             requirement_exist = Requirement.objects.filter(company_shortlisted_spaces=requirement.company_shortlisted_spaces,
@@ -615,8 +643,9 @@ class BdVerification(APIView):
                     id=requirement.company_shortlisted_spaces.id).first()
                 shortlisted_spac.color_code = 3
                 shortlisted_spac.save()
+                color_code = 3
 
-        return ui_utils.handle_response({}, data={}, success=True)
+        return ui_utils.handle_response({}, data={"color_code":color_code}, success=True)
 
 
     def insert_lead_data(self, lead_form, requirement, campaign):
@@ -1118,9 +1147,15 @@ class GetSupplierByCampaign(APIView):
 
         campaign_id = request.query_params.get('campaign_id')
         supplier_ids = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('object_id')
-        supplier_society_data = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_ids).values('supplier_id').annotate(
+        
+        verified_supplier_ids = Requirement.objects.filter(
+            company_shortlisted_spaces_id__object_id__in=supplier_ids,
+            varified_bd="yes").values('company_shortlisted_spaces_id__object_id')
+        
+        supplier_society_data = SupplierTypeSociety.objects.filter(supplier_id__in=verified_supplier_ids).values('supplier_id').annotate(
             supplier_name = F('society_name'), unit_primary_count=F('flat_count'), city=F('society_city'), area=F('society_locality'))
-        supplier_master_data = SupplierMaster.objects.filter(supplier_id__in=supplier_ids).values('supplier_id', 'supplier_name', 'unit_primary_count', 'city', 'area')
+        
+        supplier_master_data = SupplierMaster.objects.filter(supplier_id__in=verified_supplier_ids).values('supplier_id', 'supplier_name', 'unit_primary_count', 'city', 'area')
         supplier_data = list(supplier_society_data) + list(supplier_master_data)
 
         return ui_utils.handle_response({}, data=supplier_data, success=True)
