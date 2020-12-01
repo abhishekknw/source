@@ -525,6 +525,13 @@ class LeadOpsVerification(APIView):
 
                             requirement.company_campaign = company_campaign
                             requirement.company_shortlisted_spaces = company_shortlisted_spaces
+
+                            shortlisted_spac = ShortlistedSpaces.objects.filter(
+                                id=company_shortlisted_spaces.id).first()
+                            if shortlisted_spac:
+                                shortlisted_spac.color_code = 1
+                                shortlisted_spac.save()
+
                         requirement.save()
             else:
                 return ui_utils.handle_response({}, data={"error":"No company campaign found"}, success=False)
