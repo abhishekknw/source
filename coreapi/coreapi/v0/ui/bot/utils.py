@@ -5,13 +5,16 @@ import v0.ui.utils as ui_utils
 import v0.ui.b2b.utils as b2b_utils
 import datetime
 from v0.ui.b2b.models import (Requirement, SuspenseLead, BrowsedLead)
+from v0.ui.organisation.models import Organisation
+from django.db.models import Q
 
-def bot_to_requirement(data):
+def bot_to_requirement(request, data):
 
     phone_number = data.get("phone")
     sessionIds = data.get("sessionIds")
     requestId = data.get("requestId")
-    datetime = data.get("datetime")
+    date_time = data.get("datetime")
+    lead_status = "Lead"
 
     if phone_number is None:
         return ui_utils.handle_response({}, data={"errors":"Sector \
@@ -34,6 +37,26 @@ def bot_to_requirement(data):
             current_patner_feedback = row.get("partnerFeedback")
             current_patner_feedback_reason = row.get("feedbackReason")
             prefered_patners = row.get("preferredPartner")
+
+            prefered_patners_array = []
+            if prefered_patners:
+                prefered_patners_split = prefered_patners.split(",")
+                prefered_patners_array = [row.strip() for row in prefered_patners_split]
+
+            prefered_patners_list = []
+            prefered_patners_id_list = []
+            preferred_company_other = None
+            if prefered_patners_array:
+                prefered_patners_list = Organisation.objects.filter(name__in=prefered_patners_array).all()
+                prefered_patners_id_list = [row.organisation_id for row in prefered_patners_list]
+                prefered_patners_name_list = [row.name for row in prefered_patners_list]
+
+                if len(prefered_patners_name_list) < len(prefered_patners_array):
+                    for prefered_patners_name in prefered_patners_array:
+                        if prefered_patners_name not in prefered_patners_name_list:
+                            preferred_company_other = prefered_patners_name
+                            break
+
             submitted = "no"
             if meating_timeline:
                 submitted = "yes"
@@ -58,7 +81,7 @@ def bot_to_requirement(data):
 
             supplier = None
             city = None
-            state = None
+            area = None
             supplier_name = None
             if contact_details:
                 
@@ -68,22 +91,21 @@ def bot_to_requirement(data):
                 if supplier:
                     supplier_name = supplier.society_name
                     city = supplier.society_city
-                    state = supplier.society_state
+                    area = supplier.society_locality
 
-                if not supplier:
+                else:
                     supplier = SupplierMaster.objects.filter(
                         supplier_id=supplier_id).first()
 
                     if supplier:
                         supplier_type = supplier.supplier_type
                         city = supplier.city
-                        state = supplier.state
+                        area = supplier.area
                         supplier_name = supplier.supplier_name
 
             if supplier:
-                campaign = ProposalInfo.objects.filter(
-                    Q(type_of_end_customer="b_2_b_r_g")&Q(Q(name=supplier.state)|Q(
-                        name=supplier.city))).first()
+                campaign = ProposalInfo.objects.filter(Q(type_of_end_customer__formatted_name="b_2_b_r_g") & Q(name__icontains=area) | Q(name__icontains=city)).first()
+
                 campaign_id = campaign.proposal_id
 
                 shortlisted_spaces = ShortlistedSpaces.objects.filter(
@@ -133,7 +155,6 @@ def bot_to_requirement(data):
                             change_current_patner=change_current_patner.lower()
                             )
 
-
                         requirement = Requirement(
                             campaign_id=campaign_id,
                             shortlisted_spaces=shortlisted_spaces,
@@ -168,32 +189,32 @@ def bot_to_requirement(data):
                         shortlisted_spaces.color_code = 2
                         shortlisted_spaces.save()
 
-                        BrowsedLead(
-                            supplier_id=supplier_id,
-                            shortlisted_spaces_id=shortlisted_spaces.id,
-                            campaign_id=campaign_id,
-                            phone_number = phone_number,
-                            supplier_name = supplier_name,
-                            city = city,
-                            area = area,
-                            sector_id = sector.id if sector else None,
-                            sub_sector_id = sub_sector.id if sub_sector else None,
-                            implementation_timeline = impl_timeline.lower(),
-                            meating_timeline = meating_timeline.lower(),
-                            lead_status = lead_status,
-                            comment = comment,
-                            current_patner_id = current_patner_obj.organisation_id if current_patner_obj else None,
-                            current_patner_other = current_company_other,
-                            current_patner_feedback = current_patner_feedback,
-                            current_patner_feedback_reason = current_patner_feedback_reason,
-                            prefered_patners = prefered_patners_id_list,
-                            prefered_patner_other = preferred_company_other,
-                            status="open",
-                            created_at = datetime.datetime.now(),
-                            updated_at = datetime.datetime.now(),
-                            l1_answers = l1_answers,
-                            l2_answers = l2_answers
-                        ).save()
+                    BrowsedLead(
+                        supplier_id=supplier_id,
+                        shortlisted_spaces_id=shortlisted_spaces.id,
+                        campaign_id=campaign_id,
+                        phone_number = phone_number,
+                        supplier_name = supplier_name,
+                        city = city,
+                        area = area,
+                        sector_id = sector.id if sector else None,
+                        sub_sector_id = sub_sector.id if sub_sector else None,
+                        implementation_timeline = impl_timeline.lower(),
+                        meating_timeline = meating_timeline.lower(),
+                        lead_status = lead_status,
+                        comment = comment,
+                        current_patner_id = current_patner_obj.organisation_id if current_patner_obj else None,
+                        current_patner_other = current_company_other,
+                        current_patner_feedback = current_patner_feedback,
+                        current_patner_feedback_reason = current_patner_feedback_reason,
+                        prefered_patners = prefered_patners_id_list,
+                        prefered_patner_other = preferred_company_other,
+                        status="open",
+                        created_at = datetime.datetime.now(),
+                        updated_at = datetime.datetime.now(),
+                        l1_answers = l1_answers,
+                        l2_answers = l2_answers
+                    ).save()
             else:
 
                 SuspenseLead(
@@ -219,4 +240,4 @@ def bot_to_requirement(data):
 
         else:
             pass
-    return True
+    return ui_utils.handle_response({}, data={}, success=True)
