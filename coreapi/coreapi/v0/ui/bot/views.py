@@ -3,6 +3,8 @@ import v0.ui.utils as ui_utils
 from v0.ui.account.models import ContactDetails
 from v0.ui.common.models import mongo_client
 
+import v0.ui.bot.utils as bot_utils
+
 class MobileNumberVerification(APIView):
     permission_classes = ()
 
@@ -26,8 +28,13 @@ class GetDataFromBot(APIView):
         requestId = data.get("requestId")
         datetime = data.get("datetime")
 
-        for row in data["data"]:
+        if mobile is None:
+            return ui_utils.handle_response({}, data={"errors":" \
+                Phone Number should not be null"}, success=False)
 
+        for row in data["data"]:
+            
+            
             mongo_client.bot_requirement.insert({
                 "bot_data" : data,
                 "mobile" : mobile,
@@ -48,5 +55,5 @@ class GetDataFromBot(APIView):
                 "meeting_time" : row.get("meetingTime"),
                 "call_back_time" : row.get("contactBackTime")
             })
-        
+        response = bot_utils.bot_to_requirement(data)
         return ui_utils.handle_response({}, data=" Bot data successfully updated ", success=True)
