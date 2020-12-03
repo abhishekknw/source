@@ -23,6 +23,7 @@ from bson.objectid import ObjectId
 from v0.ui.common.serializers import BaseUserSerializer
 from v0.ui.supplier.serializers import SupplierMasterSerializer, SupplierTypeSocietySerializer
 import v0.constants as v0_constants
+from v0.constants import (campaign_status, proposal_on_hold)
 from v0.ui.website.utils import manipulate_object_key_values, manipulate_master_to_rs
 import v0.ui.b2b.utils as b2b_utils
 from django.db.models import F
