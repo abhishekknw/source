@@ -1166,3 +1166,13 @@ class GetSupplierByCampaign(APIView):
         supplier_data = list(supplier_society_data) + list(supplier_master_data)
 
         return ui_utils.handle_response({}, data=supplier_data, success=True)
+
+class GetLeadDistributionCampaign(APIView):
+
+    def get(self, request):
+        
+        organisation_id = request.user.profile.organisation.organisation_id
+
+        campaign = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d", account__organisation=organisation_id).values('proposal_id', 'name')
+
+        return ui_utils.handle_response({}, data=campaign, success=True)
