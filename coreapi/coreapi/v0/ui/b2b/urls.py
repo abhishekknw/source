@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 
-from .views import (AddLeadPrice, GetLeadsByCampaignId,BdRequirement,BdVerification, ImportLead, RequirementClass, SuspenseLeadClass, BrowsedLeadClass,  
+from .views import (SummaryReportAndGraph,FlatSummaryDetails,AddLeadPrice, GetLeadsByCampaignId,BdRequirement,BdVerification, ImportLead, RequirementClass, SuspenseLeadClass, BrowsedLeadClass,  
                         LeadOpsVerification, BrowsedToRequirement, DeleteRequirement, BrowsedLeadDelete, RestoreRequirement, GetLeadsByDate,
                         GetLeadsCampaignByDate, GetFeedbackCount, GetCampaignList, GetLeadsForCurrentCompanyDonut,
                         GetLeadsSummeryForDonutChart, GetLeadsForDonutChart,GetSupplierByCampaign, GetLeadDistributionCampaign )
@@ -31,6 +31,8 @@ urlpatterns = [
     url(r'^donut-2nd/$', GetLeadsSummeryForDonutChart.as_view()),
     url(r'^donut-table-2nd/$', GetLeadsForCurrentCompanyDonut.as_view()),
     url(r'^add-requirement-price/$', AddLeadPrice.as_view()),
+    url(r'^flat-summary-details/$', FlatSummaryDetails.as_view()),
+    url(r'^summary-reports/$', SummaryReportAndGraph.as_view()),
 ]
 
 # router = DefaultRouter()
