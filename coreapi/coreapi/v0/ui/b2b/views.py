@@ -769,7 +769,9 @@ class BdVerification(APIView):
             "current_patner_feedback_reason":requirement.current_patner_feedback_reason,
             "company_id":requirement.company.organisation_id,"meating_timeline":requirement.meating_timeline,
             "impl_timeline":requirement.impl_timeline,"lead_date":requirement.varified_bd_date,
-            "preferred_patner":prefered_patner,"lead_price":requirement.lead_price,"supplier_primary_count":supplier_primary_count}
+            "preferred_patner":prefered_patner,"lead_price":requirement.lead_price,
+            "supplier_primary_count":supplier_primary_count,"supplier_city": supplier_city,
+            "supplier_area": supplier_area,"supplier_sub_area": supplier_subarea}
 
         lead_for_hash = {
             "data": lead_data,
@@ -1182,9 +1184,9 @@ class FlatSummaryDetails(APIView):
             start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
             end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
 
-            where = {"company_campaign_id": campaign_id, "created_at":{"$gte": start_date}}
+            where = {"company_campaign_id": campaign_id, "created_at":{"$gte": start_date},"lead_purchased":"yes"}
         else:
-            where = {"company_campaign_id": campaign_id}
+            where = {"company_campaign_id": campaign_id,"lead_purchased":"yes"}
 
         lead_data = list(mongo_client.leads.find(where))
         total_leads = len(lead_data)
@@ -1201,6 +1203,7 @@ class FlatSummaryDetails(APIView):
 class SummaryReportAndGraph(APIView):
 
     def get(self, request):
+
         final_data = {}
         campaign_id = request.query_params.get('campaign_id')
 
@@ -1210,15 +1213,18 @@ class SummaryReportAndGraph(APIView):
         if start_date and end_date:
             start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
             end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+            date = start_date
+        else:
+            date = datetime.datetime.now()
  
-        start_date = datetime.datetime.now() - timedelta(days=7)
-        final_data['last_week'] = self.get_count_data(campaign_id, start_date)
-        start_date = datetime.datetime.now() - timedelta(days=14)
-        final_data['last_two_weeks'] = self.get_count_data(campaign_id, start_date)
-        start_date = datetime.datetime.now() - timedelta(days=21)
-        final_data['last_three_weeks'] = self.get_count_data(campaign_id, start_date)
+        diff_date = date - timedelta(days=7)
+        final_data['last_week'] = self.get_count_data(campaign_id, start_date, end_date, diff_date)
+        diff_date = date - timedelta(days=14)
+        final_data['last_two_weeks'] = self.get_count_data(campaign_id, start_date, end_date, diff_date)
+        diff_date = date - timedelta(days=21)
+        final_data['last_three_weeks'] = self.get_count_data(campaign_id, start_date, end_date, diff_date)
 
-        where = {"company_campaign_id": campaign_id}
+        where = {"company_campaign_id": campaign_id,"lead_purchased":"yes"}
         total_lead_data = list(mongo_client.leads.find(where))
         total_lead = len(total_lead_data)
 
@@ -1230,7 +1236,7 @@ class SummaryReportAndGraph(APIView):
                 primary_count = 0
             total_primary_count = total_primary_count + primary_count
 
-        where = {"company_campaign_id": campaign_id,"lead_status": "Hot Lead"}
+        where = {"company_campaign_id": campaign_id,"lead_status": "Hot Lead","lead_purchased":"yes"}
         total_hot_lead_data = list(mongo_client.leads.find(where))
         total_hot_lead_count = len(total_hot_lead_data)
 
@@ -1238,11 +1244,11 @@ class SummaryReportAndGraph(APIView):
         if total_hot_lead_data:
             company_hot_lead_status = total_hot_lead_data[0]['company_lead_status']
 
-        where = {"company_campaign_id": campaign_id,"lead_status": "Deep Lead"}
+        where = {"company_campaign_id": campaign_id,"lead_status": "Deep Lead","lead_purchased":"yes"}
         total_deep_lead_data = list(mongo_client.leads.find(where))
         total_deep_lead_count = len(total_deep_lead_data)
 
-        where = {"company_campaign_id": campaign_id,"lead_purchased":"yes"}
+        where = {"company_campaign_id": campaign_id,"lead_purchased":"yes","lead_purchased":"yes"}
         total_purchased_lead = mongo_client.leads.find(where).count()
 
         company_deep_lead_status = None
@@ -1260,9 +1266,17 @@ class SummaryReportAndGraph(APIView):
 
         return ui_utils.handle_response({}, data=final_data, success=True)
 
-    def get_count_data(self, campaign_id, start_date):
+    def get_count_data(self, campaign_id, start_date, end_date, diff_date):
+
+        if start_date and end_date:
+            where = {"company_campaign_id": campaign_id, 
+                "created_at":{"$gte": diff_date},"created_at":
+                {"$gte": start_date, "$lte": end_date},"lead_purchased":"yes"}
+
+        else:
+            where = {"company_campaign_id": campaign_id, 
+                    "created_at":{"$gte": diff_date},"lead_purchased":"yes"}
         
-        where = {"company_campaign_id": campaign_id, "created_at":{"$gte": start_date}}
         total_lead_data = list(mongo_client.leads.find(where))
         total_lead = len(total_lead_data)
         total_primary_count = 0
@@ -1273,11 +1287,11 @@ class SummaryReportAndGraph(APIView):
                 primary_count = 0
             total_primary_count = total_primary_count + primary_count
 
-        where = {"lead_status": "Hot Lead","company_campaign_id": campaign_id,"created_at":{"$gte": start_date}}
+        where.update({"lead_status": "Hot Lead"})
         hot_lead_data = list(mongo_client.leads.find(where))
         total_hot_lead = len(hot_lead_data)
 
-        where = {"lead_status": "Deep Lead","company_campaign_id": campaign_id,"created_at":{"$gte": start_date}}
+        where.update({"lead_status": "Deep Lead"})
         deep_lead_data = list(mongo_client.leads.find(where))
         total_deep_lead = len(deep_lead_data)
 
