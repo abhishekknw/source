@@ -27,6 +27,7 @@ from v0.constants import (campaign_status, proposal_on_hold)
 from v0.ui.website.utils import manipulate_object_key_values, manipulate_master_to_rs
 import v0.ui.b2b.utils as b2b_utils
 from django.db.models import F
+from v0.ui.campaign.models import CampaignComments
 from datetime import timedelta
 
 def get_value_from_list_by_key(list1, key):
@@ -1294,13 +1295,23 @@ class GetLeadDistributionCampaign(APIView):
     def get(self, request):
         
         organisation_id = request.user.profile.organisation.organisation_id
-        
+        lead_count = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"is_current_company":"no"}]}))
+        existing_client_count = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}]}))
+
+        if lead_count:
+            for row in lead_count:
+                campaign_list = row["company_campaign_id"]       
+ 
+        if existing_client_count:
+            for row in existing_client_count:
+                campaign_list = row["company_campaign_id"]
+
         if request.query_params.get('supplier_code') == "mix":
-            campaign_list = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d", account__organisation=organisation_id, is_mix=True).values_list('proposal_id', flat=True)
-    
+            campaign_list = ProposalInfo.objects.filter(proposal_id__in=campaign_list, is_mix=True).values_list('proposal_id', flat=True)
+            
         if request.query_params.get('supplier_code') and request.query_params.get('supplier_code') != "mix" and request.query_params.get('supplier_code') != "all":
-            campaign_list = ShortlistedSpaces.objects.filter(proposal_id__type_of_end_customer__formatted_name="b_to_b_l_d", proposal_id__account__organisation=organisation_id , supplier_code=request.query_params.get('supplier_code')).values_list('proposal_id', flat=True).distinct()
-        
+            campaign_list = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list , supplier_code=request.query_params.get('supplier_code')).values_list('proposal_id', flat=True).distinct()
+
         campaign_list = [campaign_id for campaign_id in campaign_list]
 
         all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).\
@@ -1325,7 +1336,7 @@ class GetLeadDistributionCampaign(APIView):
         for shortlisted_supplier in all_shortlisted_supplier:
             if shortlisted_supplier['proposal_id'] not in all_campaign_dict:
                 all_campaign_dict[shortlisted_supplier['proposal_id']] = {
-                'all_supplier_ids': [], 'all_phase_ids': [], 'total_flat_counts': 0, 'total_leads':0, 'hot_leads':0}
+                'all_supplier_ids': [], 'total_flat_counts': 0, 'purchased_survey':0}
             if shortlisted_supplier['object_id'] not in all_campaign_dict[shortlisted_supplier['proposal_id']]['all_supplier_ids']:
                 all_campaign_dict[shortlisted_supplier['proposal_id']]['all_supplier_ids'].append(shortlisted_supplier['object_id'])
                 if shortlisted_supplier['object_id'] in all_supplier_society_dict and all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count']:
@@ -1335,6 +1346,11 @@ class GetLeadDistributionCampaign(APIView):
             all_campaign_dict[shortlisted_supplier['proposal_id']]['start_date'] = shortlisted_supplier['proposal__tentative_start_date']
             all_campaign_dict[shortlisted_supplier['proposal_id']]['end_date'] = shortlisted_supplier['proposal__tentative_end_date']
             all_campaign_dict[shortlisted_supplier['proposal_id']]['campaign_status'] = shortlisted_supplier['proposal__campaign_state']
+
+        all_purchased_survey = mongo_client.leads.find({"company_campaign_id":campaign_list})
+        for row in all_purchased_survey:
+            if row["lead_purchased"] == "yes":
+                all_campaign_dict[campaign_id]['purchased_survey'] += 1
 
         all_leads_summary = []
         for campaign_id in all_campaign_dict:
@@ -1355,14 +1371,68 @@ class GetLeadDistributionCampaign(APIView):
                 "end_date": all_campaign_dict[campaign_id]['end_date'],
                 "supplier_count": len(all_campaign_dict[campaign_id]['all_supplier_ids']),
                 "flat_count": all_campaign_dict[campaign_id]['total_flat_counts'],
-                "total_leads": all_campaign_dict[campaign_id]['total_leads'],
+                "purchased_survey": all_campaign_dict[campaign_id]['purchased_survey'],
                 "campaign_status": this_campaign_status
             })
         return ui_utils.handle_response({}, data=all_leads_summary, success=True)
 
-# class GetPurachsedLeadsData(APIView):
+class GetPurchasedLeadsData(APIView):
 
-#     def get(self, request):
+    def get(self, request):
 
-#         campaign_id = request.query_params("campaign_id")
+        campaign_id = request.query_params.get("campaign_id")
+        leads = mongo_client.leads.find({"company_campaign_id": campaign_id})
+        data = []
+        for row in leads:
+            purchased_leads = {}           
+            if row["lead_purchased"] == "yes":
+                purchased_leads["purchased_date"] = "03-12-2020"
+                supplier_list = row["supplier_id"]
+                supplier_society_data = SupplierTypeSociety.objects.filter(supplier_id=supplier_list).values('supplier_id').annotate(
+                    supplier_name = F('society_name'), unit_primary_count=F('flat_count'), city=F('society_city'), area=F('society_locality'), subarea=F('society_subarea'))
+                supplier_master_data = SupplierMaster.objects.filter(supplier_id=supplier_list).values(
+                    'supplier_id', 'supplier_name', 'unit_primary_count', 'city', 'area', 'subarea')
+                leads_data = list(supplier_society_data) + list(supplier_master_data)
 
+                purchased_leads["leads_data"] = leads_data
+
+                purchased_leads["internal_comments"] = CampaignComments.objects.filter(campaign_id=campaign_id, shortlisted_spaces__object_id=supplier_list, related_to='INTERNAL').values("comment")
+                purchased_leads["external_comments"] = CampaignComments.objects.filter(campaign_id=campaign_id, shortlisted_spaces__object_id=supplier_list, related_to='EXTERNAL').values("comment")
+
+                contact_data = ContactDetails.objects.filter(object_id=supplier_list).values('mobile', 'name', 'contact_type')
+                purchased_leads["contact_data"] = contact_data
+
+                data.append(purchased_leads)
+
+        return ui_utils.handle_response({}, data=data, success=True)
+
+class GetNotPurchasedLeadsData(APIView):
+
+    def get(self, request):
+
+        campaign_id = request.query_params.get("campaign_id")
+        leads = mongo_client.leads.find({"company_campaign_id": campaign_id})
+        data = []
+        for row in leads:
+            not_purchased_leads = {}
+            if row["lead_purchased"] == "no":
+                supplier_list = []
+                supplier_list = row["supplier_id"]
+                supplier_society_data = SupplierTypeSociety.objects.filter(supplier_id=supplier_list).values('supplier_id').annotate(
+                    supplier_name = F('society_name'), unit_primary_count=F('flat_count'), city=F('society_city'), area=F('society_locality'))
+        
+                supplier_master_data = SupplierMaster.objects.filter(supplier_id=supplier_list).values(
+                    'supplier_id', 'supplier_name', 'unit_primary_count', 'city', 'area')
+                leads_data = list(supplier_society_data) + list(supplier_master_data)
+
+                not_purchased_leads["leads_data"] = leads_data
+                not_purchased_leads["price"] = 0
+                if row.get("lead_price"):
+                    not_purchased_leads["price"] = row["lead_price"]
+
+                not_purchased_leads["internal_comments"] = CampaignComments.objects.filter(campaign_id=campaign_id, shortlisted_spaces__object_id=supplier_list, related_to='INTERNAL').values("comment")
+                not_purchased_leads["external_comments"] = CampaignComments.objects.filter(campaign_id=campaign_id, shortlisted_spaces__object_id=supplier_list, related_to='EXTERNAL').values("comment")
+
+                data.append(not_purchased_leads)
+
+        return ui_utils.handle_response({}, data=data, success=True)
