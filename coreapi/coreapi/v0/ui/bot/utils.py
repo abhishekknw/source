@@ -6,6 +6,7 @@ import v0.ui.b2b.utils as b2b_utils
 import datetime
 from v0.ui.b2b.models import (Requirement, SuspenseLead, BrowsedLead)
 from v0.ui.organisation.models import Organisation
+from v0.ui.common.models import mongo_client
 from django.db.models import Q
 
 def bot_to_requirement(request, data):
@@ -16,9 +17,9 @@ def bot_to_requirement(request, data):
     date_time = data.get("datetime")
     lead_status = "Lead"
 
-    if phone_number is None:
-        return ui_utils.handle_response({}, data={"errors":"Sector \
-            or Phone Number should not be null"}, success=False)
+    # if phone_number is None:
+    #     return ui_utils.handle_response({}, data={"errors":"Sector \
+    #         or Phone Number should not be null"}, success=False)
 
     contact_details = None
     if phone_number:
@@ -29,10 +30,10 @@ def bot_to_requirement(request, data):
         sector_name = row.get("service")
         if sector_name:
 
-            sub_sector_name = row.get("subService")
+            sub_sector_name = row.get("subservice")
             impl_timeline = row.get("implementationTime")
             meating_timeline = row.get("meetingTime")
-            comment = None
+            comment = "this is the test"
             current_patner = row.get("existingPartner")
             current_patner_feedback = row.get("partnerFeedback")
             current_patner_feedback_reason = row.get("feedbackReason")
@@ -71,14 +72,17 @@ def bot_to_requirement(request, data):
             supplier_type = "RS"
             sector = None
             if sector_name is not None:
+
                 sector = BusinessTypes.objects.filter(
                     business_type=sector_name.lower()).first()
+
+         
             
             sub_sector = None
             if sub_sector_name is not None:
                 sub_sector = BusinessSubTypes.objects.filter(
                     business_sub_type=sub_sector_name.lower()).first()
-
+            
             supplier = None
             city = None
             area = None
@@ -104,7 +108,8 @@ def bot_to_requirement(request, data):
                         supplier_name = supplier.supplier_name
 
             if supplier:
-                campaign = ProposalInfo.objects.filter(Q(type_of_end_customer__formatted_name="b_2_b_r_g") & Q(name__icontains=area) | Q(name__icontains=city)).first()
+                
+                campaign = ProposalInfo.objects.filter(Q(type_of_end_customer__formatted_name="b_to_b_r_g") & Q(name=area) | Q(name=city)).first()
 
                 campaign_id = campaign.proposal_id
 
@@ -147,6 +152,7 @@ def bot_to_requirement(request, data):
 
                     companies = Organisation.objects.filter(business_type=sector)
                     for company in companies:
+                        
                         lead_status = b2b_utils.get_lead_status(
                             impl_timeline = impl_timeline.lower(),
                             meating_timeline = meating_timeline.lower(),
@@ -155,66 +161,123 @@ def bot_to_requirement(request, data):
                             change_current_patner=change_current_patner.lower()
                             )
 
-                        requirement = Requirement(
-                            campaign_id=campaign_id,
-                            shortlisted_spaces=shortlisted_spaces,
-                            company = company,
-                            current_company = current_patner_obj,
-                            current_company_other = current_company_other,
-                            is_current_patner = "yes" if current_patner_obj == company else "no",
-                            current_patner_feedback = current_patner_feedback,
-                            current_patner_feedback_reason = current_patner_feedback_reason,
-                            preferred_company_other = preferred_company_other,
-                            sector = sector,
-                            sub_sector = sub_sector,
-                            lead_by = contact_details,
-                            impl_timeline = impl_timeline.lower(),
-                            meating_timeline = meating_timeline.lower(),
-                            lead_status = lead_status,
-                            comment = comment,
-                            varified_ops = 'no',
-                            varified_bd = 'no',
-                            lead_date = datetime.datetime.now(),
-                            l1_answers = l1_answers,
-                            l2_answers = l2_answers,
-                            change_current_patner = change_current_patner.lower()
-                        )
-                        requirement.save()
+                        
+                        requirement = Requirement.objects.filter(sector=sector,campaign_id = campaign_id, sub_sector = sub_sector, is_deleted='no').first()
+                        if not requirement:
 
-                        if prefered_patners_list:
-                            requirement.preferred_company.set(prefered_patners_list)
-                
+                            requirement = Requirement(
+                                campaign_id=campaign_id,
+                                shortlisted_spaces=shortlisted_spaces,
+                                company = company,
+                                current_company = current_patner_obj,
+                                current_company_other = current_company_other,
+                                is_current_patner = "yes" if current_patner_obj == company else "no",
+                                current_patner_feedback = current_patner_feedback,
+                                current_patner_feedback_reason = current_patner_feedback_reason,
+                                preferred_company_other = preferred_company_other,
+                                sector = sector,
+                                sub_sector = sub_sector,
+                                lead_by = contact_details,
+                                impl_timeline = impl_timeline.lower(),
+                                meating_timeline = meating_timeline.lower(),
+                                lead_status = lead_status,
+                                comment = comment,
+                                varified_ops = 'no',
+                                varified_bd = 'no',
+                                lead_date = datetime.datetime.now(),
+                                l1_answers = l1_answers,
+                                l2_answers = l2_answers,
+                                change_current_patner = change_current_patner.lower()
+                            )
+                            requirement.save()
+
+                            if prefered_patners_list:
+                                requirement.preferred_company.set(prefered_patners_list)
+                        else:
+                            requirement.sector = sector
+                            requirement.sub_sector = sub_sector
+                            requirement.shortlisted_spaces = shortlisted_spaces
+                            requirement.company = company
+                            requirement.current_company = current_patner_obj
+                            requirement.current_company_other = current_company_other
+                            requirement.is_current_patner = "yes" if current_patner_obj == company else "no"
+                            requirement.current_patner_feedback = current_patner_feedback
+                            requirement.current_patner_feedback_reason = current_patner_feedback_reason
+                            requirement.preferred_company_other = preferred_company_other
+                            requirement.impl_timeline = impl_timeline.lower()
+                            requirement.meating_timeline = meating_timeline.lower()
+                            requirement.lead_status = lead_status
+                            requirement.lead_date = datetime.datetime.now()
+                            requirement.l1_answers = l1_answers
+                            requirement.l2_answers = l2_answers
+                            requirement.change_current_patner = change_current_patner.lower()
+                            requirement.comment = comment
+                            requirement.save()
+
+                            if prefered_patners_list:
+                                requirement.preferred_company.set(prefered_patners_list)
                 else:
                     if shortlisted_spaces.color_code != 1:
                         shortlisted_spaces.color_code = 2
                         shortlisted_spaces.save()
+             
+                    browse = mongo_client.browsed_lead.find({"sub_sector_id":str(sub_sector.id),"sector_id":str(sector.id)})
+                    print(list(browse))
+                    print(str(phone_number))
+                    if not browse:
 
-                    BrowsedLead(
-                        supplier_id=supplier_id,
-                        shortlisted_spaces_id=shortlisted_spaces.id,
-                        campaign_id=campaign_id,
-                        phone_number = phone_number,
-                        supplier_name = supplier_name,
-                        city = city,
-                        area = area,
-                        sector_id = sector.id if sector else None,
-                        sub_sector_id = sub_sector.id if sub_sector else None,
-                        implementation_timeline = impl_timeline.lower(),
-                        meating_timeline = meating_timeline.lower(),
-                        lead_status = lead_status,
-                        comment = comment,
-                        current_patner_id = current_patner_obj.organisation_id if current_patner_obj else None,
-                        current_patner_other = current_company_other,
-                        current_patner_feedback = current_patner_feedback,
-                        current_patner_feedback_reason = current_patner_feedback_reason,
-                        prefered_patners = prefered_patners_id_list,
-                        prefered_patner_other = preferred_company_other,
-                        status="open",
-                        created_at = datetime.datetime.now(),
-                        updated_at = datetime.datetime.now(),
-                        l1_answers = l1_answers,
-                        l2_answers = l2_answers
-                    ).save()
+                        BrowsedLead(
+                            supplier_id=supplier_id,
+                            shortlisted_spaces_id=shortlisted_spaces.id,
+                            campaign_id=campaign_id,
+                            supplier_name = supplier_name,
+                            city = city,
+                            area = area,
+                            implementation_timeline = impl_timeline.lower(),
+                            meating_timeline = meating_timeline.lower(),
+                            lead_status = lead_status,
+                            comment = comment,
+                            current_patner_id = current_patner_obj.organisation_id if current_patner_obj else None,
+                            current_patner_other = current_company_other,
+                            current_patner_feedback = current_patner_feedback,
+                            current_patner_feedback_reason = current_patner_feedback_reason,
+                            prefered_patners = prefered_patners_id_list,
+                            prefered_patner_other = preferred_company_other,
+                            status="open",
+                            created_at = datetime.datetime.now(),
+                            updated_at = datetime.datetime.now(),
+                            l1_answers = l1_answers,
+                            l2_answers = l2_answers
+                        ).save()
+                    else:
+                        mongo_client.BrowsedLead.update_one({"sector_id": sector.id,
+                            "sub_sector_id": sub_sector.id},{"$set": {
+                            "supplier_id" : supplier_id,
+                            "shortlisted_spaces_id" : shortlisted_spaces.id,
+                            "campaign_id" : campaign_id,
+                            "phone_number" : phone_number,
+                            "supplier_name" : supplier_name,
+                            "city" : city,  
+                            "area" : area,
+                            "sector_id": sector.id,
+                            "sub_sector_id": sub_sector.id,
+                            "implementation_timeline": impl_timeline.lower(),
+                            "meating_timeline": meating_timeline.lower(),
+                            "lead_status" : lead_status,
+                            "comment" : comment,
+                            "current_patner_id" : current_patner_obj.organisation_id if current_patner_obj else None,
+                            
+                            "current_patner_other" : current_company_other,
+                            "current_patner_feedback"  : current_patner_feedback,
+                            "current_patner_feedback_reason" : current_patner_feedback_reason,
+                            "prefered_patners" : prefered_patners_id_list,
+                            "prefered_patner_other": preferred_company_other,
+                            
+                            "l1_answers":l1_answers,
+                            "l2_answers":l2_answers,
+                        }})
+
+                        
             else:
 
                 SuspenseLead(
