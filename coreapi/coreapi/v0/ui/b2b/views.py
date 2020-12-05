@@ -23,9 +23,11 @@ from bson.objectid import ObjectId
 from v0.ui.common.serializers import BaseUserSerializer
 from v0.ui.supplier.serializers import SupplierMasterSerializer, SupplierTypeSocietySerializer
 import v0.constants as v0_constants
+from v0.constants import (campaign_status, proposal_on_hold)
 from v0.ui.website.utils import manipulate_object_key_values, manipulate_master_to_rs
 import v0.ui.b2b.utils as b2b_utils
 from django.db.models import F
+from datetime import timedelta
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -766,7 +768,7 @@ class BdVerification(APIView):
             "current_patner_feedback_reason":requirement.current_patner_feedback_reason,
             "company_id":requirement.company.organisation_id,"meating_timeline":requirement.meating_timeline,
             "impl_timeline":requirement.impl_timeline,"lead_date":requirement.varified_bd_date,
-            "preferred_patner":prefered_patner,"lead_price":requirement.lead_price}
+            "preferred_patner":prefered_patner,"lead_price":requirement.lead_price,"supplier_primary_count":supplier_primary_count}
 
         lead_for_hash = {
             "data": lead_data,
@@ -1031,7 +1033,7 @@ class GetLeadsByDate(APIView):
         end_date = date_time_obj.replace(hour=23, minute=59, second=59)
         organisation_id = request.user.profile.organisation.organisation_id
         lead_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"no"}]}).count()
-        existing_client_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"yes"}]}).count()
+        existing_client_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}]}).count()
             
         lead_dict = {
             'lead_count' : lead_count,
@@ -1099,7 +1101,7 @@ class GetFeedbackCount(APIView):
         dissatisfied_count = 0
         extremely_dissatisfied_count = 0
 
-        client_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"yes"}]})
+        client_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}]})
 
         for row in client_count:
             feedback = row["current_patner_feedback"]
@@ -1166,3 +1168,201 @@ class GetSupplierByCampaign(APIView):
         supplier_data = list(supplier_society_data) + list(supplier_master_data)
 
         return ui_utils.handle_response({}, data=supplier_data, success=True)
+
+class FlatSummaryDetails(APIView):
+
+    def get(self, request):
+
+        campaign_id = request.query_params.get('campaign_id')
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+
+        if start_date and end_date:
+            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+
+            where = {"company_campaign_id": campaign_id, "created_at":{"$gte": start_date}}
+        else:
+            where = {"company_campaign_id": campaign_id}
+
+        lead_data = list(mongo_client.leads.find(where))
+        total_leads = len(lead_data)
+
+        lead_obj = {}
+        data = []
+        for lead in lead_data:
+            lead_obj = dict(lead)
+            lead_obj['_id'] = str(lead_obj['_id'])
+            data.append(lead_obj)
+
+        return ui_utils.handle_response({}, data=data, success=True)
+
+class SummaryReportAndGraph(APIView):
+
+    def get(self, request):
+        final_data = {}
+        campaign_id = request.query_params.get('campaign_id')
+
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+
+        if start_date and end_date:
+            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+ 
+        start_date = datetime.datetime.now() - timedelta(days=7)
+        final_data['last_week'] = self.get_count_data(campaign_id, start_date)
+        start_date = datetime.datetime.now() - timedelta(days=14)
+        final_data['last_two_weeks'] = self.get_count_data(campaign_id, start_date)
+        start_date = datetime.datetime.now() - timedelta(days=21)
+        final_data['last_three_weeks'] = self.get_count_data(campaign_id, start_date)
+
+        where = {"company_campaign_id": campaign_id}
+        total_lead_data = list(mongo_client.leads.find(where))
+        total_lead = len(total_lead_data)
+
+        total_primary_count = 0
+        for lead in total_lead_data:
+            try:
+                primary_count = lead['supplier_primary_count']
+            except Exception as e:
+                primary_count = 0
+            total_primary_count = total_primary_count + primary_count
+
+        where = {"company_campaign_id": campaign_id,"lead_status": "Hot Lead"}
+        total_hot_lead_data = list(mongo_client.leads.find(where))
+        total_hot_lead_count = len(total_hot_lead_data)
+
+        company_hot_lead_status = None
+        if total_hot_lead_data:
+            company_hot_lead_status = total_hot_lead_data[0]['company_lead_status']
+
+        where = {"company_campaign_id": campaign_id,"lead_status": "Deep Lead"}
+        total_deep_lead_data = list(mongo_client.leads.find(where))
+        total_deep_lead_count = len(total_deep_lead_data)
+
+        where = {"company_campaign_id": campaign_id,"lead_purchased":"yes"}
+        total_purchased_lead = mongo_client.leads.find(where).count()
+
+        company_deep_lead_status = None
+        if total_deep_lead_data:
+            company_deep_lead_status = total_deep_lead_data[-1]['company_lead_status']
+
+        final_data['overall_data'] = {
+            "total_lead":total_lead,
+            "company_hot_lead_status": company_hot_lead_status,
+            "company_deep_lead_status": company_deep_lead_status,
+            "total_deep_count":total_deep_lead_count,
+            "hot_lead_count":total_hot_lead_count,
+            "primary_count":total_primary_count
+            }
+
+        return ui_utils.handle_response({}, data=final_data, success=True)
+
+    def get_count_data(self, campaign_id, start_date):
+        
+        where = {"company_campaign_id": campaign_id, "created_at":{"$gte": start_date}}
+        total_lead_data = list(mongo_client.leads.find(where))
+        total_lead = len(total_lead_data)
+        total_primary_count = 0
+        for lead in total_lead_data:
+            try:
+                primary_count = lead['supplier_primary_count']
+            except Exception as e:
+                primary_count = 0
+            total_primary_count = total_primary_count + primary_count
+
+        where = {"lead_status": "Hot Lead","company_campaign_id": campaign_id,"created_at":{"$gte": start_date}}
+        hot_lead_data = list(mongo_client.leads.find(where))
+        total_hot_lead = len(hot_lead_data)
+
+        where = {"lead_status": "Deep Lead","company_campaign_id": campaign_id,"created_at":{"$gte": start_date}}
+        deep_lead_data = list(mongo_client.leads.find(where))
+        total_deep_lead = len(deep_lead_data)
+
+        context = {
+            "total_lead": total_lead,
+            "hot_lead_count": total_hot_lead,
+            "total_deep_count": total_deep_lead,
+            "primary_count":total_primary_count
+        }
+
+        return context
+
+class GetLeadDistributionCampaign(APIView):
+
+    def get(self, request):
+        
+        organisation_id = request.user.profile.organisation.organisation_id
+        
+        if request.query_params.get('supplier_code') == "mix":
+            campaign_list = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d", account__organisation=organisation_id, is_mix=True).values_list('proposal_id', flat=True)
+    
+        if request.query_params.get('supplier_code') and request.query_params.get('supplier_code') != "mix" and request.query_params.get('supplier_code') != "all":
+            campaign_list = ShortlistedSpaces.objects.filter(proposal_id__type_of_end_customer__formatted_name="b_to_b_l_d", proposal_id__account__organisation=organisation_id , supplier_code=request.query_params.get('supplier_code')).values_list('proposal_id', flat=True).distinct()
+        
+        campaign_list = [campaign_id for campaign_id in campaign_list]
+
+        all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).\
+            values('proposal_id', 'object_id', 'is_completed', 'proposal__name', 'proposal__tentative_start_date',
+                'proposal__tentative_end_date', 'proposal__campaign_state', 'supplier_code')
+
+        all_campaign_dict = {}
+        all_shortlisted_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] == 'RS']
+        all_supplier_society = SupplierTypeSociety.objects.filter(supplier_id__in=all_shortlisted_supplier_id).values('supplier_id', 'flat_count')
+
+        all_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] != 'RS']
+        all_supplier_master = SupplierMaster.objects.filter(supplier_id__in=all_supplier_id).values('supplier_id', 'unit_primary_count')
+
+        all_supplier_society_dict = {}
+        current_date = datetime.datetime.now().date()
+        for supplier in all_supplier_society:
+            all_supplier_society_dict[supplier['supplier_id']] = {'flat_count': supplier['flat_count']}
+
+        for supplier in all_supplier_master:
+            all_supplier_society_dict[supplier['supplier_id']] = {'flat_count': supplier['unit_primary_count']}
+
+        for shortlisted_supplier in all_shortlisted_supplier:
+            if shortlisted_supplier['proposal_id'] not in all_campaign_dict:
+                all_campaign_dict[shortlisted_supplier['proposal_id']] = {
+                'all_supplier_ids': [], 'all_phase_ids': [], 'total_flat_counts': 0, 'total_leads':0, 'hot_leads':0}
+            if shortlisted_supplier['object_id'] not in all_campaign_dict[shortlisted_supplier['proposal_id']]['all_supplier_ids']:
+                all_campaign_dict[shortlisted_supplier['proposal_id']]['all_supplier_ids'].append(shortlisted_supplier['object_id'])
+                if shortlisted_supplier['object_id'] in all_supplier_society_dict and all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count']:
+                    all_campaign_dict[shortlisted_supplier['proposal_id']]['total_flat_counts'] += all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count']
+
+            all_campaign_dict[shortlisted_supplier['proposal_id']]['name'] = shortlisted_supplier['proposal__name']
+            all_campaign_dict[shortlisted_supplier['proposal_id']]['start_date'] = shortlisted_supplier['proposal__tentative_start_date']
+            all_campaign_dict[shortlisted_supplier['proposal_id']]['end_date'] = shortlisted_supplier['proposal__tentative_end_date']
+            all_campaign_dict[shortlisted_supplier['proposal_id']]['campaign_status'] = shortlisted_supplier['proposal__campaign_state']
+
+        all_leads_summary = []
+        for campaign_id in all_campaign_dict:
+            this_campaign_status = None
+            if not all_campaign_dict[campaign_id]['campaign_status'] == proposal_on_hold:
+                if all_campaign_dict[campaign_id]['start_date'].date() > current_date:
+                    this_campaign_status = campaign_status['upcoming_campaigns']
+                elif all_campaign_dict[campaign_id]['end_date'].date() >= current_date:
+                    this_campaign_status = campaign_status['ongoing_campaigns']
+                elif all_campaign_dict[campaign_id]['end_date'].date() < current_date:
+                    this_campaign_status = campaign_status['completed_campaigns']
+            else:
+                this_campaign_status = "on_hold"
+            all_leads_summary.append({
+                "campaign_id": campaign_id,
+                "name": all_campaign_dict[campaign_id]['name'],
+                "start_date": all_campaign_dict[campaign_id]['start_date'],
+                "end_date": all_campaign_dict[campaign_id]['end_date'],
+                "supplier_count": len(all_campaign_dict[campaign_id]['all_supplier_ids']),
+                "flat_count": all_campaign_dict[campaign_id]['total_flat_counts'],
+                "total_leads": all_campaign_dict[campaign_id]['total_leads'],
+                "campaign_status": this_campaign_status
+            })
+        return ui_utils.handle_response({}, data=all_leads_summary, success=True)
+
+# class GetPurachsedLeadsData(APIView):
+
+#     def get(self, request):
+
+#         campaign_id = request.query_params("campaign_id")
+
