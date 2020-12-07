@@ -23,13 +23,8 @@ class GetDataFromBot(APIView):
     def post(self, request):
         data = request.data
         if data['phone']:
-            contact_details = ContactDetails.objects.filter(
-            Q(mobile=data['phone'])|Q(landline=data['phone'])).first()
-            if contact_details:
-                response = bot_utils.bot_to_requirement(request, data)        
-                return ui_utils.handle_response({}, data="Bot data successfully Added", success=True)
-            else:
-                return ui_utils.handle_response({}, data={"errors":"Phone Number is not available"}, success=False)
+            response = bot_utils.bot_to_requirement(request, data)        
+            return ui_utils.handle_response({}, data="Bot data successfully Added", success=True)
         else:
             return ui_utils.handle_response({}, data={"errors":"Phone Number should not be null"}, success=False)
         
