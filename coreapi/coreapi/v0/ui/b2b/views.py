@@ -1219,7 +1219,7 @@ class FlatSummaryDetails(APIView):
             start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
             end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
 
-            where = {"company_campaign_id": campaign_id, "created_at":{"$gte": start_date},"lead_purchased":"yes"}
+            where = {"company_campaign_id": campaign_id, "created_at":{"$gte": start_date, "$lte": end_date},"lead_purchased":"yes"}
         else:
             where = {"company_campaign_id": campaign_id,"lead_purchased":"yes"}
 
@@ -1304,9 +1304,9 @@ class SummaryReportAndGraph(APIView):
     def get_count_data(self, campaign_id, start_date, end_date, diff_date):
 
         if start_date and end_date:
-            where = {"company_campaign_id": campaign_id, 
-                "created_at":{"$gte": diff_date},"created_at":
-                {"$gte": start_date, "$lte": end_date},"lead_purchased":"yes"}
+            where = {"company_campaign_id": campaign_id,"lead_purchased":"yes",
+                "$and": [{"created_at":{"$gte": diff_date},
+                    "created_at":{"$gte": start_date, "$lte": end_date}}]}
 
         else:
             where = {"company_campaign_id": campaign_id, 
@@ -1323,12 +1323,10 @@ class SummaryReportAndGraph(APIView):
             total_primary_count = total_primary_count + primary_count
 
         where.update({"lead_status": "Hot Lead"})
-        hot_lead_data = list(mongo_client.leads.find(where))
-        total_hot_lead = len(hot_lead_data)
+        total_hot_lead = mongo_client.leads.find(where).count()
 
         where.update({"lead_status": "Deep Lead"})
-        deep_lead_data = list(mongo_client.leads.find(where))
-        total_deep_lead = len(deep_lead_data)
+        total_deep_lead = mongo_client.leads.find(where).count()
 
         context = {
             "total_lead": total_lead,
