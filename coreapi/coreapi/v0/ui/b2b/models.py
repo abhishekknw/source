@@ -82,6 +82,8 @@ class Requirement(models.Model):
     change_current_patner = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     lead_price = models.FloatField(default=0.0, blank=True, null=True)
     call_back_preference = models.CharField(max_length=100, null=True, blank=True)
+    lead_purchased = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
+    purchased_date = models.DateTimeField(null=True)
 
     class Meta:
         db_table = 'requirement'
@@ -137,6 +139,29 @@ class BrowsedLead(MongoModel):
     updated_at = fields.DateTimeField()
     l1_answers = fields.CharField(blank=True)
     l2_answers = fields.CharField(blank=True)
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'mongo_app'
+
+
+class CampaignLeads(MongoModel):
+    purchased_count = fields.CharField(blank=True)
+    lead_count = fields.CharField(blank=True)
+    company_campaign_id = fields.CharField(blank=True)
+    created_at = fields.DateTimeField()
+    updated_at = fields.DateTimeField()
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'mongo_app'
+
+class OrganizationLeads(MongoModel):
+    purchased_count = fields.CharField(blank=True)
+    lead_count = fields.CharField(blank=True)
+    company_id = fields.CharField(blank=True)
+    created_at = fields.DateTimeField()
+    updated_at = fields.DateTimeField()
 
     class Meta:
         write_concern = WriteConcern(j=True)

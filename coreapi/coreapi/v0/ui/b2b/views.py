@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import HttpResponse
-from .models import (Requirement, SuspenseLead, BrowsedLead)
+from .models import (Requirement, SuspenseLead, BrowsedLead, CampaignLeads, OrganizationLeads)
 from .serializers import RequirementSerializer
 import v0.ui.utils as ui_utils
 from openpyxl import load_workbook
@@ -771,7 +771,8 @@ class BdVerification(APIView):
             "impl_timeline":requirement.impl_timeline,"lead_date":requirement.varified_bd_date,
             "preferred_patner":prefered_patner,"lead_price":requirement.lead_price,
             "supplier_primary_count":supplier_primary_count,"supplier_city": supplier_city,
-            "supplier_area": supplier_area,"supplier_sub_area": supplier_subarea}
+            "supplier_area": supplier_area,"supplier_sub_area": supplier_subarea,
+            "purchased_date": requirement.purchased_date}
 
         lead_for_hash = {
             "data": lead_data,
@@ -782,6 +783,40 @@ class BdVerification(APIView):
         lead_dict["lead_sha_256"] = lead_sha_256
 
         mongo_client.leads.insert_one(lead_dict)
+
+        campaign_lead_count = mongo_client.CampaignLeads.find({
+            "company_campaign_id":requirement.company_campaign_id}).count()
+        if campaign_lead_count:
+            mongo_client.CampaignLeads.update_one({"company_campaign_id": 
+                requirement.company_campaign_id},{"$set": {
+                        "lead_count": campaign_lead_count + 1,
+                        "updated_at": datetime.datetime.now()
+                    }})
+        else:
+            campaign_leads_dict = {
+                "updated_at": datetime.datetime.now(),
+                "created_at": datetime.datetime.now(),
+                "lead_count": 1,
+                "company_campaign_id": requirement.company_campaign_id
+            }
+            mongo_client.CampaignLeads.insert_one(campaign_leads_dict)
+
+        company_lead_count = mongo_client.OrganizationLeads.find({
+            "company_id":requirement.company.organisation_id}).count()
+        if company_lead_count:
+            mongo_client.OrganizationLeads.update_one({"company_id": 
+                requirement.company.organisation_id},{"$set": {
+                        "lead_count": company_lead_count + 1,
+                        "updated_at": datetime.datetime.now()
+                    }})
+        else:
+            campaign_leads_dict = {
+                "updated_at": datetime.datetime.now(),
+                "created_at": datetime.datetime.now(),
+                "lead_count": 1,
+                "company_id": requirement.company.organisation_id
+            }
+            mongo_client.OrganizationLeads.insert_one(campaign_leads_dict)
 
         return True
 
@@ -1453,3 +1488,42 @@ class GetNotPurchasedLeadsData(APIView):
                 data.append(not_purchased_leads)
 
         return ui_utils.handle_response({}, data=data, success=True)
+
+
+# class BuyLead(APIView):
+
+#     def post(self, request):
+#         requirement_ids = request.data.get('requirement_ids')
+
+#         for req in requirement_ids:
+
+#             requirement = Requirement.objects.filter(id=req.id).first()
+#             requirement.lead_purchased = "yes"
+#             requirement.purchased_date = datetime.datetime.now()
+#             requirement.save()
+
+#             if requirement:
+                
+#                 mongo_client.leads.update_one({"requrement_id": 
+#                     requirement.id,},{"$set": {
+#                             "lead_purchased": "yes",
+#                             "purchased_date": requirement.purchased_date
+#                         }})
+
+#                 company_lead_count = mongo_client.OrganizationLeads.find({"company_id":requirement.company.organisation_id}).count()
+#                 if company_lead_count:
+#                     mongo_client.OrganizationLeads.update_one({"company_id": 
+#                         requirement.company.organisation_id},{"$set": {
+#                                 "purchased_count": company_lead_count + 1,
+#                                 "updated_at": datetime.datetime.now()
+#                             }})
+#                 else:
+#                     campaign_leads_dict = {
+#                         "updated_at": datetime.datetime.now(),
+#                         "created_at": datetime.datetime.now(),
+#                         "lead_count": 1,
+#                         "company_id": requirement.company.organisation_id
+#                     }
+#                     mongo_client.OrganizationLeads.insert_one(campaign_leads_dict)
+
+#         return ui_utils.handle_response({}, data="Requirement deleted", success=True)
