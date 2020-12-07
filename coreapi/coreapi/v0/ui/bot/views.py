@@ -22,11 +22,9 @@ class GetDataFromBot(APIView):
 
     def post(self, request):
         data = request.data
-        print(data['phone'])
         if data['phone']:
             response = bot_utils.bot_to_requirement(request, data)        
             return ui_utils.handle_response({}, data="Bot data successfully Added", success=True)
         else:
-            return ui_utils.handle_response({}, data={"errors":"Sector \
-                or Phone Number should not be null"}, success=False)
+            return ui_utils.handle_response({}, data={"errors":"Phone Number should not be null"}, success=False)
         

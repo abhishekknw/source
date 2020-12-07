@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import HttpResponse
-from .models import (Requirement, SuspenseLead, BrowsedLead)
+from .models import (Requirement, SuspenseLead, BrowsedLead, CampaignLeads, OrganizationLeads)
 from .serializers import RequirementSerializer
 import v0.ui.utils as ui_utils
 from openpyxl import load_workbook
@@ -27,6 +27,7 @@ from v0.constants import (campaign_status, proposal_on_hold)
 from v0.ui.website.utils import manipulate_object_key_values, manipulate_master_to_rs
 import v0.ui.b2b.utils as b2b_utils
 from django.db.models import F
+from v0.ui.campaign.models import CampaignComments
 from datetime import timedelta
 
 def get_value_from_list_by_key(list1, key):
@@ -768,7 +769,10 @@ class BdVerification(APIView):
             "current_patner_feedback_reason":requirement.current_patner_feedback_reason,
             "company_id":requirement.company.organisation_id,"meating_timeline":requirement.meating_timeline,
             "impl_timeline":requirement.impl_timeline,"lead_date":requirement.varified_bd_date,
-            "preferred_patner":prefered_patner,"lead_price":requirement.lead_price,"supplier_primary_count":supplier_primary_count}
+            "preferred_patner":prefered_patner,"lead_price":requirement.lead_price,
+            "supplier_primary_count":supplier_primary_count,"supplier_city": supplier_city,
+            "supplier_area": supplier_area,"supplier_sub_area": supplier_subarea,
+            "purchased_date": requirement.purchased_date}
 
         lead_for_hash = {
             "data": lead_data,
@@ -779,6 +783,40 @@ class BdVerification(APIView):
         lead_dict["lead_sha_256"] = lead_sha_256
 
         mongo_client.leads.insert_one(lead_dict)
+
+        campaign_lead_count = mongo_client.CampaignLeads.find({
+            "company_campaign_id":requirement.company_campaign_id}).count()
+        if campaign_lead_count:
+            mongo_client.CampaignLeads.update_one({"company_campaign_id": 
+                requirement.company_campaign_id},{"$set": {
+                        "lead_count": campaign_lead_count + 1,
+                        "updated_at": datetime.datetime.now()
+                    }})
+        else:
+            campaign_leads_dict = {
+                "updated_at": datetime.datetime.now(),
+                "created_at": datetime.datetime.now(),
+                "lead_count": 1,
+                "company_campaign_id": requirement.company_campaign_id
+            }
+            mongo_client.CampaignLeads.insert_one(campaign_leads_dict)
+
+        company_lead_count = mongo_client.OrganizationLeads.find({
+            "company_id":requirement.company.organisation_id}).count()
+        if company_lead_count:
+            mongo_client.OrganizationLeads.update_one({"company_id": 
+                requirement.company.organisation_id},{"$set": {
+                        "lead_count": company_lead_count + 1,
+                        "updated_at": datetime.datetime.now()
+                    }})
+        else:
+            campaign_leads_dict = {
+                "updated_at": datetime.datetime.now(),
+                "created_at": datetime.datetime.now(),
+                "lead_count": 1,
+                "company_id": requirement.company.organisation_id
+            }
+            mongo_client.OrganizationLeads.insert_one(campaign_leads_dict)
 
         return True
 
@@ -1181,9 +1219,9 @@ class FlatSummaryDetails(APIView):
             start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
             end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
 
-            where = {"company_campaign_id": campaign_id, "created_at":{"$gte": start_date}}
+            where = {"company_campaign_id": campaign_id, "created_at":{"$gte": start_date, "$lte": end_date},"lead_purchased":"yes"}
         else:
-            where = {"company_campaign_id": campaign_id}
+            where = {"company_campaign_id": campaign_id,"lead_purchased":"yes"}
 
         lead_data = list(mongo_client.leads.find(where))
         total_leads = len(lead_data)
@@ -1200,6 +1238,7 @@ class FlatSummaryDetails(APIView):
 class SummaryReportAndGraph(APIView):
 
     def get(self, request):
+
         final_data = {}
         campaign_id = request.query_params.get('campaign_id')
 
@@ -1209,15 +1248,18 @@ class SummaryReportAndGraph(APIView):
         if start_date and end_date:
             start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
             end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+            date = start_date
+        else:
+            date = datetime.datetime.now()
  
-        start_date = datetime.datetime.now() - timedelta(days=7)
-        final_data['last_week'] = self.get_count_data(campaign_id, start_date)
-        start_date = datetime.datetime.now() - timedelta(days=14)
-        final_data['last_two_weeks'] = self.get_count_data(campaign_id, start_date)
-        start_date = datetime.datetime.now() - timedelta(days=21)
-        final_data['last_three_weeks'] = self.get_count_data(campaign_id, start_date)
+        diff_date = date - timedelta(days=7)
+        final_data['last_week'] = self.get_count_data(campaign_id, start_date, end_date, diff_date)
+        diff_date = date - timedelta(days=14)
+        final_data['last_two_weeks'] = self.get_count_data(campaign_id, start_date, end_date, diff_date)
+        diff_date = date - timedelta(days=21)
+        final_data['last_three_weeks'] = self.get_count_data(campaign_id, start_date, end_date, diff_date)
 
-        where = {"company_campaign_id": campaign_id}
+        where = {"company_campaign_id": campaign_id,"lead_purchased":"yes"}
         total_lead_data = list(mongo_client.leads.find(where))
         total_lead = len(total_lead_data)
 
@@ -1229,7 +1271,7 @@ class SummaryReportAndGraph(APIView):
                 primary_count = 0
             total_primary_count = total_primary_count + primary_count
 
-        where = {"company_campaign_id": campaign_id,"lead_status": "Hot Lead"}
+        where = {"company_campaign_id": campaign_id,"lead_status": "Hot Lead","lead_purchased":"yes"}
         total_hot_lead_data = list(mongo_client.leads.find(where))
         total_hot_lead_count = len(total_hot_lead_data)
 
@@ -1237,11 +1279,11 @@ class SummaryReportAndGraph(APIView):
         if total_hot_lead_data:
             company_hot_lead_status = total_hot_lead_data[0]['company_lead_status']
 
-        where = {"company_campaign_id": campaign_id,"lead_status": "Deep Lead"}
+        where = {"company_campaign_id": campaign_id,"lead_status": "Deep Lead","lead_purchased":"yes"}
         total_deep_lead_data = list(mongo_client.leads.find(where))
         total_deep_lead_count = len(total_deep_lead_data)
 
-        where = {"company_campaign_id": campaign_id,"lead_purchased":"yes"}
+        where = {"company_campaign_id": campaign_id,"lead_purchased":"yes","lead_purchased":"yes"}
         total_purchased_lead = mongo_client.leads.find(where).count()
 
         company_deep_lead_status = None
@@ -1259,9 +1301,17 @@ class SummaryReportAndGraph(APIView):
 
         return ui_utils.handle_response({}, data=final_data, success=True)
 
-    def get_count_data(self, campaign_id, start_date):
+    def get_count_data(self, campaign_id, start_date, end_date, diff_date):
+
+        if start_date and end_date:
+            where = {"company_campaign_id": campaign_id,"lead_purchased":"yes",
+                "$and": [{"created_at":{"$gte": diff_date},
+                    "created_at":{"$gte": start_date, "$lte": end_date}}]}
+
+        else:
+            where = {"company_campaign_id": campaign_id, 
+                    "created_at":{"$gte": diff_date},"lead_purchased":"yes"}
         
-        where = {"company_campaign_id": campaign_id, "created_at":{"$gte": start_date}}
         total_lead_data = list(mongo_client.leads.find(where))
         total_lead = len(total_lead_data)
         total_primary_count = 0
@@ -1272,13 +1322,11 @@ class SummaryReportAndGraph(APIView):
                 primary_count = 0
             total_primary_count = total_primary_count + primary_count
 
-        where = {"lead_status": "Hot Lead","company_campaign_id": campaign_id,"created_at":{"$gte": start_date}}
-        hot_lead_data = list(mongo_client.leads.find(where))
-        total_hot_lead = len(hot_lead_data)
+        where.update({"lead_status": "Hot Lead"})
+        total_hot_lead = mongo_client.leads.find(where).count()
 
-        where = {"lead_status": "Deep Lead","company_campaign_id": campaign_id,"created_at":{"$gte": start_date}}
-        deep_lead_data = list(mongo_client.leads.find(where))
-        total_deep_lead = len(deep_lead_data)
+        where.update({"lead_status": "Deep Lead"})
+        total_deep_lead = mongo_client.leads.find(where).count()
 
         context = {
             "total_lead": total_lead,
@@ -1294,13 +1342,26 @@ class GetLeadDistributionCampaign(APIView):
     def get(self, request):
         
         organisation_id = request.user.profile.organisation.organisation_id
-        
+        # lead_count = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"is_current_company":"no"}]}))
+        # existing_client_count = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}]}))
+        # campaign_list = []
+        # if lead_count:
+        #     for row in lead_count:
+        #         campaign = row["company_campaign_id"]       
+        #         campaign_list.append(campaign)
+        # if existing_client_count:
+        #     for row in existing_client_count:
+        #         campaign = row["company_campaign_id"]
+        #         campaign_list.append(campaign)
+
         if request.query_params.get('supplier_code') == "mix":
-            campaign_list = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d", account__organisation=organisation_id, is_mix=True).values_list('proposal_id', flat=True)
-    
+            # campaign_list = ProposalInfo.objects.filter(proposal_id__in=campaign_list, is_mix=True).values_list('proposal_id', flat=True)
+            campaign_list = ProposalInfo.objects.filter(type_of_end_customer__formatted_name='b_to_b_l_d', account__organisation=organisation_id, is_mix=True).values_list('proposal_id', flat=True)
+            
         if request.query_params.get('supplier_code') and request.query_params.get('supplier_code') != "mix" and request.query_params.get('supplier_code') != "all":
-            campaign_list = ShortlistedSpaces.objects.filter(proposal_id__type_of_end_customer__formatted_name="b_to_b_l_d", proposal_id__account__organisation=organisation_id , supplier_code=request.query_params.get('supplier_code')).values_list('proposal_id', flat=True).distinct()
-        
+            # campaign_list = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list , supplier_code=request.query_params.get('supplier_code')).values_list('proposal_id', flat=True).distinct()
+            campaign_list = ShortlistedSpaces.objects.filter(proposal_id__type_of_end_customer__formatted_name='b_to_b_l_d',proposal_id__account__organisation=organisation_id, supplier_code=request.query_params.get('supplier_code')).values_list('proposal_id', flat=True).distinct()
+
         campaign_list = [campaign_id for campaign_id in campaign_list]
 
         all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).\
@@ -1325,7 +1386,7 @@ class GetLeadDistributionCampaign(APIView):
         for shortlisted_supplier in all_shortlisted_supplier:
             if shortlisted_supplier['proposal_id'] not in all_campaign_dict:
                 all_campaign_dict[shortlisted_supplier['proposal_id']] = {
-                'all_supplier_ids': [], 'all_phase_ids': [], 'total_flat_counts': 0, 'total_leads':0, 'hot_leads':0}
+                'all_supplier_ids': [], 'total_flat_counts': 0, 'purchased_survey':0}
             if shortlisted_supplier['object_id'] not in all_campaign_dict[shortlisted_supplier['proposal_id']]['all_supplier_ids']:
                 all_campaign_dict[shortlisted_supplier['proposal_id']]['all_supplier_ids'].append(shortlisted_supplier['object_id'])
                 if shortlisted_supplier['object_id'] in all_supplier_society_dict and all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count']:
@@ -1335,6 +1396,11 @@ class GetLeadDistributionCampaign(APIView):
             all_campaign_dict[shortlisted_supplier['proposal_id']]['start_date'] = shortlisted_supplier['proposal__tentative_start_date']
             all_campaign_dict[shortlisted_supplier['proposal_id']]['end_date'] = shortlisted_supplier['proposal__tentative_end_date']
             all_campaign_dict[shortlisted_supplier['proposal_id']]['campaign_status'] = shortlisted_supplier['proposal__campaign_state']
+
+        all_purchased_survey = mongo_client.leads.find({"company_campaign_id":campaign_list})
+        for row in all_purchased_survey:
+            if row["lead_purchased"] == "yes":
+                all_campaign_dict[campaign_id]['purchased_survey'] += 1
 
         all_leads_summary = []
         for campaign_id in all_campaign_dict:
@@ -1355,14 +1421,107 @@ class GetLeadDistributionCampaign(APIView):
                 "end_date": all_campaign_dict[campaign_id]['end_date'],
                 "supplier_count": len(all_campaign_dict[campaign_id]['all_supplier_ids']),
                 "flat_count": all_campaign_dict[campaign_id]['total_flat_counts'],
-                "total_leads": all_campaign_dict[campaign_id]['total_leads'],
+                "purchased_survey": all_campaign_dict[campaign_id]['purchased_survey'],
                 "campaign_status": this_campaign_status
             })
         return ui_utils.handle_response({}, data=all_leads_summary, success=True)
 
-# class GetPurachsedLeadsData(APIView):
+class GetPurchasedLeadsData(APIView):
 
-#     def get(self, request):
+    def get(self, request):
 
-#         campaign_id = request.query_params("campaign_id")
+        campaign_id = request.query_params.get("campaign_id")
+        leads = mongo_client.leads.find({"company_campaign_id": campaign_id})
+        data = []
+        for row in leads:
+            purchased_leads = {}           
+            if row["lead_purchased"] == "yes":
+                purchased_leads["purchased_date"] = "03-12-2020"
+                supplier_list = row["supplier_id"]
+                supplier_society_data = SupplierTypeSociety.objects.filter(supplier_id=supplier_list).values('supplier_id').annotate(
+                    supplier_name = F('society_name'), unit_primary_count=F('flat_count'), city=F('society_city'), area=F('society_locality'), subarea=F('society_subarea'))
+                supplier_master_data = SupplierMaster.objects.filter(supplier_id=supplier_list).values(
+                    'supplier_id', 'supplier_name', 'unit_primary_count', 'city', 'area', 'subarea')
+                leads_data = list(supplier_society_data) + list(supplier_master_data)
 
+                purchased_leads["leads_data"] = leads_data
+
+                purchased_leads["internal_comments"] = CampaignComments.objects.filter(campaign_id=campaign_id, shortlisted_spaces__object_id=supplier_list, related_to='INTERNAL').values("comment")
+                purchased_leads["external_comments"] = CampaignComments.objects.filter(campaign_id=campaign_id, shortlisted_spaces__object_id=supplier_list, related_to='EXTERNAL').values("comment")
+
+                contact_data = ContactDetails.objects.filter(object_id=supplier_list).values('mobile', 'name', 'contact_type')
+                purchased_leads["contact_data"] = contact_data
+
+                data.append(purchased_leads)
+
+        return ui_utils.handle_response({}, data=data, success=True)
+
+class GetNotPurchasedLeadsData(APIView):
+
+    def get(self, request):
+
+        campaign_id = request.query_params.get("campaign_id")
+        leads = mongo_client.leads.find({"company_campaign_id": campaign_id})
+        data = []
+        for row in leads:
+            not_purchased_leads = {}
+            if row["lead_purchased"] == "no":
+                supplier_list = []
+                supplier_list = row["supplier_id"]
+                supplier_society_data = SupplierTypeSociety.objects.filter(supplier_id=supplier_list).values('supplier_id').annotate(
+                    supplier_name = F('society_name'), unit_primary_count=F('flat_count'), city=F('society_city'), area=F('society_locality'))
+        
+                supplier_master_data = SupplierMaster.objects.filter(supplier_id=supplier_list).values(
+                    'supplier_id', 'supplier_name', 'unit_primary_count', 'city', 'area')
+                leads_data = list(supplier_society_data) + list(supplier_master_data)
+
+                not_purchased_leads["leads_data"] = leads_data
+                not_purchased_leads["price"] = 0
+                if row.get("lead_price"):
+                    not_purchased_leads["price"] = row["lead_price"]
+
+                not_purchased_leads["internal_comments"] = CampaignComments.objects.filter(campaign_id=campaign_id, shortlisted_spaces__object_id=supplier_list, related_to='INTERNAL').values("comment")
+                not_purchased_leads["external_comments"] = CampaignComments.objects.filter(campaign_id=campaign_id, shortlisted_spaces__object_id=supplier_list, related_to='EXTERNAL').values("comment")
+
+                data.append(not_purchased_leads)
+
+        return ui_utils.handle_response({}, data=data, success=True)
+
+
+# class BuyLead(APIView):
+
+#     def post(self, request):
+#         requirement_ids = request.data.get('requirement_ids')
+
+#         for req in requirement_ids:
+
+#             requirement = Requirement.objects.filter(id=req.id).first()
+#             requirement.lead_purchased = "yes"
+#             requirement.purchased_date = datetime.datetime.now()
+#             requirement.save()
+
+#             if requirement:
+                
+#                 mongo_client.leads.update_one({"requrement_id": 
+#                     requirement.id,},{"$set": {
+#                             "lead_purchased": "yes",
+#                             "purchased_date": requirement.purchased_date
+#                         }})
+
+#                 company_lead_count = mongo_client.OrganizationLeads.find({"company_id":requirement.company.organisation_id}).count()
+#                 if company_lead_count:
+#                     mongo_client.OrganizationLeads.update_one({"company_id": 
+#                         requirement.company.organisation_id},{"$set": {
+#                                 "purchased_count": company_lead_count + 1,
+#                                 "updated_at": datetime.datetime.now()
+#                             }})
+#                 else:
+#                     campaign_leads_dict = {
+#                         "updated_at": datetime.datetime.now(),
+#                         "created_at": datetime.datetime.now(),
+#                         "lead_count": 1,
+#                         "company_id": requirement.company.organisation_id
+#                     }
+#                     mongo_client.OrganizationLeads.insert_one(campaign_leads_dict)
+
+#         return ui_utils.handle_response({}, data="Requirement deleted", success=True)
