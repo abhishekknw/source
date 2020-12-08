@@ -224,7 +224,7 @@ def bot_to_requirement(request, data):
                     current_patner_feedback_reason = current_patner_feedback_reason,
                     prefered_patners = prefered_patners_id_list,
                     prefered_patner_other = preferred_company_other,
-                    status="open",
+                    status="closed",
                     created_at = datetime.datetime.now(),
                     updated_at = datetime.datetime.now(),
                     l1_answers = l1_answers,
