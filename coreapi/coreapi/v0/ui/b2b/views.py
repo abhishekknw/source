@@ -784,12 +784,12 @@ class BdVerification(APIView):
 
         mongo_client.leads.insert_one(lead_dict)
 
-        campaign_lead_count = mongo_client.CampaignLeads.find({
-            "company_campaign_id":requirement.company_campaign_id}).count()
-        if campaign_lead_count:
+        campaign_lead = mongo_client.CampaignLeads.find_one({
+            "company_campaign_id":requirement.company_campaign_id})
+        if campaign_lead:
             mongo_client.CampaignLeads.update_one({"company_campaign_id": 
                 requirement.company_campaign_id},{"$set": {
-                        "lead_count": campaign_lead_count + 1,
+                        "lead_count": campaign_lead['lead_count'] + 1,
                         "updated_at": datetime.datetime.now()
                     }})
         else:
@@ -801,12 +801,12 @@ class BdVerification(APIView):
             }
             mongo_client.CampaignLeads.insert_one(campaign_leads_dict)
 
-        company_lead_count = mongo_client.OrganizationLeads.find({
-            "company_id":requirement.company.organisation_id}).count()
-        if company_lead_count:
+        company_lead = mongo_client.OrganizationLeads.find_one({
+            "company_id":requirement.company.organisation_id})
+        if company_lead:
             mongo_client.OrganizationLeads.update_one({"company_id": 
                 requirement.company.organisation_id},{"$set": {
-                        "lead_count": company_lead_count + 1,
+                        "lead_count": company_lead['lead_count'] + 1,
                         "updated_at": datetime.datetime.now()
                     }})
         else:
@@ -1436,7 +1436,13 @@ class GetPurchasedLeadsData(APIView):
         for row in leads:
             purchased_leads = {}           
             if row["lead_purchased"] == "yes":
-                purchased_leads["purchased_date"] = "03-12-2020"
+                row1 = row
+                if row1.get("_id"):
+                    del row1["_id"]
+                if row1.get("data"):
+                    del row1["data"]
+
+                purchased_leads = row1
                 supplier_list = row["supplier_id"]
                 supplier_society_data = SupplierTypeSociety.objects.filter(supplier_id=supplier_list).values('supplier_id').annotate(
                     supplier_name = F('society_name'), unit_primary_count=F('flat_count'), city=F('society_city'), area=F('society_locality'), subarea=F('society_subarea'))
@@ -1464,7 +1470,13 @@ class GetNotPurchasedLeadsData(APIView):
         leads = mongo_client.leads.find({"company_campaign_id": campaign_id})
         data = []
         for row in leads:
-            not_purchased_leads = {}
+            row1 = row
+            if row1.get("_id"):
+                del row1["_id"]
+            if row1.get("data"):
+                del row1["data"]
+
+            not_purchased_leads = row1
             if row["lead_purchased"] == "no":
                 supplier_list = []
                 supplier_list = row["supplier_id"]
@@ -1508,37 +1520,31 @@ class BuyLead(APIView):
                             "purchased_date": requirement.purchased_date
                         }})
 
-                company_lead_count = list(mongo_client.OrganizationLeads.find({"requrement_id":requirement.id}))
-                if company_lead_count:
-
-                    lead_count = mongo_client.leads.find({"requrement_id":requirement.id,"lead_purchased":"no"}).count()
-                    if lead_count:
-                        mongo_client.OrganizationLeads.update_one({"requrement_id": 
-                            requirement.id},{"$set": {
-                                    "purchased_count": company_lead_count['purchased_count'] + 1,
-                                    "updated_at": datetime.datetime.now()
-                                }})
+                company_lead = mongo_client.OrganizationLeads.find_one({"company_id":requirement.company_id})
+                if company_lead:
+                    mongo_client.OrganizationLeads.update_one({"company_id":requirement.company_id},
+                            {"$set": {
+                                "purchased_count": company_lead['purchased_count'] + 1,
+                                "updated_at": datetime.datetime.now()
+                            }})
                 else:
                     company_leads_dict = {
                         "updated_at": datetime.datetime.now(),
                         "created_at": datetime.datetime.now(),
                         "purchased_count": 1,
-                        "company_id": requirement.company.organisation_id
+                        "company_id": requirement.company_id
                     }
                     mongo_client.OrganizationLeads.insert_one(company_leads_dict)
 
-                campaign_lead_count = list(mongo_client.CampaignLeads.find({
-                    "requrement_id":requirement.id}))
+                campaign_lead = mongo_client.CampaignLeads.find_one({
+                    "company_campaign_id":requirement.company_campaign_id})
 
-                if campaign_lead_count:
-                    campaign_lead_count = mongo_client.leads.find(
-                        {"requrement_id":requirement.id,"lead_purchased":"no"}).count()
-                    if campaign_lead_count:
-                        mongo_client.CampaignLeads.update_one({"requrement_id": 
-                            requirement.id},{"$set": {
-                                    "purchased_count": campaign_lead_count['purchased_count'] + 1,
-                                    "updated_at": datetime.datetime.now()
-                                }})
+                if campaign_lead:
+                    mongo_client.CampaignLeads.update_one({"company_campaign_id":requirement.company_campaign_id},
+                            {"$set": {
+                                "purchased_count": campaign_lead['purchased_count'] + 1,
+                                "updated_at": datetime.datetime.now()
+                            }})
                 else:
                     campaign_leads_dict = {
                         "updated_at": datetime.datetime.now(),
