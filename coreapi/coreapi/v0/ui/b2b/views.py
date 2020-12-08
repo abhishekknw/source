@@ -1436,7 +1436,13 @@ class GetPurchasedLeadsData(APIView):
         for row in leads:
             purchased_leads = {}           
             if row["lead_purchased"] == "yes":
-                purchased_leads["purchased_date"] = "03-12-2020"
+                row1 = row
+                if row1.get("_id"):
+                    del row1["_id"]
+                if row1.get("data"):
+                    del row1["data"]
+
+                purchased_leads = row1
                 supplier_list = row["supplier_id"]
                 supplier_society_data = SupplierTypeSociety.objects.filter(supplier_id=supplier_list).values('supplier_id').annotate(
                     supplier_name = F('society_name'), unit_primary_count=F('flat_count'), city=F('society_city'), area=F('society_locality'), subarea=F('society_subarea'))
@@ -1464,7 +1470,13 @@ class GetNotPurchasedLeadsData(APIView):
         leads = mongo_client.leads.find({"company_campaign_id": campaign_id})
         data = []
         for row in leads:
-            not_purchased_leads = {}
+            row1 = row
+            if row1.get("_id"):
+                del row1["_id"]
+            if row1.get("data"):
+                del row1["data"]
+
+            not_purchased_leads = row1
             if row["lead_purchased"] == "no":
                 supplier_list = []
                 supplier_list = row["supplier_id"]
