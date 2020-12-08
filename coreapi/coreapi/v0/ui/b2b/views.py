@@ -784,12 +784,12 @@ class BdVerification(APIView):
 
         mongo_client.leads.insert_one(lead_dict)
 
-        campaign_lead_count = mongo_client.CampaignLeads.find({
-            "company_campaign_id":requirement.company_campaign_id}).count()
-        if campaign_lead_count:
+        campaign_lead = mongo_client.CampaignLeads.find_one({
+            "company_campaign_id":requirement.company_campaign_id})
+        if campaign_lead:
             mongo_client.CampaignLeads.update_one({"company_campaign_id": 
                 requirement.company_campaign_id},{"$set": {
-                        "lead_count": campaign_lead_count + 1,
+                        "lead_count": campaign_lead['lead_count'] + 1,
                         "updated_at": datetime.datetime.now()
                     }})
         else:
@@ -801,12 +801,12 @@ class BdVerification(APIView):
             }
             mongo_client.CampaignLeads.insert_one(campaign_leads_dict)
 
-        company_lead_count = mongo_client.OrganizationLeads.find({
-            "company_id":requirement.company.organisation_id}).count()
-        if company_lead_count:
+        company_lead = mongo_client.OrganizationLeads.find_one({
+            "company_id":requirement.company.organisation_id})
+        if company_lead:
             mongo_client.OrganizationLeads.update_one({"company_id": 
                 requirement.company.organisation_id},{"$set": {
-                        "lead_count": company_lead_count + 1,
+                        "lead_count": company_lead['lead_count'] + 1,
                         "updated_at": datetime.datetime.now()
                     }})
         else:
