@@ -217,6 +217,8 @@ def bot_to_requirement(request, data):
                     supplier_name = supplier_name,
                     city = city,
                     area = area,
+                    sector_id = sector.id if sector else None,
+                    sub_sector_id = sub_sector.id if sub_sector else None,
                     implementation_timeline = impl_timeline,
                     meating_timeline = meating_timeline,
                     lead_status = lead_status,
@@ -233,7 +235,6 @@ def bot_to_requirement(request, data):
                     l1_answers = l1_answers,
                     l2_answers = l2_answers
                 ).save()
-                    
         else:
 
             SuspenseLead(
