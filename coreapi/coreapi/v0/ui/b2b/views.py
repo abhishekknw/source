@@ -420,7 +420,7 @@ class BrowsedLeadClass(APIView):
     def get(self, request):
         shortlisted_spaces_id = request.query_params.get("shortlisted_spaces_id")
         browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":shortlisted_spaces_id, "status":"closed"}).values()
-        phone_numers = [row["phone_number"] for row in browsed_leads]
+        phone_numers = [row["phone_number"] for row in browsed_leads if row.get("phone_number")]
 
         contact_details = ContactDetails.objects.filter(Q(mobile__in=phone_numers)|Q(landline__in=phone_numers))
         contact_details_dict_mobile = {str(row.mobile):row.name for row in contact_details}
