@@ -117,6 +117,8 @@ def bot_to_requirement(request, data):
                     city = supplier.city
                     area = supplier.area
                     supplier_name = supplier.supplier_name
+        
+        campaign = None
 
         if supplier:
             campaign = ProposalInfo.objects.filter(Q(type_of_end_customer__formatted_name="b_to_b_r_g") & Q(name=area) | Q(name=city)).first()
@@ -211,6 +213,7 @@ def bot_to_requirement(request, data):
                     supplier_id=supplier_id,
                     shortlisted_spaces_id=shortlisted_spaces.id,
                     campaign_id=campaign_id,
+                    phone_number = phone_number,
                     supplier_name = supplier_name,
                     city = city,
                     area = area,
