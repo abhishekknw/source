@@ -302,7 +302,6 @@ class RequirementClass(APIView):
         verified_ops_user = {}
         for row in requirements:
             sectors.append(row.sector)
-            print(sectors)
 
             if row.varified_ops_by and not verified_ops_user.get(row.varified_ops_by.id):
                 verified_ops_user[row.varified_ops_by.id] = BaseUserSerializer(row.varified_ops_by,many=False).data
