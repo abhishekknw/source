@@ -4,7 +4,7 @@ from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, ProposalCente
 import v0.ui.utils as ui_utils
 import v0.ui.b2b.utils as b2b_utils
 import datetime
-from v0.ui.b2b.models import (Requirement, SuspenseLead, BrowsedLead)
+from v0.ui.b2b.models import (Requirement, SuspenseLead, BrowsedLead, PreRequirement)
 from v0.ui.organisation.models import Organisation
 from v0.ui.common.models import mongo_client
 from django.db.models import Q
@@ -164,45 +164,45 @@ def bot_to_requirement(request, data):
                 shortlisted_spaces.color_code = 1
                 shortlisted_spaces.save()
 
-                companies = Organisation.objects.filter(business_type=sector)
-                for company in companies:
+                # companies = Organisation.objects.filter(business_type=sector)
+                # for company in companies:
                     
-                    lead_status = b2b_utils.get_lead_status(
-                        impl_timeline = impl_timeline,
-                        meating_timeline = meating_timeline,
-                        company=company,
-                        prefered_patners=prefered_patners_list,
-                        change_current_patner=change_current_patner.lower()
-                        )
+                #     lead_status = b2b_utils.get_lead_status(
+                #         impl_timeline = impl_timeline,
+                #         meating_timeline = meating_timeline,
+                #         company=company,
+                #         prefered_patners=prefered_patners_list,
+                #         change_current_patner=change_current_patner.lower()
+                #         )
 
-                    requirement = Requirement(
-                        campaign_id=campaign_id,
-                        shortlisted_spaces=shortlisted_spaces,
-                        company = company,
-                        current_company = current_patner_obj,
-                        current_company_other = current_company_other,
-                        is_current_patner = "yes" if current_patner_obj == company else "no",
-                        current_patner_feedback = current_patner_feedback,
-                        current_patner_feedback_reason = current_patner_feedback_reason,
-                        preferred_company_other = preferred_company_other,
-                        sector = sector,
-                        sub_sector = sub_sector,
-                        lead_by = contact_details,
-                        impl_timeline = impl_timeline,
-                        meating_timeline = meating_timeline,
-                        lead_status = lead_status,
-                        comment = comment,
-                        varified_ops = 'no',
-                        varified_bd = 'no',
-                        lead_date = datetime.datetime.now(),
-                        l1_answers = l1_answers,
-                        l2_answers = l2_answers,
-                        change_current_patner = change_current_patner.lower()
-                    )
-                    requirement.save()
+                pre_requirement = PreRequirement(
+                    campaign_id=campaign_id,
+                    shortlisted_spaces=shortlisted_spaces,
+                    # company = company,
+                    current_company = current_patner_obj,
+                    current_company_other = current_company_other,
+                    # is_current_patner = "yes" if current_patner_obj == company else "no",
+                    current_patner_feedback = current_patner_feedback,
+                    current_patner_feedback_reason = current_patner_feedback_reason,
+                    preferred_company_other = preferred_company_other,
+                    sector = sector,
+                    sub_sector = sub_sector,
+                    lead_by = contact_details,
+                    impl_timeline = impl_timeline,
+                    meating_timeline = meating_timeline,
+                    # lead_status = lead_status,
+                    comment = comment,
+                    varified_ops = 'no',
+                    varified_bd = 'no',
+                    lead_date = datetime.datetime.now(),
+                    l1_answers = l1_answers,
+                    l2_answers = l2_answers,
+                    change_current_patner = change_current_patner.lower()
+                )
+                pre_requirement.save()
 
-                    if prefered_patners_list:
-                        requirement.preferred_company.set(prefered_patners_list)
+                if prefered_patners_list:
+                    pre_requirement.preferred_company.set(prefered_patners_list)
 
             else:
                 if shortlisted_spaces.color_code != 1:
@@ -221,7 +221,7 @@ def bot_to_requirement(request, data):
                     sub_sector_id = sub_sector.id if sub_sector else None,
                     implementation_timeline = impl_timeline,
                     meating_timeline = meating_timeline,
-                    lead_status = lead_status,
+                    # lead_status = lead_status,
                     comment = comment,
                     current_patner_id = current_patner_obj.organisation_id if current_patner_obj else None,
                     current_patner_other = current_company_other,
@@ -246,7 +246,7 @@ def bot_to_requirement(request, data):
                 sub_sector_name = sub_sector_name,
                 implementation_timeline = impl_timeline,
                 meating_timeline = meating_timeline,
-                lead_status = lead_status,
+                # lead_status = lead_status,
                 comment = comment,
                 current_patner = current_patner,
                 current_patner_feedback = current_patner_feedback,
