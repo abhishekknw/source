@@ -3,10 +3,10 @@ from __future__ import absolute_import
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import HttpResponse
-from .models import (Requirement, SuspenseLead, BrowsedLead, CampaignLeads, OrganizationLeads)
-from .serializers import RequirementSerializer
+from .models import (Requirement, SuspenseLead, BrowsedLead, CampaignLeads, OrganizationLeads, PreRequirement)
+from .serializers import RequirementSerializer, PreRequirementSerializer
 import v0.ui.utils as ui_utils
-from openpyxl import load_workbook
+from openpyxl import load_workbook, Workbook
 from v0.ui.account.models import ContactDetails, BusinessTypes, BusinessSubTypes
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster
 from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, ProposalCenterMapping
@@ -29,6 +29,7 @@ import v0.ui.b2b.utils as b2b_utils
 from django.db.models import F
 from v0.ui.campaign.models import CampaignComments
 from datetime import timedelta
+from django.utils.timezone import make_aware
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -297,7 +298,7 @@ class RequirementClass(APIView):
     
     def get(self, request):
         shortlisted_spaces_id = request.query_params.get("shortlisted_spaces_id")
-        requirements = Requirement.objects.filter(shortlisted_spaces_id=shortlisted_spaces_id)
+        requirements = PreRequirement.objects.filter(shortlisted_spaces_id=shortlisted_spaces_id)
         sectors = []
         verified_ops_user = {}
         for row in requirements:
@@ -306,12 +307,12 @@ class RequirementClass(APIView):
             if row.varified_ops_by and not verified_ops_user.get(row.varified_ops_by.id):
                 verified_ops_user[row.varified_ops_by.id] = BaseUserSerializer(row.varified_ops_by,many=False).data
         requirement_obj = {}
-        requirement_data = RequirementSerializer(requirements, many=True).data
+        requirement_data = PreRequirementSerializer(requirements, many=True).data
         added_requirement = {}
         for row in requirement_data:
             key = str(row["lead_by"])+str(row["sub_sector"])+str(row["sector"])
-            if added_requirement.get(key):
-                continue
+            # if added_requirement.get(key):
+            #     continue
 
             if not requirement_obj.get(row["sector"]):
                 requirement_obj[row["sector"]] = dict(row)
@@ -365,7 +366,7 @@ class RequirementClass(APIView):
                     change_current_patner=row.change_current_patner.lower()
                 )
                 update_req['lead_status'] = lead_status
-                requirement_data = RequirementSerializer(row, data=update_req)
+                requirement_data = PreRequirementSerializer(row, data=update_req)
                 data = {}
                 
                 if requirement_data.is_valid():
@@ -400,20 +401,49 @@ def remove_suspense_lead_cron():
 
 
 class SuspenseLeadClass(APIView):
+    permission_classes = ()
+    authentication_classes = ()
 
     def get(self, request):
-        all_suspense_lead = SuspenseLead.objects.values()
-        
-        data = paginateMongo(all_suspense_lead, request)
-        
-        list1 = []
-        for row in data["list"]:
-            row1 = dict(row)
-            row1["_id"] = str(row1["_id"])
-            list1.append(row1)
+        header_list = ['Phone Number', 'Sector Name', 'Sub Sector Name', 'Implementation Timeline', 
+            'Meating Timeline', 'Current Patner', 'Current Patner Feedback', 
+            'Current Patner Feedback Reason', 'Prefered Patners', 'L1 Answers', 'L2 Answers', 'Comment', 'Date']
 
-        data["list"] = list1
-        return ui_utils.handle_response({}, data=data, success=True)
+        book = Workbook()
+        sheet = book.active
+        sheet.append(header_list)
+
+        start_date = make_aware(datetime.datetime.strptime(request.GET.get("start_date"), '%Y-%m-%d'))
+        end_date = make_aware(datetime.datetime.strptime(request.GET.get("end_date"), '%Y-%m-%d')) + datetime.timedelta(days=1)
+
+        all_suspense_lead = list(mongo_client.suspense_lead.find({'created_at': {"$gte": start_date, "$lte": end_date}}))
+
+        data = []
+        for row in all_suspense_lead:
+            row1 = dict(row)
+            row2 = [
+                row1['phone_number'],
+                row1['sector_name'],
+                row1['sub_sector_name'],
+                row1['implementation_timeline'],
+                row1['meating_timeline'],
+                row1['current_patner'],
+                row1['current_patner_feedback'],
+                row1['current_patner_feedback_reason'],
+                ", ".join(row1['prefered_patners']),
+                row1['l1_answers'],
+                row1['l2_answers'],
+                row1['comment'],
+                row1['created_at']
+            ]
+            sheet.append(row2)
+
+        resp = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        resp['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
+        book.save(resp)
+
+        return resp
 
 class BrowsedLeadClass(APIView):
 
@@ -455,10 +485,10 @@ class DeleteRequirement(APIView):
     def post(self, request):
         requirement_ids = request.data.get('requirement_ids')
 
-        requirements = Requirement.objects.filter(id__in=requirement_ids)
+        requirements = PreRequirement.objects.filter(id__in=requirement_ids).update(is_deleted="yes")
 
-        for req in requirements:
-            Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="no").update(is_deleted="yes")
+        # for req in requirements:
+        #     Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="no").update(is_deleted="yes")
 
         return ui_utils.handle_response({}, data="Requirement deleted", success=True)
 
@@ -469,10 +499,10 @@ class RestoreRequirement(APIView):
     def post(self, request):
         requirement_ids = request.data.get('requirement_ids')
 
-        requirements = Requirement.objects.filter(id__in=requirement_ids)
+        requirements = PreRequirement.objects.filter(id__in=requirement_ids).update(is_deleted="no")
 
-        for req in requirements:
-            Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="yes").update(is_deleted="no")
+        # for req in requirements:
+        #     Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="yes").update(is_deleted="no")
 
         return ui_utils.handle_response({}, data="Requirement restored", success=True)
         
@@ -480,64 +510,91 @@ class LeadOpsVerification(APIView):
 
     def post(self, request):
         requirement_ids = request.data.get("requirement_ids")
-        requirements = Requirement.objects.filter(id__in=requirement_ids)
+        requirements = PreRequirement.objects.filter(id__in=requirement_ids)
 
-        for req in requirements:
-            reqs = Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="no")
-            
-            companies = [row.company for row in reqs]
-            company_campaigns = ProposalInfo.objects.filter(account__organisation__in=companies,type_of_end_customer__formatted_name="b_to_b_l_d")
+        for requirement in requirements:
+            companies = Organisation.objects.filter(business_type=requirement.sector)
+            for company in companies:
+                lead_status = b2b_utils.get_lead_status(
+                    impl_timeline = requirement.impl_timeline,
+                    meating_timeline = requirement.meating_timeline,
+                    company=company,
+                    prefered_patners=requirement.preferred_company,
+                    change_current_patner=requirement.change_current_patner.lower()
+                    )
 
-            if len(company_campaigns) > 0:
+                if requirement.varified_ops != "yes":
+                    requirement.varified_ops = "yes"
+                    requirement.varified_ops_date = datetime.datetime.now()
+                    requirement.varified_ops_by = request.user
 
-                for requirement in reqs:
+                    company_campaign = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d",
+                        account__organisation=company).first()
+                    if company_campaign:
 
-                    if requirement.varified_ops == "no":
-                        
-                        requirement.varified_ops = "yes"
-                        requirement.varified_ops_date = datetime.datetime.now()
-                        requirement.varified_ops_by = request.user
+                        company_shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=requirement.shortlisted_spaces.object_id,
+                            proposal=company_campaign.proposal_id).first()
 
-                        company_campaign = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d",
-                         account__organisation=requirement.company).first()
-                        if company_campaign:
+                        if not company_shortlisted_spaces:
 
-                            company_shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=requirement.shortlisted_spaces.object_id,
-                             proposal=company_campaign.proposal_id).first()
+                            center = ProposalCenterMapping.objects.filter(proposal=company_campaign).first()
+                            content_type = ui_utils.get_content_type(requirement.shortlisted_spaces.supplier_code)
 
-                            if not company_shortlisted_spaces:
+                            company_shortlisted_spaces = ShortlistedSpaces(
+                                proposal=company_campaign,
+                                center=center,
+                                object_id=requirement.shortlisted_spaces.object_id,
+                                supplier_code=requirement.shortlisted_spaces.supplier_code,
+                                content_type=content_type.data['data'],
+                                status='F',
+                                user=request.user,
+                                requirement_given='yes',
+                                requirement_given_date=datetime.datetime.now(),
+                                color_code = 1
+                            )
+                            company_shortlisted_spaces.save()
 
-                                center = ProposalCenterMapping.objects.filter(proposal=company_campaign).first()
+                        requirement.company_campaign = company_campaign
+                        requirement.company_shortlisted_spaces = company_shortlisted_spaces
 
-                                content_type = ui_utils.get_content_type(requirement.shortlisted_spaces.supplier_code)
-
-                                company_shortlisted_spaces = ShortlistedSpaces(
-                                    proposal=company_campaign,
-                                    center=center,
-                                    object_id=requirement.shortlisted_spaces.object_id,
-                                    supplier_code=requirement.shortlisted_spaces.supplier_code,
-                                    content_type=content_type.data['data'],
-                                    status='F',
-                                    user=request.user,
-                                    requirement_given='yes',
-                                    requirement_given_date=datetime.datetime.now(),
-                                    color_code = 1
-                                )
-
-                                company_shortlisted_spaces.save()
-
-                            requirement.company_campaign = company_campaign
-                            requirement.company_shortlisted_spaces = company_shortlisted_spaces
-
-                            shortlisted_spac = ShortlistedSpaces.objects.filter(
-                                id=company_shortlisted_spaces.id).first()
-                            if shortlisted_spac:
-                                shortlisted_spac.color_code = 1
-                                shortlisted_spac.save()
-
+                        shortlisted_spac = ShortlistedSpaces.objects.filter(
+                            id=company_shortlisted_spaces.id).first()
+                        if shortlisted_spac:
+                            shortlisted_spac.color_code = 1
+                            shortlisted_spac.save()
                         requirement.save()
-            else:
-                return ui_utils.handle_response({}, data={"error":"No company campaign found"}, success=False)
+
+                        new_requirement = Requirement(
+                        campaign_id=requirement.campaign_id,
+                        shortlisted_spaces=requirement.shortlisted_spaces,
+                        company = company,
+                        current_company = requirement.current_company,
+                        current_company_other = requirement.current_company_other,
+                        is_current_patner = "yes" if requirement.current_company == company else "no",
+                        current_patner_feedback = requirement.current_patner_feedback,
+                        current_patner_feedback_reason = requirement.current_patner_feedback_reason,
+                        preferred_company_other = requirement.preferred_company_other,
+                        sector = requirement.sector,
+                        sub_sector = requirement.sub_sector,
+                        lead_by = requirement.lead_by,
+                        impl_timeline = requirement.impl_timeline,
+                        meating_timeline = requirement.meating_timeline,
+                        lead_status = lead_status,
+                        comment = requirement.comment,
+                        varified_ops = 'yes',
+                        varified_bd = 'no',
+                        lead_date = requirement.lead_date,
+                        l1_answers = requirement.l1_answers,
+                        l2_answers = requirement.l2_answers,
+                        change_current_patner = requirement.change_current_patner.lower(),
+                        company_campaign=company_campaign,
+                        company_shortlisted_spaces=company_shortlisted_spaces,
+                        varified_ops_by = request.user,
+                        varified_ops_date = datetime.datetime.now(),
+                        )
+                        new_requirement.save()
+                    else:
+                        return ui_utils.handle_response({}, data={"error":"No company campaign found"}, success=False)
         
         color_code = None
         if requirement.shortlisted_spaces:
