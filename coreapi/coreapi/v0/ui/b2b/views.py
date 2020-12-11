@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from .models import (Requirement, SuspenseLead, BrowsedLead, CampaignLeads, OrganizationLeads)
 from .serializers import RequirementSerializer
 import v0.ui.utils as ui_utils
-from openpyxl import load_workbook
+from openpyxl import load_workbook, Workbook
 from v0.ui.account.models import ContactDetails, BusinessTypes, BusinessSubTypes
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster
 from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, ProposalCenterMapping
@@ -29,6 +29,7 @@ import v0.ui.b2b.utils as b2b_utils
 from django.db.models import F
 from v0.ui.campaign.models import CampaignComments
 from datetime import timedelta
+from django.utils.timezone import make_aware
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -400,20 +401,49 @@ def remove_suspense_lead_cron():
 
 
 class SuspenseLeadClass(APIView):
+    permission_classes = ()
+    authentication_classes = ()
 
     def get(self, request):
-        all_suspense_lead = SuspenseLead.objects.values()
-        
-        data = paginateMongo(all_suspense_lead, request)
-        
-        list1 = []
-        for row in data["list"]:
-            row1 = dict(row)
-            row1["_id"] = str(row1["_id"])
-            list1.append(row1)
+        header_list = ['Phone Number', 'Sector Name', 'Sub Sector Name', 'Implementation Timeline', 
+            'Meating Timeline', 'Current Patner', 'Current Patner Feedback', 
+            'Current Patner Feedback Reason', 'Prefered Patners', 'L1 Answers', 'L2 Answers', 'Comment', 'Date']
 
-        data["list"] = list1
-        return ui_utils.handle_response({}, data=data, success=True)
+        book = Workbook()
+        sheet = book.active
+        sheet.append(header_list)
+
+        start_date = make_aware(datetime.datetime.strptime(request.GET.get("start_date"), '%Y-%m-%d'))
+        end_date = make_aware(datetime.datetime.strptime(request.GET.get("end_date"), '%Y-%m-%d')) + datetime.timedelta(days=1)
+
+        all_suspense_lead = list(mongo_client.suspense_lead.find({'created_at': {"$gte": start_date, "$lte": end_date}}))
+
+        data = []
+        for row in all_suspense_lead:
+            row1 = dict(row)
+            row2 = [
+                row1['phone_number'],
+                row1['sector_name'],
+                row1['sub_sector_name'],
+                row1['implementation_timeline'],
+                row1['meating_timeline'],
+                row1['current_patner'],
+                row1['current_patner_feedback'],
+                row1['current_patner_feedback_reason'],
+                ", ".join(row1['prefered_patners']),
+                row1['l1_answers'],
+                row1['l2_answers'],
+                row1['comment'],
+                row1['created_at']
+            ]
+            sheet.append(row2)
+
+        resp = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        resp['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
+        book.save(resp)
+
+        return resp
 
 class BrowsedLeadClass(APIView):
 
