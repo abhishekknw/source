@@ -615,11 +615,9 @@ class BrowsedToRequirement(APIView):
         shortlisted_spaces_id = None
 
         for browsed_id in browsed_ids:
-            browsed = dict(mongo_client.browsed_lead.find_one({"_id": ObjectId(browsed_id)}))
+            browsed = dict(mongo_client.browsed_lead.find_one({"_id": ObjectId(browsed_id["_id"])}))
             if browsed:
-                mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id)}, {"$set":{"status":"converted"}})
-
-                companies = Organisation.objects.filter(business_type=browsed["sector_id"])
+                mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id["_id"])}, {"$set":{"status":"converted"}})
                 
                 contact_details = None
                 if browsed["phone_number"]:
@@ -631,34 +629,30 @@ class BrowsedToRequirement(APIView):
                 
                 shortlisted_spaces_id = browsed["shortlisted_spaces_id"]
 
-                for company in companies:
-                    requirement = Requirement(
-                        campaign_id=browsed["campaign_id"],
-                        shortlisted_spaces_id=browsed["shortlisted_spaces_id"],
-                        company = company,
-                        current_company_id = browsed["current_patner_id"],
-                        is_current_patner = "yes" if browsed["current_patner_id"] == company.organisation_id else "no",
-                        current_patner_feedback = browsed["current_patner_feedback"],
-                        current_patner_feedback_reason = browsed["current_patner_feedback_reason"],
-                        sector_id = browsed["sector_id"],
-                        lead_by = contact_details,
-                        impl_timeline = browsed["implementation_timeline"].lower(),
-                        meating_timeline = browsed["meating_timeline"].lower(),
-                        lead_status = browsed["lead_status"],
-                        comment = browsed["comment"],
-                        varified_ops = 'no',
-                        varified_bd = 'no',
-                        lead_date = datetime.datetime.now(),
-                        preferred_company_other = browsed["prefered_patner_other"],
-                        current_company_other = browsed["current_patner_other"],
-                        l1_answers = browsed["l1_answers"],
-                        l2_answers = browsed["l2_answers"],
-                        sub_sector_id = browsed["sub_sector_id"]
-                    )
-                    requirement.save()
+                requirement = PreRequirement(
+                    campaign_id=browsed["campaign_id"],
+                    shortlisted_spaces_id=browsed["shortlisted_spaces_id"],
+                    current_company_id = browsed["current_patner_id"],
+                    current_patner_feedback = browsed["current_patner_feedback"],
+                    current_patner_feedback_reason = browsed["current_patner_feedback_reason"],
+                    sector_id = browsed["sector_id"],
+                    lead_by = contact_details,
+                    impl_timeline = browsed["implementation_timeline"].lower(),
+                    meating_timeline = browsed["meating_timeline"].lower(),
+                    comment = browsed_id["comment"],
+                    varified_ops = 'no',
+                    varified_bd = 'no',
+                    lead_date = datetime.datetime.now(),
+                    preferred_company_other = browsed["prefered_patner_other"],
+                    current_company_other = browsed["current_patner_other"],
+                    l1_answers = browsed["l1_answers"],
+                    l2_answers = browsed["l2_answers"],
+                    sub_sector_id = browsed["sub_sector_id"]
+                )
+                requirement.save()
 
-                    if prefered_patners_list:
-                        requirement.preferred_company.set(prefered_patners_list)
+                if prefered_patners_list:
+                    requirement.preferred_company.set(prefered_patners_list)
 
         if shortlisted_spaces_id:
             ShortlistedSpaces.objects.filter(id=shortlisted_spaces_id).update(color_code=1, requirement_given='yes', requirement_given_date=datetime.datetime.now())
