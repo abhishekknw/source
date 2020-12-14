@@ -591,6 +591,7 @@ class LeadOpsVerification(APIView):
                         company_shortlisted_spaces=company_shortlisted_spaces,
                         varified_ops_by = request.user,
                         varified_ops_date = datetime.datetime.now(),
+                        call_back_preference = requirement.call_back_preference,
                         )
                         new_requirement.save()
                     else:
