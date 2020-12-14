@@ -43,6 +43,7 @@ def bot_to_requirement(request, data):
         comment = None
         current_patner = row.get("existingPartner")
         current_patner_feedback = row.get("partnerFeedback")
+        call_back_preference = row.get("contactBackTime")
 
         if current_patner_feedback:
             current_patner_feedback = current_patner_feedback.lower()
@@ -197,7 +198,8 @@ def bot_to_requirement(request, data):
                     lead_date = datetime.datetime.now(),
                     l1_answers = l1_answers,
                     l2_answers = l2_answers,
-                    change_current_patner = change_current_patner.lower()
+                    change_current_patner = change_current_patner.lower(),
+                    call_back_preference = call_back_preference.lower(),
                 )
                 pre_requirement.save()
 

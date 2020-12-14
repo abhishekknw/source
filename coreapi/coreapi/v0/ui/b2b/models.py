@@ -42,12 +42,13 @@ CURRENT_PATNER_FEEDBACK = (
 )
 
 CALL_BACK_PREFERENCE = (
-    ('Anytime', 'Anytime'),
-    ('No need of call. Arrange a meeting directly', 'No need of call. Arrange a meeting directly'),
-    ('Weekday Morning', 'Weekday Morning'),
-    ("Weekday Evening", "Weekday Evening"),
-    ("Weekend Morning", "Weekend Morning"),
-    ('Weekend Evening', 'Weekend Evening')
+    ('anytime', 'anytime'),
+    ('no need of call. arrange a meeting directly', 'no need of call. arrange a meeting directly'),
+    ('weekday morning', 'weekday morning'),
+    ("weekday evening", "weekday evening"),
+    ("weekend morning", "weekend morning"),
+    ('weekend evening', 'weekend evening'),
+    ("customized calling period", "customized calling period"),
 )
 
 
