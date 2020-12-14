@@ -342,13 +342,14 @@ class RequirementClass(APIView):
                 "meating_timeline": req["meating_timeline"],
                 "lead_status": req["lead_status"],
                 "comment": req["comment"],
-                "current_patner_feedback": req["current_patner_feedback"],
-                "current_patner_feedback_reason": req["current_patner_feedback_reason"]
+                # "current_patner_feedback": req["current_patner_feedback"],
+                # "current_patner_feedback_reason": req["current_patner_feedback_reason"],
+                "call_back_preference" :req["call_back_preference"].lower()
             }
 
             prefered_patners_list = Organisation.objects.filter(
                 organisation_id__in=req["preferred_company"]).all()
-            reqs = Requirement.objects.filter(
+            reqs = PreRequirement.objects.filter(
                 sector_id = req["sector"],
                 sub_sector_id = req["sub_sector"],
                 shortlisted_spaces_id = req["shortlisted_spaces"],
@@ -357,15 +358,6 @@ class RequirementClass(APIView):
             lead_data = []
             for row in reqs:
                 
-                lead_status = b2b_utils.get_lead_status(
-
-                    impl_timeline = req["impl_timeline"].lower(),
-                    meating_timeline = req["meating_timeline"].lower(),
-                    company=row.company,
-                    prefered_patners=prefered_patners_list,
-                    change_current_patner=row.change_current_patner.lower()
-                )
-                update_req['lead_status'] = lead_status
                 requirement_data = PreRequirementSerializer(row, data=update_req)
                 data = {}
                 
@@ -591,6 +583,7 @@ class LeadOpsVerification(APIView):
                         company_shortlisted_spaces=company_shortlisted_spaces,
                         varified_ops_by = request.user,
                         varified_ops_date = datetime.datetime.now(),
+                        call_back_preference = requirement.call_back_preference,
                         )
                         new_requirement.save()
                     else:
