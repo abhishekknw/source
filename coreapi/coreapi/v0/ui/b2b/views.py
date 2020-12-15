@@ -507,16 +507,16 @@ class LeadOpsVerification(APIView):
         for requirement in requirements:
             companies = Organisation.objects.filter(business_type=requirement.sector)
             if companies:
-                for company in companies:
-                    lead_status = b2b_utils.get_lead_status(
-                        impl_timeline = requirement.impl_timeline,
-                        meating_timeline = requirement.meating_timeline,
-                        company=company,
-                        prefered_patners=requirement.preferred_company,
-                        change_current_patner=requirement.change_current_patner.lower()
-                        )
+                if requirement.varified_ops == "no":
+                    for company in companies:
+                        lead_status = b2b_utils.get_lead_status(
+                            impl_timeline = requirement.impl_timeline,
+                            meating_timeline = requirement.meating_timeline,
+                            company=company,
+                            prefered_patners=requirement.preferred_company,
+                            change_current_patner=requirement.change_current_patner.lower()
+                            )
 
-                    if requirement.varified_ops != "yes":
                         requirement.varified_ops = "yes"
                         requirement.varified_ops_date = datetime.datetime.now()
                         requirement.varified_ops_by = request.user
@@ -553,7 +553,6 @@ class LeadOpsVerification(APIView):
                             if shortlisted_spac:
                                 shortlisted_spac.color_code = 1
                                 shortlisted_spac.save()
-                            requirement.save()
 
                             new_requirement = Requirement(
                             campaign_id=requirement.campaign_id,
@@ -587,6 +586,7 @@ class LeadOpsVerification(APIView):
                             new_requirement.save()
                         else:
                             return ui_utils.handle_response({}, data={"error":"No company campaign found"}, success=False)
+                    requirement.save()
             else:
                 return ui_utils.handle_response({}, data={"error":"No companies for the sector found"}, success=False)
         color_code = None
