@@ -4,9 +4,11 @@ def get_lead_status(impl_timeline,meating_timeline,prefered_patners,
 	company,change_current_patner):
 	
 	prefered_patner = "no"
-	for row in prefered_patners:
-		if company == row:
-			prefered_patner = "yes"
+	# for row in prefered_patners:
+	# 	if company == row:
+	# 		prefered_patner = "yes"
+	if prefered_patners:
+		prefered_patner = "yes"
 
 	if change_current_patner == "yes":
 		if impl_timeline == "within 2 weeks" and prefered_patner == "yes":

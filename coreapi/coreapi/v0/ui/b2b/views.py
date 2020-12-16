@@ -3,10 +3,10 @@ from __future__ import absolute_import
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import HttpResponse
-from .models import (Requirement, SuspenseLead, BrowsedLead)
-from .serializers import RequirementSerializer
+from .models import (Requirement, SuspenseLead, BrowsedLead, CampaignLeads, OrganizationLeads, PreRequirement)
+from .serializers import RequirementSerializer, PreRequirementSerializer
 import v0.ui.utils as ui_utils
-from openpyxl import load_workbook
+from openpyxl import load_workbook, Workbook
 from v0.ui.account.models import ContactDetails, BusinessTypes, BusinessSubTypes
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster
 from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, ProposalCenterMapping
@@ -23,9 +23,13 @@ from bson.objectid import ObjectId
 from v0.ui.common.serializers import BaseUserSerializer
 from v0.ui.supplier.serializers import SupplierMasterSerializer, SupplierTypeSocietySerializer
 import v0.constants as v0_constants
+from v0.constants import (campaign_status, proposal_on_hold)
 from v0.ui.website.utils import manipulate_object_key_values, manipulate_master_to_rs
 import v0.ui.b2b.utils as b2b_utils
 from django.db.models import F
+from v0.ui.campaign.models import CampaignComments
+from datetime import timedelta
+from django.utils.timezone import make_aware
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -294,7 +298,7 @@ class RequirementClass(APIView):
     
     def get(self, request):
         shortlisted_spaces_id = request.query_params.get("shortlisted_spaces_id")
-        requirements = Requirement.objects.filter(shortlisted_spaces_id=shortlisted_spaces_id)
+        requirements = PreRequirement.objects.filter(shortlisted_spaces_id=shortlisted_spaces_id)
         sectors = []
         verified_ops_user = {}
         for row in requirements:
@@ -303,12 +307,12 @@ class RequirementClass(APIView):
             if row.varified_ops_by and not verified_ops_user.get(row.varified_ops_by.id):
                 verified_ops_user[row.varified_ops_by.id] = BaseUserSerializer(row.varified_ops_by,many=False).data
         requirement_obj = {}
-        requirement_data = RequirementSerializer(requirements, many=True).data
+        requirement_data = PreRequirementSerializer(requirements, many=True).data
         added_requirement = {}
         for row in requirement_data:
             key = str(row["lead_by"])+str(row["sub_sector"])+str(row["sector"])
-            if added_requirement.get(key):
-                continue
+            # if added_requirement.get(key):
+            #     continue
 
             if not requirement_obj.get(row["sector"]):
                 requirement_obj[row["sector"]] = dict(row)
@@ -338,13 +342,14 @@ class RequirementClass(APIView):
                 "meating_timeline": req["meating_timeline"],
                 "lead_status": req["lead_status"],
                 "comment": req["comment"],
-                "current_patner_feedback": req["current_patner_feedback"],
-                "current_patner_feedback_reason": req["current_patner_feedback_reason"]
+                # "current_patner_feedback": req["current_patner_feedback"],
+                # "current_patner_feedback_reason": req["current_patner_feedback_reason"],
+                "call_back_preference" :req["call_back_preference"].lower()
             }
 
             prefered_patners_list = Organisation.objects.filter(
                 organisation_id__in=req["preferred_company"]).all()
-            reqs = Requirement.objects.filter(
+            reqs = PreRequirement.objects.filter(
                 sector_id = req["sector"],
                 sub_sector_id = req["sub_sector"],
                 shortlisted_spaces_id = req["shortlisted_spaces"],
@@ -353,16 +358,7 @@ class RequirementClass(APIView):
             lead_data = []
             for row in reqs:
                 
-                lead_status = b2b_utils.get_lead_status(
-
-                    impl_timeline = req["impl_timeline"].lower(),
-                    meating_timeline = req["meating_timeline"].lower(),
-                    company=row.company,
-                    prefered_patners=prefered_patners_list,
-                    change_current_patner=row.change_current_patner.lower()
-                )
-                update_req['lead_status'] = lead_status
-                requirement_data = RequirementSerializer(row, data=update_req)
+                requirement_data = PreRequirementSerializer(row, data=update_req)
                 data = {}
                 
                 if requirement_data.is_valid():
@@ -397,27 +393,56 @@ def remove_suspense_lead_cron():
 
 
 class SuspenseLeadClass(APIView):
+    permission_classes = ()
+    authentication_classes = ()
 
     def get(self, request):
-        all_suspense_lead = SuspenseLead.objects.values()
-        
-        data = paginateMongo(all_suspense_lead, request)
-        
-        list1 = []
-        for row in data["list"]:
-            row1 = dict(row)
-            row1["_id"] = str(row1["_id"])
-            list1.append(row1)
+        header_list = ['Phone Number', 'Sector Name', 'Sub Sector Name', 'Implementation Timeline', 
+            'Meating Timeline', 'Current Patner', 'Current Patner Feedback', 
+            'Current Patner Feedback Reason', 'Prefered Patners', 'L1 Answers', 'L2 Answers', 'Comment', 'Date']
 
-        data["list"] = list1
-        return ui_utils.handle_response({}, data=data, success=True)
+        book = Workbook()
+        sheet = book.active
+        sheet.append(header_list)
+
+        start_date = make_aware(datetime.datetime.strptime(request.GET.get("start_date"), '%Y-%m-%d'))
+        end_date = make_aware(datetime.datetime.strptime(request.GET.get("end_date"), '%Y-%m-%d')) + datetime.timedelta(days=1)
+
+        all_suspense_lead = list(mongo_client.suspense_lead.find({'created_at': {"$gte": start_date, "$lte": end_date}}))
+
+        data = []
+        for row in all_suspense_lead:
+            row1 = dict(row)
+            row2 = [
+                row1['phone_number'],
+                row1['sector_name'],
+                row1['sub_sector_name'],
+                row1['implementation_timeline'],
+                row1['meating_timeline'],
+                row1['current_patner'],
+                row1['current_patner_feedback'],
+                row1['current_patner_feedback_reason'],
+                ", ".join(row1['prefered_patners']),
+                row1['l1_answers'],
+                row1['l2_answers'],
+                row1['comment'],
+                row1['created_at']
+            ]
+            sheet.append(row2)
+
+        resp = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        resp['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
+        book.save(resp)
+
+        return resp
 
 class BrowsedLeadClass(APIView):
 
     def get(self, request):
         shortlisted_spaces_id = request.query_params.get("shortlisted_spaces_id")
         browsed_leads = BrowsedLead.objects.raw({"shortlisted_spaces_id":shortlisted_spaces_id, "status":"closed"}).values()
-        phone_numers = [row["phone_number"] for row in browsed_leads]
+        phone_numers = [row.get("phone_number") for row in browsed_leads]
 
         contact_details = ContactDetails.objects.filter(Q(mobile__in=phone_numers)|Q(landline__in=phone_numers))
         contact_details_dict_mobile = {str(row.mobile):row.name for row in contact_details}
@@ -428,10 +453,10 @@ class BrowsedLeadClass(APIView):
             row1 = dict(row)
             row1["_id"] = str(row1["_id"])
 
-            row1["lead_by_name"] = contact_details_dict_mobile.get(row1["phone_number"])
+            row1["lead_by_name"] = contact_details_dict_mobile.get(row1.get("phone_number"))
 
             if not row1["lead_by_name"]:
-                row1["lead_by_name"] = contact_details_dict_landline.get(row["phone_number"])
+                row1["lead_by_name"] = contact_details_dict_landline.get(row.get("phone_number"))
 
             list1.append(row1)
 
@@ -452,10 +477,10 @@ class DeleteRequirement(APIView):
     def post(self, request):
         requirement_ids = request.data.get('requirement_ids')
 
-        requirements = Requirement.objects.filter(id__in=requirement_ids)
+        requirements = PreRequirement.objects.filter(id__in=requirement_ids).update(is_deleted="yes")
 
-        for req in requirements:
-            Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="no").update(is_deleted="yes")
+        # for req in requirements:
+        #     Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="no").update(is_deleted="yes")
 
         return ui_utils.handle_response({}, data="Requirement deleted", success=True)
 
@@ -466,10 +491,10 @@ class RestoreRequirement(APIView):
     def post(self, request):
         requirement_ids = request.data.get('requirement_ids')
 
-        requirements = Requirement.objects.filter(id__in=requirement_ids)
+        requirements = PreRequirement.objects.filter(id__in=requirement_ids).update(is_deleted="no")
 
-        for req in requirements:
-            Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="yes").update(is_deleted="no")
+        # for req in requirements:
+        #     Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="yes").update(is_deleted="no")
 
         return ui_utils.handle_response({}, data="Requirement restored", success=True)
         
@@ -477,35 +502,33 @@ class LeadOpsVerification(APIView):
 
     def post(self, request):
         requirement_ids = request.data.get("requirement_ids")
-        requirements = Requirement.objects.filter(id__in=requirement_ids)
+        requirements = PreRequirement.objects.filter(id__in=requirement_ids)
 
-        for req in requirements:
-            reqs = Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="no")
-            
-            companies = [row.company for row in reqs]
-            company_campaigns = ProposalInfo.objects.filter(account__organisation__in=companies,type_of_end_customer__formatted_name="b_to_b_l_d")
+        for requirement in requirements:
+            companies = Organisation.objects.filter(business_type=requirement.sector)
+            if companies:
+                if requirement.varified_ops == "no":
+                    for company in companies:
+                        lead_status = b2b_utils.get_lead_status(
+                            impl_timeline = requirement.impl_timeline,
+                            meating_timeline = requirement.meating_timeline,
+                            company=company,
+                            prefered_patners=requirement.preferred_company,
+                            change_current_patner=requirement.change_current_patner.lower()
+                            )
 
-            if len(company_campaigns) > 0:
-
-                for requirement in reqs:
-
-                    if requirement.varified_ops == "no":
-                        
                         requirement.varified_ops = "yes"
                         requirement.varified_ops_date = datetime.datetime.now()
                         requirement.varified_ops_by = request.user
 
                         company_campaign = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d",
-                         account__organisation=requirement.company).first()
+                            account__organisation=company).first()
                         if company_campaign:
-
                             company_shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=requirement.shortlisted_spaces.object_id,
-                             proposal=company_campaign.proposal_id).first()
+                                proposal=company_campaign.proposal_id).first()
 
                             if not company_shortlisted_spaces:
-
                                 center = ProposalCenterMapping.objects.filter(proposal=company_campaign).first()
-
                                 content_type = ui_utils.get_content_type(requirement.shortlisted_spaces.supplier_code)
 
                                 company_shortlisted_spaces = ShortlistedSpaces(
@@ -520,15 +543,52 @@ class LeadOpsVerification(APIView):
                                     requirement_given_date=datetime.datetime.now(),
                                     color_code = 1
                                 )
-
                                 company_shortlisted_spaces.save()
 
                             requirement.company_campaign = company_campaign
                             requirement.company_shortlisted_spaces = company_shortlisted_spaces
-                        requirement.save()
+
+                            shortlisted_spac = ShortlistedSpaces.objects.filter(
+                                id=company_shortlisted_spaces.id).first()
+                            if shortlisted_spac:
+                                shortlisted_spac.color_code = 1
+                                shortlisted_spac.save()
+
+                            new_requirement = Requirement(
+                            campaign_id=requirement.campaign_id,
+                            shortlisted_spaces=requirement.shortlisted_spaces,
+                            company = company,
+                            current_company = requirement.current_company,
+                            current_company_other = requirement.current_company_other,
+                            is_current_patner = "yes" if requirement.current_company == company else "no",
+                            current_patner_feedback = requirement.current_patner_feedback,
+                            current_patner_feedback_reason = requirement.current_patner_feedback_reason,
+                            preferred_company_other = requirement.preferred_company_other,
+                            sector = requirement.sector,
+                            sub_sector = requirement.sub_sector,
+                            lead_by = requirement.lead_by,
+                            impl_timeline = requirement.impl_timeline,
+                            meating_timeline = requirement.meating_timeline,
+                            lead_status = lead_status,
+                            comment = requirement.comment,
+                            varified_ops = 'yes',
+                            varified_bd = 'no',
+                            lead_date = requirement.lead_date,
+                            l1_answers = requirement.l1_answers,
+                            l2_answers = requirement.l2_answers,
+                            change_current_patner = requirement.change_current_patner.lower(),
+                            company_campaign=company_campaign,
+                            company_shortlisted_spaces=company_shortlisted_spaces,
+                            varified_ops_by = request.user,
+                            varified_ops_date = datetime.datetime.now(),
+                            call_back_preference = requirement.call_back_preference
+                            )
+                            new_requirement.save()
+                        else:
+                            return ui_utils.handle_response({}, data={"error":"No company campaign found"}, success=False)
+                    requirement.save()
             else:
-                return ui_utils.handle_response({}, data={"error":"No company campaign found"}, success=False)
-        
+                return ui_utils.handle_response({}, data={"error":"No companies for the sector found"}, success=False)
         color_code = None
         if requirement.shortlisted_spaces:
             requirement_exist = Requirement.objects.filter(shortlisted_spaces=requirement.shortlisted_spaces,
@@ -555,11 +615,9 @@ class BrowsedToRequirement(APIView):
         shortlisted_spaces_id = None
 
         for browsed_id in browsed_ids:
-            browsed = dict(mongo_client.browsed_lead.find_one({"_id": ObjectId(browsed_id)}))
+            browsed = dict(mongo_client.browsed_lead.find_one({"_id": ObjectId(browsed_id["_id"])}))
             if browsed:
-                mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id)}, {"$set":{"status":"converted"}})
-
-                companies = Organisation.objects.filter(business_type=browsed["sector_id"])
+                mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id["_id"])}, {"$set":{"status":"converted"}})
                 
                 contact_details = None
                 if browsed["phone_number"]:
@@ -571,34 +629,30 @@ class BrowsedToRequirement(APIView):
                 
                 shortlisted_spaces_id = browsed["shortlisted_spaces_id"]
 
-                for company in companies:
-                    requirement = Requirement(
-                        campaign_id=browsed["campaign_id"],
-                        shortlisted_spaces_id=browsed["shortlisted_spaces_id"],
-                        company = company,
-                        current_company_id = browsed["current_patner_id"],
-                        is_current_patner = "yes" if browsed["current_patner_id"] == company.organisation_id else "no",
-                        current_patner_feedback = browsed["current_patner_feedback"],
-                        current_patner_feedback_reason = browsed["current_patner_feedback_reason"],
-                        sector_id = browsed["sector_id"],
-                        lead_by = contact_details,
-                        impl_timeline = browsed["implementation_timeline"].lower(),
-                        meating_timeline = browsed["meating_timeline"].lower(),
-                        lead_status = browsed["lead_status"],
-                        comment = browsed["comment"],
-                        varified_ops = 'no',
-                        varified_bd = 'no',
-                        lead_date = datetime.datetime.now(),
-                        preferred_company_other = browsed["prefered_patner_other"],
-                        current_company_other = browsed["current_patner_other"],
-                        l1_answers = browsed["l1_answers"],
-                        l2_answers = browsed["l2_answers"],
-                        sub_sector_id = browsed["sub_sector_id"]
-                    )
-                    requirement.save()
+                requirement = PreRequirement(
+                    campaign_id=browsed["campaign_id"],
+                    shortlisted_spaces_id=browsed["shortlisted_spaces_id"],
+                    current_company_id = browsed["current_patner_id"],
+                    current_patner_feedback = browsed["current_patner_feedback"],
+                    current_patner_feedback_reason = browsed["current_patner_feedback_reason"],
+                    sector_id = browsed["sector_id"],
+                    lead_by = contact_details,
+                    impl_timeline = browsed["implementation_timeline"].lower(),
+                    meating_timeline = browsed["meating_timeline"].lower(),
+                    comment = browsed_id["comment"],
+                    varified_ops = 'no',
+                    varified_bd = 'no',
+                    lead_date = datetime.datetime.now(),
+                    preferred_company_other = browsed["prefered_patner_other"],
+                    current_company_other = browsed["current_patner_other"],
+                    l1_answers = browsed["l1_answers"],
+                    l2_answers = browsed["l2_answers"],
+                    sub_sector_id = browsed["sub_sector_id"]
+                )
+                requirement.save()
 
-                    if prefered_patners_list:
-                        requirement.preferred_company.set(prefered_patners_list)
+                if prefered_patners_list:
+                    requirement.preferred_company.set(prefered_patners_list)
 
         if shortlisted_spaces_id:
             ShortlistedSpaces.objects.filter(id=shortlisted_spaces_id).update(color_code=1, requirement_given='yes', requirement_given_date=datetime.datetime.now())
@@ -759,7 +813,10 @@ class BdVerification(APIView):
             "current_patner_feedback_reason":requirement.current_patner_feedback_reason,
             "company_id":requirement.company.organisation_id,"meating_timeline":requirement.meating_timeline,
             "impl_timeline":requirement.impl_timeline,"lead_date":requirement.varified_bd_date,
-            "preferred_patner":prefered_patner,"lead_price":requirement.lead_price}
+            "preferred_patner":prefered_patner,"lead_price":requirement.lead_price,
+            "supplier_primary_count":supplier_primary_count,"supplier_city": supplier_city,
+            "supplier_area": supplier_area,"supplier_sub_area": supplier_subarea,
+            "purchased_date": requirement.purchased_date}
 
         lead_for_hash = {
             "data": lead_data,
@@ -770,6 +827,40 @@ class BdVerification(APIView):
         lead_dict["lead_sha_256"] = lead_sha_256
 
         mongo_client.leads.insert_one(lead_dict)
+
+        campaign_lead = mongo_client.CampaignLeads.find_one({
+            "company_campaign_id":requirement.company_campaign_id})
+        if campaign_lead:
+            mongo_client.CampaignLeads.update_one({"company_campaign_id": 
+                requirement.company_campaign_id},{"$set": {
+                        "lead_count": campaign_lead['lead_count'] + 1,
+                        "updated_at": datetime.datetime.now()
+                    }})
+        else:
+            campaign_leads_dict = {
+                "updated_at": datetime.datetime.now(),
+                "created_at": datetime.datetime.now(),
+                "lead_count": 1,
+                "company_campaign_id": requirement.company_campaign_id
+            }
+            mongo_client.CampaignLeads.insert_one(campaign_leads_dict)
+
+        company_lead = mongo_client.OrganizationLeads.find_one({
+            "company_id":requirement.company.organisation_id})
+        if company_lead:
+            mongo_client.OrganizationLeads.update_one({"company_id": 
+                requirement.company.organisation_id},{"$set": {
+                        "lead_count": company_lead['lead_count'] + 1,
+                        "updated_at": datetime.datetime.now()
+                    }})
+        else:
+            company_leads_dict = {
+                "updated_at": datetime.datetime.now(),
+                "created_at": datetime.datetime.now(),
+                "lead_count": 1,
+                "company_id": requirement.company.organisation_id
+            }
+            mongo_client.OrganizationLeads.insert_one(company_leads_dict)
 
         return True
 
@@ -1024,7 +1115,7 @@ class GetLeadsByDate(APIView):
         end_date = date_time_obj.replace(hour=23, minute=59, second=59)
         organisation_id = request.user.profile.organisation.organisation_id
         lead_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"no"}]}).count()
-        existing_client_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"yes"}]}).count()
+        existing_client_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}]}).count()
             
         lead_dict = {
             'lead_count' : lead_count,
@@ -1092,7 +1183,7 @@ class GetFeedbackCount(APIView):
         dissatisfied_count = 0
         extremely_dissatisfied_count = 0
 
-        client_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"yes"}]})
+        client_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}]})
 
         for row in client_count:
             feedback = row["current_patner_feedback"]
@@ -1159,3 +1250,352 @@ class GetSupplierByCampaign(APIView):
         supplier_data = list(supplier_society_data) + list(supplier_master_data)
 
         return ui_utils.handle_response({}, data=supplier_data, success=True)
+
+class FlatSummaryDetails(APIView):
+
+    def get(self, request):
+
+        campaign_id = request.query_params.get('campaign_id')
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+
+        if start_date and end_date:
+            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+
+            where = {"company_campaign_id": campaign_id, "created_at":{"$gte": start_date, "$lte": end_date},"lead_purchased":"yes"}
+        else:
+            where = {"company_campaign_id": campaign_id,"lead_purchased":"yes"}
+
+        lead_data = list(mongo_client.leads.find(where))
+        total_leads = len(lead_data)
+
+        lead_obj = {}
+        data = []
+        for lead in lead_data:
+            lead_obj = dict(lead)
+            lead_obj['_id'] = str(lead_obj['_id'])
+            data.append(lead_obj)
+
+        return ui_utils.handle_response({}, data=data, success=True)
+
+class SummaryReportAndGraph(APIView):
+
+    def get(self, request):
+
+        final_data = {}
+        campaign_id = request.query_params.get('campaign_id')
+
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+
+        if start_date and end_date:
+            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+            date = start_date
+        else:
+            date = datetime.datetime.now()
+ 
+        diff_date = date - timedelta(days=7)
+        final_data['last_week'] = self.get_count_data(campaign_id, start_date, end_date, diff_date)
+        diff_date = date - timedelta(days=14)
+        final_data['last_two_weeks'] = self.get_count_data(campaign_id, start_date, end_date, diff_date)
+        diff_date = date - timedelta(days=21)
+        final_data['last_three_weeks'] = self.get_count_data(campaign_id, start_date, end_date, diff_date)
+
+        where = {"company_campaign_id": campaign_id,"lead_purchased":"yes"}
+        total_lead_data = list(mongo_client.leads.find(where))
+        total_lead = len(total_lead_data)
+
+        total_primary_count = 0
+        for lead in total_lead_data:
+            try:
+                primary_count = lead['supplier_primary_count']
+            except Exception as e:
+                primary_count = 0
+            total_primary_count = total_primary_count + primary_count
+
+        where = {"company_campaign_id": campaign_id,"lead_status": "Hot Lead","lead_purchased":"yes"}
+        total_hot_lead_data = list(mongo_client.leads.find(where))
+        total_hot_lead_count = len(total_hot_lead_data)
+
+        company_hot_lead_status = None
+        if total_hot_lead_data:
+            company_hot_lead_status = total_hot_lead_data[0]['company_lead_status']
+
+        where = {"company_campaign_id": campaign_id,"lead_status": "Deep Lead","lead_purchased":"yes"}
+        total_deep_lead_data = list(mongo_client.leads.find(where))
+        total_deep_lead_count = len(total_deep_lead_data)
+
+        where = {"company_campaign_id": campaign_id,"lead_purchased":"yes","lead_purchased":"yes"}
+        total_purchased_lead = mongo_client.leads.find(where).count()
+
+        company_deep_lead_status = None
+        if total_deep_lead_data:
+            company_deep_lead_status = total_deep_lead_data[-1]['company_lead_status']
+
+        final_data['overall_data'] = {
+            "total_lead":total_lead,
+            "company_hot_lead_status": company_hot_lead_status,
+            "company_deep_lead_status": company_deep_lead_status,
+            "total_deep_count":total_deep_lead_count,
+            "hot_lead_count":total_hot_lead_count,
+            "primary_count":total_primary_count
+            }
+
+        return ui_utils.handle_response({}, data=final_data, success=True)
+
+    def get_count_data(self, campaign_id, start_date, end_date, diff_date):
+
+        if start_date and end_date:
+            where = {"company_campaign_id": campaign_id,"lead_purchased":"yes",
+                "$and": [{"created_at":{"$gte": diff_date},
+                    "created_at":{"$gte": start_date, "$lte": end_date}}]}
+
+        else:
+            where = {"company_campaign_id": campaign_id, 
+                    "created_at":{"$gte": diff_date},"lead_purchased":"yes"}
+        
+        total_lead_data = list(mongo_client.leads.find(where))
+        total_lead = len(total_lead_data)
+        total_primary_count = 0
+        for lead in total_lead_data:
+            try:
+                primary_count = lead['supplier_primary_count']
+            except Exception as e:
+                primary_count = 0
+            total_primary_count = total_primary_count + primary_count
+
+        where.update({"lead_status": "Hot Lead"})
+        total_hot_lead = mongo_client.leads.find(where).count()
+
+        where.update({"lead_status": "Deep Lead"})
+        total_deep_lead = mongo_client.leads.find(where).count()
+
+        context = {
+            "total_lead": total_lead,
+            "hot_lead_count": total_hot_lead,
+            "total_deep_count": total_deep_lead,
+            "primary_count":total_primary_count
+        }
+
+        return context
+
+class GetLeadDistributionCampaign(APIView):
+
+    def get(self, request):
+        
+        organisation_id = request.user.profile.organisation.organisation_id
+        # lead_count = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"is_current_company":"no"}]}))
+        # existing_client_count = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}]}))
+        # campaign_list = []
+        # if lead_count:
+        #     for row in lead_count:
+        #         campaign = row["company_campaign_id"]       
+        #         campaign_list.append(campaign)
+        # if existing_client_count:
+        #     for row in existing_client_count:
+        #         campaign = row["company_campaign_id"]
+        #         campaign_list.append(campaign)
+
+        if request.query_params.get('supplier_code') == "mix":
+            # campaign_list = ProposalInfo.objects.filter(proposal_id__in=campaign_list, is_mix=True).values_list('proposal_id', flat=True)
+            campaign_list = ProposalInfo.objects.filter(type_of_end_customer__formatted_name='b_to_b_l_d', account__organisation=organisation_id, is_mix=True).values_list('proposal_id', flat=True)
+            
+        if request.query_params.get('supplier_code') and request.query_params.get('supplier_code') != "mix" and request.query_params.get('supplier_code') != "all":
+            # campaign_list = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list , supplier_code=request.query_params.get('supplier_code')).values_list('proposal_id', flat=True).distinct()
+            campaign_list = ShortlistedSpaces.objects.filter(proposal_id__type_of_end_customer__formatted_name='b_to_b_l_d',proposal_id__account__organisation=organisation_id, supplier_code=request.query_params.get('supplier_code')).values_list('proposal_id', flat=True).distinct()
+
+        campaign_list = [campaign_id for campaign_id in campaign_list]
+
+        all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).\
+            values('proposal_id', 'object_id', 'is_completed', 'proposal__name', 'proposal__tentative_start_date',
+                'proposal__tentative_end_date', 'proposal__campaign_state', 'supplier_code')
+
+        all_campaign_dict = {}
+        all_shortlisted_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] == 'RS']
+        all_supplier_society = SupplierTypeSociety.objects.filter(supplier_id__in=all_shortlisted_supplier_id).values('supplier_id', 'flat_count')
+
+        all_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] != 'RS']
+        all_supplier_master = SupplierMaster.objects.filter(supplier_id__in=all_supplier_id).values('supplier_id', 'unit_primary_count')
+
+        all_supplier_society_dict = {}
+        current_date = datetime.datetime.now().date()
+        for supplier in all_supplier_society:
+            all_supplier_society_dict[supplier['supplier_id']] = {'flat_count': supplier['flat_count']}
+
+        for supplier in all_supplier_master:
+            all_supplier_society_dict[supplier['supplier_id']] = {'flat_count': supplier['unit_primary_count']}
+
+        for shortlisted_supplier in all_shortlisted_supplier:
+            if shortlisted_supplier['proposal_id'] not in all_campaign_dict:
+                all_campaign_dict[shortlisted_supplier['proposal_id']] = {
+                'all_supplier_ids': [], 'total_flat_counts': 0, 'purchased_survey':0}
+            if shortlisted_supplier['object_id'] not in all_campaign_dict[shortlisted_supplier['proposal_id']]['all_supplier_ids']:
+                all_campaign_dict[shortlisted_supplier['proposal_id']]['all_supplier_ids'].append(shortlisted_supplier['object_id'])
+                if shortlisted_supplier['object_id'] in all_supplier_society_dict and all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count']:
+                    all_campaign_dict[shortlisted_supplier['proposal_id']]['total_flat_counts'] += all_supplier_society_dict[shortlisted_supplier['object_id']]['flat_count']
+
+            all_campaign_dict[shortlisted_supplier['proposal_id']]['name'] = shortlisted_supplier['proposal__name']
+            all_campaign_dict[shortlisted_supplier['proposal_id']]['start_date'] = shortlisted_supplier['proposal__tentative_start_date']
+            all_campaign_dict[shortlisted_supplier['proposal_id']]['end_date'] = shortlisted_supplier['proposal__tentative_end_date']
+            all_campaign_dict[shortlisted_supplier['proposal_id']]['campaign_status'] = shortlisted_supplier['proposal__campaign_state']
+
+        all_purchased_survey = mongo_client.leads.find({"company_campaign_id":campaign_list})
+        for row in all_purchased_survey:
+            if row["lead_purchased"] == "yes":
+                all_campaign_dict[campaign_id]['purchased_survey'] += 1
+
+        all_leads_summary = []
+        for campaign_id in all_campaign_dict:
+            this_campaign_status = None
+            if not all_campaign_dict[campaign_id]['campaign_status'] == proposal_on_hold:
+                if all_campaign_dict[campaign_id]['start_date'].date() > current_date:
+                    this_campaign_status = campaign_status['upcoming_campaigns']
+                elif all_campaign_dict[campaign_id]['end_date'].date() >= current_date:
+                    this_campaign_status = campaign_status['ongoing_campaigns']
+                elif all_campaign_dict[campaign_id]['end_date'].date() < current_date:
+                    this_campaign_status = campaign_status['completed_campaigns']
+            else:
+                this_campaign_status = "on_hold"
+            all_leads_summary.append({
+                "campaign_id": campaign_id,
+                "name": all_campaign_dict[campaign_id]['name'],
+                "start_date": all_campaign_dict[campaign_id]['start_date'],
+                "end_date": all_campaign_dict[campaign_id]['end_date'],
+                "supplier_count": len(all_campaign_dict[campaign_id]['all_supplier_ids']),
+                "flat_count": all_campaign_dict[campaign_id]['total_flat_counts'],
+                "purchased_survey": all_campaign_dict[campaign_id]['purchased_survey'],
+                "campaign_status": this_campaign_status
+            })
+        return ui_utils.handle_response({}, data=all_leads_summary, success=True)
+
+class GetPurchasedLeadsData(APIView):
+
+    def get(self, request):
+
+        campaign_id = request.query_params.get("campaign_id")
+        leads = mongo_client.leads.find({"company_campaign_id": campaign_id})
+        data = []
+        for row in leads:
+            purchased_leads = {}           
+            if row["lead_purchased"] == "yes":
+                row1 = row
+                if row1.get("_id"):
+                    del row1["_id"]
+                if row1.get("data"):
+                    del row1["data"]
+
+                purchased_leads = row1
+                supplier_list = row["supplier_id"]
+                supplier_society_data = SupplierTypeSociety.objects.filter(supplier_id=supplier_list).values('supplier_id').annotate(
+                    supplier_name = F('society_name'), unit_primary_count=F('flat_count'), city=F('society_city'), area=F('society_locality'), subarea=F('society_subarea'))
+                supplier_master_data = SupplierMaster.objects.filter(supplier_id=supplier_list).values(
+                    'supplier_id', 'supplier_name', 'unit_primary_count', 'city', 'area', 'subarea')
+                leads_data = list(supplier_society_data) + list(supplier_master_data)
+
+                purchased_leads["leads_data"] = leads_data
+
+                purchased_leads["internal_comments"] = CampaignComments.objects.filter(campaign_id=campaign_id, shortlisted_spaces__object_id=supplier_list, related_to='INTERNAL').values("comment")
+                purchased_leads["external_comments"] = CampaignComments.objects.filter(campaign_id=campaign_id, shortlisted_spaces__object_id=supplier_list, related_to='EXTERNAL').values("comment")
+
+                contact_data = ContactDetails.objects.filter(object_id=supplier_list).values('mobile', 'name', 'contact_type')
+                purchased_leads["contact_data"] = contact_data
+
+                data.append(purchased_leads)
+
+        return ui_utils.handle_response({}, data=data, success=True)
+
+class GetNotPurchasedLeadsData(APIView):
+
+    def get(self, request):
+
+        campaign_id = request.query_params.get("campaign_id")
+        leads = mongo_client.leads.find({"company_campaign_id": campaign_id})
+        data = []
+        for row in leads:
+            row1 = row
+            if row1.get("_id"):
+                del row1["_id"]
+            if row1.get("data"):
+                del row1["data"]
+
+            not_purchased_leads = row1
+            if row["lead_purchased"] == "no":
+                supplier_list = []
+                supplier_list = row["supplier_id"]
+                supplier_society_data = SupplierTypeSociety.objects.filter(supplier_id=supplier_list).values('supplier_id').annotate(
+                    supplier_name = F('society_name'), unit_primary_count=F('flat_count'), city=F('society_city'), area=F('society_locality'))
+        
+                supplier_master_data = SupplierMaster.objects.filter(supplier_id=supplier_list).values(
+                    'supplier_id', 'supplier_name', 'unit_primary_count', 'city', 'area')
+                leads_data = list(supplier_society_data) + list(supplier_master_data)
+
+                not_purchased_leads["leads_data"] = leads_data
+                not_purchased_leads["price"] = 0
+                if row.get("lead_price"):
+                    not_purchased_leads["price"] = row["lead_price"]
+
+                not_purchased_leads["internal_comments"] = CampaignComments.objects.filter(campaign_id=campaign_id, shortlisted_spaces__object_id=supplier_list, related_to='INTERNAL').values("comment")
+                not_purchased_leads["external_comments"] = CampaignComments.objects.filter(campaign_id=campaign_id, shortlisted_spaces__object_id=supplier_list, related_to='EXTERNAL').values("comment")
+
+                data.append(not_purchased_leads)
+
+        return ui_utils.handle_response({}, data=data, success=True)
+
+
+class BuyLead(APIView):
+
+    def post(self, request):
+        requirement_ids = request.data.get('requirement_ids')
+
+        for req in requirement_ids:
+
+            requirement = Requirement.objects.filter(id=req).first()
+            requirement.lead_purchased = "yes"
+            requirement.purchased_date = datetime.datetime.now()
+            requirement.save()
+
+            if requirement:
+                
+                mongo_client.leads.update_one({"requrement_id": 
+                    requirement.id,},{"$set": {
+                            "lead_purchased": "yes",
+                            "purchased_date": requirement.purchased_date
+                        }})
+
+                company_lead = mongo_client.OrganizationLeads.find_one({"company_id":requirement.company_id})
+                if company_lead:
+                    mongo_client.OrganizationLeads.update_one({"company_id":requirement.company_id},
+                            {"$set": {
+                                "purchased_count": company_lead['purchased_count'] + 1,
+                                "updated_at": datetime.datetime.now()
+                            }})
+                else:
+                    company_leads_dict = {
+                        "updated_at": datetime.datetime.now(),
+                        "created_at": datetime.datetime.now(),
+                        "purchased_count": 1,
+                        "company_id": requirement.company_id
+                    }
+                    mongo_client.OrganizationLeads.insert_one(company_leads_dict)
+
+                campaign_lead = mongo_client.CampaignLeads.find_one({
+                    "company_campaign_id":requirement.company_campaign_id})
+
+                if campaign_lead:
+                    mongo_client.CampaignLeads.update_one({"company_campaign_id":requirement.company_campaign_id},
+                            {"$set": {
+                                "purchased_count": campaign_lead['purchased_count'] + 1,
+                                "updated_at": datetime.datetime.now()
+                            }})
+                else:
+                    campaign_leads_dict = {
+                        "updated_at": datetime.datetime.now(),
+                        "created_at": datetime.datetime.now(),
+                        "purchased_count": 1,
+                        "company_campaign_id": requirement.company_campaign_id
+                    }
+                    mongo_client.CampaignLeads.insert_one(campaign_leads_dict)
+
+        return ui_utils.handle_response({}, data="Lead buy successfully", success=True)
