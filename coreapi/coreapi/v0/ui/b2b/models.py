@@ -42,6 +42,7 @@ CURRENT_PATNER_FEEDBACK = (
 )
 
 CALL_BACK_PREFERENCE = (
+    ('NA','NA'),
     ('anytime', 'anytime'),
     ('no need of call. arrange a meeting directly', 'no need of call. arrange a meeting directly'),
     ('weekday morning', 'weekday morning'),
@@ -80,7 +81,9 @@ class Requirement(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     l1_answers = models.CharField(max_length=100, null=True, blank=True)
+    l1_answer_2 = models.CharField(max_length=100, null=True, blank=True)
     l2_answers = models.CharField(max_length=100, null=True, blank=True)
+    l2_answer_2 = models.CharField(max_length=100, null=True, blank=True)
     varified_ops_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE, related_name='varified_ops_by')
     company_campaign = models.ForeignKey('ProposalInfo', null=True, blank=True, on_delete=models.CASCADE, related_name='company_campaign')
     company_shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True, on_delete=models.CASCADE, related_name='company_shortlisted_spaces')
@@ -121,7 +124,9 @@ class PreRequirement(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     l1_answers = models.CharField(max_length=100, null=True, blank=True)
+    l1_answer_2 = models.CharField(max_length=100, null=True, blank=True)
     l2_answers = models.CharField(max_length=100, null=True, blank=True)
+    l2_answer_2 = models.CharField(max_length=100, null=True, blank=True)
     varified_ops_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE, related_name='pre_varified_ops_by')
     company_campaign = models.ForeignKey('ProposalInfo', null=True, blank=True, on_delete=models.CASCADE, related_name='pre_company_campaign')
     company_shortlisted_spaces = models.ForeignKey('ShortlistedSpaces', null=True, blank=True, on_delete=models.CASCADE, related_name='pre_company_shortlisted_spaces')
@@ -153,7 +158,9 @@ class SuspenseLead(MongoModel):
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
     l1_answers = fields.CharField(blank=True)
+    l1_answer_2 = fields.CharField(blank=True)
     l2_answers = fields.CharField(blank=True)
+    l2_answer_2 = fields.CharField(blank=True)
 
     class Meta:
         write_concern = WriteConcern(j=True)
@@ -184,7 +191,9 @@ class BrowsedLead(MongoModel):
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
     l1_answers = fields.CharField(blank=True)
+    l1_answer_2 = fields.CharField(blank=True)
     l2_answers = fields.CharField(blank=True)
+    l2_answer_2 = fields.CharField(blank=True)
 
     class Meta:
         write_concern = WriteConcern(j=True)
