@@ -77,7 +77,9 @@ def bot_to_requirement(request, data):
             submitted = "yes"
         
         l1_answers = row.get("L1Response_1")
+        l1_answer_2 = row.get("L1Response_2")
         l2_answers = row.get("L2Response_1")
+        l2_answer_2 = row.get("L2Response_2")       
         change_current_patner = "no"
         if current_patner_feedback == "Dissatisfied" or current_patner_feedback == "Extremely Dissatisfied":
             change_current_patner = "yes"
@@ -197,7 +199,9 @@ def bot_to_requirement(request, data):
                     varified_bd = 'no',
                     lead_date = datetime.datetime.now(),
                     l1_answers = l1_answers,
+                    l1_answer_2 = l1_answer_2,
                     l2_answers = l2_answers,
+                    l2_answer_2 = l2_answer_2,
                     change_current_patner = change_current_patner.lower(),
                     call_back_preference = call_back_preference.lower(),
                 )
@@ -235,7 +239,9 @@ def bot_to_requirement(request, data):
                     created_at = datetime.datetime.now(),
                     updated_at = datetime.datetime.now(),
                     l1_answers = l1_answers,
-                    l2_answers = l2_answers
+                    l1_answer_2 = l1_answer_2,
+                    l2_answers = l2_answers,
+                    l2_answer_2 = l2_answer_2
                 ).save()
         else:
 
@@ -257,7 +263,9 @@ def bot_to_requirement(request, data):
                 created_at = datetime.datetime.now(),
                 updated_at = datetime.datetime.now(),
                 l1_answers = l1_answers,
-                l2_answers = l2_answers
+                l1_answer_2 = l1_answer_2,
+                l2_answers = l2_answers,
+                l2_answer_2 = l2_answer_2
             ).save()
 
     return ui_utils.handle_response({}, data={}, success=True)

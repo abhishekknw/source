@@ -425,6 +425,8 @@ class SuspenseLeadClass(APIView):
                 ", ".join(row1['prefered_patners']),
                 row1['l1_answers'],
                 row1['l2_answers'],
+                row1['l1_answer_2'],
+                row1['l2_answer_2'],
                 row1['comment'],
                 row1['created_at']
             ]
@@ -575,7 +577,9 @@ class LeadOpsVerification(APIView):
                             varified_bd = 'no',
                             lead_date = requirement.lead_date,
                             l1_answers = requirement.l1_answers,
+                            l1_answer_2 = requirement.l1_answer_2,
                             l2_answers = requirement.l2_answers,
+                            l2_answer_2 = requirement.l2_answer_2,
                             change_current_patner = requirement.change_current_patner.lower(),
                             company_campaign=company_campaign,
                             company_shortlisted_spaces=company_shortlisted_spaces,
@@ -646,7 +650,9 @@ class BrowsedToRequirement(APIView):
                     preferred_company_other = browsed["prefered_patner_other"],
                     current_company_other = browsed["current_patner_other"],
                     l1_answers = browsed["l1_answers"],
+                    l1_answer_2 = browsed["l1_answer_2"],
                     l2_answers = browsed["l2_answers"],
+                    l2_answer_2 = browsed["l2_answer_2"],
                     sub_sector_id = browsed["sub_sector_id"]
                 )
                 requirement.save()
