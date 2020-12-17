@@ -508,6 +508,7 @@ class LeadOpsVerification(APIView):
 
         for requirement in requirements:
             companies = Organisation.objects.filter(business_type=requirement.sector)
+            verified = 0
             if companies:
                 if requirement.varified_ops == "no":
                     for company in companies:
@@ -519,13 +520,13 @@ class LeadOpsVerification(APIView):
                             change_current_patner=requirement.change_current_patner.lower()
                             )
 
-                        requirement.varified_ops = "yes"
-                        requirement.varified_ops_date = datetime.datetime.now()
-                        requirement.varified_ops_by = request.user
-
                         company_campaign = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d",
                             account__organisation=company).first()
                         if company_campaign:
+                            requirement.varified_ops = "yes"
+                            requirement.varified_ops_date = datetime.datetime.now()
+                            requirement.varified_ops_by = request.user
+
                             company_shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=requirement.shortlisted_spaces.object_id,
                                 proposal=company_campaign.proposal_id).first()
 
@@ -588,11 +589,10 @@ class LeadOpsVerification(APIView):
                             call_back_preference = requirement.call_back_preference
                             )
                             new_requirement.save()
-                        else:
-                            return ui_utils.handle_response({}, data={"error":"No company campaign found"}, success=False)
+                            verified += 1
                     requirement.save()
             else:
-                return ui_utils.handle_response({}, data={"error":"No companies for the sector found"}, success=False)
+                return ui_utils.handle_response({}, data={"error":"No companies for the service found"}, success=False)
         color_code = None
         if requirement.shortlisted_spaces:
             requirement_exist = Requirement.objects.filter(shortlisted_spaces=requirement.shortlisted_spaces,
@@ -608,8 +608,10 @@ class LeadOpsVerification(APIView):
                     shortlisted_spac.color_code = 3
                     shortlisted_spac.save()
                     color_code = 3
-
-        return ui_utils.handle_response({}, data={"messege":"Verified","color_code":color_code}, success=True)
+        if verified == 0:
+            return ui_utils.handle_response({}, data={"messege":"Ops verify failed as there are 0 client campaigns","color_code":color_code}, success=False)
+        else:
+            return ui_utils.handle_response({}, data={"messege":"Ops Verified and distributed to "+str(verified)+" campaigns","color_code":color_code}, success=True)
 
 class BrowsedToRequirement(APIView):
 
