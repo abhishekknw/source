@@ -399,7 +399,7 @@ class SuspenseLeadClass(APIView):
     def get(self, request):
         header_list = ['Phone Number', 'Sector Name', 'Sub Sector Name', 'Implementation Timeline', 
             'Meating Timeline', 'Current Patner', 'Current Patner Feedback', 
-            'Current Patner Feedback Reason', 'Prefered Patners', 'L1 Answers', 'L2 Answers', 'Comment', 'Date']
+            'Current Patner Feedback Reason', 'Prefered Patners', 'L1 Answers', 'L2 Answers', 'L1 Answer 2', 'L2 Answers 2', 'Comment', 'Date', 'Call Back Preference']
 
         book = Workbook()
         sheet = book.active
@@ -425,8 +425,11 @@ class SuspenseLeadClass(APIView):
                 ", ".join(row1['prefered_patners']),
                 row1['l1_answers'],
                 row1['l2_answers'],
+                row1['l1_answer_2'],
+                row1['l2_answer_2'],
                 row1['comment'],
-                row1['created_at']
+                row1['created_at'],
+                row1['call_back_preference']
             ]
             sheet.append(row2)
 
@@ -506,6 +509,7 @@ class LeadOpsVerification(APIView):
 
         for requirement in requirements:
             companies = Organisation.objects.filter(business_type=requirement.sector)
+            verified = 0
             if companies:
                 if requirement.varified_ops == "no":
                     for company in companies:
@@ -517,13 +521,13 @@ class LeadOpsVerification(APIView):
                             change_current_patner=requirement.change_current_patner.lower()
                             )
 
-                        requirement.varified_ops = "yes"
-                        requirement.varified_ops_date = datetime.datetime.now()
-                        requirement.varified_ops_by = request.user
-
                         company_campaign = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d",
                             account__organisation=company).first()
                         if company_campaign:
+                            requirement.varified_ops = "yes"
+                            requirement.varified_ops_date = datetime.datetime.now()
+                            requirement.varified_ops_by = request.user
+
                             company_shortlisted_spaces = ShortlistedSpaces.objects.filter(object_id=requirement.shortlisted_spaces.object_id,
                                 proposal=company_campaign.proposal_id).first()
 
@@ -575,7 +579,9 @@ class LeadOpsVerification(APIView):
                             varified_bd = 'no',
                             lead_date = requirement.lead_date,
                             l1_answers = requirement.l1_answers,
+                            l1_answer_2 = requirement.l1_answer_2,
                             l2_answers = requirement.l2_answers,
+                            l2_answer_2 = requirement.l2_answer_2,
                             change_current_patner = requirement.change_current_patner.lower(),
                             company_campaign=company_campaign,
                             company_shortlisted_spaces=company_shortlisted_spaces,
@@ -584,11 +590,10 @@ class LeadOpsVerification(APIView):
                             call_back_preference = requirement.call_back_preference
                             )
                             new_requirement.save()
-                        else:
-                            return ui_utils.handle_response({}, data={"error":"No company campaign found"}, success=False)
+                            verified += 1
                     requirement.save()
             else:
-                return ui_utils.handle_response({}, data={"error":"No companies for the sector found"}, success=False)
+                return ui_utils.handle_response({}, data={"error":"No companies for the service found"}, success=False)
         color_code = None
         if requirement.shortlisted_spaces:
             requirement_exist = Requirement.objects.filter(shortlisted_spaces=requirement.shortlisted_spaces,
@@ -604,8 +609,10 @@ class LeadOpsVerification(APIView):
                     shortlisted_spac.color_code = 3
                     shortlisted_spac.save()
                     color_code = 3
-
-        return ui_utils.handle_response({}, data={"messege":"Verified","color_code":color_code}, success=True)
+        if verified == 0:
+            return ui_utils.handle_response({}, data={"error":"Ops verify failed as there are 0 client campaigns","color_code":color_code}, success=False)
+        else:
+            return ui_utils.handle_response({}, data={"message":"Ops Verified and distributed to "+str(verified)+" campaigns","color_code":color_code}, success=True)
 
 class BrowsedToRequirement(APIView):
 
@@ -619,6 +626,10 @@ class BrowsedToRequirement(APIView):
             if browsed:
                 mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id["_id"])}, {"$set":{"status":"converted"}})
                 
+                if browsed["meating_timeline"] == "" or browsed["meating_timeline"] == "not given":
+                    return ui_utils.handle_response({}, data={
+                        "error":"meeting time not given"}, success=False)
+
                 contact_details = None
                 if browsed["phone_number"]:
                     contact_details = ContactDetails.objects.filter(Q(mobile=browsed["phone_number"])|Q(landline=browsed["phone_number"])).first()
@@ -646,7 +657,9 @@ class BrowsedToRequirement(APIView):
                     preferred_company_other = browsed["prefered_patner_other"],
                     current_company_other = browsed["current_patner_other"],
                     l1_answers = browsed["l1_answers"],
+                    l1_answer_2 = browsed["l1_answer_2"],
                     l2_answers = browsed["l2_answers"],
+                    l2_answer_2 = browsed["l2_answer_2"],
                     sub_sector_id = browsed["sub_sector_id"]
                 )
                 requirement.save()
