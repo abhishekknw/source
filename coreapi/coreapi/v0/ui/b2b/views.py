@@ -399,7 +399,7 @@ class SuspenseLeadClass(APIView):
     def get(self, request):
         header_list = ['Phone Number', 'Sector Name', 'Sub Sector Name', 'Implementation Timeline', 
             'Meating Timeline', 'Current Patner', 'Current Patner Feedback', 
-            'Current Patner Feedback Reason', 'Prefered Patners', 'L1 Answers', 'L2 Answers', 'Comment', 'Date']
+            'Current Patner Feedback Reason', 'Prefered Patners', 'L1 Answers', 'L2 Answers', 'L1 Answer 2', 'L2 Answers 2', 'Comment', 'Date', 'Call Back Preference']
 
         book = Workbook()
         sheet = book.active
@@ -428,7 +428,8 @@ class SuspenseLeadClass(APIView):
                 row1['l1_answer_2'],
                 row1['l2_answer_2'],
                 row1['comment'],
-                row1['created_at']
+                row1['created_at'],
+                row1['call_back_preference']
             ]
             sheet.append(row2)
 
@@ -625,6 +626,10 @@ class BrowsedToRequirement(APIView):
             if browsed:
                 mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id["_id"])}, {"$set":{"status":"converted"}})
                 
+                if browsed["meating_timeline"] == "" or browsed["meating_timeline"] == "not given":
+                    return ui_utils.handle_response({}, data={
+                        "error":"meeting time not given"}, success=False)
+
                 contact_details = None
                 if browsed["phone_number"]:
                     contact_details = ContactDetails.objects.filter(Q(mobile=browsed["phone_number"])|Q(landline=browsed["phone_number"])).first()

@@ -126,6 +126,14 @@ def bot_to_requirement(request, data):
         if supplier:
             campaign = ProposalInfo.objects.filter(Q(type_of_end_customer__formatted_name="b_to_b_r_g") & Q(name=area) | Q(name=city)).first()
 
+        lead_status = b2b_utils.get_lead_status(
+            impl_timeline = impl_timeline,
+            meating_timeline = meating_timeline,
+            company=None,
+            prefered_patners=prefered_patners_list,
+            change_current_patner=change_current_patner.lower()
+            )
+
         if supplier and campaign:
             
             campaign_id = campaign.proposal_id
@@ -166,18 +174,7 @@ def bot_to_requirement(request, data):
             if submitted == "yes":
                 shortlisted_spaces.color_code = 1
                 shortlisted_spaces.save()
-
-                # companies = Organisation.objects.filter(business_type=sector)
-                # for company in companies:
-                    
-                #     lead_status = b2b_utils.get_lead_status(
-                #         impl_timeline = impl_timeline,
-                #         meating_timeline = meating_timeline,
-                #         company=company,
-                #         prefered_patners=prefered_patners_list,
-                #         change_current_patner=change_current_patner.lower()
-                #         )
-
+                
                 pre_requirement = PreRequirement(
                     campaign_id=campaign_id,
                     shortlisted_spaces=shortlisted_spaces,
@@ -193,7 +190,7 @@ def bot_to_requirement(request, data):
                     lead_by = contact_details,
                     impl_timeline = impl_timeline,
                     meating_timeline = meating_timeline,
-                    # lead_status = lead_status,
+                    lead_status = lead_status,
                     comment = comment,
                     varified_ops = 'no',
                     varified_bd = 'no',
@@ -227,7 +224,7 @@ def bot_to_requirement(request, data):
                     sub_sector_id = sub_sector.id if sub_sector else None,
                     implementation_timeline = impl_timeline,
                     meating_timeline = meating_timeline,
-                    # lead_status = lead_status,
+                    lead_status = lead_status,
                     comment = comment,
                     current_patner_id = current_patner_obj.organisation_id if current_patner_obj else None,
                     current_patner_other = current_company_other,
@@ -254,7 +251,7 @@ def bot_to_requirement(request, data):
                 sub_sector_name = sub_sector_name,
                 implementation_timeline = impl_timeline,
                 meating_timeline = meating_timeline,
-                # lead_status = lead_status,
+                lead_status = lead_status,
                 comment = comment,
                 current_patner = current_patner,
                 current_patner_feedback = current_patner_feedback,
@@ -265,7 +262,8 @@ def bot_to_requirement(request, data):
                 l1_answers = l1_answers,
                 l1_answer_2 = l1_answer_2,
                 l2_answers = l2_answers,
-                l2_answer_2 = l2_answer_2
+                l2_answer_2 = l2_answer_2,
+                call_back_preference = call_back_preference.lower()
             ).save()
 
     return ui_utils.handle_response({}, data={}, success=True)
