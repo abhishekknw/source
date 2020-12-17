@@ -609,9 +609,9 @@ class LeadOpsVerification(APIView):
                     shortlisted_spac.save()
                     color_code = 3
         if verified == 0:
-            return ui_utils.handle_response({}, data={"messege":"Ops verify failed as there are 0 client campaigns","color_code":color_code}, success=False)
+            return ui_utils.handle_response({}, data={"error":"Ops verify failed as there are 0 client campaigns","color_code":color_code}, success=False)
         else:
-            return ui_utils.handle_response({}, data={"messege":"Ops Verified and distributed to "+str(verified)+" campaigns","color_code":color_code}, success=True)
+            return ui_utils.handle_response({}, data={"message":"Ops Verified and distributed to "+str(verified)+" campaigns","color_code":color_code}, success=True)
 
 class BrowsedToRequirement(APIView):
 
