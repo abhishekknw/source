@@ -624,12 +624,13 @@ class BrowsedToRequirement(APIView):
         for browsed_id in browsed_ids:
             browsed = dict(mongo_client.browsed_lead.find_one({"_id": ObjectId(browsed_id["_id"])}))
             if browsed:
-                mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id["_id"])}, {"$set":{"status":"converted"}})
-                
+
                 if browsed["meating_timeline"] == "" or browsed["meating_timeline"] == "not given":
                     return ui_utils.handle_response({}, data={
                         "error":"meeting time not given"}, success=False)
 
+                mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id["_id"])}, {"$set":{"status":"converted"}})
+                
                 contact_details = None
                 if browsed["phone_number"]:
                     contact_details = ContactDetails.objects.filter(Q(mobile=browsed["phone_number"])|Q(landline=browsed["phone_number"])).first()
