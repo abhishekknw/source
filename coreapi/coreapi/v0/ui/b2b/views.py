@@ -618,14 +618,14 @@ class BrowsedToRequirement(APIView):
 
     def post(self, request):
         browsed_ids = request.data.get("browsed_ids")
-    
+        
         shortlisted_spaces_id = None
 
         for browsed_id in browsed_ids:
             browsed = dict(mongo_client.browsed_lead.find_one({"_id": ObjectId(browsed_id["_id"])}))
             if browsed:
 
-                if browsed["meating_timeline"] == "" or browsed["meating_timeline"] == "not given":
+                if browsed_id["meating_timeline"] == "" or browsed_id["meating_timeline"] == "not given" or browsed_id["meating_timeline"] == None:
                     return ui_utils.handle_response({}, data={
                         "error":"meeting time not given"}, success=False)
 
@@ -644,16 +644,17 @@ class BrowsedToRequirement(APIView):
                 requirement = PreRequirement(
                     campaign_id=browsed["campaign_id"],
                     shortlisted_spaces_id=browsed["shortlisted_spaces_id"],
-                    current_company_id = browsed["current_patner_id"],
+                    current_company_id = browsed_id["current_patner_id"],
                     current_patner_feedback = browsed["current_patner_feedback"],
                     current_patner_feedback_reason = browsed["current_patner_feedback_reason"],
                     sector_id = browsed["sector_id"],
                     lead_by = contact_details,
-                    impl_timeline = browsed["implementation_timeline"].lower(),
-                    meating_timeline = browsed["meating_timeline"].lower(),
+                    impl_timeline = browsed_id["implementation_timeline"],
+                    meating_timeline = browsed_id["meating_timeline"],
                     comment = browsed_id["comment"],
                     varified_ops = 'no',
                     varified_bd = 'no',
+                    lead_status = browsed["lead_status"],
                     lead_date = datetime.datetime.now(),
                     preferred_company_other = browsed["prefered_patner_other"],
                     current_company_other = browsed["current_patner_other"],

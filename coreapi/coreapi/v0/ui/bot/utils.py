@@ -46,7 +46,7 @@ def bot_to_requirement(request, data):
         call_back_preference = row.get("contactBackTime")
 
         if current_patner_feedback:
-            current_patner_feedback = current_patner_feedback.lower()
+            current_patner_feedback = current_patner_feedback
         else:
             current_patner_feedback = "NA"
 
