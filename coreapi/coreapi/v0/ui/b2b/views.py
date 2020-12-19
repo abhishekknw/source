@@ -340,35 +340,43 @@ class RequirementClass(APIView):
                 "preferred_company_other": req["preferred_company_other"],
                 "impl_timeline": req["impl_timeline"],
                 "meating_timeline": req["meating_timeline"],
-                "lead_status": req["lead_status"],
                 "comment": req["comment"],
-                # "current_patner_feedback": req["current_patner_feedback"],
-                # "current_patner_feedback_reason": req["current_patner_feedback_reason"],
-                "call_back_preference" :req["call_back_preference"].lower()
             }
+
+            call_back_preference = "NA"
+            if req["call_back_preference"]:
+                call_back_preference = req["call_back_preference"]
+            update_req['call_back_preference'] = call_back_preference
 
             prefered_patners_list = Organisation.objects.filter(
                 organisation_id__in=req["preferred_company"]).all()
-            reqs = PreRequirement.objects.filter(
-                sector_id = req["sector"],
-                sub_sector_id = req["sub_sector"],
-                shortlisted_spaces_id = req["shortlisted_spaces"],
-                lead_by_id = req["lead_by"]["id"],
-            )
-            lead_data = []
-            for row in reqs:
-                
-                requirement_data = PreRequirementSerializer(row, data=update_req)
-                data = {}
-                
-                if requirement_data.is_valid():
-                    requirement_data.save()
-                    context = requirement_data.data
-                    if context['id'] == req["id"]:
-                        lead_data.append({"lead_status":context['lead_status'],"id":context['id']})
-                else:
-                    return ui_utils.handle_response({}, data={"errors":requirement_data.errors}, success=False)
 
+            row = PreRequirement.objects.filter(id = req["id"]).first()
+
+            lead_data = []
+
+            change_current_patner = "no"
+            if row.current_patner_feedback == "Dissatisfied" or row.current_patner_feedback == "Extremely Dissatisfied":
+                change_current_patner = "yes"
+            
+            lead_status = b2b_utils.get_lead_status(
+                impl_timeline = req["impl_timeline"],
+                meating_timeline = req["meating_timeline"],
+                company=None,
+                prefered_patners=prefered_patners_list,
+                change_current_patner=change_current_patner
+                )
+            update_req['lead_status'] = lead_status
+            requirement_data = PreRequirementSerializer(row, data=update_req)
+            data = {}
+            
+            if requirement_data.is_valid():
+                requirement_data.save()
+                context = requirement_data.data
+                if context['id'] == req["id"]:
+                    lead_data.append({"lead_status":context['lead_status'],"id":context['id']})
+            else:
+                return ui_utils.handle_response({}, data={"errors":requirement_data.errors}, success=False)
 
         return ui_utils.handle_response({}, data=lead_data, success=True)
 
@@ -397,9 +405,12 @@ class SuspenseLeadClass(APIView):
     authentication_classes = ()
 
     def get(self, request):
-        header_list = ['Phone Number', 'Sector Name', 'Sub Sector Name', 'Implementation Timeline', 
-            'Meating Timeline', 'Current Patner', 'Current Patner Feedback', 
-            'Current Patner Feedback Reason', 'Prefered Patners', 'L1 Answers', 'L2 Answers', 'L1 Answer 2', 'L2 Answers 2', 'Comment', 'Date', 'Call Back Preference']
+
+        header_list = ['Phone Number', 'Supplier Name', 'City', 'Area', 
+            'Sector', 'Sub Sector', 'Current Partner', 'Current Patner Feedback',
+            'Current Patner Feedback Reason', 'Prefered Partners','Implementation Timeline',
+            'Meating Timeline', 'L1 Answers', 'L2 Answers', 'Lead Status', 'Comment',
+            'Change Current Partner']
 
         book = Workbook()
         sheet = book.active
@@ -413,23 +424,29 @@ class SuspenseLeadClass(APIView):
         data = []
         for row in all_suspense_lead:
             row1 = dict(row)
+
+            change_current_patner = "no"
+            if row1['current_patner_feedback'] == "Dissatisfied" or row1['current_patner_feedback'] == "Extremely Dissatisfied":
+                change_current_patner = "yes"
+
             row2 = [
                 row1['phone_number'],
+                row1['supplier_name'],
+                row1['city'],
+                row1['area'],
                 row1['sector_name'],
                 row1['sub_sector_name'],
-                row1['implementation_timeline'],
-                row1['meating_timeline'],
                 row1['current_patner'],
                 row1['current_patner_feedback'],
                 row1['current_patner_feedback_reason'],
                 ", ".join(row1['prefered_patners']),
+                row1['implementation_timeline'],
+                row1['meating_timeline'],
                 row1['l1_answers'],
                 row1['l2_answers'],
-                row1['l1_answer_2'],
-                row1['l2_answer_2'],
+                row1['lead_status'],
                 row1['comment'],
-                row1['created_at'],
-                row1['call_back_preference']
+                change_current_patner
             ]
             sheet.append(row2)
 
