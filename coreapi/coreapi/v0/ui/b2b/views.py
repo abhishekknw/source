@@ -1399,34 +1399,28 @@ class SummaryReportAndGraph(APIView):
 class GetLeadDistributionCampaign(APIView):
 
     def get(self, request):
-        
+        lead_type = request.query_params.get("lead_type")
         organisation_id = request.user.profile.organisation.organisation_id
-        # lead_count = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"is_current_company":"no"}]}))
-        # existing_client_count = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}]}))
-        # campaign_list = []
-        # if lead_count:
-        #     for row in lead_count:
-        #         campaign = row["company_campaign_id"]       
-        #         campaign_list.append(campaign)
-        # if existing_client_count:
-        #     for row in existing_client_count:
-        #         campaign = row["company_campaign_id"]
-        #         campaign_list.append(campaign)
+        if lead_type == "Survey":
+            lead = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}]}))
+        else:
+            lead = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"is_current_company":"no"}]}))
+        
+        campaign_list = []
+        for row in lead:
+            campaign = row["company_campaign_id"]       
+            campaign_list.append(campaign)
 
         if request.query_params.get('supplier_code') == "mix":
-            # campaign_list = ProposalInfo.objects.filter(proposal_id__in=campaign_list, is_mix=True).values_list('proposal_id', flat=True)
-            campaign_list = ProposalInfo.objects.filter(type_of_end_customer__formatted_name='b_to_b_l_d', account__organisation=organisation_id, is_mix=True).values_list('proposal_id', flat=True)
-            
+            campaign_list = ProposalInfo.objects.filter(proposal_id__in=campaign_list, is_mix=True).values_list('proposal_id', flat=True)
         if request.query_params.get('supplier_code') and request.query_params.get('supplier_code') != "mix" and request.query_params.get('supplier_code') != "all":
-            # campaign_list = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list , supplier_code=request.query_params.get('supplier_code')).values_list('proposal_id', flat=True).distinct()
-            campaign_list = ShortlistedSpaces.objects.filter(proposal_id__type_of_end_customer__formatted_name='b_to_b_l_d',proposal_id__account__organisation=organisation_id, supplier_code=request.query_params.get('supplier_code')).values_list('proposal_id', flat=True).distinct()
-
+            campaign_list = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list, supplier_code=request.query_params.get('supplier_code')).values_list('proposal_id', flat=True).distinct()
         campaign_list = [campaign_id for campaign_id in campaign_list]
 
         all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).\
             values('proposal_id', 'object_id', 'is_completed', 'proposal__name', 'proposal__tentative_start_date',
                 'proposal__tentative_end_date', 'proposal__campaign_state', 'supplier_code')
-
+        print("all_shortlisted_supplier",all_shortlisted_supplier)
         all_campaign_dict = {}
         all_shortlisted_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] == 'RS']
         all_supplier_society = SupplierTypeSociety.objects.filter(supplier_id__in=all_shortlisted_supplier_id).values('supplier_id', 'flat_count')
