@@ -435,8 +435,8 @@ class SuspenseLeadClass(APIView):
         header_list = ['Phone Number', 'Supplier Name', 'City', 'Area', 
             'Sector', 'Sub Sector', 'Current Partner', 'Current Patner Feedback',
             'Current Patner Feedback Reason', 'Prefered Partners','Implementation Timeline',
-            'Meating Timeline', 'L1 Answers', 'L2 Answers', 'Lead Status', 'Comment',
-            'Change Current Partner']
+            'Meating Timeline', 'L1 Answers','L1 Answer 2', 'L2 Answers','L2 Answer 2', 'Lead Status', 'Comment','Submitted',
+            'Call Back Preference']
 
         book = Workbook()
         sheet = book.active
@@ -455,6 +455,10 @@ class SuspenseLeadClass(APIView):
             if row1['current_patner_feedback'] == "Dissatisfied" or row1['current_patner_feedback'] == "Extremely Dissatisfied":
                 change_current_patner = "yes"
 
+            submitted = "no"
+            if row1['meating_timeline'] is not "not given" and row1['meating_timeline'] is not None:
+                submitted = "yes"
+
             row2 = [
                 row1['phone_number'],
                 row1['supplier_name'],
@@ -468,11 +472,14 @@ class SuspenseLeadClass(APIView):
                 ", ".join(row1['prefered_patners']),
                 row1['implementation_timeline'],
                 row1['meating_timeline'],
-                row1['l1_answers'],
-                row1['l2_answers'],
+                row1['l1_answers'] if row1['l1_answers'] else None,
+                row1['l1_answer_2'] if row1['l1_answer_2'] else None,
+                row1['l2_answers'] if row1['l2_answers'] else None,
+                row1['l2_answer_2'] if row1['l2_answer_2'] else None,
                 row1['lead_status'],
                 row1['comment'],
-                change_current_patner
+                submitted,
+                row1['call_back_preference'] if row1['call_back_preference'] else None,
             ]
             sheet.append(row2)
 
@@ -679,10 +686,22 @@ class BrowsedToRequirement(APIView):
                     contact_details = ContactDetails.objects.filter(Q(mobile=browsed["phone_number"])|Q(landline=browsed["phone_number"])).first()
                 
                 prefered_patners_list = []
-                if browsed["prefered_patners"]:
-                    prefered_patners_list = Organisation.objects.filter(organisation_id__in=browsed["prefered_patners"]).all()
+                if browsed_id["prefered_patners_id"]:
+                    prefered_patners_list = Organisation.objects.filter(organisation_id__in=browsed_id["prefered_patners_id"]).all()
                 
                 shortlisted_spaces_id = browsed["shortlisted_spaces_id"]
+
+                change_current_patner = "no"
+                if browsed["current_patner_feedback"] == "Dissatisfied" or browsed["current_patner_feedback"] == "Extremely Dissatisfied":
+                    change_current_patner = "yes"
+
+                lead_status = b2b_utils.get_lead_status(
+                    impl_timeline = browsed_id["implementation_timeline"],
+                    meating_timeline = browsed_id["meating_timeline"],
+                    company=None,
+                    prefered_patners=prefered_patners_list,
+                    change_current_patner=change_current_patner.lower()
+                    )
 
                 requirement = PreRequirement(
                     campaign_id=browsed["campaign_id"],
@@ -697,7 +716,7 @@ class BrowsedToRequirement(APIView):
                     comment = browsed_id["comment"],
                     varified_ops = 'no',
                     varified_bd = 'no',
-                    lead_status = browsed["lead_status"],
+                    lead_status = lead_status,
                     lead_date = datetime.datetime.now(),
                     preferred_company_other = browsed["prefered_patner_other"],
                     current_company_other = browsed["current_patner_other"],
