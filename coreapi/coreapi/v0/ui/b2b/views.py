@@ -467,7 +467,7 @@ class BrowsedLeadClass(APIView):
         contact_details = ContactDetails.objects.filter(Q(mobile__in=phone_numers)|Q(landline__in=phone_numers))
         contact_details_dict_mobile = {str(row.mobile):row.name for row in contact_details}
         contact_details_dict_landline = {str(row.landline):row.name for row in contact_details}
-
+        sectors = []
         list1 = []
         for row in browsed_leads:
             row1 = dict(row)
@@ -479,8 +479,12 @@ class BrowsedLeadClass(APIView):
                 row1["lead_by_name"] = contact_details_dict_landline.get(row.get("phone_number"))
 
             list1.append(row1)
+            sectors.append(row["sector_id"])
+        
+        companies = Organisation.objects.filter(business_type__in=sectors)
+        companies_data = OrganisationSerializer(companies, many=True).data
 
-        return ui_utils.handle_response({}, data=list1, success=True)
+        return ui_utils.handle_response({}, data={"browsed": list1, "companies": companies_data}, success=True)
 
 class BrowsedLeadDelete(APIView):
 
