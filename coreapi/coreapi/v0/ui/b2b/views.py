@@ -459,6 +459,26 @@ class SuspenseLeadClass(APIView):
             if row1['meating_timeline'] is not "not given" and row1['meating_timeline'] is not None:
                 submitted = "yes"
 
+            try:
+                l1_answer_2 = row1['l1_answer_2']
+            except Exception as e:
+                l1_answer_2 = None
+
+            try:
+                l2_answer_2 = row1['l2_answer_2']
+            except Exception as e:
+                l2_answer_2 = None
+
+            try:
+                call_back_preference = row1['call_back_preference']
+            except Exception as e:
+                call_back_preference = None
+
+            try:
+                lead_status = row1['lead_status']
+            except Exception as e:
+                lead_status = None
+
             row2 = [
                 row1['phone_number'],
                 row1['supplier_name'],
@@ -473,13 +493,13 @@ class SuspenseLeadClass(APIView):
                 row1['implementation_timeline'],
                 row1['meating_timeline'],
                 row1['l1_answers'] if row1['l1_answers'] else None,
-                row1['l1_answer_2'] if row1['l1_answer_2'] else None,
+                l1_answer_2,
                 row1['l2_answers'] if row1['l2_answers'] else None,
-                row1['l2_answer_2'] if row1['l2_answer_2'] else None,
-                row1['lead_status'],
+                l2_answer_2,
+                lead_status,
                 row1['comment'],
                 submitted,
-                row1['call_back_preference'] if row1['call_back_preference'] else None,
+                call_back_preference,
             ]
             sheet.append(row2)
 
@@ -728,7 +748,8 @@ class BrowsedToRequirement(APIView):
                     l1_answer_2 = browsed["l1_answer_2"],
                     l2_answers = browsed["l2_answers"],
                     l2_answer_2 = browsed["l2_answer_2"],
-                    sub_sector_id = browsed["sub_sector_id"]
+                    sub_sector_id = browsed["sub_sector_id"],
+                    call_back_preference = browsed["call_back_preference"]
                 )
                 requirement.save()
 
