@@ -197,17 +197,19 @@ BASE_URL = Config.BASE_URL if hasattr(Config,'BASE_URL') else "http://localhost:
 if type(BASE_URL) != str:
     BASE_URL = BASE_URL[0]
 if Config:
-    MONGO_DB = Config.MONGO_DB if hasattr(Config, 'MONGO_DB') else 'machadalo_2'
-    MONGO_PORT = Config.MONGO_PORT if hasattr(Config, 'MONGO_PORT') else 27017
-    MONGO_USER = Config.MONGO_USER if hasattr(Config, 'MONGO_USER') else 'abc'
-    MONGO_PASSWORD = Config.MONGO_PASSWORD if hasattr(Config, 'MONGO_PASSWORD') else 'abc'
+    # MONGO_DB = Config.MONGO_DB if hasattr(Config, 'MONGO_DB') else 'machadalo_2'
+    # MONGO_PORT = Config.MONGO_PORT if hasattr(Config, 'MONGO_PORT') else 27017
+    # MONGO_USER = Config.MONGO_USER if hasattr(Config, 'MONGO_USER') else 'abc'
+    # MONGO_PASSWORD = Config.MONGO_PASSWORD if hasattr(Config, 'MONGO_PASSWORD') else 'abc'
+    MONGO_CONNECTION = Config.MONGO_CONNECTION
     MONGO_DB_TEST = Config.MONGO_DB_TEST if hasattr(Config,'MONGO_DB_TEST') else 'mdtest'
     DEFAULT_CC_EMAILS = Config.DEFAULT_CC_EMAILS if hasattr(Config,'DEFAULT_CC_EMAILS') else []
 else:
-    MONGO_DB = 'machadalo_2'
-    MONGO_PORT = 27017
-    MONGO_PORT = 'abc'
-    MONGO_PASSWORD = 'abc'
+    # MONGO_DB = 'machadalo_2'
+    # MONGO_PORT = 27017
+    # MONGO_PORT = 'abc'
+    # MONGO_PASSWORD = 'abc'
+    MONGO_CONNECTION = ""
     MONGO_DB_TEST = 'mdtest'
     DEFAULT_CC_EMAILS = []
 # EMAIL SETTINGS
@@ -307,9 +309,11 @@ LOGGING = {
 }
 
 #Establish a connection to the database and call the connection mongo_app
-connect(
-"mongodb://"+MONGO_USER+":"+MONGO_PASSWORD+"@localhost:"+str(MONGO_PORT)+"/"+MONGO_DB+"?AuthMechanism=SCRAM-SHA-1&AuthSource=admin", alias="mongo_app"
-)
+# connect(
+# "mongodb://"+MONGO_USER+":"+MONGO_PASSWORD+"@localhost:"+str(MONGO_PORT)+"/"+MONGO_DB+"?AuthMechanism=SCRAM-SHA-1&AuthSource=admin", alias="mongo_app"
+# )
+
+connect(Config.MONGO_CONNECTION, alias="mongo_app")
 
 # CronJob settings
 CRONJOBS = [
