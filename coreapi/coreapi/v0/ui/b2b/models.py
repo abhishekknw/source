@@ -195,6 +195,7 @@ class BrowsedLead(MongoModel):
     l1_answer_2 = fields.CharField(blank=True)
     l2_answers = fields.CharField(blank=True)
     l2_answer_2 = fields.CharField(blank=True)
+    call_back_preference = fields.CharField(blank=True)
 
     class Meta:
         write_concern = WriteConcern(j=True)
