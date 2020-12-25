@@ -3,8 +3,10 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from v0.ui.permissions.models import Role
 from pymongo import MongoClient
-client = MongoClient('localhost', settings.MONGO_PORT, username=settings.MONGO_USER, password=settings.MONGO_PASSWORD, maxPoolSize=2, waitQueueMultiple=10)
-mongo_client = client[settings.MONGO_DB]
+# client = MongoClient('localhost', settings.MONGO_PORT, username=settings.MONGO_USER, password=settings.MONGO_PASSWORD, maxPoolSize=2, waitQueueMultiple=10)
+# mongo_client = client[settings.MONGO_DB]
+client = MongoClient(settings.MONGO_CONNECTION)
+mongo_client = client.get_default_database()
 mongo_test = client[settings.MONGO_DB_TEST]
 
 
