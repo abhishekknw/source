@@ -727,6 +727,11 @@ class BrowsedToRequirement(APIView):
                     change_current_patner=change_current_patner.lower()
                     )
 
+                try:
+                    call_back_preference = browsed["call_back_preference"]
+                except Exception as e:
+                    call_back_preference = "NA"
+
                 requirement = PreRequirement(
                     campaign_id=browsed["campaign_id"],
                     shortlisted_spaces_id=browsed["shortlisted_spaces_id"],
@@ -749,7 +754,7 @@ class BrowsedToRequirement(APIView):
                     l2_answers = browsed["l2_answers"],
                     l2_answer_2 = browsed["l2_answer_2"],
                     sub_sector_id = browsed["sub_sector_id"],
-                    call_back_preference = browsed["call_back_preference"]
+                    call_back_preference = call_back_preference
                 )
                 requirement.save()
 
