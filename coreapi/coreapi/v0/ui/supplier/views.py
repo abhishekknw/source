@@ -854,6 +854,51 @@ class SocietyList(APIView):
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
 
+
+
+class SocietyListByNumber(APIView):
+
+    def get(self, request):
+        class_name = self.__class__.__name__
+
+        try:
+            search = request.GET.get("search")
+            count = len(str(search))
+            if count is not 10:
+                
+                return handle_response(class_name,
+                 data={"error":"Please enter 10 digit number"}, 
+                 request=request)
+            else:
+                society_objects = SupplierTypeSociety.objects
+                contact_details = ContactDetails.objects.values_list('object_id', flat=True).filter(
+                    Q(landline=search) | Q(mobile=search))
+                
+                if contact_details:
+            
+                    society_objects =  society_objects.filter(
+                        supplier_id__icontains = contact_details)
+                else:
+                    return handle_response(class_name,data={"error":"No data found"}, 
+                         request=request)
+                #pagination
+                society_objects_paginate = paginate(society_objects,SupplierTypeSocietySerializer,request)
+                suppliers = manipulate_object_key_values(society_objects_paginate["list"])
+                societies_with_images = get_supplier_image(suppliers, v0_constants.society_name)
+
+                data = {
+                    'count': society_objects_paginate["count"],
+                    'has_next':society_objects_paginate["has_next"],
+                    'has_previous':society_objects_paginate["has_previous"],
+                    'societies': societies_with_images,
+                }
+                return handle_response(class_name, data=data, success=True)
+
+        except Exception as e:
+            return handle_response(class_name, exception_object=e, request=request)
+
+
+
 class CorporateViewSet(viewsets.ViewSet):
     """
     A view set around corporates that gives corporate list with filters for state, keyword and pagination.
