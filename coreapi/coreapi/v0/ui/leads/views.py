@@ -2134,7 +2134,7 @@ class LeadsKeys(APIView):
 def prepare_campaign_leads_data_in_excel(data, comment_list):
     
     header_list = [
-        'Index', 'Supplier Name', 'Supplier Type' , 'Current Partner', 'FeedBack', 'Preferred Partner', 'Preferred Partner Other',
+        'Index', 'Supplier Name', 'Supplier Type' , 'Current Partner', 'Current Partner Other', 'FeedBack', 'Preferred Partner', 'Preferred Partner Other',
         'L1 Answer 1 ', 'L1 Answer 1', 'L2 Answer 1', 'L2 Answer 2', 'Implementation Time', 'Meeting Time', 'Lead Given by', 'Subarea',
         'Area', 'City', 'Address', 'Landmark', 'PinCode', 'Unit Primary Count / Flat Count',
         'Unit Secondary Count / Tower Count', 'Average Household Points',
@@ -2157,6 +2157,7 @@ def prepare_campaign_leads_data_in_excel(data, comment_list):
                 supplier_data.append(supplier['supplier_type'])
 
                 supplier_data.append(requirement.current_company.name if requirement.current_company else None)
+                supplier_data.append(requirement.current_company_other)
                 supplier_data.append(requirement.current_patner_feedback)
                 preferred_company = None
                 preferred_company_list = requirement.preferred_company.all()
