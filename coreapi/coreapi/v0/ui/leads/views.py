@@ -2145,54 +2145,105 @@ def prepare_campaign_leads_data_in_excel(data, comment_list):
     sheet.append(header_list)
     index = 0
     for supplier in data['shortlisted_suppliers']:
-        index = index + 1
-        supplier_data = []
+        requirement_data = Requirement.objects.filter(company_campaign_id=supplier['proposal'], company_shortlisted_spaces_id=supplier['id'])
+        if requirement_data:
+            for requirement in requirement_data:
+                index = index + 1
+                supplier_data = []
 
-        supplier_data.append(index)
+                supplier_data.append(index)
 
-        supplier_data.append(supplier['name'])
-        supplier_data.append(supplier['supplier_type'])
+                supplier_data.append(supplier['name'])
+                supplier_data.append(supplier['supplier_type'])
 
-        requirement = Requirement.objects.filter(company_campaign_id=supplier['proposal'], company_shortlisted_spaces_id=supplier['id']).first()
-        if requirement:
-            supplier_data.append(requirement.current_company.name if requirement.current_company else None)
-            supplier_data.append(requirement.current_patner_feedback)
-            preferred_company = None
-            if requirement.preferred_company:
-                preferred_company = ", ".join(requirement.preferred_company)
-            supplier_data.append(preferred_company)
-            supplier_data.append(requirement.preferred_company_other)
-            supplier_data.append(requirement.l1_answers)
-            supplier_data.append(requirement.l1_answer_2)
-            supplier_data.append(requirement.l2_answers)
-            supplier_data.append(requirement.l2_answer_2)
-            supplier_data.append(requirement.impl_timeline)
-            supplier_data.append(requirement.meating_timeline)
-            supplier_data.append(requirement.lead_by.name)
+                supplier_data.append(requirement.current_company.name if requirement.current_company else None)
+                supplier_data.append(requirement.current_patner_feedback)
+                preferred_company = None
+                preferred_company_list = requirement.preferred_company.all()
+                company_list = []
+                if preferred_company_list:
+                    for row in preferred_company_list:
+                        company_list.append(row.name)
+                preferred_company = ", ".join(company_list)
+                supplier_data.append(preferred_company)
+                supplier_data.append(requirement.preferred_company_other)
+                supplier_data.append(requirement.l1_answers)
+                supplier_data.append(requirement.l1_answer_2)
+                supplier_data.append(requirement.l2_answers)
+                supplier_data.append(requirement.l2_answer_2)
+                supplier_data.append(requirement.impl_timeline)
+                supplier_data.append(requirement.meating_timeline)
+                supplier_data.append(requirement.lead_by.name)
 
-        supplier_data.append(supplier['subarea'])
-        supplier_data.append(supplier['area'])
-        supplier_data.append(supplier['city'])
-        supplier_data.append(str(supplier['address1']) + ' '+ str(supplier['address2']))
+                supplier_data.append(supplier['subarea'])
+                supplier_data.append(supplier['area'])
+                supplier_data.append(supplier['city'])
+                supplier_data.append(str(supplier['address1']) + ' '+ str(supplier['address2']))
 
-        supplier_data.append(supplier['landmark'])
-        supplier_data.append(supplier['zipcode'])
+                supplier_data.append(supplier['landmark'])
+                supplier_data.append(supplier['zipcode'])
 
-        primary_count = supplier.get('flat_count')
-        secondary_count = supplier.get('tower_count')
-        if supplier.get('unit_primary_count'):
-            primary_count = supplier.get('unit_primary_count')
+                primary_count = supplier.get('flat_count')
+                secondary_count = supplier.get('tower_count')
+                if supplier.get('unit_primary_count'):
+                    primary_count = supplier.get('unit_primary_count')
 
-        if supplier.get('unit_secondary_count'):
-            secondary_count = supplier.get('unit_secondary_count')
+                if supplier.get('unit_secondary_count'):
+                    secondary_count = supplier.get('unit_secondary_count')
 
-        supplier_data.append(primary_count)
-        supplier_data.append(secondary_count)
-        avg_household_occupants = None
-        if supplier.get('avg_household_occupants'):
-            avg_household_occupants = supplier.get('avg_household_occupants')
-        supplier_data.append(avg_household_occupants)
+                supplier_data.append(primary_count)
+                supplier_data.append(secondary_count)
+                avg_household_occupants = None
+                if supplier.get('avg_household_occupants'):
+                    avg_household_occupants = supplier.get('avg_household_occupants')
+                supplier_data.append(avg_household_occupants)
 
-        sheet.append(supplier_data)
+                sheet.append(supplier_data)
+
+        else:
+            index = index + 1
+            supplier_data = []
+
+            supplier_data.append(index)
+
+            supplier_data.append(supplier['name'])
+            supplier_data.append(supplier['supplier_type'])
+
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+
+            supplier_data.append(supplier['subarea'])
+            supplier_data.append(supplier['area'])
+            supplier_data.append(supplier['city'])
+            supplier_data.append(str(supplier['address1']) + ' '+ str(supplier['address2']))
+
+            supplier_data.append(supplier['landmark'])
+            supplier_data.append(supplier['zipcode'])
+
+            primary_count = supplier.get('flat_count')
+            secondary_count = supplier.get('tower_count')
+            if supplier.get('unit_primary_count'):
+                primary_count = supplier.get('unit_primary_count')
+
+            if supplier.get('unit_secondary_count'):
+                secondary_count = supplier.get('unit_secondary_count')
+
+            supplier_data.append(primary_count)
+            supplier_data.append(secondary_count)
+            avg_household_occupants = None
+            if supplier.get('avg_household_occupants'):
+                avg_household_occupants = supplier.get('avg_household_occupants')
+            supplier_data.append(avg_household_occupants)
+
+            sheet.append(supplier_data)
 
     return book
