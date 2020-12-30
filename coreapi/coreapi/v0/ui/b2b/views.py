@@ -48,8 +48,9 @@ class ImportLead(APIView):
         wb = load_workbook(source_file)
         ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
         headers = {}
-
-        center = ProposalCenterMapping.objects.filter(proposal_id=campaign_id).first()
+        skip_row_list = []
+        lead_status = "Lead"
+        
         for index, row in enumerate(ws.iter_rows()):
             if index == 0:
                 i = 0
@@ -59,7 +60,6 @@ class ImportLead(APIView):
                     headers[key1] = i
                     i+=1
             else:
-
                 # Parsing excel columns
                 phone_number = get_value_from_list_by_key(row, headers.get('phone number'))
                 supplier_name = get_value_from_list_by_key(row, headers.get('supplier name'))
@@ -69,92 +69,129 @@ class ImportLead(APIView):
                 sub_sector_name = get_value_from_list_by_key(row, headers.get('sub sector'))
                 impl_timeline = get_value_from_list_by_key(row, headers.get('implementation timeline'))
                 meating_timeline = get_value_from_list_by_key(row, headers.get('meating timeline'))
-                lead_status = get_value_from_list_by_key(row, headers.get('lead status'))
                 comment = get_value_from_list_by_key(row, headers.get('comment'))
                 current_patner = get_value_from_list_by_key(row, headers.get('current partner'))
                 current_patner_feedback = get_value_from_list_by_key(row, headers.get('current patner feedback'))
                 current_patner_feedback_reason = get_value_from_list_by_key(row, headers.get('current patner feedback reason'))
                 prefered_patners = get_value_from_list_by_key(row, headers.get('prefered partners'))
-                submitted = get_value_from_list_by_key(row, headers.get('submitted'))
                 l1_answers = get_value_from_list_by_key(row, headers.get('l1 answers'))
+                l1_answer_2 = get_value_from_list_by_key(row, headers.get('l1 answer 2'))
                 l2_answers = get_value_from_list_by_key(row, headers.get('l2 answers'))
-                change_current_patner = get_value_from_list_by_key(row, headers.get('change current partner'))
-                
-                if sector_name is None or phone_number is None or submitted is None:
-                    return ui_utils.handle_response({}, data={"errors":"Sector \
-                     Phone Number or Submitted column should not be null"}, success=False)
+                l2_answer_2 = get_value_from_list_by_key(row, headers.get('l2 answer 2'))
+                call_back_preference = get_value_from_list_by_key(row, headers.get('call back preference'))
 
-                if impl_timeline is None:
+                if phone_number is None:
+                    skip_row_list.append(index)
+
+                if impl_timeline:
+                    impl_timeline = impl_timeline.lower()
+                else:
                     impl_timeline = "not given"
 
-                if meating_timeline is None:
+                if meating_timeline:
+                    meating_timeline = meating_timeline.lower()
+                else:
                     meating_timeline = "not given"
 
-                if change_current_patner is None:
-                    change_current_patner = "no"
-
-                if current_patner_feedback is None:
+                if current_patner_feedback:
+                    current_patner_feedback = current_patner_feedback
+                else:
                     current_patner_feedback = "NA"
+
+                change_current_patner = "no"
+                if current_patner_feedback == "Dissatisfied" or current_patner_feedback == "Extremely Dissatisfied":
+                    change_current_patner = "yes"
+
+                submitted = "no"
+                if meating_timeline is not "not given" and meating_timeline is not None:
+                    submitted = "yes"
+
+                contact_details = None
+                if phone_number:
+                    contact_details = ContactDetails.objects.filter(
+                        Q(mobile=phone_number)|Q(landline=phone_number)).first()
 
                 prefered_patners_array = []
                 if prefered_patners:
                     prefered_patners_split = prefered_patners.split(",")
                     prefered_patners_array = [row.strip() for row in prefered_patners_split]
 
-                contact_details = None
-                if phone_number:
-                    contact_details = ContactDetails.objects.filter(Q(mobile=phone_number)|Q(landline=phone_number)).first()
-                
+                prefered_patners_list = []
+                prefered_patners_id_list = []
+                preferred_company_other = None
+                if prefered_patners_array:
+                    prefered_patners_list = Organisation.objects.filter(name__in=prefered_patners_array).all()
+                    prefered_patners_id_list = [row.organisation_id for row in prefered_patners_list]
+                    prefered_patners_name_list = [row.name for row in prefered_patners_list]
+
+                    if len(prefered_patners_name_list) < len(prefered_patners_array):
+                        for prefered_patners_name in prefered_patners_array:
+                            if prefered_patners_name not in prefered_patners_name_list:
+                                preferred_company_other = prefered_patners_name
+                                break
+
                 supplier_id = ""
                 supplier_type = "RS"
                 sector = None
                 if sector_name is not None:
-                    sector = BusinessTypes.objects.filter(business_type=sector_name.lower()).first()
-                
+                    sector = BusinessTypes.objects.filter(
+                        business_type=sector_name.lower()).first()
+
                 sub_sector = None
                 if sub_sector_name is not None:
-                    sub_sector = BusinessSubTypes.objects.filter(business_sub_type=sub_sector_name.lower()).first()
+                    sub_sector = BusinessSubTypes.objects.filter(
+                        business_sub_type=sub_sector_name.lower()).first()
 
-                supplier_conditions = {}
+
                 supplier = None
+                city = None
+                area = None
+                supplier_name = None
                 if contact_details:
-                    requirement = Requirement.objects.filter(campaign_id = campaign_id, lead_by = contact_details, sub_sector = sub_sector, is_deleted='no').first()
-                    if requirement:
-                        continue
-
-                    supplier_id = contact_details.object_id
-                    supplier = SupplierTypeSociety.objects.filter(supplier_id=supplier_id).first()
-
-                    if not supplier:
-                        supplier = SupplierMaster.objects.filter(supplier_id=supplier_id).first()
-                        if supplier:
-                            supplier_type = supplier.supplier_type
-                elif supplier_name and city and area:
-                    supplier = SupplierTypeSociety.objects.filter(society_name=supplier_name, society_city=city, society_locality=area).first()
-                    if not supplier:
-                        supplier = SupplierMaster.objects.filter(supplier_name=supplier_name, city=city, area=area).first()
-                        if supplier:
-                            supplier_type = supplier.supplier_type
-                
-                # campaign = ProposalInfo.objects.filter(Q(type_of_end_customer="b_2_b_r_g")&Q(Q(name=supplier.stage)|Q(name=@supplier.city))).first()
-                # campaign_id = campaign.proposal_id
-
-                if supplier:
-                    supplier_id = supplier.supplier_id
-                    city = ""
-                    area = ""
                     
-                    if supplier_type != "RS":
-                        city = supplier.address_supplier.city
-                        area = supplier.address_supplier.area
-                    else:
+                    supplier_id = contact_details.object_id
+                    supplier = SupplierTypeSociety.objects.filter(
+                        supplier_id=supplier_id).first()
+                    if supplier:
+                        supplier_name = supplier.society_name
                         city = supplier.society_city
                         area = supplier.society_locality
-                    
-                    shortlisted_spaces = ShortlistedSpaces.objects.filter(proposal_id=campaign_id, object_id=supplier_id).first()
-                    if not shortlisted_spaces:
 
+                    else:
+                        supplier = SupplierMaster.objects.filter(
+                            supplier_id=supplier_id).first()
+
+                        if supplier:
+                            supplier_type = supplier.supplier_type
+                            city = supplier.city
+                            area = supplier.area
+                            supplier_name = supplier.supplier_name
+
+                campaign = None
+                if supplier:
+                    campaign = ProposalInfo.objects.filter(
+                        Q(type_of_end_customer__formatted_name="b_to_b_r_g") 
+                        & Q(name=area) | Q(name=city)).first()
+
+                lead_status = b2b_utils.get_lead_status(
+                    impl_timeline = impl_timeline,
+                    meating_timeline = meating_timeline,
+                    company=None,
+                    prefered_patners=prefered_patners_list,
+                    change_current_patner=change_current_patner.lower()
+                    )
+
+                if supplier and campaign:
+            
+                    campaign_id = campaign.proposal_id
+
+                    shortlisted_spaces = ShortlistedSpaces.objects.filter(
+                        proposal_id=campaign_id, object_id=supplier_id).first()
+
+                    if not shortlisted_spaces:
                         content_type = ui_utils.get_content_type(supplier_type)
+                        center = ProposalCenterMapping.objects.filter(
+                            proposal_id=campaign_id).first()
 
                         shortlisted_spaces = ShortlistedSpaces(
                             proposal_id=campaign_id,
@@ -168,7 +205,7 @@ class ImportLead(APIView):
                             requirement_given_date=datetime.datetime.now()
                         )
                         shortlisted_spaces.save()
-                    
+
                     shortlisted_spaces.requirement_given = 'yes'
                     shortlisted_spaces.requirement_given_date=datetime.datetime.now()
                     shortlisted_spaces.save()
@@ -176,67 +213,47 @@ class ImportLead(APIView):
                     current_patner_obj = None
                     current_company_other = None
                     if current_patner:
-                        current_patner_obj = Organisation.objects.filter(name=current_patner).first()
+                        current_patner_obj = Organisation.objects.filter(
+                            name=current_patner).first()
                         if not current_patner_obj:
                             current_company_other = current_patner
 
-                    prefered_patners_list = []
-                    prefered_patners_id_list = []
-                    preferred_company_other = None
-                    if prefered_patners_array:
-                        prefered_patners_list = Organisation.objects.filter(name__in=prefered_patners_array).all()
-                        prefered_patners_id_list = [row.organisation_id for row in prefered_patners_list]
-                        prefered_patners_name_list = [row.name for row in prefered_patners_list]
-
-                        if len(prefered_patners_name_list) < len(prefered_patners_array):
-                            for prefered_patners_name in prefered_patners_array:
-                                if prefered_patners_name not in prefered_patners_name_list:
-                                    preferred_company_other = prefered_patners_name
-                                    break
-                    
-                    if submitted and submitted.lower() == "yes":
+                    if submitted == "yes":
                         shortlisted_spaces.color_code = 1
                         shortlisted_spaces.save()
+                        
+                        pre_requirement = PreRequirement(
+                            campaign_id=campaign_id,
+                            shortlisted_spaces=shortlisted_spaces,
+                            # company = company,
+                            current_company = current_patner_obj,
+                            current_company_other = current_company_other,
+                            # is_current_patner = "yes" if current_patner_obj == company else "no",
+                            current_patner_feedback = current_patner_feedback,
+                            current_patner_feedback_reason = current_patner_feedback_reason,
+                            preferred_company_other = preferred_company_other,
+                            sector = sector,
+                            sub_sector = sub_sector,
+                            lead_by = contact_details,
+                            impl_timeline = impl_timeline,
+                            meating_timeline = meating_timeline,
+                            lead_status = lead_status,
+                            comment = comment,
+                            varified_ops = 'no',
+                            varified_bd = 'no',
+                            lead_date = datetime.datetime.now(),
+                            l1_answers = l1_answers,
+                            l1_answer_2 = l1_answer_2,
+                            l2_answers = l2_answers,
+                            l2_answer_2 = l2_answer_2,
+                            change_current_patner = change_current_patner.lower(),
+                            call_back_preference = call_back_preference.lower(),
+                        )
+                        pre_requirement.save()
 
-                        companies = Organisation.objects.filter(business_type=sector)
-                        for company in companies:
-                            lead_status = b2b_utils.get_lead_status(
-                                impl_timeline = impl_timeline.lower(),
-                                meating_timeline = meating_timeline.lower(),
-                                company=company,
-                                prefered_patners=prefered_patners_list,
-                                change_current_patner=change_current_patner.lower()
-                                )
+                        if prefered_patners_list:
+                            pre_requirement.preferred_company.set(prefered_patners_list)
 
-
-                            requirement = Requirement(
-                                campaign_id=campaign_id,
-                                shortlisted_spaces=shortlisted_spaces,
-                                company = company,
-                                current_company = current_patner_obj,
-                                current_company_other = current_company_other,
-                                is_current_patner = "yes" if current_patner_obj == company else "no",
-                                current_patner_feedback = current_patner_feedback,
-                                current_patner_feedback_reason = current_patner_feedback_reason,
-                                preferred_company_other = preferred_company_other,
-                                sector = sector,
-                                sub_sector = sub_sector,
-                                lead_by = contact_details,
-                                impl_timeline = impl_timeline.lower(),
-                                meating_timeline = meating_timeline.lower(),
-                                lead_status = lead_status,
-                                comment = comment,
-                                varified_ops = 'no',
-                                varified_bd = 'no',
-                                lead_date = datetime.datetime.now(),
-                                l1_answers = l1_answers,
-                                l2_answers = l2_answers,
-                                change_current_patner = change_current_patner.lower()
-                            )
-                            requirement.save()
-
-                            if prefered_patners_list:
-                                requirement.preferred_company.set(prefered_patners_list)
                     else:
                         if shortlisted_spaces.color_code != 1:
                             shortlisted_spaces.color_code = 2
@@ -252,8 +269,8 @@ class ImportLead(APIView):
                             area = area,
                             sector_id = sector.id if sector else None,
                             sub_sector_id = sub_sector.id if sub_sector else None,
-                            implementation_timeline = impl_timeline.lower(),
-                            meating_timeline = meating_timeline.lower(),
+                            implementation_timeline = impl_timeline,
+                            meating_timeline = meating_timeline,
                             lead_status = lead_status,
                             comment = comment,
                             current_patner_id = current_patner_obj.organisation_id if current_patner_obj else None,
@@ -262,13 +279,15 @@ class ImportLead(APIView):
                             current_patner_feedback_reason = current_patner_feedback_reason,
                             prefered_patners = prefered_patners_id_list,
                             prefered_patner_other = preferred_company_other,
-                            status="open",
+                            status="closed",
                             created_at = datetime.datetime.now(),
                             updated_at = datetime.datetime.now(),
                             l1_answers = l1_answers,
-                            l2_answers = l2_answers
+                            l1_answer_2 = l1_answer_2,
+                            l2_answers = l2_answers,
+                            l2_answer_2 = l2_answer_2,
+                            call_back_preference = call_back_preference.lower()
                         ).save()
-
                 else:
 
                     SuspenseLead(
@@ -278,8 +297,8 @@ class ImportLead(APIView):
                         area = area,
                         sector_name = sector_name,
                         sub_sector_name = sub_sector_name,
-                        implementation_timeline = impl_timeline.lower(),
-                        meating_timeline = meating_timeline.lower(),
+                        implementation_timeline = impl_timeline,
+                        meating_timeline = meating_timeline,
                         lead_status = lead_status,
                         comment = comment,
                         current_patner = current_patner,
@@ -289,10 +308,17 @@ class ImportLead(APIView):
                         created_at = datetime.datetime.now(),
                         updated_at = datetime.datetime.now(),
                         l1_answers = l1_answers,
-                        l2_answers = l2_answers
+                        l1_answer_2 = l1_answer_2,
+                        l2_answers = l2_answers,
+                        l2_answer_2 = l2_answer_2,
+                        call_back_preference = call_back_preference.lower()
                     ).save()
-        
-        return ui_utils.handle_response({}, data={}, success=True)
+
+        skip_row_list_split = ""
+        if skip_row_list:
+            skip_row_list_split = skip_row_list.split(",")
+
+        return ui_utils.handle_response({}, data={"skip rows":skip_row_list_split}, success=True)
     
 class RequirementClass(APIView):
     
@@ -409,8 +435,8 @@ class SuspenseLeadClass(APIView):
         header_list = ['Phone Number', 'Supplier Name', 'City', 'Area', 
             'Sector', 'Sub Sector', 'Current Partner', 'Current Patner Feedback',
             'Current Patner Feedback Reason', 'Prefered Partners','Implementation Timeline',
-            'Meating Timeline', 'L1 Answers', 'L2 Answers', 'Lead Status', 'Comment',
-            'Change Current Partner']
+            'Meating Timeline', 'L1 Answers','L1 Answer 2', 'L2 Answers','L2 Answer 2', 'Lead Status', 'Comment','Submitted',
+            'Call Back Preference']
 
         book = Workbook()
         sheet = book.active
@@ -429,6 +455,30 @@ class SuspenseLeadClass(APIView):
             if row1['current_patner_feedback'] == "Dissatisfied" or row1['current_patner_feedback'] == "Extremely Dissatisfied":
                 change_current_patner = "yes"
 
+            submitted = "no"
+            if row1['meating_timeline'] is not "not given" and row1['meating_timeline'] is not None:
+                submitted = "yes"
+
+            try:
+                l1_answer_2 = row1['l1_answer_2']
+            except Exception as e:
+                l1_answer_2 = None
+
+            try:
+                l2_answer_2 = row1['l2_answer_2']
+            except Exception as e:
+                l2_answer_2 = None
+
+            try:
+                call_back_preference = row1['call_back_preference']
+            except Exception as e:
+                call_back_preference = None
+
+            try:
+                lead_status = row1['lead_status']
+            except Exception as e:
+                lead_status = None
+
             row2 = [
                 row1['phone_number'],
                 row1['supplier_name'],
@@ -442,11 +492,14 @@ class SuspenseLeadClass(APIView):
                 ", ".join(row1['prefered_patners']),
                 row1['implementation_timeline'],
                 row1['meating_timeline'],
-                row1['l1_answers'],
-                row1['l2_answers'],
-                row1['lead_status'],
+                row1['l1_answers'] if row1['l1_answers'] else None,
+                l1_answer_2,
+                row1['l2_answers'] if row1['l2_answers'] else None,
+                l2_answer_2,
+                lead_status,
                 row1['comment'],
-                change_current_patner
+                submitted,
+                call_back_preference,
             ]
             sheet.append(row2)
 
@@ -657,10 +710,27 @@ class BrowsedToRequirement(APIView):
                     contact_details = ContactDetails.objects.filter(Q(mobile=browsed["phone_number"])|Q(landline=browsed["phone_number"])).first()
                 
                 prefered_patners_list = []
-                if browsed["prefered_patners"]:
-                    prefered_patners_list = Organisation.objects.filter(organisation_id__in=browsed["prefered_patners"]).all()
+                if browsed_id["prefered_patners_id"]:
+                    prefered_patners_list = Organisation.objects.filter(organisation_id__in=browsed_id["prefered_patners_id"]).all()
                 
                 shortlisted_spaces_id = browsed["shortlisted_spaces_id"]
+
+                change_current_patner = "no"
+                if browsed["current_patner_feedback"] == "Dissatisfied" or browsed["current_patner_feedback"] == "Extremely Dissatisfied":
+                    change_current_patner = "yes"
+
+                lead_status = b2b_utils.get_lead_status(
+                    impl_timeline = browsed_id["implementation_timeline"],
+                    meating_timeline = browsed_id["meating_timeline"],
+                    company=None,
+                    prefered_patners=prefered_patners_list,
+                    change_current_patner=change_current_patner.lower()
+                    )
+
+                try:
+                    call_back_preference = browsed["call_back_preference"]
+                except Exception as e:
+                    call_back_preference = "NA"
 
                 requirement = PreRequirement(
                     campaign_id=browsed["campaign_id"],
@@ -675,7 +745,7 @@ class BrowsedToRequirement(APIView):
                     comment = browsed_id["comment"],
                     varified_ops = 'no',
                     varified_bd = 'no',
-                    lead_status = browsed["lead_status"],
+                    lead_status = lead_status,
                     lead_date = datetime.datetime.now(),
                     preferred_company_other = browsed["prefered_patner_other"],
                     current_company_other = browsed["current_patner_other"],
@@ -683,7 +753,8 @@ class BrowsedToRequirement(APIView):
                     l1_answer_2 = browsed["l1_answer_2"],
                     l2_answers = browsed["l2_answers"],
                     l2_answer_2 = browsed["l2_answer_2"],
-                    sub_sector_id = browsed["sub_sector_id"]
+                    sub_sector_id = browsed["sub_sector_id"],
+                    call_back_preference = call_back_preference
                 )
                 requirement.save()
 
