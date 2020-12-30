@@ -707,8 +707,6 @@ class BrowsedToRequirement(APIView):
                     return ui_utils.handle_response({}, data={
                         "error":"meeting time not given"}, success=False)
 
-                mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id["_id"])}, {"$set":{"status":"converted"}})
-                
                 contact_details = None
                 if browsed["phone_number"]:
                     contact_details = ContactDetails.objects.filter(Q(mobile=browsed["phone_number"])|Q(landline=browsed["phone_number"])).first()
@@ -736,10 +734,15 @@ class BrowsedToRequirement(APIView):
                 except Exception as e:
                     call_back_preference = "NA"
 
+                if browsed_id["current_patner_id"] == "":
+                    current_patner_id = None
+                else:
+                    current_patner_id = browsed_id["current_patner_id"]
+
                 requirement = PreRequirement(
                     campaign_id=browsed["campaign_id"],
                     shortlisted_spaces_id=browsed["shortlisted_spaces_id"],
-                    current_company_id = browsed_id["current_patner_id"],
+                    current_company_id = current_patner_id,
                     current_patner_feedback = browsed["current_patner_feedback"],
                     current_patner_feedback_reason = browsed["current_patner_feedback_reason"],
                     sector_id = browsed["sector_id"],
@@ -752,7 +755,7 @@ class BrowsedToRequirement(APIView):
                     lead_status = lead_status,
                     lead_date = datetime.datetime.now(),
                     preferred_company_other = browsed["prefered_patner_other"],
-                    current_company_other = browsed["current_patner_other"],
+                    current_company_other = browsed_id["current_company_other"],
                     l1_answers = browsed["l1_answers"],
                     l1_answer_2 = browsed["l1_answer_2"],
                     l2_answers = browsed["l2_answers"],
@@ -764,6 +767,8 @@ class BrowsedToRequirement(APIView):
 
                 if prefered_patners_list:
                     requirement.preferred_company.set(prefered_patners_list)
+
+                mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id["_id"])}, {"$set":{"status":"converted"}})
 
         if shortlisted_spaces_id:
             ShortlistedSpaces.objects.filter(id=shortlisted_spaces_id).update(color_code=1, requirement_given='yes', requirement_given_date=datetime.datetime.now())
