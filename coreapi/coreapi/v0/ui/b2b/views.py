@@ -591,7 +591,7 @@ class LeadOpsVerification(APIView):
                             impl_timeline = requirement.impl_timeline,
                             meating_timeline = requirement.meating_timeline,
                             company=company,
-                            prefered_patners=requirement.preferred_company,
+                            prefered_patners=requirement.preferred_company.all(),
                             change_current_patner=requirement.change_current_patner.lower()
                             )
 
@@ -665,6 +665,10 @@ class LeadOpsVerification(APIView):
                             )
                             new_requirement.save()
                             verified += 1
+
+                            preferred_partners_list = requirement.preferred_company.all()
+                            if preferred_partners_list:
+                                new_requirement.preferred_company.set(preferred_partners_list)
                     requirement.save()
             else:
                 return ui_utils.handle_response({}, data={"error":"No companies for the service found"}, success=False)
@@ -727,6 +731,11 @@ class BrowsedToRequirement(APIView):
                     change_current_patner=change_current_patner.lower()
                     )
 
+                try:
+                    call_back_preference = browsed["call_back_preference"]
+                except Exception as e:
+                    call_back_preference = "NA"
+
                 requirement = PreRequirement(
                     campaign_id=browsed["campaign_id"],
                     shortlisted_spaces_id=browsed["shortlisted_spaces_id"],
@@ -749,7 +758,7 @@ class BrowsedToRequirement(APIView):
                     l2_answers = browsed["l2_answers"],
                     l2_answer_2 = browsed["l2_answer_2"],
                     sub_sector_id = browsed["sub_sector_id"],
-                    call_back_preference = browsed["call_back_preference"]
+                    call_back_preference = call_back_preference
                 )
                 requirement.save()
 

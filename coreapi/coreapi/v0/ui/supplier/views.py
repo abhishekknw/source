@@ -808,35 +808,57 @@ class SocietyList(APIView):
             state = request.GET.get("state")
             state_name = request.GET.get("state_name")
             search = request.GET.get("search")
+            mobile_number = request.GET.get("mobile_number")
             society_objects = []
-            if user.is_superuser:
-                society_objects = SupplierTypeSociety.objects
-                #sort list based on state selected.
-                if state and state_name:
-                    society_objects = society_objects.filter(Q(society_state=state) | Q(society_state=state_name))
+            if mobile_number:
 
-                #sort list based on search keyword.
-                if search:
-                    society_objects = society_objects.filter(Q(society_name__icontains=search) | Q(society_address1__icontains=search) | Q(society_address2__icontains=search)
-                                      | Q(society_city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
-
-                society_objects = society_objects.all().order_by('society_name')
+                count = len(str(mobile_number))
+                if count is not 10:
+                    
+                    return handle_response(class_name,
+                     data={"error":"Please enter 10 digit number"}, 
+                     request=request)
+                else:
+                    society_objects = SupplierTypeSociety.objects
+                    contact_details = ContactDetails.objects.values_list('object_id', flat=True).filter(
+                        Q(landline=mobile_number) | Q(mobile=mobile_number))
+                    
+                    if contact_details:
+                        society_objects =  society_objects.filter(
+                            supplier_id__in = contact_details)
+                    else:
+                        return handle_response(class_name,data={"error":"No data found"}, 
+                             request=request)
             else:
-                # city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
-                #                                              v0_constants.society)                
-                vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
-                society_objects = SupplierTypeSociety.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
-                                                                      & Q(representative__isnull=False))
-                #sort list based on state selected.
-                if state and state_name:
-                    society_objects = society_objects.filter(Q(society_state=state) | Q(society_state=state_name))
 
-                #sort list based on search keyword.
-                if search:
-                    society_objects = society_objects.filter(Q(society_name__icontains=search) | Q(society_address1__icontains=search) | Q(society_address2__icontains=search)
-                                      | Q(society_city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
+                if user.is_superuser:
+                    society_objects = SupplierTypeSociety.objects
+                    #sort list based on state selected.
+                    if state and state_name:
+                        society_objects = society_objects.filter(Q(society_state=state) | Q(society_state=state_name))
 
-                society_objects = society_objects.all().order_by('society_name')
+                    #sort list based on search keyword.
+                    if search:
+                        society_objects = society_objects.filter(Q(society_name__icontains=search) | Q(society_address1__icontains=search) | Q(society_address2__icontains=search)
+                                          | Q(society_city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
+
+                    society_objects = society_objects.all().order_by('society_name')
+                else:
+                    # city_query = get_region_based_query(user, v0_constants.valid_regions['CITY'],
+                    #                                              v0_constants.society)                
+                    vendor_ids = Organisation.objects.filter(created_by_org=org_id).values('organisation_id')
+                    society_objects = SupplierTypeSociety.objects.filter((Q(representative__in=vendor_ids) | Q(representative=org_id))
+                                                                          & Q(representative__isnull=False))
+                    #sort list based on state selected.
+                    if state and state_name:
+                        society_objects = society_objects.filter(Q(society_state=state) | Q(society_state=state_name))
+
+                    #sort list based on search keyword.
+                    if search:
+                        society_objects = society_objects.filter(Q(society_name__icontains=search) | Q(society_address1__icontains=search) | Q(society_address2__icontains=search)
+                                          | Q(society_city__icontains=search) | Q(supplier_id__icontains=search) | Q(supplier_code__icontains=search))
+
+                    society_objects = society_objects.all().order_by('society_name')
 
             #pagination
             society_objects_paginate = paginate(society_objects,SupplierTypeSocietySerializer,request)
@@ -853,6 +875,51 @@ class SocietyList(APIView):
             return handle_response(class_name, data=data, success=True)
         except Exception as e:
             return handle_response(class_name, exception_object=e, request=request)
+
+
+
+class SocietyListByNumber(APIView):
+
+    def get(self, request):
+        class_name = self.__class__.__name__
+
+        try:
+            search = request.GET.get("search")
+            count = len(str(search))
+            if count is not 10:
+                
+                return handle_response(class_name,
+                 data={"error":"Please enter 10 digit number"}, 
+                 request=request)
+            else:
+                society_objects = SupplierTypeSociety.objects
+                contact_details = ContactDetails.objects.values_list('object_id', flat=True).filter(
+                    Q(landline=search) | Q(mobile=search))
+                
+                if contact_details:
+            
+                    society_objects =  society_objects.filter(
+                        supplier_id__icontains = contact_details)
+                else:
+                    return handle_response(class_name,data={"error":"No data found"}, 
+                         request=request)
+                #pagination
+                society_objects_paginate = paginate(society_objects,SupplierTypeSocietySerializer,request)
+                suppliers = manipulate_object_key_values(society_objects_paginate["list"])
+                societies_with_images = get_supplier_image(suppliers, v0_constants.society_name)
+
+                data = {
+                    'count': society_objects_paginate["count"],
+                    'has_next':society_objects_paginate["has_next"],
+                    'has_previous':society_objects_paginate["has_previous"],
+                    'societies': societies_with_images,
+                }
+                return handle_response(class_name, data=data, success=True)
+
+        except Exception as e:
+            return handle_response(class_name, exception_object=e, request=request)
+
+
 
 class CorporateViewSet(viewsets.ViewSet):
     """
