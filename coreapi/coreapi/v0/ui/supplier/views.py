@@ -825,7 +825,7 @@ class SocietyList(APIView):
                     
                     if contact_details:
                         society_objects =  society_objects.filter(
-                            supplier_id__icontains = contact_details)
+                            supplier_id__in = contact_details)
                     else:
                         return handle_response(class_name,data={"error":"No data found"}, 
                              request=request)
