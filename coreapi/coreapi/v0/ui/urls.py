@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 
 from v0.ui import views
 
-from v0.ui.supplier.views import SocietyAPIView, SocietyAPIFiltersView, SocietyAPIFiltersListView, SocietyList, \
+from v0.ui.supplier.views import SocietyListByNumber, SocietyAPIView, SocietyAPIFiltersView, SocietyAPIFiltersListView, SocietyList, \
     SocietyAPISortedListView, SocietyAPISocietyIdsView, GenerateSupplierIdAPIView, checkSupplierCodeAPIView, \
     SupplierImageDetails, CorporateViewSet, GymViewSet, SalonViewSet, RetailShopViewSet, EducationalInstituteViewSet, HordingViewSet, BusShelter, \
     BusShelterSearchView, getBusShelter, SaveBasicCorporateDetailsAPIView, SaveBuildingDetailsAPIView, CompanyDetailsAPIView, \
@@ -57,6 +57,8 @@ urlpatterns = [
     url(r'^society/$', SocietyAPIView.as_view()),
     # url(r'^society/list/$', views.SocietyAPIListView.as_view()),
     url(r'^society/list/$', SocietyList.as_view()),
+    url(r'^society/list/by/number/$', SocietyListByNumber.as_view()),
+
     url(r'^busshelter/list/$', BusShelter.as_view()),
     url(r'^busshelter/search/$', BusShelterSearchView.as_view()),
     url(r'^society/filter/$', SocietyAPIFiltersView.as_view()),
