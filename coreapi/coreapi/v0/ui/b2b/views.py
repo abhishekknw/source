@@ -750,7 +750,7 @@ class BrowsedToRequirement(APIView):
                     varified_bd = 'no',
                     lead_status = lead_status,
                     lead_date = datetime.datetime.now(),
-                    preferred_company_other = browsed["prefered_patner_other"],
+                    preferred_company_other = browsed_id["preferred_company_other"],
                     current_company_other = browsed_id["current_company_other"],
                     l1_answers = browsed["l1_answers"],
                     l1_answer_2 = browsed["l1_answer_2"],
