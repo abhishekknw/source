@@ -455,10 +455,6 @@ class SuspenseLeadClass(APIView):
             if row1['current_patner_feedback'] == "Dissatisfied" or row1['current_patner_feedback'] == "Extremely Dissatisfied":
                 change_current_patner = "yes"
 
-            submitted = "no"
-            if row1['meating_timeline'] is not "not given" and row1['meating_timeline'] is not None:
-                submitted = "yes"
-
             try:
                 l1_answer_2 = row1['l1_answer_2']
             except Exception as e:
@@ -498,7 +494,7 @@ class SuspenseLeadClass(APIView):
                 l2_answer_2,
                 lead_status,
                 row1['comment'],
-                submitted,
+                "no",
                 call_back_preference,
             ]
             sheet.append(row2)
