@@ -4181,7 +4181,7 @@ def prepare_shortlisted_spaces_and_inventories(proposal_id, page, user, assigned
         if page:
             entries = 10
         else:
-            entries = 500
+            entries = len(shortlisted_spaces)
             page = 1
         paginator = Paginator(shortlisted_spaces, entries)
         try:
