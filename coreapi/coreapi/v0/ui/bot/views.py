@@ -22,6 +22,7 @@ class GetDataFromBot(APIView):
 
     def post(self, request):
         data = request.data
+        mongo_client.bot_log.insert_one(data)
         if data['phone']:
             response = bot_utils.bot_to_requirement(request, data)        
             return ui_utils.handle_response({}, data="Bot data successfully Added", success=True)
