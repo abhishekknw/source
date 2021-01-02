@@ -46,7 +46,14 @@ def bot_to_requirement(request, data):
         call_back_preference = row.get("contactBackTime")
 
         if current_patner_feedback:
-            current_patner_feedback = current_patner_feedback
+            if current_patner_feedback == "Extremely dis-satisfied":
+                current_patner_feedback = "Extremely Dissatisfied"
+            elif current_patner_feedback == "Dis-satisfied":
+                current_patner_feedback = "Dissatisfied"
+            elif current_patner_feedback == "Satisfied":
+                current_patner_feedback = "Satisfied"
+            else:
+                current_patner_feedback = "NA"
         else:
             current_patner_feedback = "NA"
 
