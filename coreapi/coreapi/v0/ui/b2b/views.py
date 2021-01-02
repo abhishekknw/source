@@ -1225,7 +1225,7 @@ class GetLeadsByDate(APIView):
         start_date = date_time_obj.replace(hour=0, minute=0, second=0)
         end_date = date_time_obj.replace(hour=23, minute=59, second=59)
         organisation_id = request.user.profile.organisation.organisation_id
-        lead_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"no"}]}).count()
+        lead_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}]}).count()
         existing_client_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}]}).count()
             
         lead_dict = {
@@ -1244,7 +1244,7 @@ class GetLeadsCampaignByDate(APIView):
         end_date = date_time_obj.replace(hour=23, minute=59, second=59)
         organisation_id = request.user.profile.organisation.organisation_id
 
-        leads = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"no"}]})
+        leads = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}]})
         campaign_ids = set()
         lead_count_purchased_map = {}
         lead_count_not_purchased_map = {}
@@ -1500,7 +1500,7 @@ class GetLeadDistributionCampaign(APIView):
         if lead_type == "Survey":
             lead = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}]}))
         else:
-            lead = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"is_current_company":"no"}]}))
+            lead = list(mongo_client.leads.find({"company_id": organisation_id}))
         
         campaign_list = []
         for row in lead:
@@ -1516,7 +1516,7 @@ class GetLeadDistributionCampaign(APIView):
         all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).\
             values('proposal_id', 'object_id', 'is_completed', 'proposal__name', 'proposal__tentative_start_date',
                 'proposal__tentative_end_date', 'proposal__campaign_state', 'supplier_code')
-        print("all_shortlisted_supplier",all_shortlisted_supplier)
+
         all_campaign_dict = {}
         all_shortlisted_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] == 'RS']
         all_supplier_society = SupplierTypeSociety.objects.filter(supplier_id__in=all_shortlisted_supplier_id).values('supplier_id', 'flat_count')
