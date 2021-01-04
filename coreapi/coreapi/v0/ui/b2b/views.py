@@ -1712,41 +1712,26 @@ class GetDynamicLeadFormHeaders(APIView):
 
         campaign_id = request.query_params.get("campaign_id")
         lead_form = mongo_client.leads_forms.find({"campaign_id": campaign_id})
-        header_data = {}
-        header_keys = {}
-        header_values = {}
 
-
-        # lead_status = requirement.lead_status
+        context = {}
         lead_form_key = None
+
         for key, lead_form_keys in lead_form[0]["data"].items():
-            print(lead_form_keys["key_name"])
             lead_form_key = lead_form_keys["item_id"]
-            lead_form_key_header = lead_form_keys["key_name"]
+            header_keys = lead_form_keys["key_name"]        
         
-        lead_form_key_2 = None
-        if lead_form_key:
-            for key, value in lead_form["global_hot_lead_criteria"].items():
-                if value.get("or"):
-                    for key1, value1 in value["or"].items():
-                        if str(key1) == str(lead_form_key):
-                            lead_form_key_2 = key
-            if lead_form_key_2 and lead_form["hotness_mapping"].get(lead_form_key_2):
-                lead_form_values = lead_form["hotness_mapping"].get(lead_form_key_2)
-                print(lead_form_values)
-                
+            lead_form_key_2 = None
+            if lead_form_key:
+                for key, value in lead_form[0]["global_hot_lead_criteria"].items():
+                    if value.get("or"):
+                        for key1, value1 in value["or"].items():
+                            if str(key1) == str(lead_form_key):
+                                lead_form_key_2 = key
+                if lead_form_key_2 and lead_form[0]["hotness_mapping"].get(lead_form_key_2):
+                    header_values = lead_form[0]["hotness_mapping"].get(lead_form_key_2)
+                else:
+                    header_values = header_keys
+            
+            context[header_keys] = header_values
 
-        if lead_form and lead_form[0] and 'hotness_mapping' in lead_form[0]:
-            for key in lead_form[0]['hotness_mapping']:
-                header_keys[key] = lead_form[0]['hotness_mapping'][key]
-                header_values[key] = 0
-        
-        for value in lead_form[0]['data']:
-            for data in lead_form[0]['data'][str(value)]:
-                if lead_form[0]['data'][str(value)]['isHotLead'] != True :
-                    header_keys['lead_Form_keys'] = lead_form[0]['data'][str(value)]['key_name']
-        
-        header_data['header_keys'] = header_keys
-        header_data['header_values'] = header_values
-
-        return ui_utils.handle_response({}, data=header_data, success=True)
+        return ui_utils.handle_response({}, data=context, success=True)
