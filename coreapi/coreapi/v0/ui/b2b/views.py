@@ -1730,7 +1730,7 @@ class GetDynamicLeadFormHeaders(APIView):
                 if lead_form_key_2 and lead_form[0]["hotness_mapping"].get(lead_form_key_2):
                     header_values = lead_form[0]["hotness_mapping"].get(lead_form_key_2)
                 else:
-                    header_values = header_keys
+                    header_values = None
             
             context[header_keys] = header_values
 
