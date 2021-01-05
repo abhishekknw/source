@@ -1,11 +1,12 @@
 from __future__ import absolute_import
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
-from .views import (MobileNumberVerification, GetDataFromBot)
+from .views import (MobileNumberVerification, GetDataFromBot, GetDataFromBotToSheet)
 
 urlpatterns = [
     url(r'^mobile-verification/$', MobileNumberVerification.as_view()),
     url(r'^bot-data/$', GetDataFromBot.as_view()),
+    url(r'^bot-to-sheet/$', GetDataFromBotToSheet.as_view()),
 ]
 
 # router = DefaultRouter()

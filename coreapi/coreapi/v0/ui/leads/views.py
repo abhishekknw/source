@@ -40,6 +40,7 @@ import hashlib
 from bson.objectid import ObjectId
 from v0.ui.proposal.models import ProposalInfo, ProposalCenterSuppliers, BookingSubstatus
 from v0.ui.account.models import Profile
+from v0.ui.b2b.models import Requirement
 from v0.ui.dynamic_suppliers.utils import get_dynamic_single_supplier_data
 from .utils import convert_xldate_as_datetime, add_society_to_campaign
 
@@ -1810,8 +1811,11 @@ class CampaignDataInExcelSheet(APIView):
                     comment_list[row.related_to][row.shortlisted_spaces_id] = []
 
                 comment_list[row.related_to][row.shortlisted_spaces_id].append(row.comment)
-
-        excel_book = prepare_campaign_specific_data_in_excel(data, comment_list)
+        
+        if data["campaign"].get("type_of_end_customer_formatted_name") == "b_to_b_l_d":
+            excel_book = prepare_campaign_leads_data_in_excel(data, comment_list)
+        else:    
+            excel_book = prepare_campaign_specific_data_in_excel(data, comment_list)
         resp = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         resp['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
@@ -2126,3 +2130,121 @@ class LeadsKeys(APIView):
                     hotness_mapping[key] = True
         
         return handle_response('', data=hotness_mapping, success=True)
+
+def prepare_campaign_leads_data_in_excel(data, comment_list):
+    
+    header_list = [
+        'Index', 'Supplier Name', 'Supplier Type' , 'Current Partner', 'Current Partner Other', 'FeedBack', 'Preferred Partner', 'Preferred Partner Other',
+        'L1 Answer 1 ', 'L1 Answer 1', 'L2 Answer 1', 'L2 Answer 2', 'Implementation Time', 'Meeting Time', 'Lead Given by', 'Subarea',
+        'Area', 'City', 'Address', 'Landmark', 'PinCode', 'Unit Primary Count / Flat Count',
+        'Unit Secondary Count / Tower Count', 'Average Household Points',
+    ]
+
+    book = Workbook()
+    sheet = book.active
+    sheet.append(header_list)
+    index = 0
+    for supplier in data['shortlisted_suppliers']:
+        requirement_data = Requirement.objects.filter(company_campaign_id=supplier['proposal'], company_shortlisted_spaces_id=supplier['id'])
+        if requirement_data:
+            for requirement in requirement_data:
+                index = index + 1
+                supplier_data = []
+
+                supplier_data.append(index)
+
+                supplier_data.append(supplier['name'])
+                supplier_data.append(supplier['supplier_type'])
+
+                supplier_data.append(requirement.current_company.name if requirement.current_company else None)
+                supplier_data.append(requirement.current_company_other)
+                supplier_data.append(requirement.current_patner_feedback)
+                preferred_company = None
+                preferred_company_list = requirement.preferred_company.all()
+                company_list = []
+                if preferred_company_list:
+                    for row in preferred_company_list:
+                        company_list.append(row.name)
+                preferred_company = ", ".join(company_list)
+                supplier_data.append(preferred_company)
+                supplier_data.append(requirement.preferred_company_other)
+                supplier_data.append(requirement.l1_answers)
+                supplier_data.append(requirement.l1_answer_2)
+                supplier_data.append(requirement.l2_answers)
+                supplier_data.append(requirement.l2_answer_2)
+                supplier_data.append(requirement.impl_timeline)
+                supplier_data.append(requirement.meating_timeline)
+                supplier_data.append(requirement.lead_by.name)
+
+                supplier_data.append(supplier['subarea'])
+                supplier_data.append(supplier['area'])
+                supplier_data.append(supplier['city'])
+                supplier_data.append(str(supplier['address1']) + ' '+ str(supplier['address2']))
+
+                supplier_data.append(supplier['landmark'])
+                supplier_data.append(supplier['zipcode'])
+
+                primary_count = supplier.get('flat_count')
+                secondary_count = supplier.get('tower_count')
+                if supplier.get('unit_primary_count'):
+                    primary_count = supplier.get('unit_primary_count')
+
+                if supplier.get('unit_secondary_count'):
+                    secondary_count = supplier.get('unit_secondary_count')
+
+                supplier_data.append(primary_count)
+                supplier_data.append(secondary_count)
+                avg_household_occupants = None
+                if supplier.get('avg_household_occupants'):
+                    avg_household_occupants = supplier.get('avg_household_occupants')
+                supplier_data.append(avg_household_occupants)
+
+                sheet.append(supplier_data)
+
+        else:
+            index = index + 1
+            supplier_data = []
+
+            supplier_data.append(index)
+
+            supplier_data.append(supplier['name'])
+            supplier_data.append(supplier['supplier_type'])
+
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+
+            supplier_data.append(supplier['subarea'])
+            supplier_data.append(supplier['area'])
+            supplier_data.append(supplier['city'])
+            supplier_data.append(str(supplier['address1']) + ' '+ str(supplier['address2']))
+
+            supplier_data.append(supplier['landmark'])
+            supplier_data.append(supplier['zipcode'])
+
+            primary_count = supplier.get('flat_count')
+            secondary_count = supplier.get('tower_count')
+            if supplier.get('unit_primary_count'):
+                primary_count = supplier.get('unit_primary_count')
+
+            if supplier.get('unit_secondary_count'):
+                secondary_count = supplier.get('unit_secondary_count')
+
+            supplier_data.append(primary_count)
+            supplier_data.append(secondary_count)
+            avg_household_occupants = None
+            if supplier.get('avg_household_occupants'):
+                avg_household_occupants = supplier.get('avg_household_occupants')
+            supplier_data.append(avg_household_occupants)
+
+            sheet.append(supplier_data)
+
+    return book

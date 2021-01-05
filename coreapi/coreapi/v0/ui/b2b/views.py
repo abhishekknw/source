@@ -455,10 +455,6 @@ class SuspenseLeadClass(APIView):
             if row1['current_patner_feedback'] == "Dissatisfied" or row1['current_patner_feedback'] == "Extremely Dissatisfied":
                 change_current_patner = "yes"
 
-            submitted = "no"
-            if row1['meating_timeline'] is not "not given" and row1['meating_timeline'] is not None:
-                submitted = "yes"
-
             try:
                 l1_answer_2 = row1['l1_answer_2']
             except Exception as e:
@@ -498,7 +494,7 @@ class SuspenseLeadClass(APIView):
                 l2_answer_2,
                 lead_status,
                 row1['comment'],
-                submitted,
+                "no",
                 call_back_preference,
             ]
             sheet.append(row2)
@@ -591,7 +587,7 @@ class LeadOpsVerification(APIView):
                             impl_timeline = requirement.impl_timeline,
                             meating_timeline = requirement.meating_timeline,
                             company=company,
-                            prefered_patners=requirement.preferred_company,
+                            prefered_patners=requirement.preferred_company.all(),
                             change_current_patner=requirement.change_current_patner.lower()
                             )
 
@@ -665,6 +661,10 @@ class LeadOpsVerification(APIView):
                             )
                             new_requirement.save()
                             verified += 1
+
+                            preferred_partners_list = requirement.preferred_company.all()
+                            if preferred_partners_list:
+                                new_requirement.preferred_company.set(preferred_partners_list)
                     requirement.save()
             else:
                 return ui_utils.handle_response({}, data={"error":"No companies for the service found"}, success=False)
@@ -703,8 +703,6 @@ class BrowsedToRequirement(APIView):
                     return ui_utils.handle_response({}, data={
                         "error":"meeting time not given"}, success=False)
 
-                mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id["_id"])}, {"$set":{"status":"converted"}})
-                
                 contact_details = None
                 if browsed["phone_number"]:
                     contact_details = ContactDetails.objects.filter(Q(mobile=browsed["phone_number"])|Q(landline=browsed["phone_number"])).first()
@@ -727,10 +725,20 @@ class BrowsedToRequirement(APIView):
                     change_current_patner=change_current_patner.lower()
                     )
 
+                try:
+                    call_back_preference = browsed["call_back_preference"]
+                except Exception as e:
+                    call_back_preference = "NA"
+
+                if browsed_id["current_patner_id"] == "":
+                    current_patner_id = None
+                else:
+                    current_patner_id = browsed_id["current_patner_id"]
+
                 requirement = PreRequirement(
                     campaign_id=browsed["campaign_id"],
                     shortlisted_spaces_id=browsed["shortlisted_spaces_id"],
-                    current_company_id = browsed_id["current_patner_id"],
+                    current_company_id = current_patner_id,
                     current_patner_feedback = browsed["current_patner_feedback"],
                     current_patner_feedback_reason = browsed["current_patner_feedback_reason"],
                     sector_id = browsed["sector_id"],
@@ -742,19 +750,21 @@ class BrowsedToRequirement(APIView):
                     varified_bd = 'no',
                     lead_status = lead_status,
                     lead_date = datetime.datetime.now(),
-                    preferred_company_other = browsed["prefered_patner_other"],
-                    current_company_other = browsed["current_patner_other"],
+                    preferred_company_other = browsed_id["preferred_company_other"],
+                    current_company_other = browsed_id["current_company_other"],
                     l1_answers = browsed["l1_answers"],
                     l1_answer_2 = browsed["l1_answer_2"],
                     l2_answers = browsed["l2_answers"],
                     l2_answer_2 = browsed["l2_answer_2"],
                     sub_sector_id = browsed["sub_sector_id"],
-                    call_back_preference = browsed["call_back_preference"]
+                    call_back_preference = call_back_preference
                 )
                 requirement.save()
 
                 if prefered_patners_list:
                     requirement.preferred_company.set(prefered_patners_list)
+
+                mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id["_id"])}, {"$set":{"status":"converted"}})
 
         if shortlisted_spaces_id:
             ShortlistedSpaces.objects.filter(id=shortlisted_spaces_id).update(color_code=1, requirement_given='yes', requirement_given_date=datetime.datetime.now())
@@ -1216,7 +1226,7 @@ class GetLeadsByDate(APIView):
         start_date = date_time_obj.replace(hour=0, minute=0, second=0)
         end_date = date_time_obj.replace(hour=23, minute=59, second=59)
         organisation_id = request.user.profile.organisation.organisation_id
-        lead_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"no"}]}).count()
+        lead_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}]}).count()
         existing_client_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}]}).count()
             
         lead_dict = {
@@ -1235,7 +1245,7 @@ class GetLeadsCampaignByDate(APIView):
         end_date = date_time_obj.replace(hour=23, minute=59, second=59)
         organisation_id = request.user.profile.organisation.organisation_id
 
-        leads = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"no"}]})
+        leads = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}]})
         campaign_ids = set()
         lead_count_purchased_map = {}
         lead_count_not_purchased_map = {}
@@ -1491,7 +1501,7 @@ class GetLeadDistributionCampaign(APIView):
         if lead_type == "Survey":
             lead = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}]}))
         else:
-            lead = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"is_current_company":"no"}]}))
+            lead = list(mongo_client.leads.find({"company_id": organisation_id}))
         
         campaign_list = []
         for row in lead:
@@ -1507,7 +1517,7 @@ class GetLeadDistributionCampaign(APIView):
         all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).\
             values('proposal_id', 'object_id', 'is_completed', 'proposal__name', 'proposal__tentative_start_date',
                 'proposal__tentative_end_date', 'proposal__campaign_state', 'supplier_code')
-        print("all_shortlisted_supplier",all_shortlisted_supplier)
+
         all_campaign_dict = {}
         all_shortlisted_supplier_id = [supplier['object_id'] for supplier in all_shortlisted_supplier if supplier['supplier_code'] == 'RS']
         all_supplier_society = SupplierTypeSociety.objects.filter(supplier_id__in=all_shortlisted_supplier_id).values('supplier_id', 'flat_count')
