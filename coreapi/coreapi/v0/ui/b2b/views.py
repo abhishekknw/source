@@ -521,7 +521,7 @@ class BrowsedLeadClass(APIView):
         for row in browsed_leads:
             row1 = dict(row)
             row1["_id"] = str(row1["_id"])
-
+            row1["created_at"] = str(row1["created_at"])
             row1["lead_by_name"] = contact_details_dict_mobile.get(row1.get("phone_number"))
 
             if not row1["lead_by_name"]:
