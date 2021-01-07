@@ -1018,6 +1018,16 @@ class BdRequirement(APIView):
                 requirement_obj[row["sector"]] = dict(row)
                 requirement_obj[row["sector"]]["requirements"] = []
 
+            preferred_company_list = row["preferred_company"]
+
+            preferred_organisation = ProposalInfo.objects.filter(
+                account__organisation__in=preferred_company_list)
+
+            if preferred_organisation:
+                row["is_preferred_company"] = "yes"
+            else:
+                row["is_preferred_company"] = "no"
+
             row["verified_ops_by_obj"] = verified_ops_user.get(row["varified_ops_by"])
             row["verified_bd_by_obj"] = verified_bd_user.get(row["varified_bd_by"])
 
@@ -1705,3 +1715,33 @@ class BuyLead(APIView):
                     mongo_client.CampaignLeads.insert_one(campaign_leads_dict)
 
         return ui_utils.handle_response({}, data="Lead buy successfully", success=True)
+
+class GetDynamicLeadFormHeaders(APIView):
+
+    def get(self, request):
+
+        campaign_id = request.query_params.get("campaign_id")
+        lead_form = mongo_client.leads_forms.find({"campaign_id": campaign_id})
+
+        context = {}
+        lead_form_key = None
+
+        for key, lead_form_keys in lead_form[0]["data"].items():
+            lead_form_key = lead_form_keys["item_id"]
+            header_keys = lead_form_keys["key_name"]        
+        
+            lead_form_key_2 = None
+            if lead_form_key:
+                for key, value in lead_form[0]["global_hot_lead_criteria"].items():
+                    if value.get("or"):
+                        for key1, value1 in value["or"].items():
+                            if str(key1) == str(lead_form_key):
+                                lead_form_key_2 = key
+                if lead_form_key_2 and lead_form[0]["hotness_mapping"].get(lead_form_key_2):
+                    header_values = lead_form[0]["hotness_mapping"].get(lead_form_key_2)
+                else:
+                    header_values = None
+            
+            context[header_keys] = header_values
+
+        return ui_utils.handle_response({}, data=context, success=True)
