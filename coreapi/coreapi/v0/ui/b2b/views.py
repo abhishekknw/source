@@ -1018,6 +1018,16 @@ class BdRequirement(APIView):
                 requirement_obj[row["sector"]] = dict(row)
                 requirement_obj[row["sector"]]["requirements"] = []
 
+            preferred_company_list = row["preferred_company"]
+
+            preferred_organisation = ProposalInfo.objects.filter(
+                account__organisation__in=preferred_company_list)
+
+            if preferred_organisation:
+                row["is_preferred_company"] = "yes"
+            else:
+                row["is_preferred_company"] = "no"
+
             row["verified_ops_by_obj"] = verified_ops_user.get(row["varified_ops_by"])
             row["verified_bd_by_obj"] = verified_bd_user.get(row["varified_bd_by"])
 
