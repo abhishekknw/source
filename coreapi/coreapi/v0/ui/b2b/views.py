@@ -628,6 +628,12 @@ class LeadOpsVerification(APIView):
                             if shortlisted_spac:
                                 shortlisted_spac.color_code = 1
                                 shortlisted_spac.save()
+                            
+                            preferred_partners_list = requirement.preferred_company.all()
+
+                            is_preferred_company = "no"
+                            if requirement.current_company in preferred_partners_list:
+                                is_preferred_company = "yes"
 
                             new_requirement = Requirement(
                             campaign_id=requirement.campaign_id,
@@ -658,12 +664,12 @@ class LeadOpsVerification(APIView):
                             company_shortlisted_spaces=company_shortlisted_spaces,
                             varified_ops_by = request.user,
                             varified_ops_date = datetime.datetime.now(),
-                            call_back_preference = requirement.call_back_preference
+                            call_back_preference = requirement.call_back_preference,
+                            is_preferred_company = is_preferred_company
                             )
                             new_requirement.save()
                             verified += 1
-
-                            preferred_partners_list = requirement.preferred_company.all()
+                            
                             if preferred_partners_list:
                                 new_requirement.preferred_company.set(preferred_partners_list)
                     requirement.save()
@@ -1019,15 +1025,15 @@ class BdRequirement(APIView):
                 requirement_obj[row["sector"]] = dict(row)
                 requirement_obj[row["sector"]]["requirements"] = []
 
-            preferred_company_list = row["preferred_company"]
+            # preferred_company_list = row["preferred_company"]
 
-            preferred_organisation = ProposalInfo.objects.filter(
-                account__organisation__in=preferred_company_list)
+            # preferred_organisation = ProposalInfo.objects.filter(
+            #     account__organisation__in=preferred_company_list)
 
-            if preferred_organisation:
-                row["is_preferred_company"] = "yes"
-            else:
-                row["is_preferred_company"] = "no"
+            # if preferred_organisation:
+            #     row["is_preferred_company"] = "yes"
+            # else:
+            #     row["is_preferred_company"] = "no"
 
             row["verified_ops_by_obj"] = verified_ops_user.get(row["varified_ops_by"])
             row["verified_bd_by_obj"] = verified_bd_user.get(row["varified_bd_by"])
