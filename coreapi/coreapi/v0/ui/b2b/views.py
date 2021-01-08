@@ -523,7 +523,8 @@ class BrowsedLeadClass(APIView):
             row1["_id"] = str(row1["_id"])
 
             row1["lead_by_name"] = contact_details_dict_mobile.get(row1.get("phone_number"))
-
+            created_at = datetime.datetime.strptime(str(row1['created_at']), '%Y-%m-%d %H:%M:%S.%f').strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+            row1['created_at'] = created_at
             if not row1["lead_by_name"]:
                 row1["lead_by_name"] = contact_details_dict_landline.get(row.get("phone_number"))
 
