@@ -1754,3 +1754,19 @@ class GetDynamicLeadFormHeaders(APIView):
             context[header_keys] = header_values
 
         return ui_utils.handle_response({}, data=context, success=True)
+
+
+class SuspenseLeadCount(APIView):
+    permission_classes = ()
+    authentication_classes = ()
+
+    def get(self, request):
+
+        start_date = make_aware(datetime.datetime.strptime(request.GET.get("start_date"), '%Y-%m-%d'))
+        end_date = make_aware(datetime.datetime.strptime(request.GET.get("end_date"), '%Y-%m-%d')) + datetime.timedelta(days=1)
+
+        count_suspanse_lead = mongo_client.suspense_lead.find({'created_at': 
+            {"$gte": start_date, "$lte": end_date}}).count()
+
+        return ui_utils.handle_response({}, data={"count":count_suspanse_lead}, success=True)
+       
