@@ -632,8 +632,10 @@ class LeadOpsVerification(APIView):
                             preferred_partners_list = requirement.preferred_company.all()
 
                             is_preferred_company = "no"
-                            if requirement.current_company in preferred_partners_list:
-                                is_preferred_company = "yes"
+                            if company_campaign.account.organisation:
+                
+                                if company_campaign.account.organisation in preferred_partners_list:
+                                    is_preferred_company = "yes"
 
                             new_requirement = Requirement(
                             campaign_id=requirement.campaign_id,
