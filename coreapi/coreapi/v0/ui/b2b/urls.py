@@ -5,7 +5,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (BuyLead,SummaryReportAndGraph,FlatSummaryDetails,AddLeadPrice, GetLeadsByCampaignId,BdRequirement,BdVerification, ImportLead, RequirementClass, SuspenseLeadClass, BrowsedLeadClass,  
                         LeadOpsVerification, BrowsedToRequirement, DeleteRequirement, BrowsedLeadDelete, RestoreRequirement, GetLeadsByDate,
                         GetLeadsCampaignByDate, GetFeedbackCount, GetCampaignList, GetLeadsForCurrentCompanyDonut, GetLeadsSummeryForDonutChart,
-                        GetLeadsForDonutChart,GetSupplierByCampaign, GetLeadDistributionCampaign, GetPurchasedLeadsData, GetNotPurchasedLeadsData )
+                        GetLeadsForDonutChart,GetSupplierByCampaign, GetLeadDistributionCampaign, GetPurchasedLeadsData, GetNotPurchasedLeadsData, GetDynamicLeadFormHeaders )
 
 urlpatterns = [
     url(r'^import-lead/(?P<campaign_id>[A-Z_a-z0-9]+)/$', ImportLead.as_view()),
@@ -27,6 +27,7 @@ urlpatterns = [
     url(r'^lead-distribution-campaign/$', GetLeadDistributionCampaign.as_view()),
     url(r'^purchased-lead-data/$', GetPurchasedLeadsData.as_view()),
     url(r'^not-purchased-lead-data/$', GetNotPurchasedLeadsData.as_view()),
+    url(r'^lead-form-headers/$', GetDynamicLeadFormHeaders.as_view()),
 
     url(r'^donut-table-1st/$', GetLeadsByCampaignId.as_view()),
     url(r'^donut-1st/$', GetLeadsForDonutChart.as_view()),

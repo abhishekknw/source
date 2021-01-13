@@ -92,7 +92,8 @@ class Requirement(models.Model):
     call_back_preference = models.CharField(max_length=100, choices=CALL_BACK_PREFERENCE, default="NA")
     lead_purchased = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     purchased_date = models.DateTimeField(null=True)
-
+    is_preferred_company = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
+    
     class Meta:
         db_table = 'requirement'
 
