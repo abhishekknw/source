@@ -52,6 +52,14 @@ CALL_BACK_PREFERENCE = (
     ("customized calling period", "customized calling period"),
 )
 
+GLOBAL_HOT_LEAD_VALUE = (
+    ('H1','H1'),
+    ('H2','H2'),
+    ('H3','H3'),
+    ('H5','H5'),
+    ('H6','H6'),
+)
+
 
 class Requirement(models.Model):
     campaign = models.ForeignKey('ProposalInfo', null=True, blank=True, on_delete=models.CASCADE)
@@ -93,7 +101,8 @@ class Requirement(models.Model):
     lead_purchased = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     purchased_date = models.DateTimeField(null=True)
     is_preferred_company = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
-    
+    hotness_of_lead = models.CharField(max_length=5, choices=GLOBAL_HOT_LEAD_VALUE, default="H1")
+
     class Meta:
         db_table = 'requirement'
 
