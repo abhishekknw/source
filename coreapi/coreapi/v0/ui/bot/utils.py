@@ -58,12 +58,17 @@ def bot_to_requirement(request, data):
             current_patner_feedback = "NA"
 
         current_patner_feedback_reason = row.get("feedbackReason")
-        prefered_patners = row.get("preferredPartner")
 
         prefered_patners_array = []
-        if prefered_patners:
-            prefered_patners_split = prefered_patners.split(",")
-            prefered_patners_array = [row.strip() for row in prefered_patners_split]
+        if isinstance(row.get("preferredPartner"), list):
+            if row.get("preferredPartner"):
+                prefered_patners_array = row.get("preferredPartner")
+
+        else:
+            prefered_patners = row.get("preferredPartner")
+            if prefered_patners:
+                prefered_patners_split = prefered_patners.split(",")
+                prefered_patners_array = [row.strip() for row in prefered_patners_split]
 
         prefered_patners_list = []
         prefered_patners_id_list = []
