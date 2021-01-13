@@ -1233,6 +1233,7 @@ class AddLeadPrice(APIView):
             requirement = Requirement.objects.filter(id=row['requirement_id']).first()
             requirement.lead_price = row['lead_price']
             requirement.comment = row['comment']
+            requirement.hotness_of_lead = row['hotness_of_lead'].upper()
             requirement.save()
         return ui_utils.handle_response({}, data="Price and comment added", success=True)
 
