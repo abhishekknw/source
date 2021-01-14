@@ -45,6 +45,11 @@ def bot_to_requirement(request, data):
         current_patner_feedback = row.get("partnerFeedback")
         call_back_preference = row.get("contactBackTime")
 
+        if call_back_preference:
+            call_back_preference = row.get("contactBackTime").lower()
+        else:
+            call_back_preference = "NA"
+
         if current_patner_feedback:
             if current_patner_feedback == "Extremely dis-satisfied":
                 current_patner_feedback = "Extremely Dissatisfied"
@@ -212,7 +217,7 @@ def bot_to_requirement(request, data):
                     l2_answers = l2_answers,
                     l2_answer_2 = l2_answer_2,
                     change_current_patner = change_current_patner.lower(),
-                    call_back_preference = call_back_preference.lower(),
+                    call_back_preference = call_back_preference,
                 )
                 pre_requirement.save()
 
@@ -250,7 +255,8 @@ def bot_to_requirement(request, data):
                     l1_answers = l1_answers,
                     l1_answer_2 = l1_answer_2,
                     l2_answers = l2_answers,
-                    l2_answer_2 = l2_answer_2
+                    l2_answer_2 = l2_answer_2,
+                    call_back_preference = call_back_preference
                 ).save()
         else:
 
@@ -275,7 +281,7 @@ def bot_to_requirement(request, data):
                 l1_answer_2 = l1_answer_2,
                 l2_answers = l2_answers,
                 l2_answer_2 = l2_answer_2,
-                call_back_preference = call_back_preference.lower()
+                call_back_preference = call_back_preference
             ).save()
 
     return ui_utils.handle_response({}, data={}, success=True)
