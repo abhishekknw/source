@@ -781,6 +781,50 @@ class BrowsedToRequirement(APIView):
         return ui_utils.handle_response({}, data={}, success=True)
 
 
+class UpdateBrowsedLead(APIView):
+
+    def post(self, request):
+
+        browsed_leads = request.data.get("browsed_leads")
+
+        for browsed in browsed_leads:
+
+            prefered_patners_id_list = []
+            if browsed["prefered_patners"]:
+                prefered_patners_list = Organisation.objects.filter(name__in=browsed["prefered_patners"]).all()
+                prefered_patners_id_list = [row.organisation_id for row in prefered_patners_list]
+            
+            try:
+                call_back_preference = browsed["call_back_preference"]
+            except Exception as e:
+                call_back_preference = "NA"
+
+            impl_timeline = "not given"
+            if browsed["implementation_timeline"] is not "":
+                impl_timeline = browsed["implementation_timeline"]
+
+            meating_timeline = "not given"
+            if browsed["meating_timeline"] is not "":
+                meating_timeline = browsed["meating_timeline"]
+
+            if browsed["current_patner_id"] == "":
+                current_patner_id = None
+            else:
+                current_patner_id = browsed["current_patner_id"]
+
+            update_values = {"$set":{
+                "current_patner_id":current_patner_id,
+                "prefered_patners":prefered_patners_id_list,
+                "implementation_timeline":impl_timeline,
+                "meating_timeline":meating_timeline,
+                "call_back_preference":call_back_preference,
+                }}
+
+            mongo_client.browsed_lead.update({"_id": ObjectId(browsed["_id"])},update_values)
+
+        return ui_utils.handle_response({}, data={}, success=True)
+
+
 class BdVerification(APIView):
     """docstring for BdVerification"""
     def post(self, request):

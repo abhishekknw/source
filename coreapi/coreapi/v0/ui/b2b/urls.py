@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 
-from .views import (SuspenseLeadCount,BuyLead,SummaryReportAndGraph,FlatSummaryDetails,AddLeadPrice, GetLeadsByCampaignId,BdRequirement,BdVerification, ImportLead, RequirementClass, SuspenseLeadClass, BrowsedLeadClass,  
+from .views import (UpdateBrowsedLead,SuspenseLeadCount,BuyLead,SummaryReportAndGraph,FlatSummaryDetails,AddLeadPrice, GetLeadsByCampaignId,BdRequirement,BdVerification, ImportLead, RequirementClass, SuspenseLeadClass, BrowsedLeadClass,  
                         LeadOpsVerification, BrowsedToRequirement, DeleteRequirement, BrowsedLeadDelete, RestoreRequirement, GetLeadsByDate,
                         GetLeadsCampaignByDate, GetFeedbackCount, GetCampaignList, GetLeadsForCurrentCompanyDonut, GetLeadsSummeryForDonutChart,
                         GetLeadsForDonutChart,GetSupplierByCampaign, GetLeadDistributionCampaign, GetPurchasedLeadsData, GetNotPurchasedLeadsData, GetDynamicLeadFormHeaders )
@@ -15,6 +15,7 @@ urlpatterns = [
     url(r'^browsed-leads/$', BrowsedLeadClass.as_view()),
     url(r'^ops-lead-verification/$', LeadOpsVerification.as_view()),
     url(r'^browsed-to-requirement/$', BrowsedToRequirement.as_view()),
+    url(r'^update-browsed-lead/$', UpdateBrowsedLead.as_view()),
     url(r'^delete-requirement/$', DeleteRequirement.as_view()),
     url(r'^delete-browsed-lead/$', BrowsedLeadDelete.as_view()),
     url(r'^restore-requirement/$', RestoreRequirement.as_view()),
