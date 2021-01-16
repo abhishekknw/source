@@ -708,7 +708,7 @@ class BrowsedToRequirement(APIView):
             browsed = dict(mongo_client.browsed_lead.find_one({"_id": ObjectId(browsed_id["_id"])}))
             if browsed:
 
-                if browsed_id["meating_timeline"] == "" or browsed_id["meating_timeline"] == "not given" or browsed_id["meating_timeline"] == None:
+                if browsed["meating_timeline"] == "" or browsed["meating_timeline"] == "not given" or browsed["meating_timeline"] == None:
                     return ui_utils.handle_response({}, data={
                         "error":"meeting time not given"}, success=False)
 
@@ -717,8 +717,8 @@ class BrowsedToRequirement(APIView):
                     contact_details = ContactDetails.objects.filter(Q(mobile=browsed["phone_number"])|Q(landline=browsed["phone_number"])).first()
                 
                 prefered_patners_list = []
-                if browsed_id["prefered_patners_id"]:
-                    prefered_patners_list = Organisation.objects.filter(organisation_id__in=browsed_id["prefered_patners_id"]).all()
+                if browsed["prefered_patners"]:
+                    prefered_patners_list = Organisation.objects.filter(organisation_id__in=browsed["prefered_patners"]).all()
                 
                 shortlisted_spaces_id = browsed["shortlisted_spaces_id"]
 
@@ -727,8 +727,8 @@ class BrowsedToRequirement(APIView):
                     change_current_patner = "yes"
 
                 lead_status = b2b_utils.get_lead_status(
-                    impl_timeline = browsed_id["implementation_timeline"],
-                    meating_timeline = browsed_id["meating_timeline"],
+                    impl_timeline = browsed["implementation_timeline"],
+                    meating_timeline = browsed["meating_timeline"],
                     company=None,
                     prefered_patners=prefered_patners_list,
                     change_current_patner=change_current_patner.lower()
@@ -739,10 +739,10 @@ class BrowsedToRequirement(APIView):
                 except Exception as e:
                     call_back_preference = "NA"
 
-                if browsed_id["current_patner_id"] == "":
+                if browsed["current_patner_id"] == "":
                     current_patner_id = None
                 else:
-                    current_patner_id = browsed_id["current_patner_id"]
+                    current_patner_id = browsed["current_patner_id"]
 
                 requirement = PreRequirement(
                     campaign_id=browsed["campaign_id"],
@@ -752,15 +752,15 @@ class BrowsedToRequirement(APIView):
                     current_patner_feedback_reason = browsed["current_patner_feedback_reason"],
                     sector_id = browsed["sector_id"],
                     lead_by = contact_details,
-                    impl_timeline = browsed_id["implementation_timeline"],
-                    meating_timeline = browsed_id["meating_timeline"],
-                    comment = browsed_id["comment"],
+                    impl_timeline = browsed["implementation_timeline"],
+                    meating_timeline = browsed["meating_timeline"],
+                    comment = browsed["comment"],
                     varified_ops = 'no',
                     varified_bd = 'no',
                     lead_status = lead_status,
                     lead_date = datetime.datetime.now(),
-                    preferred_company_other = browsed_id["preferred_company_other"],
-                    current_company_other = browsed_id["current_company_other"],
+                    preferred_company_other = browsed["prefered_patner_other"],
+                    current_company_other = browsed["current_patner_other"],
                     l1_answers = browsed["l1_answers"],
                     l1_answer_2 = browsed["l1_answer_2"],
                     l2_answers = browsed["l2_answers"],
@@ -777,6 +777,50 @@ class BrowsedToRequirement(APIView):
 
         if shortlisted_spaces_id:
             ShortlistedSpaces.objects.filter(id=shortlisted_spaces_id).update(color_code=1, requirement_given='yes', requirement_given_date=datetime.datetime.now())
+
+        return ui_utils.handle_response({}, data={}, success=True)
+
+
+class UpdateBrowsedLead(APIView):
+
+    def post(self, request):
+
+        browsed_leads = request.data.get("browsed_leads")
+
+        for browsed in browsed_leads:
+
+            prefered_patners_id_list = browsed["prefered_patners_id"]
+            
+            try:
+                call_back_preference = browsed["call_back_preference"]
+            except Exception as e:
+                call_back_preference = "NA"
+
+            impl_timeline = "not given"
+            if browsed["implementation_timeline"] is not "":
+                impl_timeline = browsed["implementation_timeline"]
+
+            meating_timeline = "not given"
+            if browsed["meating_timeline"] is not "":
+                meating_timeline = browsed["meating_timeline"]
+
+            if browsed["current_patner_id"] == "":
+                current_patner_id = None
+            else:
+                current_patner_id = browsed["current_patner_id"]
+
+            update_values = {"$set":{
+                "current_patner_id":current_patner_id,
+                "prefered_patners":prefered_patners_id_list,
+                "implementation_timeline":impl_timeline,
+                "meating_timeline":meating_timeline,
+                "call_back_preference":call_back_preference,
+                "comment":browsed["comment"],
+                "current_patner_other":browsed["current_company_other"],
+                "prefered_patner_other":browsed["preferred_company_other"]
+                }}
+
+            mongo_client.browsed_lead.update({"_id": ObjectId(browsed["_id"])},update_values)
 
         return ui_utils.handle_response({}, data={}, success=True)
 
@@ -894,21 +938,68 @@ class BdVerification(APIView):
             if lead_form_key_2 and lead_form["hotness_mapping"].get(lead_form_key_2):
                 lead_status = lead_form["hotness_mapping"].get(lead_form_key_2)
 
+        if requirement.hotness_of_lead:
+            h2 = None
+            h3 = None 
+            h4 = None
+            h5 = None
+            h6 = None
+            level = requirement.hotness_of_lead
+            if level == 'H2':
+                h2 = 'Y'
+            if level == 'H3':
+                h2 = 'Y'
+                h3 = 'Y'
+            if level == 'H4':
+                h2 = 'Y'
+                h3 = 'Y'
+                h4 = 'Y'
+            if level == 'H5':
+                h2 = 'Y'
+                h3 = 'Y'
+                h4 = 'Y'
+                h5 = 'Y'
+            if level == 'H6':
+                h2 = 'Y'
+                h3 = 'Y'
+                h4 = 'Y'
+                h5 = 'Y'
+                h6 = 'Y'
+        
         lead_data_dict = {
             "Supplier Name": supplier_name,
-            "Supplier City": supplier_city,
+            "Supplier Type": requirement.shortlisted_spaces.supplier_code,
             "Supplier Area": supplier_area,
             "Supplier Sub Area": supplier_subarea,
-            "Primary Count": supplier_primary_count,
-            "Prefered Patner": prefered_patner,
-            "Current Patner": requirement.is_current_patner,
-            "Lead Status": lead_status,
-
+            "Supplier City": supplier_city,
             "State": supplier_state,
             "Pin Code": supplier_pin_code,
+            "Primary Count": supplier_primary_count,
+            "Service" : requirement.sector.business_type if requirement.sector else None ,
+            "Sub service" : requirement.sub_sector.subtype if requirement.sub_sector else None ,
+            "L1.1 Answer" : requirement.l1_answers,
+            "L1.2 Answer": requirement.l1_answer_2,
+            "L2.1 Answer": requirement.l2_answers,
+            "L2.2 Answer": requirement.l2_answer_2,
+            "Prefered Patner": prefered_patner,
+            "Meeting Time": requirement.meating_timeline,
+            "Implementation Time": requirement.impl_timeline,
+            "Call back time" : requirement.call_back_preference,
+            "Comments" : requirement.comment,
+            "Time Stamp" : requirement.lead_date,
+            "Lead Status": lead_status,
+            "H1" : "Y",
+            "H2" : h2, 
+            "H3" : h3,
+            "H4" : h4,
+            "H5" : h5,
+            "H6" : h6,
             "Contact Person": supplier_contact_person_name,
             "Designation": supplier_designation,
             "Mobile": supplier_moblile,
+            "Current Partner": requirement.is_current_patner,
+            "Satisfaction Level" : requirement.current_patner_feedback,
+            "Reasons for Dissatisfaction" : requirement.current_patner_feedback_reason,        
         }
 
         lead_data = []
@@ -1102,7 +1193,7 @@ class GetLeadsForDonutChart(APIView):
 
     def get(self, request):
        
-        where = {"is_current_company": "no"}
+        where = {}
         
         if request.query_params.get("campaign_id"):
             where["company_campaign_id"] = request.query_params.get("campaign_id")

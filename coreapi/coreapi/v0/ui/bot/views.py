@@ -10,6 +10,8 @@ from openpyxl import load_workbook, Workbook
 from django.http import HttpResponse
 import v0.ui.b2b.utils as b2b_utils
 from v0.ui.organisation.models import Organisation
+from v0.ui.common.models import mongo_client
+import datetime
 
 class MobileNumberVerification(APIView):
     permission_classes = ()
@@ -28,6 +30,7 @@ class GetDataFromBot(APIView):
 
     def post(self, request):
         data = request.data
+        data['created_at'] = datetime.datetime.now()
         mongo_client.bot_log.insert_one(data)
         if data['phone']:
             response = bot_utils.bot_to_requirement(request, data)        
