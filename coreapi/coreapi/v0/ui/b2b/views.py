@@ -895,12 +895,32 @@ class BdVerification(APIView):
                 lead_status = lead_form["hotness_mapping"].get(lead_form_key_2)
 
         if requirement.hotness_of_lead:
-            # ascii = ord(requirement.hotness_of_lead)
-            hotness_level = ['H2', 'H3', 'H4', 'H5', 'H6']
-            for level in hotness_level :
-                hot_lead = None
-                if level <= requirement.hotness_of_lead:
-                    hot_lead = 'Y'
+            h2 = None
+            h3 = None 
+            h4 = None
+            h5 = None
+            h6 = None
+            level = requirement.hotness_of_lead
+            if level == 'H2':
+                h2 = 'Y'
+            if level == 'H3':
+                h2 = 'Y'
+                h3 = 'Y'
+            if level == 'H4':
+                h2 = 'Y'
+                h3 = 'Y'
+                h4 = 'Y'
+            if level == 'H5':
+                h2 = 'Y'
+                h3 = 'Y'
+                h4 = 'Y'
+                h5 = 'Y'
+            if level == 'H6':
+                h2 = 'Y'
+                h3 = 'Y'
+                h4 = 'Y'
+                h5 = 'Y'
+                h6 = 'Y'
         
         lead_data_dict = {
             "Supplier Name": supplier_name,
@@ -911,8 +931,8 @@ class BdVerification(APIView):
             "State": supplier_state,
             "Pin Code": supplier_pin_code,
             "Primary Count": supplier_primary_count,
-            "Service" : requirement.sector,
-            "Sub service" : requirement.sub_sector,
+            "Service" : requirement.sector.business_type if requirement.sector else None ,
+            "Sub service" : requirement.sub_sector.subtype if requirement.sub_sector else None ,
             "L1.1 Answer" : requirement.l1_answers,
             "L1.2 Answer": requirement.l1_answer_2,
             "L2.1 Answer": requirement.l2_answers,
@@ -922,14 +942,14 @@ class BdVerification(APIView):
             "Implementation Time": requirement.impl_timeline,
             "Call back time" : requirement.call_back_preference,
             "Comments" : requirement.comment,
-            "Time Stamp" : requirement.created_at,
+            "Time Stamp" : requirement.lead_date,
             "Lead Status": lead_status,
             "H1" : "Y",
-            "H2" : hot_lead, 
-            "H3" : hot_lead,
-            "H4" : hot_lead,
-            "H5" : hot_lead,
-            "H6" : hot_lead,
+            "H2" : h2, 
+            "H3" : h3,
+            "H4" : h4,
+            "H5" : h5,
+            "H6" : h6,
             "Current Patner": requirement.is_current_patner,
 
             "Contact Person": supplier_contact_person_name,
@@ -1128,7 +1148,7 @@ class GetLeadsForDonutChart(APIView):
 
     def get(self, request):
        
-        where = {"is_current_company": "no"}
+        where = {}
         
         if request.query_params.get("campaign_id"):
             where["company_campaign_id"] = request.query_params.get("campaign_id")
