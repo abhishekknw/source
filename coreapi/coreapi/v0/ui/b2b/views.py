@@ -708,7 +708,7 @@ class BrowsedToRequirement(APIView):
             browsed = dict(mongo_client.browsed_lead.find_one({"_id": ObjectId(browsed_id["_id"])}))
             if browsed:
 
-                if browsed_id["meating_timeline"] == "" or browsed_id["meating_timeline"] == "not given" or browsed_id["meating_timeline"] == None:
+                if browsed["meating_timeline"] == "" or browsed["meating_timeline"] == "not given" or browsed["meating_timeline"] == None:
                     return ui_utils.handle_response({}, data={
                         "error":"meeting time not given"}, success=False)
 
@@ -717,8 +717,8 @@ class BrowsedToRequirement(APIView):
                     contact_details = ContactDetails.objects.filter(Q(mobile=browsed["phone_number"])|Q(landline=browsed["phone_number"])).first()
                 
                 prefered_patners_list = []
-                if browsed_id["prefered_patners_id"]:
-                    prefered_patners_list = Organisation.objects.filter(organisation_id__in=browsed_id["prefered_patners_id"]).all()
+                if browsed["prefered_patners"]:
+                    prefered_patners_list = Organisation.objects.filter(organisation_id__in=browsed["prefered_patners"]).all()
                 
                 shortlisted_spaces_id = browsed["shortlisted_spaces_id"]
 
@@ -727,8 +727,8 @@ class BrowsedToRequirement(APIView):
                     change_current_patner = "yes"
 
                 lead_status = b2b_utils.get_lead_status(
-                    impl_timeline = browsed_id["implementation_timeline"],
-                    meating_timeline = browsed_id["meating_timeline"],
+                    impl_timeline = browsed["implementation_timeline"],
+                    meating_timeline = browsed["meating_timeline"],
                     company=None,
                     prefered_patners=prefered_patners_list,
                     change_current_patner=change_current_patner.lower()
@@ -739,10 +739,10 @@ class BrowsedToRequirement(APIView):
                 except Exception as e:
                     call_back_preference = "NA"
 
-                if browsed_id["current_patner_id"] == "":
+                if browsed["current_patner_id"] == "":
                     current_patner_id = None
                 else:
-                    current_patner_id = browsed_id["current_patner_id"]
+                    current_patner_id = browsed["current_patner_id"]
 
                 requirement = PreRequirement(
                     campaign_id=browsed["campaign_id"],
@@ -752,15 +752,15 @@ class BrowsedToRequirement(APIView):
                     current_patner_feedback_reason = browsed["current_patner_feedback_reason"],
                     sector_id = browsed["sector_id"],
                     lead_by = contact_details,
-                    impl_timeline = browsed_id["implementation_timeline"],
-                    meating_timeline = browsed_id["meating_timeline"],
-                    comment = browsed_id["comment"],
+                    impl_timeline = browsed["implementation_timeline"],
+                    meating_timeline = browsed["meating_timeline"],
+                    comment = browsed["comment"],
                     varified_ops = 'no',
                     varified_bd = 'no',
                     lead_status = lead_status,
                     lead_date = datetime.datetime.now(),
-                    preferred_company_other = browsed_id["preferred_company_other"],
-                    current_company_other = browsed_id["current_company_other"],
+                    preferred_company_other = browsed["prefered_patner_other"],
+                    current_company_other = browsed["current_patner_other"],
                     l1_answers = browsed["l1_answers"],
                     l1_answer_2 = browsed["l1_answer_2"],
                     l2_answers = browsed["l2_answers"],
@@ -789,10 +789,7 @@ class UpdateBrowsedLead(APIView):
 
         for browsed in browsed_leads:
 
-            prefered_patners_id_list = []
-            if browsed["prefered_patners"]:
-                prefered_patners_list = Organisation.objects.filter(name__in=browsed["prefered_patners"]).all()
-                prefered_patners_id_list = [row.organisation_id for row in prefered_patners_list]
+            prefered_patners_id_list = browsed["prefered_patners_id"]
             
             try:
                 call_back_preference = browsed["call_back_preference"]
@@ -818,6 +815,9 @@ class UpdateBrowsedLead(APIView):
                 "implementation_timeline":impl_timeline,
                 "meating_timeline":meating_timeline,
                 "call_back_preference":call_back_preference,
+                "comment":browsed["comment"],
+                "current_patner_other":browsed["current_company_other"],
+                "prefered_patner_other":browsed["preferred_company_other"]
                 }}
 
             mongo_client.browsed_lead.update({"_id": ObjectId(browsed["_id"])},update_values)
