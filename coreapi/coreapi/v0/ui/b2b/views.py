@@ -938,18 +938,64 @@ class BdVerification(APIView):
             if lead_form_key_2 and lead_form["hotness_mapping"].get(lead_form_key_2):
                 lead_status = lead_form["hotness_mapping"].get(lead_form_key_2)
 
+        if requirement.hotness_of_lead:
+            h2 = None
+            h3 = None 
+            h4 = None
+            h5 = None
+            h6 = None
+            level = requirement.hotness_of_lead
+            if level == 'H2':
+                h2 = 'Y'
+            if level == 'H3':
+                h2 = 'Y'
+                h3 = 'Y'
+            if level == 'H4':
+                h2 = 'Y'
+                h3 = 'Y'
+                h4 = 'Y'
+            if level == 'H5':
+                h2 = 'Y'
+                h3 = 'Y'
+                h4 = 'Y'
+                h5 = 'Y'
+            if level == 'H6':
+                h2 = 'Y'
+                h3 = 'Y'
+                h4 = 'Y'
+                h5 = 'Y'
+                h6 = 'Y'
+        
         lead_data_dict = {
             "Supplier Name": supplier_name,
-            "Supplier City": supplier_city,
+            "Supplier Type": requirement.shortlisted_spaces.supplier_code,
             "Supplier Area": supplier_area,
             "Supplier Sub Area": supplier_subarea,
-            "Primary Count": supplier_primary_count,
-            "Prefered Patner": prefered_patner,
-            "Current Patner": requirement.is_current_patner,
-            "Lead Status": lead_status,
-
+            "Supplier City": supplier_city,
             "State": supplier_state,
             "Pin Code": supplier_pin_code,
+            "Primary Count": supplier_primary_count,
+            "Service" : requirement.sector.business_type if requirement.sector else None ,
+            "Sub service" : requirement.sub_sector.subtype if requirement.sub_sector else None ,
+            "L1.1 Answer" : requirement.l1_answers,
+            "L1.2 Answer": requirement.l1_answer_2,
+            "L2.1 Answer": requirement.l2_answers,
+            "L2.2 Answer": requirement.l2_answer_2,
+            "Prefered Patner": prefered_patner,
+            "Meeting Time": requirement.meating_timeline,
+            "Implementation Time": requirement.impl_timeline,
+            "Call back time" : requirement.call_back_preference,
+            "Comments" : requirement.comment,
+            "Time Stamp" : requirement.lead_date,
+            "Lead Status": lead_status,
+            "H1" : "Y",
+            "H2" : h2, 
+            "H3" : h3,
+            "H4" : h4,
+            "H5" : h5,
+            "H6" : h6,
+            "Current Patner": requirement.is_current_patner,
+
             "Contact Person": supplier_contact_person_name,
             "Designation": supplier_designation,
             "Mobile": supplier_moblile,
@@ -1146,7 +1192,7 @@ class GetLeadsForDonutChart(APIView):
 
     def get(self, request):
        
-        where = {"is_current_company": "no"}
+        where = {}
         
         if request.query_params.get("campaign_id"):
             where["company_campaign_id"] = request.query_params.get("campaign_id")

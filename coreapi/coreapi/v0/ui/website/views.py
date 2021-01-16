@@ -628,14 +628,14 @@ class AssignCampaign(APIView):
                     if not user_obj.get(user['id']):
                         user_obj[user['id']] = row
             user = request.user
-            username_list = BaseUser.objects.filter(profile__organisation=user.profile.organisation.organisation_id). \
-                            values_list('username')
 
             if user.is_superuser:
                 assigned_objects = CampaignAssignment.objects.all()
             elif user.profile.name == "Intern":
                 assigned_objects = CampaignAssignment.objects.filter(assigned_to_id=user)
             else:
+                username_list = BaseUser.objects.filter(profile__organisation=user.profile.organisation.organisation_id). \
+                            values_list('username')
                 assigned_objects = CampaignAssignment.objects.filter(campaign__created_by__in=username_list)
             campaigns = []
             all_proposal_ids = []
