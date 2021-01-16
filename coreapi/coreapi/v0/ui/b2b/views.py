@@ -994,11 +994,12 @@ class BdVerification(APIView):
             "H4" : h4,
             "H5" : h5,
             "H6" : h6,
-            "Current Patner": requirement.is_current_patner,
-
             "Contact Person": supplier_contact_person_name,
             "Designation": supplier_designation,
             "Mobile": supplier_moblile,
+            "Current Partner": requirement.is_current_patner,
+            "Satisfaction Level" : requirement.current_patner_feedback,
+            "Reasons for Dissatisfaction" : requirement.current_patner_feedback_reason,        
         }
 
         lead_data = []
