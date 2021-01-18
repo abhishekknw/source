@@ -965,7 +965,7 @@ class BdVerification(APIView):
                 h4 = 'Y'
                 h5 = 'Y'
                 h6 = 'Y'
-        
+
         lead_data_dict = {
             "Supplier Name": supplier_name,
             "Supplier Type": requirement.shortlisted_spaces.supplier_code,
@@ -976,7 +976,7 @@ class BdVerification(APIView):
             "Pin Code": supplier_pin_code,
             "Primary Count": supplier_primary_count,
             "Service" : requirement.sector.business_type if requirement.sector else None ,
-            "Sub service" : requirement.sub_sector.subtype if requirement.sub_sector else None ,
+            "Sub service" : requirement.sub_sector.business_sub_type if requirement.sub_sector else None ,
             "L1.1 Answer" : requirement.l1_answers,
             "L1.2 Answer": requirement.l1_answer_2,
             "L2.1 Answer": requirement.l2_answers,
