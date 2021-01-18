@@ -1824,6 +1824,7 @@ class GetDynamicLeadFormHeaders(APIView):
         campaign_id = request.query_params.get("campaign_id")
         lead_form = mongo_client.leads_forms.find({"campaign_id": campaign_id})
 
+        data = {}
         context = {}
         lead_form_key = None
 
@@ -1841,11 +1842,21 @@ class GetDynamicLeadFormHeaders(APIView):
                 if lead_form_key_2 and lead_form[0]["hotness_mapping"].get(lead_form_key_2):
                     header_values = lead_form[0]["hotness_mapping"].get(lead_form_key_2)
                 else:
-                    header_values = None
+                    header_values = header_keys
             
             context[header_keys] = header_values
 
-        return ui_utils.handle_response({}, data=context, success=True)
+            leads = mongo_client.leads.find({"company_campaign_id": campaign_id})
+            values = []
+            for entry in leads:
+                lead = entry['data']
+                lead.insert(0, {'lead_purchased' : entry['lead_purchased']})
+                values.append(lead)
+
+            data['header'] = context
+            data['values'] = values
+
+        return ui_utils.handle_response({}, data=data, success=True)
 
 
 class SuspenseLeadCount(APIView):
