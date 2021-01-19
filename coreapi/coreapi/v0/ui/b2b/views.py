@@ -891,6 +891,8 @@ class BdVerification(APIView):
                 supplier_city = supplier.society_city
                 supplier_area = supplier.society_locality
                 supplier_subarea = supplier.society_subarea
+                address = supplier.society_address1 + " " + supplier.society_address2
+                lat_long = str(supplier.society_latitude) + "/" + str(supplier.society_longitude)
                 supplier_primary_count = supplier.flat_count
 
                 supplier_state = supplier.society_state
@@ -906,6 +908,8 @@ class BdVerification(APIView):
                 supplier_city = supplier.city
                 supplier_area = supplier.area
                 supplier_subarea = supplier.subarea
+                address = supplier.address1 + " " + supplier.address2
+                lat_long = str(supplier.latitude) + "/" + str(supplier.longitude)
                 supplier_primary_count = supplier.unit_primary_count
 
                 supplier_state = supplier.state
@@ -969,10 +973,12 @@ class BdVerification(APIView):
         lead_data_dict = {
             "Supplier Name": supplier_name,
             "Supplier Type": requirement.shortlisted_spaces.supplier_code,
-            "Supplier Area": supplier_area,
-            "Supplier Sub Area": supplier_subarea,
-            "Supplier City": supplier_city,
+            "Area": supplier_area,
+            "Address": address,
+            "Lat/Long": lat_long,
+            "City": supplier_city,
             "State": supplier_state,
+            "Country": "India",
             "Pin Code": supplier_pin_code,
             "Primary Count": supplier_primary_count,
             "Service" : requirement.sector.business_type if requirement.sector else None ,
@@ -981,25 +987,28 @@ class BdVerification(APIView):
             "L1.2 Answer": requirement.l1_answer_2,
             "L2.1 Answer": requirement.l2_answers,
             "L2.2 Answer": requirement.l2_answer_2,
+            "L3.1 Answer": None,
+            "L3.2 Answer": None,
             "Prefered Patner": prefered_patner,
-            "Meeting Time": requirement.meating_timeline,
             "Implementation Time": requirement.impl_timeline,
+            "Meeting Time": requirement.meating_timeline,
             "Call back time" : requirement.call_back_preference,
             "Comments" : requirement.comment,
             "Time Stamp" : requirement.lead_date,
             "Lead Status": lead_status,
-            "H1" : "Y",
             "H2" : h2, 
             "H3" : h3,
             "H4" : h4,
             "H5" : h5,
             "H6" : h6,
-            "Contact Person": supplier_contact_person_name,
+            "Not Applicable" : None,
+            "Name": supplier_contact_person_name,
+            "Number": supplier_moblile,
             "Designation": supplier_designation,
-            "Mobile": supplier_moblile,
             "Current Partner": requirement.is_current_patner,
             "Satisfaction Level" : requirement.current_patner_feedback,
-            "Reasons for Dissatisfaction" : requirement.current_patner_feedback_reason,        
+            "Reasons for Dissatisfaction" : requirement.current_patner_feedback_reason,
+            "Price": requirement.lead_price,
         }
 
         lead_data = []
