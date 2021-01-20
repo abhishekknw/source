@@ -891,7 +891,7 @@ class BdVerification(APIView):
                 supplier_city = supplier.society_city
                 supplier_area = supplier.society_locality
                 supplier_subarea = supplier.society_subarea
-                address = supplier.society_address1 + " " + supplier.society_address2
+                address = str(supplier.society_address1) + " " + str(supplier.society_address2)
                 lat_long = str(supplier.society_latitude) + "/" + str(supplier.society_longitude)
                 supplier_primary_count = supplier.flat_count
 
@@ -908,7 +908,7 @@ class BdVerification(APIView):
                 supplier_city = supplier.city
                 supplier_area = supplier.area
                 supplier_subarea = supplier.subarea
-                address = supplier.address1 + " " + supplier.address2
+                address = str(supplier.address1) + " " + str(supplier.address2)
                 lat_long = str(supplier.latitude) + "/" + str(supplier.longitude)
                 supplier_primary_count = supplier.unit_primary_count
 
