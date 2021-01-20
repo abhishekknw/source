@@ -99,7 +99,7 @@ class Requirement(models.Model):
     change_current_patner = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     lead_price = models.FloatField(default=0.0, blank=True, null=True)
     call_back_preference = models.CharField(max_length=100, choices=CALL_BACK_PREFERENCE, default="NA")
-    lead_purchased = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
+    lead_purchased = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="yes")
     purchased_date = models.DateTimeField(null=True)
     is_preferred_company = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     hotness_of_lead = models.CharField(max_length=5, choices=GLOBAL_HOT_LEAD_VALUE, default="H1")
@@ -144,7 +144,7 @@ class PreRequirement(models.Model):
     change_current_patner = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     lead_price = models.FloatField(default=0.0, blank=True, null=True)
     call_back_preference = models.CharField(max_length=100, choices=CALL_BACK_PREFERENCE, default="NA")
-    lead_purchased = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
+    lead_purchased = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="yes")
     purchased_date = models.DateTimeField(null=True)
 
     class Meta:
