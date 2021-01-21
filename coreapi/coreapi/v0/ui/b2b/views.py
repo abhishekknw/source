@@ -994,7 +994,7 @@ class BdVerification(APIView):
             "Meeting Time": requirement.meating_timeline,
             "Call back time" : requirement.call_back_preference,
             "Comments" : requirement.comment,
-            "Time Stamp" : datetime.datetime.strptime(str(requirement.lead_date), '%Y-%m-%d %H:%M:%S.%f+00:00'),
+            "Time Stamp" : datetime.datetime.strftime(requirement.lead_date, '%Y-%m-%d %H:%M:%S'),
             "Lead Status": lead_status,
             "H2" : h2, 
             "H3" : h3,
