@@ -899,7 +899,7 @@ class BdVerification(APIView):
                 supplier_pin_code = supplier.society_zip
 
                 supplier_contact_person_name = requirement.lead_by.name
-                supplier_designation = requirement.lead_by.designation
+                supplier_designation = requirement.lead_by.contact_type
                 supplier_moblile = requirement.lead_by.mobile
         else:
             supplier = SupplierMaster.objects.filter(supplier_id = requirement.shortlisted_spaces.object_id).first()
@@ -916,7 +916,7 @@ class BdVerification(APIView):
                 supplier_pin_code = supplier.zipcode
 
                 supplier_contact_person_name = requirement.lead_by.name
-                supplier_designation = requirement.lead_by.designation
+                supplier_designation = requirement.lead_by.contact_type
                 supplier_moblile = requirement.lead_by.mobile
         
         prefered_patner = "no"
@@ -994,7 +994,7 @@ class BdVerification(APIView):
             "Meeting Time": requirement.meating_timeline,
             "Call back time" : requirement.call_back_preference,
             "Comments" : requirement.comment,
-            "Time Stamp" : requirement.lead_date,
+            "Time Stamp" : str(requirement.lead_date),
             "Lead Status": lead_status,
             "H2" : h2, 
             "H3" : h3,
