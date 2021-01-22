@@ -31,6 +31,8 @@ from v0.ui.campaign.models import CampaignComments
 from datetime import timedelta
 from django.utils.timezone import make_aware
 import pytz
+from dateutil.tz import *
+
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -834,7 +836,6 @@ class BdVerification(APIView):
         requirements = Requirement.objects.filter(id__in=requirement_ids)
 
         # tz = pytz.timezone('Asia/Kolkata')
-        from dateutil.tz import *
         local = tzlocal()
         now = datetime.datetime.now()
         # now = now.replace(tzinfo = local)
