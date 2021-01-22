@@ -30,9 +30,6 @@ from django.db.models import F
 from v0.ui.campaign.models import CampaignComments
 from datetime import timedelta
 from django.utils.timezone import make_aware
-import pytz
-from dateutil.tz import *
-
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -835,11 +832,7 @@ class BdVerification(APIView):
 
         requirements = Requirement.objects.filter(id__in=requirement_ids)
 
-        # tz = pytz.timezone('Asia/Kolkata')
-        local = tzlocal()
-        now = datetime.datetime.now()
-        # now = now.replace(tzinfo = local)
-        now = now.astimezone(local)
+        now = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
 
         for requirement in requirements:
 
