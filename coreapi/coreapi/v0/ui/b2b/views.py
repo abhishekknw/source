@@ -832,6 +832,8 @@ class BdVerification(APIView):
 
         requirements = Requirement.objects.filter(id__in=requirement_ids)
 
+        now = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
+
         for requirement in requirements:
 
             if requirement.varified_bd == "no":
@@ -843,7 +845,7 @@ class BdVerification(APIView):
 
                         requirement.varified_bd = "yes"
                         requirement.varified_bd_by = request.user
-                        requirement.varified_bd_date = datetime.datetime.now()
+                        requirement.varified_bd_date = now
                         requirement.save()
 
                         self.insert_lead_data(lead_form, requirement, requirement.campaign)
