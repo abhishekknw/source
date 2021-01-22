@@ -833,10 +833,12 @@ class BdVerification(APIView):
 
         requirements = Requirement.objects.filter(id__in=requirement_ids)
 
-        tz = pytz.timezone('Asia/Kolkata')
+        # tz = pytz.timezone('Asia/Kolkata')
+        from dateutil.tz import *
+        local = tzlocal()
         now = datetime.datetime.now()
-        now = now.replace(tzinfo = tz)
-        now = now.astimezone(tz)
+        # now = now.replace(tzinfo = local)
+        now = now.astimezone(local)
 
         for requirement in requirements:
 
