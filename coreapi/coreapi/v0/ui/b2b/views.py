@@ -840,13 +840,13 @@ class BdVerification(APIView):
                 
                     lead_form = mongo_client.leads_forms.find_one({"campaign_id": requirement.company_campaign.proposal_id})
                     if lead_form:
-                
-                        self.insert_lead_data(lead_form, requirement, requirement.campaign)
 
                         requirement.varified_bd = "yes"
                         requirement.varified_bd_by = request.user
                         requirement.varified_bd_date = datetime.datetime.now()
                         requirement.save()
+
+                        self.insert_lead_data(lead_form, requirement, requirement.campaign)
 
                     else:
                         return ui_utils.handle_response({}, data="Please add lead form for this campaign to BD verify",
@@ -994,7 +994,7 @@ class BdVerification(APIView):
             "Meeting Time": requirement.meating_timeline,
             "Call back time" : requirement.call_back_preference,
             "Comments" : requirement.comment,
-            "Time Stamp" : datetime.datetime.strftime(requirement.lead_date, '%Y-%m-%d %H:%M:%S'),
+            "Time Stamp" : datetime.datetime.strftime(requirement.varified_bd_date, '%Y-%m-%d %H:%M:%S'),
             "Lead Status": lead_status,
             "H2" : h2, 
             "H3" : h3,
