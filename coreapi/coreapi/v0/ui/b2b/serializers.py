@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 from v0.ui.account.serializers import ContactDetailsSerializer
-from .models import (Requirement, PreRequirement)
+from .models import (Requirement, PreRequirement,MachadaloRelationshipManager)
 from rest_framework import serializers
 from v0.ui.common.models import BaseUser
 
@@ -18,4 +18,10 @@ class PreRequirementSerializer(ModelSerializer):
 	lead_by = ContactDetailsSerializer(read_only=True)
 	class Meta:
 		model = PreRequirement
+		fields = '__all__'
+
+class RelationshipManagerSerializer(ModelSerializer):
+
+	class Meta:
+		model = MachadaloRelationshipManager
 		fields = '__all__'
