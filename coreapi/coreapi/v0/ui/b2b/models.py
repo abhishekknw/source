@@ -234,3 +234,31 @@ class OrganizationLeads(MongoModel):
     class Meta:
         write_concern = WriteConcern(j=True)
         connection_alias = 'mongo_app'
+
+
+class SalesRepresentatives(models.Model):
+    company = models.ForeignKey('Organisation', null=True, blank=True, 
+        on_delete=models.CASCADE, related_name='company')
+    name = models.CharField(max_length=100, null=True, blank=True)
+    phone_number = models.CharField(max_length=30, null=True, blank=True)
+    city = models.CharField(max_length=80, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class NotificationTemplates(models.Model):
+    content = models.TextField(max_length=500, null=True, blank=True)
+    notification_type = models.CharField(max_length=80, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class MachadaloRelationshipManager(models.Model):
+    company = models.ForeignKey('Organisation', null=True, blank=True, 
+        on_delete=models.CASCADE, related_name='company')
+    name = models.CharField(max_length=100, null=True, blank=True)
+    phone_number = models.CharField(max_length=30, null=True, blank=True)
+    email = models.CharField(max_length=80, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+    

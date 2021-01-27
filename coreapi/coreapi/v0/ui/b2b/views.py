@@ -3,8 +3,8 @@ from __future__ import absolute_import
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import HttpResponse
-from .models import (Requirement, SuspenseLead, BrowsedLead, CampaignLeads, OrganizationLeads, PreRequirement)
-from .serializers import RequirementSerializer, PreRequirementSerializer
+from .models import (MachadaloRelationshipManager,Requirement, SuspenseLead, BrowsedLead, CampaignLeads, OrganizationLeads, PreRequirement)
+from .serializers import RequirementSerializer, PreRequirementSerializer, RelationshipManagerSerializer
 import v0.ui.utils as ui_utils
 from openpyxl import load_workbook, Workbook
 from v0.ui.account.models import ContactDetails, BusinessTypes, BusinessSubTypes
@@ -16,7 +16,7 @@ from v0.ui.organisation.serializers import OrganisationSerializer
 from django.db.models import Q
 import v0.ui.utils as ui_utils
 import datetime
-from v0.ui.common.models import mongo_client
+from v0.ui.common.models import mongo_client,BaseUser
 import hashlib
 from v0.ui.common.pagination import paginateMongo
 from bson.objectid import ObjectId
@@ -1883,4 +1883,31 @@ class SuspenseLeadCount(APIView):
             {"$gte": start_date, "$lte": end_date}}).count()
 
         return ui_utils.handle_response({}, data={"count":count_suspanse_lead}, success=True)
-       
+
+
+class LicenceDetails(APIView):
+    # permission_classes = ()
+    # authentication_classes = ()
+
+    def get(self, request):
+
+        current_user = request.user
+        mydetail = None
+        companydetail = None
+        managerdetail = None
+        rltionshipmanager = None
+        base_user = BaseUser.objects.filter(username=current_user).first()
+        mydetail = BaseUserSerializer(base_user, many=False).data
+
+        if base_user and base_user.profile:
+
+            orgdetail = Organisation.objects.filter(pk=
+                base_user.profile.organisation_id).first()
+            companydetail = OrganisationSerializer(orgdetail, many=False).data
+
+            managerdetail = MachadaloRelationshipManager.objects.filter(company=
+                base_user.profile.organisation_id).first()
+            rltionshipmanager = RelationshipManagerSerializer(managerdetail, many=False).data
+
+        return ui_utils.handle_response({}, data={"mydetail":mydetail,
+            "companydetail":companydetail,"relationship_manager":rltionshipmanager}, success=True)
