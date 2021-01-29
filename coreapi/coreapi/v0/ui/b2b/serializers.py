@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 from v0.ui.account.serializers import ContactDetailsSerializer
-from .models import (Requirement, PreRequirement,MachadaloRelationshipManager)
+from .models import (PaymentDetails,Requirement, PreRequirement,MachadaloRelationshipManager,LicenseDetails)
 from rest_framework import serializers
 from v0.ui.common.models import BaseUser
 
@@ -24,4 +24,16 @@ class RelationshipManagerSerializer(ModelSerializer):
 
 	class Meta:
 		model = MachadaloRelationshipManager
+		fields = '__all__'
+
+class LicenseDetailsSerializer(ModelSerializer):
+
+	class Meta:
+		model = LicenseDetails
+		fields = '__all__'
+
+class PaymentDetailsSerializer(ModelSerializer):
+
+	class Meta:
+		model = PaymentDetails
 		fields = '__all__'
