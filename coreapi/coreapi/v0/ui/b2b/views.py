@@ -3,8 +3,8 @@ from __future__ import absolute_import
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import HttpResponse
-from .models import (MachadaloRelationshipManager,Requirement, SuspenseLead, BrowsedLead, CampaignLeads, OrganizationLeads, PreRequirement)
-from .serializers import RequirementSerializer, PreRequirementSerializer, RelationshipManagerSerializer
+from .models import (PaymentDetails,LicenseDetails,MachadaloRelationshipManager,Requirement, SuspenseLead, BrowsedLead, CampaignLeads, OrganizationLeads, PreRequirement)
+from .serializers import PaymentDetailsSerializer,LicenseDetailsSerializer,RequirementSerializer, PreRequirementSerializer, RelationshipManagerSerializer
 import v0.ui.utils as ui_utils
 from openpyxl import load_workbook, Workbook
 from v0.ui.account.models import ContactDetails, BusinessTypes, BusinessSubTypes
@@ -1039,7 +1039,7 @@ class BdVerification(APIView):
             "preferred_patner":prefered_patner,"lead_price":requirement.lead_price,
             "supplier_primary_count":supplier_primary_count,"supplier_city": supplier_city,
             "supplier_area": supplier_area,"supplier_sub_area": supplier_subarea,
-            "purchased_date": requirement.purchased_date}
+            "purchased_date": requirement.purchased_date,"client_status":requirement.client_status}
 
         lead_for_hash = {
             "data": lead_data,
@@ -1335,6 +1335,7 @@ class AddLeadPrice(APIView):
             requirement = Requirement.objects.filter(id=row['requirement_id']).first()
             requirement.lead_price = row['lead_price']
             requirement.comment = row['comment']
+            requirement.client_status = row['client_status']
             requirement.hotness_of_lead = row['hotness_of_lead'].upper()
             requirement.save()
         return ui_utils.handle_response({}, data="Price and comment added", success=True)
@@ -1901,9 +1902,9 @@ class LicenceDetails(APIView):
 
         if base_user and base_user.profile:
 
-            orgdetail = Organisation.objects.filter(pk=
+            licensedetail = LicenseDetails.objects.filter(company=
                 base_user.profile.organisation_id).first()
-            companydetail = OrganisationSerializer(orgdetail, many=False).data
+            companydetail = LicenseDetailsSerializer(licensedetail, many=False).data
 
             managerdetail = MachadaloRelationshipManager.objects.filter(company=
                 base_user.profile.organisation_id).first()
@@ -1911,3 +1912,58 @@ class LicenceDetails(APIView):
 
         return ui_utils.handle_response({}, data={"mydetail":mydetail,
             "companydetail":companydetail,"relationship_manager":rltionshipmanager}, success=True)
+
+    def put(self,request):
+
+        licensedetail = LicenseDetails.objects.filter(company=
+                request.data['company']).first()
+        if licensedetail:
+
+            license = LicenseDetailsSerializer(licensedetail, data=request.data,
+                partial=True)
+
+            if license.is_valid():
+                license.save()
+                return ui_utils.handle_response({}, data={"data":license.data}, success=True)
+            else:
+                return ui_utils.handle_response({}, data={"errors":license.errors}, success=False)
+        else:
+            return ui_utils.handle_response({}, data={"data":"data not found"}, success=True)
+
+
+class PaymentDetailsView(APIView):
+    # permission_classes = ()
+    # authentication_classes = ()
+
+    def get(self, request):
+
+        paymentdetail = None
+        current_user = request.user
+        base_user = BaseUser.objects.filter(username=current_user).first()
+
+        if base_user and base_user.profile:
+
+            paymnt = PaymentDetails.objects.filter(company=
+                base_user.profile.organisation_id).first()
+
+            paymentdetail = PaymentDetailsSerializer(paymnt, many=True).data
+
+        return ui_utils.handle_response({}, data={"paymentdetail":paymentdetail}, success=True)
+
+
+class LeadsDecisionPanding(APIView):
+    # permission_classes = ()
+    # authentication_classes = ()
+
+    def get(self, request):
+
+        data = []
+        organisation_id = request.user.profile.organisation.organisation_id
+
+        if organisation_id:
+            leads = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"client_status":"Decision Pending"}]}))
+
+            for entry in leads:
+                data.append(entry['data'])
+
+        return ui_utils.handle_response({}, data={"lead":data}, success=True)
