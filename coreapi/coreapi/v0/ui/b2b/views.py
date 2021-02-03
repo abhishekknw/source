@@ -1966,13 +1966,34 @@ class LeadsDecisionPanding(APIView):
 
             for entry in leads:
 
+                context['_id'] = str(ObjectId(entry['_id']))
+                context['requirement_id'] = entry['requrement_id']
                 context['entity_name'] = entry['data'][0]['value']
                 context['entity_type'] = entry['data'][1]['value']
                 context['primary_count'] = entry['data'][9]['value']
                 context['area'] = entry['data'][2]['value']
                 context['city'] = entry['data'][5]['value']
                 context['client_status'] = entry['client_status']
-
+                
                 data.append(context)
 
         return ui_utils.handle_response({}, data={"lead":data}, success=True)
+
+class UpdateClientStatus(APIView):
+
+    def post(self, request):
+
+        data = request.data.get("data")
+
+        for clnt_status in data:
+
+            mongo_client.leads.update_one({"requrement_id": 
+                int(clnt_status['requirement_id'])},{"$set": {
+                        "client_status": clnt_status['client_status'],
+                    }})
+
+            req = Requirement.objects.filter(id=clnt_status["requirement_id"]).first()
+            req.client_status = clnt_status["client_status"]
+            req.save()
+        
+        return ui_utils.handle_response({}, data=data, success=True)
