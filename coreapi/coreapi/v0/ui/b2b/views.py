@@ -1958,12 +1958,21 @@ class LeadsDecisionPanding(APIView):
     def get(self, request):
 
         data = []
+        context = {}
         organisation_id = request.user.profile.organisation.organisation_id
 
         if organisation_id:
             leads = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"client_status":"Decision Pending"}]}))
 
             for entry in leads:
-                data.append(entry['data'])
+
+                context['entity_name'] = entry['data'][0]['value']
+                context['entity_type'] = entry['data'][1]['value']
+                context['primary_count'] = entry['data'][9]['value']
+                context['area'] = entry['data'][2]['value']
+                context['city'] = entry['data'][5]['value']
+                context['client_status'] = entry['client_status']
+
+                data.append(context)
 
         return ui_utils.handle_response({}, data={"lead":data}, success=True)
