@@ -910,7 +910,7 @@ class BdVerification(APIView):
                 supplier_city = supplier.city
                 supplier_area = supplier.area
                 supplier_subarea = supplier.subarea
-                address = str(supplier.address1) + " " + str(supplier.address2)
+                address = str(supplier.address_supplier.address1) + " " + str(supplier.address_supplier.address2)
                 lat_long = str(supplier.latitude) + "/" + str(supplier.longitude)
                 supplier_primary_count = supplier.unit_primary_count
 
