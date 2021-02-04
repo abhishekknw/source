@@ -167,7 +167,7 @@ def bot_to_requirement(request, data):
             campaign_id = campaign.proposal_id
 
             shortlisted_spaces = ShortlistedSpaces.objects.filter(
-                proposal_id=campaign_id, object_id__in=supplier_id).first()
+                proposal_id=campaign_id, object_id=supplier.supplier_id).first()
 
             if not shortlisted_spaces:
                 content_type = ui_utils.get_content_type(supplier_type)
