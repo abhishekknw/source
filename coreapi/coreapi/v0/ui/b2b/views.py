@@ -367,6 +367,7 @@ class RequirementClass(APIView):
                 "impl_timeline": req["impl_timeline"],
                 "meating_timeline": req["meating_timeline"],
                 "comment": req["comment"],
+                "lead_price": req["lead_price"],
             }
 
             call_back_preference = "NA"
@@ -382,7 +383,7 @@ class RequirementClass(APIView):
             lead_data = []
 
             change_current_patner = "no"
-            if row.current_patner_feedback == "Dissatisfied" or row.current_patner_feedback == "Extremely Dissatisfied":
+            if row.current_patner_feedback and (row.current_patner_feedback == "Dissatisfied" or row.current_patner_feedback == "Extremely Dissatisfied"):
                 change_current_patner = "yes"
             
             lead_status = b2b_utils.get_lead_status(
@@ -1039,7 +1040,8 @@ class BdVerification(APIView):
             "preferred_patner":prefered_patner,"lead_price":requirement.lead_price,
             "supplier_primary_count":supplier_primary_count,"supplier_city": supplier_city,
             "supplier_area": supplier_area,"supplier_sub_area": supplier_subarea,
-            "purchased_date": requirement.purchased_date,"client_status":requirement.client_status}
+            "purchased_date": requirement.purchased_date,"client_status":requirement.client_status,
+            "supplier_type":requirement.shortlisted_spaces.supplier_code}
 
         lead_for_hash = {
             "data": lead_data,
@@ -1959,10 +1961,17 @@ class LeadsDecisionPanding(APIView):
 
         data = []
         context = {}
+        type_of_entity = request.query_params.get("type_of_entity")
         organisation_id = request.user.profile.organisation.organisation_id
 
         if organisation_id:
-            leads = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"client_status":"Decision Pending"}]}))
+
+            if type_of_entity:
+                where = {"$and": [{"company_id": organisation_id}, {"client_status":"Decision Pending"},{"supplier_type":type_of_entity}]}
+            else:
+                where = {"$and": [{"company_id": organisation_id}, {"client_status":"Decision Pending"}]}
+
+            leads = list(mongo_client.leads.find(where))
 
             for entry in leads:
 
@@ -1996,4 +2005,4 @@ class UpdateClientStatus(APIView):
             req.client_status = clnt_status["client_status"]
             req.save()
         
-        return ui_utils.handle_response({}, data=data, success=True)
+        return ui_utils.handle_response({}, data="Record updated successfully", success=True)
