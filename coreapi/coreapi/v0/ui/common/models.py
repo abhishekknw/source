@@ -16,6 +16,7 @@ class BaseUser(AbstractUser):
     """
     user_code = models.CharField(max_length=255, default=settings.DEFAULT_USER_CODE)
     mobile = models.CharField(max_length=20, null=True, blank=True)
+    designation = models.CharField(max_length=50, null=True, blank=True)
     profile = models.ForeignKey('Profile', null=True, blank=True, on_delete=models.CASCADE)  # remove null=true once every user has been attached one profile
     role = models.ForeignKey(Role, null=True, blank=True, on_delete=models.CASCADE)
     terms_accepted = models.BooleanField(default=False)

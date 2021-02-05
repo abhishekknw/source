@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 
-from .views import (UpdateBrowsedLead,SuspenseLeadCount,BuyLead,SummaryReportAndGraph,FlatSummaryDetails,AddLeadPrice, GetLeadsByCampaignId,BdRequirement,BdVerification, ImportLead, RequirementClass, SuspenseLeadClass, BrowsedLeadClass,  
+from .views import (UpdateClientStatus,LeadsDecisionPanding,PaymentDetailsView,LicenceDetails,UpdateBrowsedLead,SuspenseLeadCount,BuyLead,SummaryReportAndGraph,FlatSummaryDetails,AddLeadPrice, GetLeadsByCampaignId,BdRequirement,BdVerification, ImportLead, RequirementClass, SuspenseLeadClass, BrowsedLeadClass,  
                         LeadOpsVerification, BrowsedToRequirement, DeleteRequirement, BrowsedLeadDelete, RestoreRequirement, GetLeadsByDate,
                         GetLeadsCampaignByDate, GetFeedbackCount, GetCampaignList, GetLeadsForCurrentCompanyDonut, GetLeadsSummeryForDonutChart,
                         GetLeadsForDonutChart,GetSupplierByCampaign, GetLeadDistributionCampaign, GetPurchasedLeadsData, GetNotPurchasedLeadsData, GetDynamicLeadFormHeaders )
@@ -39,6 +39,10 @@ urlpatterns = [
     url(r'^flat-summary-details/$', FlatSummaryDetails.as_view()),
     url(r'^summary-reports/$', SummaryReportAndGraph.as_view()),
     url(r'^buy-leads/$', BuyLead.as_view()),
+    url(r'^licence-details/$', LicenceDetails.as_view()),
+    url(r'^payment-details/$', PaymentDetailsView.as_view()),
+    url(r'^lead-decision-panding/$', LeadsDecisionPanding.as_view()),
+    url(r'^update-client-decision-status/$', UpdateClientStatus.as_view()),
 ]
 
 # router = DefaultRouter()

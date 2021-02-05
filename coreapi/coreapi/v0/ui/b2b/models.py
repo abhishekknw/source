@@ -61,6 +61,12 @@ GLOBAL_HOT_LEAD_VALUE = (
     ('H6','H6'),
 )
 
+CLIENT_STATUS = (
+    ('Accepted','Accepted'),
+    ('Decision Pending','Decision Pending'),
+    ('Decline','Decline'),
+)
+
 
 class Requirement(models.Model):
     campaign = models.ForeignKey('ProposalInfo', null=True, blank=True, on_delete=models.CASCADE)
@@ -103,6 +109,7 @@ class Requirement(models.Model):
     purchased_date = models.DateTimeField(null=True)
     is_preferred_company = models.CharField(max_length=5, choices=(("yes","yes"),("no","no")), default="no")
     hotness_of_lead = models.CharField(max_length=5, choices=GLOBAL_HOT_LEAD_VALUE, default="H1")
+    client_status = models.CharField(max_length=20, choices=CLIENT_STATUS, default="Decision Pending")
 
     class Meta:
         db_table = 'requirement'
@@ -234,3 +241,65 @@ class OrganizationLeads(MongoModel):
     class Meta:
         write_concern = WriteConcern(j=True)
         connection_alias = 'mongo_app'
+
+
+class SalesRepresentatives(models.Model):
+    company = models.ForeignKey('Organisation', null=True, blank=True, 
+        on_delete=models.CASCADE, related_name='company')
+    name = models.CharField(max_length=100, null=True, blank=True)
+    phone_number = models.CharField(max_length=30, null=True, blank=True)
+    city = models.CharField(max_length=80, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class NotificationTemplates(models.Model):
+    content = models.TextField(max_length=500, null=True, blank=True)
+    notification_type = models.CharField(max_length=80, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class MachadaloRelationshipManager(models.Model):
+    company = models.ForeignKey('Organisation', null=True, blank=True, 
+        on_delete=models.CASCADE, related_name='company')
+    name = models.CharField(max_length=100, null=True, blank=True)
+    phone_number = models.CharField(max_length=30, null=True, blank=True)
+    email = models.CharField(max_length=80, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class PaymentDetails(models.Model):
+    company = models.ForeignKey('Organisation', null=True, blank=True, 
+        on_delete=models.CASCADE, related_name='company')
+    date = models.DateTimeField(auto_now_add=True)
+    amount = models.CharField(max_length=100, null=True, blank=True)
+    payment_status = models.CharField(max_length=30, null=True, blank=True)
+    url = models.CharField(max_length=80, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'payment_details'
+
+class LicenseDetails(models.Model):
+    company = models.ForeignKey('Organisation', null=True, blank=True, 
+        on_delete=models.CASCADE, related_name='company')
+    website_url = models.CharField(max_length=100, null=True, blank=True)
+    contact_number = models.CharField(max_length=30, null=True, blank=True)
+    gstin_number = models.CharField(max_length=80, null=True, blank=True)
+    registered_address = models.CharField(max_length=500, null=True, blank=True)
+    city = models.CharField(max_length=50, null=True, blank=True)
+    pin_code = models.CharField(max_length=50, null=True, blank=True)
+    billing_address = models.CharField(max_length=500, null=True, blank=True)
+    pan_number = models.CharField(max_length=50, null=True, blank=True)
+    poc_name = models.CharField(max_length=50, null=True, blank=True)
+    email = models.CharField(max_length=50, null=True, blank=True)
+    designation = models.CharField(max_length=50, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'license_details'
+
+
+

@@ -38,6 +38,11 @@ class Organisation(BaseModel):
     category = models.CharField(max_length=30, choices=ORGANIZATION_CATEGORY, default=ORGANIZATION_CATEGORY[1][0])
     objects = managers.GeneralManager()
     created_by_org = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE)
+    gstin = models.CharField(max_length=50, blank=True, null=True)
+    city = models.CharField(max_length=50, blank=True, null=True)
+    pin_code = models.CharField(max_length=50, blank=True, null=True)
+    billing_address = models.CharField(max_length=100, blank=True, null=True)
+    pan_number = models.CharField(max_length=50, blank=True, null=True)
 
     class Meta:
         db_table = 'organisation'

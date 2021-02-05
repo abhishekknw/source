@@ -3,8 +3,8 @@ from __future__ import absolute_import
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import HttpResponse
-from .models import (Requirement, SuspenseLead, BrowsedLead, CampaignLeads, OrganizationLeads, PreRequirement)
-from .serializers import RequirementSerializer, PreRequirementSerializer
+from .models import (PaymentDetails,LicenseDetails,MachadaloRelationshipManager,Requirement, SuspenseLead, BrowsedLead, CampaignLeads, OrganizationLeads, PreRequirement)
+from .serializers import PaymentDetailsSerializer,LicenseDetailsSerializer,RequirementSerializer, PreRequirementSerializer, RelationshipManagerSerializer
 import v0.ui.utils as ui_utils
 from openpyxl import load_workbook, Workbook
 from v0.ui.account.models import ContactDetails, BusinessTypes, BusinessSubTypes
@@ -16,7 +16,7 @@ from v0.ui.organisation.serializers import OrganisationSerializer
 from django.db.models import Q
 import v0.ui.utils as ui_utils
 import datetime
-from v0.ui.common.models import mongo_client
+from v0.ui.common.models import mongo_client,BaseUser
 import hashlib
 from v0.ui.common.pagination import paginateMongo
 from bson.objectid import ObjectId
@@ -367,6 +367,7 @@ class RequirementClass(APIView):
                 "impl_timeline": req["impl_timeline"],
                 "meating_timeline": req["meating_timeline"],
                 "comment": req["comment"],
+                "lead_price": req["lead_price"],
             }
 
             call_back_preference = "NA"
@@ -382,7 +383,7 @@ class RequirementClass(APIView):
             lead_data = []
 
             change_current_patner = "no"
-            if row.current_patner_feedback == "Dissatisfied" or row.current_patner_feedback == "Extremely Dissatisfied":
+            if row.current_patner_feedback and (row.current_patner_feedback == "Dissatisfied" or row.current_patner_feedback == "Extremely Dissatisfied"):
                 change_current_patner = "yes"
             
             lead_status = b2b_utils.get_lead_status(
@@ -910,7 +911,7 @@ class BdVerification(APIView):
                 supplier_city = supplier.city
                 supplier_area = supplier.area
                 supplier_subarea = supplier.subarea
-                address = str(supplier.address1) + " " + str(supplier.address2)
+                address = str(supplier.address_supplier.address1) + " " + str(supplier.address_supplier.address2)
                 lat_long = str(supplier.latitude) + "/" + str(supplier.longitude)
                 supplier_primary_count = supplier.unit_primary_count
 
@@ -1039,7 +1040,8 @@ class BdVerification(APIView):
             "preferred_patner":prefered_patner,"lead_price":requirement.lead_price,
             "supplier_primary_count":supplier_primary_count,"supplier_city": supplier_city,
             "supplier_area": supplier_area,"supplier_sub_area": supplier_subarea,
-            "purchased_date": requirement.purchased_date}
+            "purchased_date": requirement.purchased_date,"client_status":requirement.client_status,
+            "supplier_type":requirement.shortlisted_spaces.supplier_code}
 
         lead_for_hash = {
             "data": lead_data,
@@ -1335,6 +1337,7 @@ class AddLeadPrice(APIView):
             requirement = Requirement.objects.filter(id=row['requirement_id']).first()
             requirement.lead_price = row['lead_price']
             requirement.comment = row['comment']
+            requirement.client_status = row['client_status']
             requirement.hotness_of_lead = row['hotness_of_lead'].upper()
             requirement.save()
         return ui_utils.handle_response({}, data="Price and comment added", success=True)
@@ -1883,4 +1886,123 @@ class SuspenseLeadCount(APIView):
             {"$gte": start_date, "$lte": end_date}}).count()
 
         return ui_utils.handle_response({}, data={"count":count_suspanse_lead}, success=True)
-       
+
+
+class LicenceDetails(APIView):
+    # permission_classes = ()
+    # authentication_classes = ()
+
+    def get(self, request):
+
+        current_user = request.user
+        mydetail = None
+        companydetail = None
+        managerdetail = None
+        rltionshipmanager = None
+        base_user = BaseUser.objects.filter(username=current_user).first()
+        mydetail = BaseUserSerializer(base_user, many=False).data
+
+        if base_user and base_user.profile:
+
+            licensedetail = LicenseDetails.objects.filter(company=
+                base_user.profile.organisation_id).first()
+            companydetail = LicenseDetailsSerializer(licensedetail, many=False).data
+
+            managerdetail = MachadaloRelationshipManager.objects.filter(company=
+                base_user.profile.organisation_id).first()
+            rltionshipmanager = RelationshipManagerSerializer(managerdetail, many=False).data
+
+        return ui_utils.handle_response({}, data={"mydetail":mydetail,
+            "companydetail":companydetail,"relationship_manager":rltionshipmanager}, success=True)
+
+    def put(self,request):
+
+        licensedetail = LicenseDetails.objects.filter(company=
+                request.data['company']).first()
+        if licensedetail:
+
+            license = LicenseDetailsSerializer(licensedetail, data=request.data,
+                partial=True)
+
+            if license.is_valid():
+                license.save()
+                return ui_utils.handle_response({}, data={"data":license.data}, success=True)
+            else:
+                return ui_utils.handle_response({}, data={"errors":license.errors}, success=False)
+        else:
+            return ui_utils.handle_response({}, data={"data":"data not found"}, success=True)
+
+
+class PaymentDetailsView(APIView):
+    # permission_classes = ()
+    # authentication_classes = ()
+
+    def get(self, request):
+
+        paymentdetail = None
+        current_user = request.user
+        base_user = BaseUser.objects.filter(username=current_user).first()
+
+        if base_user and base_user.profile:
+
+            paymnt = PaymentDetails.objects.filter(company=
+                base_user.profile.organisation_id).first()
+
+            paymentdetail = PaymentDetailsSerializer(paymnt, many=True).data
+
+        return ui_utils.handle_response({}, data={"paymentdetail":paymentdetail}, success=True)
+
+
+class LeadsDecisionPanding(APIView):
+    # permission_classes = ()
+    # authentication_classes = ()
+
+    def get(self, request):
+
+        data = []
+        context = {}
+        type_of_entity = request.query_params.get("type_of_entity")
+        organisation_id = request.user.profile.organisation.organisation_id
+
+        if organisation_id:
+
+            if type_of_entity:
+                where = {"$and": [{"company_id": organisation_id}, {"client_status":"Decision Pending"},{"supplier_type":type_of_entity}]}
+            else:
+                where = {"$and": [{"company_id": organisation_id}, {"client_status":"Decision Pending"}]}
+
+            leads = list(mongo_client.leads.find(where))
+
+            for entry in leads:
+
+                context['_id'] = str(ObjectId(entry['_id']))
+                context['requirement_id'] = entry['requrement_id']
+                context['entity_name'] = entry['data'][0]['value']
+                context['entity_type'] = entry['data'][1]['value']
+                context['primary_count'] = entry['data'][9]['value']
+                context['area'] = entry['data'][2]['value']
+                context['city'] = entry['data'][5]['value']
+                context['client_status'] = entry['client_status']
+                
+                data.append(context)
+
+        return ui_utils.handle_response({}, data={"lead":data}, success=True)
+
+class UpdateClientStatus(APIView):
+
+    def post(self, request):
+
+        data = request.data.get("data")
+
+        for clnt_status in data:
+
+            mongo_client.leads.update_one({"requrement_id": 
+                int(clnt_status['requirement_id'])},{"$set": {
+                        "client_status": clnt_status['client_status'],
+                    }})
+
+            req = Requirement.objects.filter(id=clnt_status["requirement_id"]).first()
+            req.client_status = clnt_status["client_status"]
+            req.save()
+        
+        return ui_utils.handle_response({}, data="Record updated successfully", success=True)
