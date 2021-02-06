@@ -654,3 +654,15 @@ class SupplierTvChannel(BasicSupplierDetails):
 
     class Meta:
         db_table = 'supplier_tv_channel'
+
+class SupplierCorporates(BasicSupplierDetails):
+    comments = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        db_table = 'supplier_type_corporates'
+
+class SupplierTypeHospital(BasicSupplierDetails):
+    comments = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        db_table = 'supplier_hospital'
