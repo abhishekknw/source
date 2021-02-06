@@ -105,6 +105,8 @@ bus = 'BU'
 gantry = 'GN'
 radio_channel = 'RC'
 tv_channel = 'TV'
+corporates = 'CO'
+hospital = 'HL'
 
 # all supplier codes
 society_code = 'RS'
@@ -1361,6 +1363,8 @@ codes_to_model_names = {
     'TV': 'SupplierTvChannel',
     'WI': 'WhatsAppIndividualInventory',
     'WG': 'WhatsAppGroupInventory',
+    'CO': 'SupplierCorporates',
+    'HL': 'SupplierTypeHospital',
   
     bus_depot_code: 'SupplierTypeBusDepot',
     retail_shop: 'SupplierTypeRetailShop',
@@ -1418,6 +1422,8 @@ supplier_code_to_names = {
     'BU': 'Bus',
     'RC': 'Radio Channel',
     'TV': 'TV Channel',
+    'CO': 'Corporates',
+    'HL': 'Hospital',
 }
 
 # model to codes
