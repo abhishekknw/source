@@ -244,8 +244,7 @@ class OrganizationLeads(MongoModel):
 
 
 class SalesRepresentatives(models.Model):
-    company = models.ForeignKey('Organisation', null=True, blank=True, 
-        on_delete=models.CASCADE, related_name='company')
+    company = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE, related_name='sales_org')
     name = models.CharField(max_length=100, null=True, blank=True)
     phone_number = models.CharField(max_length=30, null=True, blank=True)
     city = models.CharField(max_length=80, null=True, blank=True)
@@ -259,8 +258,7 @@ class NotificationTemplates(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 class MachadaloRelationshipManager(models.Model):
-    company = models.ForeignKey('Organisation', null=True, blank=True, 
-        on_delete=models.CASCADE, related_name='company')
+    company = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE, related_name='relation_org')
     name = models.CharField(max_length=100, null=True, blank=True)
     phone_number = models.CharField(max_length=30, null=True, blank=True)
     email = models.CharField(max_length=80, null=True, blank=True)
@@ -269,8 +267,7 @@ class MachadaloRelationshipManager(models.Model):
 
 
 class PaymentDetails(models.Model):
-    company = models.ForeignKey('Organisation', null=True, blank=True, 
-        on_delete=models.CASCADE, related_name='company')
+    company = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE, related_name='payment_org')
     date = models.DateTimeField(auto_now_add=True)
     amount = models.CharField(max_length=100, null=True, blank=True)
     payment_status = models.CharField(max_length=30, null=True, blank=True)
@@ -282,8 +279,7 @@ class PaymentDetails(models.Model):
         db_table = 'payment_details'
 
 class LicenseDetails(models.Model):
-    company = models.ForeignKey('Organisation', null=True, blank=True, 
-        on_delete=models.CASCADE, related_name='company')
+    company = models.ForeignKey('Organisation', null=True, blank=True, on_delete=models.CASCADE, related_name='license_org')
     website_url = models.CharField(max_length=100, null=True, blank=True)
     contact_number = models.CharField(max_length=30, null=True, blank=True)
     gstin_number = models.CharField(max_length=80, null=True, blank=True)
