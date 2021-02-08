@@ -121,7 +121,7 @@ hording_code = 'HO'
 positive = ['Yes', 'Y', '1']
 negative = ['No', 'N', '0']
 
-valid_supplier_codes = [society, corporate, gym, salon, bus_shelter, bus_depot_code, retail_shop_code, educational_institute_code, hording_code, bus, gantry, radio_channel, tv_channel]
+valid_supplier_codes = [society, corporate, gym, salon, bus_shelter, bus_depot_code, retail_shop_code, educational_institute_code, hording_code, bus, gantry, radio_channel, tv_channel, corporates, hospital]
 
 supplier_keys = [
 
