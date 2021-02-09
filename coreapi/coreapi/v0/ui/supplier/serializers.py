@@ -203,10 +203,10 @@ class SupplierTvChannelSerializer(ModelSerializer):
 
 class SupplierCorporatesSerializer(ModelSerializer):
     class Meta:
-        model = SupplierTvChannel
+        model = SupplierCorporates
         fields = '__all__'
 
 class SupplierHospitalSerializer(ModelSerializer):
     class Meta:
-        model = SupplierTvChannel
+        model = SupplierTypeHospital
         fields = '__all__'
