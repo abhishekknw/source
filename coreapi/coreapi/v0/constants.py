@@ -105,6 +105,8 @@ bus = 'BU'
 gantry = 'GN'
 radio_channel = 'RC'
 tv_channel = 'TV'
+corporates = 'CO'
+hospital = 'HL'
 
 # all supplier codes
 society_code = 'RS'
@@ -119,7 +121,7 @@ hording_code = 'HO'
 positive = ['Yes', 'Y', '1']
 negative = ['No', 'N', '0']
 
-valid_supplier_codes = [society, corporate, gym, salon, bus_shelter, bus_depot_code, retail_shop_code, educational_institute_code, hording_code, bus, gantry, radio_channel, tv_channel]
+valid_supplier_codes = [society, corporate, gym, salon, bus_shelter, bus_depot_code, retail_shop_code, educational_institute_code, hording_code, bus, gantry, radio_channel, tv_channel, corporates, hospital]
 
 supplier_keys = [
 
@@ -1361,6 +1363,8 @@ codes_to_model_names = {
     'TV': 'SupplierTvChannel',
     'WI': 'WhatsAppIndividualInventory',
     'WG': 'WhatsAppGroupInventory',
+    'CO': 'SupplierCorporates',
+    'HL': 'SupplierTypeHospital',
   
     bus_depot_code: 'SupplierTypeBusDepot',
     retail_shop: 'SupplierTypeRetailShop',
@@ -1418,6 +1422,8 @@ supplier_code_to_names = {
     'BU': 'Bus',
     'RC': 'Radio Channel',
     'TV': 'TV Channel',
+    'CO': 'Corporates',
+    'HL': 'Hospital',
 }
 
 # model to codes
@@ -2156,6 +2162,30 @@ supplier_master_diff_table = {
         'supplier_type': 'supplier_code'
     },
     'HO': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code'
+    },
+    'BU': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code'
+    },
+    'GN': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code'
+    },
+    'RC': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code'
+    },
+    'TV': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code'
+    },
+    'CO': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code'
+    },
+    'HL': {
         'supplier_name': 'name',
         'supplier_type': 'supplier_code'
     },

@@ -37,7 +37,7 @@ import v0.ui.serializers as ui_serializers
 from v0.ui.location.models import State, City, CityArea, CitySubArea
 from v0.ui.supplier.serializers import (SupplierHordingSerializer, SupplierEducationalInstituteSerializer, SupplierTypeSocietySerializer, SupplierTypeCorporateSerializer, SupplierTypeBusShelterSerializer,
                                         SupplierTypeGymSerializer, SupplierTypeRetailShopSerializer, SupplierTvChannelSerializer, SupplierRadioChannelSerializer,
-                                        SupplierGantrySerializer, SupplierBusSerializer,
+                                        SupplierGantrySerializer, SupplierBusSerializer, SupplierCorporatesSerializer, SupplierHospitalSerializer,
                                         SupplierTypeSalonSerializer, BusDepotSerializer, SupplierMasterSerializer, AddressMasterSerializer)
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster, AddressMaster
 from v0.ui.finances.serializers import (IdeationDesignCostSerializer, DataSciencesCostSerializer, EventStaffingCostSerializer,
@@ -930,6 +930,8 @@ def get_serializer(query):
             v0_constants.gantry: SupplierGantrySerializer,
             v0_constants.radio_channel: SupplierRadioChannelSerializer,
             v0_constants.tv_channel: SupplierTvChannelSerializer,
+            v0_constants.corporates: SupplierCorporatesSerializer,
+            v0_constants.hospital: SupplierHospitalSerializer,
             'ideation_design_cost': IdeationDesignCostSerializer,
             'logistic_operations_cost': LogisticOperationsCostSerializer,
             'space_booking_cost': SpaceBookingCostSerializer,
