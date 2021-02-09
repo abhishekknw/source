@@ -2165,4 +2165,28 @@ supplier_master_diff_table = {
         'supplier_name': 'name',
         'supplier_type': 'supplier_code'
     },
+    'BU': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code'
+    },
+    'GN': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code'
+    },
+    'RC': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code'
+    },
+    'TV': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code'
+    },
+    'CO': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code'
+    },
+    'HL': {
+        'supplier_name': 'name',
+        'supplier_type': 'supplier_code'
+    },
 }
