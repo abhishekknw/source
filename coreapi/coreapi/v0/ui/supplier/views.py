@@ -164,7 +164,7 @@ def update_contact_and_ownership_detail(data):
             "feedback": data.get('feedback', None),
         }
         supplier_type = master_supplier_data.get('supplier_type', None)
-        if supplier_type in ["CP", "BS", "HO"]:
+        if supplier_type in ["CP", "BS", "HO", "CO", "HL", "RC", "TV", "GN", "BU"]:
             master_data["quality_rating"] = data.get('quality_rating', None)
             master_data["locality_rating"] = data.get('locality_rating', None)
             master_data["quantity_rating"] = data.get('quantity_rating', None)
