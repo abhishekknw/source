@@ -1370,7 +1370,7 @@ class GetLeadsCampaignByDate(APIView):
         end_date = date_time_obj.replace(hour=23, minute=59, second=59)
         organisation_id = request.user.profile.organisation.organisation_id
 
-        leads = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}]})
+        leads = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"client_status": "Accepted"}]})
         campaign_ids = set()
         lead_count_purchased_map = {}
         lead_count_not_purchased_map = {}
@@ -1478,7 +1478,7 @@ class GetSupplierByCampaign(APIView):
         
         verified_supplier_ids = Requirement.objects.filter(
             company_shortlisted_spaces_id__object_id__in=supplier_ids,
-            varified_bd="yes").values('company_shortlisted_spaces_id__object_id')
+            varified_bd="yes", client_status="Accepted").values('company_shortlisted_spaces_id__object_id')
         
         supplier_society_data = SupplierTypeSociety.objects.filter(supplier_id__in=verified_supplier_ids).values('supplier_id').annotate(
             supplier_name = F('society_name'), unit_primary_count=F('flat_count'), city=F('society_city'), area=F('society_locality'))
