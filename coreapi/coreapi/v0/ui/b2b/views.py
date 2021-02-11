@@ -1370,7 +1370,7 @@ class GetLeadsCampaignByDate(APIView):
         end_date = date_time_obj.replace(hour=23, minute=59, second=59)
         organisation_id = request.user.profile.organisation.organisation_id
 
-        leads = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"client_status": "Accepted"}]})
+        leads = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}]}, {"client_status": "Accepted"})
         campaign_ids = set()
         lead_count_purchased_map = {}
         lead_count_not_purchased_map = {}
