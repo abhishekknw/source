@@ -1158,7 +1158,7 @@ class GetLeadsByCampaignId(APIView):
 
     def get(self, request):
 
-        where = {"is_current_company": "no","lead_purchased": request.query_params.get('is_purchased')}
+        where = {"is_current_company": "no","lead_purchased": request.query_params.get('is_purchased'), "client_status":"Accepted"}
 
         if request.query_params.get("campaign_id"):
             where["company_campaign_id"] = request.query_params.get("campaign_id")
@@ -1206,7 +1206,7 @@ class GetLeadsForDonutChart(APIView):
 
     def get(self, request):
        
-        where = {}
+        where = {"client_status":"Accepted"}
         
         if request.query_params.get("campaign_id"):
             where["company_campaign_id"] = request.query_params.get("campaign_id")
@@ -1234,7 +1234,7 @@ class GetLeadsSummeryForDonutChart(APIView):
 
     def get(self, request):
        
-        where = {"is_current_company": "yes"}
+        where = {"is_current_company": "yes", "client_status":"Accepted"}
         if request.query_params.get("campaign_id"):
             where["company_campaign_id"] = request.query_params.get("campaign_id")
         else:
@@ -1276,7 +1276,7 @@ class GetLeadsForCurrentCompanyDonut(APIView):
 
     def get(self, request):
         
-        where = {"is_current_company": "yes","lead_purchased":request.query_params.get("is_purchased")}
+        where = {"is_current_company": "yes","lead_purchased":request.query_params.get("is_purchased"), "client_status":"Accepted"}
         if request.query_params.get("campaign_id"):
             where["company_campaign_id"] = request.query_params.get("campaign_id")
         else:
@@ -1498,9 +1498,9 @@ class FlatSummaryDetails(APIView):
             start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
             end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
 
-            where = {"company_campaign_id": campaign_id, "created_at":{"$gte": start_date, "$lte": end_date},"lead_purchased":"yes"}
+            where = {"company_campaign_id": campaign_id, "created_at":{"$gte": start_date, "$lte": end_date},"lead_purchased":"yes", "client_status": "Accepted"}
         else:
-            where = {"company_campaign_id": campaign_id,"lead_purchased":"yes"}
+            where = {"company_campaign_id": campaign_id,"lead_purchased":"yes", "client_status": "Accepted"}
 
         lead_data = list(mongo_client.leads.find(where))
         total_leads = len(lead_data)
@@ -1538,7 +1538,7 @@ class SummaryReportAndGraph(APIView):
         diff_date = date - timedelta(days=21)
         final_data['last_three_weeks'] = self.get_count_data(campaign_id, start_date, end_date, diff_date)
 
-        where = {"company_campaign_id": campaign_id,"lead_purchased":"yes"}
+        where = {"company_campaign_id": campaign_id,"lead_purchased":"yes", "client_status": "Accepted"}
         total_lead_data = list(mongo_client.leads.find(where))
         total_lead = len(total_lead_data)
 
@@ -1550,7 +1550,7 @@ class SummaryReportAndGraph(APIView):
                 primary_count = 0
             total_primary_count = total_primary_count + primary_count
 
-        where = {"company_campaign_id": campaign_id,"lead_status": "Hot Lead","lead_purchased":"yes"}
+        where = {"company_campaign_id": campaign_id,"lead_status": "Hot Lead","lead_purchased":"yes", "client_status": "Accepted"}
         total_hot_lead_data = list(mongo_client.leads.find(where))
         total_hot_lead_count = len(total_hot_lead_data)
 
@@ -1558,11 +1558,11 @@ class SummaryReportAndGraph(APIView):
         if total_hot_lead_data:
             company_hot_lead_status = total_hot_lead_data[0]['company_lead_status']
 
-        where = {"company_campaign_id": campaign_id,"lead_status": "Deep Lead","lead_purchased":"yes"}
+        where = {"company_campaign_id": campaign_id,"lead_status": "Deep Lead","lead_purchased":"yes", "client_status": "Accepted"}
         total_deep_lead_data = list(mongo_client.leads.find(where))
         total_deep_lead_count = len(total_deep_lead_data)
 
-        where = {"company_campaign_id": campaign_id,"lead_purchased":"yes","lead_purchased":"yes"}
+        where = {"company_campaign_id": campaign_id,"lead_purchased":"yes", "client_status": "Accepted"}
         total_purchased_lead = mongo_client.leads.find(where).count()
 
         company_deep_lead_status = None
@@ -1583,12 +1583,12 @@ class SummaryReportAndGraph(APIView):
     def get_count_data(self, campaign_id, start_date, end_date, diff_date):
 
         if start_date and end_date:
-            where = {"company_campaign_id": campaign_id,"lead_purchased":"yes",
+            where = {"company_campaign_id": campaign_id,"lead_purchased":"yes", "client_status": "Accepted",
                 "$and": [{"created_at":{"$gte": diff_date},
                     "created_at":{"$gte": start_date, "$lte": end_date}}]}
 
         else:
-            where = {"company_campaign_id": campaign_id, 
+            where = {"company_campaign_id": campaign_id, "client_status": "Accepted", 
                     "created_at":{"$gte": diff_date},"lead_purchased":"yes"}
         
         total_lead_data = list(mongo_client.leads.find(where))
@@ -1622,9 +1622,9 @@ class GetLeadDistributionCampaign(APIView):
         lead_type = request.query_params.get("lead_type")
         organisation_id = request.user.profile.organisation.organisation_id
         if lead_type == "Survey":
-            lead = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}]}))
+            lead = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}, {"client_status":"Accepted"}]}))
         else:
-            lead = list(mongo_client.leads.find({"company_id": organisation_id}))
+            lead = list(mongo_client.leads.find({"company_id": organisation_id}, {"client_status":"Accepted"}))
         
         campaign_list = []
         for row in lead:
@@ -1858,7 +1858,7 @@ class GetDynamicLeadFormHeaders(APIView):
             
             context[header_keys] = header_values
 
-            leads = mongo_client.leads.find({"company_campaign_id": campaign_id})
+            leads = mongo_client.leads.find({"company_campaign_id": campaign_id}, {"client_status": "Accepted"})
             values = []
             for entry in leads:
                 lead = entry['data']
