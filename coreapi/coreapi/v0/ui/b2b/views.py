@@ -1158,7 +1158,7 @@ class GetLeadsByCampaignId(APIView):
 
     def get(self, request):
 
-        where = {"is_current_company": "no","lead_purchased": request.query_params.get('is_purchased'), "client_status":"Accepted"}
+        where = {"lead_purchased": request.query_params.get('is_purchased'), "client_status":"Accepted"}
 
         if request.query_params.get("campaign_id"):
             where["company_campaign_id"] = request.query_params.get("campaign_id")
@@ -1624,7 +1624,7 @@ class GetLeadDistributionCampaign(APIView):
         if lead_type == "Survey":
             lead = list(mongo_client.leads.find({"$and": [{"company_id": organisation_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}, {"client_status":"Accepted"}]}))
         else:
-            lead = list(mongo_client.leads.find({"company_id": organisation_id}, {"client_status":"Accepted"}))
+            lead = list(mongo_client.leads.find({"company_id": organisation_id, "client_status":"Accepted"}))
         
         campaign_list = []
         for row in lead:
@@ -1858,7 +1858,7 @@ class GetDynamicLeadFormHeaders(APIView):
             
             context[header_keys] = header_values
 
-            leads = mongo_client.leads.find({"company_campaign_id": campaign_id}, {"client_status": "Accepted"})
+            leads = mongo_client.leads.find({"company_campaign_id": campaign_id, "client_status": "Accepted"})
             values = []
             for entry in leads:
                 lead = entry['data']
