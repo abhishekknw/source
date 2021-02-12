@@ -1012,6 +1012,7 @@ class BdVerification(APIView):
             "Satisfaction Level" : requirement.current_patner_feedback,
             "Reasons for Dissatisfaction" : requirement.current_patner_feedback_reason,
             "Price": requirement.lead_price,
+            "Client Status":requirement.client_status,
         }
 
         lead_data = []
@@ -1969,15 +1970,15 @@ class LeadsDecisionPanding(APIView):
 
         if organisation_id:
 
-            if type_of_entity:
-                where = {"$and": [{"company_id": organisation_id}, {"client_status":"Decision Pending"},{"supplier_type":type_of_entity}]}
-            else:
+            if type_of_entity == "all":
                 where = {"$and": [{"company_id": organisation_id}, {"client_status":"Decision Pending"}]}
+            else:
+                where = {"$and": [{"company_id": organisation_id}, {"client_status":"Decision Pending"},{"supplier_type":type_of_entity}]}
 
-            leads = list(mongo_client.leads.find(where))
-
+            leads = list(mongo_client.leads.find(where)) 
+            
             for entry in leads:
-
+            
                 context['_id'] = str(ObjectId(entry['_id']))
                 context['requirement_id'] = entry['requrement_id']
                 context['entity_name'] = entry['data'][0]['value']
@@ -1986,8 +1987,7 @@ class LeadsDecisionPanding(APIView):
                 context['area'] = entry['data'][2]['value']
                 context['city'] = entry['data'][5]['value']
                 context['client_status'] = entry['client_status']
-                
-                data.append(context)
+                data.append(context.copy())
 
         return ui_utils.handle_response({}, data={"lead":data}, success=True)
 
@@ -2009,3 +2009,85 @@ class UpdateClientStatus(APIView):
             req.save()
         
         return ui_utils.handle_response({}, data="Record updated successfully", success=True)
+
+# class DownloadB2BLeads(APIView):
+
+#     def get(self, request):
+
+#         campaign_id = request.query_params.get("campaign_id")
+#         requirement = PreRequirement.objects.filter(campaign_id=campaign_id)
+
+#         browsed_leads = BrowsedLead.objects.raw({"campaign_id":campaign_id,
+#          "status":"closed"}).values()
+
+#         header_list = [
+#             'Index',
+#             'Supplier Id',
+#             'Supplier Name', 
+#             'Supplier Type' ,
+#             'Area',
+#             'City', 
+#             'Sector',
+#             'Sub Sector',
+#             'Current Partner',
+#             'Current Partner Other',
+#             'FeedBack',
+#             'Preferred Partner',
+#             'Preferred Partner Other',
+#             'L1 Answer 1 ', 
+#             'L1 Answer 1', 
+#             'L2 Answer 1', 
+#             'L2 Answer 2', 
+#             'Implementation Time', 
+#             'Meeting Time',
+#             'Lead Status',
+#             'Comment',
+#             'Lead Given by',
+#             'Call Back Time',
+#             'Timestamp',
+#             'Submitted',
+#             'Browsed',
+#             'Ops Verified',
+#             'Deleted' 
+            
+#         ]
+
+#         book = Workbook()
+#         sheet = book.active
+#         sheet.append(header_list)
+#         index = 0
+#         lead_data = []
+
+#         for req in requirement:
+
+#             supplier_data = SupplierTypeSociety.objects.filter(
+#                 supplier_id=req.shortlisted_spaces.object_id).first()
+
+#             supplier_type = "RS"
+#             supplier_name = supplier.society_name
+#             city = supplier.society_city
+#             area = supplier.society_locality
+
+#             if supplier_society_data is None:
+#                 supplier_data = SupplierMaster.objects.filter(
+#                     supplier_id=req.shortlisted_spaces.object_id).first()
+                
+#                 supplier_type = supplier.supplier_type
+#                 city = supplier.city
+#                 area = supplier.area
+#                 supplier_name = supplier.supplier_name
+            
+#             index = index + 1
+#             lead_data.append(index)
+#             lead_data.append(req.shortlisted_spaces.object_id)
+#             lead_data.append(supplier_name)
+#             lead_data.append(supplier_type)
+#             lead_data.append(area)
+#             lead_data.append(city)
+
+#             lead_data.append(req.sector)
+#             lead_data.append(req.sub_sector)
+            
+            
+        
+#         return ui_utils.handle_response({}, data="Record updated successfully", success=True)
