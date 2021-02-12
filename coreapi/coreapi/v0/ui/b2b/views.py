@@ -1835,6 +1835,7 @@ class GetDynamicLeadFormHeaders(APIView):
 
         campaign_id = request.query_params.get("campaign_id")
         lead_form = mongo_client.leads_forms.find({"campaign_id": campaign_id})
+        lead_type = request.query_params.get("lead_type")
 
         data = {}
         context = {}
@@ -1858,7 +1859,11 @@ class GetDynamicLeadFormHeaders(APIView):
             
             context[header_keys] = header_values
 
-            leads = mongo_client.leads.find({"company_campaign_id": campaign_id, "client_status": "Accepted"})
+            if lead_type == "Survey":
+                leads = list(mongo_client.leads.find({"$and": [{"company_campaign_id": campaign_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}, {"client_status":"Accepted"}]}))
+            else:
+                leads = list(mongo_client.leads.find({"company_campaign_id": campaign_id, "client_status":"Accepted"}))
+
             values = []
             for entry in leads:
                 lead = entry['data']
