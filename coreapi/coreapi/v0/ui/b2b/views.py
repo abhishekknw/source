@@ -1991,24 +1991,24 @@ class LeadsDecisionPanding(APIView):
 
         return ui_utils.handle_response({}, data={"lead":data}, success=True)
 
-# class UpdateClientStatus(APIView):
+class UpdateClientStatus(APIView):
 
-#     def post(self, request):
+    def post(self, request):
 
-#         data = request.data.get("data")
+        data = request.data.get("data")
 
-#         for clnt_status in data:
+        for clnt_status in data:
 
-#             mongo_client.leads.update_one({"requrement_id": 
-#                 int(clnt_status['requirement_id'])},{"$set": {
-#                         "client_status": clnt_status['client_status'],
-#                     }})
+            mongo_client.leads.update_one({"requrement_id": 
+                int(clnt_status['requirement_id'])},{"$set": {
+                        "client_status": clnt_status['client_status'],
+                    }})
 
-#             req = Requirement.objects.filter(id=clnt_status["requirement_id"]).first()
-#             req.client_status = clnt_status["client_status"]
-#             req.save()
+            req = Requirement.objects.filter(id=clnt_status["requirement_id"]).first()
+            req.client_status = clnt_status["client_status"]
+            req.save()
         
-#         return ui_utils.handle_response({}, data="Record updated successfully", success=True)
+        return ui_utils.handle_response({}, data="Record updated successfully", success=True)
 
 # class DownloadB2BLeads(APIView):
 
