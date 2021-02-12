@@ -1352,7 +1352,8 @@ class GetLeadsByDate(APIView):
         end_date = date_time_obj.replace(hour=23, minute=59, second=59)
         organisation_id = request.user.profile.organisation.organisation_id
         lead_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"client_status": "Accepted"}]}).count()
-        existing_client_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}]}).count()
+        existing_client_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"yes"},
+            {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}, {"client_status": "Accepted"}]}).count()
             
         lead_dict = {
             'lead_count' : lead_count,
@@ -1420,7 +1421,8 @@ class GetFeedbackCount(APIView):
         dissatisfied_count = 0
         extremely_dissatisfied_count = 0
 
-        client_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}]})
+        client_count = mongo_client.leads.find({"$and": [{"created_at":{"$gte": start_date, "$lte": end_date}}, {"company_id": organisation_id}, {"is_current_company":"yes"},
+            {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}, {"client_status": "Accepted"}]})
 
         for row in client_count:
             feedback = row["current_patner_feedback"]
@@ -1474,22 +1476,14 @@ class GetSupplierByCampaign(APIView):
     def get(self, request):
 
         campaign_id = request.query_params.get('campaign_id')
-        supplier_ids = ShortlistedSpaces.objects.filter(proposal_id=campaign_id).values('object_id')
-        
-        # verified_supplier_ids = Requirement.objects.filter(
-        #     company_shortlisted_spaces_id__object_id__in=supplier_ids,
-        #     varified_bd="yes", client_status="Accepted").values('company_shortlisted_spaces_id__object_id')
 
-        verified_supplier_ids = list(mongo_client.leads.find({"company_campaign_id":campaign_id}, {"client_status":"Accepted"}))
+        verified_supplier_ids = Requirement.objects.filter(company_campaign_id=campaign_id,
+            varified_bd="yes", client_status="Accepted").values('company_shortlisted_spaces_id__object_id')
 
-        supplier_list = []
-        for supplier_id in verified_supplier_ids:
-            supplier_list.append(supplier_id["supplier_id"])
-
-        supplier_society_data = SupplierTypeSociety.objects.filter(supplier_id__in=supplier_list).values('supplier_id').annotate(
+        supplier_society_data = SupplierTypeSociety.objects.filter(supplier_id__in=verified_supplier_ids).values('supplier_id').annotate(
             supplier_name = F('society_name'), unit_primary_count=F('flat_count'), city=F('society_city'), area=F('society_locality'))
         
-        supplier_master_data = SupplierMaster.objects.filter(supplier_id__in=supplier_list).values('supplier_id', 'supplier_name', 'unit_primary_count', 'city', 'area')
+        supplier_master_data = SupplierMaster.objects.filter(supplier_id__in=verified_supplier_ids).values('supplier_id', 'supplier_name', 'unit_primary_count', 'city', 'area')
         supplier_data = list(supplier_society_data) + list(supplier_master_data)
 
         return ui_utils.handle_response({}, data=supplier_data, success=True)
