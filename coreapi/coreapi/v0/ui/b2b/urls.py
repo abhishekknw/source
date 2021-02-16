@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 
-from .views import (UpdateClientStatus,LeadsDecisionPanding,PaymentDetailsView,LicenceDetails,UpdateBrowsedLead,SuspenseLeadCount,BuyLead,SummaryReportAndGraph,FlatSummaryDetails,AddLeadPrice, GetLeadsByCampaignId,BdRequirement,BdVerification, ImportLead, RequirementClass, SuspenseLeadClass, BrowsedLeadClass,  
+from .views import (DownloadB2BLeads,AddNotificationTemplate,UpdateClientStatus,LeadsDecisionPanding,PaymentDetailsView,LicenceDetails,UpdateBrowsedLead,SuspenseLeadCount,BuyLead,SummaryReportAndGraph,FlatSummaryDetails,AddLeadPrice, GetLeadsByCampaignId,BdRequirement,BdVerification, ImportLead, RequirementClass, SuspenseLeadClass, BrowsedLeadClass,  
                         LeadOpsVerification, BrowsedToRequirement, DeleteRequirement, BrowsedLeadDelete, RestoreRequirement, GetLeadsByDate,
                         GetLeadsCampaignByDate, GetFeedbackCount, GetCampaignList, GetLeadsForCurrentCompanyDonut, GetLeadsSummeryForDonutChart,
                         GetLeadsForDonutChart,GetSupplierByCampaign, GetLeadDistributionCampaign, GetPurchasedLeadsData, GetNotPurchasedLeadsData, GetDynamicLeadFormHeaders )
@@ -43,6 +43,9 @@ urlpatterns = [
     url(r'^payment-details/$', PaymentDetailsView.as_view()),
     url(r'^lead-decision-panding/$', LeadsDecisionPanding.as_view()),
     url(r'^update-client-decision-status/$', UpdateClientStatus.as_view()),
+    url(r'^add-notification-template/$', AddNotificationTemplate.as_view()),
+    url(r'^download-b2b-leads/$', DownloadB2BLeads.as_view()),
+
 ]
 
 # router = DefaultRouter()
