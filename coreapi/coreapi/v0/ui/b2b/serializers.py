@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 from v0.ui.account.serializers import ContactDetailsSerializer
-from .models import (PaymentDetails,Requirement, PreRequirement,MachadaloRelationshipManager,LicenseDetails)
+from .models import (NotificationTemplates,PaymentDetails,Requirement, PreRequirement,MachadaloRelationshipManager,LicenseDetails)
 from rest_framework import serializers
 from v0.ui.common.models import BaseUser
 
@@ -36,4 +36,10 @@ class PaymentDetailsSerializer(ModelSerializer):
 
 	class Meta:
 		model = PaymentDetails
+		fields = '__all__'
+
+class NotificationTemplateSerializer(ModelSerializer):
+
+	class Meta:
+		model = NotificationTemplates
 		fields = '__all__'

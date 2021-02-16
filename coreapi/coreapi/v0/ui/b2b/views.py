@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import HttpResponse
 from .models import (PaymentDetails,LicenseDetails,MachadaloRelationshipManager,Requirement, SuspenseLead, BrowsedLead, CampaignLeads, OrganizationLeads, PreRequirement)
-from .serializers import PaymentDetailsSerializer,LicenseDetailsSerializer,RequirementSerializer, PreRequirementSerializer, RelationshipManagerSerializer
+from .serializers import NotificationTemplateSerializer,PaymentDetailsSerializer,LicenseDetailsSerializer,RequirementSerializer, PreRequirementSerializer, RelationshipManagerSerializer
 import v0.ui.utils as ui_utils
 from openpyxl import load_workbook, Workbook
 from v0.ui.account.models import ContactDetails, BusinessTypes, BusinessSubTypes
@@ -658,6 +658,7 @@ class LeadOpsVerification(APIView):
                             varified_ops = 'yes',
                             varified_bd = 'no',
                             lead_date = requirement.lead_date,
+                            lead_price  = requirement.lead_price,
                             l1_answers = requirement.l1_answers,
                             l1_answer_2 = requirement.l1_answer_2,
                             l2_answers = requirement.l2_answers,
@@ -850,7 +851,9 @@ class BdVerification(APIView):
                         requirement.save()
 
                         self.insert_lead_data(lead_form, requirement, requirement.campaign)
-
+                        if requirement.lead_by:
+                            b2b_utils.send_whatsapp_notification(None,None,
+                                requirement.lead_by.mobile)
                     else:
                         return ui_utils.handle_response({}, data="Please add lead form for this campaign to BD verify",
                          success=False)
@@ -867,7 +870,7 @@ class BdVerification(APIView):
                 shortlisted_spac.save()
                 color_code = 3
 
-        return ui_utils.handle_response({}, data={"color_code":color_code}, success=True)
+        return ui_utils.handle_response({}, data={"color_code":color_code,"varified_bd_by":request.user.first_name + request.user.last_name}, success=True)
 
 
     def insert_lead_data(self, lead_form, requirement, campaign):
@@ -2010,84 +2013,145 @@ class UpdateClientStatus(APIView):
         
         return ui_utils.handle_response({}, data="Record updated successfully", success=True)
 
-# class DownloadB2BLeads(APIView):
+class DownloadB2BLeads(APIView):
 
-#     def get(self, request):
+    def get(self, request):
 
-#         campaign_id = request.query_params.get("campaign_id")
-#         requirement = PreRequirement.objects.filter(campaign_id=campaign_id)
+        campaign_id = request.query_params.get("campaign_id")
+        requirement = PreRequirement.objects.filter(campaign_id=campaign_id)
 
-#         browsed_leads = BrowsedLead.objects.raw({"campaign_id":campaign_id,
-#          "status":"closed"}).values()
+        browsed_leads = list(BrowsedLead.objects.raw({"campaign_id":campaign_id,
+         "status":"closed"}).values())
 
-#         header_list = [
-#             'Index',
-#             'Supplier Id',
-#             'Supplier Name', 
-#             'Supplier Type' ,
-#             'Area',
-#             'City', 
-#             'Sector',
-#             'Sub Sector',
-#             'Current Partner',
-#             'Current Partner Other',
-#             'FeedBack',
-#             'Preferred Partner',
-#             'Preferred Partner Other',
-#             'L1 Answer 1 ', 
-#             'L1 Answer 1', 
-#             'L2 Answer 1', 
-#             'L2 Answer 2', 
-#             'Implementation Time', 
-#             'Meeting Time',
-#             'Lead Status',
-#             'Comment',
-#             'Lead Given by',
-#             'Call Back Time',
-#             'Timestamp',
-#             'Submitted',
-#             'Browsed',
-#             'Ops Verified',
-#             'Deleted' 
+        header_list = ['Index','Supplier Id','Supplier Name','Supplier Type','Area',
+            'City','Sector','Sub Sector','Current Partner','Current Partner Other','FeedBack',
+            'Preferred Partner','Preferred Partner Other','L1 Answer 1 ','L1 Answer 2', 
+            'L2 Answer 1','L2 Answer 2','Implementation Time','Meeting Time','Lead Status',
+            'Comment','Lead Given by','Call Back Time','Timestamp','Submitted','Browsed',
+            'Ops Verified','Deleted' 
             
-#         ]
+        ]
 
-#         book = Workbook()
-#         sheet = book.active
-#         sheet.append(header_list)
-#         index = 0
-#         lead_data = []
+        book = Workbook()
+        sheet = book.active
+        sheet.append(header_list)
+        index = 0
+        lead_data = []
 
-#         for req in requirement:
+        for req in requirement:
 
-#             supplier_data = SupplierTypeSociety.objects.filter(
-#                 supplier_id=req.shortlisted_spaces.object_id).first()
+            supplier_data = SupplierTypeSociety.objects.filter(
+                supplier_id=req.shortlisted_spaces.object_id).first()
 
-#             supplier_type = "RS"
-#             supplier_name = supplier.society_name
-#             city = supplier.society_city
-#             area = supplier.society_locality
+            supplier_type = "RS"
+            supplier_name = supplier_data.society_name
+            city = supplier_data.society_city
+            area = supplier_data.society_locality
 
-#             if supplier_society_data is None:
-#                 supplier_data = SupplierMaster.objects.filter(
-#                     supplier_id=req.shortlisted_spaces.object_id).first()
+            if supplier_data is None:
+                supplier_data = SupplierMaster.objects.filter(
+                    supplier_id=req.shortlisted_spaces.object_id).first()
                 
-#                 supplier_type = supplier.supplier_type
-#                 city = supplier.city
-#                 area = supplier.area
-#                 supplier_name = supplier.supplier_name
-            
-#             index = index + 1
-#             lead_data.append(index)
-#             lead_data.append(req.shortlisted_spaces.object_id)
-#             lead_data.append(supplier_name)
-#             lead_data.append(supplier_type)
-#             lead_data.append(area)
-#             lead_data.append(city)
+                supplier_type = supplier_data.supplier_type
+                city = supplier_data.city
+                area = supplier_data.area
+                supplier_name = supplier_data.supplier_name
 
-#             lead_data.append(req.sector)
-#             lead_data.append(req.sub_sector)
-            
-            
+            index = index + 1
+
+            preferred_company = None
+            preferred_company_list = req.preferred_company.all()
+            company_list = []
+            if preferred_company_list:
+                for row in preferred_company_list:
+                    company_list.append(row.name)
+            preferred_company = ", ".join(company_list)
+
+            row2 = [
+                index,
+                req.shortlisted_spaces.object_id,
+                supplier_name,
+                supplier_type,
+                area,
+                city,
+                req.sector.business_type if req.sector else None,
+                req.sub_sector.business_sub_type if req.sub_sector else None,
+                req.current_company.name if req.current_company else None,
+                req.current_company_other,
+                req.current_patner_feedback,
+                preferred_company,
+                req.preferred_company_other,
+                req.l1_answers,
+                req.l1_answer_2,
+                req.l2_answers,
+                req.l2_answer_2,
+                req.impl_timeline,
+                req.meating_timeline,
+                req.lead_status,
+                req.comment,
+                req.lead_by.name,
+                req.call_back_preference,
+                req.lead_date,
+                "yes",
+                "no",
+                req.varified_ops,
+                req.is_deleted
+            ]
+
+            sheet.append(row2)
+
+        # for browsed in browsed_leads:
+        #     print(browsed['supplier_id'])
+        #     row2 = [
+        #         index,
+        #         browsed['supplier_id'],
+        #         browsed['supplier_name'],
+        #         supplier_type,
+        #         area,
+        #         city,
+        #         req.sector.business_type if req.sector else None,
+        #         req.sub_sector.business_sub_type if req.sub_sector else None,
+        #         req.current_company.name if req.current_company else None,
+        #         req.current_company_other,
+        #         req.current_patner_feedback,
+        #         preferred_company,
+        #         req.preferred_company_other,
+        #         req.l1_answers,
+        #         req.l1_answer_2,
+        #         req.l2_answers,
+        #         req.l2_answer_2,
+        #         req.impl_timeline,
+        #         req.meating_timeline,
+        #         req.lead_status,
+        #         req.comment,
+        #         req.lead_by.name,
+        #         req.call_back_preference,
+        #         req.lead_date,
+        #         "yes",
+        #         "no",
+        #         req.varified_ops,
+        #         req.is_deleted
+        #     ]
+
+        resp = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        resp['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
+        book.save(resp)
+
+        return resp
+
+
+class AddNotificationTemplate(APIView):
+
+    def post(self, request):
+
+        serializer = NotificationTemplateSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            res = serializer.data
+            status = True
+        else:
+            res = serializer.errors
+            status = False
         
-#         return ui_utils.handle_response({}, data="Record updated successfully", success=True)
+        return ui_utils.handle_response({}, data=res, success=status)

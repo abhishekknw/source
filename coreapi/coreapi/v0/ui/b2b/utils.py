@@ -1,4 +1,4 @@
-from .models import Requirement
+from .models import Requirement,NotificationTemplates
 import requests 
 
 
@@ -28,11 +28,11 @@ def send_whatsapp_notification(company,notification_type,destination):
 	
 	API_ENDPOINT = "http://35.226.184.99:5002/v1/message/push"
 
-	contact_details = SalesRepresentatives.objects.filter(company=company).first()
+	# contact_details = SalesRepresentatives.objects.filter(company=company).first()
 	template = NotificationTemplates.objects.filter(notification_type=
 		notification_type).first()
 
-	if contact_details and template and destination:
+	if template:
 
 		data = {
 		 "destination": destination,
