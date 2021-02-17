@@ -433,11 +433,11 @@ class SuspenseLeadClass(APIView):
 
     def get(self, request):
 
-        header_list = ['Phone Number', 'Supplier Name', 'City', 'Area', 
-            'Sector', 'Sub Sector', 'Current Partner', 'Current Patner Feedback',
+        header_list = ['Phone Number', 'Supplier Name', 'POC Name', 'Designation', 'Organization', 'City', 'Area', 
+            'Pin Code', 'Sector', 'Sub Sector', 'Current Partner', 'Current Patner Feedback',
             'Current Patner Feedback Reason', 'Prefered Partners','Implementation Timeline',
-            'Meating Timeline', 'L1 Answers','L1 Answer 2', 'L2 Answers','L2 Answer 2', 'Lead Status', 'Comment','Submitted',
-            'Call Back Preference']
+            'Meating Timeline', 'L1 Answers','L1 Answer 2', 'L2 Answers','L2 Answer 2', 'Lead Status', 'Comment', 
+            'Submitted', 'Call Back Preference']
 
         book = Workbook()
         sheet = book.active
@@ -476,11 +476,35 @@ class SuspenseLeadClass(APIView):
             except Exception as e:
                 lead_status = None
 
+            try:
+                poc_name = row1['poc_name']
+            except Exception as e:
+                poc_name = None
+            
+            try:
+                designation = row1['designation']
+            except Exception as e:
+                designation = None
+
+            try:
+                organization = row1['organization']
+            except Exception as e:
+                organization = None
+
+            try:
+                pin_code = row1['pin_code']
+            except Exception as e:
+                pin_code = None
+
             row2 = [
                 row1['phone_number'],
                 row1['supplier_name'],
+                poc_name,
+                designation,
+                organization,
                 row1['city'],
                 row1['area'],
+                pin_code,
                 row1['sector_name'],
                 row1['sub_sector_name'],
                 row1['current_patner'],
