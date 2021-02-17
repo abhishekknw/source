@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 
-from .views import (BuyLead,SummaryReportAndGraph,FlatSummaryDetails,AddLeadPrice, GetLeadsByCampaignId,BdRequirement,BdVerification, ImportLead, RequirementClass, SuspenseLeadClass, BrowsedLeadClass,  
+from .views import (DownloadB2BLeads,AddNotificationTemplate,UpdateClientStatus,LeadsDecisionPanding,PaymentDetailsView,LicenceDetails,UpdateBrowsedLead,SuspenseLeadCount,BuyLead,SummaryReportAndGraph,FlatSummaryDetails,AddLeadPrice, GetLeadsByCampaignId,BdRequirement,BdVerification, ImportLead, RequirementClass, SuspenseLeadClass, BrowsedLeadClass,  
                         LeadOpsVerification, BrowsedToRequirement, DeleteRequirement, BrowsedLeadDelete, RestoreRequirement, GetLeadsByDate,
                         GetLeadsCampaignByDate, GetFeedbackCount, GetCampaignList, GetLeadsForCurrentCompanyDonut, GetLeadsSummeryForDonutChart,
                         GetLeadsForDonutChart,GetSupplierByCampaign, GetLeadDistributionCampaign, GetPurchasedLeadsData, GetNotPurchasedLeadsData, GetDynamicLeadFormHeaders )
@@ -11,9 +11,11 @@ urlpatterns = [
     url(r'^import-lead/(?P<campaign_id>[A-Z_a-z0-9]+)/$', ImportLead.as_view()),
     url(r'^requirements/$', RequirementClass.as_view()),
     url(r'^suspance-leads/$', SuspenseLeadClass.as_view()),
+    url(r'^suspance-leads-count/$', SuspenseLeadCount.as_view()),
     url(r'^browsed-leads/$', BrowsedLeadClass.as_view()),
     url(r'^ops-lead-verification/$', LeadOpsVerification.as_view()),
     url(r'^browsed-to-requirement/$', BrowsedToRequirement.as_view()),
+    url(r'^update-browsed-lead/$', UpdateBrowsedLead.as_view()),
     url(r'^delete-requirement/$', DeleteRequirement.as_view()),
     url(r'^delete-browsed-lead/$', BrowsedLeadDelete.as_view()),
     url(r'^restore-requirement/$', RestoreRequirement.as_view()),
@@ -37,6 +39,13 @@ urlpatterns = [
     url(r'^flat-summary-details/$', FlatSummaryDetails.as_view()),
     url(r'^summary-reports/$', SummaryReportAndGraph.as_view()),
     url(r'^buy-leads/$', BuyLead.as_view()),
+    url(r'^licence-details/$', LicenceDetails.as_view()),
+    url(r'^payment-details/$', PaymentDetailsView.as_view()),
+    url(r'^lead-decision-panding/$', LeadsDecisionPanding.as_view()),
+    url(r'^update-client-decision-status/$', UpdateClientStatus.as_view()),
+    url(r'^add-notification-template/$', AddNotificationTemplate.as_view()),
+    url(r'^download-b2b-leads/$', DownloadB2BLeads.as_view()),
+
 ]
 
 # router = DefaultRouter()

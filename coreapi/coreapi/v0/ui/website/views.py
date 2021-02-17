@@ -628,14 +628,14 @@ class AssignCampaign(APIView):
                     if not user_obj.get(user['id']):
                         user_obj[user['id']] = row
             user = request.user
-            username_list = BaseUser.objects.filter(profile__organisation=user.profile.organisation.organisation_id). \
-                            values_list('username')
 
             if user.is_superuser:
                 assigned_objects = CampaignAssignment.objects.all()
             elif user.profile.name == "Intern":
                 assigned_objects = CampaignAssignment.objects.filter(assigned_to_id=user)
             else:
+                username_list = BaseUser.objects.filter(profile__organisation=user.profile.organisation.organisation_id). \
+                            values_list('username')
                 assigned_objects = CampaignAssignment.objects.filter(campaign__created_by__in=username_list)
             campaigns = []
             all_proposal_ids = []
@@ -657,16 +657,27 @@ class AssignCampaign(APIView):
 
             campaign_obj = {}
 
+            account_name_list = {}
+            account_org_name_list = {}
+            accountResult = AccountInfo.objects.all()
+            
+            for acount in accountResult:
+                account_name_list[acount.account_id] = acount.name
+                account_org_name_list[acount.account_id] = acount.organisation.name
+                
+            org_name_list = {}
+            organisationResult = Organisation.objects.all()
+
+            for org in organisationResult:
+                org_name_list[acount.organisation_id] = org.name
+
             for data in serializer.data:
 
-                accountResult = AccountInfo.objects.filter(pk=data['campaign']['account']).first()
-                data['campaign']['accountName'] = accountResult.name
-                data['campaign']['accountOrganisationName'] = accountResult.organisation.name
+                data['campaign']['accountName'] = account_name_list.get(data['campaign']['account'])
+                data['campaign']['accountOrganisationName'] = account_org_name_list.get(data['campaign']['account'])
 
-
-                organisationResult = Organisation.objects.filter(organisation_id=data['campaign']['principal_vendor']).first()
-                if organisationResult:
-                    data['campaign']['organisationName'] = organisationResult.name
+                if org_name_list.get(data['campaign']['principal_vendor']):
+                    data['campaign']['organisationName'] = org_name_list.get(data['campaign']['principal_vendor'])
                 else:
                     data['campaign']['organisationName'] = ''
 

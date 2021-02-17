@@ -1,4 +1,6 @@
-from .models import Requirement
+from .models import Requirement,NotificationTemplates
+import requests 
+
 
 def get_lead_status(impl_timeline,meating_timeline,prefered_patners,
 	company,change_current_patner):
@@ -21,3 +23,26 @@ def get_lead_status(impl_timeline,meating_timeline,prefered_patners,
 			return "Lead"
 	else:
 		return "Raw Lead"
+
+def send_whatsapp_notification(company,notification_type,destination):
+	
+	API_ENDPOINT = "http://35.226.184.99:5002/v1/message/push/94d3874500a84f87cf63e14007f7cfa2"
+
+	# contact_details = SalesRepresentatives.objects.filter(company=company).first()
+	template = NotificationTemplates.objects.filter(notification_type=
+		notification_type).first()
+
+	if template:
+
+		data = {
+		 "destination": destination,
+		 "message" :template.content
+		}
+		
+		# sending post request and saving response as response object 
+		rspnse = requests.post(url = API_ENDPOINT, data = data)
+
+		# extracting response text  
+		pastebin_url = rspnse.text
+
+	return True

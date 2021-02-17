@@ -4,7 +4,7 @@ from rest_framework import serializers
 from .models import (AddressMaster, SupplierMaster, SupplierHording, SupplierEducationalInstitute, SupplierTypeSociety, SupplierTypeCode, SupplierTypeRetailShop, SupplierTypeBusShelter,
                     SupplierTypeGym, SupplierTypeSalon, SupplierTypeCorporate, SupplierInfo, CorporateBuilding,
                     CorporateParkCompanyList, CorporateCompanyDetails, SupplierTypeBusDepot, SupplierAmenitiesMap,
-                    SupplierBus, SupplierGantry, SupplierRadioChannel, SupplierTvChannel)
+                    SupplierBus, SupplierGantry, SupplierRadioChannel, SupplierTvChannel, SupplierTypeHospital, SupplierCorporates)
 from v0.ui.components.serializers import CompanyFloorSerializer, CorporateBuildingWingSerializer
 
 
@@ -199,4 +199,14 @@ class SupplierRadioChannelSerializer(ModelSerializer):
 class SupplierTvChannelSerializer(ModelSerializer):
     class Meta:
         model = SupplierTvChannel
+        fields = '__all__'
+
+class SupplierCorporatesSerializer(ModelSerializer):
+    class Meta:
+        model = SupplierCorporates
+        fields = '__all__'
+
+class SupplierHospitalSerializer(ModelSerializer):
+    class Meta:
+        model = SupplierTypeHospital
         fields = '__all__'
