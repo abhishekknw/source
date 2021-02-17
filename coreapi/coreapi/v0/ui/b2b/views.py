@@ -852,8 +852,9 @@ class BdVerification(APIView):
 
                         self.insert_lead_data(lead_form, requirement, requirement.campaign)
                         if requirement.lead_by:
+                            phone = "91" + str(requirement.lead_by.mobile)
                             b2b_utils.send_whatsapp_notification(None,None,
-                                requirement.lead_by.mobile)
+                                phone)
                     else:
                         return ui_utils.handle_response({}, data="Please add lead form for this campaign to BD verify",
                          success=False)
