@@ -43,6 +43,6 @@ def send_whatsapp_notification(company,notification_type,destination):
 		rspnse = requests.post(url = API_ENDPOINT, data = data)
 
 		# extracting response text  
-		pastebin_url = r.text
+		pastebin_url = rspnse.text
 
 	return True
