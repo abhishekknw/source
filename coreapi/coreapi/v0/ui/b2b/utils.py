@@ -26,7 +26,7 @@ def get_lead_status(impl_timeline,meating_timeline,prefered_patners,
 
 def send_whatsapp_notification(company,notification_type,destination):
 	
-	API_ENDPOINT = "http://35.226.184.99:5002/v1/message/push"
+	API_ENDPOINT = "http://35.226.184.99:5002/v1/message/push/94d3874500a84f87cf63e14007f7cfa2"
 
 	# contact_details = SalesRepresentatives.objects.filter(company=company).first()
 	template = NotificationTemplates.objects.filter(notification_type=
