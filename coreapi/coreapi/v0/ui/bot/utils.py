@@ -16,7 +16,7 @@ def bot_to_requirement(request, data):
     requestId = data.get("requestId")
     date_time = data.get("datetime")
     lead_status = "Lead"
-    entity_name = data.get("entityName")
+    entity_type = data.get("entityType")
 
     contact_details = None
     if phone_number:
@@ -124,7 +124,7 @@ def bot_to_requirement(request, data):
             for contact in contact_details:
                 supplier_id.append(contact.object_id)
 
-            if entity_name == "RS":
+            if entity_type == "RS":
                 supplier = SupplierTypeSociety.objects.filter(
                     supplier_id__in=supplier_id).first()
                 if supplier:
@@ -135,14 +135,12 @@ def bot_to_requirement(request, data):
 
             else:
                 supplier = SupplierMaster.objects.filter(
-                    supplier_id__in=supplier_id, supplier_type=entity_name).first()
+                    supplier_id__in=supplier_id, supplier_type=entity_type).first()
                 if supplier:
                     supplier_type = supplier.supplier_type
                     city = supplier.city
                     area = supplier.area
                     supplier_name = supplier.supplier_name
-            
-        lead_contact = contact_details.get(object_id=supplier.supplier_id, mobile=phone_number)
         
         campaign = None
         entity_filter = Q()
@@ -165,6 +163,8 @@ def bot_to_requirement(request, data):
         if supplier and campaign:
             
             campaign_id = campaign.proposal_id
+
+            lead_contact = contact_details.get(object_id=supplier.supplier_id, mobile=phone_number)
 
             shortlisted_spaces = ShortlistedSpaces.objects.filter(
                 proposal_id=campaign_id, object_id=supplier.supplier_id).first()
@@ -273,7 +273,11 @@ def bot_to_requirement(request, data):
 
             SuspenseLead(
                 phone_number = phone_number,
-                supplier_name = supplier_name,
+                supplier_name = data["newPoc"].get("entityName"),
+                poc_name = data["newPoc"].get("name"),
+                designation = data["newPoc"].get("designation"),
+                organization = data["newPoc"].get("organization"),
+                pin_code = data["newPoc"].get("pinCode"),
                 city = city,
                 area = area,
                 sector_name = sector_name,
