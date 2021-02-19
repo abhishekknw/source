@@ -163,7 +163,7 @@ class SuspenseLead(MongoModel):
     pin_code = fields.CharField(blank=True)
     poc_name = fields.CharField(blank=True)
     designation = fields.CharField(blank=True)
-    organization = fields.CharField(blank=True)
+    supplier_type = fields.CharField(blank=True)
     city = fields.CharField(blank=True)
     area = fields.CharField(blank=True)
     sub_area = fields.CharField(blank=True)
