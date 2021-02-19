@@ -30,6 +30,7 @@ from django.db.models import F
 from v0.ui.campaign.models import CampaignComments
 from datetime import timedelta
 from django.utils.timezone import make_aware
+from v0.constants import supplier_code_to_names
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -433,7 +434,7 @@ class SuspenseLeadClass(APIView):
 
     def get(self, request):
 
-        header_list = ['Phone Number', 'Supplier Name', 'POC Name', 'Designation', 'Organization', 'City', 'Area', 
+        header_list = ['Phone Number', 'Supplier Type', 'Supplier Name', 'POC Name', 'Designation', 'City', 'Area', 
             'Pin Code', 'Sector', 'Sub Sector', 'Current Partner', 'Current Patner Feedback',
             'Current Patner Feedback Reason', 'Prefered Partners','Implementation Timeline',
             'Meating Timeline', 'L1 Answers','L1 Answer 2', 'L2 Answers','L2 Answer 2', 'Lead Status', 'Comment', 
@@ -487,9 +488,10 @@ class SuspenseLeadClass(APIView):
                 designation = None
 
             try:
-                organization = row1['organization']
+                supplier_type = row1['supplier_type']
+                supplier_type_name = supplier_code_to_names[supplier_type]
             except Exception as e:
-                organization = None
+                supplier_type_name = None
 
             try:
                 pin_code = row1['pin_code']
@@ -498,10 +500,10 @@ class SuspenseLeadClass(APIView):
 
             row2 = [
                 row1['phone_number'],
+                supplier_type_name,
                 row1['supplier_name'],
                 poc_name,
                 designation,
-                organization,
                 row1['city'],
                 row1['area'],
                 pin_code,

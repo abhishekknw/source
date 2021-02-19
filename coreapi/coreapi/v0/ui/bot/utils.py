@@ -273,12 +273,12 @@ def bot_to_requirement(request, data):
 
             SuspenseLead(
                 phone_number = phone_number,
-                supplier_name = data["newPoc"].get("entityName"),
+                supplier_name = data["newPoc"].get("organization"),
                 poc_name = data["newPoc"].get("name"),
                 designation = data["newPoc"].get("designation"),
-                organization = data["newPoc"].get("organization"),
+                supplier_type = entity_type,
                 pin_code = data["newPoc"].get("pinCode"),
-                city = city,
+                city = data["newPoc"].get("city"),
                 area = area,
                 sector_name = sector_name,
                 sub_sector_name = sub_sector_name,
