@@ -2125,38 +2125,52 @@ class DownloadB2BLeads(APIView):
 
             sheet.append(row2)
 
-        # for browsed in browsed_leads:
-        #     print(browsed['supplier_id'])
-        #     row2 = [
-        #         index,
-        #         browsed['supplier_id'],
-        #         browsed['supplier_name'],
-        #         supplier_type,
-        #         area,
-        #         city,
-        #         req.sector.business_type if req.sector else None,
-        #         req.sub_sector.business_sub_type if req.sub_sector else None,
-        #         req.current_company.name if req.current_company else None,
-        #         req.current_company_other,
-        #         req.current_patner_feedback,
-        #         preferred_company,
-        #         req.preferred_company_other,
-        #         req.l1_answers,
-        #         req.l1_answer_2,
-        #         req.l2_answers,
-        #         req.l2_answer_2,
-        #         req.impl_timeline,
-        #         req.meating_timeline,
-        #         req.lead_status,
-        #         req.comment,
-        #         req.lead_by.name,
-        #         req.call_back_preference,
-        #         req.lead_date,
-        #         "yes",
-        #         "no",
-        #         req.varified_ops,
-        #         req.is_deleted
-        #     ]
+        for browsed in browsed_leads:
+            
+            index = index + 1
+            sector = BusinessTypes.objects.filter(id=browsed['sector_id']).first()
+            sub_sector = BusinessSubTypes.objects.filter(id=browsed['sub_sector_id']).first()
+
+            try:
+                supplier_type = None
+                supplier_type = browsed['supplier_type']
+            except Exception as e:
+                supplier_type = None
+
+            row3 = [
+                index,
+                browsed['supplier_id'],
+                browsed['supplier_name'],
+                supplier_type,
+                browsed['area'],
+                browsed['city'],
+                sector.business_type if sector.business_type else None,
+                sub_sector.business_sub_type if sub_sector else None,
+                browsed['current_patner_id'],
+                browsed['current_patner_other'],
+                browsed['current_patner_feedback'],
+                ", ".join(browsed['prefered_patners']),
+                browsed['prefered_patner_other'],
+
+                browsed['l1_answers'],
+                browsed['l1_answer_2'],
+                browsed['l2_answers'],
+                browsed['l2_answer_2'],
+
+                browsed['implementation_timeline'],
+                browsed['meating_timeline'],
+                browsed['lead_status'],
+
+                browsed['comment'],
+                None,
+                browsed['call_back_preference'],
+                browsed['created_at'],
+                "no",
+                "yes",
+                "no",
+                "no"
+            ]   
+            sheet.append(row3)
 
         resp = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
