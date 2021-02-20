@@ -4,24 +4,34 @@ from pymodm import MongoModel, fields
 from django.conf import settings
 
 IMPL_TIMELINE_CATEGORY = (
+    ('within next 2 days', 'within next 2 days'),
+    ('2 days to 1 week', '2 days to 1 week'),
+    ('1 week to 2 weeks', '1 week to 2 weeks'),
+    ('less than 1 month', 'less than 1 month'),
     ('within 2 weeks', 'within 2 weeks'),
+    ('2 weeks to 1 month', '2 weeks to 1 month'),
+    ('within 1 month','within 1 month'),
     ('within 2 months','within 2 months'),
+    ('1 month to 2 months', '1 month to 2 months'),
+    ('2 months to 4 months', '2 months to 4 months'),
+    ('4 months to 6 months', '4 months to 6 months'),
+    ('after 6 months', 'after 6 months'),
+    ('1 month to 3 months', '1 month to 3 months'),
     ('2 months to 6 months', '2 months to 6 months'),
+    ('3 months to 6 months', '3 months to 6 months'),
+    ('6 months to 9 months', '6 months to 9 months'),
+    ('9 months to 1 year', '9 months to 1 year'),
     ('6 months to 1 year', '6 months to 1 year'),
     ('1 year to 1.5 years', '1 year to 1.5 years'),
-    ('<1month', '<1month'),
-    ('1-3 months','1-3 months'),
-    ('4-6 months', '4-6 months'),
-    ('>6 months', '>6 months'),
-    ('yet not decided', 'yet not decided'),
+    ('not yet decided', 'not yet decided'),
     ('not given', 'not given')
 )
 
 MEATING_TIMELINE_CATEGORY = (
     ('as soon as possible', 'as soon as possible'),
     ('within 1 week', 'within 1 week'),
+    ('within a fortnight (2 weeks)', 'within a fortnight (2 weeks)'),
     ('within a month', 'within a month'),
-    ('after a month', 'after a month'),
     ('not given', 'not given')
 )
 
