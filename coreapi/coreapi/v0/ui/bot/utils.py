@@ -16,7 +16,10 @@ def bot_to_requirement(request, data):
     requestId = data.get("requestId")
     date_time = data.get("datetime")
     lead_status = "Lead"
-    entity_type = data.get("entityType")
+    if data.get("entityType"):
+        entity_type = data.get("entityType")
+    else:
+        entity_type = "RS"
 
     contact_details = None
     if phone_number:
