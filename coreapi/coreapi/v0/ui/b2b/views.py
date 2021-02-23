@@ -2070,10 +2070,11 @@ class DownloadB2BLeads(APIView):
             supplier_data = SupplierTypeSociety.objects.filter(
                 supplier_id=req.shortlisted_spaces.object_id).first()
 
-            supplier_type = "RS"
-            supplier_name = supplier_data.society_name
-            city = supplier_data.society_city
-            area = supplier_data.society_locality
+            if supplier_data:
+                supplier_type = "RS"
+                supplier_name = supplier_data.society_name
+                city = supplier_data.society_city
+                area = supplier_data.society_locality
 
             if supplier_data is None:
                 supplier_data = SupplierMaster.objects.filter(
