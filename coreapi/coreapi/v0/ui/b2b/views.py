@@ -436,8 +436,8 @@ class SuspenseLeadClass(APIView):
 
         header_list = ['Phone Number', 'Supplier Type', 'Supplier Name', 'POC Name', 'Designation', 'City', 'Area', 
             'Pin Code', 'Sector', 'Sub Sector', 'Current Partner', 'Current Patner Feedback',
-            'Current Patner Feedback Reason', 'Prefered Partners','Implementation Timeline',
-            'Meating Timeline', 'L1 Answers','L1 Answer 2', 'L2 Answers','L2 Answer 2', 'Lead Status', 'Comment', 
+            'Current Patner Feedback Reason', 'Preferred Partner','Implementation Timeline',
+            'Meeting Time', 'L1 Answers','L1 Answer 2', 'L2 Answers','L2 Answer 2', 'Lead Status', 'Comment', 
             'Submitted', 'Call Back Preference']
 
         book = Workbook()
