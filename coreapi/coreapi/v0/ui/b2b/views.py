@@ -707,8 +707,8 @@ class LeadOpsVerification(APIView):
                 return ui_utils.handle_response({}, data={"error":"No companies for the service found"}, success=False)
         color_code = None
         if requirement.shortlisted_spaces:
-            requirement_exist = Requirement.objects.filter(shortlisted_spaces=requirement.shortlisted_spaces,
-             varified_ops = "no").first()
+            requirement_exist = PreRequirement.objects.filter(shortlisted_spaces=requirement.shortlisted_spaces,
+             varified_ops = "no")
         
             if not requirement_exist:
                 
