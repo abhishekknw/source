@@ -1820,8 +1820,14 @@ class CampaignDataInExcelSheet(APIView):
                 comment_list[row.related_to][row.shortlisted_spaces_id].append(row.comment)
 
         if data["campaign"].get("type_of_end_customer_formatted_name") == "b_to_b_l_d":
-            # excel_book = prepare_campaign_leads_data_in_excel(data, comment_list)
+            excel_book = prepare_campaign_leads_data_in_excel(data, comment_list)
             
+            resp = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            resp['Content-Disposition'] = 'attachment; filename=B2B Leads ' + data["campaign"]["name"] + '.xlsx'
+        
+        elif data["campaign"].get("type_of_end_customer_formatted_name") == "b_to_b_r_g":
+
             requirement = PreRequirement.objects.filter(
                 campaign_id=data["campaign"]['proposal_id'])
             browsed_leads = list(BrowsedLead.objects.raw(
@@ -1829,14 +1835,20 @@ class CampaignDataInExcelSheet(APIView):
 
             excel_book = b2b_utils.download_b2b_leads(requirement,browsed_leads)
 
-            resp = HttpResponse(
-            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            resp['Content-Disposition'] = 'attachment; filename=B2B Leads ' + data["campaign"]["name"] + '.xlsx'
-        else:    
-            excel_book = prepare_campaign_specific_data_in_excel(data, comment_list)
+            name = str(data["campaign"]["name"]) if data["campaign"]["name"] else "mydata"
+            filename = str(name.replace(" ", ""))
+
             resp = HttpResponse(
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            resp['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
+            resp['Content-Disposition'] = 'attachment; filename=B2BRG'+filename+'.xlsx'
+
+        else:
+
+            excel_book = prepare_campaign_specific_data_in_excel(data, comment_list)
+
+            resp = HttpResponse(
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            resp['Content-Disposition'] = 'attachment; filename=' + data["campaign"]["name"] + '.xlsx'
         excel_book.save(resp)
         return resp
 
