@@ -2,7 +2,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import difflib
-
+import v0.ui.b2b.utils as b2b_utils
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from openpyxl import load_workbook, Workbook
@@ -40,7 +40,7 @@ import hashlib
 from bson.objectid import ObjectId
 from v0.ui.proposal.models import ProposalInfo, ProposalCenterSuppliers, BookingSubstatus
 from v0.ui.account.models import Profile
-from v0.ui.b2b.models import Requirement
+from v0.ui.b2b.models import Requirement,PreRequirement,BrowsedLead
 from v0.ui.dynamic_suppliers.utils import get_dynamic_single_supplier_data
 from .utils import convert_xldate_as_datetime, add_society_to_campaign
 
@@ -1824,17 +1824,37 @@ class CampaignDataInExcelSheet(APIView):
                     comment_list[row.related_to][row.shortlisted_spaces_id] = []
 
                 comment_list[row.related_to][row.shortlisted_spaces_id].append(row.comment)
-        
+
         if data["campaign"].get("type_of_end_customer_formatted_name") == "b_to_b_l_d":
             excel_book = prepare_campaign_leads_data_in_excel(data, comment_list)
+            
             resp = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             resp['Content-Disposition'] = 'attachment; filename=B2B Leads ' + data["campaign"]["name"] + '.xlsx'
-        else:    
-            excel_book = prepare_campaign_specific_data_in_excel(data, comment_list)
+        
+        elif data["campaign"].get("type_of_end_customer_formatted_name") == "b_to_b_r_g":
+
+            requirement = PreRequirement.objects.filter(
+                campaign_id=data["campaign"]['proposal_id'])
+            browsed_leads = list(BrowsedLead.objects.raw(
+                {"campaign_id":campaign_id,"status":"closed"}).values())
+
+            excel_book = b2b_utils.download_b2b_leads(requirement,browsed_leads)
+
+            name = str(data["campaign"]["name"]) if data["campaign"]["name"] else "mydata"
+            filename = str(name.replace(" ", ""))
+
             resp = HttpResponse(
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            resp['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
+            resp['Content-Disposition'] = 'attachment; filename=B2BRG'+filename+'.xlsx'
+
+        else:
+
+            excel_book = prepare_campaign_specific_data_in_excel(data, comment_list)
+
+            resp = HttpResponse(
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            resp['Content-Disposition'] = 'attachment; filename=' + data["campaign"]["name"] + '.xlsx'
         excel_book.save(resp)
         return resp
 
