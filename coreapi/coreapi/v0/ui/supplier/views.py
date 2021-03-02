@@ -3682,8 +3682,8 @@ class MultiSupplierDetails(APIView):
                                                                              'society_latitude','society_longitude','society_address1',
                                                                              'landmark', 'supplier_id', 'flat_count', 'society_type_quality')
             else:
-                suppliers = SupplierMaster.objects.filter(pk__in=supplier_ids).values('supplier_name','area','city','subarea','state','latitude','longitude',
-                                                                             'address1', 'landmark', 'supplier_id', 'unit_primary_count')
+                suppliers = SupplierMaster.objects.filter(pk__in=supplier_ids).values('supplier_name','area','city','subarea','state','latitude',
+                                                                             'longitude', 'landmark', 'supplier_id', 'unit_primary_count')
             # Get contact name & number
             contact_details = ContactDetails.objects.filter(object_id__in=supplier_ids).values('object_id', 'name', 'mobile', 'contact_type')
             multiple_supplier_details_with_contact = []
@@ -3700,7 +3700,7 @@ class MultiSupplierDetails(APIView):
                     'latitude': supplier['society_latitude'] if is_society else supplier['latitude'],
                     'longitude': supplier['society_longitude'] if is_society else supplier['longitude'],
                     'state': supplier['society_state'] if is_society else supplier['state'],
-                    'address': supplier['society_address1'] if is_society else supplier['address1'],
+                    'address': supplier['society_address1'] if is_society else None,
                     'landmark': supplier['landmark'] if is_society else supplier['landmark'],
                     'flat_count': supplier['flat_count'] if is_society else supplier['unit_primary_count'],
                     'society_type': supplier['society_type_quality'] if is_society else None,
@@ -3728,7 +3728,7 @@ class MultiSupplierDetails(APIView):
                                 'latitude': supplier['society_latitude'] if is_society else supplier['latitude'],
                                 'longitude': supplier['society_longitude'] if is_society else supplier['longitude'],
                                 'state': supplier['society_state'] if is_society else supplier['state'],
-                                'address': supplier['society_address1'] if is_society else supplier['address1'],
+                                'address': supplier['society_address1'] if is_society else None,
                                 'landmark': supplier['landmark'] if is_society else supplier['landmark'],
                                 'contact_name': contact_detail['name'],
                                 'contact_number': contact_detail['mobile'],
