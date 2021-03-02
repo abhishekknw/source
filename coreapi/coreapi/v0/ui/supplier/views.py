@@ -3672,18 +3672,18 @@ class MultiSupplierDetails(APIView):
                 return Response(data={'status': False, 'error': "Please provide valid supplier type code"},
                                 status=status.HTTP_400_BAD_REQUEST)
             content_type = response.data['data']
-            supplier_model = content_type.model
-            model = apps.get_model(settings.APP_NAME, supplier_model)
+            # supplier_model = content_type.model
+            # model = apps.get_model(settings.APP_NAME, supplier_model)
 
             if supplier_type_code == 'RS':
                 is_society = True
-                suppliers = model.objects.filter(pk__in=supplier_ids).values('society_name', 'society_locality',
+                suppliers = SupplierTypeSociety.objects.filter(pk__in=supplier_ids).values('society_name', 'society_locality',
                                                                              'society_city', 'society_subarea', 'society_state',
                                                                              'society_latitude','society_longitude','society_address1',
                                                                              'landmark', 'supplier_id', 'flat_count', 'society_type_quality')
             else:
-                suppliers = model.objects.filter(pk__in=supplier_ids).values('name', 'area','city', 'subarea','state','latitude', 'longitude',
-                                                                             'address1','supplier_id')
+                suppliers = SupplierMaster.objects.filter(pk__in=supplier_ids).values('supplier_name','area','city','subarea','state','latitude','longitude',
+                                                                             'address1', 'landmark', 'supplier_id', 'unit_primary_count')
             # Get contact name & number
             contact_details = ContactDetails.objects.filter(object_id__in=supplier_ids).values('object_id', 'name', 'mobile', 'contact_type')
             multiple_supplier_details_with_contact = []
@@ -3693,7 +3693,7 @@ class MultiSupplierDetails(APIView):
                 supplier_object = {
                     'supplier_type_code': supplier_type_code,
                     'supplier_id': supplier['supplier_id'],
-                    'name': supplier['society_name'] if is_society else supplier['name'],
+                    'name': supplier['society_name'] if is_society else supplier['supplier_name'],
                     'area': supplier['society_locality'] if is_society else supplier['area'],
                     'city': supplier['society_city'] if is_society else supplier['city'],
                     'subarea': supplier['society_subarea'] if is_society else supplier['subarea'],
@@ -3701,8 +3701,8 @@ class MultiSupplierDetails(APIView):
                     'longitude': supplier['society_longitude'] if is_society else supplier['longitude'],
                     'state': supplier['society_state'] if is_society else supplier['state'],
                     'address': supplier['society_address1'] if is_society else supplier['address1'],
-                    'landmark': supplier['landmark'] if is_society else None,
-                    'flat_count': supplier['flat_count'] if is_society else None,
+                    'landmark': supplier['landmark'] if is_society else supplier['landmark'],
+                    'flat_count': supplier['flat_count'] if is_society else supplier['unit_primary_count'],
                     'society_type': supplier['society_type_quality'] if is_society else None,
                     'is_society': is_society if is_society else False
                 }
@@ -3721,7 +3721,7 @@ class MultiSupplierDetails(APIView):
                                 'id': index,
                                 'supplier_type_code': supplier_type_code,
                                 'supplier_id': supplier['supplier_id'],
-                                'name': supplier['society_name'] if is_society else supplier['name'],
+                                'name': supplier['society_name'] if is_society else supplier['supplier_name'],
                                 'area': supplier['society_locality'] if is_society else supplier['area'],
                                 'city': supplier['society_city'] if is_society else supplier['city'],
                                 'subarea': supplier['society_subarea'] if is_society else supplier['subarea'],
@@ -3729,11 +3729,11 @@ class MultiSupplierDetails(APIView):
                                 'longitude': supplier['society_longitude'] if is_society else supplier['longitude'],
                                 'state': supplier['society_state'] if is_society else supplier['state'],
                                 'address': supplier['society_address1'] if is_society else supplier['address1'],
-                                'landmark': supplier['landmark'] if is_society else None,
+                                'landmark': supplier['landmark'] if is_society else supplier['landmark'],
                                 'contact_name': contact_detail['name'],
                                 'contact_number': contact_detail['mobile'],
                                 'contact_type': contact_detail['contact_type'],
-                                'flat_count': supplier['flat_count'] if is_society else None,
+                                'flat_count': supplier['flat_count'] if is_society else supplier['unit_primary_count'],
                                 'society_type': supplier['society_type_quality'] if is_society else None,
                                 'is_society': is_society if is_society else False
                             })
