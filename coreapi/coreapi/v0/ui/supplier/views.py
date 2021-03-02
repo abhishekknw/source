@@ -3680,7 +3680,7 @@ class MultiSupplierDetails(APIView):
                 suppliers = model.objects.filter(pk__in=supplier_ids).values('society_name', 'society_locality',
                                                                              'society_city', 'society_subarea', 'society_state',
                                                                              'society_latitude','society_longitude','society_address1',
-                                                                             'supplier_id', 'flat_count', 'society_type_quality')
+                                                                             'landmark', 'supplier_id', 'flat_count', 'society_type_quality')
             else:
                 suppliers = model.objects.filter(pk__in=supplier_ids).values('name', 'area','city', 'subarea','state','latitude', 'longitude',
                                                                              'address1','supplier_id')
@@ -3701,6 +3701,7 @@ class MultiSupplierDetails(APIView):
                     'longitude': supplier['society_longitude'] if is_society else supplier['longitude'],
                     'state': supplier['society_state'] if is_society else supplier['state'],
                     'address': supplier['society_address1'] if is_society else supplier['address1'],
+                    'landmark': supplier['landmark'] if is_society else None,
                     'flat_count': supplier['flat_count'] if is_society else None,
                     'society_type': supplier['society_type_quality'] if is_society else None,
                     'is_society': is_society if is_society else False
@@ -3728,6 +3729,7 @@ class MultiSupplierDetails(APIView):
                                 'longitude': supplier['society_longitude'] if is_society else supplier['longitude'],
                                 'state': supplier['society_state'] if is_society else supplier['state'],
                                 'address': supplier['society_address1'] if is_society else supplier['address1'],
+                                'landmark': supplier['landmark'] if is_society else None,
                                 'contact_name': contact_detail['name'],
                                 'contact_number': contact_detail['mobile'],
                                 'contact_type': contact_detail['contact_type'],
@@ -4256,7 +4258,8 @@ class UpdateSupplierDataImport(APIView):
                 area = supplier['area']	
                 subarea = supplier['subarea']
                 city = supplier['city']	
-                address = supplier['address']	
+                address = supplier['address']
+                landmark = supplier['landmark']	
                 contact_type = supplier['contact_type']
                 if contact_type is None:
                     contact_type = 'Committee Member'
@@ -4266,7 +4269,7 @@ class UpdateSupplierDataImport(APIView):
                         if supplier_data:
                             supplier_data.update(society_name=name, society_city=city, society_longitude=longitude,
                             society_latitude=latitude, flat_count=flat_count, society_type_quality=society_type,
-                            society_locality=area, society_subarea=subarea, society_address1=address )
+                            society_locality=area, society_subarea=subarea, society_address1=address, landmark=landmark )
                     
                     if contact_number and supplier_id:
                         # Check contact number in contact details
