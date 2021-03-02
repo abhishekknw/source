@@ -709,7 +709,8 @@ class LeadOpsVerification(APIView):
         if requirement.shortlisted_spaces:
             requirement_exist = PreRequirement.objects.filter(shortlisted_spaces=requirement.shortlisted_spaces,
              varified_ops = "no")
-        
+            
+            list_color_code = requirement.shortlisted_spaces.color_code
             if not requirement_exist:
                 
                 browsed_leads = dict(BrowsedLead.objects.raw({"shortlisted_spaces_id":requirement.shortlisted_spaces.id, "status":"closed"}))
@@ -721,9 +722,9 @@ class LeadOpsVerification(APIView):
                     shortlisted_spac.save()
                     color_code = 3
         if verified == 0:
-            return ui_utils.handle_response({}, data={"error":"Ops verify failed as there are 0 client campaigns","color_code":color_code}, success=False)
+            return ui_utils.handle_response({}, data={"error":"Ops verify failed as there are 0 client campaigns","color_code":color_code,"verified_ops_by":request.user.first_name + request.user.last_name,"list_color_code":list_color_code}, success=False)
         else:
-            return ui_utils.handle_response({}, data={"message":"Ops Verified and distributed to "+str(verified)+" campaigns","color_code":color_code}, success=True)
+            return ui_utils.handle_response({}, data={"message":"Ops Verified and distributed to "+str(verified)+" campaigns","color_code":color_code,"verified_ops_by":request.user.first_name + request.user.last_name,"list_color_code":list_color_code}, success=True)
 
 class BrowsedToRequirement(APIView):
 
@@ -738,7 +739,7 @@ class BrowsedToRequirement(APIView):
 
                 if browsed["meating_timeline"] == "" or browsed["meating_timeline"] == "not given" or browsed["meating_timeline"] == None:
                     return ui_utils.handle_response({}, data={
-                        "error":"meeting time not given"}, success=False)
+                        "error":"meeting time not given"}, success=True)
 
                 contact_details = None
                 if browsed["phone_number"]:
@@ -850,7 +851,7 @@ class UpdateBrowsedLead(APIView):
 
             mongo_client.browsed_lead.update({"_id": ObjectId(browsed["_id"])},update_values)
 
-        return ui_utils.handle_response({}, data={}, success=True)
+        return ui_utils.handle_response({}, data={"message":"Browsed lead updated successfully"}, success=True)
 
 
 class BdVerification(APIView):
@@ -883,11 +884,12 @@ class BdVerification(APIView):
                                 phone)
                     else:
                         return ui_utils.handle_response({}, data="Please add lead form for this campaign to BD verify",
-                         success=False)
+                         success=True)
 
         color_code = None
         if requirement.company_shortlisted_spaces:
-    
+        
+            list_color_code = requirement.company_shortlisted_spaces.color_code
             requirement_exist = Requirement.objects.filter(company_shortlisted_spaces=requirement.company_shortlisted_spaces,
              varified_bd = "no")
             if not requirement_exist:
@@ -897,7 +899,7 @@ class BdVerification(APIView):
                 shortlisted_spac.save()
                 color_code = 3
 
-        return ui_utils.handle_response({}, data={"color_code":color_code,"varified_bd_by":request.user.first_name + request.user.last_name}, success=True)
+        return ui_utils.handle_response({}, data={"list_color_code":list_color_code,"color_code":color_code,"varified_bd_by":request.user.first_name + request.user.last_name}, success=True)
 
 
     def insert_lead_data(self, lead_form, requirement, campaign):
@@ -2080,3 +2082,17 @@ class AddNotificationTemplate(APIView):
             status = False
         
         return ui_utils.handle_response({}, data=res, success=status)
+
+class SuspenseLeadClass(APIView):
+
+    def get(self, request):
+
+        suspense_lead = mongo_client.suspense_lead.find().sort("created_at",-1)
+        list1 = []
+        for row in suspense_lead:
+            row1 = dict(row)
+            row1["_id"] = str(row1["_id"])
+            list1.append(row1)
+
+        return ui_utils.handle_response({}, data={"suspense_lead": list1}, success=True)
+
