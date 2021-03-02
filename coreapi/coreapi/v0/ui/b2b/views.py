@@ -1039,7 +1039,7 @@ class BdVerification(APIView):
             "Satisfaction Level" : requirement.current_patner_feedback,
             "Reasons for Dissatisfaction" : requirement.current_patner_feedback_reason,
             "Price": requirement.lead_price,
-            "Client Status":requirement.client_status,
+            # "Client Status":requirement.client_status,
         }
 
         lead_data = []

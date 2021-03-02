@@ -1702,15 +1702,21 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
 
         supplier_data.append(supplier['proposal'])
         supplier_data.append(supplier['object_id'])
-        supplier_data.append(supplier['name'])
-        supplier_data.append(supplier['supplier_type'])
-        supplier_data.append(supplier['subarea'])
-        supplier_data.append(supplier['area'])
-        supplier_data.append(supplier['city'])
-        supplier_data.append(str(supplier['address1']) + ' '+ str(supplier['address2']))
+        supplier_data.append(supplier['name'] if supplier.get('name') else None)
+        supplier_data.append(supplier['supplier_type'] if supplier.get('supplier_type') else None)
+        supplier_data.append(supplier['subarea'] if supplier.get('subarea') else None)
+        supplier_data.append(supplier['area'] if supplier.get('area') else None)
+        supplier_data.append(supplier['city'] if supplier.get('city') else None)
+        address1 = ""
+        address2 = ""
+        if supplier.get('address1'):
+            address1 = supplier.get('address1')
+        if supplier.get('address2'):
+            address2 = supplier.get('address2')
+        supplier_data.append(str(address1) + ' '+ str(address2))
 
-        supplier_data.append(supplier['landmark'])
-        supplier_data.append(supplier['zipcode'])
+        supplier_data.append(supplier['landmark'] if supplier.get('landmark') else None)
+        supplier_data.append(supplier['zipcode'] if supplier.get('zipcode') else None)
 
         primary_count = supplier.get('flat_count')
         secondary_count = supplier.get('tower_count')
@@ -1762,7 +1768,7 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
         supplier_data.append(internal_comment)
         supplier_data.append(external_comment)
 
-        supplier_data.append(supplier["quality_rating"])
+        supplier_data.append(supplier["quality_rating"] if supplier.get('quality_rating') else None)
 
         assigned_user = SupplierAssignment.objects.filter(campaign_id=supplier['proposal'], supplier_id=supplier['object_id']).first()
         assigned_to = None
