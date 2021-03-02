@@ -611,13 +611,6 @@ class LeadOpsVerification(APIView):
             if companies:
                 if requirement.varified_ops == "no":
                     for company in companies:
-                        lead_status = b2b_utils.get_lead_status(
-                            impl_timeline = requirement.impl_timeline,
-                            meating_timeline = requirement.meating_timeline,
-                            company=company,
-                            prefered_patners=requirement.preferred_company.all(),
-                            change_current_patner=requirement.change_current_patner.lower()
-                            )
 
                         company_campaign = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d",
                             account__organisation=company).first()
@@ -679,7 +672,7 @@ class LeadOpsVerification(APIView):
                             lead_by = requirement.lead_by,
                             impl_timeline = requirement.impl_timeline,
                             meating_timeline = requirement.meating_timeline,
-                            lead_status = lead_status,
+                            lead_status = requirement.lead_status,
                             comment = requirement.comment,
                             varified_ops = 'yes',
                             varified_bd = 'no',
@@ -721,6 +714,7 @@ class LeadOpsVerification(APIView):
                     shortlisted_spac.color_code = 3
                     shortlisted_spac.save()
                     color_code = 3
+                    list_color_code = color_code
         if verified == 0:
             return ui_utils.handle_response({}, data={"error":"Ops verify failed as there are 0 client campaigns","color_code":color_code,"verified_ops_by":request.user.first_name + request.user.last_name,"list_color_code":list_color_code}, success=False)
         else:
@@ -898,6 +892,7 @@ class BdVerification(APIView):
                 shortlisted_spac.color_code = 3
                 shortlisted_spac.save()
                 color_code = 3
+                list_color_code = color_code
 
         return ui_utils.handle_response({}, data={"list_color_code":list_color_code,"color_code":color_code,"varified_bd_by":request.user.first_name + request.user.last_name}, success=True)
 
