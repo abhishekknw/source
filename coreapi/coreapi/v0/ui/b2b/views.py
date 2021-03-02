@@ -436,8 +436,8 @@ class SuspenseLeadClass(APIView):
 
         header_list = ['Phone Number', 'Supplier Type', 'Supplier Name', 'POC Name', 'Designation', 'City', 'Area', 
             'Pin Code', 'Sector', 'Sub Sector', 'Current Partner', 'Current Patner Feedback',
-            'Current Patner Feedback Reason', 'Prefered Partners','Implementation Timeline',
-            'Meating Timeline', 'L1 Answers','L1 Answer 2', 'L2 Answers','L2 Answer 2', 'Lead Status', 'Comment', 
+            'Current Patner Feedback Reason', 'Preferred Partner','Implementation Timeline',
+            'Meeting Time', 'L1 Answers','L1 Answer 2', 'L2 Answers','L2 Answer 2', 'Lead Status', 'Comment', 
             'Submitted', 'Call Back Preference']
 
         book = Workbook()
@@ -709,7 +709,8 @@ class LeadOpsVerification(APIView):
         if requirement.shortlisted_spaces:
             requirement_exist = PreRequirement.objects.filter(shortlisted_spaces=requirement.shortlisted_spaces,
              varified_ops = "no")
-        
+            
+            list_color_code = requirement.shortlisted_spaces.color_code
             if not requirement_exist:
                 
                 browsed_leads = dict(BrowsedLead.objects.raw({"shortlisted_spaces_id":requirement.shortlisted_spaces.id, "status":"closed"}))
@@ -721,9 +722,9 @@ class LeadOpsVerification(APIView):
                     shortlisted_spac.save()
                     color_code = 3
         if verified == 0:
-            return ui_utils.handle_response({}, data={"error":"Ops verify failed as there are 0 client campaigns","color_code":color_code}, success=False)
+            return ui_utils.handle_response({}, data={"error":"Ops verify failed as there are 0 client campaigns","color_code":color_code,"verified_ops_by":request.user.first_name + request.user.last_name,"list_color_code":list_color_code}, success=False)
         else:
-            return ui_utils.handle_response({}, data={"message":"Ops Verified and distributed to "+str(verified)+" campaigns","color_code":color_code}, success=True)
+            return ui_utils.handle_response({}, data={"message":"Ops Verified and distributed to "+str(verified)+" campaigns","color_code":color_code,"verified_ops_by":request.user.first_name + request.user.last_name,"list_color_code":list_color_code}, success=True)
 
 class BrowsedToRequirement(APIView):
 
@@ -738,7 +739,7 @@ class BrowsedToRequirement(APIView):
 
                 if browsed["meating_timeline"] == "" or browsed["meating_timeline"] == "not given" or browsed["meating_timeline"] == None:
                     return ui_utils.handle_response({}, data={
-                        "error":"meeting time not given"}, success=False)
+                        "error":"meeting time not given"}, success=True)
 
                 contact_details = None
                 if browsed["phone_number"]:
@@ -850,7 +851,7 @@ class UpdateBrowsedLead(APIView):
 
             mongo_client.browsed_lead.update({"_id": ObjectId(browsed["_id"])},update_values)
 
-        return ui_utils.handle_response({}, data={}, success=True)
+        return ui_utils.handle_response({}, data={"message":"Browsed lead updated successfully"}, success=True)
 
 
 class BdVerification(APIView):
@@ -883,11 +884,12 @@ class BdVerification(APIView):
                                 phone)
                     else:
                         return ui_utils.handle_response({}, data="Please add lead form for this campaign to BD verify",
-                         success=False)
+                         success=True)
 
         color_code = None
         if requirement.company_shortlisted_spaces:
-    
+        
+            list_color_code = requirement.company_shortlisted_spaces.color_code
             requirement_exist = Requirement.objects.filter(company_shortlisted_spaces=requirement.company_shortlisted_spaces,
              varified_bd = "no")
             if not requirement_exist:
@@ -897,7 +899,7 @@ class BdVerification(APIView):
                 shortlisted_spac.save()
                 color_code = 3
 
-        return ui_utils.handle_response({}, data={"color_code":color_code,"varified_bd_by":request.user.first_name + request.user.last_name}, success=True)
+        return ui_utils.handle_response({}, data={"list_color_code":list_color_code,"color_code":color_code,"varified_bd_by":request.user.first_name + request.user.last_name}, success=True)
 
 
     def insert_lead_data(self, lead_form, requirement, campaign):
@@ -2045,140 +2047,23 @@ class DownloadB2BLeads(APIView):
     def get(self, request):
 
         campaign_id = request.query_params.get("campaign_id")
+
         requirement = PreRequirement.objects.filter(campaign_id=campaign_id)
+
+        campaign = ProposalInfo.objects.filter(proposal_id=campaign_id).first()
 
         browsed_leads = list(BrowsedLead.objects.raw({"campaign_id":campaign_id,
          "status":"closed"}).values())
 
-        header_list = ['Index','Supplier Id','Supplier Name','Supplier Type','Area',
-            'City','Sector','Sub Sector','Current Partner','Current Partner Other','FeedBack',
-            'Preferred Partner','Preferred Partner Other','L1 Answer 1 ','L1 Answer 2', 
-            'L2 Answer 1','L2 Answer 2','Implementation Time','Meeting Time','Lead Status',
-            'Comment','Lead Given by','Call Back Time','Timestamp','Submitted','Browsed',
-            'Ops Verified','Deleted' 
-            
-        ]
+        excel_book = b2b_utils.download_b2b_leads(requirement,browsed_leads)
 
-        book = Workbook()
-        sheet = book.active
-        sheet.append(header_list)
-        index = 0
-        lead_data = []
-
-        for req in requirement:
-
-            supplier_data = SupplierTypeSociety.objects.filter(
-                supplier_id=req.shortlisted_spaces.object_id).first()
-
-            if supplier_data:
-                supplier_type = "RS"
-                supplier_name = supplier_data.society_name
-                city = supplier_data.society_city
-                area = supplier_data.society_locality
-
-            if supplier_data is None:
-                supplier_data = SupplierMaster.objects.filter(
-                    supplier_id=req.shortlisted_spaces.object_id).first()
-                
-                supplier_type = supplier_data.supplier_type
-                city = supplier_data.city
-                area = supplier_data.area
-                supplier_name = supplier_data.supplier_name
-
-            index = index + 1
-
-            preferred_company = None
-            preferred_company_list = req.preferred_company.all()
-            company_list = []
-            if preferred_company_list:
-                for row in preferred_company_list:
-                    company_list.append(row.name)
-            preferred_company = ", ".join(company_list)
-
-            row2 = [
-                index,
-                req.shortlisted_spaces.object_id,
-                supplier_name,
-                supplier_type,
-                area,
-                city,
-                req.sector.business_type if req.sector else None,
-                req.sub_sector.business_sub_type if req.sub_sector else None,
-                req.current_company.name if req.current_company else None,
-                req.current_company_other,
-                req.current_patner_feedback,
-                preferred_company,
-                req.preferred_company_other,
-                req.l1_answers,
-                req.l1_answer_2,
-                req.l2_answers,
-                req.l2_answer_2,
-                req.impl_timeline,
-                req.meating_timeline,
-                req.lead_status,
-                req.comment,
-                req.lead_by.name,
-                req.call_back_preference,
-                req.lead_date,
-                "yes",
-                "no",
-                req.varified_ops,
-                req.is_deleted
-            ]
-
-            sheet.append(row2)
-
-        for browsed in browsed_leads:
-            
-            index = index + 1
-            sector = BusinessTypes.objects.filter(id=browsed['sector_id']).first()
-            sub_sector = BusinessSubTypes.objects.filter(id=browsed['sub_sector_id']).first()
-
-            try:
-                supplier_type = None
-                supplier_type = browsed['supplier_type']
-            except Exception as e:
-                supplier_type = None
-
-            row3 = [
-                index,
-                browsed['supplier_id'],
-                browsed['supplier_name'],
-                supplier_type,
-                browsed['area'],
-                browsed['city'],
-                sector.business_type if sector.business_type else None,
-                sub_sector.business_sub_type if sub_sector else None,
-                browsed['current_patner_id'],
-                browsed['current_patner_other'],
-                browsed['current_patner_feedback'],
-                ", ".join(browsed['prefered_patners']),
-                browsed['prefered_patner_other'],
-
-                browsed['l1_answers'],
-                browsed['l1_answer_2'],
-                browsed['l2_answers'],
-                browsed['l2_answer_2'],
-
-                browsed['implementation_timeline'],
-                browsed['meating_timeline'],
-                browsed['lead_status'],
-
-                browsed['comment'],
-                None,
-                browsed['call_back_preference'],
-                browsed['created_at'],
-                "no",
-                "yes",
-                "no",
-                "no"
-            ]   
-            sheet.append(row3)
+        name = str(campaign.name) if campaign else "mydata"
+        filename = str(name.replace(" ", ""))
 
         resp = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        resp['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
-        book.save(resp)
+        resp['Content-Disposition'] = 'attachment; filename='+filename+'.xlsx'
+        excel_book.save(resp)
 
         return resp
 
@@ -2197,3 +2082,17 @@ class AddNotificationTemplate(APIView):
             status = False
         
         return ui_utils.handle_response({}, data=res, success=status)
+
+class SuspenseLeadClass(APIView):
+
+    def get(self, request):
+
+        suspense_lead = mongo_client.suspense_lead.find().sort("created_at",-1)
+        list1 = []
+        for row in suspense_lead:
+            row1 = dict(row)
+            row1["_id"] = str(row1["_id"])
+            list1.append(row1)
+
+        return ui_utils.handle_response({}, data={"suspense_lead": list1}, success=True)
+
