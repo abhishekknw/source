@@ -1326,11 +1326,11 @@ class GetLeadsForCurrentCompanyDonut(APIView):
             suppliers_list = list(set(suppliers_list))
         
             master_societies = SupplierMaster.objects.filter(
-                supplier_id__in=suppliers_list).exclude(supplier_type="RS")
+                supplier_id__in=suppliers_list)
             master_serializer = SupplierMasterSerializer(master_societies, many=True)
             
             supplire_societies = SupplierTypeSociety.objects.filter(
-                supplier_id__in=suppliers_list,supplier_code="RS")
+                supplier_id__in=suppliers_list)
             supplire_serializer = SupplierTypeSocietySerializer(supplire_societies, many=True)
             
             all_societies = manipulate_object_key_values(supplire_serializer.data)
