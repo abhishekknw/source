@@ -611,13 +611,6 @@ class LeadOpsVerification(APIView):
             if companies:
                 if requirement.varified_ops == "no":
                     for company in companies:
-                        lead_status = b2b_utils.get_lead_status(
-                            impl_timeline = requirement.impl_timeline,
-                            meating_timeline = requirement.meating_timeline,
-                            company=company,
-                            prefered_patners=requirement.preferred_company.all(),
-                            change_current_patner=requirement.change_current_patner.lower()
-                            )
 
                         company_campaign = ProposalInfo.objects.filter(type_of_end_customer__formatted_name="b_to_b_l_d",
                             account__organisation=company).first()
@@ -679,7 +672,7 @@ class LeadOpsVerification(APIView):
                             lead_by = requirement.lead_by,
                             impl_timeline = requirement.impl_timeline,
                             meating_timeline = requirement.meating_timeline,
-                            lead_status = lead_status,
+                            lead_status = requirement.lead_status,
                             comment = requirement.comment,
                             varified_ops = 'yes',
                             varified_bd = 'no',
@@ -721,6 +714,7 @@ class LeadOpsVerification(APIView):
                     shortlisted_spac.color_code = 3
                     shortlisted_spac.save()
                     color_code = 3
+                    list_color_code = color_code
         if verified == 0:
             return ui_utils.handle_response({}, data={"error":"Ops verify failed as there are 0 client campaigns","color_code":color_code,"verified_ops_by":request.user.first_name + request.user.last_name,"list_color_code":list_color_code}, success=False)
         else:
@@ -898,6 +892,7 @@ class BdVerification(APIView):
                 shortlisted_spac.color_code = 3
                 shortlisted_spac.save()
                 color_code = 3
+                list_color_code = color_code
 
         return ui_utils.handle_response({}, data={"list_color_code":list_color_code,"color_code":color_code,"varified_bd_by":request.user.first_name + request.user.last_name}, success=True)
 
@@ -1044,7 +1039,7 @@ class BdVerification(APIView):
             "Satisfaction Level" : requirement.current_patner_feedback,
             "Reasons for Dissatisfaction" : requirement.current_patner_feedback_reason,
             "Price": requirement.lead_price,
-            "Client Status":requirement.client_status,
+            # "Client Status":requirement.client_status,
         }
 
         lead_data = []
@@ -1209,11 +1204,11 @@ class GetLeadsByCampaignId(APIView):
             suppliers_list = list(set(suppliers_list))
             
             master_societies = SupplierMaster.objects.filter(
-                supplier_id__in=suppliers_list).exclude(supplier_type="RS")
+                supplier_id__in=suppliers_list)
             master_serializer = SupplierMasterSerializer(master_societies, many=True)
             
             supplire_societies = SupplierTypeSociety.objects.filter(
-                supplier_id__in=suppliers_list,supplier_code="RS")
+                supplier_id__in=suppliers_list)
             supplire_serializer = SupplierTypeSocietySerializer(supplire_societies, many=True)
             
             all_societies = manipulate_object_key_values(supplire_serializer.data)
@@ -1664,10 +1659,10 @@ class GetLeadDistributionCampaign(APIView):
             campaign = row["company_campaign_id"]       
             campaign_list.append(campaign)
 
-        if request.query_params.get('supplier_code') == "mix":
-            campaign_list = ProposalInfo.objects.filter(proposal_id__in=campaign_list, is_mix=True).values_list('proposal_id', flat=True)
-        if request.query_params.get('supplier_code') and request.query_params.get('supplier_code') != "mix" and request.query_params.get('supplier_code') != "all":
-            campaign_list = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list, supplier_code=request.query_params.get('supplier_code')).values_list('proposal_id', flat=True).distinct()
+        # if request.query_params.get('supplier_code') == "mix":
+        campaign_list = ProposalInfo.objects.filter(proposal_id__in=campaign_list).values_list('proposal_id', flat=True).distinct()
+        # if request.query_params.get('supplier_code') and request.query_params.get('supplier_code') != "mix" and request.query_params.get('supplier_code') != "all":
+        #     campaign_list = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list, supplier_code=request.query_params.get('supplier_code')).values_list('proposal_id', flat=True).distinct()
         campaign_list = [campaign_id for campaign_id in campaign_list]
 
         all_shortlisted_supplier = ShortlistedSpaces.objects.filter(proposal_id__in=campaign_list).\
@@ -1867,6 +1862,7 @@ class GetDynamicLeadFormHeaders(APIView):
     def get(self, request):
 
         campaign_id = request.query_params.get("campaign_id")
+        supplier_type = request.query_params.get("supplier_type")
         lead_form = mongo_client.leads_forms.find({"campaign_id": campaign_id})
         lead_type = request.query_params.get("lead_type")
 
@@ -1892,10 +1888,18 @@ class GetDynamicLeadFormHeaders(APIView):
             
             context[header_keys] = header_values
 
-            if lead_type == "Survey":
-                leads = list(mongo_client.leads.find({"$and": [{"company_campaign_id": campaign_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}, {"client_status":"Accepted"}]}))
+            if supplier_type == "all":
+                
+                if lead_type == "Survey":
+                    leads = list(mongo_client.leads.find({"$and": [{"company_campaign_id": campaign_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}, {"client_status":"Accepted"}]}))
+                else:
+                    leads = list(mongo_client.leads.find({"company_campaign_id": campaign_id, "client_status":"Accepted"}))
             else:
-                leads = list(mongo_client.leads.find({"company_campaign_id": campaign_id, "client_status":"Accepted"}))
+
+                if lead_type == "Survey":
+                    leads = list(mongo_client.leads.find({"$and": [{"company_campaign_id": campaign_id}, {"is_current_company":"yes"}, {"current_patner_feedback": { "$in": ["Dissatisfied", "Extremely Dissatisfied"]}}, {"client_status":"Accepted"}, {"supplier_type":supplier_type}]}))
+                else:
+                    leads = list(mongo_client.leads.find({"company_campaign_id": campaign_id, "client_status":"Accepted", "supplier_type":supplier_type}))
 
             values = []
             for entry in leads:
