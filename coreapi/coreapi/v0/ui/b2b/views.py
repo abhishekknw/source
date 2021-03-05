@@ -640,6 +640,9 @@ class LeadOpsVerification(APIView):
                                 )
                                 company_shortlisted_spaces.save()
 
+                            company_shortlisted_spaces.requirement_given_date=datetime.datetime.now()
+                            company_shortlisted_spaces.save()
+
                             requirement.company_campaign = company_campaign
                             requirement.company_shortlisted_spaces = company_shortlisted_spaces
 
