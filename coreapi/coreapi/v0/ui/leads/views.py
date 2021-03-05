@@ -2,7 +2,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 import difflib
-
+import v0.ui.b2b.utils as b2b_utils
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from openpyxl import load_workbook, Workbook
@@ -40,7 +40,7 @@ import hashlib
 from bson.objectid import ObjectId
 from v0.ui.proposal.models import ProposalInfo, ProposalCenterSuppliers, BookingSubstatus
 from v0.ui.account.models import Profile
-from v0.ui.b2b.models import Requirement
+from v0.ui.b2b.models import Requirement,PreRequirement,BrowsedLead
 from v0.ui.dynamic_suppliers.utils import get_dynamic_single_supplier_data
 from .utils import convert_xldate_as_datetime, add_society_to_campaign
 
@@ -210,12 +210,19 @@ def get_data_by_supplier_type_code(lead_form, supplier_id):
 def get_supplier_all_leads_entries(leads_form_id, supplier_id, page_number=0, **kwargs):
     leads_per_page = 25
     leads_forms = mongo_client.leads_forms.find_one({"leads_form_id": int(leads_form_id)}, {"_id":0, "data":1, "campaign_id": 1})
+
+    lead_distribution = ProposalInfo.objects.filter(proposal_id=leads_forms["campaign_id"]).first()
+
     if not leads_forms:
         return None
     leads_forms_items = leads_forms["data"]
     if supplier_id == 'All':
-        leads_data = mongo_client.leads.find({"$and": [{"leads_form_id": int(leads_form_id)}, {"status": {"$ne": "inactive"}}]},
-                                             {"_id": 0})
+        if lead_distribution.type_of_end_customer.formatted_name == "b_to_b_l_d":
+            leads_data = mongo_client.leads.find({"$and": [{"client_status": {"$nin": ["Decision Pending", "Decline"]}},
+                {"leads_form_id": int(leads_form_id)}, {"status": {"$ne": "inactive"}}]}, {"_id": 0})
+        else:
+            leads_data = mongo_client.leads.find({"$and": [{"leads_form_id": int(leads_form_id)}, {"status": {"$ne": "inactive"}}]},
+                                                {"_id": 0})
         leads_data_list = list(leads_data)
         suppliers_list = []
         for lead_data in leads_data_list:
@@ -1695,15 +1702,21 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
 
         supplier_data.append(supplier['proposal'])
         supplier_data.append(supplier['object_id'])
-        supplier_data.append(supplier['name'])
-        supplier_data.append(supplier['supplier_type'])
-        supplier_data.append(supplier['subarea'])
-        supplier_data.append(supplier['area'])
-        supplier_data.append(supplier['city'])
-        supplier_data.append(str(supplier['address1']) + ' '+ str(supplier['address2']))
+        supplier_data.append(supplier['name'] if supplier.get('name') else None)
+        supplier_data.append(supplier['supplier_type'] if supplier.get('supplier_type') else None)
+        supplier_data.append(supplier['subarea'] if supplier.get('subarea') else None)
+        supplier_data.append(supplier['area'] if supplier.get('area') else None)
+        supplier_data.append(supplier['city'] if supplier.get('city') else None)
+        address1 = ""
+        address2 = ""
+        if supplier.get('address1'):
+            address1 = supplier.get('address1')
+        if supplier.get('address2'):
+            address2 = supplier.get('address2')
+        supplier_data.append(str(address1) + ' '+ str(address2))
 
-        supplier_data.append(supplier['landmark'])
-        supplier_data.append(supplier['zipcode'])
+        supplier_data.append(supplier['landmark'] if supplier.get('landmark') else None)
+        supplier_data.append(supplier['zipcode'] if supplier.get('zipcode') else None)
 
         primary_count = supplier.get('flat_count')
         secondary_count = supplier.get('tower_count')
@@ -1755,7 +1768,7 @@ def prepare_campaign_specific_data_in_excel(data, comment_list):
         supplier_data.append(internal_comment)
         supplier_data.append(external_comment)
 
-        supplier_data.append(supplier["quality_rating"])
+        supplier_data.append(supplier["quality_rating"] if supplier.get('quality_rating') else None)
 
         assigned_user = SupplierAssignment.objects.filter(campaign_id=supplier['proposal'], supplier_id=supplier['object_id']).first()
         assigned_to = None
@@ -1811,14 +1824,37 @@ class CampaignDataInExcelSheet(APIView):
                     comment_list[row.related_to][row.shortlisted_spaces_id] = []
 
                 comment_list[row.related_to][row.shortlisted_spaces_id].append(row.comment)
-        
+
         if data["campaign"].get("type_of_end_customer_formatted_name") == "b_to_b_l_d":
             excel_book = prepare_campaign_leads_data_in_excel(data, comment_list)
-        else:    
-            excel_book = prepare_campaign_specific_data_in_excel(data, comment_list)
-        resp = HttpResponse(
+            
+            resp = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        resp['Content-Disposition'] = 'attachment; filename=mydata.xlsx'
+            resp['Content-Disposition'] = 'attachment; filename=B2B Leads ' + data["campaign"]["name"] + '.xlsx'
+        
+        elif data["campaign"].get("type_of_end_customer_formatted_name") == "b_to_b_r_g":
+
+            requirement = PreRequirement.objects.filter(
+                campaign_id=data["campaign"]['proposal_id'])
+            browsed_leads = list(BrowsedLead.objects.raw(
+                {"campaign_id":campaign_id,"status":"closed"}).values())
+
+            excel_book = b2b_utils.download_b2b_leads(requirement,browsed_leads)
+
+            name = str(data["campaign"]["name"]) if data["campaign"]["name"] else "mydata"
+            filename = str(name.replace(" ", ""))
+
+            resp = HttpResponse(
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            resp['Content-Disposition'] = 'attachment; filename=B2BRG'+filename+'.xlsx'
+
+        else:
+
+            excel_book = prepare_campaign_specific_data_in_excel(data, comment_list)
+
+            resp = HttpResponse(
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            resp['Content-Disposition'] = 'attachment; filename=' + data["campaign"]["name"] + '.xlsx'
         excel_book.save(resp)
         return resp
 
@@ -2135,9 +2171,9 @@ def prepare_campaign_leads_data_in_excel(data, comment_list):
     
     header_list = [
         'Index', 'Supplier Name', 'Supplier Type' , 'Current Partner', 'Current Partner Other', 'FeedBack', 'Preferred Partner', 'Preferred Partner Other',
-        'L1 Answer 1 ', 'L1 Answer 1', 'L2 Answer 1', 'L2 Answer 2', 'Implementation Time', 'Meeting Time', 'Lead Given by', 'Subarea',
-        'Area', 'City', 'Address', 'Landmark', 'PinCode', 'Unit Primary Count / Flat Count',
-        'Unit Secondary Count / Tower Count', 'Average Household Points',
+        'L1 Answer 1 ', 'L1 Answer 2', 'L2 Answer 1', 'L2 Answer 2', 'Implementation Time', 'Meeting Time', 'Call back Time', 'Lead price',
+        'Lead Given by(name)', 'Lead given by (number)', 'Designation', 'Client Status', 'Subarea', 'Area', 'City', 'Address', 'Landmark',
+        'PinCode', 'Unit Primary Count / Flat Count', 'Unit Secondary Count / Tower Count', 'Average Household Points',
     ]
 
     book = Workbook()
@@ -2174,7 +2210,12 @@ def prepare_campaign_leads_data_in_excel(data, comment_list):
                 supplier_data.append(requirement.l2_answer_2)
                 supplier_data.append(requirement.impl_timeline)
                 supplier_data.append(requirement.meating_timeline)
+                supplier_data.append(requirement.call_back_preference)
+                supplier_data.append(requirement.lead_price)
                 supplier_data.append(requirement.lead_by.name)
+                supplier_data.append(requirement.lead_by.mobile)
+                supplier_data.append(requirement.lead_by.contact_type)
+                supplier_data.append(requirement.client_status)
 
                 supplier_data.append(supplier['subarea'])
                 supplier_data.append(supplier['area'])
@@ -2210,6 +2251,11 @@ def prepare_campaign_leads_data_in_excel(data, comment_list):
             supplier_data.append(supplier['name'])
             supplier_data.append(supplier['supplier_type'])
 
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
+            supplier_data.append(None)
             supplier_data.append(None)
             supplier_data.append(None)
             supplier_data.append(None)
