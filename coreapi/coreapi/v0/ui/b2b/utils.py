@@ -137,10 +137,49 @@ def download_b2b_leads(requirement,browsed_leads):
         sub_sector = BusinessSubTypes.objects.filter(id=browsed['sub_sector_id']).first()
 
         try:
-            supplier_type = None
             supplier_type = browsed['supplier_type']
         except Exception as e:
             supplier_type = None
+
+        try:
+            l1_answer_2 = browsed['l1_answer_2']
+        except Exception as e:
+            l1_answer_2 = None
+
+        try:
+            l2_answers = browsed['l2_answers']
+        except Exception as e:
+            l2_answers = None
+
+        try:
+            l2_answer_2 = browsed['l2_answer_2']
+        except Exception as e:
+            l2_answer_2 = None
+
+        try:
+            implementation_timeline = browsed['implementation_timeline']
+        except Exception as e:
+            implementation_timeline = None
+
+        try:
+            meating_timeline = browsed['meating_timeline']
+        except Exception as e:
+            meating_timeline = None
+
+        try:
+            meating_timeline = browsed['meating_timeline']
+        except Exception as e:
+            meating_timeline = None
+
+        try:
+            lead_status = browsed['lead_status']
+        except Exception as e:
+            lead_status = None
+
+        try:
+            call_back_preference = browsed['call_back_preference']
+        except Exception as e:
+            call_back_preference = None
 
         row3 = [
             index,
