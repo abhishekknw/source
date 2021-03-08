@@ -566,24 +566,70 @@ class BrowsedLeadClass(APIView):
 class BrowsedLeadDelete(APIView):
 
     def post(self, request):
-        browsed_ids = request.data.get("browsed_ids")
-
+        browsed_ids = request.data.get("browsed")
+        list_color_code = None
         for browsed_id in browsed_ids:
-            mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id)}, {"$set":{"status":"deleted"}})
+            browsed = mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id["_id"])}, {"$set":{"status":"deleted"}})
 
-        return ui_utils.handle_response({}, data="", success=True)
+            shortlisted_spaces = browsed_id['shortlisted_spaces_id']
+
+            shortlisted_spac = ShortlistedSpaces.objects.filter(id=
+                        shortlisted_spaces).first()
+            
+            if shortlisted_spac:
+                list_color_code = shortlisted_spac.color_code
+
+        return ui_utils.handle_response({}, data={"message":"Browsed lead deleted successfully","list_color_code":list_color_code}, success=True)
 
 class DeleteRequirement(APIView):
 
     def post(self, request):
         requirement_ids = request.data.get('requirement_ids')
+        list_color_code = None
 
-        requirements = PreRequirement.objects.filter(id__in=requirement_ids).update(is_deleted="yes")
+        for req in requirement_ids:
+            requirement = PreRequirement.objects.filter(id=req).first()
+            requirement.is_deleted="yes"
+            requirement.save()
 
-        # for req in requirements:
-        #     Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="no").update(is_deleted="yes")
+            if requirement.shortlisted_spaces:
 
-        return ui_utils.handle_response({}, data="Requirement deleted", success=True)
+                req_exist = PreRequirement.objects.values_list('varified_ops', flat=True).filter(
+                    shortlisted_spaces=requirement.shortlisted_spaces,is_deleted="no")
+                
+                if requirement.shortlisted_spaces:
+                    
+                    list_color_code = requirement.shortlisted_spaces.color_code
+
+                    shortlisted_spac = ShortlistedSpaces.objects.filter(id=
+                        requirement.shortlisted_spaces.id).first()
+                    
+                    browsed_leads = list(BrowsedLead.objects.raw(
+                            {"shortlisted_spaces_id":str(requirement.shortlisted_spaces.id), 
+                            "status":"closed"}))
+
+                    if req_exist:
+                
+                        if "yes" in req_exist and "no" not in req_exist:
+
+                            if browsed_leads:
+                                shortlisted_spac.color_code = 2 #Brown
+                                list_color_code = 2
+                            else:
+                                shortlisted_spac.color_code = 3 #Green
+                                list_color_code = 3
+
+                    else:
+                        if browsed_leads:
+                            shortlisted_spac.color_code = 2 #Brown
+                            list_color_code = 2
+                        else:
+                            shortlisted_spac.color_code = 5 #Red
+                            list_color_code = 5
+                            
+                    shortlisted_spac.save()
+
+        return ui_utils.handle_response({}, data={"message":"Requirement deleted","list_color_code":list_color_code}, success=True)
 
 
 class RestoreRequirement(APIView):
@@ -591,13 +637,19 @@ class RestoreRequirement(APIView):
 
     def post(self, request):
         requirement_ids = request.data.get('requirement_ids')
+        list_color_code = None
 
-        requirements = PreRequirement.objects.filter(id__in=requirement_ids).update(is_deleted="no")
-
-        # for req in requirements:
-        #     Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="yes").update(is_deleted="no")
-
-        return ui_utils.handle_response({}, data="Requirement restored", success=True)
+        for req in requirement_ids:
+            requirement= PreRequirement.objects.filter(id=req).first()
+            requirement.is_deleted = "no"
+            requirement.save()
+            if requirement.shortlisted_spaces:
+                list_color_code
+                shrtlstd_space = ShortlistedSpaces.objects.filter(id=requirement.shortlisted_spaces.id).first()
+                shrtlstd_space.color_code = 1
+                shrtlstd_space.save()
+            
+        return ui_utils.handle_response({}, data={"message":"Requirement restored","list_color_code":1}, success=True)
         
 class LeadOpsVerification(APIView):
 
@@ -639,9 +691,6 @@ class LeadOpsVerification(APIView):
                                     color_code = 1
                                 )
                                 company_shortlisted_spaces.save()
-
-                            company_shortlisted_spaces.requirement_given_date=datetime.datetime.now()
-                            company_shortlisted_spaces.save()
 
                             requirement.company_campaign = company_campaign
                             requirement.company_shortlisted_spaces = company_shortlisted_spaces
@@ -1042,7 +1091,7 @@ class BdVerification(APIView):
             "Satisfaction Level" : requirement.current_patner_feedback,
             "Reasons for Dissatisfaction" : requirement.current_patner_feedback_reason,
             "Price": requirement.lead_price,
-            # "Client Status":requirement.client_status,
+            "Client Status":requirement.client_status,
         }
 
         lead_data = []
@@ -1329,11 +1378,11 @@ class GetLeadsForCurrentCompanyDonut(APIView):
             suppliers_list = list(set(suppliers_list))
         
             master_societies = SupplierMaster.objects.filter(
-                supplier_id__in=suppliers_list)
+                supplier_id__in=suppliers_list).exclude(supplier_type="RS")
             master_serializer = SupplierMasterSerializer(master_societies, many=True)
             
             supplire_societies = SupplierTypeSociety.objects.filter(
-                supplier_id__in=suppliers_list)
+                supplier_id__in=suppliers_list,supplier_code="RS")
             supplire_serializer = SupplierTypeSocietySerializer(supplire_societies, many=True)
             
             all_societies = manipulate_object_key_values(supplire_serializer.data)
@@ -2090,7 +2139,7 @@ class AddNotificationTemplate(APIView):
         
         return ui_utils.handle_response({}, data=res, success=status)
 
-class SuspenseLeadClass(APIView):
+class GetAllSuspenseLead(APIView):
 
     def get(self, request):
 
@@ -2099,7 +2148,46 @@ class SuspenseLeadClass(APIView):
         for row in suspense_lead:
             row1 = dict(row)
             row1["_id"] = str(row1["_id"])
+            
             list1.append(row1)
 
-        return ui_utils.handle_response({}, data={"suspense_lead": list1}, success=True)
+        companies = Organisation.objects.all()
+        companies_data = OrganisationSerializer(companies, many=True).data
+        return ui_utils.handle_response({}, data={"suspense_lead": list1,"companies":companies_data}, success=True)
 
+
+class UpdateSuspenseLead(APIView):
+
+    def post(self, request):
+
+        suspense_leads = request.data.get("suspense_leads")
+
+        for suspense in suspense_leads:
+
+            update_values = {"$set":{
+                "implementation_timeline":suspense["implementation_timeline"],
+                "meating_timeline":suspense["meating_timeline"],
+                "comment":suspense["comment"],
+                "current_patner":suspense["current_patner_id"],
+                "current_patner_other":suspense["current_patner_other"],
+                "prefered_patners":suspense["prefered_patners_id"],
+                "prefered_patner_other":suspense["prefered_patner_other"],
+                "call_back_preference":suspense["call_back_preference"],
+                "status":"open",
+                "updated_at":datetime.datetime.now(),
+                }}
+
+            mongo_client.suspense_lead.update({"_id": ObjectId(suspense["_id"])},update_values)
+
+        return ui_utils.handle_response({}, data={"message":"Suspense lead updated successfully"}, success=True)
+
+
+class SuspenseLeadDelete(APIView):
+
+    def post(self, request):
+        suspense_ids = request.data.get("suspense_ids")
+
+        for suspense_id in suspense_ids:
+            mongo_client.suspense_lead.update({"_id": ObjectId(suspense_id)}, {"$set":{"status":"deleted"}})
+
+        return ui_utils.handle_response({}, data={"message":"Suspense lead removed successfully"}, success=True)
