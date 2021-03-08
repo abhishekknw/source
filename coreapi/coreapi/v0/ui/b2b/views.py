@@ -566,19 +566,26 @@ class BrowsedLeadClass(APIView):
 class BrowsedLeadDelete(APIView):
 
     def post(self, request):
-        browsed_ids = request.data.get("browsed_ids")
-
+        browsed_ids = request.data.get("browsed")
+        list_color_code = None
         for browsed_id in browsed_ids:
-            mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id)}, {"$set":{"status":"deleted"}})
+            browsed = mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id["_id"])}, {"$set":{"status":"deleted"}})
 
-        return ui_utils.handle_response({}, data="", success=True)
+            shortlisted_spaces = browsed_id['shortlisted_spaces_id']
+
+            shortlisted_spac = ShortlistedSpaces.objects.filter(id=
+                        shortlisted_spaces).first()
+            
+            if shortlisted_spac:
+                list_color_code = shortlisted_spac.color_code
+
+        return ui_utils.handle_response({}, data={"message":"Browsed lead deleted successfully","list_color_code":list_color_code}, success=True)
 
 class DeleteRequirement(APIView):
 
     def post(self, request):
         requirement_ids = request.data.get('requirement_ids')
-
-        # requirements = PreRequirement.objects.filter(id__in=requirement_ids).update(is_deleted="yes")
+        list_color_code = None
 
         for req in requirement_ids:
             requirement = PreRequirement.objects.filter(id=req).first()
@@ -590,42 +597,39 @@ class DeleteRequirement(APIView):
                 req_exist = PreRequirement.objects.values_list('varified_ops', flat=True).filter(
                     shortlisted_spaces=requirement.shortlisted_spaces,is_deleted="no")
                 
-                shortlisted_spac = ShortlistedSpaces.objects.filter(id=
-                    requirement.shortlisted_spaces.id).first()
-                
-                browsed_leads = dict(BrowsedLead.objects.raw(
-                        {"shortlisted_spaces_id":requirement.shortlisted_spaces.id, 
-                        "status":"closed"}))
-
-                if req_exist:
-                    if "yes" in req_exist and "no" not in req_exist and browsed_leads:
-                        shortlisted_spac.color_code = 5 #Red
-                else:
-                    if not browsed_leads:
-                        if "no" in req_exist and "yes" not in req_exist:
-                            shortlisted_spac.color_code = 3 #Green
-                    else:
-                        shortlisted_spac.color_code = 2 #Brown
-                shortlisted_spac.save()
-
-
-                # print(req_exist)
-                # requirement_exist = PreRequirement.objects.filter(
-                #     shortlisted_spaces=requirement.shortlisted_spaces,varified_ops = "no")
-                
-                # if not requirement_exist:
-                
-                #     shortlisted_spac = ShortlistedSpaces.objects.filter(
-                #         id=requirement.shortlisted_spaces.id).first()
+                if requirement.shortlisted_spaces:
                     
-                #     browsed_leads = dict(BrowsedLead.objects.raw({"shortlisted_spaces_id":requirement.shortlisted_spaces.id, "status":"closed"}))
-                #     if not browsed_leads:
-                #         shortlisted_spac.color_code = 3 #Green
-                #     else:
-                #         shortlisted_spac.color_code = 2 #Brown
-                #     shortlisted_spac.save()
+                    list_color_code = requirement.shortlisted_spaces.color_code
 
-        return ui_utils.handle_response({}, data="Requirement deleted", success=True)
+                    shortlisted_spac = ShortlistedSpaces.objects.filter(id=
+                        requirement.shortlisted_spaces.id).first()
+                    
+                    browsed_leads = list(BrowsedLead.objects.raw(
+                            {"shortlisted_spaces_id":str(requirement.shortlisted_spaces.id), 
+                            "status":"closed"}))
+
+                    if req_exist:
+                
+                        if "yes" in req_exist and "no" not in req_exist:
+
+                            if browsed_leads:
+                                shortlisted_spac.color_code = 2 #Brown
+                                list_color_code = 2
+                            else:
+                                shortlisted_spac.color_code = 3 #Green
+                                list_color_code = 3
+
+                    else:
+                        if browsed_leads:
+                            shortlisted_spac.color_code = 2 #Brown
+                            list_color_code = 2
+                        else:
+                            shortlisted_spac.color_code = 5 #Red
+                            list_color_code = 5
+                            
+                    shortlisted_spac.save()
+
+        return ui_utils.handle_response({}, data={"message":"Requirement deleted","list_color_code":list_color_code}, success=True)
 
 
 class RestoreRequirement(APIView):
@@ -633,19 +637,19 @@ class RestoreRequirement(APIView):
 
     def post(self, request):
         requirement_ids = request.data.get('requirement_ids')
-
-        # requirements = PreRequirement.objects.filter(id__in=requirement_ids).update(is_deleted="no",shortlisted_spaces__color_code=2)
+        list_color_code = None
 
         for req in requirement_ids:
             requirement= PreRequirement.objects.filter(id=req).first()
             requirement.is_deleted = "no"
             requirement.save()
             if requirement.shortlisted_spaces:
+                list_color_code
                 shrtlstd_space = ShortlistedSpaces.objects.filter(id=requirement.shortlisted_spaces.id).first()
                 shrtlstd_space.color_code = 1
                 shrtlstd_space.save()
             
-        return ui_utils.handle_response({}, data="Requirement restored", success=True)
+        return ui_utils.handle_response({}, data={"message":"Requirement restored","list_color_code":1}, success=True)
         
 class LeadOpsVerification(APIView):
 
