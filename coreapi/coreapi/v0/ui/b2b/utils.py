@@ -299,7 +299,7 @@ def download_b2b_leads(requirement,browsed_leads):
                 supplier_type,
                 area,
                 city,
-                sector.business_type if sector.business_type else None,
+                sector.business_type if sector else None,
                 sub_sector.business_sub_type if sub_sector else None,
                 current_patner_id,
                 current_patner_other,
