@@ -3,6 +3,7 @@ import requests
 from openpyxl import load_workbook, Workbook
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster
 from v0.ui.account.models import ContactDetails, BusinessTypes, BusinessSubTypes
+from v0.ui.proposal.models import ShortlistedSpaces
 
 
 def get_lead_status(impl_timeline,meating_timeline,prefered_patners,
@@ -49,6 +50,55 @@ def send_whatsapp_notification(company,notification_type,destination):
 		pastebin_url = rspnse.text
 
 	return True
+
+def get_color_code(shortlisted_spaces_id):
+    
+    requirement = PreRequirement.objects.filter(shortlisted_spaces_id=shortlisted_spaces_id)
+    browsed_leads = list(BrowsedLead.objects.raw(
+        {"shortlisted_spaces_id":str(shortlisted_spaces_id),
+        "status":"closed"}))
+    color_code_list = []
+
+    if requirement:
+
+        for req in requirement:
+
+            if req.varified_ops == "no" and req.is_deleted == "no":
+                color_code_list.append(1) # Yellow
+            elif req.varified_ops == "yes" and req.is_deleted == "no":
+                if browsed_leads:
+                    color_code_list.append(2) # Brown
+                else:
+                    color_code_list.append(3) # Green
+            elif req.is_deleted == "yes":
+                color_code_list.append(5) # Green
+            else:
+                if browsed_leads:
+                    color_code_list.append(2) # Brown
+                else:
+                    color_code_list.append(4) # Green
+
+        if 1 in color_code_list:
+            color_code = 1 #Yellow
+        else:
+            if 2 in color_code_list:
+                color_code = 2 #Brown
+            else:
+                if 3 in color_code_list:
+                    color_code = 3 #Green 
+                else:
+                    color_code = 4 #White
+    else:
+        if browsed_leads:
+            color_code = 2 #Brown
+        else:
+            color_code = 4 #White
+
+    shortlisted_spac = ShortlistedSpaces.objects.filter(id=shortlisted_spaces_id).first()
+    shortlisted_spac.color_code = color_code
+    shortlisted_spac.save()
+
+    return color_code
 
 def download_b2b_leads(requirement,browsed_leads):
 	
@@ -119,7 +169,7 @@ def download_b2b_leads(requirement,browsed_leads):
             req.meating_timeline,
             req.lead_status,
             req.comment,
-            req.lead_by.name,
+            req.lead_by.name if req.lead_by else None,
             req.call_back_preference,
             req.lead_date,
             "yes",
@@ -130,90 +180,151 @@ def download_b2b_leads(requirement,browsed_leads):
 
         sheet.append(row2)
 
-    for browsed in browsed_leads:
+    if browsed_leads:
         
-        index = index + 1
-        sector = BusinessTypes.objects.filter(id=browsed['sector_id']).first()
-        sub_sector = BusinessSubTypes.objects.filter(id=browsed['sub_sector_id']).first()
+        for browsed in browsed_leads:
+            
+            index = index + 1
+            try:
+                sector_id = browsed['sector_id']
+                sector = BusinessTypes.objects.filter(id=sector_id).first()
+            except Exception as e:
+                sector = None
 
-        try:
-            supplier_type = browsed['supplier_type']
-        except Exception as e:
-            supplier_type = None
+            try:
+                sub_sector_id = browsed['sub_sector_id']
+                sub_sector = BusinessSubTypes.objects.filter(id=sub_sector_id).first()
+            except Exception as e:
+                sub_sector = None
 
-        try:
-            l1_answer_2 = browsed['l1_answer_2']
-        except Exception as e:
-            l1_answer_2 = None
+            try:
+                supplier_type = browsed['supplier_type']
+            except Exception as e:
+                supplier_type = None
 
-        try:
-            l2_answers = browsed['l2_answers']
-        except Exception as e:
-            l2_answers = None
+            try:
+                l1_answers = browsed['l1_answers']
+            except Exception as e:
+                l1_answers = None
 
-        try:
-            l2_answer_2 = browsed['l2_answer_2']
-        except Exception as e:
-            l2_answer_2 = None
+            try:
+                l1_answer_2 = browsed['l1_answer_2']
+            except Exception as e:
+                l1_answer_2 = None
 
-        try:
-            implementation_timeline = browsed['implementation_timeline']
-        except Exception as e:
-            implementation_timeline = None
+            try:
+                l2_answers = browsed['l2_answers']
+            except Exception as e:
+                l2_answers = None
 
-        try:
-            meating_timeline = browsed['meating_timeline']
-        except Exception as e:
-            meating_timeline = None
+            try:
+                l2_answer_2 = browsed['l2_answer_2']
+            except Exception as e:
+                l2_answer_2 = None
 
-        try:
-            meating_timeline = browsed['meating_timeline']
-        except Exception as e:
-            meating_timeline = None
+            try:
+                implementation_timeline = browsed['implementation_timeline']
+            except Exception as e:
+                implementation_timeline = None
 
-        try:
-            lead_status = browsed['lead_status']
-        except Exception as e:
-            lead_status = None
+            try:
+                meating_timeline = browsed['meating_timeline']
+            except Exception as e:
+                meating_timeline = None
 
-        try:
-            call_back_preference = browsed['call_back_preference']
-        except Exception as e:
-            call_back_preference = None
+            try:
+                lead_status = browsed['lead_status']
+            except Exception as e:
+                lead_status = None
 
-        row3 = [
-            index,
-            browsed['supplier_id'],
-            browsed['supplier_name'],
-            supplier_type,
-            browsed['area'],
-            browsed['city'],
-            sector.business_type if sector.business_type else None,
-            sub_sector.business_sub_type if sub_sector else None,
-            browsed['current_patner_id'],
-            browsed['current_patner_other'],
-            browsed['current_patner_feedback'],
-            ", ".join(browsed['prefered_patners']),
-            browsed['prefered_patner_other'],
+            try:
+                call_back_preference = browsed['call_back_preference']
+            except Exception as e:
+                call_back_preference = None
 
-            browsed['l1_answers'],
-            browsed['l1_answer_2'],
-            browsed['l2_answers'],
-            browsed['l2_answer_2'],
+            try:
+                prefered_patner_other = browsed['prefered_patner_other']
+            except Exception as e:
+                prefered_patner_other = None
 
-            browsed['implementation_timeline'],
-            browsed['meating_timeline'],
-            browsed['lead_status'],
+            try:
+                current_patner_feedback = browsed['current_patner_feedback']
+            except Exception as e:
+                current_patner_feedback = None
 
-            browsed['comment'],
-            None,
-            browsed['call_back_preference'],
-            browsed['created_at'],
-            "no",
-            "yes",
-            "no",
-            "no"
-        ]   
-        sheet.append(row3)
+            try:
+                current_patner_other = browsed['current_patner_other']
+            except Exception as e:
+                current_patner_other = None
+
+            try:
+                current_patner_id = browsed['current_patner_id']
+            except Exception as e:
+                current_patner_id = None
+
+            try:
+                supplier_name = browsed['supplier_name']
+            except Exception as e:
+                supplier_name = None
+
+            try:
+                supplier_id = browsed['supplier_id']
+            except Exception as e:
+                supplier_id = None
+
+            try:
+                area = browsed['area']
+            except Exception as e:
+                area = None
+
+            try:
+                city = browsed['city']
+            except Exception as e:
+                city = None
+
+            try:
+                comment = browsed['comment']
+            except Exception as e:
+                comment = None
+
+            try:
+                prefered_patners = browsed['prefered_patners']
+            except Exception as e:
+                prefered_patners = None
+
+            row3 = [
+                index,
+                supplier_id,
+                supplier_name,
+                supplier_type,
+                area,
+                city,
+                sector.business_type if sector else None,
+                sub_sector.business_sub_type if sub_sector else None,
+                current_patner_id,
+                current_patner_other,
+                current_patner_feedback,
+                ", ".join(prefered_patners),
+                prefered_patner_other,
+
+                l1_answers,
+                l1_answer_2,
+                l2_answers,
+                l2_answer_2,
+
+                implementation_timeline,
+                meating_timeline,
+                lead_status,
+
+                comment,
+                None,
+                call_back_preference,
+                browsed['created_at'],
+                "no",
+                "yes",
+                "no",
+                "no"
+            ]   
+            sheet.append(row3)
 
     return book
