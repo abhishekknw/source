@@ -3,6 +3,7 @@ import requests
 from openpyxl import load_workbook, Workbook
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster
 from v0.ui.account.models import ContactDetails, BusinessTypes, BusinessSubTypes
+from v0.ui.proposal.models import ShortlistedSpaces
 
 
 def get_lead_status(impl_timeline,meating_timeline,prefered_patners,
@@ -49,6 +50,55 @@ def send_whatsapp_notification(company,notification_type,destination):
 		pastebin_url = rspnse.text
 
 	return True
+
+def get_color_code(shortlisted_spaces_id):
+    
+    requirement = PreRequirement.objects.filter(shortlisted_spaces_id=shortlisted_spaces_id)
+    browsed_leads = list(BrowsedLead.objects.raw(
+        {"shortlisted_spaces_id":str(shortlisted_spaces_id),
+        "status":"closed"}))
+    color_code_list = []
+
+    if requirement:
+
+        for req in requirement:
+
+            if req.varified_ops == "no" and req.is_deleted == "no":
+                color_code_list.append(1) # Yellow
+            elif req.varified_ops == "yes" and req.is_deleted == "no":
+                if browsed_leads:
+                    color_code_list.append(2) # Brown
+                else:
+                    color_code_list.append(3) # Green
+            elif req.is_deleted == "yes":
+                color_code_list.append(5) # Green
+            else:
+                if browsed_leads:
+                    color_code_list.append(2) # Brown
+                else:
+                    color_code_list.append(4) # Green
+
+        if 1 in color_code_list:
+            color_code = 1 #Yellow
+        else:
+            if 2 in color_code_list:
+                color_code = 2 #Brown
+            else:
+                if 3 in color_code_list:
+                    color_code = 3 #Green 
+                else:
+                    color_code = 4 #White
+    else:
+        if browsed_leads:
+            color_code = 2 #Brown
+        else:
+            color_code = 4 #White
+
+    shortlisted_spac = ShortlistedSpaces.objects.filter(id=shortlisted_spaces_id).first()
+    shortlisted_spac.color_code = color_code
+    shortlisted_spac.save()
+
+    return color_code
 
 def download_b2b_leads(requirement,browsed_leads):
 	
