@@ -573,12 +573,9 @@ class BrowsedLeadDelete(APIView):
 
             shortlisted_spaces = browsed_id['shortlisted_spaces_id']
 
-            shortlisted_spac = ShortlistedSpaces.objects.filter(id=
-                        shortlisted_spaces).first()
+        if shortlisted_spaces:
+            list_color_code = b2b_utils.get_color_code(shortlisted_spaces)
             
-            if shortlisted_spac:
-                list_color_code = shortlisted_spac.color_code
-
         return ui_utils.handle_response({}, data={"message":"Browsed lead deleted successfully","list_color_code":list_color_code}, success=True)
 
 class DeleteRequirement(APIView):
@@ -592,42 +589,8 @@ class DeleteRequirement(APIView):
             requirement.is_deleted="yes"
             requirement.save()
 
-            if requirement.shortlisted_spaces:
-
-                req_exist = PreRequirement.objects.values_list('varified_ops', flat=True).filter(
-                    shortlisted_spaces=requirement.shortlisted_spaces,is_deleted="no")
-                
-                if requirement.shortlisted_spaces:
-                    
-                    list_color_code = requirement.shortlisted_spaces.color_code
-
-                    shortlisted_spac = ShortlistedSpaces.objects.filter(id=
-                        requirement.shortlisted_spaces.id).first()
-                    
-                    browsed_leads = list(BrowsedLead.objects.raw(
-                            {"shortlisted_spaces_id":str(requirement.shortlisted_spaces.id), 
-                            "status":"closed"}))
-
-                    if req_exist:
-                
-                        if "yes" in req_exist and "no" not in req_exist:
-
-                            if browsed_leads:
-                                shortlisted_spac.color_code = 2 #Brown
-                                list_color_code = 2
-                            else:
-                                shortlisted_spac.color_code = 3 #Green
-                                list_color_code = 3
-
-                    else:
-                        if browsed_leads:
-                            shortlisted_spac.color_code = 2 #Brown
-                            list_color_code = 2
-                        else:
-                            shortlisted_spac.color_code = 5 #Red
-                            list_color_code = 5
-                            
-                    shortlisted_spac.save()
+        if requirement.shortlisted_spaces:
+            list_color_code = b2b_utils.get_color_code(requirement.shortlisted_spaces.id)
 
         return ui_utils.handle_response({}, data={"message":"Requirement deleted","list_color_code":list_color_code}, success=True)
 
@@ -643,11 +606,9 @@ class RestoreRequirement(APIView):
             requirement= PreRequirement.objects.filter(id=req).first()
             requirement.is_deleted = "no"
             requirement.save()
-            if requirement.shortlisted_spaces:
-                list_color_code
-                shrtlstd_space = ShortlistedSpaces.objects.filter(id=requirement.shortlisted_spaces.id).first()
-                shrtlstd_space.color_code = 1
-                shrtlstd_space.save()
+        
+        if requirement.shortlisted_spaces:
+            list_color_code = b2b_utils.get_color_code(requirement.shortlisted_spaces.id)
             
         return ui_utils.handle_response({}, data={"message":"Requirement restored","list_color_code":1}, success=True)
         
@@ -751,22 +712,10 @@ class LeadOpsVerification(APIView):
             else:
                 return ui_utils.handle_response({}, data={"error":"No companies for the service found"}, success=False)
         color_code = None
+        list_color_code = None
         if requirement.shortlisted_spaces:
-            requirement_exist = PreRequirement.objects.filter(shortlisted_spaces=requirement.shortlisted_spaces,
-             varified_ops = "no")
+            list_color_code = b2b_utils.get_color_code(requirement.shortlisted_spaces.id)
             
-            list_color_code = requirement.shortlisted_spaces.color_code
-            if not requirement_exist:
-                
-                browsed_leads = dict(BrowsedLead.objects.raw({"shortlisted_spaces_id":requirement.shortlisted_spaces.id, "status":"closed"}))
-                if not browsed_leads:
-                   
-                    shortlisted_spac = ShortlistedSpaces.objects.filter(
-                        id=requirement.shortlisted_spaces.id).first()
-                    shortlisted_spac.color_code = 3
-                    shortlisted_spac.save()
-                    color_code = 3
-                    list_color_code = color_code
         if verified == 0:
             return ui_utils.handle_response({}, data={"error":"Ops verify failed as there are 0 client campaigns","color_code":color_code,"verified_ops_by":request.user.first_name + request.user.last_name,"list_color_code":list_color_code}, success=False)
         else:
