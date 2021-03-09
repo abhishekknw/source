@@ -2106,12 +2106,12 @@ class DownloadB2BLeads(APIView):
 
         requirement = PreRequirement.objects.filter(campaign_id=campaign_id)
 
-        campaign = ProposalInfo.objects.filter(proposal_id=campaign_id).first()
-
-        browsed_leads = list(BrowsedLead.objects.raw({"campaign_id":campaign_id,
+        browsed_leads = list(BrowsedLead.objects.raw({"campaign_id":str(campaign_id),
          "status":"closed"}).values())
 
         excel_book = b2b_utils.download_b2b_leads(requirement,browsed_leads)
+
+        campaign = ProposalInfo.objects.filter(proposal_id=campaign_id).first()
 
         name = str(campaign.name) if campaign else "mydata"
         filename = str(name.replace(" ", ""))
@@ -2191,3 +2191,182 @@ class SuspenseLeadDelete(APIView):
             mongo_client.suspense_lead.update({"_id": ObjectId(suspense_id)}, {"$set":{"status":"deleted"}})
 
         return ui_utils.handle_response({}, data={"message":"Suspense lead removed successfully"}, success=True)
+
+
+class SuspenseLeadOpsVerification(APIView):
+
+    def post(self, request):
+
+        suspense_ids = request.data.get("suspense_ids")
+        id_ = []
+        for suspense_id in suspense_ids:
+            id_.append(ObjectId(suspense_id))     
+
+        suspense_leads = list(mongo_client.suspense_lead.find({"_id": {'$in':(id_)}}))
+        print("############################")
+        for suspense in suspense_leads:
+    
+            campaign = ProposalInfo.objects.filter(Q(
+                type_of_end_customer__formatted_name="b_to_b_r_g")
+            & Q(name=suspense['city']) | Q(name=suspense['area'])).first()
+
+            shortlisted_spaces = ShortlistedSpaces.objects.filter(
+                proposal_id=campaign.proposal_id, 
+                object_id=suspense['supplier_id']).first()
+
+            if not shortlisted_spaces:
+                print(2)
+                content_type = ui_utils.get_content_type(suspense['supplier_type'])
+                center = ProposalCenterMapping.objects.filter(
+                    proposal_id=campaign.proposal_id).first()
+
+                shortlisted_spaces = ShortlistedSpaces(
+                    proposal_id=campaign.proposal_id,
+                    center=center,
+                    supplier_code=suspense['supplier_type'],
+                    object_id=suspense['supplier_id'],
+                    content_type=content_type.data['data'],
+                    status='F',
+                    user=request.user,
+                    requirement_given='yes',
+                    requirement_given_date=datetime.datetime.now()
+                )
+                shortlisted_spaces.save()
+
+            if suspense['sector_name'] is not None:
+                sector = BusinessTypes.objects.filter(
+                    business_type=suspense['sector_name'].lower()).first()
+            
+            if suspense['sub_sector_name'] is not None:
+                sub_sector = BusinessSubTypes.objects.filter(
+                    business_sub_type=suspense['sub_sector_name'].lower()).first()
+
+            change_current_patner = "no"
+            if suspense['current_patner_feedback'] == "Dissatisfied" or suspense['current_patner_feedback'] == "Extremely Dissatisfied":
+                change_current_patner = "yes"
+
+            prefered_patners_list = []
+            if suspense["prefered_patners"]:
+                prefered_patners_list = Organisation.objects.filter(
+                    organisation_id__in=suspense['prefered_patners']).all()
+
+            current_patner_obj = None
+            current_company_other = None
+            if suspense['current_patner']:
+                current_patner_obj = Organisation.objects.filter(
+                    name=suspense['current_patner']).first()
+                
+
+            pre_requirement = PreRequirement(
+                campaign_id=campaign.proposal_id,
+                shortlisted_spaces=shortlisted_spaces,
+                current_company = current_patner_obj,
+                current_company_other = suspense['current_patner_other'],
+                current_patner_feedback = suspense['current_patner_feedback'],
+                current_patner_feedback_reason = suspense['current_patner_feedback_reason'],
+                preferred_company_other = suspense['prefered_patner_other'],
+                sector = sector,
+                sub_sector = sub_sector,
+                lead_by = None,
+                impl_timeline = suspense['implementation_timeline'],
+                meating_timeline = suspense['meating_timeline'],
+                lead_status = "Lead",
+                comment = suspense['meating_timeline'],
+                varified_ops = 'yes',
+                varified_bd = 'no',
+                lead_date = datetime.datetime.now(),
+                l1_answers = suspense['l1_answers'],
+                l1_answer_2 = suspense['l1_answer_2'],
+                l2_answers = suspense['l2_answers'],
+                l2_answer_2 = suspense['l2_answer_2'],
+                change_current_patner = change_current_patner.lower(),
+                call_back_preference = suspense['call_back_preference'].lower(),
+                varified_ops_by_id = request.user.id
+            )
+            pre_requirement.save()
+
+            if prefered_patners_list:
+                pre_requirement.preferred_company.set(prefered_patners_list)
+
+            if pre_requirement:
+                companies = Organisation.objects.filter(business_type=
+                    pre_requirement.sector)
+
+                if companies:
+                    for company in companies:
+                        company_campaign = ProposalInfo.objects.filter(
+                            type_of_end_customer__formatted_name="b_to_b_l_d",
+                            account__organisation=company).first()
+
+                        if company_campaign:
+                            company_shortlisted_spaces = ShortlistedSpaces.objects.filter(
+                                object_id=pre_requirement.shortlisted_spaces.object_id,
+                                proposal=company_campaign.proposal_id).first()
+
+                            if not company_shortlisted_spaces:
+                                center_ = ProposalCenterMapping.objects.filter(proposal=company_campaign).first()
+                                content_type_ = ui_utils.get_content_type(pre_requirement.shortlisted_spaces.supplier_code)
+
+                                company_shortlisted_spaces = ShortlistedSpaces(
+                                    proposal=company_campaign,
+                                    center=center_,
+                                    object_id=pre_requirement.shortlisted_spaces.object_id,
+                                    supplier_code=pre_requirement.shortlisted_spaces.supplier_code,
+                                    content_type=content_type_.data['data'],
+                                    status='F',
+                                    user=request.user,
+                                    requirement_given='yes',
+                                    requirement_given_date=datetime.datetime.now(),
+                                    color_code = 1
+                                )
+                                company_shortlisted_spaces.save()
+
+                            preferred_partners_list = pre_requirement.preferred_company.all()
+
+                            is_preferred_company = "no"
+                            if company_campaign.account.organisation:
+                                if company_campaign.account.organisation in preferred_partners_list:
+                                    is_preferred_company = "yes"
+
+                            new_requirement = Requirement(
+                            campaign_id=pre_requirement.campaign_id,
+                            shortlisted_spaces=pre_requirement.shortlisted_spaces,
+                            company = company,
+                            current_company = pre_requirement.current_company,
+                            current_company_other = pre_requirement.current_company_other,
+                            is_current_patner = "yes" if pre_requirement.current_company == company else "no",
+                            current_patner_feedback = pre_requirement.current_patner_feedback,
+                            current_patner_feedback_reason = pre_requirement.current_patner_feedback_reason,
+                            preferred_company_other = pre_requirement.preferred_company_other,
+                            sector = pre_requirement.sector,
+                            sub_sector = pre_requirement.sub_sector,
+                            lead_by = pre_requirement.lead_by,
+                            impl_timeline = pre_requirement.impl_timeline,
+                            meating_timeline = pre_requirement.meating_timeline,
+                            lead_status = pre_requirement.lead_status,
+                            comment = pre_requirement.comment,
+                            varified_ops = 'yes',
+                            varified_bd = 'no',
+                            lead_date = pre_requirement.lead_date,
+                            lead_price  = pre_requirement.lead_price,
+                            l1_answers = pre_requirement.l1_answers,
+                            l1_answer_2 = pre_requirement.l1_answer_2,
+                            l2_answers = pre_requirement.l2_answers,
+                            l2_answer_2 = pre_requirement.l2_answer_2,
+                            change_current_patner = pre_requirement.change_current_patner.lower(),
+                            company_campaign=company_campaign,
+                            company_shortlisted_spaces=company_shortlisted_spaces,
+                            varified_ops_by = request.user,
+                            varified_ops_date = datetime.datetime.now(),
+                            call_back_preference = pre_requirement.call_back_preference,
+                            is_preferred_company = is_preferred_company
+                            )
+                            new_requirement.save()
+                            
+                            if preferred_partners_list:
+                                new_requirement.preferred_company.set(preferred_partners_list)
+                else:
+                    return ui_utils.handle_response({}, data=
+                        {"error":"No companies for the service found"}, 
+                        success=False)
+        return ui_utils.handle_response({}, data={"message":"Ops Verified"}, success=True)
