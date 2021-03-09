@@ -185,8 +185,17 @@ def download_b2b_leads(requirement,browsed_leads):
         for browsed in browsed_leads:
             
             index = index + 1
-            sector = BusinessTypes.objects.filter(id=browsed['sector_id']).first()
-            sub_sector = BusinessSubTypes.objects.filter(id=browsed['sub_sector_id']).first()
+            try:
+                sector_id = browsed['sector_id']
+                sector = BusinessTypes.objects.filter(id=sector_id).first()
+            except Exception as e:
+                sector = None
+
+            try:
+                sub_sector_id = browsed['sub_sector_id']
+                sub_sector = BusinessSubTypes.objects.filter(id=sub_sector_id).first()
+            except Exception as e:
+                sub_sector = None
 
             try:
                 supplier_type = browsed['supplier_type']
@@ -222,7 +231,6 @@ def download_b2b_leads(requirement,browsed_leads):
                 meating_timeline = browsed['meating_timeline']
             except Exception as e:
                 meating_timeline = None
-
 
             try:
                 lead_status = browsed['lead_status']

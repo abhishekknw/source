@@ -802,7 +802,7 @@ class BrowsedToRequirement(APIView):
         if shortlisted_spaces_id:
             ShortlistedSpaces.objects.filter(id=shortlisted_spaces_id).update(color_code=1, requirement_given='yes', requirement_given_date=datetime.datetime.now())
 
-        return ui_utils.handle_response({}, data={}, success=True)
+        return ui_utils.handle_response({}, data={"message":"Lead submitted successfully","list_color_code":1}, success=True)
 
 
 class UpdateBrowsedLead(APIView):
