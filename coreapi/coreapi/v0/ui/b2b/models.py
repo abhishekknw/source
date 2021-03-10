@@ -184,9 +184,11 @@ class SuspenseLead(MongoModel):
     lead_status = fields.CharField(blank=True)
     comment = fields.CharField(blank=True)
     current_patner = fields.CharField(blank=True)
+    current_patner_other = fields.CharField(blank=True)
     current_patner_feedback = fields.CharField(blank=True)
     current_patner_feedback_reason = fields.CharField(blank=True)
     prefered_patners = fields.ListField(blank=True)
+    prefered_patner_other = fields.CharField(blank=True)
     created_at = fields.DateTimeField()
     updated_at = fields.DateTimeField()
     l1_answers = fields.CharField(blank=True)
@@ -202,6 +204,7 @@ class SuspenseLead(MongoModel):
 
 class BrowsedLead(MongoModel):
     supplier_id = fields.CharField(blank=True)
+    supplier_type = fields.CharField(blank=True)
     shortlisted_spaces_id = fields.CharField(blank=True)
     campaign_id = fields.CharField(blank=True)
     phone_number = fields.CharField(blank=True)

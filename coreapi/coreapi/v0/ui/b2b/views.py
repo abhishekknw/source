@@ -566,24 +566,33 @@ class BrowsedLeadClass(APIView):
 class BrowsedLeadDelete(APIView):
 
     def post(self, request):
-        browsed_ids = request.data.get("browsed_ids")
-
+        browsed_ids = request.data.get("browsed")
+        list_color_code = None
         for browsed_id in browsed_ids:
-            mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id)}, {"$set":{"status":"deleted"}})
+            browsed = mongo_client.browsed_lead.update({"_id": ObjectId(browsed_id["_id"])}, {"$set":{"status":"deleted"}})
 
-        return ui_utils.handle_response({}, data="", success=True)
+            shortlisted_spaces = browsed_id['shortlisted_spaces_id']
+
+        if shortlisted_spaces:
+            list_color_code = b2b_utils.get_color_code(shortlisted_spaces)
+            
+        return ui_utils.handle_response({}, data={"message":"Browsed lead deleted successfully","list_color_code":list_color_code}, success=True)
 
 class DeleteRequirement(APIView):
 
     def post(self, request):
         requirement_ids = request.data.get('requirement_ids')
+        list_color_code = None
 
-        requirements = PreRequirement.objects.filter(id__in=requirement_ids).update(is_deleted="yes")
+        for req in requirement_ids:
+            requirement = PreRequirement.objects.filter(id=req).first()
+            requirement.is_deleted="yes"
+            requirement.save()
 
-        # for req in requirements:
-        #     Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="no").update(is_deleted="yes")
+        if requirement.shortlisted_spaces:
+            list_color_code = b2b_utils.get_color_code(requirement.shortlisted_spaces.id)
 
-        return ui_utils.handle_response({}, data="Requirement deleted", success=True)
+        return ui_utils.handle_response({}, data={"message":"Requirement deleted","list_color_code":list_color_code}, success=True)
 
 
 class RestoreRequirement(APIView):
@@ -591,13 +600,17 @@ class RestoreRequirement(APIView):
 
     def post(self, request):
         requirement_ids = request.data.get('requirement_ids')
+        list_color_code = None
 
-        requirements = PreRequirement.objects.filter(id__in=requirement_ids).update(is_deleted="no")
-
-        # for req in requirements:
-        #     Requirement.objects.filter(sector=req.sector, sub_sector=req.sub_sector, shortlisted_spaces=req.shortlisted_spaces, lead_by=req.lead_by, is_deleted="yes").update(is_deleted="no")
-
-        return ui_utils.handle_response({}, data="Requirement restored", success=True)
+        for req in requirement_ids:
+            requirement= PreRequirement.objects.filter(id=req).first()
+            requirement.is_deleted = "no"
+            requirement.save()
+        
+        if requirement.shortlisted_spaces:
+            list_color_code = b2b_utils.get_color_code(requirement.shortlisted_spaces.id)
+            
+        return ui_utils.handle_response({}, data={"message":"Requirement restored","list_color_code":1}, success=True)
         
 class LeadOpsVerification(APIView):
 
@@ -639,9 +652,6 @@ class LeadOpsVerification(APIView):
                                     color_code = 1
                                 )
                                 company_shortlisted_spaces.save()
-
-                            company_shortlisted_spaces.requirement_given_date=datetime.datetime.now()
-                            company_shortlisted_spaces.save()
 
                             requirement.company_campaign = company_campaign
                             requirement.company_shortlisted_spaces = company_shortlisted_spaces
@@ -702,22 +712,10 @@ class LeadOpsVerification(APIView):
             else:
                 return ui_utils.handle_response({}, data={"error":"No companies for the service found"}, success=False)
         color_code = None
+        list_color_code = None
         if requirement.shortlisted_spaces:
-            requirement_exist = PreRequirement.objects.filter(shortlisted_spaces=requirement.shortlisted_spaces,
-             varified_ops = "no")
+            list_color_code = b2b_utils.get_color_code(requirement.shortlisted_spaces.id)
             
-            list_color_code = requirement.shortlisted_spaces.color_code
-            if not requirement_exist:
-                
-                browsed_leads = dict(BrowsedLead.objects.raw({"shortlisted_spaces_id":requirement.shortlisted_spaces.id, "status":"closed"}))
-                if not browsed_leads:
-                   
-                    shortlisted_spac = ShortlistedSpaces.objects.filter(
-                        id=requirement.shortlisted_spaces.id).first()
-                    shortlisted_spac.color_code = 3
-                    shortlisted_spac.save()
-                    color_code = 3
-                    list_color_code = color_code
         if verified == 0:
             return ui_utils.handle_response({}, data={"error":"Ops verify failed as there are 0 client campaigns","color_code":color_code,"verified_ops_by":request.user.first_name + request.user.last_name,"list_color_code":list_color_code}, success=False)
         else:
@@ -804,7 +802,7 @@ class BrowsedToRequirement(APIView):
         if shortlisted_spaces_id:
             ShortlistedSpaces.objects.filter(id=shortlisted_spaces_id).update(color_code=1, requirement_given='yes', requirement_given_date=datetime.datetime.now())
 
-        return ui_utils.handle_response({}, data={}, success=True)
+        return ui_utils.handle_response({}, data={"message":"Lead submitted successfully","list_color_code":1}, success=True)
 
 
 class UpdateBrowsedLead(APIView):
@@ -1042,7 +1040,7 @@ class BdVerification(APIView):
             "Satisfaction Level" : requirement.current_patner_feedback,
             "Reasons for Dissatisfaction" : requirement.current_patner_feedback_reason,
             "Price": requirement.lead_price,
-            # "Client Status":requirement.client_status,
+            "Client Status":requirement.client_status,
         }
 
         lead_data = []
@@ -1329,11 +1327,11 @@ class GetLeadsForCurrentCompanyDonut(APIView):
             suppliers_list = list(set(suppliers_list))
         
             master_societies = SupplierMaster.objects.filter(
-                supplier_id__in=suppliers_list)
+                supplier_id__in=suppliers_list).exclude(supplier_type="RS")
             master_serializer = SupplierMasterSerializer(master_societies, many=True)
             
             supplire_societies = SupplierTypeSociety.objects.filter(
-                supplier_id__in=suppliers_list)
+                supplier_id__in=suppliers_list,supplier_code="RS")
             supplire_serializer = SupplierTypeSocietySerializer(supplire_societies, many=True)
             
             all_societies = manipulate_object_key_values(supplire_serializer.data)
@@ -2057,12 +2055,12 @@ class DownloadB2BLeads(APIView):
 
         requirement = PreRequirement.objects.filter(campaign_id=campaign_id)
 
-        campaign = ProposalInfo.objects.filter(proposal_id=campaign_id).first()
-
-        browsed_leads = list(BrowsedLead.objects.raw({"campaign_id":campaign_id,
+        browsed_leads = list(BrowsedLead.objects.raw({"campaign_id":str(campaign_id),
          "status":"closed"}).values())
 
         excel_book = b2b_utils.download_b2b_leads(requirement,browsed_leads)
+
+        campaign = ProposalInfo.objects.filter(proposal_id=campaign_id).first()
 
         name = str(campaign.name) if campaign else "mydata"
         filename = str(name.replace(" ", ""))
@@ -2090,7 +2088,7 @@ class AddNotificationTemplate(APIView):
         
         return ui_utils.handle_response({}, data=res, success=status)
 
-class SuspenseLeadClass(APIView):
+class GetAllSuspenseLead(APIView):
 
     def get(self, request):
 
@@ -2099,7 +2097,225 @@ class SuspenseLeadClass(APIView):
         for row in suspense_lead:
             row1 = dict(row)
             row1["_id"] = str(row1["_id"])
+            
             list1.append(row1)
 
-        return ui_utils.handle_response({}, data={"suspense_lead": list1}, success=True)
+        companies = Organisation.objects.all()
+        companies_data = OrganisationSerializer(companies, many=True).data
+        return ui_utils.handle_response({}, data={"suspense_lead": list1,"companies":companies_data}, success=True)
 
+
+class UpdateSuspenseLead(APIView):
+
+    def post(self, request):
+
+        suspense_leads = request.data.get("suspense_leads")
+
+        for suspense in suspense_leads:
+
+            update_values = {"$set":{
+                "implementation_timeline":suspense["implementation_timeline"],
+                "meating_timeline":suspense["meating_timeline"],
+                "comment":suspense["comment"],
+                "current_patner":suspense["current_patner_id"],
+                "current_patner_other":suspense["current_patner_other"],
+                "prefered_patners":suspense["prefered_patners_id"],
+                "prefered_patner_other":suspense["prefered_patner_other"],
+                "call_back_preference":suspense["call_back_preference"],
+                "status":"open",
+                "updated_at":datetime.datetime.now(),
+                }}
+
+            mongo_client.suspense_lead.update({"_id": ObjectId(suspense["_id"])},update_values)
+
+        return ui_utils.handle_response({}, data={"message":"Suspense lead updated successfully"}, success=True)
+
+
+class SuspenseLeadDelete(APIView):
+
+    def post(self, request):
+        suspense_ids = request.data.get("suspense_ids")
+
+        for suspense_id in suspense_ids:
+            mongo_client.suspense_lead.update({"_id": ObjectId(suspense_id)}, {"$set":{"status":"deleted"}})
+
+        return ui_utils.handle_response({}, data={"message":"Suspense lead removed successfully"}, success=True)
+
+
+class SuspenseLeadOpsVerification(APIView):
+
+    def post(self, request):
+
+        suspense_ids = request.data.get("suspense_ids")
+        id_ = []
+        for suspense_id in suspense_ids:
+            id_.append(ObjectId(suspense_id))     
+
+        suspense_leads = list(mongo_client.suspense_lead.find({"_id": {'$in':(id_)}}))
+        print("############################")
+        for suspense in suspense_leads:
+    
+            campaign = ProposalInfo.objects.filter(Q(
+                type_of_end_customer__formatted_name="b_to_b_r_g")
+            & Q(name=suspense['city']) | Q(name=suspense['area'])).first()
+
+            shortlisted_spaces = ShortlistedSpaces.objects.filter(
+                proposal_id=campaign.proposal_id, 
+                object_id=suspense['supplier_id']).first()
+
+            if not shortlisted_spaces:
+                print(2)
+                content_type = ui_utils.get_content_type(suspense['supplier_type'])
+                center = ProposalCenterMapping.objects.filter(
+                    proposal_id=campaign.proposal_id).first()
+
+                shortlisted_spaces = ShortlistedSpaces(
+                    proposal_id=campaign.proposal_id,
+                    center=center,
+                    supplier_code=suspense['supplier_type'],
+                    object_id=suspense['supplier_id'],
+                    content_type=content_type.data['data'],
+                    status='F',
+                    user=request.user,
+                    requirement_given='yes',
+                    requirement_given_date=datetime.datetime.now()
+                )
+                shortlisted_spaces.save()
+
+            if suspense['sector_name'] is not None:
+                sector = BusinessTypes.objects.filter(
+                    business_type=suspense['sector_name'].lower()).first()
+            
+            if suspense['sub_sector_name'] is not None:
+                sub_sector = BusinessSubTypes.objects.filter(
+                    business_sub_type=suspense['sub_sector_name'].lower()).first()
+
+            change_current_patner = "no"
+            if suspense['current_patner_feedback'] == "Dissatisfied" or suspense['current_patner_feedback'] == "Extremely Dissatisfied":
+                change_current_patner = "yes"
+
+            prefered_patners_list = []
+            if suspense["prefered_patners"]:
+                prefered_patners_list = Organisation.objects.filter(
+                    organisation_id__in=suspense['prefered_patners']).all()
+
+            current_patner_obj = None
+            current_company_other = None
+            if suspense['current_patner']:
+                current_patner_obj = Organisation.objects.filter(
+                    name=suspense['current_patner']).first()
+                
+
+            pre_requirement = PreRequirement(
+                campaign_id=campaign.proposal_id,
+                shortlisted_spaces=shortlisted_spaces,
+                current_company = current_patner_obj,
+                current_company_other = suspense['current_patner_other'],
+                current_patner_feedback = suspense['current_patner_feedback'],
+                current_patner_feedback_reason = suspense['current_patner_feedback_reason'],
+                preferred_company_other = suspense['prefered_patner_other'],
+                sector = sector,
+                sub_sector = sub_sector,
+                lead_by = None,
+                impl_timeline = suspense['implementation_timeline'],
+                meating_timeline = suspense['meating_timeline'],
+                lead_status = "Lead",
+                comment = suspense['meating_timeline'],
+                varified_ops = 'yes',
+                varified_bd = 'no',
+                lead_date = datetime.datetime.now(),
+                l1_answers = suspense['l1_answers'],
+                l1_answer_2 = suspense['l1_answer_2'],
+                l2_answers = suspense['l2_answers'],
+                l2_answer_2 = suspense['l2_answer_2'],
+                change_current_patner = change_current_patner.lower(),
+                call_back_preference = suspense['call_back_preference'].lower(),
+                varified_ops_by_id = request.user.id
+            )
+            pre_requirement.save()
+
+            if prefered_patners_list:
+                pre_requirement.preferred_company.set(prefered_patners_list)
+
+            if pre_requirement:
+                companies = Organisation.objects.filter(business_type=
+                    pre_requirement.sector)
+
+                if companies:
+                    for company in companies:
+                        company_campaign = ProposalInfo.objects.filter(
+                            type_of_end_customer__formatted_name="b_to_b_l_d",
+                            account__organisation=company).first()
+
+                        if company_campaign:
+                            company_shortlisted_spaces = ShortlistedSpaces.objects.filter(
+                                object_id=pre_requirement.shortlisted_spaces.object_id,
+                                proposal=company_campaign.proposal_id).first()
+
+                            if not company_shortlisted_spaces:
+                                center_ = ProposalCenterMapping.objects.filter(proposal=company_campaign).first()
+                                content_type_ = ui_utils.get_content_type(pre_requirement.shortlisted_spaces.supplier_code)
+
+                                company_shortlisted_spaces = ShortlistedSpaces(
+                                    proposal=company_campaign,
+                                    center=center_,
+                                    object_id=pre_requirement.shortlisted_spaces.object_id,
+                                    supplier_code=pre_requirement.shortlisted_spaces.supplier_code,
+                                    content_type=content_type_.data['data'],
+                                    status='F',
+                                    user=request.user,
+                                    requirement_given='yes',
+                                    requirement_given_date=datetime.datetime.now(),
+                                    color_code = 1
+                                )
+                                company_shortlisted_spaces.save()
+
+                            preferred_partners_list = pre_requirement.preferred_company.all()
+
+                            is_preferred_company = "no"
+                            if company_campaign.account.organisation:
+                                if company_campaign.account.organisation in preferred_partners_list:
+                                    is_preferred_company = "yes"
+
+                            new_requirement = Requirement(
+                            campaign_id=pre_requirement.campaign_id,
+                            shortlisted_spaces=pre_requirement.shortlisted_spaces,
+                            company = company,
+                            current_company = pre_requirement.current_company,
+                            current_company_other = pre_requirement.current_company_other,
+                            is_current_patner = "yes" if pre_requirement.current_company == company else "no",
+                            current_patner_feedback = pre_requirement.current_patner_feedback,
+                            current_patner_feedback_reason = pre_requirement.current_patner_feedback_reason,
+                            preferred_company_other = pre_requirement.preferred_company_other,
+                            sector = pre_requirement.sector,
+                            sub_sector = pre_requirement.sub_sector,
+                            lead_by = pre_requirement.lead_by,
+                            impl_timeline = pre_requirement.impl_timeline,
+                            meating_timeline = pre_requirement.meating_timeline,
+                            lead_status = pre_requirement.lead_status,
+                            comment = pre_requirement.comment,
+                            varified_ops = 'yes',
+                            varified_bd = 'no',
+                            lead_date = pre_requirement.lead_date,
+                            lead_price  = pre_requirement.lead_price,
+                            l1_answers = pre_requirement.l1_answers,
+                            l1_answer_2 = pre_requirement.l1_answer_2,
+                            l2_answers = pre_requirement.l2_answers,
+                            l2_answer_2 = pre_requirement.l2_answer_2,
+                            change_current_patner = pre_requirement.change_current_patner.lower(),
+                            company_campaign=company_campaign,
+                            company_shortlisted_spaces=company_shortlisted_spaces,
+                            varified_ops_by = request.user,
+                            varified_ops_date = datetime.datetime.now(),
+                            call_back_preference = pre_requirement.call_back_preference,
+                            is_preferred_company = is_preferred_company
+                            )
+                            new_requirement.save()
+                            
+                            if preferred_partners_list:
+                                new_requirement.preferred_company.set(preferred_partners_list)
+                else:
+                    return ui_utils.handle_response({}, data=
+                        {"error":"No companies for the service found"}, 
+                        success=False)
+        return ui_utils.handle_response({}, data={"message":"Ops Verified"}, success=True)
