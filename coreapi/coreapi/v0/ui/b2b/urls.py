@@ -45,7 +45,7 @@ urlpatterns = [
     url(r'^update-client-decision-status/$', UpdateClientStatus.as_view()),
     url(r'^add-notification-template/$', AddNotificationTemplate.as_view()),
     url(r'^download-b2b-leads/$', DownloadB2BLeads.as_view()),
-    url(r'^all-suspense-leads/$', GetAllSuspenseLead.as_view()),
+    url(r'^suspense-leads-tab/$', GetAllSuspenseLead.as_view()),
     url(r'^update-suspense-leads/$', UpdateSuspenseLead.as_view()),
     url(r'^delete-suspense-leads/$', SuspenseLeadDelete.as_view()),
     url(r'^suspense-lead-ops-verification/$', SuspenseLeadOpsVerification.as_view()),

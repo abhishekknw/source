@@ -2092,15 +2092,37 @@ class GetAllSuspenseLead(APIView):
 
     def get(self, request):
 
-        suspense_lead = mongo_client.suspense_lead.find().sort("created_at",-1)
         list1 = []
+        suspense_lead = mongo_client.suspense_lead.find({}).sort("created_at",-1)
+        companies = Organisation.objects.all()
+        org_dict_id = {str((row3.name).lower()):row3.organisation_id for row3 in companies}
+
         for row in suspense_lead:
             row1 = dict(row)
             row1["_id"] = str(row1["_id"])
+            prefered_patners_list = []
+            mongo_client.suspense_lead.update({"_id":ObjectId(row1["_id"]) , 
+                'current_patner_other': {"$exists" : False}}, {"$set": {'current_patner_other': None}})
+
+            mongo_client.suspense_lead.update({"_id":ObjectId(row1["_id"]) , 
+                'prefered_patner_other': {"$exists" : False}}, {"$set": {'prefered_patner_other': None}})
+
+            if row1['prefered_patners']:
+                for prf_prnr in row1['prefered_patners']:
+                    if prf_prnr == "other":
+                        prefered_patners_list.append("other")
+                    else:
+                        prefered_patners_list.append(org_dict_id.get(prf_prnr.lower()))
+            else:
+                prefered_patners_list.append("other")
+
+            row1['prefered_patners'] = prefered_patners_list
+
+            if row1['current_patner']:
+                row1["current_patner"] = org_dict_id.get(row1.get("current_patner"))
             
             list1.append(row1)
 
-        companies = Organisation.objects.all()
         companies_data = OrganisationSerializer(companies, many=True).data
         return ui_utils.handle_response({}, data={"suspense_lead": list1,"companies":companies_data}, success=True)
 
