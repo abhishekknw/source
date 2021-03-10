@@ -245,6 +245,7 @@ def bot_to_requirement(request, data):
 
                 BrowsedLead(
                     supplier_id=supplier.supplier_id,
+                    supplier_type = entity_type,
                     shortlisted_spaces_id=shortlisted_spaces.id,
                     campaign_id=campaign_id,
                     phone_number = phone_number,

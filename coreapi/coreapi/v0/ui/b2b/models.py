@@ -204,6 +204,7 @@ class SuspenseLead(MongoModel):
 
 class BrowsedLead(MongoModel):
     supplier_id = fields.CharField(blank=True)
+    supplier_type = fields.CharField(blank=True)
     shortlisted_spaces_id = fields.CharField(blank=True)
     campaign_id = fields.CharField(blank=True)
     phone_number = fields.CharField(blank=True)
