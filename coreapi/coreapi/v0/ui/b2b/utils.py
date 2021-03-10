@@ -4,6 +4,7 @@ from openpyxl import load_workbook, Workbook
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster
 from v0.ui.account.models import ContactDetails, BusinessTypes, BusinessSubTypes
 from v0.ui.proposal.models import ShortlistedSpaces
+from v0.ui.organisation.models import Organisation
 
 
 def get_lead_status(impl_timeline,meating_timeline,prefered_patners,
@@ -186,139 +187,147 @@ def download_b2b_leads(requirement,browsed_leads):
             
             index = index + 1
             try:
-                sector_id = browsed['sector_id']
-                sector = BusinessTypes.objects.filter(id=sector_id).first()
+                b_sector_id = browsed['sector_id']
+                b_sector = BusinessTypes.objects.filter(id=b_sector_id).first()
             except Exception as e:
-                sector = None
+                b_sector = None
 
             try:
-                sub_sector_id = browsed['sub_sector_id']
-                sub_sector = BusinessSubTypes.objects.filter(id=sub_sector_id).first()
+                b_sub_sector_id = browsed['sub_sector_id']
+                b_sub_sector = BusinessSubTypes.objects.filter(id=b_sub_sector_id).first()
             except Exception as e:
-                sub_sector = None
+                b_sub_sector = None
 
             try:
-                supplier_type = browsed['supplier_type']
+                b_supplier_type = browsed['supplier_type']
             except Exception as e:
-                supplier_type = None
+                b_supplier_type = None
 
             try:
-                l1_answers = browsed['l1_answers']
+                b_l1_answers = browsed['l1_answers']
             except Exception as e:
-                l1_answers = None
+                b_l1_answers = None
 
             try:
-                l1_answer_2 = browsed['l1_answer_2']
+                b_l1_answer_2 = browsed['l1_answer_2']
             except Exception as e:
-                l1_answer_2 = None
+                b_l1_answer_2 = None
 
             try:
-                l2_answers = browsed['l2_answers']
+                b_l2_answers = browsed['l2_answers']
             except Exception as e:
-                l2_answers = None
+                b_l2_answers = None
 
             try:
-                l2_answer_2 = browsed['l2_answer_2']
+                b_l2_answer_2 = browsed['l2_answer_2']
             except Exception as e:
-                l2_answer_2 = None
+                b_l2_answer_2 = None
 
             try:
-                implementation_timeline = browsed['implementation_timeline']
+                b_implementation_timeline = browsed['implementation_timeline']
             except Exception as e:
-                implementation_timeline = None
+                b_implementation_timeline = None
 
             try:
-                meating_timeline = browsed['meating_timeline']
+                b_meating_timeline = browsed['meating_timeline']
             except Exception as e:
-                meating_timeline = None
+                b_meating_timeline = None
 
             try:
-                lead_status = browsed['lead_status']
+                b_call_back_preference = browsed['call_back_preference']
             except Exception as e:
-                lead_status = None
+                b_call_back_preference = None
 
             try:
-                call_back_preference = browsed['call_back_preference']
+                b_prefered_patner_other = browsed['prefered_patner_other']
             except Exception as e:
-                call_back_preference = None
+                b_prefered_patner_other = None
 
             try:
-                prefered_patner_other = browsed['prefered_patner_other']
+                b_current_patner_feedback = browsed['current_patner_feedback']
             except Exception as e:
-                prefered_patner_other = None
+                b_current_patner_feedback = None
 
             try:
-                current_patner_feedback = browsed['current_patner_feedback']
+                b_current_patner_other = browsed['current_patner_other']
             except Exception as e:
-                current_patner_feedback = None
+                b_current_patner_other = None
 
             try:
-                current_patner_other = browsed['current_patner_other']
+                b_current_patner_id = browsed['current_patner_id']
             except Exception as e:
-                current_patner_other = None
+                b_current_patner_id = None
 
             try:
-                current_patner_id = browsed['current_patner_id']
+                b_supplier_name = browsed['supplier_name']
             except Exception as e:
-                current_patner_id = None
+                b_supplier_name = None
 
             try:
-                supplier_name = browsed['supplier_name']
+                b_supplier_id = browsed['supplier_id']
             except Exception as e:
-                supplier_name = None
+                b_supplier_id = None
 
             try:
-                supplier_id = browsed['supplier_id']
+                b_area = browsed['area']
             except Exception as e:
-                supplier_id = None
+                b_area = None
 
             try:
-                area = browsed['area']
+                b_city = browsed['city']
             except Exception as e:
-                area = None
+                b_city = None
 
             try:
-                city = browsed['city']
+                b_comment = browsed['comment']
             except Exception as e:
-                city = None
+                b_comment = None
 
             try:
-                comment = browsed['comment']
+                b_prefered_patners = browsed['prefered_patners']
             except Exception as e:
-                comment = None
+                b_prefered_patners = None
 
-            try:
-                prefered_patners = browsed['prefered_patners']
-            except Exception as e:
-                prefered_patners = None
+            b_current_patner = Organisation.objects.filter(
+                organisation_id=b_current_patner_id).first()
+
+            b_prefered_patners_list = Organisation.objects.filter(
+                organisation_id__in=b_prefered_patners).all()
+
+            b_preferred_company = None
+            b_company_list = []
+            if b_prefered_patners_list:
+                for b_row in b_prefered_patners_list:
+                    b_company_list.append(b_row.name)
+            b_preferred_company = ", ".join(b_company_list)
 
             row3 = [
                 index,
-                supplier_id,
-                supplier_name,
-                supplier_type,
-                area,
-                city,
-                sector.business_type if sector else None,
-                sub_sector.business_sub_type if sub_sector else None,
-                current_patner_id,
-                current_patner_other,
-                current_patner_feedback,
-                ", ".join(prefered_patners),
-                prefered_patner_other,
+                b_supplier_id,
+                b_supplier_name,
+                b_supplier_type,
+                b_area,
+                b_city,
+                b_sector.business_type if b_sector else None,
+                b_sub_sector.business_sub_type if b_sub_sector else None,
+                b_current_patner.name if b_current_patner else None,
+                b_current_patner_other,
+                b_current_patner_feedback,
+                b_preferred_company,
+                b_prefered_patner_other,
 
-                l1_answers,
-                l1_answer_2,
-                l2_answers,
-                l2_answer_2,
+                b_l1_answers,
+                b_l1_answer_2,
+                b_l2_answers,
+                b_l2_answer_2,
 
-                implementation_timeline,
-                meating_timeline,
-                lead_status,
-
-                comment,
+                b_implementation_timeline,
+                b_meating_timeline,
                 None,
-                call_back_preference,
+
+                b_comment,
+                None,
+                b_call_back_preference,
                 browsed['created_at'],
                 "no",
                 "yes",
