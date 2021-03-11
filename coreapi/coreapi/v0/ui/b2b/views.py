@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import HttpResponse
-from .models import (PaymentDetails,LicenseDetails,MachadaloRelationshipManager,Requirement, SuspenseLead, BrowsedLead, CampaignLeads, OrganizationLeads, PreRequirement)
+from .models import (Gupshup,PaymentDetails,LicenseDetails,MachadaloRelationshipManager,Requirement, SuspenseLead, BrowsedLead, CampaignLeads, OrganizationLeads, PreRequirement)
 from .serializers import NotificationTemplateSerializer,PaymentDetailsSerializer,LicenseDetailsSerializer,RequirementSerializer, PreRequirementSerializer, RelationshipManagerSerializer
 import v0.ui.utils as ui_utils
 from openpyxl import load_workbook, Workbook
@@ -2104,6 +2104,9 @@ class GetAllSuspenseLead(APIView):
             mongo_client.suspense_lead.update({"_id":ObjectId(row1["_id"]) , 
                 'current_patner_other': {"$exists" : False}}, {"$set": {'current_patner_other': None}})
 
+            mongo_client.suspense_lead.update({"_id":ObjectId(row1["_id"]) ,
+                'status': {"$exists" : False}}, {"$set": {'status': "closed"}})
+
             mongo_client.suspense_lead.update({"_id":ObjectId(row1["_id"]) , 
                 'prefered_patner_other': {"$exists" : False}}, {"$set": {'prefered_patner_other': None}})
 
@@ -2162,6 +2165,17 @@ class SuspenseLeadDelete(APIView):
             mongo_client.suspense_lead.update({"_id": ObjectId(suspense_id)}, {"$set":{"status":"deleted"}})
 
         return ui_utils.handle_response({}, data={"message":"Suspense lead removed successfully"}, success=True)
+
+
+class UpdateMongoDbNotExistKey(APIView):
+
+    def get(self, request):
+        key_name = request.query_params.get("key_name")
+        value = request.query_params.get("value")
+
+        result = mongo_client.suspense_lead.update({str(key_name): {"$exists" : False}}, {"$set": {str(key_name): value}})
+
+        return ui_utils.handle_response({}, data={"result":result}, success=True)
 
 
 class SuspenseLeadOpsVerification(APIView):
@@ -2341,3 +2355,29 @@ class SuspenseLeadOpsVerification(APIView):
                         {"error":"No companies for the service found"}, 
                         success=False)
         return ui_utils.handle_response({}, data={"message":"Ops Verified"}, success=True)
+
+
+
+from rest_framework.permissions import AllowAny
+from rest_framework import permissions
+
+
+class PublicEndpoint(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return True
+
+class GetGupshupMsg(APIView):
+
+    permission_classes = (PublicEndpoint,)
+    def post(self, request):
+        msg = request.data
+        # di = {
+        # "data":msg
+        # }
+        # rspnse = mongo_client.gupshup.insert_one(di)
+
+        print("####################")
+        print(msg)
+        print("####################")
+        
+        return ui_utils.handle_response({}, data={"message":"gupshup connected","result":msg}, success=True)
