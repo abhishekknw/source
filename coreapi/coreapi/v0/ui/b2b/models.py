@@ -316,4 +316,11 @@ class LicenseDetails(models.Model):
         db_table = 'license_details'
 
 
+class Gupshup(MongoModel):
+    data = fields.CharField(blank=True)
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'mongo_app'
+
 
