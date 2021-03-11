@@ -31,6 +31,7 @@ from v0.ui.campaign.models import CampaignComments
 from datetime import timedelta
 from django.utils.timezone import make_aware
 from v0.constants import supplier_code_to_names
+from v0.ui.supplier.views import update_contact_and_ownership_detail
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -2167,6 +2168,118 @@ class SuspenseLeadDelete(APIView):
         return ui_utils.handle_response({}, data={"message":"Suspense lead removed successfully"}, success=True)
 
 
+class AddSuspenseToSupplier(APIView):
+
+    def get(self, request):
+
+        city = request.query_params.get("city")
+        area = request.query_params.get("area")
+        supplier_type = request.query_params.get("supplier_type")
+
+        if supplier_type == 'RS':
+            supplier_list = SupplierTypeSociety.objects.filter(society_city=city, society_locality=area).values('society_name')
+        else:
+            supplier_list = SupplierMaster.objects.filter(city=city, area=area).values('supplier_name')
+
+        return ui_utils.handle_response({}, data={"supplier_list": supplier_list}, success=True)
+
+
+    def post(self, request):
+        
+        suspense_id = request.data.get("suspense_id")
+        supplier_type = request.data.get("supplier_type")
+        phone_number = request.data.get("phone_number")
+        supplier_name = request.data.get("supplier_name")
+        poc_name = request.data.get("poc_name")
+        designation = request.data.get("designation")
+        city_id = request.data.get("city")
+        area = request.data.get("area")
+
+        #If area does not exist, add new area
+        if city_id:
+            area_detail = CityArea.objects.filter(label__icontains=area, city_code=city_id).values('id')
+            if area_detail and len(area_detail) > 0:
+                area_id = area_detail[0]['id']
+            else:
+                area_code = ui_utils.getRandomString()
+                areaInserted = CityArea.objects.create(label=area.title(), area_code=area_code.upper(), city_code_id=city_id)
+                if areaInserted:
+                    area_id = areaInserted.id
+                else:
+                    print('Failed to add Area :', area)
+
+        suspense_data = {
+                    'city_id': city_id,
+                    'area_id': area_id,
+                    'subarea_id': subarea_id,
+                    'supplier_type': supplier_type,
+                    'supplier_code': supplier_type,
+                    'supplier_name': poc_name,    
+                }
+        supplier_id = get_supplier_id(suspense_data)
+
+        #updating supplier id in suspense lead table
+        mongo_client.suspense_lead.update({"_id": ObjectId(suspense_id)}, {"$set":{"supplier_id":supplier_id}})
+
+        if supplier_type != "RS":
+            supplier_data = {
+            'supplier_id': supplier_id,
+            'supplier_name': supplier_name,
+            'supplier_type': supplier_type,
+            'area': area_id,
+            'city': city,
+            'subarea': subarea,
+            }
+            serializer = SupplierMasterSerializer(data=supplier_data)
+            if serializer.is_valid():
+                serializer.save()
+
+            AddressMaster(**{
+                'supplier_id': supplier_id,
+                'area': area,
+                'city': city,
+                'subarea': subarea,
+            }).save()
+        else:
+            supplier_data = {
+            'supplier_id': supplier_id,
+            'society_name': supplier_name,
+            'supplier_code': supplier_type,
+            'society_locality': area,
+            'society_city': city,
+            'society_subarea': subarea,
+            }
+            serializer = SupplierTypeSocietySerializer(data=supplier_data)
+            if serializer.is_valid():
+                serializer.save()
+
+
+        if phone_number and supplier_id:
+            contact_details = ContactDetails.objects.filter(mobile=phone_number, object_id=supplier_id)
+            if contact_details:
+                if contact_name and contact_type:
+                    contact_details.update(name=contact_name, contact_type=contact_type)                
+                else:
+                    ContactDetails(**{
+                        'object_id': supplier_id,
+                        'mobile' : phone_number, 
+                        'name' : poc_name, 
+                        'contact_type' : designation,
+                    }).save()
+
+        return ui_utils.handle_response({}, data="Supplier added successfully", success=True)
+
+class AddPocDetails(APIView):
+
+    def post(self, request):
+        
+        suspense_id = request.data.get("suspense_id")
+        contactData = request.data.get("contactData")
+        suspense_lead = mongo_client.suspense_lead.find({"_id": ObjectId(suspense_id)})
+        object_id = suspense_lead['supplier_id']
+        update_contact_and_ownership_detail(contactData)
+
+        return ui_utils.handle_response({}, data="POC added successfully", success=True)
 class UpdateMongoDbNotExistKey(APIView):
 
     def get(self, request):
@@ -2371,13 +2484,10 @@ class GetGupshupMsg(APIView):
     permission_classes = (PublicEndpoint,)
     def post(self, request):
         msg = request.data
-        # di = {
-        # "data":msg
-        # }
-        # rspnse = mongo_client.gupshup.insert_one(di)
 
-        print("####################")
-        print(msg)
-        print("####################")
-        
+        # mobile = request.data.payload["destination"]
+        response = mongo_client.gupshup.insert_one(msg)
+
+        # print(mobile)
+        print(msg)        
         return ui_utils.handle_response({}, data={"message":"gupshup connected","result":msg}, success=True)

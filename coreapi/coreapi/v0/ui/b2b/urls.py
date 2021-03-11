@@ -3,7 +3,7 @@ from django.conf.urls import url
 from rest_framework.routers import DefaultRouter
 
 from .views import (GetGupshupMsg,UpdateMongoDbNotExistKey,SuspenseLeadOpsVerification,SuspenseLeadDelete,UpdateSuspenseLead,GetAllSuspenseLead,DownloadB2BLeads,AddNotificationTemplate,UpdateClientStatus,LeadsDecisionPanding,PaymentDetailsView,LicenceDetails,UpdateBrowsedLead,SuspenseLeadCount,BuyLead,SummaryReportAndGraph,FlatSummaryDetails,AddLeadPrice, GetLeadsByCampaignId,BdRequirement,BdVerification, ImportLead, RequirementClass, SuspenseLeadClass, BrowsedLeadClass,  
-                        LeadOpsVerification, BrowsedToRequirement, DeleteRequirement, BrowsedLeadDelete, RestoreRequirement, GetLeadsByDate,
+                        LeadOpsVerification, BrowsedToRequirement, DeleteRequirement, BrowsedLeadDelete, RestoreRequirement, GetLeadsByDate, AddPocDetails, AddSuspenseToSupplier,
                         GetLeadsCampaignByDate, GetFeedbackCount, GetCampaignList, GetLeadsForCurrentCompanyDonut, GetLeadsSummeryForDonutChart,
                         GetLeadsForDonutChart,GetSupplierByCampaign, GetLeadDistributionCampaign, GetPurchasedLeadsData, GetNotPurchasedLeadsData, GetDynamicLeadFormHeaders )
 
@@ -48,6 +48,8 @@ urlpatterns = [
     url(r'^suspense-leads-tab/$', GetAllSuspenseLead.as_view()),
     url(r'^update-suspense-leads/$', UpdateSuspenseLead.as_view()),
     url(r'^delete-suspense-leads/$', SuspenseLeadDelete.as_view()),
+    url(r'^suspense-to-supplier/$', AddSuspenseToSupplier.as_view()),
+    url(r'^add-poc/$', AddPocDetails.as_view()),
     url(r'^suspense-lead-ops-verification/$', SuspenseLeadOpsVerification.as_view()),
     url(r'^update-not-exist-mongo-key/$', UpdateMongoDbNotExistKey.as_view()),
 

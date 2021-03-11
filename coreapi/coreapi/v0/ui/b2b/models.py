@@ -197,6 +197,7 @@ class SuspenseLead(MongoModel):
     l2_answer_2 = fields.CharField(blank=True)
     call_back_preference = fields.CharField(blank=True)
     status = fields.ListField(blank=True)
+    supplier_id = fields.CharField(blank=True)
 
     class Meta:
         write_concern = WriteConcern(j=True)
