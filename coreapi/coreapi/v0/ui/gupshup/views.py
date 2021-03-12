@@ -47,37 +47,42 @@ class GetGupshupMsg(APIView):
     permission_classes = (PublicEndpoint,)
     def post(self, request):
         response = request.data
+        string = ""
         if response['type'] == "message-event":
-            mobile = request.data["payload"]['destination']
+            payload = request.data["payload"]
+            mobile = payload.get("destination")
         else:
-            mobile = request.data["payload"]['source']
-        mobile_split = mobile[2:12]
-        where = {"mobile":mobile_split,"user_status":1,"verification_status":2}
-        contact_verification = mongo_client.ContactVerification.find(where).count()
-        
-        if contact_verification:
+            payload = request.data["payload"]
+            mobile = payload.get("source")
 
-            # name = contact_verification['name']
-            # designation = contact_verification['designation']
-            # entity_name = contact_verification['entity_name']
-
+        if mobile:
+            mobile_split = mobile[2:12]
+            where = {"mobile":mobile_split,"user_status":1,"verification_status":2}
+            contact_verification = mongo_client.ContactVerification.find(where).count()
             
+            if contact_verification:
 
-            # name = contact_verification['name']
-            # designation = contact_verification['designation']
-            # entity_name = contact_verification['entity_name']
+                # name = contact_verification['name']
+                # designation = contact_verification['designation']
+                # entity_name = contact_verification['entity_name']
 
-            string = "Hello sir, Welcome to Machadalo. You are a verified user."
-        else:
-            gupshup_utils.mobile_verification(mobile_split)
-            string = "Hello, Welcome to Machadalo, you are a first time user"
+                
 
-        data = {
-            "data":response,
-            "mobile":mobile_split,
-            "type":response['type']
-        }
-        mongo_client.gupshup.insert_one(data)
+                # name = contact_verification['name']
+                # designation = contact_verification['designation']
+                # entity_name = contact_verification['entity_name']
+
+                string = "Hello sir, Welcome to Machadalo. You are a verified user."
+            else:
+                gupshup_utils.mobile_verification(mobile_split)
+                string = "Hello, Welcome to Machadalo, you are a first time user"
+
+            data = {
+                "data":response,
+                "mobile":mobile_split,
+                "type":response['type']
+            }
+            mongo_client.gupshup.insert_one(data)
         # print(response)     
           
         return HttpResponse(string)
