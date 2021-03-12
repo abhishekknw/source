@@ -26,4 +26,10 @@ class ContactVerification(MongoModel):
         write_concern = WriteConcern(j=True)
         connection_alias = 'mongo_app'
 
+class MessageTemplate(models.Model):
+    verification_status = models.CharField(max_length=50, null=True, blank=True)
+    message = models.CharField(max_length=500, null=True, blank=True)
+
+    class Meta:
+        db_table = 'gupshup_message'
 

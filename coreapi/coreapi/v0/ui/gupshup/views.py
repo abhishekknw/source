@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import HttpResponse
-from .models import (Gupshup,ContactVerification)
+from .models import (Gupshup,ContactVerification, MessageTemplate)
 # from .serializers import NotificationTemplateSerializer,PaymentDetailsSerializer,LicenseDetailsSerializer,RequirementSerializer, PreRequirementSerializer, RelationshipManagerSerializer
 import v0.ui.utils as ui_utils
 from openpyxl import load_workbook, Workbook
@@ -108,3 +108,12 @@ class SendGupshupMsg(APIView):
         print(r.text)
         
         return ui_utils.handle_response({}, data={"result":r.text}, success=True)
+
+# class Message(APIView):
+
+#     permission_classes = (PublicEndpoint,)
+#     def get(self, request):
+#         verification_status = request.query_params.get("verification_status")
+#         message = MessageTemplate.objects.filter(verification_status=verification_status).values('message')
+#         print(message)
+#         return ui_utils.handle_response({}, data=message, success=True)
