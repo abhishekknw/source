@@ -10,7 +10,6 @@ from bson.objectid import ObjectId
 def mobile_verification(mobile):
     
     if mobile.isnumeric():
-
         name = ""
         designation = ""
         city = ""
@@ -22,30 +21,31 @@ def mobile_verification(mobile):
         contact_verification = mongo_client.ContactVerification.find_one(
             {"mobile":mobile})
         contact_details = ContactDetails.objects.filter(mobile=mobile).first()
+        if contact_details:
+            print(2)
+            supplier = SupplierTypeSociety.objects.filter(supplier_id=
+            contact_details.object_id).first()
+            if supplier:
 
-        name = contact_details.name
-        designation = contact_details.contact_type
+                city = supplier.society_city
+                area = supplier.society_locality
+                subarea = supplier.society_subarea
+                supplier_name = supplier.society_name
+            else:
+                supplier_master = SupplierMaster.objects.filter(supplier_id=
+                    contact_details.object_id).first()
 
-        supplier = SupplierTypeSociety.objects.filter(supplier_id=
-        contact_details.object_id).first()
-        if supplier:
+                if supplier_master:
 
-            city = supplier.society_city
-            area = supplier.society_locality
-            subarea = supplier.society_subarea
-            supplier_name = supplier.society_name
-        else:
-            supplier_master = SupplierMaster.objects.filter(supplier_id=
-                contact_details.object_id).first()
-
-            if supplier_master:
-
-                city = supplier_master.city
-                area = supplier_master.area
-                subarea = supplier_master.subarea
-                supplier_name = supplier_master.supplier_name
+                    city = supplier_master.city
+                    area = supplier_master.area
+                    subarea = supplier_master.subarea
+                    supplier_name = supplier_master.supplier_name
 
         if contact_verification and contact_details:
+            print(3)
+            name = contact_details.name
+            designation = contact_details.contact_type
             
             if contact_details.mobile and name and designation and city and \
                 area and subarea and supplier_name:
@@ -62,6 +62,10 @@ def mobile_verification(mobile):
                     {"_id":ObjectId(contact_verification['_id'])},update_dict)
 
         elif not contact_verification and contact_details:
+            print(4)
+
+            name = contact_details.name
+            designation = contact_details.contact_type
 
             if contact_details.mobile and name and designation and city and \
                 area and subarea and supplier_name:
@@ -76,6 +80,7 @@ def mobile_verification(mobile):
                     "entity_name":supplier_name
                 }
         else:
+            print(5)
             data = {
                 "mobile":mobile,
                 "verification_status":0,
