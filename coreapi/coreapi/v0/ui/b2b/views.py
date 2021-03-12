@@ -2469,25 +2469,3 @@ class SuspenseLeadOpsVerification(APIView):
                         success=False)
         return ui_utils.handle_response({}, data={"message":"Ops Verified"}, success=True)
 
-
-
-from rest_framework.permissions import AllowAny
-from rest_framework import permissions
-
-
-class PublicEndpoint(permissions.BasePermission):
-    def has_permission(self, request, view):
-        return True
-
-class GetGupshupMsg(APIView):
-
-    permission_classes = (PublicEndpoint,)
-    def post(self, request):
-        msg = request.data
-
-        # mobile = request.data.payload["destination"]
-        response = mongo_client.gupshup.insert_one(msg)
-
-        # print(mobile)
-        print(msg)        
-        return ui_utils.handle_response({}, data={"message":"gupshup connected","result":msg}, success=True)
