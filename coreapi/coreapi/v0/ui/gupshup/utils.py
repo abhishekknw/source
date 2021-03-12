@@ -1,7 +1,7 @@
 from v0.ui.account.models import ContactDetails
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster
 import datetime
-from v0.ui.gupshup.models import ContactVerification
+from v0.ui.gupshup.models import ContactVerification,MessageTemplate
 from v0.ui.common.models import mongo_client
 from django.db.models import Q
 from bson.objectid import ObjectId
@@ -69,7 +69,15 @@ def mobile_verification(mobile):
 
             if contact_details.mobile and name and designation and city and \
                 area and subarea and supplier_name:
-                pass
+
+                data = {
+                    "mobile":mobile,
+                    "verification_status":2,
+                    "user_status":1,
+                    "name":name,
+                    "designation":designation,
+                    "entity_name":supplier_name
+                }
             else:
                 data = {
                     "mobile":mobile,
@@ -93,3 +101,22 @@ def mobile_verification(mobile):
         mongo_client.ContactVerification.insert_one(data)
 
     return True
+
+
+def get_template(obj):
+    
+    template = MessageTemplate.objects.filter(verification_status=
+        obj['verification_status']).first()
+    
+    if template:
+        name = obj['name']
+        designation = obj['designation']
+        entity_name = obj['entity_name']
+        string = template.message
+
+        string = string.replace("$NAME",name)
+        string = string.replace("$DESIGNATION",designation)
+        string = string.replace("$SUPPLIER_NAME",entity_name)
+    else:
+        string = "Hello, Welcome to Machadalo"
+    return string
