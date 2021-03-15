@@ -8,13 +8,13 @@ from .serializers import NotificationTemplateSerializer,PaymentDetailsSerializer
 import v0.ui.utils as ui_utils
 from openpyxl import load_workbook, Workbook
 from v0.ui.account.models import ContactDetails, BusinessTypes, BusinessSubTypes
-from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster
+from v0.ui.account.serializers import ContactDetailsSerializer
+from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster, AddressMaster
 from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, ProposalCenterMapping
 from v0.ui.proposal.serializers import ProposalInfoSerializer
 from v0.ui.organisation.models import Organisation
 from v0.ui.organisation.serializers import OrganisationSerializer
 from django.db.models import Q
-import v0.ui.utils as ui_utils
 import datetime
 from v0.ui.common.models import mongo_client,BaseUser
 import hashlib
@@ -31,6 +31,7 @@ from v0.ui.campaign.models import CampaignComments
 from datetime import timedelta
 from django.utils.timezone import make_aware
 from v0.constants import supplier_code_to_names
+from v0.ui.location.models import CityArea
 from v0.ui.supplier.views import update_contact_and_ownership_detail
 
 def get_value_from_list_by_key(list1, key):
@@ -2192,12 +2193,14 @@ class AddSuspenseToSupplier(APIView):
         supplier_name = request.data.get("supplier_name")
         poc_name = request.data.get("poc_name")
         designation = request.data.get("designation")
-        city_id = request.data.get("city")
+        city_id = request.data.get("city_id")
+        city = request.data.get("city")
+        area_id = request.data.get("area_id")
         area = request.data.get("area")
 
         #If area does not exist, add new area
         if city_id:
-            area_detail = CityArea.objects.filter(label__icontains=area, city_code=city_id).values('id')
+            area_detail = CityArea.objects.filter(id=area_id, city_code=city_id).values('id')
             if area_detail and len(area_detail) > 0:
                 area_id = area_detail[0]['id']
             else:
@@ -2211,12 +2214,12 @@ class AddSuspenseToSupplier(APIView):
         suspense_data = {
                     'city_id': city_id,
                     'area_id': area_id,
-                    'subarea_id': subarea_id,
+                    'subarea_id': 1,
                     'supplier_type': supplier_type,
                     'supplier_code': supplier_type,
                     'supplier_name': poc_name,    
                 }
-        supplier_id = get_supplier_id(suspense_data)
+        supplier_id = ui_utils.get_supplier_id(suspense_data)
 
         #updating supplier id in suspense lead table
         mongo_client.suspense_lead.update({"_id": ObjectId(suspense_id)}, {"$set":{"supplier_id":supplier_id}})
@@ -2226,9 +2229,8 @@ class AddSuspenseToSupplier(APIView):
             'supplier_id': supplier_id,
             'supplier_name': supplier_name,
             'supplier_type': supplier_type,
-            'area': area_id,
+            'area': area.title(),
             'city': city,
-            'subarea': subarea,
             }
             serializer = SupplierMasterSerializer(data=supplier_data)
             if serializer.is_valid():
@@ -2236,18 +2238,16 @@ class AddSuspenseToSupplier(APIView):
 
             AddressMaster(**{
                 'supplier_id': supplier_id,
-                'area': area,
+                'area': area.title(),
                 'city': city,
-                'subarea': subarea,
             }).save()
         else:
             supplier_data = {
             'supplier_id': supplier_id,
             'society_name': supplier_name,
             'supplier_code': supplier_type,
-            'society_locality': area,
+            'society_locality': area.title(),
             'society_city': city,
-            'society_subarea': subarea,
             }
             serializer = SupplierTypeSocietySerializer(data=supplier_data)
             if serializer.is_valid():
@@ -2259,13 +2259,13 @@ class AddSuspenseToSupplier(APIView):
             if contact_details:
                 if contact_name and contact_type:
                     contact_details.update(name=contact_name, contact_type=contact_type)                
-                else:
-                    ContactDetails(**{
-                        'object_id': supplier_id,
-                        'mobile' : phone_number, 
-                        'name' : poc_name, 
-                        'contact_type' : designation,
-                    }).save()
+            else:
+                ContactDetails(**{
+                    'object_id': supplier_id,
+                    'mobile' : phone_number, 
+                    'name' : poc_name, 
+                    'contact_type' : designation,
+                }).save()
 
         return ui_utils.handle_response({}, data="Supplier added successfully", success=True)
 
@@ -2275,11 +2275,26 @@ class AddPocDetails(APIView):
         
         suspense_id = request.data.get("suspense_id")
         contactData = request.data.get("contactData")
-        suspense_lead = mongo_client.suspense_lead.find({"_id": ObjectId(suspense_id)})
+        suspense_lead = mongo_client.suspense_lead.find_one({"_id": ObjectId(suspense_id)})
         object_id = suspense_lead['supplier_id']
-        update_contact_and_ownership_detail(contactData)
+        not_remove_contacts = []
+        if contactData:
+            for contact in contactData:
+                contact['object_id'] = object_id
+                if 'id' in contact:
+                    contact_detail = ContactDetails.objects.filter(pk=contact['id']).first()
+                    contact_serializer = ContactDetailsSerializer(contact_detail, data=contact)
+                else:
+                    contact_serializer = ContactDetailsSerializer(data=contact)
+                if contact_serializer.is_valid():
+                    contact_serializer.save(object_id=object_id)
+                    not_remove_contacts.append(contact_serializer.data['id'])
+
+        ContactDetails.objects.filter(object_id=object_id).exclude(pk__in=not_remove_contacts).delete()
 
         return ui_utils.handle_response({}, data="POC added successfully", success=True)
+
+
 class UpdateMongoDbNotExistKey(APIView):
 
     def get(self, request):
