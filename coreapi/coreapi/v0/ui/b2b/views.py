@@ -8,6 +8,7 @@ from .serializers import NotificationTemplateSerializer,PaymentDetailsSerializer
 import v0.ui.utils as ui_utils
 from openpyxl import load_workbook, Workbook
 from v0.ui.account.models import ContactDetails, BusinessTypes, BusinessSubTypes
+from v0.ui.location.models import City,CityArea
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster
 from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, ProposalCenterMapping
 from v0.ui.proposal.serializers import ProposalInfoSerializer
@@ -2102,17 +2103,33 @@ class GetAllSuspenseLead(APIView):
             row1 = dict(row)
             row1["_id"] = str(row1["_id"])
             prefered_patners_list = []
-            mongo_client.suspense_lead.update({"_id":ObjectId(row1["_id"]) , 
-                'current_patner_other': {"$exists" : False}}, {"$set": {'current_patner_other': None}})
 
-            mongo_client.suspense_lead.update({"_id":ObjectId(row1["_id"]) ,
-                'status': {"$exists" : False}}, {"$set": {'status': "closed"}})
+            row1['current_patner_other'] = row1.get("current_patner_other")
+            row1['status'] = row1.get("status")
+            row1['prefered_patner_other'] = row1.get("prefered_patner_other")
+            row1['poc_name'] = row1.get("poc_name")
+            row1['designation'] = row1.get("designation")
+            row1['pin_code'] = row1.get("pin_code")
+            row1['address'] = row1.get("address")
+            row1['area_id'] = None
+            row1['city_id'] = None
 
-            mongo_client.suspense_lead.update({"_id":ObjectId(row1["_id"]) , 
-                'prefered_patner_other': {"$exists" : False}}, {"$set": {'prefered_patner_other': None}})
+            if row1.get("area"):
 
-            if row1['prefered_patners']:
-                for prf_prnr in row1['prefered_patners']:
+                area_detail = CityArea.objects.filter(label=
+                    str(row1.get("area"))).first()
+                if area_detail:
+                    row1['area_id'] = area_detail.id
+
+            if row1.get("city"):
+
+                city_detail = City.objects.filter(city_name=
+                    str(row1.get("city"))).first()
+                if city_detail:
+                    row1['city_id'] = city_detail.id
+
+            if row1.get("prefered_patners"):
+                for prf_prnr in row1.get("prefered_patners"):
                     if prf_prnr == "other":
                         prefered_patners_list.append("other")
                     else:
@@ -2122,7 +2139,7 @@ class GetAllSuspenseLead(APIView):
 
             row1['prefered_patners'] = prefered_patners_list
 
-            if row1['current_patner']:
+            if row1.get("current_patner"):
                 row1["current_patner"] = org_dict_id.get(row1.get("current_patner"))
             
             list1.append(row1)
@@ -2148,7 +2165,7 @@ class UpdateSuspenseLead(APIView):
                 "prefered_patners":suspense["prefered_patners_id"],
                 "prefered_patner_other":suspense["prefered_patner_other"],
                 "call_back_preference":suspense["call_back_preference"],
-                "status":"open",
+                "status":"closed",
                 "updated_at":datetime.datetime.now(),
                 }}
 
