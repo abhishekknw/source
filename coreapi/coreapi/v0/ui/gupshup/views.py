@@ -33,7 +33,6 @@ from django.utils.timezone import make_aware
 from v0.constants import supplier_code_to_names
 from v0.ui.supplier.views import update_contact_and_ownership_detail
 
-
 from rest_framework.permissions import AllowAny
 from rest_framework import permissions
 
@@ -109,12 +108,3 @@ class SendGupshupMsg(APIView):
         print(r.text)
         
         return ui_utils.handle_response({}, data={"result":r.text}, success=True)
-
-# class Message(APIView):
-
-#     permission_classes = (PublicEndpoint,)
-#     def get(self, request):
-#         verification_status = request.query_params.get("verification_status")
-#         message = MessageTemplate.objects.filter(verification_status=verification_status).values('message')
-#         print(message)
-#         return ui_utils.handle_response({}, data=message, success=True)

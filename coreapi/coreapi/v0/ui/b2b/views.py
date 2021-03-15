@@ -10,6 +10,7 @@ from openpyxl import load_workbook, Workbook
 from v0.ui.account.models import ContactDetails, BusinessTypes, BusinessSubTypes
 from v0.ui.account.serializers import ContactDetailsSerializer
 from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster, AddressMaster
+from v0.ui.location.models import City,CityArea
 from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, ProposalCenterMapping
 from v0.ui.proposal.serializers import ProposalInfoSerializer
 from v0.ui.organisation.models import Organisation
@@ -2103,17 +2104,33 @@ class GetAllSuspenseLead(APIView):
             row1 = dict(row)
             row1["_id"] = str(row1["_id"])
             prefered_patners_list = []
-            mongo_client.suspense_lead.update({"_id":ObjectId(row1["_id"]) , 
-                'current_patner_other': {"$exists" : False}}, {"$set": {'current_patner_other': None}})
 
-            mongo_client.suspense_lead.update({"_id":ObjectId(row1["_id"]) ,
-                'status': {"$exists" : False}}, {"$set": {'status': "closed"}})
+            row1['current_patner_other'] = row1.get("current_patner_other")
+            row1['status'] = row1.get("status")
+            row1['prefered_patner_other'] = row1.get("prefered_patner_other")
+            row1['poc_name'] = row1.get("poc_name")
+            row1['designation'] = row1.get("designation")
+            row1['pin_code'] = row1.get("pin_code")
+            row1['address'] = row1.get("address")
+            row1['area_id'] = None
+            row1['city_id'] = None
 
-            mongo_client.suspense_lead.update({"_id":ObjectId(row1["_id"]) , 
-                'prefered_patner_other': {"$exists" : False}}, {"$set": {'prefered_patner_other': None}})
+            if row1.get("area"):
 
-            if row1['prefered_patners']:
-                for prf_prnr in row1['prefered_patners']:
+                area_detail = CityArea.objects.filter(label=
+                    str(row1.get("area"))).first()
+                if area_detail:
+                    row1['area_id'] = area_detail.id
+
+            if row1.get("city"):
+
+                city_detail = City.objects.filter(city_name=
+                    str(row1.get("city"))).first()
+                if city_detail:
+                    row1['city_id'] = city_detail.id
+
+            if row1.get("prefered_patners"):
+                for prf_prnr in row1.get("prefered_patners"):
                     if prf_prnr == "other":
                         prefered_patners_list.append("other")
                     else:
@@ -2123,7 +2140,7 @@ class GetAllSuspenseLead(APIView):
 
             row1['prefered_patners'] = prefered_patners_list
 
-            if row1['current_patner']:
+            if row1.get("current_patner"):
                 row1["current_patner"] = org_dict_id.get(row1.get("current_patner"))
             
             list1.append(row1)
@@ -2137,19 +2154,41 @@ class UpdateSuspenseLead(APIView):
     def post(self, request):
 
         suspense_leads = request.data.get("suspense_leads")
+        companies = Organisation.objects.all()
+        org_dict_id = {str((row3.organisation_id).lower()):row3.name for row3 in companies}
 
         for suspense in suspense_leads:
+            prefered_patners = []
 
+            if "other" in suspense.get("prefered_patners_id") and \
+                len(suspense["prefered_patners_id"]) == 1:
+                prefered_patners.append("other")
+
+            else:
+                for prtnrs in suspense["prefered_patners_id"]:
+                    prtnrs = prtnrs.lower()
+                    if not prtnrs == "other":
+                        company = org_dict_id.get(prtnrs)
+                        prefered_patners.append(company)
+
+            if "other" in suspense["prefered_patners_id"] and \
+                len(suspense["prefered_patners_id"]) > 1:
+                prefered_patners.append("other")
+
+            if suspense.get("current_patner_id"):
+                current_patner = org_dict_id.get(suspense.get("current_patner_id"))
+
+            
             update_values = {"$set":{
                 "implementation_timeline":suspense["implementation_timeline"],
                 "meating_timeline":suspense["meating_timeline"],
                 "comment":suspense["comment"],
-                "current_patner":suspense["current_patner_id"],
+                "current_patner":current_patner,
                 "current_patner_other":suspense["current_patner_other"],
-                "prefered_patners":suspense["prefered_patners_id"],
+                "prefered_patners":prefered_patners,
                 "prefered_patner_other":suspense["prefered_patner_other"],
                 "call_back_preference":suspense["call_back_preference"],
-                "status":"open",
+                "status":"closed",
                 "updated_at":datetime.datetime.now(),
                 }}
 
