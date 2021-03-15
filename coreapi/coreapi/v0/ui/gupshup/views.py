@@ -59,30 +59,17 @@ class GetGupshupMsg(APIView):
 
             where = {"mobile":mobile_split,"user_status":1,"verification_status":2}
             verification_2 = mongo_client.ContactVerification.find_one(where)
-
-            if verification_2:
-                template = gupshup_utils.get_template(dict(verification_2))
-
-            else:
+            if not verification_2:
                 gupshup_utils.mobile_verification(mobile_split)
 
-                where['verification_status'] = 1
-                verification_1 = mongo_client.ContactVerification.find_one(where)
+                verification = mongo_client.ContactVerification.find_one({"mobile":mobile_split})
+                if verification:
+                    template = gupshup_utils.get_template(dict(verification))
 
-                if verification_1:
-                    template = gupshup_utils.get_template(dict(verification_1))
+            else:
+                template = gupshup_utils.get_template(dict(verification_2))
 
-                where['verification_status'] = 0
-                verification_0 = mongo_client.ContactVerification.find_one(where)
-
-                if verification_0:
-                    template = gupshup_utils.get_template(dict(verification_0))
-
-            data = {
-                "data":response,
-                "mobile":mobile_split,
-                "type":response['type']
-            }
+            data = {"data":response,"mobile":mobile_split,"type":response['type']}
             mongo_client.gupshup.insert_one(data)
           
         return HttpResponse(template)
