@@ -6,7 +6,6 @@ from v0.ui.common.models import mongo_client
 from django.db.models import Q
 from bson.objectid import ObjectId
 
-
 def mobile_verification(mobile):
     
     if mobile.isnumeric():
@@ -23,6 +22,9 @@ def mobile_verification(mobile):
         contact_details = ContactDetails.objects.filter(mobile=mobile).first()
         if contact_details:
             print(2)
+            designation = contact_details.contact_type
+            name = contact_details.name
+
             supplier = SupplierTypeSociety.objects.filter(supplier_id=
             contact_details.object_id).first()
             if supplier:
@@ -44,8 +46,6 @@ def mobile_verification(mobile):
 
         if contact_verification and contact_details:
             print(3)
-            name = contact_details.name
-            designation = contact_details.contact_type
             
             if contact_details.mobile and name and designation and city and \
                 area and subarea and supplier_name:
@@ -63,9 +63,6 @@ def mobile_verification(mobile):
 
         elif not contact_verification and contact_details:
             print(4)
-
-            name = contact_details.name
-            designation = contact_details.contact_type
 
             if contact_details.mobile and name and designation and city and \
                 area and subarea and supplier_name:
@@ -120,3 +117,39 @@ def get_template(obj):
     else:
         string = "Hello, Welcome to Machadalo"
     return string
+
+
+def get_supplier_object(supplier_id):
+    
+    supplier = SupplierTypeSociety.objects.filter(supplier_id=
+    contact_details.object_id).first()
+    context = {}
+    city = ""
+    area = ""
+    subarea = ""
+    supplier_name = ""
+
+    if supplier:
+        city = supplier.society_city
+        area = supplier.society_locality
+        subarea = supplier.society_subarea
+        supplier_name = supplier.society_name
+    else:
+        supplier_master = SupplierMaster.objects.filter(supplier_id=
+            contact_details.object_id).first()
+
+        if supplier_master:
+
+            city = supplier_master.city
+            area = supplier_master.area
+            subarea = supplier_master.subarea
+            supplier_name = supplier_master.supplier_name
+
+    context = {
+        "supplier_name":supplier_name,
+        "city":city,
+        "area":area,
+        "subarea":subarea
+    }
+
+    return context
