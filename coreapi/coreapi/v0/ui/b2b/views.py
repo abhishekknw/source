@@ -2250,54 +2250,63 @@ class AddSuspenseToSupplier(APIView):
                 else:
                     print('Failed to add Area :', area)
 
-        suspense_data = {
-                    'city_id': city_id,
-                    'area_id': area_id,
-                    'subarea_id': 1,
-                    'supplier_type': supplier_type,
-                    'supplier_code': supplier_type,
-                    'supplier_name': poc_name,    
-                }
-        supplier_id = ui_utils.get_supplier_id(suspense_data)
+        if supplier_type == "RS":
+            supplier = SupplierTypeSociety.objects.filter(society_city=city, society_locality=area, society_name=supplier_name).first()
+        else:
+            supplier = SupplierMaster.objects.filter(city=city, area=area, supplier_name=supplier_name).first()
+        
+        if not supplier:
+            suspense_data = {
+                        'city_id': city_id,
+                        'area_id': area_id,
+                        'subarea_id': 1,
+                        'supplier_type': supplier_type,
+                        'supplier_code': supplier_type,
+                        'supplier_name': poc_name,    
+                    }
+            supplier_id = ui_utils.get_supplier_id(suspense_data)
 
-        #updating supplier id in suspense lead table
-        mongo_client.suspense_lead.update({"_id": ObjectId(suspense_id)}, {"$set":{"supplier_id":supplier_id}})
+            #updating supplier id in suspense lead table
+            mongo_client.suspense_lead.update({"_id": ObjectId(suspense_id)}, {"$set":{"supplier_id":supplier_id}})
 
-        if supplier_type != "RS":
-            supplier_data = {
-            'supplier_id': supplier_id,
-            'supplier_name': supplier_name,
-            'supplier_type': supplier_type,
-            'area': area.title(),
-            'city': city,
-            }
-            serializer = SupplierMasterSerializer(data=supplier_data)
-            if serializer.is_valid():
-                serializer.save()
-
-            AddressMaster(**{
+            if supplier_type != "RS":
+                supplier_data = {
                 'supplier_id': supplier_id,
+                'supplier_name': supplier_name,
+                'supplier_type': supplier_type,
                 'area': area.title(),
                 'city': city,
-            }).save()
-        else:
-            supplier_data = {
-            'supplier_id': supplier_id,
-            'society_name': supplier_name,
-            'supplier_code': supplier_type,
-            'society_locality': area.title(),
-            'society_city': city,
-            }
-            serializer = SupplierTypeSocietySerializer(data=supplier_data)
-            if serializer.is_valid():
-                serializer.save()
+                }
+                serializer = SupplierMasterSerializer(data=supplier_data)
+                if serializer.is_valid():
+                    serializer.save()
 
+                AddressMaster(**{
+                    'supplier_id': supplier_id,
+                    'area': area.title(),
+                    'city': city,
+                }).save()
+            else:
+                supplier_data = {
+                'supplier_id': supplier_id,
+                'society_name': supplier_name,
+                'supplier_code': supplier_type,
+                'society_locality': area.title(),
+                'society_city': city,
+                }
+                serializer = SupplierTypeSocietySerializer(data=supplier_data)
+                if serializer.is_valid():
+                    serializer.save()
+
+        else:
+            supplier_id = supplier.supplier_id
+            mongo_client.suspense_lead.update({"_id": ObjectId(suspense_id)}, {"$set":{"supplier_id":supplier_id}})
 
         if phone_number and supplier_id:
             contact_details = ContactDetails.objects.filter(mobile=phone_number, object_id=supplier_id)
             if contact_details:
-                if contact_name and contact_type:
-                    contact_details.update(name=contact_name, contact_type=contact_type)                
+                if poc_name and designation:
+                    contact_details.update(name=poc_name, contact_type=designation)                
             else:
                 ContactDetails(**{
                     'object_id': supplier_id,
