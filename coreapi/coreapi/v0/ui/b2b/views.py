@@ -2153,16 +2153,38 @@ class UpdateSuspenseLead(APIView):
     def post(self, request):
 
         suspense_leads = request.data.get("suspense_leads")
+        companies = Organisation.objects.all()
+        org_dict_id = {str((row3.organisation_id).lower()):row3.name for row3 in companies}
 
         for suspense in suspense_leads:
+            prefered_patners = []
 
+            if "other" in suspense.get("prefered_patners_id") and \
+                len(suspense["prefered_patners_id"]) == 1:
+                prefered_patners.append("other")
+
+            else:
+                for prtnrs in suspense["prefered_patners_id"]:
+                    prtnrs = prtnrs.lower()
+                    if not prtnrs == "other":
+                        company = org_dict_id.get(prtnrs)
+                        prefered_patners.append(company)
+
+            if "other" in suspense["prefered_patners_id"] and \
+                len(suspense["prefered_patners_id"]) > 1:
+                prefered_patners.append("other")
+
+            if suspense.get("current_patner_id"):
+                current_patner = org_dict_id.get(suspense.get("current_patner_id"))
+
+            
             update_values = {"$set":{
                 "implementation_timeline":suspense["implementation_timeline"],
                 "meating_timeline":suspense["meating_timeline"],
                 "comment":suspense["comment"],
-                "current_patner":suspense["current_patner_id"],
+                "current_patner":current_patner,
                 "current_patner_other":suspense["current_patner_other"],
-                "prefered_patners":suspense["prefered_patners_id"],
+                "prefered_patners":prefered_patners,
                 "prefered_patner_other":suspense["prefered_patner_other"],
                 "call_back_preference":suspense["call_back_preference"],
                 "status":"closed",
