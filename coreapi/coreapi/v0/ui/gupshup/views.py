@@ -47,28 +47,55 @@ class GetGupshupMsg(APIView):
     def post(self, request):
         response = request.data
         template = ""
+        mobile_split = None
         if response['type'] == "message-event":
             payload = request.data["payload"]
             mobile = payload.get("destination")
-        else:
-            payload = request.data["payload"]
-            mobile = payload.get("source")
-
-        if mobile:
             mobile_split = mobile[2:12]
 
-            where = {"mobile":mobile_split,"user_status":1,"verification_status":2}
-            verification_2 = mongo_client.ContactVerification.find_one(where)
-            if not verification_2:
-                gupshup_utils.mobile_verification(mobile_split)
+        if response['type'] == "message":
+            payload = request.data["payload"]
+            mobile = payload.get("source")
+            text = response['payload']['payload']['text']
 
-                verification = mongo_client.ContactVerification.find_one({"mobile":mobile_split})
+            if mobile:
+                mobile_split = mobile[2:12]
+
+                where = {"mobile":mobile_split}
+                verification = mongo_client.ContactVerification.find_one(where)
                 if verification:
-                    template = gupshup_utils.get_template(dict(verification))
 
-            else:
-                template = gupshup_utils.get_template(dict(verification_2))
+                    if verification['verification_status'] == 2:
+                        template = gupshup_utils.get_template(verification)
+                        gupshup_utils.update_supplier_details(verification)
+                    else:
+                        context = {"_id":verification['_id'],"text":text,
+                        "level":verification['level']}
+                        gupshup_utils.save_response(context)
 
+                        verify = mongo_client.ContactVerification.find_one(where)
+                        if verify:
+                            if verify['verification_status'] is not 2:
+                                objct = {"mobile":mobile_split,"message":text}
+                                message = gupshup_utils.get_response_template_without_verify(objct)
+                                if message:
+                                    template = message
+                            else:
+                                template = gupshup_utils.get_template(verify)
+                                gupshup_utils.update_supplier_details(verify)
+                            
+                else:
+                    gupshup_utils.mobile_verification(mobile_split)
+
+                    verify = mongo_client.ContactVerification.find_one(where)
+                    if verify:
+                        template = gupshup_utils.get_template(verify)
+
+                objct = {"mobile":mobile_split,"message":text}
+                message = gupshup_utils.get_response_template(objct)
+                if message:
+                    template = message
+        if mobile_split:
             data = {"data":response,"mobile":mobile_split,"type":response['type']}
             mongo_client.gupshup.insert_one(data)
           

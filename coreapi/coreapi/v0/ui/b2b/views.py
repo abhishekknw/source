@@ -2111,6 +2111,7 @@ class GetAllSuspenseLead(APIView):
             row1['designation'] = row1.get("designation")
             row1['pin_code'] = row1.get("pin_code")
             row1['address'] = row1.get("address")
+            row1['supplier_type'] = row1.get("supplier_type")
             row1['area_id'] = None
             row1['city_id'] = None
 

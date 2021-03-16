@@ -14,9 +14,10 @@ class Gupshup(MongoModel):
 class ContactVerification(MongoModel):
     mobile = fields.CharField(blank=True)
     name = fields.CharField(blank=True)
+    city = fields.CharField(blank=True)
     designation = fields.CharField(blank=True)
     entity_name = fields.CharField(blank=True)
-    mobile = fields.CharField(blank=True)
+    entity_type = fields.CharField(blank=True)
     verification_status = fields.ListField(blank=True)
     user_status = fields.ListField(blank=True)
     created_at = fields.DateTimeField()
