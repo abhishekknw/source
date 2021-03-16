@@ -2315,7 +2315,7 @@ class AddSuspenseToSupplier(APIView):
                     'contact_type' : designation,
                 }).save()
 
-        return ui_utils.handle_response({}, data="Supplier added successfully", success=True)
+        return ui_utils.handle_response({}, data={"message":"Supplier added successfully"}, success=True)
 
 class AddPocDetails(APIView):
 
@@ -2340,7 +2340,7 @@ class AddPocDetails(APIView):
 
         ContactDetails.objects.filter(object_id=object_id).exclude(pk__in=not_remove_contacts).delete()
 
-        return ui_utils.handle_response({}, data="POC added successfully", success=True)
+        return ui_utils.handle_response({}, data={"message":"POC added successfully"}, success=True)
 
 
 class UpdateMongoDbNotExistKey(APIView):
