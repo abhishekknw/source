@@ -2135,7 +2135,8 @@ class GetAllSuspenseLead(APIView):
                     if prf_prnr == "other":
                         prefered_patners_list.append("other")
                     else:
-                        prefered_patners_list.append(org_dict_id.get(prf_prnr.lower()))
+                        if prf_prnr:
+                            prefered_patners_list.append(org_dict_id.get(prf_prnr.lower()))
             else:
                 prefered_patners_list.append("other")
 
@@ -2176,6 +2177,7 @@ class UpdateSuspenseLead(APIView):
                 len(suspense["prefered_patners_id"]) > 1:
                 prefered_patners.append("other")
 
+            current_patner = None
             if suspense.get("current_patner_id"):
                 current_patner = org_dict_id.get(suspense.get("current_patner_id"))
 
