@@ -60,9 +60,16 @@ class GetGupshupMsg(APIView):
 
             if mobile:
                 mobile_split = mobile[2:12]
+                # obj = {
+                # "mobile":mobile_split,
+                # "message":"hello world"
+                # }
+
+                # gupshup_utils.waiting_response(obj)
 
                 where = {"mobile":mobile_split}
                 verification = mongo_client.ContactVerification.find_one(where)
+
                 if verification:
 
                     if verification['verification_status'] == 2:

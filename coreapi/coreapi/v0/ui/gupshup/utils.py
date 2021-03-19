@@ -5,6 +5,9 @@ from v0.ui.gupshup.models import ContactVerification,MessageTemplate
 from v0.ui.common.models import mongo_client
 from django.db.models import Q
 from bson.objectid import ObjectId
+import time
+import requests 
+
 
 ENTITY_CODE = {
     'a':'RS',
@@ -95,12 +98,18 @@ def get_template(obj):
         string = template.message
         if name:
             string = string.replace("$NAME",name)
+        else:
+            string = string.replace("$NAME","")
 
         if designation:
             string = string.replace("$DESIGNATION",designation)
+        else:
+            string = string.replace("$DESIGNATION","")
 
         if entity_name:
             string = string.replace("$SUPPLIER_NAME",entity_name)
+        else:
+            string = string.replace("$SUPPLIER_NAME","")
         
     else:
         string = "Hello, Welcome to Machadalo"
@@ -158,21 +167,25 @@ def get_response_template(obj):
 
         if verification_dict['verification_status'] == 1 or verification_dict['verification_status'] == 0:
             
+            if not verification_dict.get('city'):
+                template = "Provide your city"
+                update_dict = {"$set": {"level": 8}}
+
             if not verification_dict.get('entity_type'):
                 template = get_template({"verification_status":"ET"})
                 update_dict = {"$set": {"level": 4}}
 
+            if not verification_dict.get('designation'):
+                template = "Please provide your designation in "+verification_dict['entity_name']
+                update_dict = {"$set": {"level": 7}}
+
+            if not verification_dict.get('entity_name'):
+                template = "Provide your Entity name"
+                update_dict = {"$set": {"level": 6}}
+
             if not verification_dict.get('name'):
                 template = "Provide your name"
                 update_dict = {"$set": {"level": 5}}
-
-            if not verification_dict.get('designation'):
-                template = "Provide your designation"
-                update_dict = {"$set": {"level": 6}}
-
-            if not verification_dict.get('city'):
-                template = "Provide your city"
-                update_dict = {"$set": {"level": 7}}
 
     if msg == "m" or msg == "main" or \
         msg == "main menu" or msg == "menu":
@@ -196,22 +209,25 @@ def get_response_template_without_verify(obj):
 
     if verification_dict['verification_status'] == 1 or verification_dict['verification_status'] == 0:
         
-        if not verification_dict.get('entity_type'):
+        if not verification_dict.get('city'):
+            template = "Provide your city"
+            update_dict = {"$set": {"level": 8}}
 
+        if not verification_dict.get('entity_type'):
             template = get_template({"verification_status":"ET"})
             update_dict = {"$set": {"level": 4}}
+
+        if not verification_dict.get('designation'):
+            template = "Please provide your designation in "+verification_dict['entity_name']
+            update_dict = {"$set": {"level": 7}}
+
+        if not verification_dict.get('entity_name'):
+            template = "Provide your Entity name"
+            update_dict = {"$set": {"level": 6}}
 
         if not verification_dict.get('name'):
             template = "Provide your name"
             update_dict = {"$set": {"level": 5}}
-
-        if not verification_dict.get('designation'):
-            template = "Provide your designation"
-            update_dict = {"$set": {"level": 6}}
-
-        if not verification_dict.get('city'):
-            template = "Provide your city"
-            update_dict = {"$set": {"level": 7}}
 
     if update_dict:
         mongo_client.ContactVerification.update({"_id": 
@@ -237,9 +253,14 @@ def save_response(obj):
     if obj['level'] == 6:
 
         mongo_client.ContactVerification.update(
-            {"_id": obj['_id']},{"$set":{"designation":obj['text']}})
+            {"_id": obj['_id']},{"$set":{"entity_name":obj['text']}})
 
     if obj['level'] == 7:
+
+        mongo_client.ContactVerification.update(
+            {"_id": obj['_id']},{"$set":{"designation":obj['text']}})
+
+    if obj['level'] == 8:
 
         mongo_client.ContactVerification.update(
             {"_id": obj['_id']},{"$set":{"city":obj['text']}})
@@ -247,7 +268,7 @@ def save_response(obj):
     verify = mongo_client.ContactVerification.find_one({"_id": obj['_id']})
     if verify:
         if verify.get('entity_type') and verify.get('city') and \
-            verify.get('designation') and verify.get('name'):
+            verify.get('designation') and verify.get('name') and verify.get('entity_name'):
 
             mongo_client.ContactVerification.update(
                 {"_id": obj['_id']},{"$set":{"verification_status":2}})
@@ -294,3 +315,31 @@ def update_supplier_details(obj):
                     supplier_master.save()
 
     return True
+
+def send_message_to_gupshup(obj):
+  
+    URL = "https://api.gupshup.io/sm/api/v1/msg"
+    mobile = "91"+str(obj['mobile'])
+    print("#####################")
+    print(mobile)
+    message = obj['message']
+
+    params = {
+            "channel" : "whatsapp",
+            "source" : "917834811114",
+            "destination" : mobile,
+            "src.name":"TestMachadalo",
+            "message" : message
+        }
+
+    headers = {'Content-Type': 'application/x-www-form-urlencoded','apikey':"yvbving75adlrx2a0asejuffagte6l04"}
+    response = requests.post(URL, data=params, headers=headers)
+    print(response.text)
+
+def waiting_response(obj):
+    time.sleep(5)
+    print("^^^^")
+    response = send_message_to_gupshup(obj)
+    print(response)
+
+    
