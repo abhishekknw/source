@@ -2095,7 +2095,7 @@ class GetAllSuspenseLead(APIView):
     def get(self, request):
 
         list1 = []
-        suspense_lead = mongo_client.suspense_lead.find({"status":"closed"}).sort("created_at",-1)
+        suspense_lead = mongo_client.suspense_lead.find({}).sort("created_at",-1)
         companies = Organisation.objects.all()
         org_dict_id = {str((row3.name).lower()):row3.organisation_id for row3 in companies}
 
@@ -2178,9 +2178,8 @@ class UpdateSuspenseLead(APIView):
 
             current_patner = None
             if suspense.get("current_patner_id"):
-                current_patner = suspense.get("current_patner_id").lower()
-                if current_patner:
-                    current_patner = org_dict_id.get(current_patner)
+                current_patner = org_dict_id.get(suspense.get("current_patner_id"))
+
             
             update_values = {"$set":{
                 "implementation_timeline":suspense["implementation_timeline"],
@@ -2323,7 +2322,6 @@ class AddPocDetails(APIView):
         update_contact_and_ownership_detail(contactData)
 
         return ui_utils.handle_response({}, data="POC added successfully", success=True)
-
 class UpdateMongoDbNotExistKey(APIView):
 
     def get(self, request):
