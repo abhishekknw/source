@@ -2142,8 +2142,9 @@ class GetAllSuspenseLead(APIView):
 
             row1['prefered_patners'] = prefered_patners_list
 
+
             if row1.get("current_patner"):
-                row1["current_patner"] = org_dict_id.get(row1.get("current_patner"))
+                row1["current_patner"] = org_dict_id.get(row1.get("current_patner").lower())
             
             list1.append(row1)
 
