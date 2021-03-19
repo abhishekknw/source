@@ -2325,6 +2325,16 @@ class AddSuspenseToSupplier(APIView):
 
 class AddPocDetails(APIView):
 
+    def get(self, request):
+
+        suspense_id = request.query_params.get("suspense_id")
+        suspense_lead = mongo_client.suspense_lead.find_one({"_id": ObjectId(suspense_id)})
+        object_id = suspense_lead['supplier_id']
+
+        contact_detail = ContactDetails.objects.filter(object_id=object_id).values("name", "mobile", "contact_type")
+
+        return ui_utils.handle_response({}, data={"contact_detail": contact_detail}, success=True)
+
     def post(self, request):
         
         suspense_id = request.data.get("suspense_id")
