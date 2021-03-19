@@ -2185,14 +2185,14 @@ class UpdateSuspenseLead(APIView):
 
             
             update_values = {"$set":{
-                "implementation_timeline":suspense["implementation_timeline"],
-                "meating_timeline":suspense["meating_timeline"],
-                "comment":suspense["comment"],
+                "implementation_timeline":suspense.get("implementation_timeline"),
+                "meating_timeline":suspense.get("meating_timeline"),
+                "comment":suspense.get("comment"),
                 "current_patner":current_patner,
-                "current_patner_other":suspense["current_patner_other"],
+                "current_patner_other":suspense.get("current_patner_other"),
                 "prefered_patners":prefered_patners,
-                "prefered_patner_other":suspense["prefered_patner_other"],
-                "call_back_preference":suspense["call_back_preference"],
+                "prefered_patner_other":suspense.get("prefered_patner_other"),
+                "call_back_preference":suspense.get("call_back_preference"),
                 "status":"closed",
                 "updated_at":datetime.datetime.now(),
                 }}
