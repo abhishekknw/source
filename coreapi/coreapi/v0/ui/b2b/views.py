@@ -2221,13 +2221,32 @@ class AddSuspenseToSupplier(APIView):
         city = request.query_params.get("city")
         area = request.query_params.get("area")
         supplier_type = request.query_params.get("supplier_type")
+        suspense_id = request.query_params.get("suspense_id")
+        supplier = {}
+
+        supplier_objects = SupplierMaster.objects
+        society_objects = SupplierTypeSociety.objects
 
         if supplier_type == 'RS':
-            supplier_list = SupplierTypeSociety.objects.filter(society_city=city, society_locality=area).values('society_name')
+            supplier_list = society_objects.filter(society_city=city, society_locality=area).values('society_name', 'supplier_id')
         else:
-            supplier_list = SupplierMaster.objects.filter(city=city, area=area).values('supplier_name')
+            supplier_list = supplier_objects.filter(city=city, area=area).values('supplier_name', 'supplier_id')
 
-        return ui_utils.handle_response({}, data={"supplier_list": supplier_list}, success=True)
+        if suspense_id:
+            suspense_lead = mongo_client.suspense_lead.find_one({"_id": ObjectId(suspense_id)})
+            supplier_id = suspense_lead['supplier_id']
+
+            if suspense_lead['supplier_type'] == "RS":
+                supplier_data = society_objects.filter(supplier_id=supplier_id).values('supplier_id').annotate(
+                    supplier_name = F('society_name'), city=F('society_city'), area=F('society_locality'))
+            else:
+                supplier_data = supplier_objects.filter(supplier_id=supplier_id).values('supplier_name','city', 'area')
+
+            supplier["supplier"] = supplier_data
+            contact_detail = ContactDetails.objects.filter(object_id=supplier_id).values("name", "mobile", "contact_type")
+            supplier["contact_detail"] = contact_detail
+
+        return ui_utils.handle_response({}, data={"supplier_list": supplier_list, "supplier_data": supplier}, success=True)
 
 
     def post(self, request):
@@ -2242,6 +2261,7 @@ class AddSuspenseToSupplier(APIView):
         city = request.data.get("city")
         area_id = request.data.get("area_id")
         area = request.data.get("area")
+        supplier_id = request.data.get("supplier_id")
 
         #If area does not exist, add new area
         if city_id:
@@ -2257,9 +2277,9 @@ class AddSuspenseToSupplier(APIView):
                     print('Failed to add Area :', area)
 
         if supplier_type == "RS":
-            supplier = SupplierTypeSociety.objects.filter(society_city=city, society_locality=area, society_name=supplier_name).first()
+            supplier = SupplierTypeSociety.objects.filter(supplier_id=supplier_id)
         else:
-            supplier = SupplierMaster.objects.filter(city=city, area=area, supplier_name=supplier_name).first()
+            supplier = SupplierMaster.objects.filter(supplier_id=supplier_id)
         
         if not supplier:
             suspense_data = {
@@ -2268,12 +2288,22 @@ class AddSuspenseToSupplier(APIView):
                         'subarea_id': 1,
                         'supplier_type': supplier_type,
                         'supplier_code': supplier_type,
-                        'supplier_name': poc_name,    
+                        'supplier_name': supplier_name,    
                     }
             supplier_id = ui_utils.get_supplier_id(suspense_data)
 
-            #updating supplier id in suspense lead table
-            mongo_client.suspense_lead.update({"_id": ObjectId(suspense_id)}, {"$set":{"supplier_id":supplier_id}})
+            #updating supplier data in suspense lead table
+            update_values = {"$set":{
+                "supplier_id":supplier_id,
+                "supplier_type":supplier_type,
+                "supplier_name":supplier_name,
+                "poc_name":poc_name,
+                "designation":designation,
+                "city":city,
+                "area":area,
+                "is_updated":"True"
+                }}
+            mongo_client.suspense_lead.update({"_id": ObjectId(suspense_id)},update_values)
 
             if supplier_type != "RS":
                 supplier_data = {
@@ -2305,8 +2335,21 @@ class AddSuspenseToSupplier(APIView):
                     serializer.save()
 
         else:
-            supplier_id = supplier.supplier_id
-            mongo_client.suspense_lead.update({"_id": ObjectId(suspense_id)}, {"$set":{"supplier_id":supplier_id}})
+            update_values = {"$set":{
+                "supplier_id":supplier_id,
+                "supplier_type":supplier_type,
+                "supplier_name":supplier_name,
+                "poc_name":poc_name,
+                "designation":designation,
+                "city":city,
+                "area":area,
+                "is_updated":"True"
+                }}
+            mongo_client.suspense_lead.update({"_id": ObjectId(suspense_id)},update_values)
+            if supplier_type == "RS":
+                supplier.update(society_name=supplier_name)
+            else:
+                supplier.update(supplier_name=supplier_name)
 
         if phone_number and supplier_id:
             contact_details = ContactDetails.objects.filter(mobile=phone_number, object_id=supplier_id)
