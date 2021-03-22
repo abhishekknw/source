@@ -2221,32 +2221,13 @@ class AddSuspenseToSupplier(APIView):
         city = request.query_params.get("city")
         area = request.query_params.get("area")
         supplier_type = request.query_params.get("supplier_type")
-        suspense_id = request.query_params.get("suspense_id")
-        supplier = {}
-
-        supplier_objects = SupplierMaster.objects
-        society_objects = SupplierTypeSociety.objects
 
         if supplier_type == 'RS':
-            supplier_list = society_objects.filter(society_city=city, society_locality=area).values('society_name', 'supplier_id')
+            supplier_list = SupplierTypeSociety.objects.filter(society_city=city, society_locality=area).values('society_name', 'supplier_id')
         else:
-            supplier_list = supplier_objects.filter(city=city, area=area).values('supplier_name', 'supplier_id')
+            supplier_list = SupplierMaster.objects.filter(city=city, area=area).values('supplier_name', 'supplier_id')
 
-        if suspense_id:
-            suspense_lead = mongo_client.suspense_lead.find_one({"_id": ObjectId(suspense_id)})
-            supplier_id = suspense_lead['supplier_id']
-
-            if suspense_lead['supplier_type'] == "RS":
-                supplier_data = society_objects.filter(supplier_id=supplier_id).values('supplier_id').annotate(
-                    supplier_name = F('society_name'), city=F('society_city'), area=F('society_locality'))
-            else:
-                supplier_data = supplier_objects.filter(supplier_id=supplier_id).values('supplier_name','city', 'area')
-
-            supplier["supplier"] = supplier_data
-            contact_detail = ContactDetails.objects.filter(object_id=supplier_id).values("name", "mobile", "contact_type")
-            supplier["contact_detail"] = contact_detail
-
-        return ui_utils.handle_response({}, data={"supplier_list": supplier_list, "supplier_data": supplier}, success=True)
+        return ui_utils.handle_response({}, data={"supplier_list": supplier_list}, success=True)
 
 
     def post(self, request):
