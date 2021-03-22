@@ -6,8 +6,8 @@ from v0.ui.common.models import mongo_client
 from django.db.models import Q
 from bson.objectid import ObjectId
 import time
-import requests 
-
+import requests
+import threading 
 
 ENTITY_CODE = {
     'a':'RS',
@@ -53,12 +53,12 @@ def mobile_verification(mobile):
 
                     update_data = {"$set":{"verification_status":2,"name":name,
                         "contact_type":designation,"entity_name":supplier_name,"city":city,
-                        "entity_type":supplier_type}}
+                        "entity_type":supplier_type,"updated_at":datetime.datetime.now()}}
                 else:
 
                     update_data = {"$set":{"verification_status":1,"name":name,
                         "contact_type":designation,"entity_name":supplier_name,"city":city,
-                        "entity_type":supplier_type}}
+                        "entity_type":supplier_type,"updated_at":datetime.datetime.now()}}
 
                 update_verification = mongo_client.ContactVerification.update(
                     {"_id":ObjectId(contact_verification['_id'])},update_data)
@@ -68,18 +68,21 @@ def mobile_verification(mobile):
 
                 data = {"city":city,"mobile":mobile,"verification_status":0,"user_status": 1,
                     "name":name,"designation":designation,"entity_name":supplier_name,
-                    "entity_type":supplier_type,"level":0}
+                    "entity_type":supplier_type,"level":0,"updated_at":datetime.datetime.now()
+                    ,"created_at":datetime.datetime.now()}
             else:
                 if contact_details.mobile and name and designation and city and \
                     area and subarea and supplier_name:
 
                     data = {"city":city,"mobile":mobile,"verification_status":2,"user_status":1,
                         "name":name,"designation":designation,"entity_name":supplier_name,
-                        "entity_type":supplier_type,"level":0}
+                        "entity_type":supplier_type,"level":0,"updated_at":datetime.datetime.now()
+                        ,"created_at":datetime.datetime.now()}
                 else:
                     data = {"city":city,"mobile":mobile,"verification_status":1,"user_status":1,
                     "name":name,"designation":designation,"entity_name":supplier_name,
-                    "entity_type":supplier_type,"level":0}
+                    "entity_type":supplier_type,"level":0,"updated_at":datetime.datetime.now()
+                    ,"created_at":datetime.datetime.now()}
 
             mongo_client.ContactVerification.insert_one(data)
 
@@ -169,23 +172,23 @@ def get_response_template(obj):
             
             if not verification_dict.get('city'):
                 template = "Provide your city"
-                update_dict = {"$set": {"level": 8}}
+                update_dict = {"$set": {"level": 8,"updated_at":datetime.datetime.now()}}
 
             if not verification_dict.get('entity_type'):
                 template = get_template({"verification_status":"ET"})
-                update_dict = {"$set": {"level": 4}}
+                update_dict = {"$set": {"level": 4,"updated_at":datetime.datetime.now()}}
 
             if not verification_dict.get('designation'):
                 template = "Please provide your designation in "+verification_dict['entity_name']
-                update_dict = {"$set": {"level": 7}}
+                update_dict = {"$set": {"level": 7,"updated_at":datetime.datetime.now()}}
 
             if not verification_dict.get('entity_name'):
                 template = "Provide your Entity name"
-                update_dict = {"$set": {"level": 6}}
+                update_dict = {"$set": {"level": 6,"updated_at":datetime.datetime.now()}}
 
             if not verification_dict.get('name'):
                 template = "Provide your name"
-                update_dict = {"$set": {"level": 5}}
+                update_dict = {"$set": {"level": 5,"updated_at":datetime.datetime.now()}}
 
     if msg == "m" or msg == "main" or \
         msg == "main menu" or msg == "menu":
@@ -211,23 +214,23 @@ def get_response_template_without_verify(obj):
         
         if not verification_dict.get('city'):
             template = "Provide your city"
-            update_dict = {"$set": {"level": 8}}
+            update_dict = {"$set": {"level": 8,"updated_at":datetime.datetime.now()}}
 
         if not verification_dict.get('entity_type'):
             template = get_template({"verification_status":"ET"})
-            update_dict = {"$set": {"level": 4}}
+            update_dict = {"$set": {"level": 4,"updated_at":datetime.datetime.now()}}
 
         if not verification_dict.get('designation'):
             template = "Please provide your designation in "+verification_dict['entity_name']
-            update_dict = {"$set": {"level": 7}}
+            update_dict = {"$set": {"level": 7,"updated_at":datetime.datetime.now()}}
 
         if not verification_dict.get('entity_name'):
             template = "Provide your Entity name"
-            update_dict = {"$set": {"level": 6}}
+            update_dict = {"$set": {"level": 6,"updated_at":datetime.datetime.now()}}
 
         if not verification_dict.get('name'):
             template = "Provide your name"
-            update_dict = {"$set": {"level": 5}}
+            update_dict = {"$set": {"level": 5,"updated_at":datetime.datetime.now()}}
 
     if update_dict:
         mongo_client.ContactVerification.update({"_id": 
@@ -243,27 +246,32 @@ def save_response(obj):
             entity_type = ENTITY_CODE.get(obj['text'].lower())
 
         mongo_client.ContactVerification.update(
-            {"_id": obj['_id']},{"$set":{"entity_type":obj['text'],"entity_type":entity_type}})
+            {"_id": obj['_id']},{"$set":{"entity_type":obj['text'],"entity_type":entity_type,
+            "updated_at":datetime.datetime.now()}})
 
     if obj['level'] == 5:
 
         mongo_client.ContactVerification.update(
-            {"_id": obj['_id']},{"$set":{"name":obj['text']}})
+            {"_id": obj['_id']},{"$set":{"name":obj['text'],
+            "updated_at":datetime.datetime.now()}})
 
     if obj['level'] == 6:
 
         mongo_client.ContactVerification.update(
-            {"_id": obj['_id']},{"$set":{"entity_name":obj['text']}})
+            {"_id": obj['_id']},{"$set":{"entity_name":obj['text'],
+            "updated_at":datetime.datetime.now()}})
 
     if obj['level'] == 7:
 
         mongo_client.ContactVerification.update(
-            {"_id": obj['_id']},{"$set":{"designation":obj['text']}})
+            {"_id": obj['_id']},{"$set":{"designation":obj['text'],
+            "updated_at":datetime.datetime.now()}})
 
     if obj['level'] == 8:
 
         mongo_client.ContactVerification.update(
-            {"_id": obj['_id']},{"$set":{"city":obj['text']}})
+            {"_id": obj['_id']},{"$set":{"city":obj['text'],
+            "updated_at":datetime.datetime.now()}})
 
     verify = mongo_client.ContactVerification.find_one({"_id": obj['_id']})
     if verify:
@@ -271,7 +279,8 @@ def save_response(obj):
             verify.get('designation') and verify.get('name') and verify.get('entity_name'):
 
             mongo_client.ContactVerification.update(
-                {"_id": obj['_id']},{"$set":{"verification_status":2}})
+                {"_id": obj['_id']},{"$set":{"verification_status":2,
+                "updated_at":datetime.datetime.now()}})
 
     return True
 
@@ -316,30 +325,39 @@ def update_supplier_details(obj):
 
     return True
 
-def send_message_to_gupshup(obj):
+def send_message_to_gupshup():
   
+    time.sleep(120)
     URL = "https://api.gupshup.io/sm/api/v1/msg"
-    mobile = "91"+str(obj['mobile'])
-    print("#####################")
-    print(mobile)
-    message = obj['message']
+    # obj = threading.current_thread().obj
+    template = MessageTemplate.objects.filter(verification_status="WR").first()
+    if template:
 
-    params = {
-            "channel" : "whatsapp",
-            "source" : "917834811114",
-            "destination" : mobile,
-            "src.name":"TestMachadalo",
-            "message" : message
-        }
+        mobile = "919713198098"
+        message = template.message
+        print("##########")
+        params = {
+                "channel" : "whatsapp",
+                "source" : "917834811114",
+                "destination" : mobile,
+                "src.name":"TestMachadalo",
+                "message" : message
+            }
 
-    headers = {'Content-Type': 'application/x-www-form-urlencoded','apikey':"yvbving75adlrx2a0asejuffagte6l04"}
-    response = requests.post(URL, data=params, headers=headers)
-    print(response.text)
+        headers = {'Content-Type': 'application/x-www-form-urlencoded','apikey':"gb4safxmjwlppbs4h9ssnjramaluzjke"}
+        response = requests.post(URL, data=params, headers=headers)
+        print(response.text)
+        return response.text
 
 def waiting_response(obj):
-    time.sleep(5)
-    print("^^^^")
-    response = send_message_to_gupshup(obj)
-    print(response)
+    # time.sleep(5)
+    # Event.wait(5)
+    print("$$$$$$$$$$$")
+    t = threading.Thread(target=send_message_to_gupshup)
+    print(t)
+
+    t.start()
+    return t
+    # response = send_message_to_gupshup(obj)
 
     
