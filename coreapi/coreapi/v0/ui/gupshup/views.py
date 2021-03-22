@@ -102,6 +102,8 @@ class GetGupshupMsg(APIView):
                 message = gupshup_utils.get_response_template(objct)
                 if message:
                     template = message
+                    res = gupshup_utils.waiting_response(objct)
+                    print(res)
         if mobile_split:
             data = {"data":response,"mobile":mobile_split,"type":response['type']}
             mongo_client.gupshup.insert_one(data)
