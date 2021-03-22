@@ -294,15 +294,15 @@ LOGGING = {
             'formatter': 'console'
         },
         'file': {
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'class': 'logging.FileHandler',
             'formatter': 'file',
-            'filename': '/var/log/mdbackend/debug.log'
+            'filename': '/var/log/mdbackend/error.log'
         }
     },
     'loggers': {
         '': {
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'handlers': ['console', 'file']
         }
     }

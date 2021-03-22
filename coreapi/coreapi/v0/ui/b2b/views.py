@@ -3,18 +3,19 @@ from __future__ import absolute_import
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import HttpResponse
-from .models import (PaymentDetails,LicenseDetails,MachadaloRelationshipManager,Requirement, SuspenseLead, BrowsedLead, CampaignLeads, OrganizationLeads, PreRequirement)
+from .models import (Gupshup,PaymentDetails,LicenseDetails,MachadaloRelationshipManager,Requirement, SuspenseLead, BrowsedLead, CampaignLeads, OrganizationLeads, PreRequirement)
 from .serializers import NotificationTemplateSerializer,PaymentDetailsSerializer,LicenseDetailsSerializer,RequirementSerializer, PreRequirementSerializer, RelationshipManagerSerializer
 import v0.ui.utils as ui_utils
 from openpyxl import load_workbook, Workbook
 from v0.ui.account.models import ContactDetails, BusinessTypes, BusinessSubTypes
-from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster
+from v0.ui.account.serializers import ContactDetailsSerializer
+from v0.ui.supplier.models import SupplierTypeSociety, SupplierMaster, AddressMaster
+from v0.ui.location.models import City,CityArea
 from v0.ui.proposal.models import ProposalInfo, ShortlistedSpaces, ProposalCenterMapping
 from v0.ui.proposal.serializers import ProposalInfoSerializer
 from v0.ui.organisation.models import Organisation
 from v0.ui.organisation.serializers import OrganisationSerializer
 from django.db.models import Q
-import v0.ui.utils as ui_utils
 import datetime
 from v0.ui.common.models import mongo_client,BaseUser
 import hashlib
@@ -31,6 +32,8 @@ from v0.ui.campaign.models import CampaignComments
 from datetime import timedelta
 from django.utils.timezone import make_aware
 from v0.constants import supplier_code_to_names
+from v0.ui.location.models import CityArea
+from v0.ui.supplier.views import update_contact_and_ownership_detail
 
 def get_value_from_list_by_key(list1, key):
     text = ""
@@ -2092,15 +2095,59 @@ class GetAllSuspenseLead(APIView):
 
     def get(self, request):
 
-        suspense_lead = mongo_client.suspense_lead.find().sort("created_at",-1)
         list1 = []
+        suspense_lead = mongo_client.suspense_lead.find({"status":"closed"}).sort("created_at",-1)
+        companies = Organisation.objects.all()
+        org_dict_id = {str((row3.name).lower()):row3.organisation_id for row3 in companies}
+
         for row in suspense_lead:
             row1 = dict(row)
             row1["_id"] = str(row1["_id"])
+            prefered_patners_list = []
+
+            row1['current_patner_other'] = row1.get("current_patner_other")
+            row1['status'] = row1.get("status")
+            row1['prefered_patner_other'] = row1.get("prefered_patner_other")
+            row1['poc_name'] = row1.get("poc_name")
+            row1['designation'] = row1.get("designation")
+            row1['pin_code'] = row1.get("pin_code")
+            row1['address'] = row1.get("address")
+            row1['supplier_type'] = row1.get("supplier_type")
+            row1['area_id'] = None
+            row1['city_id'] = None
+
+            if row1.get("area"):
+
+                area_detail = CityArea.objects.filter(label=
+                    str(row1.get("area"))).first()
+                if area_detail:
+                    row1['area_id'] = area_detail.id
+
+            if row1.get("city"):
+
+                city_detail = City.objects.filter(city_name=
+                    str(row1.get("city"))).first()
+                if city_detail:
+                    row1['city_id'] = city_detail.id
+
+            if row1.get("prefered_patners"):
+                for prf_prnr in row1.get("prefered_patners"):
+                    if prf_prnr == "other":
+                        prefered_patners_list.append("other")
+                    else:
+                        if prf_prnr:
+                            prefered_patners_list.append(org_dict_id.get(prf_prnr.lower()))
+            else:
+                prefered_patners_list.append("other")
+
+            row1['prefered_patners'] = prefered_patners_list
+
+
+            if row1.get("current_patner"):
+                row1["current_patner"] = org_dict_id.get(row1.get("current_patner").lower())
             
             list1.append(row1)
 
-        companies = Organisation.objects.all()
         companies_data = OrganisationSerializer(companies, many=True).data
         return ui_utils.handle_response({}, data={"suspense_lead": list1,"companies":companies_data}, success=True)
 
@@ -2110,19 +2157,44 @@ class UpdateSuspenseLead(APIView):
     def post(self, request):
 
         suspense_leads = request.data.get("suspense_leads")
+        companies = Organisation.objects.all()
+        org_dict_id = {str((row3.organisation_id).lower()):row3.name for row3 in companies}
 
         for suspense in suspense_leads:
+            prefered_patners = []
 
+            if "other" in suspense.get("prefered_patners_id") and \
+                len(suspense["prefered_patners_id"]) == 1:
+                prefered_patners.append("other")
+
+            else:
+                for prtnrs in suspense["prefered_patners_id"]:
+                    prtnrs = prtnrs.lower()
+                    if not prtnrs == "other":
+                        company = org_dict_id.get(prtnrs)
+                        prefered_patners.append(company)
+
+            if "other" in suspense["prefered_patners_id"] and \
+                len(suspense["prefered_patners_id"]) > 1:
+                prefered_patners.append("other")
+
+            current_patner = None
+            if suspense.get("current_patner_id"):
+                current_patner = suspense.get("current_patner_id").lower()
+                if current_patner:
+                    current_patner = org_dict_id.get(current_patner)
+
+            
             update_values = {"$set":{
-                "implementation_timeline":suspense["implementation_timeline"],
-                "meating_timeline":suspense["meating_timeline"],
-                "comment":suspense["comment"],
-                "current_patner":suspense["current_patner_id"],
-                "current_patner_other":suspense["current_patner_other"],
-                "prefered_patners":suspense["prefered_patners_id"],
-                "prefered_patner_other":suspense["prefered_patner_other"],
-                "call_back_preference":suspense["call_back_preference"],
-                "status":"open",
+                "implementation_timeline":suspense.get("implementation_timeline"),
+                "meating_timeline":suspense.get("meating_timeline"),
+                "comment":suspense.get("comment"),
+                "current_patner":current_patner,
+                "current_patner_other":suspense.get("current_patner_other"),
+                "prefered_patners":prefered_patners,
+                "prefered_patner_other":suspense.get("prefered_patner_other"),
+                "call_back_preference":suspense.get("call_back_preference"),
+                "status":"closed",
                 "updated_at":datetime.datetime.now(),
                 }}
 
@@ -2142,180 +2214,374 @@ class SuspenseLeadDelete(APIView):
         return ui_utils.handle_response({}, data={"message":"Suspense lead removed successfully"}, success=True)
 
 
-class SuspenseLeadOpsVerification(APIView):
+class AddSuspenseToSupplier(APIView):
+
+    def get(self, request):
+
+        city = request.query_params.get("city")
+        area = request.query_params.get("area")
+        supplier_type = request.query_params.get("supplier_type")
+
+        if supplier_type == 'RS':
+            supplier_list = SupplierTypeSociety.objects.filter(society_city=city, society_locality=area).values('society_name', 'supplier_id')
+        else:
+            supplier_list = SupplierMaster.objects.filter(city=city, area=area).values('supplier_name', 'supplier_id')
+
+        return ui_utils.handle_response({}, data={"supplier_list": supplier_list}, success=True)
+
 
     def post(self, request):
+        
+        suspense_id = request.data.get("suspense_id")
+        supplier_type = request.data.get("supplier_type")
+        phone_number = request.data.get("phone_number")
+        supplier_name = request.data.get("supplier_name")
+        poc_name = request.data.get("poc_name")
+        designation = request.data.get("designation")
+        city_id = request.data.get("city_id")
+        city = request.data.get("city")
+        area_id = request.data.get("area_id")
+        area = request.data.get("area")
+        supplier_id = request.data.get("supplier_id")
 
-        suspense_ids = request.data.get("suspense_ids")
-        id_ = []
-        for suspense_id in suspense_ids:
-            id_.append(ObjectId(suspense_id))     
-
-        suspense_leads = list(mongo_client.suspense_lead.find({"_id": {'$in':(id_)}}))
-        print("############################")
-        for suspense in suspense_leads:
-    
-            campaign = ProposalInfo.objects.filter(Q(
-                type_of_end_customer__formatted_name="b_to_b_r_g")
-            & Q(name=suspense['city']) | Q(name=suspense['area'])).first()
-
-            shortlisted_spaces = ShortlistedSpaces.objects.filter(
-                proposal_id=campaign.proposal_id, 
-                object_id=suspense['supplier_id']).first()
-
-            if not shortlisted_spaces:
-                print(2)
-                content_type = ui_utils.get_content_type(suspense['supplier_type'])
-                center = ProposalCenterMapping.objects.filter(
-                    proposal_id=campaign.proposal_id).first()
-
-                shortlisted_spaces = ShortlistedSpaces(
-                    proposal_id=campaign.proposal_id,
-                    center=center,
-                    supplier_code=suspense['supplier_type'],
-                    object_id=suspense['supplier_id'],
-                    content_type=content_type.data['data'],
-                    status='F',
-                    user=request.user,
-                    requirement_given='yes',
-                    requirement_given_date=datetime.datetime.now()
-                )
-                shortlisted_spaces.save()
-
-            if suspense['sector_name'] is not None:
-                sector = BusinessTypes.objects.filter(
-                    business_type=suspense['sector_name'].lower()).first()
-            
-            if suspense['sub_sector_name'] is not None:
-                sub_sector = BusinessSubTypes.objects.filter(
-                    business_sub_type=suspense['sub_sector_name'].lower()).first()
-
-            change_current_patner = "no"
-            if suspense['current_patner_feedback'] == "Dissatisfied" or suspense['current_patner_feedback'] == "Extremely Dissatisfied":
-                change_current_patner = "yes"
-
-            prefered_patners_list = []
-            if suspense["prefered_patners"]:
-                prefered_patners_list = Organisation.objects.filter(
-                    organisation_id__in=suspense['prefered_patners']).all()
-
-            current_patner_obj = None
-            current_company_other = None
-            if suspense['current_patner']:
-                current_patner_obj = Organisation.objects.filter(
-                    name=suspense['current_patner']).first()
-                
-
-            pre_requirement = PreRequirement(
-                campaign_id=campaign.proposal_id,
-                shortlisted_spaces=shortlisted_spaces,
-                current_company = current_patner_obj,
-                current_company_other = suspense['current_patner_other'],
-                current_patner_feedback = suspense['current_patner_feedback'],
-                current_patner_feedback_reason = suspense['current_patner_feedback_reason'],
-                preferred_company_other = suspense['prefered_patner_other'],
-                sector = sector,
-                sub_sector = sub_sector,
-                lead_by = None,
-                impl_timeline = suspense['implementation_timeline'],
-                meating_timeline = suspense['meating_timeline'],
-                lead_status = "Lead",
-                comment = suspense['meating_timeline'],
-                varified_ops = 'yes',
-                varified_bd = 'no',
-                lead_date = datetime.datetime.now(),
-                l1_answers = suspense['l1_answers'],
-                l1_answer_2 = suspense['l1_answer_2'],
-                l2_answers = suspense['l2_answers'],
-                l2_answer_2 = suspense['l2_answer_2'],
-                change_current_patner = change_current_patner.lower(),
-                call_back_preference = suspense['call_back_preference'].lower(),
-                varified_ops_by_id = request.user.id
-            )
-            pre_requirement.save()
-
-            if prefered_patners_list:
-                pre_requirement.preferred_company.set(prefered_patners_list)
-
-            if pre_requirement:
-                companies = Organisation.objects.filter(business_type=
-                    pre_requirement.sector)
-
-                if companies:
-                    for company in companies:
-                        company_campaign = ProposalInfo.objects.filter(
-                            type_of_end_customer__formatted_name="b_to_b_l_d",
-                            account__organisation=company).first()
-
-                        if company_campaign:
-                            company_shortlisted_spaces = ShortlistedSpaces.objects.filter(
-                                object_id=pre_requirement.shortlisted_spaces.object_id,
-                                proposal=company_campaign.proposal_id).first()
-
-                            if not company_shortlisted_spaces:
-                                center_ = ProposalCenterMapping.objects.filter(proposal=company_campaign).first()
-                                content_type_ = ui_utils.get_content_type(pre_requirement.shortlisted_spaces.supplier_code)
-
-                                company_shortlisted_spaces = ShortlistedSpaces(
-                                    proposal=company_campaign,
-                                    center=center_,
-                                    object_id=pre_requirement.shortlisted_spaces.object_id,
-                                    supplier_code=pre_requirement.shortlisted_spaces.supplier_code,
-                                    content_type=content_type_.data['data'],
-                                    status='F',
-                                    user=request.user,
-                                    requirement_given='yes',
-                                    requirement_given_date=datetime.datetime.now(),
-                                    color_code = 1
-                                )
-                                company_shortlisted_spaces.save()
-
-                            preferred_partners_list = pre_requirement.preferred_company.all()
-
-                            is_preferred_company = "no"
-                            if company_campaign.account.organisation:
-                                if company_campaign.account.organisation in preferred_partners_list:
-                                    is_preferred_company = "yes"
-
-                            new_requirement = Requirement(
-                            campaign_id=pre_requirement.campaign_id,
-                            shortlisted_spaces=pre_requirement.shortlisted_spaces,
-                            company = company,
-                            current_company = pre_requirement.current_company,
-                            current_company_other = pre_requirement.current_company_other,
-                            is_current_patner = "yes" if pre_requirement.current_company == company else "no",
-                            current_patner_feedback = pre_requirement.current_patner_feedback,
-                            current_patner_feedback_reason = pre_requirement.current_patner_feedback_reason,
-                            preferred_company_other = pre_requirement.preferred_company_other,
-                            sector = pre_requirement.sector,
-                            sub_sector = pre_requirement.sub_sector,
-                            lead_by = pre_requirement.lead_by,
-                            impl_timeline = pre_requirement.impl_timeline,
-                            meating_timeline = pre_requirement.meating_timeline,
-                            lead_status = pre_requirement.lead_status,
-                            comment = pre_requirement.comment,
-                            varified_ops = 'yes',
-                            varified_bd = 'no',
-                            lead_date = pre_requirement.lead_date,
-                            lead_price  = pre_requirement.lead_price,
-                            l1_answers = pre_requirement.l1_answers,
-                            l1_answer_2 = pre_requirement.l1_answer_2,
-                            l2_answers = pre_requirement.l2_answers,
-                            l2_answer_2 = pre_requirement.l2_answer_2,
-                            change_current_patner = pre_requirement.change_current_patner.lower(),
-                            company_campaign=company_campaign,
-                            company_shortlisted_spaces=company_shortlisted_spaces,
-                            varified_ops_by = request.user,
-                            varified_ops_date = datetime.datetime.now(),
-                            call_back_preference = pre_requirement.call_back_preference,
-                            is_preferred_company = is_preferred_company
-                            )
-                            new_requirement.save()
-                            
-                            if preferred_partners_list:
-                                new_requirement.preferred_company.set(preferred_partners_list)
+        #If area does not exist, add new area
+        if city_id:
+            area_detail = CityArea.objects.filter(id=area_id, city_code=city_id).values('id')
+            if area_detail and len(area_detail) > 0:
+                area_id = area_detail[0]['id']
+            else:
+                area_code = ui_utils.getRandomString()
+                areaInserted = CityArea.objects.create(label=area.title(), area_code=area_code.upper(), city_code_id=city_id)
+                if areaInserted:
+                    area_id = areaInserted.id
                 else:
-                    return ui_utils.handle_response({}, data=
-                        {"error":"No companies for the service found"}, 
-                        success=False)
-        return ui_utils.handle_response({}, data={"message":"Ops Verified"}, success=True)
+                    print('Failed to add Area :', area)
+
+        if supplier_type == "RS":
+            supplier = SupplierTypeSociety.objects.filter(supplier_id=supplier_id)
+        else:
+            supplier = SupplierMaster.objects.filter(supplier_id=supplier_id)
+        
+        if not supplier:
+            suspense_data = {
+                        'city_id': city_id,
+                        'area_id': area_id,
+                        'subarea_id': 1,
+                        'supplier_type': supplier_type,
+                        'supplier_code': supplier_type,
+                        'supplier_name': supplier_name,    
+                    }
+            supplier_id = ui_utils.get_supplier_id(suspense_data)
+
+            #updating supplier data in suspense lead table
+            update_values = {"$set":{
+                "supplier_id":supplier_id,
+                "supplier_type":supplier_type,
+                "supplier_name":supplier_name,
+                "poc_name":poc_name,
+                "designation":designation,
+                "city":city,
+                "area":area,
+                "is_updated":"True"
+                }}
+            mongo_client.suspense_lead.update({"_id": ObjectId(suspense_id)},update_values)
+
+            if supplier_type != "RS":
+                supplier_data = {
+                'supplier_id': supplier_id,
+                'supplier_name': supplier_name,
+                'supplier_type': supplier_type,
+                'area': area.title(),
+                'city': city,
+                }
+                serializer = SupplierMasterSerializer(data=supplier_data)
+                if serializer.is_valid():
+                    serializer.save()
+
+                AddressMaster(**{
+                    'supplier_id': supplier_id,
+                    'area': area.title(),
+                    'city': city,
+                }).save()
+            else:
+                supplier_data = {
+                'supplier_id': supplier_id,
+                'society_name': supplier_name,
+                'supplier_code': supplier_type,
+                'society_locality': area.title(),
+                'society_city': city,
+                }
+                serializer = SupplierTypeSocietySerializer(data=supplier_data)
+                if serializer.is_valid():
+                    serializer.save()
+
+        else:
+            update_values = {"$set":{
+                "supplier_id":supplier_id,
+                "supplier_type":supplier_type,
+                "supplier_name":supplier_name,
+                "poc_name":poc_name,
+                "designation":designation,
+                "city":city,
+                "area":area,
+                "is_updated":"True"
+                }}
+            mongo_client.suspense_lead.update({"_id": ObjectId(suspense_id)},update_values)
+            if supplier_type == "RS":
+                supplier.update(society_name=supplier_name)
+            else:
+                supplier.update(supplier_name=supplier_name)
+
+        if phone_number and supplier_id:
+            contact_details = ContactDetails.objects.filter(mobile=phone_number, object_id=supplier_id)
+            if contact_details:
+                if poc_name and designation:
+                    contact_details.update(name=poc_name, contact_type=designation)                
+            else:
+                ContactDetails(**{
+                    'object_id': supplier_id,
+                    'mobile' : phone_number, 
+                    'name' : poc_name, 
+                    'contact_type' : designation,
+                }).save()
+
+        return ui_utils.handle_response({}, data={"message":"Supplier added successfully"}, success=True)
+
+class AddPocDetails(APIView):
+
+    def get(self, request):
+
+        suspense_id = request.query_params.get("suspense_id")
+        suspense_lead = mongo_client.suspense_lead.find_one({"_id": ObjectId(suspense_id)})
+        object_id = suspense_lead['supplier_id']
+
+        contact_detail = ContactDetails.objects.filter(object_id=object_id).values("name", "mobile", "contact_type")
+
+        return ui_utils.handle_response({}, data={"contact_detail": contact_detail}, success=True)
+
+    def post(self, request):
+        
+        suspense_id = request.data.get("suspense_id")
+        contactData = request.data.get("contactData")
+        suspense_lead = mongo_client.suspense_lead.find_one({"_id": ObjectId(suspense_id)})
+        object_id = suspense_lead['supplier_id']
+        not_remove_contacts = []
+        if contactData:
+            for contact in contactData:
+                contact['object_id'] = object_id
+                if 'id' in contact:
+                    contact_detail = ContactDetails.objects.filter(pk=contact['id']).first()
+                    contact_serializer = ContactDetailsSerializer(contact_detail, data=contact)
+                else:
+                    contact_serializer = ContactDetailsSerializer(data=contact)
+                if contact_serializer.is_valid():
+                    contact_serializer.save(object_id=object_id)
+                    not_remove_contacts.append(contact_serializer.data['id'])
+
+        ContactDetails.objects.filter(object_id=object_id).exclude(pk__in=not_remove_contacts).delete()
+
+        return ui_utils.handle_response({}, data={"message":"POC added successfully"}, success=True)
+
+
+class UpdateMongoDbNotExistKey(APIView):
+
+    def get(self, request):
+        key_name = request.query_params.get("key_name")
+        value = request.query_params.get("value")
+
+        result = mongo_client.suspense_lead.update({str(key_name): {"$exists" : False}}, {"$set": {str(key_name): value}})
+
+        return ui_utils.handle_response({}, data={"result":result}, success=True)
+
+
+class SuspenseLeadOpsVerification(APIView):
+
+    def get(self, request):
+
+        suspense_id = request.query_params.get("_id")
+        suspense = dict(mongo_client.suspense_lead.find_one({"_id": ObjectId(suspense_id)}))
+
+        campaign = ProposalInfo.objects.filter(Q(type_of_end_customer__formatted_name="b_to_b_r_g") 
+            and Q(name=str(suspense.get('city')) or Q(name=str(suspense.get('area'))))).first()
+
+        shortlisted_spaces = ShortlistedSpaces.objects.filter(
+            proposal_id=campaign.proposal_id, 
+            object_id=suspense.get('supplier_id')).first()
+
+        if not shortlisted_spaces:
+
+            content_type = ui_utils.get_content_type(suspense.get('supplier_type'))
+            center = ProposalCenterMapping.objects.filter(
+                proposal_id=campaign.proposal_id).first()
+
+            shortlisted_spaces = ShortlistedSpaces(
+                proposal_id=campaign.proposal_id,
+                center=center,
+                supplier_code=suspense.get('supplier_type'),
+                object_id=suspense.get('supplier_id'),
+                content_type=content_type.data['data'],
+                status='F',
+                user=request.user,
+                requirement_given='yes',
+                requirement_given_date=datetime.datetime.now()
+            )
+            shortlisted_spaces.save()
+
+        if shortlisted_spaces:
+            shortlisted_spaces.color_code = 1
+            shortlisted_spaces.save()
+
+        if suspense.get('sector_name'):
+            sector = BusinessTypes.objects.filter(
+                business_type=suspense.get('sector_name').lower()).first()
+
+        if suspense.get('sub_sector_name'):
+            sub_sector = BusinessSubTypes.objects.filter(
+                business_sub_type=suspense.get('sub_sector_name').lower()).first()
+
+        change_current_patner = "no"
+        if suspense.get('current_patner_feedback') == "Dissatisfied" or \
+            suspense.get('current_patner_feedback') == "Extremely Dissatisfied":
+            change_current_patner = "yes"
+
+        prefered_patners_list = []
+        if suspense.get("prefered_patners"):
+            prefered_patners_list = Organisation.objects.filter(
+                organisation_id__in=suspense.get("prefered_patners")).all()
+
+        current_patner_obj = None
+        if suspense.get('current_patner'):
+            current_patner_obj = Organisation.objects.filter(
+                name=suspense.get('current_patner')).first()
+
+        lead_status = b2b_utils.get_lead_status(impl_timeline = suspense.get('implementation_timeline'),
+            meating_timeline = suspense.get('meating_timeline'),company=None,prefered_patners=prefered_patners_list,
+            change_current_patner=change_current_patner.lower())
+
+        pre_requirement = PreRequirement(
+            campaign_id=campaign.proposal_id,
+            shortlisted_spaces=shortlisted_spaces,
+            current_company = current_patner_obj,
+            current_company_other = suspense.get('current_patner_other'),
+            current_patner_feedback = suspense.get('current_patner_feedback'),
+            current_patner_feedback_reason = suspense.get('current_patner_feedback_reason'),
+            preferred_company_other = suspense.get('prefered_patner_other'),
+            sector = sector,
+            sub_sector = sub_sector,
+            lead_by = None,
+            impl_timeline = suspense.get('implementation_timeline'),
+            meating_timeline = suspense.get('meating_timeline'),
+            lead_status = lead_status,
+            comment = suspense.get('comment'),
+            varified_ops = 'yes',
+            varified_bd = 'no',
+            lead_date = datetime.datetime.now(),
+            l1_answers = suspense.get('l1_answers'),
+            l1_answer_2 = suspense.get('l1_answer_2'),
+            l2_answers = suspense.get('l2_answers'),
+            l2_answer_2 = suspense.get('l2_answer_2'),
+            change_current_patner = change_current_patner.lower(),
+            call_back_preference = suspense.get('call_back_preference').lower(),
+            varified_ops_by_id = request.user.id,
+        )
+        pre_requirement.save()
+
+        if prefered_patners_list:
+            pre_requirement.preferred_company.set(prefered_patners_list)
+
+        if pre_requirement:
+            companies = Organisation.objects.filter(business_type=
+                pre_requirement.sector)
+
+            verified = 0
+            if companies:
+                for company in companies:
+
+                    company_campaign = ProposalInfo.objects.filter(
+                        type_of_end_customer__formatted_name="b_to_b_l_d",
+                        account__organisation=company).first()
+
+                    if company_campaign:
+                        company_shortlisted_spaces = ShortlistedSpaces.objects.filter(
+                            object_id=pre_requirement.shortlisted_spaces.object_id,
+                            proposal=company_campaign.proposal_id).first()
+
+                    if not company_shortlisted_spaces:
+                        center_ = ProposalCenterMapping.objects.filter(proposal=company_campaign).first()
+                        content_type_ = ui_utils.get_content_type(pre_requirement.shortlisted_spaces.supplier_code)
+
+                        company_shortlisted_spaces = ShortlistedSpaces(
+                            proposal=company_campaign,
+                            center=center_,
+                            object_id=pre_requirement.shortlisted_spaces.object_id,
+                            supplier_code=pre_requirement.shortlisted_spaces.supplier_code,
+                            content_type=content_type_.data['data'],
+                            status='F',
+                            user=request.user,
+                            requirement_given='yes',
+                            requirement_given_date=datetime.datetime.now(),
+                            color_code = 1
+                        )
+                        company_shortlisted_spaces.save()
+
+                    if company_shortlisted_spaces:
+                        color_code = b2b_utils.get_color_code(company_shortlisted_spaces.id)
+                        company_shortlisted_spaces.color_code = color_code
+                        company_shortlisted_spaces.save()
+
+                    o_preferred_partners_list = pre_requirement.preferred_company.all()
+
+                    is_preferred_company = "no"
+                    if company_campaign:
+                        if company_campaign.account.organisation in o_preferred_partners_list:
+                            is_preferred_company = "yes"
+
+                    new_requirement = Requirement(
+                        campaign_id=pre_requirement.campaign_id,
+                        shortlisted_spaces=pre_requirement.shortlisted_spaces,
+                        company = company,
+                        current_company = pre_requirement.current_company,
+                        current_company_other = pre_requirement.current_company_other,
+                        is_current_patner = "yes" if pre_requirement.current_company == company else "no",
+                        current_patner_feedback = pre_requirement.current_patner_feedback,
+                        current_patner_feedback_reason = pre_requirement.current_patner_feedback_reason,
+                        preferred_company_other = pre_requirement.preferred_company_other,
+                        sector = pre_requirement.sector,
+                        sub_sector = pre_requirement.sub_sector,
+                        lead_by = pre_requirement.lead_by,
+                        impl_timeline = pre_requirement.impl_timeline,
+                        meating_timeline = pre_requirement.meating_timeline,
+                        lead_status = pre_requirement.lead_status,
+                        comment = pre_requirement.comment,
+                        varified_ops = 'yes',
+                        varified_bd = 'no',
+                        lead_date = pre_requirement.lead_date,
+                        lead_price  = pre_requirement.lead_price,
+                        l1_answers = pre_requirement.l1_answers,
+                        l1_answer_2 = pre_requirement.l1_answer_2,
+                        l2_answers = pre_requirement.l2_answers,
+                        l2_answer_2 = pre_requirement.l2_answer_2,
+                        change_current_patner = pre_requirement.change_current_patner.lower(),
+                        company_campaign=company_campaign,
+                        company_shortlisted_spaces=company_shortlisted_spaces,
+                        varified_ops_by = request.user,
+                        varified_ops_date = datetime.datetime.now(),
+                        call_back_preference = pre_requirement.call_back_preference,
+                        is_preferred_company = is_preferred_company
+                    )
+                    new_requirement.save()
+                    verified += 1
+
+                    if o_preferred_partners_list:
+                        new_requirement.preferred_company.set(o_preferred_partners_list)
+            
+            return ui_utils.handle_response({}, data=
+                {"error":"No companies for the service found"}, success=False)
+
+        update_suspense = mongo_client.suspense_lead.update(
+                    {"_id":ObjectId(suspense_id)},{"status":"converted"})
+
+        if verified == 0:
+            return ui_utils.handle_response({}, data={"error":"Ops verify failed as there are 0 client campaigns","verified_ops_by":request.user.first_name + request.user.last_name}, success=False)
+        else:
+            return ui_utils.handle_response({}, data={"message":"Ops Verified and distributed to "+str(verified)+" campaigns","verified_ops_by":request.user.first_name + request.user.last_name}, success=True)
