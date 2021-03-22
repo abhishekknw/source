@@ -302,7 +302,8 @@ def bot_to_requirement(request, data):
                 l1_answer_2 = l1_answer_2,
                 l2_answers = l2_answers,
                 l2_answer_2 = l2_answer_2,
-                call_back_preference = call_back_preference
+                call_back_preference = call_back_preference,
+                status="closed"
             ).save()
 
     return ui_utils.handle_response({}, data={}, success=True)
