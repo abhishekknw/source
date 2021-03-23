@@ -207,6 +207,11 @@ def get_response_template_without_verify(obj):
     template = None
     update_dict = {}
 
+    if msg == "m" or msg == "main" or \
+        msg == "main menu" or msg == "menu":
+        template = "Please select your service"
+        return template
+
     verification_dict = mongo_client.ContactVerification.find_one(
         {"mobile":obj['mobile']})
 
@@ -325,39 +330,42 @@ def update_supplier_details(obj):
 
     return True
 
-def send_message_to_gupshup():
-  
+def send_message_to_gupshup(mobile):
+
     time.sleep(120)
-    URL = "https://api.gupshup.io/sm/api/v1/msg"
-    # obj = threading.current_thread().obj
-    template = MessageTemplate.objects.filter(verification_status="WR").first()
-    if template:
+    contact = mongo_client.ContactVerification.find_one({"mobile":mobile})
+    if contact:
+        contact_data = dict(contact)
 
-        mobile = "919713198098"
-        message = template.message
-        print("##########")
-        params = {
-                "channel" : "whatsapp",
-                "source" : "917834811114",
-                "destination" : mobile,
-                "src.name":"TestMachadalo",
-                "message" : message
-            }
+        if not (contact_data['name'] and contact_data['designation'] and \
+            contact_data['entity_name'] and contact_data['entity_name'] and \
+            contact_data['entity_type']):
 
-        headers = {'Content-Type': 'application/x-www-form-urlencoded','apikey':"gb4safxmjwlppbs4h9ssnjramaluzjke"}
-        response = requests.post(URL, data=params, headers=headers)
-        print(response.text)
-        return response.text
+            URL = "https://api.gupshup.io/sm/api/v1/msg"
+            # obj = threading.current_thread().obj
+            template = MessageTemplate.objects.filter(verification_status="WR").first()
+            if template:
+
+                mobile = "91"+mobile
+                message = template.message
+                params = {
+                        "channel" : "whatsapp",
+                        "source" : "917834811114",
+                        "destination" : mobile,
+                        "src.name":"TestMachadalo",
+                        "message" : message
+                    }
+
+                headers = {'Content-Type': 'application/x-www-form-urlencoded','apikey':"gb4safxmjwlppbs4h9ssnjramaluzjke"}
+                response = requests.post(URL, data=params, headers=headers)
+                print(response.text)
+    return True
 
 def waiting_response(obj):
-    # time.sleep(5)
-    # Event.wait(5)
-    print("$$$$$$$$$$$")
-    t = threading.Thread(target=send_message_to_gupshup)
-    print(t)
-
-    t.start()
-    return t
-    # response = send_message_to_gupshup(obj)
+    
+    thread = threading.Thread(target=send_message_to_gupshup,
+        kwargs=dict(mobile=obj['mobile']))
+    thread.start()
+    return thread
 
     
