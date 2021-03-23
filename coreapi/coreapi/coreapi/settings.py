@@ -316,6 +316,6 @@ LOGGING = {
 connect(Config.MONGO_CONNECTION, alias="mongo_app")
 
 # CronJob settings
-CRONJOBS = [
-    ('* */1 * * *', 'v0.ui.b2b.views.remove_suspense_lead_cron') # Remove suspance leads
-]
+# CRONJOBS = [
+#     ('* */1 * * *', 'v0.ui.b2b.views.remove_suspense_lead_cron') # Remove suspance leads
+# ]
