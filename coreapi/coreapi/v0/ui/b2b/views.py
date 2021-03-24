@@ -2193,6 +2193,7 @@ class UpdateSuspenseLead(APIView):
                 "current_patner_other":suspense.get("current_patner_other"),
                 "prefered_patners":prefered_patners,
                 "prefered_patner_other":suspense.get("prefered_patner_other"),
+                "current_patner_feedback":suspense.get("current_patner_feedback"),
                 "call_back_preference":suspense.get("call_back_preference"),
                 "status":"closed",
                 "updated_at":datetime.datetime.now(),
