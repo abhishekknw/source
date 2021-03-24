@@ -2193,6 +2193,8 @@ class UpdateSuspenseLead(APIView):
                 "current_patner_other":suspense.get("current_patner_other"),
                 "prefered_patners":prefered_patners,
                 "prefered_patner_other":suspense.get("prefered_patner_other"),
+                "current_patner_feedback":suspense.get("current_patner_feedback"),
+                "current_patner_feedback_reason":suspense.get("current_patner_feedback_reason"),
                 "call_back_preference":suspense.get("call_back_preference"),
                 "status":"closed",
                 "updated_at":datetime.datetime.now(),
@@ -2243,6 +2245,8 @@ class AddSuspenseToSupplier(APIView):
         area_id = request.data.get("area_id")
         area = request.data.get("area")
         supplier_id = request.data.get("supplier_id")
+        address = request.data.get("address")
+        pin_code = request.data.get("pin_code")
 
         #If area does not exist, add new area
         if city_id:
@@ -2282,6 +2286,8 @@ class AddSuspenseToSupplier(APIView):
                 "designation":designation,
                 "city":city,
                 "area":area,
+                "address1":address,
+                "pin_code":pin_code,
                 "is_updated":"True"
                 }}
             mongo_client.suspense_lead.update({"_id": ObjectId(suspense_id)},update_values)
@@ -2293,6 +2299,7 @@ class AddSuspenseToSupplier(APIView):
                 'supplier_type': supplier_type,
                 'area': area.title(),
                 'city': city,
+                'zipcode':pin_code,
                 }
                 serializer = SupplierMasterSerializer(data=supplier_data)
                 if serializer.is_valid():
@@ -2302,6 +2309,8 @@ class AddSuspenseToSupplier(APIView):
                     'supplier_id': supplier_id,
                     'area': area.title(),
                     'city': city,
+                    'address1':address,
+                    'zipcode' : pin_code,
                 }).save()
             else:
                 supplier_data = {
@@ -2310,6 +2319,8 @@ class AddSuspenseToSupplier(APIView):
                 'supplier_code': supplier_type,
                 'society_locality': area.title(),
                 'society_city': city,
+                "society_address1":address,
+                "society_zip":pin_code,
                 }
                 serializer = SupplierTypeSocietySerializer(data=supplier_data)
                 if serializer.is_valid():
@@ -2324,6 +2335,8 @@ class AddSuspenseToSupplier(APIView):
                 "designation":designation,
                 "city":city,
                 "area":area,
+                "address1":address,
+                "pin_code":pin_code,
                 "is_updated":"True"
                 }}
             mongo_client.suspense_lead.update({"_id": ObjectId(suspense_id)},update_values)
