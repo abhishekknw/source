@@ -199,6 +199,7 @@ class SuspenseLead(MongoModel):
     status = fields.ListField(blank=True)
     supplier_id = fields.CharField(blank=True)
     is_updated = fields.CharField(blank=True, default="False")
+    address1 = fields.CharField(blank=True)
 
     class Meta:
         write_concern = WriteConcern(j=True)
