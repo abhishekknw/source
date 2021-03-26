@@ -216,7 +216,7 @@ else:
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'businessdevelopment@machadalo.com'
-EMAIL_HOST_PASSWORD = 'bdemail@clientservice#96'
+EMAIL_HOST_PASSWORD = 'bdemail@clientservice#2021'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 DEFAULT_EMAIL_FROM = EMAIL_HOST_USER
@@ -294,15 +294,15 @@ LOGGING = {
             'formatter': 'console'
         },
         'file': {
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'class': 'logging.FileHandler',
             'formatter': 'file',
-            'filename': '/var/log/mdbackend/debug.log'
+            'filename': '/var/log/mdbackend/error.log'
         }
     },
     'loggers': {
         '': {
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'handlers': ['console', 'file']
         }
     }
@@ -316,6 +316,6 @@ LOGGING = {
 connect(Config.MONGO_CONNECTION, alias="mongo_app")
 
 # CronJob settings
-CRONJOBS = [
-    ('* */1 * * *', 'v0.ui.b2b.views.remove_suspense_lead_cron') # Remove suspance leads
-]
+# CRONJOBS = [
+#     ('* */1 * * *', 'v0.ui.b2b.views.remove_suspense_lead_cron') # Remove suspance leads
+# ]

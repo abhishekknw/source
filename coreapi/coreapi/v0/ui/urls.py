@@ -43,6 +43,7 @@ urlpatterns = [
     url(r'^leads/', include('v0.ui.mis.urls')),
     url(r'^b2b/', include('v0.ui.b2b.urls')),
     url(r'^bot/', include('v0.ui.bot.urls')),
+    url(r'^gupshup/', include('v0.ui.gupshup.urls')),
 
     # Script urls
     url(r'^scripts/', include(('v0.scripts.urls'))),

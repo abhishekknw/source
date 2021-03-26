@@ -197,6 +197,9 @@ class SuspenseLead(MongoModel):
     l2_answer_2 = fields.CharField(blank=True)
     call_back_preference = fields.CharField(blank=True)
     status = fields.ListField(blank=True)
+    supplier_id = fields.CharField(blank=True)
+    is_updated = fields.CharField(blank=True, default="False")
+    address1 = fields.CharField(blank=True)
 
     class Meta:
         write_concern = WriteConcern(j=True)
@@ -315,5 +318,12 @@ class LicenseDetails(models.Model):
     class Meta:
         db_table = 'license_details'
 
+
+class Gupshup(MongoModel):
+    data = fields.CharField(blank=True)
+
+    class Meta:
+        write_concern = WriteConcern(j=True)
+        connection_alias = 'mongo_app'
 
 
